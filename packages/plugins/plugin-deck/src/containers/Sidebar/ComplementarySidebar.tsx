@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -96,16 +98,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         >
           <Tabs.List classNames='grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
             {companions.map((companion) => (
-              <Tabs.Trigger
+              <ComplementarySidebarTrigger
                 key={Attention.getLinkedVariant(companion.id)}
-                value={Attention.getLinkedVariant(companion.id)}
-                classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                label={Theme.toLocalizedString(companion.properties.label, t)}
-                icon={companion.properties.icon}
-                iconOnly
-                tooltipSide='left'
-                data-value={Attention.getLinkedVariant(companion.id)}
-                {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
+                companion={companion}
                 variant={
                   selectedVariant === Attention.getLinkedVariant(companion.id)
                     ? state.complementarySidebarState === 'expanded'
@@ -150,6 +145,46 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
+  );
+};
+
+type ComplementarySidebarTriggerProps = {
+  companion: DeckCompanion;
+  variant: 'primary' | 'ghost';
+  onClick: (event: MouseEvent) => void;
+};
+
+const NO_BADGE = Atom.make<number | undefined>(undefined);
+
+/** Largest count the rail pill spells out; anything above reads as `99+`. */
+const MAX_BADGE = 99;
+
+/** An R0 tab; subscribes to its companion's badge here so a count change re-renders only this tab. */
+const ComplementarySidebarTrigger = ({ companion, variant, onClick }: ComplementarySidebarTriggerProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const value = Attention.getLinkedVariant(companion.id);
+  const count = useAtomValue(companion.properties.badge ?? NO_BADGE);
+  const badge = count !== undefined && count > 0 ? (count > MAX_BADGE ? `${MAX_BADGE}+` : String(count)) : undefined;
+
+  return (
+    <Tabs.Trigger
+      value={value}
+      classNames={[
+        'w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0',
+        // A pseudo-element rather than a child, since an icon-only button renders no children.
+        badge &&
+          'relative after:absolute after:top-0 after:end-0 after:min-w-4 after:h-4 after:px-1 after:rounded-full after:bg-accent-bg after:text-accent-fg after:text-[10px] after:leading-4 after:text-center after:content-[attr(data-badge)]',
+      ]}
+      label={Theme.toLocalizedString(companion.properties.label, t)}
+      icon={companion.properties.icon}
+      iconOnly
+      tooltipSide='left'
+      data-value={value}
+      data-badge={badge}
+      {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
+      variant={variant}
+      onClick={onClick}
+    />
   );
 };
 

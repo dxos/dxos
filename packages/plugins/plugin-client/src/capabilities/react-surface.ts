@@ -22,7 +22,7 @@ import {
   RecoveryCodeDialog,
   RecoveryCredentialsContainer,
   ResetDialog,
-  SpaceInvitationsContainer,
+  SpaceInvitationContainer,
   UsageContainer,
 } from '#containers';
 import { Account, ClientOptions } from '#types';
@@ -53,11 +53,6 @@ export default Capability.makeModule(({ createInvitationUrl, identityTestActions
         component: ContactsContainer,
       }),
       Surface.create({
-        id: 'spaceInvitations',
-        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.SpaceInvitations)),
-        component: SpaceInvitationsContainer,
-      }),
-      Surface.create({
         id: Account.Security,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Security)),
         component: RecoveryCredentialsContainer,
@@ -81,6 +76,12 @@ export default Capability.makeModule(({ createInvitationUrl, identityTestActions
         id: 'contactPicker',
         filter: Surface.makeFilter(AppSurface.ContactPicker),
         component: ContactPickerContainer,
+        props: ({ data }) => data,
+      }),
+      Surface.create({
+        id: 'spaceInvitation',
+        filter: Surface.makeFilter(AppSurface.SpaceInvitation),
+        component: SpaceInvitationContainer,
         props: ({ data }) => data,
       }),
       Surface.create({

@@ -43,6 +43,11 @@ export type ChatEvent =
       type: 'rewind';
       id: string;
     }
+  /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
+  | {
+      type: 'remove-prompt';
+      id: string;
+    }
   /** A person answered a request an agent raised (allow or refuse a tool call). */
   | {
       type: 'respond';

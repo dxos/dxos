@@ -40,12 +40,19 @@ import * as Util from '@dxos/react-ui/Util';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback, markWork } from '@dxos/util';
 
-import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { AiUsageQuotaError, type ProcessorRequestContext, getProcessorState } from '../../processor/index.ts';
+import {
+  AiUsageQuotaError,
+  type ProcessorRequestContext,
+  getProcessorState,
+  projectAlarms,
+  projectSelfWakes,
+  resolveRewind,
+} from '../../processor/index.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -53,7 +60,6 @@ import {
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt/index.ts';
-import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue/index.ts';
 import {
   ChatContextProvider,
   type ChatContextValue,
@@ -66,7 +72,6 @@ import {
 import { type ChatEvent } from './events.ts';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
-import { projectAlarms, projectSelfWakes, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root
@@ -124,32 +129,14 @@ const ChatRoot = ({
   const [controller, setController] = useState<ChatThreadController | null>(null);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
-  const feedMessages = useQuery(
-    db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  );
   const feedAlarms = useQuery(
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
   );
-  const pendingMessages = useAtomValue(processorState.messages);
-  const { messages, queued } = useMemo(
-    () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
-    [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
-  );
+  // The processor queries the feed and reconciles it with the streamed turn and the outbox.
+  const { messages, delivery, queued, tail } = useAtomValue(processorState.thread);
   const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
   const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
-
-  // Cancelling is a plain feed removal: the queue and the alarm set are projections over the feed,
-  // so dropping the record is what takes the item out of them.
-  const handleCancel = useCallback(
-    (item: Message.Message | Alarm.Alarm) => {
-      if (db && feed) {
-        void db.removeFeedItemsByIds(feed, [item.id]).catch((err) => log.catch(err));
-      }
-    },
-    [db, feed],
-  );
 
   const dump = useDebug({ processor });
 
@@ -180,13 +167,29 @@ const ChatRoot = ({
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
           // composer so it can be revised. Recorded on the feed rather than the chat because the
           // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          // chat. A stale click (message already gone) resolves to nothing and is a no-op. A prompt sent
+          // from here keeps its own row id, so the feed is pointed at its turn's message.
           const rewind = feed && resolveRewind(messages, ev.id);
           if (rewind) {
             Obj.update(feed, (feed) => {
-              feed.rewindFrom = rewind.rewindFrom;
+              feed.rewindFrom = delivery.get(rewind.rewindFrom)?.turnId ?? rewind.rewindFrom;
             });
             event.emit({ type: 'update-prompt', text: rewind.text });
+          }
+          break;
+        }
+
+        case 'remove-prompt': {
+          // Withdrawing a prompt the agent has not taken up: the queue is feed state, so removing the
+          // entry is what takes it out of the agent's queue, and the outbox forgets this client's copy.
+          const row = delivery.get(ev.id);
+          if (row?.status === 'failed' || row?.status === 'delivered') {
+            if (row.entryId && db && feed) {
+              void db.removeFeedItemsByIds(feed, [row.entryId]).catch((err) => log.catch(err));
+            }
+            if (row.outboxId) {
+              processor?.removePrompt(row.outboxId);
+            }
           }
           break;
         }
@@ -194,9 +197,9 @@ const ChatRoot = ({
 
       onEvent?.(ev);
     });
-    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
-    // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, onEvent, feed, messages]);
+    // `feed`, `messages` and `delivery` are dependencies because the rewind and prompt branches read
+    // them: without them the handler would keep resolving against whatever was mounted first.
+  }, [event, dump, onEvent, db, feed, messages, delivery, processor]);
 
   useEffect(() => {
     return event.on((ev) => {
@@ -284,21 +287,15 @@ const ChatRoot = ({
               break;
             }
             // The prompt's own guard does not cover submits emitted elsewhere (a checklist's execute action).
-            if (active && queued.length >= DEFAULT_MAX_QUEUE) {
+            if (active && queued >= DEFAULT_MAX_QUEUE) {
               break;
             }
             markWork('chat.submit');
             lastPrompt.current = ev.text;
-            const context = getContext?.();
-            // Await persistence (transient chat) before requesting so the agent resolves the
-            // now-durable conversation feed; resolves immediately when there is no hook.
-            //
-            // A prompt submitted while a turn is running is QUEUED, not requested: `request` would
-            // cancel the running turn to start its own, whereas the agent's queue is feed state that
-            // it drains in order once the current turn settles.
-            void Promise.resolve(onSubmit?.(text)).then(() =>
-              active ? processor.enqueue({ message: text, context }) : processor.request({ message: text, context }),
-            );
+            // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
+            // transient chat and before the agent acknowledges it. The processor requests it when the
+            // agent is idle and queues it behind a running turn otherwise.
+            processor.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
           }
           break;
         }
@@ -335,7 +332,7 @@ const ChatRoot = ({
         }
       }
     });
-  }, [event, processor, streaming, active, queued.length, onSubmit, getContext, invokePromise, chat, db, feed]);
+  }, [event, processor, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.
@@ -347,16 +344,15 @@ const ChatRoot = ({
       event={event}
       db={db}
       chat={chat}
-      onCancel={handleCancel}
       processor={processor}
-      queueSize={queued.length}
+      queueSize={queued}
       setController={setController}
       setVisibleRange={setVisibleRange}
       {...props}
     >
       <ChatThreadContextProvider
         messages={messages}
-        queued={queued}
+        tail={tail}
         alarms={alarms}
         selfWakes={selfWakes}
         requestTiming={requestTiming}
@@ -533,14 +529,16 @@ type ChatThreadProps = Util.ThemedClassName<{
   viewType?: ChatView;
   /** Blank lines kept below the tail at rest — breathing room above the composer. */
   tailLines?: number;
+  /** Hue of the user's messages; defaults to the identity's hue. */
+  userHue?: string;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
 
-const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { chat, db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
-  const { messages } = useChatThreadContext(CHAT_THREAD_NAME);
+  const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -569,15 +567,17 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   const model = useFeedModel(messages, { stops: 'prompt' });
   const streaming = useAtomValue(getProcessorState(processor).streaming);
   useEffect(() => {
-    const last = messages[messages.length - 1];
+    // The answer streams above any prompts still waiting for the agent, which end the thread.
+    const last = messages[messages.length - 1 - tail];
     model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
-  }, [model, streaming, messages]);
+  }, [model, streaming, messages, tail]);
 
   const userHue = useMemo(
     () =>
+      userHueProp ||
       identity?.data?.hue ||
       keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
-    [identity],
+    [userHueProp, identity],
   );
 
   const controllerRef = useRef<ChatThreadController | null>(null);
@@ -954,31 +954,6 @@ const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
 ChatTaskQuestions.displayName = 'Chat.TaskQuestions';
 
 //
-// Queue
-//
-
-const CHAT_QUEUE_NAME = 'Chat.Queue';
-
-/**
- * How long a prompt must sit in the queue before the queue shows it. A prompt sent to an idle agent
- * is taken up within a frame or two, so showing it at once flashes a row that is gone before it can
- * be read; only one that is actually waiting behind a running turn earns a row.
- */
-const QUEUE_REVEAL_DELAY = 1_000;
-
-type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
-
-const ChatQueue = (props: ChatQueueProps) => {
-  const { onCancel } = useChatContext(CHAT_QUEUE_NAME);
-  const { queued } = useChatThreadContext(CHAT_QUEUE_NAME);
-  const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
-
-  return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
-};
-
-ChatQueue.displayName = CHAT_QUEUE_NAME;
-
-//
 // Activity
 //
 
@@ -1010,7 +985,6 @@ export const Chat = {
   Toolbar: ChatToolbar,
   Content: ChatContent,
   Prompt: ChatPrompt,
-  Queue: ChatQueue,
   Activity: ChatActivity,
   Status: ChatStatus,
   Thread: ChatThread,
@@ -1022,7 +996,6 @@ export type {
   ChatEvent,
   ChatOutlineProps,
   ChatPromptProps,
-  ChatQueueProps,
   ChatRootProps,
   ChatThreadProps,
   ChatToolbarProps,

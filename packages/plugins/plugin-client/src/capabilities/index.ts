@@ -77,16 +77,6 @@ export const IdentityLifecycle = Capability.lazyModule(
   },
   () => import('./identity-lifecycle.ts'),
 );
-export const InboxMonitor = Capability.lazyModule(
-  'InboxMonitor',
-  {
-    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker],
-    provides: [],
-    // Subscribes to `client.halo` and `client.spaces` (initialized-only).
-    activatesOn: ClientEvents.Initialized,
-  },
-  () => import('./inbox-monitor.ts'),
-);
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
@@ -113,7 +103,12 @@ export const NavigationTargetLoader = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.contactPicker', 'org.dxos.role.dialog'],
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.contactPicker',
+    'org.dxos.role.dialog',
+    'org.dxos.role.spaceInvitation',
+  ],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',

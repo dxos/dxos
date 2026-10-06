@@ -261,6 +261,7 @@ const ToastCloseTrigger = forwardRef<HTMLButtonElement, ToastCloseTriggerProps>(
         iconOnly
         label={label ?? t('toolbar-close.label')}
         classNames={recipes.toastCloseTrigger()}
+        data-testid='toast.close'
         ref={forwardedRef}
       />
     </ToastPrimitive.CloseTrigger>

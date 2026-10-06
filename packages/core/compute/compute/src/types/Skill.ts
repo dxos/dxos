@@ -233,6 +233,14 @@ export type Definition = {
 export const registryURI = (key: DXN.Name<string>): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
 
 /**
+ * The ref a session binds for a resolved skill: a skill in a database is bound as-is (it is
+ * space-authored or a fork carrying the user's edits), anything else by its registry URI, so a
+ * rebind never substitutes the pristine copy for the fork or vice versa.
+ */
+export const makeRef = (skill: Skill): Ref.Ref<Skill> =>
+  Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(registryURI(getKey(skill)));
+
+/**
  * Registry skill refs declared by an object's type via {@link SkillsAnnotation}.
  * Bound by URI rather than a DB clone, so the ref resolves through the hypergraph registry.
  */

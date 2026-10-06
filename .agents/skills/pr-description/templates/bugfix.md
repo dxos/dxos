@@ -1,34 +1,68 @@
 # Bugfix
 
-Applies when the PR fixes a defect. All four sections are required; the second is the one most often
-skipped and the one reviewers check first.
+Applies when the PR fixes a defect. Copy this block verbatim and replace every `{{…}}` slot. All four
+subsections are required; Reproduction is the one most often skipped and the one reviewers check
+first.
 
-```markdown
+````markdown
 ## Bug
 
 ### Discovery and symptoms
 
-<Who or what found it (user report, Linear issue, CI failure, Sentry/SigNoz alert, while working on X)
-and what the user saw: the error text, the wrong value, the hang. Quote the log line or error.>
+**Found by:** {{FOUND_BY}}
+
+{{SYMPTOM}}
+
+```text
+{{ERROR_OR_LOG_LINE}}
+```
 
 ### Reproduction
 
-<The test that reproduces it: file path and test name. State that it fails without the fix and
-passes with it, and how you checked (`moon run <pkg>:test -- <file>`). A test this PR adds does not
-exist on the base, so show the failure by reverse-applying only the fix's hunks against the PR's
-base (the same base used to pick templates) with the test and every other edit kept, for example
-`git diff "$BASE"...HEAD -- "$FIX_FILE" | git apply -R` when the fix has a file to itself, or
-`git revert --no-commit "$FIX_COMMIT"` when it has a commit to itself. An existing test or manual
-steps on the base also count.
-If no automated test can reproduce it, say why and give the manual steps instead.>
+**Test:** `{{TEST_FILE}}` › `{{TEST_NAME}}`
+**Without fix:** fails — `{{FAILURE}}`
+**With fix:** passes — `{{COMMAND}}`
 
 ### Root cause
 
-<The mechanism, not the symptom: which code path, under which condition, does what. Point at the
-file and line. "Race" or "flake" is not a root cause; name the two things that race.>
+{{MECHANISM}}
 
 ### Fix
 
-<What changed and why it removes the cause rather than the symptom. Name any alternative you
-rejected and why, in one line each.>
+{{CHANGE}}
+
+**Rejected alternatives:** {{REJECTED}}
+````
+
+| Slot                    | Fill with                                                                                                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{{FOUND_BY}}`          | One of `user report`, `Linear DX-123`, `CI failure (<run link>)`, `SigNoz alert`, `Sentry`, `while working on <X>`.                                                                          |
+| `{{SYMPTOM}}`           | One or two sentences: what the user or caller saw.                                                                                                                                           |
+| `{{ERROR_OR_LOG_LINE}}` | The exact error text or log line, quoted verbatim. When there is none (a wrong value, a hang), drop the whole fenced block, not just its contents.                                           |
+| `{{TEST_FILE}}`         | Repo-relative path of the reproducing test.                                                                                                                                                  |
+| `{{TEST_NAME}}`         | The `describe › test` name as vitest prints it.                                                                                                                                              |
+| `{{FAILURE}}`           | The assertion or error the test fails with on the base.                                                                                                                                      |
+| `{{COMMAND}}`           | The command you ran, e.g. `moon run <pkg>:test -- <file>`.                                                                                                                                   |
+| `{{MECHANISM}}`         | Which code path, under which condition, does what, ending with the location in backticks: ``(`path/to/file.ts:123`)``. "Race" or "flake" is not a root cause; name the two things that race. |
+| `{{CHANGE}}`            | What changed and why it removes the cause rather than the symptom.                                                                                                                           |
+| `{{REJECTED}}`          | `none`, or `<alternative> — <why not>`, several separated by `; `.                                                                                                                           |
+
+## Proving the reproduction
+
+A test this PR adds does not exist on the base, so show the failure by reverse-applying only the
+fix's hunks against the PR's base (the same `$BASE` used to pick templates), with the test and every
+other edit kept. Run exactly one of these, whichever matches how the fix is isolated; each undoes
+the fix, so running both fails:
+
+```bash
+git diff "$BASE"...HEAD -- "$FIX_FILE" | git apply -R   # either: the fix has a file to itself
+git revert --no-commit "$FIX_COMMIT"                    # or: the fix has a commit to itself
+```
+
+An existing test, or manual steps on the base, also count. When no automated test can reproduce it,
+replace the three Reproduction lines with exactly:
+
+```markdown
+**Test:** none — {{WHY_NO_TEST}}
+**Manual steps:** {{STEPS}}
 ```

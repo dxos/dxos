@@ -2,86 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
+import { toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import { describe, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { type Context } from '@dxos/context';
-import { createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
-import { type MessageListener, type ReconnectListener } from '@dxos/edge-client';
+import {
+  createCredentialSignerWithKey,
+  createDidFromIdentityKey,
+  createInboxEnvelope,
+  createSpaceInvitationNotice,
+  encodeInboxEnvelope,
+} from '@dxos/credentials';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { EdgeService, type InboxNotice } from '@dxos/protocols';
-import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type InboxService } from '@dxos/protocols/rpc';
+import { INBOX_MAX_PAYLOAD_LENGTH, InboxAccountRequiredError, InboxPayloadTooLargeError } from '@dxos/protocols';
+import { CredentialSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { InboxService } from '@dxos/protocols/rpc';
+import { Message, SpaceInvitationMessage } from '@dxos/types';
 
-import {
-  type InboxEdgeClient,
-  type InboxIdentitySource,
-  type InboxPushSource,
-  InboxServiceImpl,
-} from './inbox-service.ts';
-
-/**
- * In-memory stand-in for the EDGE inbox: one pending list per recipient DID, with every connected
- * device of the recipient rung on each change, as the router's push frame would.
- */
-class MemoryEdgeInbox {
-  readonly notices = new Map<string, InboxNotice[]>();
-  readonly #devices = new Map<string, Set<MessageListener>>();
-  #nextId = 0;
-
-  put(recipientDid: string, senderDid: string, payload: string): string {
-    const id = `n${++this.#nextId}`;
-    const now = Date.now();
-    this.#list(recipientDid).push({ id, senderDid, sentAt: now, expiresAt: now + 1_000_000, payload });
-    this.#ring(recipientDid);
-    return id;
-  }
-
-  /** The client an identity authenticates as, plus the socket of one of its devices. */
-  connect(did: string): { edgeClient: InboxEdgeClient; pushSource: InboxPushSource } {
-    const listeners = this.#devices.get(did) ?? new Set();
-    this.#devices.set(did, listeners);
-    const edgeClient: InboxEdgeClient = {
-      sendInboxMessage: async (_ctx: Context, recipientDid: string, payload: string) => ({
-        id: this.put(recipientDid, did, payload),
-      }),
-      listInbox: async () => ({ notices: [...this.#list(did)] }),
-      ackInbox: async (_ctx: Context, ids: readonly string[]) => {
-        this.notices.set(
-          did,
-          this.#list(did).filter((notice) => !ids.includes(notice.id)),
-        );
-        this.#ring(did);
-      },
-    };
-    const pushSource: InboxPushSource = {
-      onMessage: (listener: MessageListener) => {
-        listeners.add(listener);
-        return () => listeners.delete(listener);
-      },
-      onReconnected: (_listener: ReconnectListener) => () => {},
-    };
-    return { edgeClient, pushSource };
-  }
-
-  #list(did: string): InboxNotice[] {
-    const list = this.notices.get(did) ?? [];
-    this.notices.set(did, list);
-    return list;
-  }
-
-  #ring(did: string): void {
-    const frame = create(MessageSchema, { serviceId: EdgeService.INBOX });
-    this.#devices.get(did)?.forEach((listener) => listener(frame));
-  }
-}
+import { MemoryEdgeInbox } from '../testing/index.ts';
+import { type InboxIdentitySource, InboxServiceImpl } from './inbox-service.ts';
 
 const createIdentity = async (keyring: Keyring) => {
   const identityKey = await keyring.createKey();
@@ -89,20 +34,22 @@ const createIdentity = async (keyring: Keyring) => {
     stateUpdate: new Event(),
     identity: {
       identityKey,
-      getIdentityCredentialSigner: () => createCredentialSignerWithKey(keyring, identityKey),
+      getInboxEnvelopeSigner: () => ({ identityKey, signingKey: identityKey, signer: keyring }),
     },
   };
-  return { identityKey, did: await createDidFromIdentityKey(identityKey), source };
+  return { keyring, identityKey, did: await createDidFromIdentityKey(identityKey), source };
 };
 
-const createService = (edge: MemoryEdgeInbox, identity: { did: string; source: InboxIdentitySource }) => {
-  const { edgeClient, pushSource } = edge.connect(identity.did);
+type TestIdentity = Awaited<ReturnType<typeof createIdentity>>;
+
+const createService = (edge: MemoryEdgeInbox, identity: TestIdentity) => {
+  const { edgeClient, pushSource } = edge.connect(identity.source);
   return new InboxServiceImpl(identity.source, edgeClient, pushSource);
 };
 
 /** Collects every snapshot the service emits until the test ends. */
-const observe = (service: InboxServiceImpl): InboxService.Notices[] => {
-  const snapshots: InboxService.Notices[] = [];
+const observe = (service: InboxServiceImpl): InboxService.Messages[] => {
+  const snapshots: InboxService.Messages[] = [];
   const fiber = Effect.runFork(
     service['InboxService.subscribe']().pipe(
       Stream.runForEach((snapshot) => Effect.sync(() => snapshots.push(snapshot))),
@@ -112,30 +59,48 @@ const observe = (service: InboxServiceImpl): InboxService.Notices[] => {
   return snapshots;
 };
 
-const latest = (snapshots: InboxService.Notices[]) => snapshots.at(-1)?.notices ?? [];
+const latest = (snapshots: InboxService.Messages[]) => snapshots.at(-1)?.messages ?? [];
+
+const send = (sender: InboxServiceImpl, recipientIdentityKey: PublicKey, payload = '{}') =>
+  EffectEx.runPromise(
+    sender['InboxService.sendMessage']({ recipientIdentityKey, type: InboxService.INBOX_MESSAGE_TYPE, payload }),
+  );
+
+/** The base64 payload of an envelope `issuer` signed for `recipient`, as it travels through EDGE. */
+const envelopePayload = async (
+  issuer: TestIdentity,
+  recipient: PublicKey,
+  { type = InboxService.INBOX_MESSAGE_TYPE, version }: { type?: string; version?: number } = {},
+) => {
+  const envelope = await createInboxEnvelope(
+    { identityKey: issuer.identityKey, signingKey: issuer.identityKey, signer: issuer.keyring },
+    recipient,
+    { type, payload: '{}' },
+  );
+  if (version !== undefined) {
+    envelope.version = version;
+  }
+  return Buffer.from(encodeInboxEnvelope(envelope)).toString('base64');
+};
 
 describe('InboxService', () => {
-  test('delivers a signed notice to the recipient', async ({ expect }) => {
+  test('delivers a signed message to the recipient', async ({ expect }) => {
     const keyring = new Keyring();
     const edge = new MemoryEdgeInbox();
     const alice = await createIdentity(keyring);
     const bob = await createIdentity(keyring);
-    const sender = createService(edge, alice);
     const snapshots = observe(createService(edge, bob));
 
-    const spaceKey = PublicKey.random();
-    await EffectEx.runPromise(
-      sender['InboxService.send']({ recipientIdentityKey: bob.identityKey, spaceKey, role: SpaceMember_Role.EDITOR }),
-    );
+    await send(createService(edge, alice), bob.identityKey, '{"text":"hello"}');
 
     await vi.waitFor(() => expect(latest(snapshots)).toHaveLength(1));
-    const [notice] = latest(snapshots);
-    expect(notice.senderIdentityKey.equals(alice.identityKey)).toBe(true);
-    expect(notice.spaceKey.equals(spaceKey)).toBe(true);
-    expect(notice.role).toBe(SpaceMember_Role.EDITOR);
+    const [message] = latest(snapshots);
+    expect(message.senderIdentityKey.equals(alice.identityKey)).toBe(true);
+    expect(message.type).toBe(InboxService.INBOX_MESSAGE_TYPE);
+    expect(message.payload).toBe('{"text":"hello"}');
   });
 
-  test('dedupes by credential id and acks every copy', async ({ expect }) => {
+  test('dedupes by envelope id and acks every copy', async ({ expect }) => {
     const keyring = new Keyring();
     const edge = new MemoryEdgeInbox();
     const alice = await createIdentity(keyring);
@@ -143,13 +108,7 @@ describe('InboxService', () => {
     const recipient = createService(edge, bob);
     const snapshots = observe(recipient);
 
-    await EffectEx.runPromise(
-      createService(edge, alice)['InboxService.send']({
-        recipientIdentityKey: bob.identityKey,
-        spaceKey: PublicKey.random(),
-        role: SpaceMember_Role.EDITOR,
-      }),
-    );
+    await send(createService(edge, alice), bob.identityKey);
     const [first] = edge.notices.get(bob.did) ?? [];
     edge.put(bob.did, alice.did, first.payload);
 
@@ -161,16 +120,15 @@ describe('InboxService', () => {
     await vi.waitFor(() => expect(latest(snapshots)).toHaveLength(0));
   });
 
-  test('drops a notice whose issuer is not the authenticated sender', async ({ expect }) => {
+  test('acks an envelope that fails verification', async ({ expect }) => {
     const keyring = new Keyring();
     const edge = new MemoryEdgeInbox();
     const alice = await createIdentity(keyring);
     const bob = await createIdentity(keyring);
     const mallory = await createIdentity(keyring);
 
-    // Mallory relays a notice Alice signed, so EDGE attributes it to Mallory.
-    const credential = await createForeignNotice(alice, bob.identityKey);
-    edge.put(bob.did, mallory.did, credential);
+    // Mallory relays an envelope Alice signed, so EDGE attributes it to Mallory.
+    edge.put(bob.did, mallory.did, await envelopePayload(alice, bob.identityKey));
 
     const snapshots = observe(createService(edge, bob));
     await vi.waitFor(() => expect(snapshots.length).toBeGreaterThan(0));
@@ -178,7 +136,59 @@ describe('InboxService', () => {
     await vi.waitFor(() => expect(edge.notices.get(bob.did)).toHaveLength(0));
   });
 
-  test('an ack on one device clears the notice on the others', async ({ expect }) => {
+  test('leaves an unknown type or version pending, not acked', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const alice = await createIdentity(keyring);
+    const bob = await createIdentity(keyring);
+    edge.put(bob.did, alice.did, await envelopePayload(alice, bob.identityKey, { type: 'org.example.future' }));
+    edge.put(bob.did, alice.did, await envelopePayload(alice, bob.identityKey, { version: 2 }));
+    // A known message after them, so the test knows the pull has finished.
+    edge.put(bob.did, alice.did, await envelopePayload(alice, bob.identityKey));
+
+    const snapshots = observe(createService(edge, bob));
+    await vi.waitFor(() => expect(latest(snapshots)).toHaveLength(1));
+    expect(edge.notices.get(bob.did)).toHaveLength(3);
+  });
+
+  test('surfaces a legacy invitation credential as an invitation message', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const alice = await createIdentity(keyring);
+    const bob = await createIdentity(keyring);
+    const spaceKey = PublicKey.random();
+    const credential = await createSpaceInvitationNotice(
+      createCredentialSignerWithKey(keyring, alice.identityKey),
+      bob.identityKey,
+      { spaceKey, role: SpaceMember_Role.EDITOR },
+    );
+    edge.put(bob.did, alice.did, Buffer.from(toBinary(CredentialSchema, credential)).toString('base64'));
+
+    const snapshots = observe(createService(edge, bob));
+    await vi.waitFor(() => expect(latest(snapshots)).toHaveLength(1));
+    const [message] = latest(snapshots);
+    expect(message.senderIdentityKey.equals(alice.identityKey)).toBe(true);
+    expect(message.type).toBe(InboxService.INBOX_MESSAGE_TYPE);
+    const data = Option.getOrThrow(Message.decodeJson(message.payload));
+    expect(data.sender.identityDid).toBe(alice.did);
+    expect(Option.getOrThrow(SpaceInvitationMessage.match(data))).toMatchObject({
+      spaceKey: spaceKey.toHex(),
+      role: SpaceMember_Role.EDITOR,
+    });
+  });
+
+  test('acks a payload that is neither an envelope nor a credential', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const alice = await createIdentity(keyring);
+    const bob = await createIdentity(keyring);
+    edge.put(bob.did, alice.did, Buffer.from('not a message').toString('base64'));
+
+    observe(createService(edge, bob));
+    await vi.waitFor(() => expect(edge.notices.get(bob.did)).toHaveLength(0));
+  });
+
+  test('an ack on one device clears the message on the others', async ({ expect }) => {
     const keyring = new Keyring();
     const edge = new MemoryEdgeInbox();
     const alice = await createIdentity(keyring);
@@ -188,18 +198,73 @@ describe('InboxService', () => {
     const laptopSnapshots = observe(laptop);
     const phoneSnapshots = observe(phone);
 
-    await EffectEx.runPromise(
-      createService(edge, alice)['InboxService.send']({
-        recipientIdentityKey: bob.identityKey,
-        spaceKey: PublicKey.random(),
-        role: SpaceMember_Role.EDITOR,
-      }),
-    );
+    await send(createService(edge, alice), bob.identityKey);
     await vi.waitFor(() => expect(latest(phoneSnapshots)).toHaveLength(1));
     await vi.waitFor(() => expect(latest(laptopSnapshots)).toHaveLength(1));
 
     await EffectEx.runPromise(laptop['InboxService.ack']({ ids: [latest(laptopSnapshots)[0].id] }));
     await vi.waitFor(() => expect(latest(phoneSnapshots)).toHaveLength(0));
+  });
+
+  test('refuses a message too large for EDGE before sending it', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const alice = await createIdentity(keyring);
+    const bob = await createIdentity(keyring);
+
+    const error = await EffectEx.runPromise(
+      Effect.flip(
+        createService(edge, alice)['InboxService.sendMessage']({
+          recipientIdentityKey: bob.identityKey,
+          type: InboxService.INBOX_MESSAGE_TYPE,
+          payload: 'x'.repeat(INBOX_MAX_PAYLOAD_LENGTH),
+        }),
+      ),
+    );
+    expect(InboxPayloadTooLargeError.is(error)).toBe(true);
+    expect(edge.notices.get(bob.did) ?? []).toHaveLength(0);
+  });
+
+  test('a sender without an account is refused with a typed error', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const alice = await createIdentity(keyring);
+    const bob = await createIdentity(keyring);
+    edge.accountless.add(alice.did);
+
+    const error = await EffectEx.runPromise(
+      Effect.flip(
+        createService(edge, alice)['InboxService.sendMessage']({
+          recipientIdentityKey: bob.identityKey,
+          type: InboxService.INBOX_MESSAGE_TYPE,
+          payload: '{}',
+        }),
+      ),
+    );
+    expect(InboxAccountRequiredError.is(error)).toBe(true);
+    expect(edge.notices.get(bob.did) ?? []).toHaveLength(0);
+  });
+
+  test('a recipient without an account sees the status once, and again once linked', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const bob = await createIdentity(keyring);
+    edge.accountless.add(bob.did);
+    const snapshots = observe(createService(edge, bob));
+    const refused = () => snapshots.filter((snapshot) => snapshot.status === 'account-required');
+
+    await vi.waitFor(() => expect(refused()).toHaveLength(1));
+    for (let i = 0; i < 3; i++) {
+      const calls = edge.listCalls;
+      bob.source.stateUpdate.emit();
+      await vi.waitFor(() => expect(edge.listCalls).toBeGreaterThan(calls));
+    }
+
+    edge.accountless.delete(bob.did);
+    bob.source.stateUpdate.emit();
+    await vi.waitFor(() => expect(snapshots.at(-1)?.status).toBe('available'));
+    // Pulls run one at a time, so every refused pull above has published (or not) by now.
+    expect(refused()).toHaveLength(1);
   });
 
   test('without EDGE it reports an empty inbox and refuses to send', async ({ expect }) => {
@@ -210,31 +275,6 @@ describe('InboxService', () => {
     await vi.waitFor(() => expect(snapshots).toHaveLength(1));
     expect(latest(snapshots)).toHaveLength(0);
 
-    const exit = await EffectEx.runPromise(
-      Effect.exit(
-        service['InboxService.send']({
-          recipientIdentityKey: PublicKey.random(),
-          spaceKey: PublicKey.random(),
-          role: SpaceMember_Role.EDITOR,
-        }),
-      ),
-    );
-    expect(exit._tag).toBe('Failure');
+    await expect(send(service, PublicKey.random())).rejects.toThrow();
   });
 });
-
-/** The payload of a notice `issuer` sent to `recipient`, as it travels through EDGE. */
-const createForeignNotice = async (
-  issuer: { identityKey: PublicKey; source: InboxIdentitySource },
-  recipient: PublicKey,
-): Promise<string> => {
-  const edge = new MemoryEdgeInbox();
-  const recipientDid = await createDidFromIdentityKey(recipient);
-  await EffectEx.runPromise(
-    createService(edge, { did: await createDidFromIdentityKey(issuer.identityKey), source: issuer.source })[
-      'InboxService.send'
-    ]({ recipientIdentityKey: recipient, spaceKey: PublicKey.random(), role: SpaceMember_Role.ADMIN }),
-  );
-  const [notice] = edge.notices.get(recipientDid) ?? [];
-  return notice.payload;
-};

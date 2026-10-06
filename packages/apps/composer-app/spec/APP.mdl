@@ -751,6 +751,103 @@ test QA-11: Composer basics tour
 ## Suites
 
 ```mdl
+test QA-12: Two people collaborate, then one invites the other from the notifications inbox
+  desc: |
+    The messenger demo. Two identities name themselves, collaborate in a space shared by the standard
+    invitation (QA-8's path), then the second person invites the first to a new space as a known
+    contact; the invitation arrives as a notification and is accepted from the panel — QA-10's
+    contact-picker path with the join link replaced by plugin-messenger's inbox.
+  actors: human
+  covers: [org.dxos.plugin.messenger]
+  status: unverified        # 2026-10-05, written for PR #13701; the invite half is exercised by testing/bin/two-user-invite.mjs
+  automated:
+    - composer-e2e:messenger-demo.spec.ts#Messenger demo › collaborate, then invite a contact from the notifications inbox
+  given:
+    - alice: a booted app in one browser profile, with a fresh identity
+    - bob: a SECOND browser profile with its own, different identity
+    - on a deployed origin, both identities are bound to a hub account (two-user-invite.mjs --account does this with test+…@dxos.org); EDGE serves the inbox only to such identities
+    - no space whose name starts with "QA:" exists on either profile
+  before:
+    - name: Dismiss the privacy notice
+      do: "On both: if the \"Privacy Notice\" toast shows, close it."
+      expect: no privacy toast remains; it is raised only for a new identity on a non-local, non-CI origin
+    - name: Close the companion panel
+      do: "On both: if the right-hand companion panel (R1) is open, close it with the rail's sidebar toggle."
+      expect: the main content takes the width; the rail of companion tabs stays
+  steps:
+    - name: Alice names herself
+      do: "On Alice: open the account menu, set the display name to \"Alice\" and save."
+      expect: Alice's avatar and the account menu read "Alice"
+      invoke: org.dxos.operation.client.updateProfile { displayName: "Alice" }
+    - name: Bob names himself
+      do: "On Bob: open the account menu, set the display name to \"Bob\" and save."
+      expect: Bob's avatar and the account menu read "Bob"
+      invoke: org.dxos.operation.client.updateProfile { displayName: "Bob" }
+    - name: Alice creates a space
+      do: "On Alice: in the navtree, open the space list's +, name the space \"QA: Shared $runId\" and create it."
+      expect: the space opens on Alice and appears in her navtree
+      invoke: org.dxos.operation.space.create { name: "QA: Shared $runId" }
+      capture: sharedSpace
+    - name: Alice shares the space
+      do: "On Alice: open the space's members panel, choose Invite one, and copy the invitation link; note the auth code it shows."
+      expect: an invitation link and a six-digit auth code are shown on Alice
+      note: The standard (interactive, shared-secret) invitation; the code exchange is a human step with no single operation, as in QA-8.
+    - name: Bob joins with the invitation
+      do: "On Bob: open the invitation link and enter Alice's auth code."
+      expect: |
+        the code's six cells sit centred in the Joining space dialog; Bob's navtree lists "QA: Shared $runId";
+        each is now in the other's contacts, and Alice's members panel lists Bob
+    - name: Alice creates a document and Bob opens it
+      do: "On Alice: in \"QA: Shared $runId\", create a document. On Bob: open it from the space's collection."
+      expect: the document appears in the space on BOTH peers and is open on both
+      invoke: org.dxos.operation.markdown.create { name: "QA: Plan $runId", content: "" }
+      space: $sharedSpace
+    - name: Alice writes a title and a paragraph
+      do: |
+        On Alice: type the heading "# Q3 Planning", a blank line, then the paragraph "We will finalise the roadmap
+        and assing owners this week." (the misspelling is deliberate)
+      expect: Bob's open document shows the title and Alice's paragraph, misspelling included, without a reload
+    - name: Bob adds a paragraph
+      do: "On Bob: at the end of the document, add a blank line and the paragraph \"I will draft the launch checklist and share it on Friday.\""
+      expect: Alice's document shows Bob's paragraph beneath hers
+    - name: Bob corrects Alice's misspelling
+      do: "On Bob: select \"assing\" in Alice's paragraph and type \"assign\" over it."
+      expect: |
+        BOTH peers show the title, Alice's paragraph reading "assign owners", and Bob's paragraph; "assing"
+        appears on neither — convergence is the criterion, as in QA-8
+    - name: Bob creates a space
+      do: "On Bob: create a space named \"QA: Design $runId\"."
+      expect: the space opens on Bob
+      invoke: org.dxos.operation.space.create { name: "QA: Design $runId" }
+      capture: designSpace
+    - name: Bob invites Alice as a contact
+      do: "On Bob: open \"QA: Design $runId\"'s members panel, pick Alice in the contact picker and click Add."
+      expect: |
+        Alice is listed as a member on Bob; no "Added, but not notified" toast appears (that toast means the
+        inbox refused the send — on a deployed origin, an identity without an account)
+      note: Bob's contact picker offers Alice only because they share "QA: Shared $runId".
+    - name: Alice is notified
+      do: "On Alice: look at the envelope tab in the right rail, then open it."
+      expect: |
+        the envelope tab shows an unread count, and the Notifications panel lists "Invitation to QA: Design
+        $runId" from Bob with a Join button; Alice also saw a toast announcing it
+    - name: Alice accepts
+      do: "On Alice: click Join on the invitation tile."
+      expect: |
+        Alice switches to "QA: Design $runId"; the tile now reads Open space and the unread count drops by one
+      invoke: org.dxos.operation.appToolkit.joinBySpaceKey { spaceKey: $designSpace.key }
+    - name: Alice finds Bob in her contacts
+      do: "On Alice: open the account menu and choose Contacts."
+      expect: the Contacts panel lists Bob
+  after:
+    - name: Delete the test spaces
+      do: Delete "QA: Design $runId" on Bob and "QA: Shared $runId" on Alice from their settings.
+      expect: neither "QA:" space remains on either profile
+  then:
+    - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+```
+
+```mdl
 suite smoke: Boots, one space, three documents, one deletion
   desc: The five-minute check — QA-1 alone. Tagged for every scheduled run.
   tags: [smoke, nightly]
@@ -771,7 +868,7 @@ suite multi-peer: Journeys that need a second browser profile
     every member needs a profile the other suites do not: a second TAB shares storage and would
     pass these without replicating anything.
   tags: [nightly]
-  tests: [QA-7, QA-8, QA-10]
+  tests: [QA-7, QA-8, QA-10, QA-12]
 ```
 
 ```mdl

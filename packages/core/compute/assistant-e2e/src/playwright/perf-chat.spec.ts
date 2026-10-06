@@ -13,6 +13,7 @@ import {
   appendRows,
   attachAll,
   countersLabel,
+  detachAll,
   installProbes,
   installReactProbe,
   latencySummary,
@@ -24,6 +25,7 @@ import {
   startProfiling,
   sumAppFootprint,
   trackNetwork,
+  waitForQuietDisk,
   writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
@@ -68,8 +70,67 @@ const IDLE_MS = 10_000;
 
 const BUDGET_MS = 120_000;
 
+/**
+ * Boot reopens a space the seed stage already wrote, a read-only path that measures zero; the
+ * headroom absorbs a stray page write without letting a re-persisting path (megabytes) through.
+ */
+const BOOT_WRITE_BYTES_CEILING = 64 * 1024;
+
 /** Seeding the busy space measured 23–25 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
 const SEED_BUDGET_MS = 180_000;
+
+/** The prompt the flow submits; the probe below looks for its row by this text. */
+const PROMPT = 'Run the calculations.';
+
+/** Where the in-page probe leaves its reading. */
+const QUEUED_PROBE = '__dxosQueuedProbe';
+
+/**
+ * Arms the submit → queued-row probe: from the Enter keydown's timestamp to the start of the first
+ * animation frame in which the thread holds the prompt as a row with its delivery ticks — the frame
+ * that paints it. In-page, because a round trip per poll from the runner is coarser than the frame
+ * being measured.
+ */
+const armQueuedProbe = (page: Page) =>
+  page.evaluate(
+    ({ prompt, key }) => {
+      const probe: { submittedAt?: number; visibleAt?: number } = {};
+      Reflect.set(globalThis, key, probe);
+      const visible = () =>
+        [...document.querySelectorAll('[data-testid="feed.message"]')].some(
+          (row) => row.querySelector('[data-testid="chat.delivery"]') && row.textContent?.includes(prompt),
+        );
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== 'Enter') {
+          return;
+        }
+        document.removeEventListener('keydown', onKeyDown, true);
+        probe.submittedAt = event.timeStamp;
+        const check = (frameAt: number) => {
+          if (visible()) {
+            probe.visibleAt = frameAt;
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        requestAnimationFrame(check);
+      };
+      document.addEventListener('keydown', onKeyDown, true);
+    },
+    { prompt: PROMPT, key: QUEUED_PROBE },
+  );
+
+const readQueuedProbe = async (page: Page): Promise<number | undefined> => {
+  const probe: unknown = await page.evaluate((key) => Reflect.get(globalThis, key), QUEUED_PROBE);
+  if (typeof probe !== 'object' || probe === null) {
+    return undefined;
+  }
+  const submittedAt: unknown = Reflect.get(probe, 'submittedAt');
+  const visibleAt: unknown = Reflect.get(probe, 'visibleAt');
+  return typeof submittedAt === 'number' && typeof visibleAt === 'number'
+    ? Math.round((visibleAt - submittedAt) * 10) / 10
+    : undefined;
+};
 
 const chatPrompt = (page: Page): Locator =>
   page
@@ -138,6 +199,14 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
         seed: await page.evaluate(() => Reflect.get(globalThis, '__dxosPerfSeed')),
       });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
+      // The prompt shows before the harness's chat, its bindings and their index passes have landed;
+      // unloading then would leave that work for boot, which would also miss the unindexed chat.
+      const quiet = await attachAll(debugPort);
+      try {
+        await waitForQuietDisk(quiet, { timeoutMs: BUDGET_MS });
+      } finally {
+        detachAll(quiet);
+      }
     });
 
     // Unloaded with every session closed, and only once the old workers are gone: a shared worker a
@@ -178,10 +247,12 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     };
     page.context().on('request', onRequest);
 
-    await runner.stage('assistant-turns', async () => {
+    let submitToQueuedVisibleMs: number | undefined;
+    const turnsRow = await runner.stage('assistant-turns', async () => {
       const prompt = chatPrompt(page);
       await prompt.click({ timeout: BUDGET_MS });
-      await page.keyboard.type('Run the calculations.');
+      await page.keyboard.type(PROMPT);
+      await armQueuedProbe(page);
       await page.keyboard.press('Enter');
       await page
         .getByText(DONE)
@@ -190,7 +261,12 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       if (liveModelCalls.length > 0) {
         throw new Error(`chat reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
       }
+      submitToQueuedVisibleMs = await readQueuedProbe(page);
+      if (submitToQueuedVisibleMs === undefined) {
+        throw new Error('the submitted prompt never showed as a queued row');
+      }
     });
+    turnsRow.submitToQueuedVisibleMs = submitToQueuedVisibleMs;
 
     await runner.stage('scroll-thread', async () => {
       await page.getByText(DONE).first().hover({ timeout: BUDGET_MS });
@@ -229,6 +305,13 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     runner.dispose();
 
     expect(rows.filter((row) => !row.ok).map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
+    // Checked after publishing, so a regression still lands in the trend it is caught by.
+    const boot = rows.find((row) => row.stage === 'boot');
+    // A boot row with no instrumented realm reports zero writes without having measured any.
+    expect(boot?.disk.realms, 'boot should read SQLite counters from at least one realm').toBeGreaterThan(0);
+    expect(boot?.disk.writeBytes, 'reopening a seeded space should not write to SQLite').toBeLessThanOrEqual(
+      BOOT_WRITE_BYTES_CEILING,
+    );
   } finally {
     await context?.close().catch((error) => log.warn('context did not close', { error }));
     await instrumented.close();
@@ -257,6 +340,7 @@ const summarize = (row: StageRow) => ({
   heapMB: Math.round(row.heapUsedTotalBytes / MB),
   domNodes: row.domNodes,
   lagMaxMs: row.responsiveness.lagMaxMs,
+  ...(row.submitToQueuedVisibleMs === undefined ? {} : { submitToQueuedVisibleMs: row.submitToQueuedVisibleMs }),
   ...(row.latency
     ? {
         submitToRequestMs: row.latency.submitToRequestMs,

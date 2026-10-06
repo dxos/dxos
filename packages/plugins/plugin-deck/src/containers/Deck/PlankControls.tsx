@@ -40,6 +40,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
         <PlankControl
           label={t('close-companion.label')}
           variant='ghost'
+          data-testid='plankHeading.closeCompanion'
           icon='ph--x--regular'
           onClick={() => void handleCloseCompanion()}
           classNames={plankControlSpacing}

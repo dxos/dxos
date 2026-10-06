@@ -68,6 +68,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../types"
     }
   ]
 }
