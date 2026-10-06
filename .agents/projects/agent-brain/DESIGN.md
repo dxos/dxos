@@ -192,12 +192,16 @@ judged depends on how long it lives:
 
 ### Goals and tasks
 
-Tasks are the agent's plan for a goal, written by judgment. When a judgment decides on work that takes
-several steps ("complete my taxes": gather the W-2s, find last year's return, book the accountant), it
-creates `Task` objects under the goal, each owned by the agent or assigned to the user. Tasks are
-visible and checkable, and completing one is a fact the goal's wake rules can match. A goal with no
-plan ("keep me informed about Dima") has no tasks. Tasks are never a separate source of intent: a task
-exists because a goal needs it, and closing the goal closes its open tasks.
+Undecided between two shapes:
+
+- **Tasks are a goal's plan, written by judgment.** When a judgment decides on work that takes several
+  steps ("complete my taxes": gather the W-2s, find last year's return, book the accountant), it
+  creates `Task` objects under the goal, each owned by the agent or assigned to the user. Completing
+  one is a fact the goal's wake rules can match; closing the goal closes its open tasks.
+- **Every step is a sub-goal.** One concept instead of two: a step is a goal under its parent, with
+  its own status, situation and feed. This only works if the machinery is optional — a sub-goal with
+  no drivers is a plain checklist item and costs nothing until it needs wake rules or judgment
+  ("book the accountant" gains a follow-up rule when the accountant does not reply).
 
 ### Examples
 
@@ -214,7 +218,8 @@ exists because a goal needs it, and closing the goal closes its open tasks.
 
 ## Open questions
 
-1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
-2. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
-3. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
-4. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
+1. Goals and tasks: tasks as a goal's plan, or sub-goals with optional machinery (above).
+2. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
+3. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
+4. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
+5. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
