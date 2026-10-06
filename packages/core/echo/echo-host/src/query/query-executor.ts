@@ -1974,7 +1974,7 @@ export class QueryExecutor extends Resource {
    * Whether a reference held in space `from` may reach space `to`: anything may, except replicated data
    * reaching a local space, which must behave as if the reference were not there.
    */
-  #isReachable(from: SpaceId, to: SpaceId): boolean {
+  private _isReachable(from: SpaceId, to: SpaceId): boolean {
     return this._spaceStateManager.isLocalSpace(from) || !this._spaceStateManager.isLocalSpace(to);
   }
 
@@ -2201,7 +2201,7 @@ export class QueryExecutor extends Resource {
     const parsedEchoUri = EID.tryParse(dxn);
     const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
     const spaceId = (parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined) ?? sourceSpaceId;
-    if (!objectId || !spaceId || !this.#isReachable(sourceSpaceId, spaceId)) {
+    if (!objectId || !spaceId || !this._isReachable(sourceSpaceId, spaceId)) {
       return null;
     }
 
@@ -2230,7 +2230,7 @@ export class QueryExecutor extends Resource {
     }
 
     const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
-    if (!this.#isReachable(sourceSpaceId, spaceId)) {
+    if (!this._isReachable(sourceSpaceId, spaceId)) {
       return null;
     }
 
