@@ -326,6 +326,32 @@ export const LeadingRow: Story = {
   },
 };
 
+/** `align='start'`: a title over a snippet, its leading avatar and trailing date centred on the title line. */
+export const StartAlignedRow: Story = {
+  render: () => (
+    <Card.Root grid>
+      <Card.Row
+        align='start'
+        leading={<Avatar.Root fallback='Ada Lovelace' label='Ada Lovelace' data-testid='start-avatar' />}
+        trailing={<span data-testid='start-date'>3 days ago</span>}
+      >
+        <div data-testid='start-title' className='flex items-center min-h-(--dx-block-size)'>
+          Ada Lovelace
+        </div>
+        <div>Notes on the analytical engine, which may act upon other things besides number.</div>
+      </Card.Row>
+    </Card.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const middle = (testId: string) => {
+      const box = byTestId(canvasElement, testId).getBoundingClientRect();
+      return box.top + box.height / 2;
+    };
+    await expect(middle('start-date')).toBeCloseTo(middle('start-title'), 0);
+    await expect(middle('start-avatar')).toBeCloseTo(middle('start-title'), 0);
+  },
+};
+
 /**
  * The card lifts one level above its host, and title, body and footer share the content edge; the poster spans the
  * card's full width at its aspect ratio, flush with the top edge, and a poster that fails to load keeps its frame and
