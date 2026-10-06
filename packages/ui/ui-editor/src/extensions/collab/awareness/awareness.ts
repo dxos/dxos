@@ -356,4 +356,11 @@ const styles = EditorView.theme({
     whiteSpace: 'nowrap',
     pointerEvents: 'none',
   },
+  // Square where it meets the caret, so the name reads as the caret's flag.
+  '.cm-tooltip-above.cm-collab-selectionInfo': {
+    borderBottomLeftRadius: 0,
+  },
+  '.cm-tooltip-below.cm-collab-selectionInfo': {
+    borderTopLeftRadius: 0,
+  },
 });
