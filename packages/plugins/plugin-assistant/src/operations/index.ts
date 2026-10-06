@@ -18,7 +18,7 @@ export const AssistantOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./generate-home-suggestions.ts')),
   ),
   AssistantOperation.RespondToRequest.pipe(Operation.lazyHandler(() => import('./respond-to-request.ts'))),
-  AssistantOperation.ReviewTurn.pipe(Operation.lazyHandler(() => import('./review-turn.ts'))),
+  AssistantOperation.AnalyzeTurn.pipe(Operation.lazyHandler(() => import('./analyze-turn.ts'))),
   AssistantOperation.RunPromptInChat.pipe(Operation.lazyHandler(() => import('./run-prompt-in-chat.ts'))),
   RoutineOperation.RunPromptInNewChat.pipe(Operation.lazyHandler(() => import('./run-prompt-in-new-chat.ts'))),
   AssistantOperation.SetCurrentChat.pipe(Operation.lazyHandler(() => import('./set-current-chat.ts'))),

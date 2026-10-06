@@ -77,8 +77,8 @@ export type AiChatProcessorOptions = {
   system?: string;
   /** Who this processor's prompts come from, when the chat is one of several people's with one agent. */
   sender?: AgentService.PromptSender;
-  /** Schedules {@link AssistantOperation.ReviewTurn} after each turn this processor issues (opt-in setting). */
-  reviewTurns?: boolean;
+  /** Schedules {@link AssistantOperation.AnalyzeTurn} after each turn this processor issues (opt-in setting). */
+  analyzeTurns?: boolean;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -711,14 +711,14 @@ export class AiChatProcessor {
   #scheduleReview(since: string, outcome: AssistantOperation.TurnOutcome, error?: string): void {
     const chat = this._options.chat?.target;
     const spaceId = chat && Obj.getDatabase(chat)?.spaceId;
-    if (!this._options.reviewTurns || !chat || !spaceId) {
+    if (!this._options.analyzeTurns || !chat || !spaceId) {
       return;
     }
 
     const skills = this.context.getSkills().map((skill) => skill.name);
     this._runtime.runFork(
       Operation.schedule(
-        AssistantOperation.ReviewTurn,
+        AssistantOperation.AnalyzeTurn,
         { chat, outcome, error, since, model: this._options.model, skills },
         { spaceId },
       ),

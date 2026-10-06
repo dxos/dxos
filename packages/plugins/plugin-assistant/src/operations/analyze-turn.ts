@@ -32,7 +32,7 @@ import {
 } from '../review/turn-review.ts';
 
 // Never fails: it runs detached after the user's turn, so a review that cannot complete is only logged.
-const handler: Operation.WithHandler<typeof AssistantOperation.ReviewTurn> = AssistantOperation.ReviewTurn.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.AnalyzeTurn> = AssistantOperation.AnalyzeTurn.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ chat, outcome, error, since, model, skills }) {

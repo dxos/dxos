@@ -19,7 +19,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { Message } from '@dxos/types';
 
@@ -126,7 +126,7 @@ const makeChat = Effect.fnUntraced(function* () {
 });
 
 const review = (chat: Chat.Chat) =>
-  Operation.invoke(AssistantOperation.ReviewTurn, {
+  Operation.invoke(AssistantOperation.AnalyzeTurn, {
     chat,
     outcome: 'success',
     since: SINCE,
@@ -134,7 +134,7 @@ const review = (chat: Chat.Chat) =>
     skills: ['Markdown', 'Tables'],
   });
 
-describe('ReviewTurn', () => {
+describe('AnalyzeTurn', () => {
   beforeEach(() => {
     captured = { events: [], uploads: [] };
   });

@@ -62,10 +62,10 @@ export type TurnOutcome = Schema.Schema.Type<typeof TurnOutcome>;
  * Asks a small model whether the agent struggled in the chat's latest turn because of its prompting or
  * tooling, and if so reports the trajectory. Scheduled detached at turn end, only when the user opted in.
  */
-export const ReviewTurn = Operation.make({
+export const AnalyzeTurn = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.assistant.reviewTurn'),
-    name: 'Review Agent Turn',
+    key: DXN.make('org.dxos.operation.assistant.analyzeTurn'),
+    name: 'Analyze Agent Turn',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service, AiService.AiService, Capability.Service],
