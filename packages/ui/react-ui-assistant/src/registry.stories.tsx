@@ -32,7 +32,7 @@ type StoryArgs = {
 // Stands in for the query container a thread gets from `Column.Center`, so `cqi` is not the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (
   <WidgetStateProvider store={store}>
-    <div className='dx-container-type-inline-size'>
+    <div className='dx-container-type-inline-size p-4'>
       <MarkdownBlock text={content} registry={assistantRegistry} />
     </div>
   </WidgetStateProvider>
@@ -41,7 +41,7 @@ const DefaultStory = ({ content }: StoryArgs) => (
 const meta = {
   title: 'ui/react-ui-assistant/widgets/Registry',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-4' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
