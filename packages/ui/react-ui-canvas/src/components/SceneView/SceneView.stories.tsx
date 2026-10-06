@@ -75,16 +75,27 @@ const createSquareTree = () => {
   return { scenes: [scene], root };
 };
 
-/** Shapes on the default lattice: one-cell boxes and a three-cell bar, linked through the gutters. */
+/**
+ * Shapes on the default lattice, three columns by three rows around the origin: A, B, C down the first
+ * column; D and E below a free cell in the second; F spanning all three rows of the third. Linked through
+ * the gutters.
+ */
 const createLatticeTree = () => {
   const root = 'scene:root';
-  const at = (col: number, row: number, spanX = 1) => cellBounds({ col, row, spanX, spanY: 1 }, DEFAULT_LATTICE);
+  const at = (col: number, row: number, spanX = 1, spanY = 1) =>
+    cellBounds({ col, row, spanX, spanY }, DEFAULT_LATTICE);
   const scene = SceneBuilder.create(root, 'root')
     .rect('a', at(-1, -1), 'A')
-    .rect('b', at(1, -1), 'B')
-    .rect('bar', at(-1, 1, 3), 'Bar')
+    .rect('b', at(-1, 0), 'B')
+    .rect('c', at(-1, 1), 'C')
+    .rect('d', at(0, 0), 'D')
+    .rect('e', at(0, 1), 'E')
+    .rect('f', at(1, -1, 1, 3), 'F')
     .line('ab', 'a', 'b')
-    .line('a-bar', 'a', 'bar')
+    .line('bc', 'b', 'c')
+    .line('bd', 'b', 'd')
+    .line('de', 'd', 'e')
+    .line('df', 'd', 'f')
     .build();
   return { scenes: [scene], root };
 };

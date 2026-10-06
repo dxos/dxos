@@ -11,8 +11,8 @@ import { SceneManager } from './SceneManager.ts';
 const PORT = 9006;
 const LATTICE_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--lattice', PORT);
 
-// The fixture: one-cell boxes A (column -1, row -1) and B (column 1, row -1), and Bar spanning columns
-// -1..1 on row 1, on the default 256x128 lattice with 128x64 gutters.
+// The fixture, on the default 256x128 lattice with 128x64 gutters, columns and rows -1..1: A, B, C down
+// column -1; a free cell above D and E in column 0; F spanning all three rows of column 1.
 test.describe('SceneView lattice', () => {
   let page: Page;
   let scene: SceneManager;
@@ -50,15 +50,28 @@ test.describe('SceneView lattice', () => {
 
   test('a drag part of the way to a free cell snaps onto it', async () => {
     const a = await scene.box(scene.node('a'));
-    // Most of a row down (a row is 192 scene units) lands on the next row, in the same column.
-    const row = (192 * (await scene.zoom())) / 100;
+    // Most of a column right (a column is 384 scene units) lands on the free cell next to A, in the same row.
+    const column = (384 * (await scene.zoom())) / 100;
     await scene.drag(
       { x: a.x + a.width / 2, y: a.y + a.height / 2 },
-      { x: a.x + a.width / 2 + 10, y: a.y + a.height / 2 + row * 0.8 },
+      { x: a.x + a.width / 2 + column * 0.8, y: a.y + a.height / 2 + 10 },
     );
     const moved = await scene.box(scene.node('a'));
-    expect(Math.abs(moved.x - a.x)).toBeLessThan(2);
-    expect(Math.abs(moved.y - (a.y + row))).toBeLessThan(2);
+    expect(Math.abs(moved.x - (a.x + column))).toBeLessThan(2);
+    expect(Math.abs(moved.y - a.y)).toBeLessThan(2);
     expect(moved.width).toBeCloseTo(a.width, 0);
+  });
+
+  test('dragging a face steps it one cell and leaves the opposite face where it was', async () => {
+    await scene.clickNode('e');
+    const before = await scene.box(scene.node('e'));
+    // E's east neighbour is F, so grow downwards: the south face most of a row down.
+    const handle = await scene.handle('e', 's');
+    const from = { x: handle.x + handle.width / 2, y: handle.y + handle.height / 2 };
+    const row = (192 * (await scene.zoom())) / 100;
+    await scene.drag(from, { x: from.x, y: from.y + row * 0.8 });
+    const after = await scene.box(scene.node('e'));
+    expect(Math.abs(after.y - before.y)).toBeLessThan(2);
+    expect(Math.abs(after.y + after.height - (before.y + before.height + row))).toBeLessThan(2);
   });
 });
