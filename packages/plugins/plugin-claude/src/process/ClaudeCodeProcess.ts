@@ -23,9 +23,13 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Subprocess from '@dxos/compute/Subprocess';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import { ContentBlock, Message } from '@dxos/types';
+
+import { claudeCodeToken } from '../claude-code-token.ts';
+import { CLAUDE_CODE_OAUTH_TOKEN_ENV } from '../constants.ts';
 
 /** Key a chat names in `chat.session.process` to run on Claude Code. */
 export const CLAUDE_CODE_PROCESS_KEY = 'org.dxos.plugin.claude.process.claude-code';
@@ -43,7 +47,8 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
 
 /**
  * Runs a chat on Claude Code: a durable process that starts the agent as an operating-system process
- * through {@link Subprocess} and drives one turn per prompt over ACP. Prompts and wake-ups queue on
+ * through {@link Subprocess} and drives one turn per prompt over ACP. The agent runs on the space's
+ * Claude subscription token (`claude setup-token`) when one is connected, as `CLAUDE_CODE_OAUTH_TOKEN`. Prompts and wake-ups queue on
  * the chat's feed exactly as they do for the assistant's own agent, so a prompt that arrives
  * mid-turn waits its turn and one left by a process that died is redelivered. The agent stays
  * running between turns, so a follow-up does not pay for starting it again.
@@ -54,8 +59,9 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
       key: CLAUDE_CODE_PROCESS_KEY,
       input: AgentInput,
       output: Schema.Void,
-      // `SessionStore` reads the queue with typed queries, which match nothing for an unregistered type.
-      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm],
+      // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
+      // and the agent's subscription token is found with one.
+      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
       services: [Database.Service, Subprocess.Subprocess],
       rpcs: HarnessControl,
     },
@@ -70,6 +76,7 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
         const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
         const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
         const subprocess = yield* Subprocess.Subprocess;
+        const database = yield* Database.Service;
         const processScope = yield* Effect.scope;
         const clock = yield* Clock.Clock;
         const store = new SessionStore();
@@ -80,11 +87,17 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
         const connect: AcpAgent.AgentOptions['connect'] = (cwd, toolsToken) =>
           Effect.gen(function* () {
             const scope = yield* Scope.fork(processScope);
+            // Read per start, so a token connected or replaced since the last agent is the one it gets.
+            const subscription = yield* claudeCodeToken.pipe(Effect.provideService(Database.Service, database));
             const child = yield* subprocess
               .spawn({
                 ...command,
                 cwd,
-                env: { ...command.env, ...(toolsToken !== undefined && { [AcpAgent.TOOLS_TOKEN_ENV]: toolsToken }) },
+                env: {
+                  ...command.env,
+                  ...(subscription !== undefined && { [CLAUDE_CODE_OAUTH_TOKEN_ENV]: subscription }),
+                  ...(toolsToken !== undefined && { [AcpAgent.TOOLS_TOKEN_ENV]: toolsToken }),
+                },
               })
               .pipe(Scope.provide(scope));
             yield* child.exited.pipe(

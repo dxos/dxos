@@ -6,6 +6,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -26,10 +28,17 @@ export const Subprocess = AppCapability.layerSpec(() => import('./subprocess.ts'
   name: 'Subprocess',
   environments: ['node'],
 });
+
 export const ClaudeCodeEdgeAgent = Capability.lazyModule(
   'ClaudeCodeEdgeAgent',
   { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
   () => import('./claude-code-edge-agent.ts'),
+);
+
+export const Connector = Capability.lazyModule(
+  'ClaudeCodeConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+  () => import('./connector.ts'),
 );
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {

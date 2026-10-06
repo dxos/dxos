@@ -33,7 +33,10 @@ const connection = acp
       sessionId: params.sessionId,
       update: {
         sessionUpdate: 'agent_message_chunk',
-        content: { type: 'text', text: `${text} pid=${process.pid} cwd=${process.cwd()}` },
+        content: {
+          type: 'text',
+          text: `${text} pid=${process.pid} oauth=${process.env.CLAUDE_CODE_OAUTH_TOKEN ?? 'none'} cwd=${process.cwd()}`,
+        },
       },
     });
     return { stopReason: 'end_turn' };

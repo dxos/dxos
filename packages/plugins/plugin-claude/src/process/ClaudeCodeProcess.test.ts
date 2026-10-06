@@ -17,10 +17,11 @@ import * as NodeSubprocess from '@dxos/compute-runtime/node-subprocess';
 import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AccessToken } from '@dxos/link';
 import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import { Message } from '@dxos/types';
 
-import { CLAUDE_CODE_AGENT } from '../constants.ts';
+import { CLAUDE_CODE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
 import * as ClaudeCodeProcess from './ClaudeCodeProcess.ts';
 
 const FAKE_AGENT = fileURLToPath(new URL('./testing/fake-claude-code-subprocess.ts', import.meta.url));
@@ -29,7 +30,7 @@ const FAKE_AGENT = fileURLToPath(new URL('./testing/fake-claude-code-subprocess.
 let definition: AgentProcessDefinition | undefined;
 
 const TestLayer = AssistantTestLayer({
-  types: [Feed.Feed],
+  types: [Feed.Feed, AccessToken.AccessToken],
   agent: { processes: () => (definition ? [definition] : []) },
   extraServices: NodeSubprocess.layer,
 });
@@ -79,12 +80,34 @@ describe('ClaudeCodeProcess', () => {
         const [, second] = yield* replies(session.feed, 2);
 
         expect(first).toMatch(/^first pid=\d+ /);
+        // No subscription token is connected, so the agent gets none.
+        expect(first).toContain(' oauth=none ');
         expect(first.endsWith(` cwd=${workspace}`)).toBe(true);
         expect(second).toMatch(/^second pid=\d+/);
         // One agent served both turns: the follow-up did not start it again.
         expect(second.match(/pid=(\d+)/)?.[1]).toBe(first.match(/pid=(\d+)/)?.[1]);
         // Recorded on the chat, so a later process continues the same agent session.
         expect(Obj.getKeys(chat, AcpAgent.sessionKeySource(CLAUDE_CODE_AGENT)).map(({ id }) => id)).toEqual(['fake-1']);
+      },
+      Effect.scoped,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'runs the agent on the Claude subscription token connected in the space',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* Database.add(
+          Obj.make(AccessToken.AccessToken, { source: CLAUDE_CODE_TOKEN_SOURCE, token: 'sk-ant-oat01-test' }),
+        );
+        const { chat } = yield* setup({ command: process.execPath, args: [FAKE_AGENT] });
+        const session = yield* AgentService.getSession(chat);
+        yield* session.submitPrompt('hello');
+        const [reply] = yield* replies(session.feed, 1);
+        expect(reply).toContain(' oauth=sk-ant-oat01-test ');
       },
       Effect.scoped,
       Effect.provide(TestLayer),

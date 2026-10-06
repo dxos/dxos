@@ -13,14 +13,13 @@ import * as CodeCapabilities from '@dxos/plugin-code/CodeCapabilities';
 import * as EdgeAgent from '@dxos/plugin-code/EdgeAgent';
 import { isManagedAccessToken } from '@dxos/protocols';
 
-import { ANTHROPIC_SOURCE, CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
-
-/** Prefix of a Claude subscription OAuth token, which the API takes as a bearer rather than as an API key. */
-const OAUTH_TOKEN_PREFIX = 'sk-ant-oat';
+import { claudeCodeToken } from '../claude-code-token.ts';
+import { ANTHROPIC_SOURCE, CLAUDE_CODE_EDGE_AGENT, OAUTH_TOKEN_PREFIX } from '../constants.ts';
 
 /**
- * Claude Code run by EDGE in a sandbox container. It lends each turn the space's Anthropic token: the
- * container holds only a token for EDGE's proxy, so the user's credential never enters it.
+ * Claude Code run by EDGE in a sandbox container. It lends each turn the space's Claude subscription
+ * token, or its Anthropic token: the container holds only a token for EDGE's proxy, so the user's
+ * credential never enters it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -44,8 +43,16 @@ export default Capability.makeModule(
   }),
 );
 
-/** The space's Anthropic token; a server-custodied one cannot be read here, so it is passed over. */
-const anthropicCredential = Effect.gen(function* () {
+/**
+ * The credential each turn lends: the Claude subscription token from `claude setup-token` when one is
+ * connected, else the space's Anthropic token. A server-custodied token cannot be read here, so it is
+ * passed over.
+ */
+export const anthropicCredential = Effect.gen(function* () {
+  const subscription = yield* claudeCodeToken;
+  if (subscription !== undefined) {
+    return { kind: 'oauth' as const, value: subscription };
+  }
   const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
   const token = tokens.find(
     (accessToken) => accessToken.source === ANTHROPIC_SOURCE && !isManagedAccessToken(accessToken.token),

@@ -145,12 +145,14 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-code": "workspace:*",
+    "@dxos/plugin-connector": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@effect/vitest": "catalog:",
