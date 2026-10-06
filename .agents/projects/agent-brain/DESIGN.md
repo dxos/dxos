@@ -71,8 +71,10 @@ or may not say how to achieve it, and it may define conditions. It is distinct f
 
 - **Plain text.** A user states a goal in natural language and it evolves through discussion with the
   agent. A DSL for more precise goals may come later; v1 assumes text.
-- **Owned by actors.** A goal belongs to a user and an agent. The agent can enumerate a user's goals
-  ("what are you doing for me?"), and the user can inspect, reprioritize, edit and cancel them.
+- **Owned by an actor.** A goal is associated with an `Actor`: a user, a group, or an agent — and an
+  agent is just a user, so the agent's own goals need no special case. The agent can enumerate an
+  actor's goals ("what are you doing for me?"), and the owner can inspect, reprioritize, edit and
+  cancel them.
 - **Long-running.** A goal holds until it is achieved or cancelled. Some last only the session
   ("help me draft this reply"); others last months ("learn French").
 - **Prioritized.** A goal may carry a priority, which orders the agent's attention when goals compete.
@@ -192,12 +194,12 @@ judged depends on how long it lives:
   created it, may be relevant to parallel or later sessions, and assimilates what they learn: their
   facts reach it through the feeds whatever session produced them. When it acts, the agent service
   routes the result to the right place — the user's current session, or their channel.
-- **One background session per user, with one private thread per durable goal** — provided private
-  threads can be implemented effectively (see open questions). A user's goals see each other's threads,
+- **One background session per owning actor, with one private thread per durable goal** — provided
+  private threads can be implemented effectively (see M0). An actor's goals see each other's threads,
   so their conflicts and priorities are weighed together ("taxes" outranks "learn French" this week),
-  while different users' goals are separated by construction rather than by an audience rule. Goals
-  that belong to no single user — the agent's own, or a team's — run in the agent's own background
-  session, under the same audience rule as any shared conversation.
+  while different actors' goals are separated by construction. Because a group and the agent itself
+  are actors too, team goals and the agent's own goals each get their own session; a group's session
+  follows the audience rule of that group.
 - **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
   private thread's history moves with it into the goal's feed.
 
@@ -241,14 +243,14 @@ Milestones, each ending in a demo that can be watched.
 | #   | Milestone                   | Delivers                                                                                                                                                                                                                                                                                | Demo                                                                                                                                        |
 | --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | M0  | Private threads             | A session feed carries threads the conversation view hides; agent-runtime runs a turn inside a thread with the session's context. Decides per-user vs per-agent background sessions.                                                                                                    | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view.                                                    |
-| M1  | Facts and goals, in-process | `readSource` writes one tuple per feed item; hierarchical `Goal` objects (status, priority, situation, drivers, wake rules) with their own feeds; the in-process brain: a Datalog engine (adopted or written) evaluating compiled goal rules, judgment in the session's private thread. | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment) in one runtime; goals and sub-goals in the Goals tab. |
-| M2  | Brain on EDGE               | A Durable Object per agent follows the fact feeds, rebuilds its index, evaluates wake rules, schedules time drivers with alarms and runs per-user background sessions; the agent service routes results to sessions and channels.                                                       | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart (shortened timeout).               |
-| M3  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                                                             | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
-| M4  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                                                                  | An eval report across the example goals, with judgment-call counts.                                                                         |
+| M1  | Goal compilation spike      | Compile the eight example goals to Datalog (and to SPARQL `ASK` for comparison) with the goal-pattern prompt; measure how often the rules are valid and match the text, and how a miscompile is caught (read-back, replay of recent facts). Throwaway code; the findings feed M2.       | A table of the eight goals, their compiled rules and a pass/fail per goal, with the failure modes.                                          |
+| M2  | Facts and goals, in-process | `readSource` writes one tuple per feed item; hierarchical `Goal` objects (status, priority, situation, drivers, wake rules) with their own feeds; the in-process brain: a Datalog engine (adopted or written) evaluating compiled goal rules, judgment in the session's private thread. | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment) in one runtime; goals and sub-goals in the Goals tab. |
+| M3  | Brain on EDGE               | A Durable Object per agent follows the fact feeds, rebuilds its index, evaluates wake rules, schedules time drivers with alarms and runs per-user background sessions; the agent service routes results to sessions and channels.                                                       | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart (shortened timeout).               |
+| M4  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                                                             | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
+| M5  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                                                                  | An eval report across the example goals, with judgment-call counts.                                                                         |
 
 ## Open questions
 
 1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
-2. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
-3. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
-4. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
+2. Whether goals compile reliably to rules, and how a miscompiled rule is noticed (M1 answers this).
+3. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
