@@ -87,6 +87,35 @@ describe('gutter route', () => {
     }
   });
 
+  test('a route runs straight through free cells', ({ expect }) => {
+    // A's east port to F's west side level with it: the cell between them (column 0, row -1) is free.
+    const route = gutterRoute(
+      nodes,
+      spec,
+      { point: { x: -256, y: -192 }, side: 'e' },
+      { point: { x: 256, y: -192 }, side: 'w' },
+    );
+    expect(route).toEqual([
+      { x: -256, y: -192 },
+      { x: 256, y: -192 },
+    ]);
+  });
+
+  test('a route still detours round an occupied cell', ({ expect }) => {
+    // B's east port to F's west side level with it: D sits in between, so the run leaves for a gutter.
+    const route = gutterRoute(
+      nodes,
+      spec,
+      { point: { x: -256, y: 0 }, side: 'e' },
+      { point: { x: 256, y: 0 }, side: 'w' },
+    );
+    expect(route?.length).toBeGreaterThan(2);
+    for (const point of route ?? []) {
+      // Nothing of the route lies inside D (x -128..128, y -64..64).
+      expect(point.x > -128 && point.x < 128 && point.y > -64 && point.y < 64).toBe(false);
+    }
+  });
+
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
     const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>

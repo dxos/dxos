@@ -231,6 +231,6 @@ before), not reasoned about from the source.
 - [ ] **Lattice: dynamic ports.** Instead of a fixed number of ports per side, place a link's port where
       its incident segment can stay straight (e.g. aligned with the gutter line or the other end), so the
       route needs no jog at the shape. Interacts with pinned ports and `portsPerSide`.
-- [ ] **Lattice: route around occupied cells only.** Gutter routing currently keeps every run on a gutter
+- [x] **Lattice: route around occupied cells only.** Gutter routing currently keeps every run on a gutter
       centre line; instead let a route cross free cells directly and detour through the gutters only
       around occupied ones (`utils/gutter-route.ts`).

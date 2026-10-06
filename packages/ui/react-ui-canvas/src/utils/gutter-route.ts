@@ -4,9 +4,10 @@
 
 //
 // Gutter routing for smart links on a lattice scene (docs/DESIGN.md §8b): each end leaves its port
-// straight out to the centre line of the gutter beside it, and the route between runs along gutter centre
-// lines only, at right angles, with as few bends as it can. A gutter a multi-cell shape spans is covered by
-// the shape, so it is not a track.
+// straight out to the centre line of the gutter beside it, and the route between runs at right angles, with
+// as few bends as it can, along gutter centre lines and the lines through its own ports. A port line runs
+// straight through free cells, so a route detours into the gutters only around occupied ones; a gutter a
+// multi-cell shape spans is covered by the shape, so it is not a track.
 //
 
 import { type Bounds, type Node, type Point } from '../model/types.ts';
@@ -70,8 +71,6 @@ export const gutterRoute = (
   const horizontals = gutterLines(Math.min(start.y, end.y), Math.max(start.y, end.y), pitchY);
   const xs = sortedUnique([...verticals, start.x, end.x]);
   const ys = sortedUnique([...horizontals, start.y, end.y]);
-  const isVertical = new Set(sortedUnique(verticals));
-  const isHorizontal = new Set(sortedUnique(horizontals));
   const frames = nodes.map(nodeBounds);
   const clear = (a: Point, b: Point) => !frames.some((frame) => crosses(a, b, frame));
 
@@ -113,13 +112,12 @@ export const gutterRoute = (
       continue;
     }
     const here = { x: xs[current.i], y: ys[current.j] };
-    const steps: [number, number, Axis][] = [];
-    if (isHorizontal.has(ys[current.j])) {
-      steps.push([current.i - 1, current.j, 'h'], [current.i + 1, current.j, 'h']);
-    }
-    if (isVertical.has(xs[current.i])) {
-      steps.push([current.i, current.j - 1, 'v'], [current.i, current.j + 1, 'v']);
-    }
+    const steps: [number, number, Axis][] = [
+      [current.i - 1, current.j, 'h'],
+      [current.i + 1, current.j, 'h'],
+      [current.i, current.j - 1, 'v'],
+      [current.i, current.j + 1, 'v'],
+    ];
     for (const [i, j, axis] of steps) {
       if (i < 0 || j < 0 || i >= xs.length || j >= ys.length) {
         continue;

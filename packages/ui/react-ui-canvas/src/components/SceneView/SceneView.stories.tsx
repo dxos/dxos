@@ -100,6 +100,8 @@ const createLatticeTree = () => {
     // separate lanes rather than on top of each other.
     .smart('ae', 'a#s2', 'e#n2')
     .smart('be', 'b#e3', 'e#n2')
+    // Level ports with only a free cell between them: the route runs straight through it.
+    .smart('af', 'a#e2', 'f#w1')
     .build();
   return { scenes: [scene], root };
 };
