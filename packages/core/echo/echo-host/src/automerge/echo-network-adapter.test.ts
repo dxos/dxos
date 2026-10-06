@@ -206,6 +206,7 @@ describe('EchoNetworkAdapter', () => {
     const adapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: async () => null,
       getContainingSpaceIdForDocument: async () => null,
+      isLocalSpace: () => false,
       isDocumentInRemoteCollection: async () => true,
       onCollectionStateQueried: () => {},
       onCollectionStateReceived: () => {},

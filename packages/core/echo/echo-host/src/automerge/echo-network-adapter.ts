@@ -13,7 +13,7 @@ import {
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -45,6 +45,8 @@ export interface NetworkDataMonitor {
 export type EchoNetworkAdapterProps = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
   getContainingSpaceIdForDocument: (documentId: string) => Promise<SpaceId | null>;
+  /** Whether a space is local; its documents and collections are never offered to any peer. */
+  isLocalSpace: (spaceId: SpaceId) => boolean;
   isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckProps) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
@@ -176,7 +178,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     // Checked ahead of the connection, whose own policy may be disabled (edge `disableSharePolicy`).
     const spaceId = await this._params.getContainingSpaceIdForDocument(params.documentId);
-    if (spaceId !== null && SpaceId.isLocal(spaceId)) {
+    if (spaceId !== null && this._params.isLocalSpace(spaceId)) {
       log.verbose('share policy probe: local space document', { peerId, documentId: params.documentId });
       return false;
     }
@@ -192,7 +194,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
-    if (isLocalCollectionId(params.collectionId)) {
+    if (isLocalCollectionId(params.collectionId, this._params.isLocalSpace)) {
       return false;
     }
     const connection = this._connections.get(peerId);
@@ -226,7 +228,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   // TODO(dmaretskyi): Remove.
   getPeersInterestedInCollection(collectionId: string): PeerId[] {
-    if (isLocalCollectionId(collectionId)) {
+    if (isLocalCollectionId(collectionId, this._params.isLocalSpace)) {
       return [];
     }
     return Array.from(this._connections.values())

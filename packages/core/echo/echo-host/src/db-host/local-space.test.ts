@@ -23,7 +23,9 @@ describe('EchoHost.openLocalSpace', () => {
     ]);
     const drafts = await host.openLocalSpace(Context.default(), 'drafts');
 
-    expect(SpaceId.isLocal(settings.spaceId)).toBe(true);
+    // Local ids are ordinary space ids; locality is recorded by the host.
+    expect(SpaceId.isValid(settings.spaceId)).toBe(true);
+    expect(host.isLocalSpace(settings.spaceId)).toBe(true);
     expect(again.root.url).toBe(settings.root.url);
     expect(concurrent.root.url).toBe(settings.root.url);
     expect(drafts.spaceId).not.toBe(settings.spaceId);
@@ -50,6 +52,7 @@ describe('EchoHost.openLocalSpace', () => {
     const second = await openHost(path);
     const reopened = await second.openLocalSpace(Context.default(), 'settings');
     expect(reopened.spaceId).toBe(created.spaceId);
+    expect(second.isLocalSpace(reopened.spaceId)).toBe(true);
     expect(reopened.root.url).toBe(created.root.url);
     expect(Object.keys(reopened.root.doc()?.objects ?? {})).toEqual([objectId]);
   });

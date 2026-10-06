@@ -157,6 +157,9 @@ export class EchoClient extends Resource {
     }
     this._databases.clear();
     this.#localDatabases.clear();
+    for (const spaceId of this.#localNames.keys()) {
+      this._graph._setLocalSpace(spaceId, false);
+    }
     this.#localNames.clear();
   }
 
@@ -191,7 +194,7 @@ export class EchoClient extends Resource {
       }),
     );
     const directoryUrl = space.pipeline?.directoryUrl;
-    invariant(SpaceId.isValid(space.id) && SpaceId.isLocal(space.id), 'Host returned a non-local space id.');
+    invariant(SpaceId.isValid(space.id), 'Host returned an invalid space id.');
     invariant(directoryUrl, 'Host returned a local space without a directory.');
     if (this._lifecycleState !== LifecycleState.OPEN) {
       throw new ContextDisposedError();
@@ -199,6 +202,7 @@ export class EchoClient extends Resource {
 
     const db = this._databases.get(space.id) ?? this.constructDatabase({ spaceId: space.id });
     this.#localNames.set(db.spaceId, name);
+    this._graph._setLocalSpace(db.spaceId, true);
     await db.setSpaceRoot(directoryUrl);
     await db.open();
     return db;
@@ -260,6 +264,7 @@ export class EchoClient extends Resource {
     const localName = this.#localNames.get(db.spaceId);
     if (localName !== undefined) {
       this.#localNames.delete(db.spaceId);
+      this._graph._setLocalSpace(db.spaceId, false);
       this.#localDatabases.delete(localName);
     }
     this._dbUpdateSubscriptions.get(db.spaceId)?.();

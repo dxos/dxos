@@ -45,7 +45,7 @@ import {
   setProxyHandler,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -1221,12 +1221,12 @@ const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedRefer
  */
 const assertReplicable = (target: ProxyTarget, uri: URI.URI): URI.URI => {
   const database = getEchoDatabase(target[symbolInternals]);
-  if (database === undefined || SpaceId.isLocal(database.spaceId)) {
+  if (database === undefined || database.graph._isLocalSpace(database.spaceId)) {
     return uri;
   }
   const eid = EID.tryParse(uri);
   const spaceId = eid ? EID.getSpaceId(eid) : undefined;
-  if (spaceId !== undefined && SpaceId.isLocal(spaceId)) {
+  if (spaceId !== undefined && database.graph._isLocalSpace(spaceId)) {
     throw new EchoError.LocalReferenceError(uri);
   }
   return uri;

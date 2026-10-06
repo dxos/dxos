@@ -683,7 +683,11 @@ export class QueryExecutor extends Resource {
     this._reactivity = options.reactivity;
 
     this.#mode = options.executor ?? 'memory';
-    this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
+    this.#planner = new QueryPlanner({
+      executor: this.#mode,
+      sql: options.sql,
+      localSpaceIds: this._spaceStateManager.localSpaceIds,
+    });
     this._plan = this.#planner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
@@ -1966,14 +1970,23 @@ export class QueryExecutor extends Resource {
     return EID.make({ entityId: item.objectId });
   }
 
+  /**
+   * Whether a reference held in space `from` may reach space `to`: anything may, except replicated data
+   * reaching a local space, which must behave as if the reference were not there.
+   */
+  #isReachable(from: SpaceId, to: SpaceId): boolean {
+    return this._spaceStateManager.isLocalSpace(from) || !this._spaceStateManager.isLocalSpace(to);
+  }
+
   private async _queryIncomingReferencesFromSqlIndex(
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
     // The reverse index keys targets without their space, so a local anchor's referrers are narrowed
     // here to those its references may come from.
-    const localAnchors = workingSet.filter((item) => SpaceId.isLocal(item.spaceId));
-    const sharedAnchors = workingSet.filter((item) => !SpaceId.isLocal(item.spaceId));
+    const isLocal = (spaceId: SpaceId) => this._spaceStateManager.isLocalSpace(spaceId);
+    const localAnchors = workingSet.filter((item) => isLocal(item.spaceId));
+    const sharedAnchors = workingSet.filter((item) => !isLocal(item.spaceId));
     const [shared, local] = await Promise.all([
       this._queryIncomingReferencesByTarget(
         sharedAnchors.map((item) => QueryExecutor._anchorTargetDxn(item)),
@@ -1986,7 +1999,7 @@ export class QueryExecutor extends Resource {
     ]);
     const metas = new Map(shared.map((meta) => [meta.recordId, meta]));
     for (const meta of local) {
-      if (SpaceId.isLocal(meta.spaceId)) {
+      if (isLocal(meta.spaceId)) {
         metas.set(meta.recordId, meta);
       }
     }
@@ -2188,7 +2201,7 @@ export class QueryExecutor extends Resource {
     const parsedEchoUri = EID.tryParse(dxn);
     const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
     const spaceId = (parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined) ?? sourceSpaceId;
-    if (!objectId || !spaceId || !isReachable(sourceSpaceId, spaceId)) {
+    if (!objectId || !spaceId || !this.#isReachable(sourceSpaceId, spaceId)) {
       return null;
     }
 
@@ -2217,7 +2230,7 @@ export class QueryExecutor extends Resource {
     }
 
     const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
-    if (!isReachable(sourceSpaceId, spaceId)) {
+    if (!this.#isReachable(sourceSpaceId, spaceId)) {
       return null;
     }
 
@@ -2636,9 +2649,3 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
-
-/**
- * Whether a reference held in space `from` may reach space `to`: anything may, except replicated data
- * reaching a local space, which must behave as if the reference were not there.
- */
-const isReachable = (from: SpaceId, to: SpaceId): boolean => SpaceId.isLocal(from) || !SpaceId.isLocal(to);

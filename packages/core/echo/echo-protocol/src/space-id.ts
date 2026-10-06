@@ -26,14 +26,3 @@ export const createIdFromSpaceKey = async (spaceKey: PublicKey): Promise<SpaceId
   SPACE_IDS_CACHE.set(spaceKey, spaceId);
   return spaceId;
 };
-
-const LOCAL_SPACE_DOMAIN = 'dxos.local-space:';
-
-/**
- * The id of the device-local space named `name`: stable per name, so reopening a name finds its
- * objects, and carrying the local marker (`SpaceId.isLocal`) that keeps it out of replication.
- */
-export const createLocalSpaceId = async (name: string): Promise<SpaceId> => {
-  const digest = await subtleCrypto.digest('SHA-256', new TextEncoder().encode(LOCAL_SPACE_DOMAIN + name));
-  return SpaceId.local(new Uint8Array(digest).slice(0, SpaceId.byteLength));
-};

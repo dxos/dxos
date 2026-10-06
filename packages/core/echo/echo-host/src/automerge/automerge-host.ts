@@ -87,6 +87,9 @@ export type AutomergeHostProps = {
    */
   useSubduction?: boolean;
 
+  /** Whether a space is local; nothing may announce, serve or sync its documents. Defaults to none. */
+  isLocalSpace?: (spaceId: SpaceId) => boolean;
+
   /**
    * Residency policy for loaded documents. The default evicts a released document after
    * {@link EVICT_IDLE_DELAY} and keeps no floor; a host whose invocations are shorter than the delay
@@ -320,6 +323,7 @@ export class AutomergeHost extends Resource {
    * Reference counts the documents held loaded. The repo caches a document forever once anything
    * faults it in, so residency is decided here instead — see {@link DocumentLeaseRegistry}.
    */
+  readonly #isLocalSpace: (spaceId: SpaceId) => boolean;
   private readonly _leases: DocumentLeaseRegistry;
 
   /**
@@ -344,8 +348,10 @@ export class AutomergeHost extends Resource {
     getSpaceKeyByRootDocumentId,
     useSubduction = false,
     residency,
+    isLocalSpace = () => false,
   }: AutomergeHostProps) {
     super();
+    this.#isLocalSpace = isLocalSpace;
     this._leases = new DocumentLeaseRegistry({
       open: (documentId) => {
         const query = this._repo.findWithProgress(documentId);
@@ -369,6 +375,7 @@ export class AutomergeHost extends Resource {
     this._echoNetworkAdapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
       getContainingSpaceIdForDocument: this.getContainingSpaceIdForDocument.bind(this),
+      isLocalSpace,
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
@@ -1347,7 +1354,7 @@ export class AutomergeHost extends Resource {
     const handle = isValidDocumentId(documentId) ? this._repo.getHandle(documentId) : undefined;
     if (handle && getHandleState(this._repo, handle.documentId) === 'ready') {
       const spaceId = handle.doc()?.access?.spaceId;
-      if (SpaceId.isValid(spaceId) && SpaceId.isLocal(spaceId)) {
+      if (SpaceId.isValid(spaceId) && this.#isLocalSpace(spaceId)) {
         return spaceId;
       }
     }
@@ -1359,7 +1366,7 @@ export class AutomergeHost extends Resource {
   /** Whether a document belongs to a local space, which nothing may announce, serve or sync. */
   async #isLocalDocument(documentId: string): Promise<boolean> {
     const spaceId = await this.getContainingSpaceIdForDocument(documentId);
-    return spaceId !== null && SpaceId.isLocal(spaceId);
+    return spaceId !== null && this.#isLocalSpace(spaceId);
   }
 
   /**
@@ -1556,7 +1563,7 @@ export class AutomergeHost extends Resource {
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
     // The reply lists the collection's document ids and heads, which a local space keeps to itself.
-    if (isLocalCollectionId(collectionId)) {
+    if (isLocalCollectionId(collectionId, this.#isLocalSpace)) {
       return;
     }
     this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);

@@ -1075,6 +1075,7 @@ const createTeleportTestPeer = async (
 ): Promise<TeleportTestPeer> => {
   const meshAdapter = new MeshEchoReplicator();
   const echoAdapter = new EchoNetworkAdapter({
+    isLocalSpace: () => false,
     // If a document is in the remote collection we don't have it locally, so can't get spaceKey from it.
     getContainingSpaceForDocument: async (documentId) => {
       return options?.localDocuments ? (options.localDocuments.includes(documentId) ? spaceKey : null) : spaceKey;

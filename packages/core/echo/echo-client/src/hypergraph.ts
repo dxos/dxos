@@ -20,7 +20,7 @@ import {
   resolveMergeRedirect,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -75,6 +75,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
   readonly #blobManager = new BlobManager();
   #localDatabaseOpener: ((name: string) => Promise<DatabaseImpl>) | undefined;
+  /** Spaces opened here as local databases; their ids look like any other space's. */
+  readonly #localSpaceIds = new Set<SpaceId>();
 
   constructor() {
     this._registry = makeRegistry();
@@ -216,6 +218,26 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this.#localDatabaseOpener = opener;
   }
 
+  /**
+   * Records whether a space is local to this device, which keeps references from replicated data out of it.
+   * @internal
+   */
+  _setLocalSpace(spaceId: SpaceId, local: boolean): void {
+    if (local) {
+      this.#localSpaceIds.add(spaceId);
+    } else {
+      this.#localSpaceIds.delete(spaceId);
+    }
+  }
+
+  /**
+   * Whether a space was opened here as a local database.
+   * @internal
+   */
+  _isLocalSpace(spaceId: SpaceId): boolean {
+    return this.#localSpaceIds.has(spaceId);
+  }
+
   getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
     return this._databases.get(spaceId);
   }
@@ -241,7 +263,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // Replicated data must not reach a local space; a reference that does (written by an older client, or
     // by hand) resolves to nothing rather than to an object no other peer can see.
     const blocked = (uri: URI.URI): boolean =>
-      context.space !== undefined && !SpaceId.isLocal(context.space) && isLocalSpaceUri(uri);
+      context.space !== undefined && !this._isLocalSpace(context.space) && this.#isLocalSpaceUri(uri);
 
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
@@ -312,6 +334,13 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return this.#resolveRegistryType(uri) ?? (await this._resolveTypeFromDatabase(uri, context));
       },
     } satisfies Ref.Resolver;
+  }
+
+  /** Whether an `echo:` URI names an entity in a local space. */
+  #isLocalSpaceUri(uri: string): boolean {
+    const eid = EID.tryParse(uri);
+    const spaceId = eid ? EID.getSpaceId(eid) : undefined;
+    return spaceId !== undefined && this._isLocalSpace(spaceId);
   }
 
   /**
@@ -994,13 +1023,6 @@ trace.diagnostic({
 });
 
 /** True when the query carries a scope clause naming nothing — `from('all-accessible-spaces')`. */
-/** Whether an `echo:` URI names an entity in a local space. */
-const isLocalSpaceUri = (uri: string): boolean => {
-  const eid = EID.tryParse(uri);
-  const spaceId = eid ? EID.getSpaceId(eid) : undefined;
-  return spaceId !== undefined && SpaceId.isLocal(spaceId);
-};
-
 const isAllSpacesScope = (ast: QueryAST.Query): boolean => {
   let found = false;
   QueryAST.visit(ast, (node) => {

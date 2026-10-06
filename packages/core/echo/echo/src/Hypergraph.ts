@@ -91,8 +91,8 @@ export interface Hypergraph extends Database.Queryable {
 
   /**
    * The device-local database named `name`: a space hosted like any other, created on first use and
-   * reopened with its objects after, except that it never replicates. Its `spaceId` is a local id (see
-   * `SpaceId.isLocal`), {@link getDatabase} finds it, graph queries scan and traverse into and out of it,
+   * reopened with its objects after, except that it never replicates. Its `spaceId` is an ordinary space id;
+   * the host records which spaces are local. {@link getDatabase} finds it, graph queries scan and traverse into and out of it,
    * and its objects may reference any space. References from replicated data into it are refused:
    * writing one throws `Error.LocalReferenceError`, and one already in replicated data resolves to
    * nothing. Fails when the graph is not connected to a host that can open local spaces.

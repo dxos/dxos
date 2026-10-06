@@ -7,7 +7,7 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, type URI } from '@dxos/keys';
+import { DXN, type SpaceId, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors.ts';
 import { QueryPlan } from './plan.ts';
@@ -49,6 +49,8 @@ export type QueryPlannerOptions = {
    * TextSelector and TimestampSelector remain as-is so the caller can detect them and bail.
    */
   noIndexes?: boolean;
+  /** Spaces local to this device, which the compiled statement keeps replicated references out of. */
+  localSpaceIds?: readonly SpaceId[];
 };
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
@@ -83,7 +85,7 @@ export class QueryPlanner {
     if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
       return plan;
     }
-    return compileToSql(sql, plan, this.#planSubquery).plan;
+    return compileToSql(sql, plan, this.#planSubquery, { localSpaceIds: this._options.localSpaceIds }).plan;
   }
 
   /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */

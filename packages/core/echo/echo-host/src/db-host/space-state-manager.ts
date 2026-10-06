@@ -39,6 +39,9 @@ export class SpaceStateManager extends Resource {
   private readonly _perSpaceContext = new Map<SpaceId, Context>();
   private readonly _lastSpaceDocumentList = new Map<SpaceId, DocumentId[]>();
   private readonly _spaceRootRefs = new Map<SpaceId, SpaceRootRefs>();
+  /** Local spaces by id, with the name each was opened by; their ids are indistinguishable from any other. */
+  private readonly _localSpaces = new Map<SpaceId, string>();
+  private readonly _localSpaceByName = new Map<string, SpaceId>();
   /** Re-runs a space's document-list check; the anchor documents enter the list only once refs exist. */
   private readonly _documentListCheck = new Map<SpaceId, () => void>();
 
@@ -81,6 +84,8 @@ export class SpaceStateManager extends Resource {
     this._perSpaceContext.clear();
     this._lastSpaceDocumentList.clear();
     this._spaceRootRefs.clear();
+    this._localSpaces.clear();
+    this._localSpaceByName.clear();
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
@@ -93,6 +98,31 @@ export class SpaceStateManager extends Resource {
 
   getRootByDocumentId(documentId: DocumentId): DatabaseRoot | undefined {
     return this._roots.get(documentId);
+  }
+
+  /** Whether a space is local: it stays on this device and nothing may announce, serve or sync it. */
+  isLocalSpace(spaceId: SpaceId): boolean {
+    return this._localSpaces.has(spaceId);
+  }
+
+  /** Ids of every local space this host knows. */
+  get localSpaceIds(): SpaceId[] {
+    return [...this._localSpaces.keys()];
+  }
+
+  /** The local space opened under `name`, if one exists. */
+  getLocalSpaceId(name: string): SpaceId | undefined {
+    return this._localSpaceByName.get(name);
+  }
+
+  /**
+   * Records a space as local before its root is assigned, so the root is persisted as local in the same
+   * write and no replicator ever sees it as an ordinary space.
+   */
+  markLocalSpace(spaceId: SpaceId, name: string): void {
+    invariant(!this._localSpaceByName.has(name) || this._localSpaceByName.get(name) === spaceId, 'Local space name taken.');
+    this._localSpaces.set(spaceId, name);
+    this._localSpaceByName.set(name, spaceId);
   }
 
   getSpaceRootDocumentId(spaceId: SpaceId): DocumentId | undefined {
@@ -171,6 +201,11 @@ export class SpaceStateManager extends Resource {
     this._rootBySpace.delete(spaceId);
     this._lastSpaceDocumentList.delete(spaceId);
     this._spaceRootRefs.delete(spaceId);
+    const localName = this._localSpaces.get(spaceId);
+    if (localName !== undefined) {
+      this._localSpaces.delete(spaceId);
+      this._localSpaceByName.delete(localName);
+    }
 
     const spaceCtx = this._perSpaceContext.get(spaceId);
     if (spaceCtx) {
@@ -283,7 +318,8 @@ export class SpaceStateManager extends Resource {
           root_doc_url: string;
           space_root_doc_url: string | null;
           credentials_doc_url: string | null;
-        }>`SELECT space_id, root_doc_url, space_root_doc_url, credentials_doc_url FROM echo_spaces`;
+          local_name: string | null;
+        }>`SELECT space_id, root_doc_url, space_root_doc_url, credentials_doc_url, local_name FROM echo_spaces`;
       }),
     );
     for (const row of rows) {
@@ -291,6 +327,9 @@ export class SpaceStateManager extends Resource {
       const rootDocUrl = row.root_doc_url as AutomergeUrl;
       const documentId = interpretAsDocumentId(rootDocUrl);
       this._rootBySpace.set(spaceId, documentId);
+      if (row.local_name !== null) {
+        this.markLocalSpace(spaceId, row.local_name);
+      }
       if (row.space_root_doc_url) {
         this._spaceRootRefs.set(spaceId, {
           spaceRootDocUrl: row.space_root_doc_url as AutomergeUrl,
@@ -301,11 +340,12 @@ export class SpaceStateManager extends Resource {
   }
 
   private async _saveSpace(spaceId: SpaceId, rootDocUrl: AutomergeUrl): Promise<void> {
+    const localName = this._localSpaces.get(spaceId) ?? null;
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         // Upsert rather than INSERT OR REPLACE: the latter deletes the row, discarding the space-root columns.
-        yield* sql`INSERT INTO echo_spaces (space_id, root_doc_url) VALUES (${spaceId}, ${rootDocUrl})
+        yield* sql`INSERT INTO echo_spaces (space_id, root_doc_url, local_name) VALUES (${spaceId}, ${rootDocUrl}, ${localName})
           ON CONFLICT(space_id) DO UPDATE SET root_doc_url = excluded.root_doc_url`;
       }),
     );

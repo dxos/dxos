@@ -35,8 +35,8 @@ export const CreateSpaceRequest = Schema.Struct({
   tags: Schema.optional(mutableArray(Schema.String)),
   membershipPolicy: MembershipPolicy,
   /**
-   * Opens this device's local space of that name instead, creating it on first use: a space with a local
-   * id (`SpaceId.isLocal`), no key, credentials or members, that never replicates. `tags` and
+   * Opens this device's local space of that name instead, creating it on first use: a space with an ordinary
+   * id but no key, credentials or members, which the host records as local and never replicates. `tags` and
    * `membershipPolicy` do not apply to it.
    */
   localName: Schema.optional(Schema.String),

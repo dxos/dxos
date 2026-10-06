@@ -24,14 +24,13 @@ import {
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromSpaceKey,
-  createLocalSpaceId,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
@@ -212,6 +211,7 @@ export class EchoHost extends Resource {
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
       useSubduction,
+      isLocalSpace: (spaceId) => this._spaceStateManager.isLocalSpace(spaceId),
     });
 
     this._runtime = runtime;
@@ -554,10 +554,15 @@ export class EchoHost extends Resource {
     return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
+  /** Whether a space is local to this device; local space ids look like any other. */
+  isLocalSpace(spaceId: SpaceId): boolean {
+    return this._spaceStateManager.isLocalSpace(spaceId);
+  }
+
   /**
    * Opens the device-local space named `name`, creating it on first use. A local space is a database
-   * directory like any other but has no space key, credentials or members, and its local id
-   * (`SpaceId.isLocal`) is what keeps every replicator from announcing or syncing its documents.
+   * directory like any other, with an ordinary space id, but no space key, credentials or members; the
+   * host records it as local, which is what keeps every replicator from announcing or syncing it.
    */
   openLocalSpace(ctx: Context, name: string): Promise<{ spaceId: SpaceId; root: DatabaseRoot }> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
@@ -570,10 +575,14 @@ export class EchoHost extends Resource {
   }
 
   async #openLocalSpace(ctx: Context, name: string): Promise<{ spaceId: SpaceId; root: DatabaseRoot }> {
-    const spaceId = await createLocalSpaceId(name);
-    if (this._spaceStateManager.getSpaceRootDocumentId(spaceId)) {
-      return { spaceId, root: await this.#ensureSpaceRootLoaded(spaceId) };
+    const existing = this._spaceStateManager.getLocalSpaceId(name);
+    if (existing) {
+      return { spaceId: existing, root: await this.#ensureSpaceRootLoaded(existing) };
     }
+
+    // Marked before its first document exists, so the share policy refuses every one from the start.
+    const spaceId = SpaceId.random();
+    this._spaceStateManager.markLocalSpace(spaceId, name);
 
     // Released once the root is assigned: `updateSpaceRoot` takes the lease the space keeps.
     using directory = await this._automergeHost.createDoc<DatabaseDirectory>({

@@ -75,12 +75,14 @@ describe('local databases on the graph', () => {
       expect(env.space.graph).toBe(env.graph);
     });
 
-    test('local databases have local space ids, replicated spaces do not', async ({ expect }) => {
+    test('local databases have ordinary space ids that the graph knows are local', async ({ expect }) => {
       await using env = await setup();
-      expect(SpaceId.isLocal(env.local.spaceId)).toBe(true);
-      expect(SpaceId.isLocal(env.other.spaceId)).toBe(true);
+      // Local space ids are ordinary space ids; which spaces are local is known to the graph and the host.
+      expect(SpaceId.isValid(env.local.spaceId)).toBe(true);
       expect(env.local.spaceId).not.toBe(env.other.spaceId);
-      expect(SpaceId.isLocal(env.space.spaceId)).toBe(false);
+      expect(env.graph._isLocalSpace(env.local.spaceId)).toBe(true);
+      expect(env.graph._isLocalSpace(env.other.spaceId)).toBe(true);
+      expect(env.graph._isLocalSpace(env.space.spaceId)).toBe(false);
     });
   });
 

@@ -24,7 +24,7 @@ describe('Client graph local databases', () => {
 
       const space = await client.spaces.create();
       const local = await client.graph.localDatabase('settings');
-      expect(SpaceId.isLocal(local.spaceId)).toBe(true);
+      expect(SpaceId.isValid(local.spaceId)).toBe(true);
       expect(await client.graph.localDatabase('settings')).toBe(local);
       expect(client.graph.getDatabase(local.spaceId)).toBe(local);
       // Local spaces belong to the graph, not to the replicated space list.

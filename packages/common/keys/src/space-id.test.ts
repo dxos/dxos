@@ -15,16 +15,3 @@ test('space-id', () => {
   expect(decoded.length).toBe(SpaceId.byteLength);
   expect(SpaceId.encode(decoded)).toBe(id);
 });
-
-test('local space ids are recognisable and valid', () => {
-  const seed = new Uint8Array(SpaceId.byteLength).fill(0xff);
-  const local = SpaceId.local(seed);
-
-  expect(SpaceId.isValid(local)).toBe(true);
-  expect(local.startsWith('BLOCALDB')).toBe(true);
-  expect(SpaceId.isLocal(local)).toBe(true);
-  expect(SpaceId.local(seed)).toBe(local);
-  expect(SpaceId.encode(SpaceId.decode(local))).toBe(local);
-  expect(SpaceId.isLocal(SpaceId.random())).toBe(false);
-  expect(SpaceId.isLocal(SpaceId.encode(seed))).toBe(false);
-});
