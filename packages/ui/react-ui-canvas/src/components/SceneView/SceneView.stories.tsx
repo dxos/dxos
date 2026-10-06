@@ -78,7 +78,7 @@ const createSquareTree = () => {
 /**
  * Shapes on the default lattice, three columns by three rows around the origin: A, B, C down the first
  * column; D and E below a free cell in the second; F spanning all three rows of the third. Linked through
- * the gutters.
+ * the gutters, two of the links sharing gutters to show the lanes.
  */
 const createLatticeTree = () => {
   const root = 'scene:root';
@@ -96,6 +96,10 @@ const createLatticeTree = () => {
     .smart('bd', 'b', 'd')
     .smart('de', 'd', 'e')
     .smart('df', 'd', 'f')
+    // Two links that share the column gutter between B and D and the row gutter above E: they run in
+    // separate lanes rather than on top of each other.
+    .smart('ae', 'a#s2', 'e#n2')
+    .smart('be', 'b#e3', 'e#n2')
     .build();
   return { scenes: [scene], root };
 };

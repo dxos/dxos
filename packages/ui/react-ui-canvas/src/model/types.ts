@@ -206,10 +206,11 @@ export const Marker = Schema.Literals(['arrow', 'circle']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
 /** Markers at the source (`start`) and target (`end`) of a link. */
+/** A link's end markers; the properties form shows them side by side, as the two ends of the line. */
 export const LinkEnds = Schema.Struct({
   start: Schema.optional(Marker),
   end: Schema.optional(Marker),
-});
+}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
 export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 
 const linkBase = {
