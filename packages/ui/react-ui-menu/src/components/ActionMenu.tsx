@@ -274,7 +274,43 @@ export type ActionMenuProps = Partial<MenuActions> & {
  * graph; groups become `Sub` menus, `checked` members radio or checkbox items. Without a `MenuActions` it is a menu of
  * the explicit `actions` alone.
  */
-export const ActionMenu = ({
+export const ActionMenu = (props: ActionMenuProps) => {
+  const { virtualRef, open, defaultOpen, onOpenChange, deferUntilOpen, children } = props;
+  const [built, setBuilt] = useState(false);
+  // Only a menu that owns its open state and renders its own trigger can wait for a click.
+  const deferred = !!deferUntilOpen && !virtualRef && open === undefined && defaultOpen === undefined;
+  const trigger = isValidElement<{
+    'onClick'?: (event: MouseEvent) => void;
+    'aria-haspopup'?: 'menu';
+    'aria-expanded'?: boolean;
+  }>(children)
+    ? children
+    : undefined;
+
+  const handleTriggerClick = useCallback(
+    (event: MouseEvent) => {
+      trigger?.props.onClick?.(event);
+      setBuilt(true);
+      onOpenChange?.(true);
+    },
+    [trigger, onOpenChange],
+  );
+
+  // Returned before the menu's hooks run, not just before its JSX: the menu's action graph and state machine are what
+  // a list of rows cannot afford per row, and a deferred menu builds neither until its trigger is first clicked.
+  if (deferred && !built && trigger) {
+    return cloneElement(trigger, {
+      'onClick': handleTriggerClick,
+      // The trigger announces itself as a menu button before the `Menu.Trigger` that would say so exists.
+      'aria-haspopup': 'menu',
+      'aria-expanded': false,
+    });
+  }
+
+  return <ActionMenuRoot {...props} deferred={deferred} />;
+};
+
+const ActionMenuRoot = ({
   items,
   contributions,
   onAction,
@@ -288,9 +324,9 @@ export const ActionMenu = ({
   open,
   defaultOpen,
   onOpenChange,
-  deferUntilOpen,
+  deferred,
   children,
-}: ActionMenuProps) => {
+}: ActionMenuProps & { deferred: boolean }) => {
   // Called unconditionally (hooks), used only when no source was spread in.
   const standalone = useMenuActions();
   const menu = useMemo<MenuActions>(
@@ -304,46 +340,10 @@ export const ActionMenu = ({
     [items, contributions, onAction, caller, iconSize, standalone],
   );
 
-  const [built, setBuilt] = useState(false);
-  // Only a menu that owns its open state and renders its own trigger can wait for a click.
-  const deferred = !!deferUntilOpen && !virtualRef && open === undefined && defaultOpen === undefined;
-  const trigger = isValidElement<{
-    'onClick'?: (event: MouseEvent) => void;
-    'aria-haspopup'?: 'menu';
-    'aria-expanded'?: boolean;
-  }>(children)
-    ? children
-    : undefined;
-
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
-
-  const handleTriggerClick = useCallback(
-    (event: MouseEvent) => {
-      trigger?.props.onClick?.(event);
-      setBuilt(true);
-      handleOpenChange(true);
-    },
-    [trigger, handleOpenChange],
-  );
-
   // Next's Content portals into a ref.
   const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
 
   const positioning = VirtualAnchor.useVirtualAnchor(virtualRef);
-
-  if (deferred && !built && trigger) {
-    return cloneElement(trigger, {
-      'onClick': handleTriggerClick,
-      // The trigger announces itself as a menu button before the `Menu.Trigger` that would say so exists.
-      'aria-haspopup': 'menu',
-      'aria-expanded': false,
-    });
-  }
 
   return (
     <Menu.Root
@@ -351,7 +351,7 @@ export const ActionMenu = ({
       // close always refocuses the trigger, which would pull focus back from whatever an outside click focused.
       open={deferred ? undefined : open}
       defaultOpen={deferred ? true : defaultOpen}
-      onOpenChange={({ open }) => handleOpenChange(open)}
+      onOpenChange={({ open }) => onOpenChange?.(open)}
       positioning={positioning}
     >
       {children && (
