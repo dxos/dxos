@@ -7,6 +7,7 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -50,6 +51,42 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+/** Every widget in one column, in registry order, so their rows, carets and buttons can be compared. */
+// Resolved at render: the stories it collects are declared below it.
+const allWidgets = () =>
+  [
+    Prompt,
+    SyntheticVariants,
+    Reasoning,
+    Status,
+    Reference,
+    Suggestion,
+    Select,
+    Stats,
+    Toolkit,
+    ToolkitFailed,
+    ToolkitNarrated,
+    ToolkitStatus,
+    Summary,
+    Request,
+    RequestAnswered,
+    Surface,
+    Json,
+  ]
+    .map((story) => story.args?.content ?? '')
+    .join('\n\n');
+
+export const AllWidgets: Story = {
+  args: { content: '' },
+  render: () => (
+    <ScrollArea.Root classNames='h-full'>
+      <ScrollArea.Viewport>
+        <DefaultStory content={allWidgets()} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  ),
+};
 
 //
 // DOM widgets
@@ -502,32 +539,5 @@ export const Surface: Story = {
 export const Json: Story = {
   args: {
     content: `<json>${JSON.stringify({ _tag: 'unknown', payload: { value: 42 } })}</json>`,
-  },
-};
-
-/** Every widget in one column, in registry order, so their rows, carets and buttons can be compared. */
-export const AllWidgets: Story = {
-  args: {
-    content: [
-      Prompt,
-      SyntheticVariants,
-      Reasoning,
-      Status,
-      Reference,
-      Suggestion,
-      Select,
-      Stats,
-      Toolkit,
-      ToolkitFailed,
-      ToolkitNarrated,
-      ToolkitStatus,
-      Summary,
-      Request,
-      RequestAnswered,
-      Surface,
-      Json,
-    ]
-      .map((story) => story.args?.content ?? '')
-      .join('\n\n'),
   },
 };
