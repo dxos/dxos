@@ -143,7 +143,7 @@ export const Selected: Story = {
 
 /** A row of machinery alone (a synthetic prompt) reserves no toolbar line: there is nothing to copy. */
 export const TestMachineryOnly: Story = {
-  args: { variant: 'answer', context: 'Your scheduled alarm fired.', machinery: true },
+  args: { variant: 'answer', context: 'Scheduled alarm fired.', machinery: true },
   play: async ({ canvasElement }) => {
     const row = await within(canvasElement).findByTestId('feed.message');
     await expect(within(row).queryByRole('button')).toBeNull();

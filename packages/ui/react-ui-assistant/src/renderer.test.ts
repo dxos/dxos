@@ -131,13 +131,13 @@ describe('createRenderer', () => {
     const rendered = createRenderer('normal')(
       message([
         { _tag: 'stats' },
-        ContentBlock.Text.make({ text: 'Your scheduled alarm fired.', disposition: 'synthetic' }),
+        ContentBlock.Text.make({ text: 'Scheduled alarm fired.', disposition: 'synthetic' }),
         { _tag: 'toolCall', toolCallId: '1', name: 'a', input: '{}', providerExecuted: false },
         { _tag: 'toolResult', toolCallId: '1', name: 'a', providerExecuted: false, result: 'ok' },
       ]),
     );
 
-    expect(markdown(rendered)).toContain('<synthetic>Your scheduled alarm fired.</synthetic>');
+    expect(markdown(rendered)).toContain('<synthetic>Scheduled alarm fired.</synthetic>');
     expect(toolkitTags(rendered)).toBe(1);
   });
 

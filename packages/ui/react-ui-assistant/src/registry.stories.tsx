@@ -179,7 +179,7 @@ export const TestSynthetic: Story = {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('assistant.synthetic')).toHaveLength(3));
     const trigger = canvas.getAllByTestId('assistant.synthetic')[1];
-    await expect(trigger).toHaveTextContent('Your scheduled alarm fired');
+    await expect(trigger).toHaveTextContent('Scheduled alarm fired');
     await expect(trigger).not.toHaveTextContent('Poll the agent session');
 
     // The caret is the trigger's last child, at the row's end.
