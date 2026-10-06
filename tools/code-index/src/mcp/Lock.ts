@@ -160,8 +160,15 @@ export const explain = (dir: string, error: Store.StoreError): Effect.Effect<nev
 /** Holders that keep the store until stopped; waiting on one of them can only time out. */
 const LONG_LIVED = new Set(['serve', 'mcp', 'chat']);
 
-/** Only a holder known to finish on its own (`index`, `query`, ...) is worth waiting for. */
+/**
+ * Only a holder known to finish on its own (`index`, `query`, ...) is worth waiting for, and one whose command line
+ * cannot be read: a process that is exiting still shows its descriptors after its `cmdline` reads empty, and that is
+ * exactly the holder that is about to release the store.
+ */
 export const isTransient = (holder: Holder): boolean => {
+  if (holder.command === '') {
+    return true;
+  }
   const subcommand = subcommandOf(holder.command);
   return subcommand !== undefined && !LONG_LIVED.has(subcommand);
 };
