@@ -5,6 +5,7 @@
 import { type Scene, type SceneId } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 import { portId } from './ports.ts';
+import { DEFAULT_SIZES } from './shapes.ts';
 
 export type SceneTree = { scenes: Scene[]; root: SceneId };
 
@@ -18,7 +19,7 @@ export type SceneTree = { scenes: Scene[]; root: SceneId };
 const cell = (units: number) => units * 64;
 
 const CLASS_SIZE = { width: cell(4), height: cell(3) };
-const PORTAL_SIZE = { width: cell(8), height: cell(5) };
+const PORTAL_SIZE = DEFAULT_SIZES.scene;
 
 type ClassDef = { key: string; name: string; attributes: string[]; methods: string[] };
 type LevelDef = { key: string; title: string; classes: ClassDef[]; children?: LevelDef[] };
@@ -127,7 +128,7 @@ export const createSceneTree = (depth: number, prefix = 'root'): SceneTree => {
 /** The fixture's unit: every point and size is written as a count of these, never as raw pixels. */
 const scale = (units: number) => units * 32;
 
-const PORTAL = { width: scale(16), height: scale(10) };
+const PORTAL = DEFAULT_SIZES.scene;
 
 /** Child scene variants, chosen by nesting level and side so siblings differ. */
 const VARIANTS = ['flow', 'model', 'cycle', 'note'] as const;
@@ -146,8 +147,7 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
   if (depth > 1) {
     const left = buildScene(depth - 1, `${name}/L`, scenes, variant * 2 + 1);
     const right = buildScene(depth - 1, `${name}/R`, scenes, variant * 2 + 2);
-    // Portals keep one aspect (16:10) so every child gets the same frame shape; 512×320 is the
-    // smallest such size on the major grid.
+    // Portals take the scene type's default frame, so every child gets the same frame shape.
     builder
       .portal(elementId('left'), { x: scale(8), y: scale(-12), ...PORTAL }, left)
       .portal(elementId('right'), { x: scale(8), y: scale(2), ...PORTAL }, right);

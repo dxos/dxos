@@ -24,6 +24,7 @@ import {
   isNoteNode,
   isRectNode,
 } from '../model/types.ts';
+import { partKey } from './parts.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
 export const nodeBounds = (node: Node): Bounds => ({
@@ -42,12 +43,15 @@ export const resizeNode = <N extends Node>(node: N, bounds: Bounds): N => ({
   size: { width: bounds.width, height: bounds.height },
 });
 
+/** The bounding box a new basic shape gets: rectangle, ellipse and class share it, so a new circle matches a new square. */
+export const DEFAULT_SHAPE_SIZE: Size = { width: 256, height: 256 };
+
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 256, height: 128 },
-  ellipse: { width: 256, height: 128 },
-  class: { width: 256, height: 192 },
+  rect: DEFAULT_SHAPE_SIZE,
+  ellipse: DEFAULT_SHAPE_SIZE,
+  class: DEFAULT_SHAPE_SIZE,
   note: { width: 256, height: 128 },
-  scene: { width: 512, height: 320 },
+  scene: { width: 512, height: 256 },
 };
 
 export type CreateNodeProps = {
@@ -83,6 +87,18 @@ export const createNode = ({
       return { type, id, z, center, size, scene: scene ?? id };
   }
 };
+
+/** What a shape copy keeps of its own (the fresh node's) rather than the source's: identity, place and child scene. */
+const OWN_FIELDS = new Set(['id', 'type', 'z', 'center', 'scene']);
+
+/**
+ * A new shape like `source` (its size, look and ports) built on `fresh`, the type's own new node at the
+ * new place: it keeps its own identity and child scene, and the type's text rather than the source's.
+ */
+export const cloneShape = (source: Node, fresh: Node): Node => ({
+  ...fresh,
+  ...Object.fromEntries(Object.entries(source).filter(([key]) => !OWN_FIELDS.has(key) && !partKey(key))),
+});
 
 /** The node's display text, in the field its type uses for it; a type without one is returned as is. */
 export const withLabel = <N extends Node>(node: N, label: string): N => {

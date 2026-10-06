@@ -33,6 +33,13 @@ describe('properties', () => {
     expect(commonSchema([Schema.Struct({ a: Schema.String }), Schema.Struct({ b: Schema.String })])).toBeUndefined();
   });
 
+  test('a field bounded differently by two types is not shared', ({ expect }) => {
+    const bounded = (minimum: number) =>
+      Schema.Struct({ n: Schema.Number.check(Schema.isGreaterThanOrEqualTo(minimum)), s: Schema.String });
+    expect(names(commonSchema([bounded(0), bounded(10)]))).toEqual(['s']);
+    expect(names(commonSchema([bounded(0), bounded(0)]))).toEqual(['n', 's']);
+  });
+
   test('values merge field by field, mixed where they differ', ({ expect }) => {
     const { values, mixed } = mergeValues(
       [

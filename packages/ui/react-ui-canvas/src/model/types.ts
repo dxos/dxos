@@ -40,7 +40,7 @@ const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnot
 const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') }).pipe(
   Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }),
 );
-const NodeSize = Schema.Struct({ width: gridNumber('W'), height: gridNumber('H') }).pipe(
+const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') }).pipe(
   Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }),
 );
 
@@ -92,12 +92,8 @@ export const NodeStyle = Schema.Struct({
   border: Schema.optional(Schema.Boolean),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
-  /** Text size in the node's own scene units, in whole steps over a readable range. */
-  fontSize: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 8, maximum: 80 })).annotate({
-      title: 'Font size',
-    }),
-  ),
+  /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
+  fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Extra classes on the frame, for a host's own look. */
   className: Schema.optional(Schema.String),
 });
@@ -114,6 +110,8 @@ export const nodeBase = {
   size: NodeSize,
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
+  /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
+  portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
   style: Schema.optional(NodeStyle),
 };
 
