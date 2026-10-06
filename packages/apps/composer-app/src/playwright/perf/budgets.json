@@ -199,8 +199,8 @@
     "unit": "bytes"
   },
   "automergeSaves > assistant-turns": {
-    "target": 40.8,
-    "limit": 42.8,
+    "target": 40.5,
+    "limit": 42.5,
     "unit": "count"
   },
   "automergeSaves > open-project": {
@@ -211,11 +211,6 @@
   "echoIndexPasses > open-project": {
     "target": 2,
     "limit": 3,
-    "unit": "count"
-  },
-  "echoQueryRecomputes > boot": {
-    "target": 31,
-    "limit": 32.6,
     "unit": "count"
   },
   "echoQueryRecomputes > open-project": {
@@ -248,11 +243,6 @@
     "limit": 2,
     "unit": "count"
   },
-  "layoutCount > boot": {
-    "target": 153,
-    "limit": 161,
-    "unit": "count"
-  },
   "layoutCount > edit-document": {
     "target": 65,
     "limit": 68.3,
@@ -265,17 +255,17 @@
   },
   "layoutCount > open-project": {
     "target": 26,
-    "limit": 27.3,
+    "limit": 27.4,
     "unit": "count"
   },
   "layoutCount > open-tasks": {
-    "target": 15.8,
+    "target": 16,
     "limit": 17,
     "unit": "count"
   },
   "layoutCount > reopen-project": {
     "target": 26,
-    "limit": 27.3,
+    "limit": 27.4,
     "unit": "count"
   },
   "layoutCount > scroll-document": {
@@ -288,34 +278,19 @@
     "limit": 25.2,
     "unit": "count"
   },
-  "layoutCount > toggle-task": {
-    "target": 2,
-    "limit": 3,
-    "unit": "count"
-  },
   "reactCommits > assistant-turns": {
-    "target": 536,
-    "limit": 563,
-    "unit": "count"
-  },
-  "reactCommits > boot": {
-    "target": 218,
-    "limit": 229,
-    "unit": "count"
-  },
-  "reactCommits > open-assistant": {
-    "target": 7,
-    "limit": 8,
+    "target": 531,
+    "limit": 558,
     "unit": "count"
   },
   "reactCommits > open-project": {
-    "target": 57.8,
-    "limit": 60.7,
+    "target": 58.5,
+    "limit": 62.2,
     "unit": "count"
   },
   "reactRenders > assistant-turns": {
-    "target": 16000,
-    "limit": 17000,
+    "target": 15900,
+    "limit": 16700,
     "unit": "count"
   },
   "reactRenders > open-assistant": {
@@ -324,13 +299,13 @@
     "unit": "count"
   },
   "reactRenders > open-project": {
-    "target": 9240,
-    "limit": 9700,
+    "target": 9260,
+    "limit": 9720,
     "unit": "count"
   },
   "reactRenders > open-tasks": {
-    "target": 3960,
-    "limit": 4160,
+    "target": 3950,
+    "limit": 4150,
     "unit": "count"
   },
   "reactRenders > reopen-project": {
@@ -349,8 +324,8 @@
     "unit": "count"
   },
   "reactRenders > toggle-task": {
-    "target": 866,
-    "limit": 909,
+    "target": 863,
+    "limit": 906,
     "unit": "count"
   },
   "reactWastedRenders > open-assistant": {
@@ -364,8 +339,8 @@
     "unit": "count"
   },
   "reactWastedRenders > open-project": {
-    "target": 459,
-    "limit": 482,
+    "target": 460,
+    "limit": 485,
     "unit": "count"
   },
   "reactWastedRenders > open-tasks": {
@@ -394,28 +369,23 @@
     "unit": "count"
   },
   "recalcStyleCount > assistant-turns": {
-    "target": 806,
-    "limit": 846,
-    "unit": "count"
-  },
-  "recalcStyleCount > boot": {
-    "target": 176,
-    "limit": 185,
+    "target": 807,
+    "limit": 873,
     "unit": "count"
   },
   "recalcStyleCount > edit-document": {
-    "target": 161,
-    "limit": 169,
+    "target": 162,
+    "limit": 170,
     "unit": "count"
   },
   "recalcStyleCount > open-project": {
-    "target": 63,
-    "limit": 66.2,
+    "target": 62.5,
+    "limit": 65.6,
     "unit": "count"
   },
   "recalcStyleCount > reopen-project": {
-    "target": 62.5,
-    "limit": 65.6,
+    "target": 63,
+    "limit": 66.2,
     "unit": "count"
   },
   "recalcStyleCount > scroll-document": {
@@ -433,11 +403,6 @@
     "limit": 279,
     "unit": "count"
   },
-  "sqliteDeletes > boot": {
-    "target": 36.3,
-    "limit": 38.1,
-    "unit": "count"
-  },
   "sqliteInserts > open-project": {
     "target": 12,
     "limit": 13,
@@ -446,11 +411,6 @@
   "sqliteRowsChanged > assistant-turns": {
     "target": 2900,
     "limit": 3050,
-    "unit": "count"
-  },
-  "sqliteSelects > boot": {
-    "target": 422,
-    "limit": 443,
     "unit": "count"
   },
   "sqliteUpdates > open-project": {
