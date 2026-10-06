@@ -9,6 +9,8 @@
 // `@dxos/diagram`'s router.
 //
 
+import { Nudge } from '@dxos/diagram';
+
 import { type NodeRegistry } from '../model/registry.ts';
 import {
   DEFAULT_GRID,
@@ -219,6 +221,63 @@ const resolveEnds = (
     return undefined;
   }
   return [routeEnd(sourceTerminal, pair.source), routeEnd(targetTerminal, pair.target)];
+};
+
+/**
+ * Every link's geometry, routed together: on a lattice scene the smart links take the gutters and are
+ * then nudged apart (`@dxos/diagram`'s `Nudge`, one minor grid unit between lanes) so links sharing a
+ * gutter run side by side in their own lanes, ordered so their turn-offs do not cross (DESIGN §8b).
+ * Other links, and any scene without a lattice, route one by one as `linkGeometry` does.
+ */
+export const sceneLinkGeometry = (
+  scene: Scene,
+  registry: NodeRegistry,
+  links: readonly Link[],
+  lattice?: LatticeSpec,
+): LinkGeometry[] => {
+  if (!lattice) {
+    return links.flatMap((link) => linkGeometry(scene, registry, link) ?? []);
+  }
+  const nodes = Object.values(scene.nodes);
+  const rect = (bounds: { x: number; y: number; width: number; height: number }) => ({
+    x: bounds.x,
+    y: bounds.y,
+    w: bounds.width,
+    h: bounds.height,
+  });
+  const frameOf = (end: Endpoint) => {
+    const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
+    return node ? rect(nodeBounds(node)) : undefined;
+  };
+  const routed = links.flatMap((link) => {
+    const ends = resolveEnds(scene, registry, link.source, link.target);
+    if (!ends) {
+      return [];
+    }
+    const [from, to] = ends;
+    const points = link.type === 'smart' ? (gutterRoute(nodes, lattice, from, to) ?? smartPoints(from, to)) : undefined;
+    return [{ link, from, to, points }];
+  });
+  const smart = routed.filter((entry) => entry.points !== undefined);
+  const nudged = Nudge.nudge(
+    smart.map(({ link, points }) => ({
+      points: points ?? [],
+      source: frameOf(link.source),
+      target: frameOf(link.target),
+    })),
+    { spacing: DEFAULT_GRID, obstacles: nodes.map((node) => rect(nodeBounds(node))) },
+  );
+  const lanes = new Map(smart.map((entry, index) => [entry.link.id, nudged[index]]));
+  return routed.map(({ link, from, to }) => {
+    const points = lanes.get(link.id);
+    if (!points || points.length < 2) {
+      return { link, path: linkPath(link, from, to), source: from, target: to };
+    }
+    // A nudged port may slide along its side, so the ends are read back from the lane.
+    const source = { point: points[0], side: from.side };
+    const target = { point: points[points.length - 1], side: to.side };
+    return { link, path: splinePath(points), source, target };
+  });
 };
 
 /** Index at which a new control point at `point` keeps the polyline `ends`+`points` in order. */

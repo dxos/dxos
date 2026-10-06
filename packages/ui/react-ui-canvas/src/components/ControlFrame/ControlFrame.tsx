@@ -31,7 +31,7 @@ import {
 import { boundsFromPoints } from '../../utils/hit.ts';
 import { type LatticeSpec } from '../../utils/lattice.ts';
 import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
-import { curvePath, linkGeometry } from '../../utils/route.ts';
+import { curvePath, linkGeometry, sceneLinkGeometry } from '../../utils/route.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -115,6 +115,15 @@ export const ControlFrame = memo(
     const midpointRadius = 4 * unit;
     const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
+    const lanes =
+      lattice && selectedLinks.length > 0
+        ? new Map(
+            sceneLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+              geometry.link.id,
+              geometry,
+            ]),
+          )
+        : undefined;
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
     // Only the node under the pointer: every node's ports at once is a field of dots that hides the
     // diagram the user is drawing, and a link can start from a body now, so they are a refinement
@@ -205,7 +214,10 @@ export const ControlFrame = memo(
         )}
         {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
         {selectedLinks.map((link) => {
-          const geometry = capabilities.update ? linkGeometry(scene, registry, link, lattice) : undefined;
+          // On a lattice the handles sit on the link's lane, which depends on the links around it.
+          const geometry = capabilities.update
+            ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice))
+            : undefined;
           if (!geometry) {
             return null;
           }

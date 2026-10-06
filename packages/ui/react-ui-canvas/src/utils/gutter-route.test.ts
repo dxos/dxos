@@ -4,10 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { type Node } from '../model/types.ts';
+import { defaultNodeRegistry } from '../model/registry.ts';
+import { type Link, type Node, type Scene } from '../model/types.ts';
 import { gutterRoute } from './gutter-route.ts';
 import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';
-import { createNode } from './shapes.ts';
+import { sceneLinkGeometry } from './route.ts';
+import { createLink, createNode } from './shapes.ts';
 
 const spec = DEFAULT_LATTICE;
 
@@ -83,5 +85,28 @@ describe('gutter route', () => {
       // Nothing of the route lies inside F (x 256..640, y -256..256).
       expect(point.x > 256 && point.x < 640 && point.y > -256 && point.y < 256).toBe(false);
     }
+  });
+
+  test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
+    const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
+    const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>
+      createLink({
+        type: 'smart',
+        id,
+        z: id,
+        source: { node: source, port: sourcePort },
+        target: { node: target, port: targetPort },
+      });
+    // Both run down the column gutter at x = -192 and along the row gutter at y = 96 into E's north side.
+    const links = [link('ae', 'a', 's2', 'e', 'n2'), link('be', 'b', 'e2', 'e', 'n2')];
+    const [first, second] = sceneLinkGeometry(scene, defaultNodeRegistry, links, spec).map(({ path }) => path);
+    // The vertical runs near the column gutter: each link has its own, a lane apart.
+    const verticalX = (path: string) =>
+      [...path.matchAll(/L (-?[\d.]+) (-?[\d.]+)/g)]
+        .map((match) => Number(match[1]))
+        .filter((x) => Math.abs(x + 192) <= 32);
+    const lanes = new Set([...verticalX(first), ...verticalX(second)]);
+    expect(lanes.size).toBeGreaterThanOrEqual(2);
+    expect(first).not.toEqual(second);
   });
 });

@@ -33,7 +33,7 @@ import { contentBounds } from '../../utils/hit.ts';
 import { type LatticeSpec } from '../../utils/lattice.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey } from '../../utils/parts.ts';
-import { type LinkGeometry, linkGeometry } from '../../utils/route.ts';
+import { sceneLinkGeometry } from '../../utils/route.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { frameClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
@@ -122,11 +122,8 @@ export const SceneLayer = memo(
         : sorted;
     }, [scene.nodes, selected]);
     const links = useMemo(
-      () =>
-        sortByZ(Object.values(scene.links))
-          .map((link) => linkGeometry(scene, registry, link, lattice))
-          .filter((geometry): geometry is LinkGeometry => geometry !== undefined),
-      [scene, registry],
+      () => sceneLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
+      [scene, registry, lattice],
     );
     const unit = 1 / Math.max(zoom, 0.05);
     // One set of end markers per layer, sized in scene units so they scale with the stroke.
