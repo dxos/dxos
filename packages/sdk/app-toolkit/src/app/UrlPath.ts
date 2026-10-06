@@ -67,6 +67,43 @@ export const COMPANION_KEY = 'companion';
  */
 export const TAIL_SEPARATOR = '+';
 
+/**
+ * Query parameter carrying a human-readable title, so a link preview (the Composer Worker's metadata for
+ * messenger crawlers) can name what a link opens without access to the space.
+ */
+export const TITLE_PARAM = 'title';
+
+/** Longest title a link carries, so a shared link stays short enough to paste. */
+export const MAX_TITLE_LENGTH = 60;
+
+/** Collapse whitespace and truncate to {@link MAX_TITLE_LENGTH}, or `undefined` when nothing remains. */
+export const normalizeTitle = (title: string | undefined): string | undefined => {
+  const collapsed = title?.replace(/\s+/g, ' ').trim();
+  if (!collapsed) {
+    return undefined;
+  }
+  // Spread by code point so truncation never splits a surrogate pair.
+  const chars = [...collapsed];
+  return chars.length > MAX_TITLE_LENGTH
+    ? `${chars
+        .slice(0, MAX_TITLE_LENGTH - 1)
+        .join('')
+        .trimEnd()}…`
+    : collapsed;
+};
+
+/** A copy of `url` carrying `title` as {@link TITLE_PARAM}, or without the parameter when there is no title. */
+export const withTitle = (url: URL, title: string | undefined): URL => {
+  const next = new URL(url);
+  const normalized = normalizeTitle(title);
+  if (normalized) {
+    next.searchParams.set(TITLE_PARAM, normalized);
+  } else {
+    next.searchParams.delete(TITLE_PARAM);
+  }
+  return next;
+};
+
 // The workspace and companion keys are NOT reserved — they are the grammar's own configured keys.
 const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
