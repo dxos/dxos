@@ -4,12 +4,32 @@
 
 import { describe, test } from 'vitest';
 
+import { Annotation, Obj } from '@dxos/echo';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { createRenderer, linkBareObjectUris } from './renderer.ts';
+import { DeliveryAnnotation } from './types.ts';
 
 describe('createRenderer', () => {
+  // A folded tool run (`collapseToolRuns`) and a patched streaming copy are plain spreads, not ECHO
+  // objects; reading their delivery status must not throw.
+  test('a plain message copy renders without a delivery tag', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });
+    const copy: Message.Message = { ...prompt, blocks: [...prompt.blocks] };
+    expect(markdown(render(copy))).toBe('<prompt>hello</prompt>');
+  });
+
+  test('a prompt row with a delivery status ends with its tag; a plain prompt carries none', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });
+    expect(markdown(render(prompt))).not.toContain('<delivery');
+
+    Obj.update(prompt, (prompt) => Annotation.set(prompt, DeliveryAnnotation, 'delivered'));
+    expect(markdown(render(prompt))).toBe(`<prompt>hello</prompt>\n<delivery status="delivered" id="${prompt.id}" />`);
+  });
+
   test('a run of tool calls is one panel', ({ expect }) => {
     const render = createRenderer(undefined);
     const rendered = render(

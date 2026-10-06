@@ -133,10 +133,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                     classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
                     data-testid='assistant.chat-status'
                   >
-                    {/* A column, so the queue's listbox spans the row: a row shrinks it and wraps each bubble to nothing. */}
-                    <Layout.Flex column classNames='col-span-2'>
-                      <ChatComponent.Queue />
-                    </Layout.Flex>
                     {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
                     <ChatComponent.Activity classNames='col-start-1 self-center' />
                     <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
