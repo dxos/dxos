@@ -263,15 +263,6 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
               void handleSnap(canvas);
             },
           },
-          // A comment on the whole drawing, at the end of the quick actions: a drawing has no text span to select.
-          ...(onThreadCreate && {
-            comment: {
-              id: 'comment',
-              label: 'Comment', // TODO(Zan): Use translation lookup here.
-              icon: 'thread-icon',
-              onSelect: () => onThreadCreate(),
-            },
-          }),
         }),
         tools: (_editor: Editor, tools: any) => {
           const newTools = { ...tools };

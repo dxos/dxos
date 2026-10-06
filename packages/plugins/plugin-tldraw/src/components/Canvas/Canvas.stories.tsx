@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -21,7 +20,6 @@ import { migrateCanvas } from '../../migrations/index.ts';
 import { CanvasComponent } from './Canvas.tsx';
 
 const DefaultStory = () => {
-  const [comments, setComments] = useState(0);
   const [canvas, setCanvas] = useState(
     createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: data.v2 })),
   );
@@ -54,17 +52,10 @@ const DefaultStory = () => {
           <Button.Root variant='ghost' onClick={handleMigrate}>
             Load V1 Sample
           </Button.Root>
-          <span data-testid='comment-count'>comments:{comments}</span>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
-        <CanvasComponent
-          classNames='dx-attention-surface'
-          canvas={canvas}
-          assetsBaseUrl={null}
-          autoCenter
-          onThreadCreate={() => setComments((count) => count + 1)}
-        />
+        <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
       </Panel.Body>
     </Panel.Root>
   );
@@ -84,28 +75,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-/** The top-left quick actions end with a button that comments on the whole drawing, which has no text to select. */
-export const TestCommentQuickAction: Story = {
-  play: async ({ canvasElement }) => {
-    const button = await waitFor(
-      () => {
-        const found = canvasElement.querySelector<HTMLElement>('.tlui-menu [data-testid$=".comment"]');
-        if (!found) {
-          throw new Error('No comment quick action.');
-        }
-        return found;
-      },
-      { timeout: 10_000 },
-    );
-    // Last in the quick actions, after snap.
-    await expect(button.parentElement?.lastElementChild).toBe(button);
-    await userEvent.click(button);
-    await waitFor(() =>
-      expect(canvasElement.querySelector('[data-testid="comment-count"]')).toHaveTextContent('comments:1'),
-    );
-  },
-};
 
 const BuilderStory = () => {
   const [canvas] = useState(() =>
