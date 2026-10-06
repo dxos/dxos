@@ -40,6 +40,13 @@ export type FormFieldOverride = {
   placeholder?: string;
   readonly?: boolean;
   hidden?: boolean;
+  /**
+   * Numeric bounds and step for this use of the field, narrower than the schema's: e.g. a range the editor
+   * offers that stored data need not satisfy (a check on the schema would reject such a record outright).
+   */
+  min?: number;
+  max?: number;
+  step?: number;
 };
 
 /**
@@ -89,6 +96,10 @@ export type FormFieldRendererProps<T = any> = {
   required?: boolean;
   /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
   indeterminate?: boolean;
+  /** Numeric bounds and step from the caller's override, applied on top of the schema's. */
+  min?: number;
+  max?: number;
+  step?: number;
 } & FormFieldStateProps<T>;
 
 /** Where a row puts its label: above the control, or beside it on one line, after a toggle. */

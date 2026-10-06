@@ -144,6 +144,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     presentation: layout,
     required,
     indeterminate,
+    min: override?.min,
+    max: override?.max,
+    step: override?.step,
     db,
     ...fieldState,
   };

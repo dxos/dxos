@@ -13,7 +13,13 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Form, type FormFieldMap, type FormFieldRenderer, type FormUpdateMeta } from '@dxos/react-ui-form';
+import {
+  Form,
+  type FormFieldMap,
+  type FormFieldOverride,
+  type FormFieldRenderer,
+  type FormUpdateMeta,
+} from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -32,7 +38,7 @@ import {
   getElement,
   isLink,
 } from '../../model/types.ts';
-import { portsPerSideOf } from '../../utils/ports.ts';
+import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { resolveStyle } from '../../utils/style.ts';
 
@@ -89,6 +95,15 @@ const formValues = (nodes: NodeRegistry, element: Element): Record<string, unkno
     ? element
     : { ...element, style: resolveStyle(element.style), portsPerSide: portsPerSideOf(nodes, element) };
 
+/**
+ * The ranges the panel offers. They are the editor's, not the model's: a check on the stored schema would
+ * make a record outside them (an older or imported scene) fail validation and drop out of the scene.
+ */
+const FIELD_LIMITS: Record<string, FormFieldOverride> = {
+  'style.fontSize': { min: 8, max: 80, step: 1 },
+  'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
+};
+
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /** The selection by kind, e.g. "3 nodes, 2 links". */
@@ -128,7 +143,11 @@ export const Properties = ({
     const shown = elements.map((element) => formValues(nodes, element));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
-    return { values, fieldOverrides: Object.fromEntries([...mixed].map((path) => [path, { indeterminate: true }])) };
+    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_LIMITS };
+    for (const path of mixed) {
+      fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
+    }
+    return { values, fieldOverrides };
   }, [elements, nodes]);
 
   const onSave = useCallback(

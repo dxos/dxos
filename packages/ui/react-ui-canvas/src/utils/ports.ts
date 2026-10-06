@@ -16,6 +16,12 @@ export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
 
 export const DEFAULT_PORTS_PER_SIDE = 3;
 
+/** The most ports a side may carry; a stored count is clamped to `1..MAX_PORTS_PER_SIDE` whole ports. */
+export const MAX_PORTS_PER_SIDE = 9;
+
+const clampPorts = (count: number) =>
+  Number.isFinite(count) ? Math.min(MAX_PORTS_PER_SIDE, Math.max(1, Math.round(count))) : DEFAULT_PORTS_PER_SIDE;
+
 /**
  * The id of the `index`th port along `side`, counting from 1 at the side's start: `e1` is the top of the
  * east side, `s2` the middle of the south side. Pin a link end to one by naming `<node>#<portId>`.
@@ -40,7 +46,7 @@ export const defaultPorts: readonly Port[] = sidePorts();
 
 /** How many ports a node spreads along each side: its own count, else its type's, else the default. */
 export const portsPerSideOf = (registry: NodeRegistry, node: Node): number =>
-  node.portsPerSide ?? nodeDef(registry, node)?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE;
+  clampPorts(node.portsPerSide ?? nodeDef(registry, node)?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE);
 
 /**
  * A node's ports: its own when it carries them, else its own `portsPerSide` spread along each side, else
@@ -51,7 +57,7 @@ export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =
   const def = nodeDef(registry, node);
   const ports =
     node.ports ??
-    (node.portsPerSide !== undefined ? sidePorts(node.portsPerSide) : undefined) ??
+    (node.portsPerSide !== undefined ? sidePorts(clampPorts(node.portsPerSide)) : undefined) ??
     def?.ports?.(node) ??
     sidePorts(def?.portsPerSide);
   const bounds = nodeBounds(node);
