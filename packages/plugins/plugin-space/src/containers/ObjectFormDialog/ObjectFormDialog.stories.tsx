@@ -57,7 +57,7 @@ const makeBookmark = (props: Omit<Obj.MakeProps<typeof Bookmark>, 'visits'>): Bo
 
 const typename = Type.getTypename(Bookmark);
 
-const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
+const DefaultStory = ({ mode = 'live', selectType = false }: { mode?: 'draft' | 'live'; selectType?: boolean }) => {
   const [space] = useSpaces();
   const bookmarks = useQuery(space?.db, Filter.type(Bookmark));
   // What the operation would receive: `pending` until the dialog settles, then `ref` or `dismissed`.
@@ -80,7 +80,7 @@ const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
         <Dialog.Root defaultOpen>
           <ObjectFormDialog
             target={space.db}
-            typename={typename}
+            typename={selectType ? undefined : typename}
             mode={mode}
             defaults={{ name: 'Seeded' }}
             handle={handle}
@@ -217,6 +217,11 @@ export const LiveEnterConfirms: Story = {
       { timeout: 5_000 },
     );
   },
+};
+
+/** No type given: the dialog opens on the type picker. */
+export const SelectType: Story = {
+  args: { mode: 'draft', selectType: true },
 };
 
 /** A draft create: nothing exists until the form is submitted. */

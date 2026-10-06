@@ -21,7 +21,6 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
@@ -579,14 +578,15 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           <div className='col-start-2 flex flex-col py-1'>
             {/* The accordion heading: a real heading wrapping the control that folds its section, so the
               thread reads as a list of sections rather than a list of clickable text. The clamp sits on
-              the button, whose own line boxes it counts — on the heading it would see the button as one
-              atomic box and clamp nothing. */}
+              the label inside the trigger: on the trigger itself it replaces the flex row that keeps the
+              caret beside the name, and on the heading it would see one atomic box and clamp nothing. */}
             <h2 className='text-lg min-w-0'>
+              {/* Caret after the name, as the chat's disclosures, so the name lines up with the line below. */}
               <Collapsible.Trigger
-                classNames='line-clamp-2'
+                classNames='text-lg flex-row-reverse justify-end'
                 data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
               >
-                {sender}
+                <span className='line-clamp-2'>{sender}</span>
               </Collapsible.Trigger>
             </h2>
             {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
@@ -622,9 +622,10 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           conditional did — a thread holds many messages and each body is a rendered document. */}
         <Collapsible.Content asChild>
           <div className='col-span-full grid grid-cols-subgrid items-start'>
-            {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
-            <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
             <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
+              {/* In the content column with the body: auto-placed, the card took the avatar column and
+                  widened it to the width of its longest address. */}
+              <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
               {/* The summary is not repeated here: an expanded message shows its body, and the
                 conversation's summary is the last tile in the stack. */}
               <MessageBody message={message} mailbox={mailbox} options={options} />
@@ -743,16 +744,13 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
         {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
             tile's own heading, so `"NAME" <addr>` would just repeat it. */}
         {recipients.length > 0 && (
-          <Card.Row>
-            <Layout.Block>
-              {/* One recipient reads as a person, so it gets the same avatar treatment as every other
-                  person row; several are a group, which an avatar would misrepresent. */}
-              {recipients.length === 1 ? (
-                <Avatar actor={{ email: recipients[0] }} size={5} />
-              ) : (
-                <Icon.Icon icon='ph--users--regular' />
-              )}
-            </Layout.Block>
+          // One recipient reads as a person, so it gets the same avatar treatment as every other
+          // person row; several are a group, which an avatar would misrepresent. Passed as `leading`:
+          // as a child the Block lands inside the row's content instead of its start rail.
+          <Card.Row
+            leading={recipients.length === 1 ? <Avatar actor={{ email: recipients[0] }} size={5} /> : undefined}
+            icon={recipients.length === 1 ? undefined : 'ph--users--regular'}
+          >
             <Card.Text classNames='text-sm' variant='muted'>
               {recipients.join(', ')}
             </Card.Text>
