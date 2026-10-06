@@ -27,6 +27,7 @@ export const NumberField = ({
   presentation,
   getValue,
   onValueChange,
+  onBlur,
 }: FormFieldRendererProps<number>) => {
   const { min, max, integer } = getNumericConstraints(type);
   const committed = getValue();
@@ -55,6 +56,8 @@ export const NumberField = ({
         setText(next);
         if (!Number.isNaN(valueAsNumber)) {
           onValueChange(type, valueAsNumber);
+          // A stepper press never blurs, so every value that parses commits itself, as a pick does.
+          onBlur();
         }
       }}
     />

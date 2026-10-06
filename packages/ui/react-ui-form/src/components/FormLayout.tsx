@@ -74,6 +74,7 @@ const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProp
         align='start'
         gap='md'
         columns={`repeat(${node.cols}, minmax(0, 1fr))`}
+        fixed={node.fixed}
       >
         {node.children.map((child, index) => (
           <Fragment key={index}>
