@@ -222,7 +222,7 @@ test.describe('SceneView', () => {
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
     expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
     // Geometry is two labelled number fields per row.
-    expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'W', 'H']));
+    expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });
 
   test('the geometry fields step by the grid and move the node', async () => {

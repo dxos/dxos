@@ -43,7 +43,7 @@ import { topZ } from '../../utils/order.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { resizeBounds } from '../../utils/resize.ts';
 import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
-import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
+import { DEFAULT_SIZES, cloneShape, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
 import { type LinkEnd, handlePoint } from '../ControlFrame/ControlFrame.tsx';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
@@ -661,11 +661,9 @@ export const usePointerMachine = ({
     [nodeRegistry, scene.nodes, camera.zoom],
   );
 
-  /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
-  const commitCreated = useCallback(
+  /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
+  const addNode = useCallback(
     (node: Node) => {
-      pendingRef.current = undefined;
-      // A new portal opens onto a fresh scene of its own, whichever path created it.
       if (isPortalNode(node)) {
         registry.set(store.scenes, {
           ...registry.get(store.scenes),
@@ -673,9 +671,18 @@ export const usePointerMachine = ({
         });
       }
       projection.apply({ kind: 'create', node });
+    },
+    [projection, registry, store],
+  );
+
+  /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
+  const commitCreated = useCallback(
+    (node: Node) => {
+      pendingRef.current = undefined;
+      addNode(node);
       select([node.id]);
     },
-    [projection, select, registry, store],
+    [addNode, select],
   );
 
   /** A gesture abandoned (Escape, a drag leaving the canvas): its pending node is dropped with it. */
@@ -726,19 +733,23 @@ export const usePointerMachine = ({
           // A free-ended link that never reached a node ends free too.
           target = { point: current.to };
         } else if (!target && capabilities.create) {
-          // Dropping a port drag on empty canvas creates a rectangle there and links to it (canvas-editor
-          // behaviour); its top-left is what snaps, so the edges land on the grid.
-          const size = DEFAULT_SIZES.rect;
-          const node = createNode({
-            type: 'rect',
-            id: createId('rect'),
+          // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
+          // behaviour): a copy of the shape it left, without its text, else a rectangle. Its top-left is
+          // what snaps, so the edges land on the grid.
+          const source = scene.nodes[endpointNode(current.source) ?? ''];
+          const def = source ? nodeRegistry[source.type] : undefined;
+          const size = source?.size ?? DEFAULT_SIZES.rect;
+          const props = {
+            id: createId(source?.type ?? 'rect'),
             z: topZ(Object.values(scene.nodes)),
             center: {
               x: snap(current.to.x - size.width / 2) + size.width / 2,
               y: snap(current.to.y - size.height / 2) + size.height / 2,
             },
-          });
-          projection.apply({ kind: 'create', node });
+            size,
+          };
+          const node = source && def ? cloneShape(source, def.create(props)) : createNode({ type: 'rect', ...props });
+          addNode(node);
           target = { node: node.id };
         }
         if (target) {
@@ -793,6 +804,7 @@ export const usePointerMachine = ({
     setTool,
     createdNode,
     commitCreated,
+    addNode,
   ]);
 
   return {

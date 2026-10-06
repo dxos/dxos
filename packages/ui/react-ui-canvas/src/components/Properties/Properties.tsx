@@ -32,6 +32,7 @@ import {
   getElement,
   isLink,
 } from '../../model/types.ts';
+import { portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { resolveStyle } from '../../utils/style.ts';
 
@@ -79,9 +80,14 @@ const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
   isLink(element) ? LINK_SCHEMAS[element.type] : (nodeDef(nodes, element)?.schema ?? NodeBase);
 
-/** What the form shows for an element: the toggles show what the frame draws, so an unset fill or border reads as on. */
-const formValues = (element: Element): Record<string, unknown> =>
-  isLink(element) ? element : { ...element, style: resolveStyle(element.style) };
+/**
+ * What the form shows for an element: what the frame draws, so an unset fill or border reads as on and an
+ * unset port count as the type's.
+ */
+const formValues = (nodes: NodeRegistry, element: Element): Record<string, unknown> =>
+  isLink(element)
+    ? element
+    : { ...element, style: resolveStyle(element.style), portsPerSide: portsPerSideOf(nodes, element) };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
@@ -119,10 +125,11 @@ export const Properties = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
   const { values, fieldOverrides } = useMemo(() => {
-    const { values, mixed } = mergeValues(elements.map(formValues), Object.keys(formValues(elements[0] ?? {})));
+    const shown = elements.map((element) => formValues(nodes, element));
+    const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
     return { values, fieldOverrides: Object.fromEntries([...mixed].map((path) => [path, { indeterminate: true }])) };
-  }, [elements]);
+  }, [elements, nodes]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -132,11 +139,11 @@ export const Properties = ({
         intents: elements.map((element) => ({
           kind: 'update' as const,
           id: element.id,
-          values: patchValues(formValues(element), values, paths),
+          values: patchValues(formValues(nodes, element), values, paths),
         })),
       });
     },
-    [projection, elements],
+    [projection, elements, nodes],
   );
 
   if (elements.length === 0) {

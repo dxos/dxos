@@ -38,13 +38,22 @@ export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
 
 export const defaultPorts: readonly Port[] = sidePorts();
 
+/** How many ports a node spreads along each side: its own count, else its type's, else the default. */
+export const portsPerSideOf = (registry: NodeRegistry, node: Node): number =>
+  node.portsPerSide ?? nodeDef(registry, node)?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE;
+
 /**
- * A node's ports: its own when it carries them, else its type's, else `portsPerSide` of the type. Ports
- * landing on the same point collapse to the first, so a definition cannot stack two at one place.
+ * A node's ports: its own when it carries them, else its own `portsPerSide` spread along each side, else
+ * its type's layout or count. Ports landing on the same point collapse to the first, so a definition
+ * cannot stack two at one place.
  */
 export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
   const def = nodeDef(registry, node);
-  const ports = node.ports ?? def?.ports?.(node) ?? sidePorts(def?.portsPerSide);
+  const ports =
+    node.ports ??
+    (node.portsPerSide !== undefined ? sidePorts(node.portsPerSide) : undefined) ??
+    def?.ports?.(node) ??
+    sidePorts(def?.portsPerSide);
   const bounds = nodeBounds(node);
   const seen = new Set<string>();
   return ports.filter((port) => {

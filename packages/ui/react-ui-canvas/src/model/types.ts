@@ -40,7 +40,7 @@ const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnot
 const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') }).pipe(
   Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }),
 );
-const NodeSize = Schema.Struct({ width: gridNumber('W'), height: gridNumber('H') }).pipe(
+const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') }).pipe(
   Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }),
 );
 
@@ -114,6 +114,12 @@ export const nodeBase = {
   size: NodeSize,
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
+  /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
+  portsPerSide: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 9 })).annotate({
+      title: 'Ports per side',
+    }),
+  ),
   style: Schema.optional(NodeStyle),
 };
 

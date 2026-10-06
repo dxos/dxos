@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../model/registry.ts';
 import { type Bounds, type Port } from '../model/types.ts';
-import { defaultPorts, nodePorts, pairPorts, portAccepts, portPoint, sidePorts } from './ports.ts';
+import { defaultPorts, nodePorts, pairPorts, portAccepts, portPoint, portsPerSideOf, sidePorts } from './ports.ts';
 import { curvePath, curvePoint } from './route.ts';
 import { createNode } from './shapes.ts';
 
@@ -95,6 +95,24 @@ describe('ports', () => {
       ],
     };
     expect(nodePorts(defaultNodeRegistry, stacked).map((port) => port.id)).toEqual(['a']);
+  });
+
+  test('a node sets its own port count, overriding its type', ({ expect }) => {
+    const rect = createNode({
+      type: 'rect',
+      id: 'r',
+      z: 'a',
+      center: { x: 128, y: 64 },
+      size: { width: 256, height: 128 },
+    });
+    expect(portsPerSideOf(defaultNodeRegistry, rect)).toBe(3);
+    const one = { ...rect, portsPerSide: 1 };
+    expect(nodePorts(defaultNodeRegistry, one).map((port) => port.id)).toEqual(['n1', 'e1', 's1', 'w1']);
+    expect(portsPerSideOf(defaultNodeRegistry, one)).toBe(1);
+    // The ellipse type has one a side; a node of it can have more.
+    const ellipse = createNode({ type: 'ellipse', id: 'e', z: 'a', center: { x: 128, y: 128 } });
+    expect(portsPerSideOf(defaultNodeRegistry, ellipse)).toBe(1);
+    expect(nodePorts(defaultNodeRegistry, { ...ellipse, portsPerSide: 2 })).toHaveLength(8);
   });
 
   test('automatic pairing picks the closest pair and re-pairs after a move', ({ expect }) => {
