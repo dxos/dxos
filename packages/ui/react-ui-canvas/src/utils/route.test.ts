@@ -51,7 +51,7 @@ describe('route', () => {
         { x: 10, y: 10 },
       ]),
     ).toBe('M 0 0 L 10 10');
-    // A right angle is cut 32 back along each segment; the corner is the quadratic's control, so the
+    // A right angle is cut one minor cell (16) back along each segment; the corner is the quadratic's control, so the
     // route bends around it and never reaches it.
     expect(
       splinePath([
@@ -59,7 +59,7 @@ describe('route', () => {
         { x: 100, y: 0 },
         { x: 100, y: 100 },
       ]),
-    ).toBe('M 0 0 L 68 0 Q 100 0, 100 32 L 100 100');
+    ).toBe('M 0 0 L 84 0 Q 100 0, 100 16 L 100 100');
     // Segments shorter than two radii share what they have, so neighbouring corners never overlap.
     expect(
       splinePath([

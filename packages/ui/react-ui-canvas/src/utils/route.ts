@@ -12,6 +12,7 @@
 import { type NodeRegistry } from '../model/registry.ts';
 import {
   type Endpoint,
+  DEFAULT_GRID,
   type Link,
   MAJOR_GRID,
   type Node,
@@ -30,8 +31,11 @@ import { nodeBounds } from './shapes.ts';
 const MIN_TANGENT = 40;
 const TANGENT_RATIO = 0.4;
 
-/** How far a rounded corner reaches back along each of its segments, in scene px (half a major cell). */
-const CORNER_RADIUS = 32;
+/**
+ * How far a rounded corner reaches back along each of its segments, in scene px: one minor grid cell, so
+ * every corner of a route has the same radius (a gutter route's port stubs are half a gutter, two cells).
+ */
+const CORNER_RADIUS = DEFAULT_GRID;
 
 /** How far a smart link's stub leaves its port, in scene px (half a major cell). */
 const SMART_STUB = MAJOR_GRID / 2;
