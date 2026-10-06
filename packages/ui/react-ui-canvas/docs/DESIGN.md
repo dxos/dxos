@@ -382,7 +382,7 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 | Cut / copy / paste         | Per-view clipboard (`clipboard.ts`) of the selected nodes and the links between them. Paste mints fresh ids, rewires the links, offsets one grid step further per paste (or lands at the pointer from the canvas menu) and applies as one `batch` intent, so it is one undo step. ⌘X / ⌘C / ⌘V, toolbar buttons, and a right-click menu: Cut / Copy / Delete on an element, Paste on the canvas, Remove control point on a spline point.                                                                                                                                                                                                                                                                          |
 | Undo                       | Per-view log of projection snapshots (`undo.ts`): every `apply` that changes the model pushes the snapshot taken before it, so the undo unit is the intent whatever the projection made of it; each projection takes and restores its own opaque snapshot (freehand: the scene, constrained: the constraint model, dynamic: graph plus overlay). ⌘Z / ⇧⌘Z and the Undo / Redo toolbar buttons; a log belongs to one scene and empties on drill. ECHO history later.                                                                                                                                                                                                                                               |
 
-## 8b. Lattice mode (designed 2026-10-06, not built)
+## 8b. Lattice mode (designed 2026-10-06; steps 1-4 built)
 
 A per-scene constraint in which every shape occupies whole cells of a lattice coarser than the snap grid,
 separated by fixed gutters, so the scene reads as a regular board with gutter channels between shapes.
@@ -394,8 +394,9 @@ nothing is selected. The pitch is a shape plus a gutter (384 x 192 by default). 
 number of cells on each axis (1x1, 3x1, 3x3, ...) and covers the gutters between them, so its frame is
 `n x width + (n - 1) x gutterX` by `m x height + (m - 1) x gutterY` (a 3x1 shape is 1024 x 128), and its
 centre always lies on a cell centre: a shape is `(col, row, spanX, spanY)`. Every channel between shapes is
-exactly one gutter wide. Resizing moves the dragged edge by two cells with the opposite edge fixed (the
-only odd-preserving step). Shapes may not share a cell.
+exactly one gutter wide. Resizing is symmetric about the shape's centre cell, so the dragged edge steps
+one cell position at a time and the opposite edge follows it (an odd span cannot keep that edge fixed and grow
+by one). Shapes may not share a cell.
 
 **Where it lives.** Nodes stay in scene pixels: the lattice is a rule a projection enforces, not a second
 coordinate system, so persistence, the DSL bridge and freehand are untouched. (Storing cell units and
