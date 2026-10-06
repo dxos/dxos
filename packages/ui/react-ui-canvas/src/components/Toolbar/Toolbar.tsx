@@ -9,7 +9,7 @@
 // `ActionToolbar` changes the scene, and `CameraToolbar` fits and zooms the view beside its own numbers.
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
@@ -60,7 +60,7 @@ const readoutClasses = 'text-fg-muted font-mono text-sm whitespace-nowrap';
 export type NavigationToolbarProps = Util.ThemedClassName<{
   actions: ToolbarActions;
   /** Trailing status, e.g. the depth readout. */
-  children?: React.ReactNode;
+  children?: ReactNode;
 }>;
 
 /** Where the view is: the drilled path and the readout that follows it. */
@@ -87,7 +87,7 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
   );
 };
 
-export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions; children?: React.ReactNode }>;
+export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions; children?: ReactNode }>;
 
 /** The camera: fit and zoom, beside its own numbers; nothing here changes the scene. */
 export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarProps) => {

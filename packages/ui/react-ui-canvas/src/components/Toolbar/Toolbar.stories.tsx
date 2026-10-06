@@ -43,19 +43,13 @@ const DefaultStory = () => {
     create: (type: NodeType) => note(`create ${type}`),
   };
   return (
-    <div className='flex flex-col gap-2 p-2'>
-      {/* Each bar fills its frame, as SceneView floats it, so each sits in a content-width one. */}
-      <div className='w-max'>
-        <NavigationToolbar actions={actions}>depth {actions.path.length - 1}</NavigationToolbar>
-      </div>
-      <div className='w-max'>
-        <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
-      </div>
-      <div className='w-max'>
-        <CameraToolbar actions={actions}>
-          {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
-        </CameraToolbar>
-      </div>
+    // `items-start`: each bar fills its box, as SceneView floats it, so the column must not stretch them.
+    <div className='flex flex-col items-start gap-2 p-2'>
+      <NavigationToolbar actions={actions}>depth {actions.path.length - 1}</NavigationToolbar>
+      <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
+      <CameraToolbar actions={actions}>
+        {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
+      </CameraToolbar>
       <pre className='text-xs text-fg-muted'>{log.join('\n')}</pre>
     </div>
   );
