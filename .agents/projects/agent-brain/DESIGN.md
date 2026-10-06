@@ -190,18 +190,18 @@ judged depends on how long it lives:
 - **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
   private thread's history moves with it into the goal's feed.
 
-### Goals and tasks
+### Goals are hierarchical
 
-Undecided between two shapes:
+There is one kind of thing: a goal. The steps of a goal are sub-goals, parented to it in the ECHO
+parent tree, each with its own status, situation and feed. "Complete my taxes" is judged into "gather
+the W-2s", "find last year's return" and "book the accountant", each owned by the agent or assigned to
+the user.
 
-- **Tasks are a goal's plan, written by judgment.** When a judgment decides on work that takes several
-  steps ("complete my taxes": gather the W-2s, find last year's return, book the accountant), it
-  creates `Task` objects under the goal, each owned by the agent or assigned to the user. Completing
-  one is a fact the goal's wake rules can match; closing the goal closes its open tasks.
-- **Every step is a sub-goal.** One concept instead of two: a step is a goal under its parent, with
-  its own status, situation and feed. This only works if the machinery is optional — a sub-goal with
-  no drivers is a plain checklist item and costs nothing until it needs wake rules or judgment
-  ("book the accountant" gains a follow-up rule when the accountant does not reply).
+The machinery is optional per goal, so a step costs nothing until it needs it: a sub-goal with no
+drivers is a plain checklist item, and gains wake rules or a deadline only when judgment gives it
+some ("book the accountant" gets a follow-up rule when the accountant does not reply). A sub-goal's
+change of status is a fact in its parent's view, so a parent's wake rules can match its children;
+closing a goal closes its open sub-goals.
 
 ### Examples
 
@@ -218,7 +218,7 @@ Undecided between two shapes:
 
 ## Open questions
 
-1. Goals and tasks: tasks as a goal's plan, or sub-goals with optional machinery (above).
+1. How goals relate to `@dxos/types` `Task`: whether user-visible task lists render sub-goals, or a sub-goal links to a `Task` when one is wanted.
 2. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
 3. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
 4. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
