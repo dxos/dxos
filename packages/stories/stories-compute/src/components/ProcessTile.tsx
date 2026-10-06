@@ -2,19 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import React, { useEffect, useRef, useState } from 'react';
 
-import * as Process from '@dxos/compute/Process';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 
 import {
   DEFAULT_FRAME_COUNT,
@@ -24,38 +18,10 @@ import {
   type MandelbrotParams,
   decodeFrame,
 } from '../testing/index.ts';
+import { ProcessCard } from './ProcessCard.tsx';
+import { type SpawnedProcess } from './types.ts';
 
-export type ProcessItem = {
-  id: string;
-  location: Process.Location;
-  /** Sent with the first request; an absent `center` lets the process pick one at random. */
-  params: MandelbrotParams;
-  handle: Process.Handle<MandelbrotInput, MandelbrotOutput, never>;
-};
-
-const TERMINAL_STATES: readonly Process.State[] = [
-  Process.State.SUCCEEDED,
-  Process.State.FAILED,
-  Process.State.TERMINATED,
-];
-
-const formatElapsed = (ms: number): string => {
-  const seconds = Math.floor(ms / 1_000);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-};
-
-/** Re-renders once a second while `active`, so elapsed time advances without a status change. */
-const useNow = (active: boolean): number => {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!active) {
-      return;
-    }
-    const interval = setInterval(() => setNow(Date.now()), 1_000);
-    return () => clearInterval(interval);
-  }, [active]);
-  return now;
-};
+export type ProcessItem = SpawnedProcess<MandelbrotParams, MandelbrotInput, MandelbrotOutput>;
 
 /** Frames granted per request; topped up before they run out so the push never stalls. */
 const BATCH = 5;
@@ -141,57 +107,21 @@ export type ProcessTileProps = {
 };
 
 export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
-  const { handle, location } = item;
-  const status = useAtomValue(handle.statusAtom);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const frame = useMandelbrot(item, canvas);
-  const terminal = TERMINAL_STATES.includes(status.state);
-  const now = useNow(!terminal);
-  const end = Option.match(status.completedAt, { onNone: () => now, onSome: (date) => date.getTime() });
-
-  const handleKill = () => {
-    void EffectEx.runPromise(handle.terminate());
-  };
-
   return (
-    <Card.Root grid data-testid='process-tile'>
-      <Card.Header>
-        <Layout.Block>
-          <Icon.Icon icon='ph--cpu--regular' />
-        </Layout.Block>
-        <Card.Title truncate classNames='font-mono'>
-          {handle.pid}
-        </Card.Title>
-        {terminal ? (
-          <Card.Action system='delete' onClick={() => onRemove?.(item)} data-testid='process-remove' />
-        ) : (
-          <Card.Action icon='ph--stop-circle--regular' label='Kill' onClick={handleKill} data-testid='process-kill' />
-        )}
-      </Card.Header>
-      <Card.Row
-        icon={location.kind === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
-        data-testid='process-location'
-      >
-        <Card.Text>{location.kind}</Card.Text>
-      </Card.Row>
-      <Card.Row icon='ph--pulse--regular' data-testid='process-state'>
-        <Card.Text>{status.state}</Card.Text>
-      </Card.Row>
-      <Card.Row
-        icon='ph--timer--regular'
-        trailing={<Card.Text variant='muted'>frame {frame ?? '—'}</Card.Text>}
-        data-testid='process-output'
-      >
-        <Card.Text classNames='font-mono'>{formatElapsed(end - status.startedAt.getTime())}</Card.Text>
-      </Card.Row>
-      <Card.Row span='full'>
-        <canvas
-          ref={setCanvas}
-          width={item.params.size ?? DEFAULT_SIZE}
-          height={item.params.size ?? DEFAULT_SIZE}
-          className='w-full aspect-square rounded-sm bg-black [image-rendering:pixelated]'
-        />
-      </Card.Row>
-    </Card.Root>
+    <ProcessCard
+      location={item.location}
+      handle={item.handle}
+      progress={`frame ${frame ?? '—'}`}
+      onRemove={() => onRemove?.(item)}
+    >
+      <canvas
+        ref={setCanvas}
+        width={item.params.size ?? DEFAULT_SIZE}
+        height={item.params.size ?? DEFAULT_SIZE}
+        className='w-full aspect-square rounded-sm bg-black [image-rendering:pixelated]'
+      />
+    </ProcessCard>
   );
 };
