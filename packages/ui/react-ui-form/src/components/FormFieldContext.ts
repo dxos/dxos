@@ -22,8 +22,8 @@ export type FormFieldBinding<T = any> = {
   onBlur: (event?: FocusEvent<HTMLElement>) => void;
   status: FormFieldStatus['status'];
   error?: string;
-  /** The edited objects disagree on this value (see `FormFieldStatus.mixed`). */
-  mixed?: boolean;
+  /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
+  indeterminate?: boolean;
   required?: boolean;
   readonly?: boolean;
   presentation?: FormPresentation;

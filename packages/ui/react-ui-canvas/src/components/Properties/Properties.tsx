@@ -118,10 +118,11 @@ export const Properties = ({
   const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
-  const { values, mixed } = useMemo(
-    () => mergeValues(elements.map(formValues), Object.keys(formValues(elements[0] ?? {}))),
-    [elements],
-  );
+  const { values, fieldOverrides } = useMemo(() => {
+    const { values, mixed } = mergeValues(elements.map(formValues), Object.keys(formValues(elements[0] ?? {})));
+    // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
+    return { values, fieldOverrides: Object.fromEntries([...mixed].map((path) => [path, { indeterminate: true }])) };
+  }, [elements]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -154,7 +155,7 @@ export const Properties = ({
           key={[...selection].join()}
           schema={schema}
           values={values}
-          mixed={mixed}
+          fieldOverrides={fieldOverrides}
           fieldMap={fields}
           readonly={readonly}
           autoSave

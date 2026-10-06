@@ -16,8 +16,8 @@ export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'child
   /** Visible label beside the track; without one pass `aria-label`. */
   'label'?: ReactNode;
   'aria-label'?: string;
-  /** The value differs between the objects being edited: the track is dimmed until it is set. */
-  'mixed'?: boolean;
+  /** Neither on nor off (e.g. several edited objects disagree): the track is dimmed until it is set. */
+  'indeterminate'?: boolean;
 };
 
 /**
@@ -25,14 +25,14 @@ export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'child
  * input joins the roving focus.
  */
 export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
-  ({ classNames, label, 'aria-label': ariaLabel, mixed, disabled: disabledProp, ...props }, forwardedRef) => {
+  ({ classNames, label, 'aria-label': ariaLabel, indeterminate, disabled: disabledProp, ...props }, forwardedRef) => {
     const disabled = Fieldset.useFieldsetDisabled(disabledProp);
     const toolbarItem = useToolbarItem(disabled);
     return (
       <SwitchPrimitive.Root
         {...props}
         disabled={disabled || toolbarItem?.disabled}
-        data-mixed={mixed ? '' : undefined}
+        data-indeterminate={indeterminate ? '' : undefined}
         className={mx(recipes.switch(), classNames)}
         ref={forwardedRef}
       >

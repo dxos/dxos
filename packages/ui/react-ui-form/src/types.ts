@@ -21,8 +21,25 @@ import { type Palette } from '@dxos/ui-types';
 export type FormFieldStatus = {
   status?: 'error';
   error?: string;
-  /** The objects the form edits disagree on this value, and it has not been edited since (see `mixed`). */
-  mixed?: boolean;
+  /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
+  indeterminate?: boolean;
+};
+
+/**
+ * Per-instance overrides for one field (keyed by json-path in `Form.Root`'s `fieldOverrides`), for what the schema
+ * cannot say about this use of the form: e.g. a value several edited objects disagree on.
+ */
+export type FormFieldOverride = {
+  /**
+   * Show no value until the user edits it (several edited objects disagree on it); the placeholder says so and a
+   * required field is not flagged. The form's values should still hold a valid value here so the form validates.
+   */
+  indeterminate?: boolean;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  readonly?: boolean;
+  hidden?: boolean;
 };
 
 /**
@@ -70,8 +87,8 @@ export type FormFieldRendererProps<T = any> = {
   presentation?: FormPresentation;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
-  /** The edited objects disagree on this value: the field shows none, and says so, until it is edited. */
-  mixed?: boolean;
+  /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
+  indeterminate?: boolean;
 } & FormFieldStateProps<T>;
 
 /** Where a row puts its label: above the control, or beside it on one line, after a toggle. */

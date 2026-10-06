@@ -15,7 +15,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
-import { type FormFieldStatus } from '#types';
+import { type FormFieldOverride, type FormFieldStatus } from '#types';
 
 import { getDiscriminatorDefaults } from '../util/index.ts';
 
@@ -42,12 +42,8 @@ export interface FormHandlerProps<T extends AnyProperties> {
    */
   defaultValues?: Partial<T>;
 
-  /**
-   * Json-paths whose value differs between the objects the form edits at once (a multi-selection). Each reads as
-   * unset, so the field shows no value and the status reports `mixed`, until the user edits it; `values` should still
-   * hold a valid value at each path (e.g. the first object's) so the form validates and saves.
-   */
-  mixed?: ReadonlySet<string>;
+  /** Per-field overrides by json-path (`style.hue`); see {@link FormFieldOverride}. */
+  fieldOverrides?: Readonly<Record<string, FormFieldOverride>>;
 
   /**
    * Auto-save the form when the values change.
@@ -116,6 +112,8 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   //
 
   getStatus: (path: string | (string | number)[]) => FormFieldStatus;
+  /** The caller's override for the field at `path`, if any. */
+  getOverride: (path: (string | number)[]) => FormFieldOverride | undefined;
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
   onValueChange: <V>(path: (string | number)[], type: SchemaAST.AST, value: V) => void;
@@ -128,7 +126,7 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
 export const useFormHandler = <T extends AnyProperties>({
   schema,
   autoSave,
-  mixed,
+  fieldOverrides,
   values: valuesProp,
   defaultValues: defaultValuesProp,
   onValuesChanged,
@@ -261,7 +259,7 @@ export const useFormHandler = <T extends AnyProperties>({
             errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
         ) ?? [];
 
-      const isMixed = isMixedPath(mixed, overrides, jsonPath);
+      const indeterminate = isIndeterminate(fieldOverrides, overrides, jsonPath);
 
       // Only show errors for touched fields.
       const isTouched = touched[jsonPath as SchemaEx.JsonPath];
@@ -269,17 +267,22 @@ export const useFormHandler = <T extends AnyProperties>({
         return {
           status: undefined,
           error: undefined,
-          mixed: isMixed,
+          indeterminate,
         };
       }
 
       return {
         status: error ? 'error' : undefined,
         error: error ? (error ?? undefined) : undefined,
-        mixed: isMixed,
+        indeterminate,
       };
     },
-    [errors, touched, mixed, overrides],
+    [errors, touched, fieldOverrides, overrides],
+  );
+
+  const getOverride = useCallback<FormHandler<T>['getOverride']>(
+    (path) => fieldOverrides?.[SchemaEx.createJsonPath(path)],
+    [fieldOverrides],
   );
 
   const getValue = useCallback<FormHandler<T>['getValue']>(
@@ -288,14 +291,14 @@ export const useFormHandler = <T extends AnyProperties>({
       if (Object.prototype.hasOwnProperty.call(overrides, jsonPath)) {
         return overrides[jsonPath] as any;
       }
-      // A value the edited objects disagree on has none to show until it is edited.
-      if (mixed?.has(jsonPath)) {
+      // An indeterminate value has none to show until it is edited.
+      if (fieldOverrides?.[jsonPath]?.indeterminate) {
         return undefined;
       }
       // Un-edited fields reflect the current source value.
       return SchemaEx.getValue(source, jsonPath);
     },
-    [source, overrides, mixed],
+    [source, overrides, fieldOverrides],
   );
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
@@ -375,6 +378,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // Field utils.
       getStatus,
+      getOverride,
       getValue,
       onBlur,
       onValueChange,
@@ -391,6 +395,7 @@ export const useFormHandler = <T extends AnyProperties>({
       canSave,
       isValid,
       getStatus,
+      getOverride,
       getValue,
       onBlur,
       onValueChange,
@@ -474,12 +479,12 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
   return true;
 };
 
-/** Whether a path's value is mixed and still unedited: an override is the user's own value for every object. */
-const isMixedPath = (
-  mixed: ReadonlySet<string> | undefined,
+/** Whether a path is indeterminate and still unedited: an edit is the user's own value, so it shows. */
+const isIndeterminate = (
+  fieldOverrides: FormHandlerProps<any>['fieldOverrides'],
   overrides: Record<SchemaEx.JsonPath, unknown>,
   jsonPath: string,
-): boolean => !!mixed?.has(jsonPath) && !Object.prototype.hasOwnProperty.call(overrides, jsonPath);
+): boolean => !!fieldOverrides?.[jsonPath]?.indeterminate && !Object.prototype.hasOwnProperty.call(overrides, jsonPath);
 
 /** Returns a copy of `record` without the given json-path keys. */
 const omitPaths = <V>(

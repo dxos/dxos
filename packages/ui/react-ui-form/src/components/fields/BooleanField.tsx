@@ -21,7 +21,7 @@ export const BooleanField = ({
   label,
   readonly,
   presentation,
-  mixed,
+  indeterminate,
   getValue,
   onValueChange,
   onBlur,
@@ -35,9 +35,11 @@ export const BooleanField = ({
 
   return (
     <Input.Switch
-      // A mixed value is dimmed and says so; the first press sets it for every object.
-      mixed={mixed}
-      label={variant === 'settings' ? undefined : mixed ? `${label} (${t('mixed.placeholder')})` : label}
+      // A switch has no third state: an indeterminate one is dimmed and says so, and the first press sets it.
+      indeterminate={indeterminate}
+      label={
+        variant === 'settings' ? undefined : indeterminate ? `${label} (${t('indeterminate.placeholder')})` : label
+      }
       disabled={!!readonly}
       checked={!!value}
       // A toggle is a commit: the switch never blurs, so it commits itself.

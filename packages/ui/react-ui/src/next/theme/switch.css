@@ -18,8 +18,8 @@
     opacity: 0.5;
     cursor: default;
   }
-  /* Neither on nor off: a switch has no indeterminate state, so the track is dimmed and the label says why. */
-  .dx-switch[data-mixed] .dx-switch-control {
+  /* Neither on nor off: the track is dimmed and the host's label says why. */
+  .dx-switch[data-indeterminate] .dx-switch-control {
     opacity: 0.5;
   }
 

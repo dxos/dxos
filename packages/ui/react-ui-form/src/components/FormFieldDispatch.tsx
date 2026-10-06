@@ -89,7 +89,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     projection,
     fieldMap,
     fieldProvider,
-    readonly,
+    readonly: readonlyProp,
     hideEmpty = true,
     layout,
     createTypename,
@@ -105,14 +105,17 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     refInline,
   } = props;
   const { t } = Hooks.useTranslation(translationKey);
+  const { variant, form } = useFormContext(FormFieldDispatch.displayName);
+  // The caller's per-field override wins over what the schema says.
+  const override = form.getOverride(path ?? []);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
-  const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const description = override?.description ?? SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
   const label = useMemo(
-    () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
-    [labelProp, title, name],
+    () => override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [override?.label, labelProp, title, name],
   );
-  const { variant } = useFormContext(FormFieldDispatch.displayName);
+  const readonly = override?.readonly ?? readonlyProp;
   // A settings row shows its description beside the control, so the description never doubles as the placeholder.
   const placeholder = useMemo(
     () =>
@@ -126,7 +129,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
   const fieldState = useFormFieldState(FormFieldDispatch.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
-  const mixed = fieldState.getStatus().mixed;
+  const indeterminate = fieldState.getStatus().indeterminate;
   const fieldProps: FormFieldRendererProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
@@ -134,16 +137,18 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     label,
     description,
     jsonPath,
-    // A mixed value reads as none, so its placeholder says why rather than naming the field.
-    placeholder: mixed ? t('mixed.placeholder') : placeholder,
+    // An indeterminate value reads as none, so its placeholder says why rather than naming the field.
+    placeholder: indeterminate
+      ? (override?.placeholder ?? t('indeterminate.placeholder'))
+      : (override?.placeholder ?? placeholder),
     presentation: layout,
     required,
-    mixed,
+    indeterminate,
     db,
     ...fieldState,
   };
 
-  if ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null) {
+  if (override?.hidden || ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null)) {
     return null;
   }
 
@@ -230,7 +235,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     onBlur: fieldState.onBlur,
     status,
     error,
-    mixed,
+    indeterminate,
     required: fieldProps.required,
     readonly,
     presentation: layout,

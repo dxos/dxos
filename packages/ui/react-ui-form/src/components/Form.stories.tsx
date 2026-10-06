@@ -87,15 +87,24 @@ export const DocumentWidth: Story = {
   },
 };
 
-const MIXED = new Set(['age', 'active', 'status']);
+const OVERRIDES = {
+  age: { indeterminate: true },
+  active: { indeterminate: true },
+  status: { indeterminate: true },
+  name: { label: 'Display name' },
+};
 
 /**
- * `mixed`: the paths several edited objects disagree on read as unset with a "Mixed" placeholder (a dimmed switch
- * for a boolean) until edited; the rest show the shared value.
+ * `fieldOverrides`: per-field changes for this use of the form. Indeterminate fields (values several edited objects
+ * disagree on) read as unset with a "Mixed" placeholder, and a dimmed switch for a boolean, until edited.
  */
-export const Mixed: Story = {
+export const FieldOverrides: Story = {
   render: () => (
-    <Form.Root schema={ScalarSchema} values={{ ...SCALAR_VALUES, active: true, status: 'active' }} mixed={MIXED}>
+    <Form.Root
+      schema={ScalarSchema}
+      values={{ ...SCALAR_VALUES, active: true, status: 'active' }}
+      fieldOverrides={OVERRIDES}
+    >
       <Form.Content>
         <Form.Fields include={['name', 'age', 'active', 'status']} />
       </Form.Content>
@@ -104,7 +113,8 @@ export const Mixed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByPlaceholderText('Mixed')).toBeInTheDocument();
-    await expect(canvasElement.querySelector('[data-mixed]')).not.toBeNull();
+    await expect(await canvas.findByText('Display name')).toBeInTheDocument();
+    await expect(canvasElement.querySelector('[data-indeterminate]')).not.toBeNull();
   },
 };
 

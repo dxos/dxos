@@ -27,7 +27,7 @@ export const translations = [
         'add-property-button.label': 'Add property',
         'boolean-input-true.value': 'Yes',
         'boolean-input-false.value': 'No',
-        'mixed.placeholder': 'Mixed',
+        'indeterminate.placeholder': 'Mixed',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
         'delete-field.label': 'Delete field',
