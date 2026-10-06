@@ -320,7 +320,50 @@ Milestones, each ending in a demo that can be watched.
 | M4  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                                                             | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
 | M5  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                                                                  | An eval report across the example goals, with judgment-call counts.                                                                         |
 
+### M1 findings (2026-10-07)
+
+The spike compiled the eight example goals three times each to Datalog and to SPARQL `ASK`, replayed
+each against a hand-written fact timeline, and tested read-back as a miscompile detector (~$3.25 in
+model calls; code was throwaway).
+
+| Compiler                   | Datalog parse / conform / correct (of 24) | SPARQL parse / conform / correct (of 24) |
+| -------------------------- | ----------------------------------------- | ---------------------------------------- |
+| Sonnet 5.5, first prompt   | 24 / 15 / 13                              | 24 / 24 / 16                             |
+| Sonnet 5.5, revised prompt | 24 / 24 / 18                              | 24 / 24 / 18                             |
+| Haiku 4.5, revised prompt  | 15 / 15 / 11                              | 17 / 17 / 8                              |
+
+"Correct" allows extra wakes, which judgment absorbs. Goals 1, 2, 3, 4, 6 and 7 compiled correctly in
+every run; 5 (taxes) and 8 (session PR draft) failed every run, both on what "achieved" means.
+
+- **Datalog is confirmed** for goal rules: the two languages scored the same, and Datalog's static
+  checks (arity, safety, stratification) caught bad rules before they ran, while helper predicates and
+  `not achieved(goal)` compose. SPARQL stays for retrieval.
+- **Replay catches miscompiles; read-back does not.** Read-back flagged 57–83% of wrong compilations
+  and 19–61% of correct ones, and approved the most dangerous miscompile (taxes closing only if Rich
+  himself said so). Replaying test facts caught every one.
+- **Compile with Sonnet-class models only.** Haiku wrote Prolog disjunction, mis-keyed joins, and a
+  SPARQL rule under which a refusal achieves goal 3.
+- **Main failure modes:** `about(F, …)` written with `F` unbound (the model reads it as "find facts
+  about X"); wake rules guarded by `not achieved` that never fire on the achieving fact; achievement
+  tied to a speaker or speech-act label the goal never named; possessives ("my taxes") that keyword
+  matching cannot scope; no compilation ever woke on a sub-goal's status change.
+
+Consequences for M2, settled in the vocabulary and runtime rather than the prompt:
+
+1. `about` is an index lookup that may bind `F`; a `concerns(F, Entity)` built-in scopes possessive
+   goals ("my taxes" concerns Rich).
+2. A wake fires when a rule gains a new binding; the runtime always wakes a goal when `achieved` first
+   becomes true, and when a sub-goal's status changes.
+3. The compiler marks each goal's achievement as `rule` or `judgment`. Rules are reliable for
+   single-event outcomes with a named person or event (#2, #3), constraints (#7) and checkable states
+   (an empty inbox); everything else is judged.
+4. **Compilations are gated on replay:** the compiler also emits 3–5 test facts, including near-misses,
+   with their expected effects, and the runtime replays them before the goal goes active. Read-back
+   becomes an explanation shown to the user, not a gate.
+5. The engine: the spike's ~300-line evaluator was adequate; M2 adds incremental per-fact evaluation,
+   provenance (which fact woke a goal) and a semantic-index `about`. The eight scenarios become the
+   first evals.
+
 ## Open questions
 
 1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
-2. Whether goals compile reliably to rules, and how a miscompiled rule is noticed (M1 answers this).

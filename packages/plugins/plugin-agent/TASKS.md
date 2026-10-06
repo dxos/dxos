@@ -1,6 +1,6 @@
 # plugin-agent — Tasks
 
-_Resume: Phase 3 — M0 (private threads) research and M1 (compilation spike) running. Uncommitted: none. Last: Agent Brain design (docs/BRAIN.md, #13762)._
+_Resume: Phase 3 — approve the M0 design (child feed per private thread), then build it. Uncommitted: none. Last: M1 spike findings in BRAIN.md._
 
 Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), brain: [docs/BRAIN.md](./docs/BRAIN.md), ontology:
 [docs/ONTOLOGY.md](./docs/ONTOLOGY.md), memory: [docs/MEMORY.md](./docs/MEMORY.md), testing:
@@ -51,8 +51,8 @@ in-memory trigger registry ("durable triggers").
 
 ### Tasks
 
-- [ ] **M0 Private threads** — a session feed carries threads the chat view hides; agent-runtime runs a turn inside one. Research in progress.
-- [ ] **M1 Goal compilation spike** — compile the eight example goals to Datalog and SPARQL `ASK`, measure validity, correctness and read-back. Spike running (throwaway code; findings to BRAIN.md).
+- [ ] **M0 Private threads** — a session feed carries threads the chat view hides; agent-runtime runs a turn inside one. Researched: child feed per thread (design B) recommended, awaiting approval.
+- [x] **M1 Goal compilation spike** — Datalog confirmed; 6/8 goals compile reliably on Sonnet; replay (not read-back) catches miscompiles. Findings in BRAIN.md "M1 findings".
 - [ ] **M2 Facts and goals, in-process** — one tuple per feed item; hierarchical `Goal` directives with feeds; Datalog engine; judgment in the session's private thread.
 - [ ] **M3 Brain on EDGE** — Durable Object per agent: follows feeds, wake rules, alarms, background sessions per actor; agent service routing.
 - [ ] **M4 Planning and constraints** — sub-goals, action drivers, session → durable promotion.
