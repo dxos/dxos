@@ -3,7 +3,8 @@
  */
 
 @layer dx-components {
-  .dx-collapsible:not(.dx-container) {
+  /* A Container or card Section host keeps its own layout (a grid, or a card's subgrid of rails). */
+  .dx-collapsible:not(.dx-container, .dx-card-section) {
     display: flex;
     flex-direction: column;
     min-width: 0;

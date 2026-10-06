@@ -21940,6 +21940,12 @@ importers:
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
