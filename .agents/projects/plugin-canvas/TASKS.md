@@ -222,3 +222,9 @@ before), not reasoned about from the source.
       its text. Open questions: whether an applied object stays linked to its prototype (edits propagate)
       or is a one-off copy; where classes live (per scene, per canvas, or as ECHO objects in the space);
       how the palette offers them.
+- [ ] **Lattice mode** (design: `packages/ui/react-ui-canvas/docs/DESIGN.md` §8b). Steps, each testable
+      alone: (1) `quantize` + occupancy, unit-tested; (2) lattice projection wrapping the freehand
+      reducer, reducer-invariant tests; (3) `Projection.constrain?` in the pointer machine (preview lands
+      where it drops, red on collision); (4) lattice grid layer + story; (5) Column/Row/Span fields and
+      the scene's spec in the properties panel; (6) lattice-aware `smart` routing on `makeAvoidingRouter` + `nudge`; (7) toolbar toggle and switch-on quantization with nearest-free-cell placement.
+      Later: reflow instead of rejection.
