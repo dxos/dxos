@@ -165,8 +165,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
   const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
-  // An object whose comments are not anchored to a span (a drawing) has no text to select, so the panel offers a
-  // comment on the whole object instead.
+  // An object whose comments are not anchored to a span (a drawing) has no text to select, so its empty state points
+  // only to the toolbar's whole-object comment.
   const unanchored = findCommentConfig(commentConfigs, subject)?.comments === 'unanchored';
   const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
@@ -190,11 +190,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
 
-  // The timestamp placeholder anchor is what the toolbar's comment action uses for an object with no span to anchor to.
+  // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over.
   const handleAddObjectComment = useCallback(
     () =>
       invokePromise(CommentOperation.Create, {
-        anchor: Date.now().toString(),
         subject,
         branch: reviewBranch,
       }),
@@ -555,19 +554,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 {t('show-all.label')}
               </Tabs.Trigger>
             </Tabs.List>
-            {unanchored && (
-              <>
-                <Toolbar.Separator variant='gap' />
-                <Button.Root
-                  variant='ghost'
-                  iconOnly
-                  icon='ph--plus--regular'
-                  label={t('add-object-comment.label')}
-                  onClick={handleAddObjectComment}
-                  data-testid='comments.object-comment.add'
-                />
-              </>
-            )}
+            <Toolbar.Separator variant='gap' />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--plus--regular'
+              label={t('add-object-comment.label')}
+              onClick={handleAddObjectComment}
+              data-testid='comments.object-comment.add'
+            />
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>
