@@ -57,42 +57,36 @@ export type Adapter = {
 
 /**
  * Starts the adapter at `entry` the way the desktop app's agent helper does, with Composer's tools
- * token in its environment. It runs through `env`, so every `CLAUDE_*` variable is removed rather
- * than inherited: run from inside another Claude Code session they name that session, and the agent
- * would resume its conversation. `HOME` is a fresh directory shared by every agent this one starts,
- * so the developer's settings and login play no part, the API key is the only credential, and an
- * agent started after another died can still reload its session.
+ * token in its environment. Nothing named `ANTHROPIC_*` or `CLAUDE_*` is inherited: the first could
+ * point the agent at another endpoint or credential than the suite's key, and the second, set when the
+ * suite runs inside a Claude Code session, would have the agent resume that session. `HOME` is a fresh
+ * directory shared by every agent this one starts, so the developer's settings and login play no part
+ * and an agent started after another died can still reload its session. Each agent leads a process
+ * group of its own, so `stop` ends what it started as well.
  */
 export const makeAdapter = (entry: string): Adapter => {
   const home = mkdtempSync(join(tmpdir(), 'claude-code-e2e-home-'));
   const children: ChildProcess[] = [];
   const inherited = Object.fromEntries(
-    Object.entries(process.env).flatMap(([name, value]) => (value === undefined ? [] : [[name, value]])),
+    Object.entries(process.env).flatMap(([name, value]) =>
+      value === undefined || name.startsWith('ANTHROPIC_') || name.startsWith('CLAUDE_') ? [] : [[name, value]],
+    ),
   );
   return {
     connect: (cwd, toolsToken) =>
       Effect.sync(() => {
-        const child = spawn(
-          'env',
-          [
-            ...Object.keys(process.env)
-              .filter((name) => name.startsWith('CLAUDE_'))
-              .flatMap((name) => ['-u', name]),
-            process.execPath,
-            entry,
-          ],
-          {
-            cwd,
-            env: {
-              ...inherited,
-              ANTHROPIC_API_KEY: API_KEY,
-              HOME: home,
-              ...(process.env.DX_E2E_MODEL && { ANTHROPIC_MODEL: process.env.DX_E2E_MODEL }),
-              ...(toolsToken !== undefined && { [AcpAgent.TOOLS_TOKEN_ENV]: toolsToken }),
-            },
-            stdio: ['pipe', 'pipe', 'ignore'],
+        const child = spawn(process.execPath, [entry], {
+          cwd,
+          env: {
+            ...inherited,
+            ANTHROPIC_API_KEY: API_KEY,
+            HOME: home,
+            ...(process.env.DX_E2E_MODEL && { ANTHROPIC_MODEL: process.env.DX_E2E_MODEL }),
+            ...(toolsToken !== undefined && { [AcpAgent.TOOLS_TOKEN_ENV]: toolsToken }),
           },
-        );
+          stdio: ['pipe', 'pipe', 'ignore'],
+          detached: true,
+        });
         children.push(child);
         // A write to an agent that died is refused by the stream; unlistened, the pipe's error would crash the run.
         child.stdin.on('error', (error) => log('adapter stdin closed', { error: error.message }));
@@ -100,8 +94,14 @@ export const makeAdapter = (entry: string): Adapter => {
       }),
     stop: () => {
       for (const child of children) {
-        if (child.exitCode === null && child.signalCode === null) {
-          child.kill('SIGKILL');
+        if (child.pid === undefined) {
+          continue;
+        }
+        try {
+          process.kill(-child.pid, 'SIGKILL');
+        } catch (error) {
+          // A group whose every member has exited is gone, which is what stopping wanted.
+          log('adapter group already gone', { pid: child.pid, error: String(error) });
         }
       }
     },
