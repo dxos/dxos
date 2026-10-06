@@ -196,5 +196,16 @@ export const WithEcho: Story = {
     await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInTheDocument(), {
       timeout: 10_000,
     });
+
+    // The name stays inside its own background on a line with a hanging indent (a list item).
+    const info = editors[0].querySelector<HTMLElement>('.cm-collab-selectionInfo');
+    const line = info?.closest<HTMLElement>('.cm-line');
+    if (info && line) {
+      line.style.textIndent = '-40px';
+      const range = document.createRange();
+      range.selectNodeContents(info);
+      await expect(range.getBoundingClientRect().left).toBeGreaterThanOrEqual(info.getBoundingClientRect().left);
+      line.style.textIndent = '';
+    }
   },
 };

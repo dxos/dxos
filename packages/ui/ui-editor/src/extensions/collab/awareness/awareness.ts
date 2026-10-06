@@ -310,6 +310,8 @@ const styles = EditorView.theme({
     opacity: 0,
     transitionDelay: '0s',
     whiteSpace: 'nowrap',
+    // A list item's hanging indent (`text-indent: -width`) is inherited and pulls the name out of its own background.
+    textIndent: 0,
   },
   '.cm-collab-selectionCaret:hover > .cm-collab-selectionInfo': {
     opacity: 1,
