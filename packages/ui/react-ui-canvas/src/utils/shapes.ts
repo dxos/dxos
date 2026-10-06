@@ -51,7 +51,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   ellipse: DEFAULT_SHAPE_SIZE,
   class: DEFAULT_SHAPE_SIZE,
   note: { width: 256, height: 128 },
-  scene: { width: 512, height: 320 },
+  scene: { width: 512, height: 256 },
 };
 
 export type CreateNodeProps = {
