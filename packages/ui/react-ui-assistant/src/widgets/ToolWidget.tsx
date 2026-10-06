@@ -14,6 +14,7 @@ import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
+import { BACKGROUND_TOOL } from '../renderer.ts';
 import { translationKey } from '../translations.ts';
 import { PANEL_FRAME, WidgetPanel, WidgetPanelRow } from './WidgetPanel.tsx';
 
@@ -70,6 +71,8 @@ type ToolEntry = {
   active: boolean;
   title: string;
   icon: string;
+  /** A background tool's result, recovered without the call it answers; named by {@link entryLabel}. */
+  background?: boolean;
   /** Prose of a status or reasoning row; a call carries its payload in the fields below. */
   text?: string;
   error?: unknown;
@@ -132,7 +135,15 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
       }
 
       case 'toolResult': {
-        const entry = pending();
+        // A background tool's result answers a call from an earlier turn, so it stands as its own row
+        // rather than answering whichever call in this run is still unanswered.
+        let entry: ToolEntry | undefined;
+        if (block.name === BACKGROUND_TOOL) {
+          entry = { id: block.toolCallId, kind: 'call', active: false, background: true, title: '', icon: TOOL_ICON };
+          entries.push(entry);
+        } else {
+          entry = pending();
+        }
         if (!entry) {
           break;
         }
@@ -192,7 +203,7 @@ type ToolPanelProps = {
  * truncated first line reads as a broken title rather than a summary.
  */
 const entryLabel = (entry: ToolEntry, t: ReturnType<typeof Hooks.useTranslation>['t']): string =>
-  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.title;
+  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.background ? t('tool-background.label') : entry.title;
 
 /** Whether the row carries anything an expansion could show. */
 const hasDetail = (entry: ToolEntry): boolean =>
@@ -227,7 +238,9 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     ? entryLabel(narrating, t)
     : running
       ? `${entryLabel(running, t)} · ${t('tool-run-suffix.label', { count: calls.length })}`
-      : (singleCall?.title ?? count);
+      : singleCall
+        ? entryLabel(singleCall, t)
+        : count;
   const icon = narrating?.icon ?? running?.icon ?? singleCall?.icon ?? TOOL_ICON;
 
   // Nothing an expansion could show — a lone status, which is what a run looks like while the model

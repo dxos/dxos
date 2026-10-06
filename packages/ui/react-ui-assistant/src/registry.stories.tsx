@@ -13,6 +13,7 @@ import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { assistantRegistry } from './registry.tsx';
+import { BACKGROUND_TOOL } from './renderer.ts';
 import { translations } from './translations.ts';
 
 // Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
@@ -68,6 +69,8 @@ const allWidgets = () =>
     ToolkitFailed,
     ToolkitNarrated,
     ToolkitStatus,
+    ToolkitBackgroundResult,
+    ToolkitBackgroundError,
     Summary,
     Request,
     RequestAnswered,
@@ -509,6 +512,34 @@ export const ToolkitNarrationOnly: Story = {
 export const ToolkitStatus: Story = {
   args: {
     content: toolkit([status('Reading the space')]),
+  },
+};
+
+/** A background tool's result, recovered on a later turn without the call it answers. */
+export const ToolkitBackgroundResult: Story = {
+  args: {
+    content: toolkit([
+      result('9b14bf5b-4723-46f8-976e-1cacad08d854', BACKGROUND_TOOL, {
+        stdout: '0\n',
+        stderr: '',
+        exitCode: 0,
+        success: true,
+      }),
+    ]),
+  },
+};
+
+export const ToolkitBackgroundError: Story = {
+  args: {
+    content: toolkit([
+      {
+        _tag: 'toolResult',
+        toolCallId: '7',
+        name: BACKGROUND_TOOL,
+        error: 'Timed out after 30s',
+        providerExecuted: false,
+      },
+    ]),
   },
 };
 

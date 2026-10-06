@@ -56,6 +56,14 @@ export const createRenderer = (
         continue;
       }
 
+      // A background tool's result arrives as the next turn's synthetic prompt; it is a result, so it
+      // joins the tool panel rather than reading as a prompt nobody typed.
+      const recovered = isPrompt(message) ? undefined : recoveredToolResult(block);
+      if (recovered) {
+        run.push(recovered);
+        continue;
+      }
+
       // Status and reasoning narrate the run they sit in, and a run of narration alone is still one
       // step the reader took in: emitted as their own widgets they split what happened between two
       // sentences of prose into a row per block.
@@ -189,6 +197,30 @@ const blockToMarkdown = (
 };
 
 /** The prose a narration block carries; blank means the widget would render no row for it. */
+/** Tool name of a recovered background result; the widget names it, since the original call is gone. */
+export const BACKGROUND_TOOL = 'background';
+
+/** The agent runtime's `<result pid=…>` / `<error pid=…>` prompt for a background tool's outcome. */
+const RECOVERED_RESULT = /^<(result|error) pid=([^>\s]+)>([\s\S]*)<\/\1>$/;
+
+const recoveredToolResult = (block: ContentBlock.Any): ContentBlock.ToolResult | undefined => {
+  if (block._tag !== 'text' || block.disposition !== 'synthetic') {
+    return undefined;
+  }
+  const match = block.text.trim().match(RECOVERED_RESULT);
+  if (!match) {
+    return undefined;
+  }
+  const [, kind, pid, body] = match;
+  return {
+    _tag: 'toolResult',
+    toolCallId: pid,
+    name: BACKGROUND_TOOL,
+    providerExecuted: false,
+    ...(kind === 'error' ? { error: body } : { result: body }),
+  };
+};
+
 const narrationText = (block: ContentBlock.Any): string => {
   switch (block._tag) {
     case 'status':
