@@ -116,9 +116,10 @@ below, not by a conflict policy.
 2. Read `local` and capture `nextHeads = Obj.version(tagIndex).automergeHeads` **at the same
    instant**.
 3. Diff base/local/remote; push the local-only changes to the provider.
-4. Persist `nextHeads` **and** the delta token in a single `Obj.update` on the cursor — but only if
-   the push fully drained with nothing `pending` (see
-   [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)).
+4. Persist `nextHeads` in a single `Obj.update` on the cursor — but only if the push fully drained
+   with nothing `pending` (see
+   [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)). This holds on
+   capped runs too; the delta token joins the same update only on an uncapped run.
 
 Capturing at step 2 rather than at the end of the run is what keeps the two failure modes from
 appearing:
@@ -383,7 +384,8 @@ and only the first may advance `nextHeads`:
 | Permanent rejection — message deleted (404), label gone, insufficient scope | `settled`      | No retry can succeed. Advancing past it is the only terminating choice; the local tag stays as the user left it and simply never reaches the provider. Logged at `warn` with the op. |
 | Transient — 429, 5xx, timeout                                               | `pending`      | Retrying is expected to succeed.                                                                                                                                                     |
 
-**`nextHeads` is persisted only when `pending` is empty** (and the cap was not hit). A run with any
+**`nextHeads` is persisted only when `pending` is empty**, capped or not; the delta token advances
+only on an uncapped run. A run with any
 pending op leaves the base where it was and requests `runAgain`, so the whole diff — including the
 ops that did settle — recomputes next run. Re-pushing a settled op is a no-op at both providers, so
 the duplication is the acceptable half of the trade; the alternative, advancing past a transient
