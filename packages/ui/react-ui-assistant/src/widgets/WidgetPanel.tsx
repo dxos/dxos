@@ -50,11 +50,12 @@ export const WidgetPanel = ({
     // the min-width then takes the line's own width, which is what bounds the payload's scroller.
     classNames='w-0 min-w-full'
   >
-    <TogglePanel.Header caret='end' data-testid={testId} classNames='gap-1'>
+    <TogglePanel.Header caret='end' data-testid={testId} classNames='group/disclosure gap-1'>
       <span className='flex min-w-0 items-center gap-2 text-fg-muted tabular-nums'>
         <Icon.Icon icon={icon} size='md' />
-        {/* Takes the base colour on hover, as a breadcrumb link does: the title is prose, not a list row. */}
-        <span className={mx('truncate group-hover:text-fg', error && 'text-error-text')}>{label}</span>
+        {/* Takes the base colour on hover, as a breadcrumb link does: the title is prose, not a list row.
+            A named group: a bare `group-hover` matches any `group` ancestor, and the app's planks are one. */}
+        <span className={mx('truncate group-hover/disclosure:text-fg', error && 'text-error-text')}>{label}</span>
         {suffix}
       </span>
     </TogglePanel.Header>
