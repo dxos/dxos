@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Accordion from '@dxos/react-ui/Accordion';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
@@ -16,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
 import { translationKey } from '../translations.ts';
+import { PANEL_FRAME, WidgetPanel, WidgetPanelRow } from './WidgetPanel.tsx';
 
 export type ToolWidgetProps = WidgetProps;
 
@@ -80,9 +80,6 @@ type ToolEntry = {
 const TOOL_ICON = 'ph--wrench--regular';
 const STATUS_ICON = 'ph--info--regular';
 const REASONING_ICON = 'ph--brain--regular';
-
-/** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
-const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
 
 /**
  * The call's display label where its producer supplied one (a code-mode `eval`), else the operation's
@@ -203,7 +200,6 @@ const hasDetail = (entry: ToolEntry): boolean =>
 
 const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const [open, setOpen] = useState(false);
 
   const calls = entries.filter((entry) => entry.kind === 'call');
   const status = entries.filter((entry) => entry.kind === 'status').at(-1);
@@ -238,63 +234,31 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   // is still saying what it is about to do. A caret that reveals emptiness reads as a failure, so
   // the row stays plain prose until a call or a second line of narration joins it.
   if (single && !hasDetail(single)) {
-    return (
-      <div
-        className='flex items-center gap-2 p-1 text-fg-muted min-h-(--dx-control)'
-        data-testid={`assistant.tool-${single.kind}`}
-      >
-        <Icon.Icon icon={icon} size='md' />
-        <span className='truncate'>{header}</span>
-      </div>
-    );
+    return <WidgetPanelRow icon={icon} label={header} testId={`assistant.tool-${single.kind}`} />;
   }
 
   return (
-    // The summary is a bare text row rather than a bordered panel header: the border belongs to
-    // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
-    //
-    // The body animates: the Collapsible measures its own `--height`, so the reveal ramps instead
-    // of the content appearing and vanishing in one frame. Content mounts on first open and then
-    // stays mounted while the machine hides it, which is what lets the ramp have a height to animate to.
-    <TogglePanel.Root
-      open={open}
-      onChangeOpen={setOpen}
+    <WidgetPanel
+      icon={icon}
+      label={header}
+      error={single?.error !== undefined}
+      suffix={
+        failed > 0 && <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+      }
+      testId={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
+      onChangeOpen={onChangeOpen}
       // A thread is a column of these, nearly all left closed; building each payload at mount was
       // most of the cost of scrolling one into view.
       lazyMount
-      // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
-      // would stretch the whole line — carrying the summary row out of view and scrolling the
-      // editor instead of the payload. Zero width removes this widget from that calculation, and
-      // the min-width then takes the line's own width, which is what bounds the payload's scroller.
-      classNames='w-0 min-w-full'
     >
-      <TogglePanel.Header
-        caret='end'
-        data-testid={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
-        classNames='gap-1'
-      >
-        <span className='flex min-w-0 items-center gap-2 text-fg-muted tabular-nums'>
-          {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
-              whether it is collapsed or not. */}
-          <Icon.Icon icon={icon} size='md' />
-          <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
-          {failed > 0 && (
-            <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
-          )}
-        </span>
-      </TogglePanel.Header>
-      {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
-          ramp, while the box is still shorter than the content it is growing to hold. */}
-      <TogglePanel.Body>
-        {single ? (
-          // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
-          // padding twice pushed the copy button off the caret's column.
-          <ToolCallDetail entry={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
-        ) : (
-          <ToolCallList entries={entries} onOpen={onChangeOpen} />
-        )}
-      </TogglePanel.Body>
-    </TogglePanel.Root>
+      {single ? (
+        // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
+        // padding twice pushed the copy button off the caret's column.
+        <ToolCallDetail entry={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
+      ) : (
+        <ToolCallList entries={entries} onOpen={onChangeOpen} />
+      )}
+    </WidgetPanel>
   );
 };
 

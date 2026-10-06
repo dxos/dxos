@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -88,6 +89,56 @@ export const Synthetic: Story = {
       3. [x] Archive old messages.
       </checklist>
       </synthetic>`,
+  },
+};
+
+/**
+ * Synthetic turns beside a tool run: both are one line of prose with the disclosure caret at its
+ * end — a one-liner, a multi-line wake-up, and a long nudge with a checklist.
+ */
+const SYNTHETIC_VARIANTS = trim`
+  <synthetic>Continue.</synthetic>
+
+  <synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).
+  Poll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>
+
+  <synthetic>
+  Completed the checklist:
+  <checklist>
+  1. [x] Review new messages.
+  2. [x] Respond to new messages.
+  3. [x] Archive old messages.
+  </checklist>
+  </synthetic>
+`;
+
+export const SyntheticVariants: Story = {
+  args: {
+    content: SYNTHETIC_VARIANTS,
+  },
+};
+
+/** Collapsed to its first line with the caret trailing it; the caret opens onto the whole prompt. */
+export const TestSynthetic: Story = {
+  args: {
+    content: SYNTHETIC_VARIANTS,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('assistant.synthetic')).toHaveLength(3));
+    const trigger = canvas.getAllByTestId('assistant.synthetic')[1];
+    await expect(trigger).toHaveTextContent('Your scheduled alarm fired');
+    await expect(trigger).not.toHaveTextContent('Poll the agent session');
+
+    // The caret is the trigger's last child, at the row's end.
+    const caret = trigger.lastElementChild;
+    await expect(caret?.querySelector('svg')).not.toBeNull();
+    await expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(trigger);
+    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
+    const body = canvasElement.querySelectorAll<HTMLElement>('[data-synthetic-text]')[1];
+    await waitFor(() => expect(body.getBoundingClientRect().height).toBeGreaterThan(0));
+    await expect(body).toHaveTextContent('Poll the agent session');
   },
 };
 
@@ -451,5 +502,32 @@ export const Surface: Story = {
 export const Json: Story = {
   args: {
     content: `<json>${JSON.stringify({ _tag: 'unknown', payload: { value: 42 } })}</json>`,
+  },
+};
+
+/** Every widget in one column, in registry order, so their rows, carets and buttons can be compared. */
+export const AllWidgets: Story = {
+  args: {
+    content: [
+      Prompt,
+      SyntheticVariants,
+      Reasoning,
+      Status,
+      Reference,
+      Suggestion,
+      Select,
+      Stats,
+      Toolkit,
+      ToolkitFailed,
+      ToolkitNarrated,
+      ToolkitStatus,
+      Summary,
+      Request,
+      RequestAnswered,
+      Surface,
+      Json,
+    ]
+      .map((story) => story.args?.content ?? '')
+      .join('\n\n'),
   },
 };
