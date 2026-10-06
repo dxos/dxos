@@ -38,6 +38,14 @@ const numberOf = (properties: Properties, key: string): number | undefined => {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 };
 
+/** Each row's `keys` summed, skipping rows that carry none of them or whose `when` integrity column is 0. */
+const readings = (rows: ReadonlyArray<Properties>, keys: ReadonlyArray<string>, when: string | undefined): number[] =>
+  rows
+    .filter((row) => when === undefined || (numberOf(row, when) ?? 0) > 0)
+    .map((row) => keys.map((key) => numberOf(row, key)))
+    .filter((values) => values.some((value) => value !== undefined))
+    .map((values) => values.reduce<number>((total, value) => total + (value ?? 0), 0));
+
 const median = (values: readonly number[]): number => {
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
@@ -47,11 +55,72 @@ const median = (values: readonly number[]): number => {
 export const STAGE_WALL_GROUP = 'stage wall time';
 export const STAGE_CPU_GROUP = 'stage CPU';
 export const RUN_GROUP = 'run';
+export const WORK_GROUP = 'work';
+
+/**
+ * A work counter scored per stage as `<name> > <stage>`, the shape `wall > <stage>` has, so the
+ * heatmap reads the stage and the counter from the id without knowing about counters. `keys` are
+ * summed within a row; `when` drops rows whose instrument read nothing, which report 0 or omit it.
+ */
+export type WorkMetric = { name: string; keys: string[]; when?: string };
+
+const realmKeys = (prefix: string) =>
+  ['Tab', 'Worker', 'SharedWorker', 'ServiceWorker'].map((suffix) => prefix + suffix);
+
+/**
+ * The counters every nightly row carries: the React hook (on by default), `Performance.getMetrics`
+ * and the data probes (free). Counts move only when the code does more or less work, so their
+ * budgets can sit a few percent above the median where wall time and CPU need 35%.
+ */
+export const DEFAULT_WORK_METRICS: ReadonlyArray<WorkMetric> = [
+  { name: 'reactCommits', keys: ['reactCommits'] },
+  { name: 'reactRenders', keys: ['reactRenders'] },
+  { name: 'reactWastedRenders', keys: ['reactWastedRenders'] },
+  { name: 'recalcStyleCount', keys: ['recalcStyleCount'] },
+  { name: 'layoutCount', keys: ['layoutCount'] },
+  { name: 'sqliteSelects', keys: ['sqliteSelects'], when: 'dataRealms' },
+  { name: 'sqliteInserts', keys: ['sqliteInserts'], when: 'dataRealms' },
+  { name: 'sqliteUpdates', keys: ['sqliteUpdates'], when: 'dataRealms' },
+  { name: 'sqliteDeletes', keys: ['sqliteDeletes'], when: 'dataRealms' },
+  { name: 'sqliteRowsChanged', keys: ['sqliteRowsChanged'], when: 'dataRealms' },
+  {
+    name: 'automergeSaves',
+    keys: ['automergeSnapshotSaves', 'automergeIncrementalSaves', 'automergeSyncStateSaves', 'automergeOtherSaves'],
+    when: 'dataRealms',
+  },
+  { name: 'automergeSaveBytes', keys: ['automergeSaveBytes'], when: 'dataRealms' },
+  { name: 'echoIndexPasses', keys: ['echoIndexPasses'], when: 'dataRealms' },
+  { name: 'echoQueryRuns', keys: ['echoQueryRuns'], when: 'dataRealms' },
+  { name: 'echoQueryRecomputes', keys: ['echoQueryRecomputes'], when: 'dataRealms' },
+];
+
+/**
+ * The counters only `DX_PERF_COUNTERS=trace,calls` rows carry: a trace per stage and V8 precise
+ * coverage, which cost 7–29% and so run in a pass of their own rather than beside the trended timings.
+ */
+export const COSTED_WORK_METRICS: ReadonlyArray<WorkMetric> = [
+  { name: 'styleRecalcs', keys: ['styleRecalcs'], when: 'traceCounterEvents' },
+  { name: 'styleRecalcElements', keys: ['styleRecalcElements'], when: 'traceCounterEvents' },
+  { name: 'layouts', keys: ['layouts'], when: 'traceCounterEvents' },
+  { name: 'layoutDirtyObjects', keys: ['layoutDirtyObjects'], when: 'traceCounterEvents' },
+  { name: 'forcedLayouts', keys: ['forcedLayouts'], when: 'traceCounterEvents' },
+  // Integrity first: no thread with a PMU reading means the runner exposes none, not that nothing ran.
+  { name: 'instructions', keys: realmKeys('instructions'), when: 'instructionThreads' },
+  { name: 'jsCalls', keys: ['jsCallsTotal'], when: 'jsCallRealms' },
+];
+
+const WORK_NAMES = new Set([...DEFAULT_WORK_METRICS, ...COSTED_WORK_METRICS].map(({ name }) => name));
 
 /** A metric id names its group before the first ` > `, so a budget and its group cannot disagree. */
 export const groupOfId = (id: string): string => {
   const prefix = id.split(' > ')[0];
-  return prefix === 'wall' ? STAGE_WALL_GROUP : prefix === 'cpu' ? STAGE_CPU_GROUP : RUN_GROUP;
+  return prefix === 'wall'
+    ? STAGE_WALL_GROUP
+    : prefix === 'cpu'
+      ? STAGE_CPU_GROUP
+      : WORK_NAMES.has(prefix)
+        ? WORK_GROUP
+        : RUN_GROUP;
 };
 
 /**
@@ -92,11 +161,47 @@ const RUN_METRICS: ReadonlyArray<{ id: string; keys: string[]; reduce: 'max' | '
 ];
 
 /**
- * One measurement per budgeted metric: each stage's wall time and CPU, and each whole-run reading,
- * as the median across the night's iterations. A stage that failed in every iteration produces no
- * row and so no measurement, which the scorer counts at the floor.
+ * Every iteration's reading of each work counter, keyed `<name> > <stage>`. A counter whose
+ * instrument did not run in a stage has no entry rather than zeros.
  */
-export const toMeasurements = (events: ReadonlyArray<StageEvent>): Measurement[] => {
+export const workReadings = (
+  events: ReadonlyArray<StageEvent>,
+  work: ReadonlyArray<WorkMetric>,
+): Map<string, number[]> => {
+  const byStage = new Map<string, Properties[]>();
+  for (const { properties } of events) {
+    if (typeof properties.stage === 'string' && typeof properties.iteration === 'number') {
+      byStage.set(properties.stage, [...(byStage.get(properties.stage) ?? []), properties]);
+    }
+  }
+  const result = new Map<string, number[]>();
+  for (const [stage, rows] of byStage) {
+    for (const { name, keys, when } of work) {
+      const values = readings(rows, keys, when);
+      if (values.length > 0) {
+        result.set(`${name} > ${stage}`, values);
+      }
+    }
+  }
+  return result;
+};
+
+export type MeasureOptions = {
+  /** The work counters measured per stage. */
+  work?: ReadonlyArray<WorkMetric>;
+  /** Stage wall time and CPU and the whole-run readings; off for a pass whose instruments inflate them. */
+  timings?: boolean;
+};
+
+/**
+ * One measurement per metric: each stage's wall time, CPU and work counters, and each whole-run
+ * reading, as the median across the night's iterations. A stage that failed in every iteration
+ * produces no row and so no measurement, which the scorer counts at the floor.
+ */
+export const toMeasurements = (
+  events: ReadonlyArray<StageEvent>,
+  { work = DEFAULT_WORK_METRICS, timings = true }: MeasureOptions = {},
+): Measurement[] => {
   const byStage = new Map<string, { wall: number[]; cpu: number[] }>();
   const byIteration = new Map<string, Properties[]>();
   for (const { properties } of events) {
@@ -123,13 +228,15 @@ export const toMeasurements = (events: ReadonlyArray<StageEvent>): Measurement[]
     ...(cpu.length > 0 ? [{ id: `cpu > ${stage}`, group: STAGE_CPU_GROUP, value: median(cpu) }] : []),
   ]);
 
+  const workMeasurements = [...workReadings(events, work)].map(([id, values]) => ({
+    id,
+    group: WORK_GROUP,
+    value: median(values),
+  }));
+
   const runMeasurements = RUN_METRICS.flatMap(({ id, keys, reduce, when }) => {
     const perIteration = [...byIteration.values()].flatMap((rows) => {
-      const values = rows
-        .filter((row) => when === undefined || (numberOf(row, when) ?? 0) > 0)
-        .map((row) => keys.map((key) => numberOf(row, key)))
-        .filter((readings) => readings.some((reading) => reading !== undefined))
-        .map((readings) => readings.reduce<number>((total, reading) => total + (reading ?? 0), 0));
+      const values = readings(rows, keys, when);
       if (values.length === 0) {
         return [];
       }
@@ -138,5 +245,5 @@ export const toMeasurements = (events: ReadonlyArray<StageEvent>): Measurement[]
     return perIteration.length > 0 ? [{ id, group: RUN_GROUP, value: median(perIteration) }] : [];
   });
 
-  return [...stageMeasurements, ...runMeasurements];
+  return [...(timings ? [...stageMeasurements, ...runMeasurements] : []), ...workMeasurements];
 };
