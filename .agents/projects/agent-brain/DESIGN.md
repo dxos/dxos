@@ -181,6 +181,12 @@ judged depends on how long it lives:
   created it, may be relevant to parallel or later sessions, and assimilates what they learn: their
   facts reach it through the feeds whatever session produced them. When it acts, the agent service
   routes the result to the right place — the user's current session, or their channel.
+- **One background session per agent, with one private thread per durable goal.** It is the same
+  private-thread pattern as session goals, hosted in the brain's session instead of the user's. A
+  judgment for one goal can see the others' threads, so conflicts and priorities are weighed
+  together ("taxes" outranks "learn French" this week), and there is one place to read the brain's
+  thinking. Because the session sees every user's goals, anything it sends follows the audience
+  rule: one user's goals are never disclosed to another.
 - **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
   private thread's history moves with it into the goal's feed.
 
