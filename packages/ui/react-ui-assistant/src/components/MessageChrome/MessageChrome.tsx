@@ -270,9 +270,11 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
+            {/* Sized by its own text, not the column: the toolbar below shares the column, and its
+                relative timestamp changing width ("just now" → "1 minute ago") resized the bubble. */}
             <div
               className={mx(
-                'px-3 py-2 border-s-2 rounded-sm bg-input-surface',
+                'w-fit max-w-full ms-auto px-3 py-2 border-s-2 rounded-sm bg-input-surface',
                 userHue ? getStyles(userHue).border : 'border-accent-bg',
               )}
             >
