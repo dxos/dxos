@@ -140,7 +140,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
       // {
       //   from: 0,
       //   to: 0,
-      //   value: Decoration.widget({ side: 0, block: false, widget: new RemoteCaretWidget('Test', 'red') }),
+      //   value: Decoration.widget({ side: 0, block: false, widget: new RemoteCaretWidget('test', 'Test', 'red') }),
       // },
     ];
 
@@ -207,7 +207,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
       }
 
       const name = state.info.displayName ?? 'Anonymous';
-      const isHovered = hovered?.pos === head && hovered.name === name;
+      const isHovered = hovered?.pos === head && hovered.peerId === state.peerId;
       hoveredRendered ||= isHovered;
       decorations.push({
         from: head,
@@ -215,7 +215,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
         value: Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
           block: false,
-          widget: new RemoteCaretWidget(name, darkColor, isHovered),
+          widget: new RemoteCaretWidget(state.peerId, name, darkColor, isHovered),
         }),
       });
     }
@@ -229,7 +229,8 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 }
 
-type HoveredCaret = { pos: number; name: string; color: string };
+/** Keyed by peer, not name: two peers may share a display name and a position. */
+type HoveredCaret = { pos: number; peerId: string; name: string; color: string };
 
 const setHoveredCaret = StateEffect.define<HoveredCaret | null>();
 
@@ -299,6 +300,7 @@ const hoveredCaret = StateField.define<HoveredCaret | null>({
 
 class RemoteCaretWidget extends WidgetType {
   constructor(
+    private readonly _peerId: string,
     private readonly _name: string,
     private readonly _color: string,
     /** Its name tooltip is showing, which outlasts the pointer; the dot hides for as long. */
@@ -310,6 +312,7 @@ class RemoteCaretWidget extends WidgetType {
   override toDOM(view: EditorView): HTMLElement {
     const span = document.createElement('span');
     span.className = 'cm-collab-selectionCaret';
+    span.dataset.peer = this._peerId;
     span.dataset.name = this._name;
     span.dataset.color = this._color;
     span.toggleAttribute('data-hovered', this._hovered);
@@ -332,7 +335,9 @@ class RemoteCaretWidget extends WidgetType {
       cancelHide(view);
       hoveredAt.set(view, Date.now());
       const pos = view.posAtDOM(span);
-      view.dispatch({ effects: setHoveredCaret.of({ pos, name: this._name, color: this._color }) });
+      view.dispatch({
+        effects: setHoveredCaret.of({ pos, peerId: this._peerId, name: this._name, color: this._color }),
+      });
     });
     // A 2px caret is easy to leave by accident; a name that vanished at once could not be read.
     span.addEventListener('mouseleave', () => scheduleHide(view));
@@ -341,7 +346,7 @@ class RemoteCaretWidget extends WidgetType {
 
   override updateDOM(dom: HTMLElement): boolean {
     // Only the hover state changes in place: replacing the element under the pointer would drop its hover.
-    if (dom.dataset.name !== this._name || dom.dataset.color !== this._color) {
+    if (dom.dataset.peer !== this._peerId || dom.dataset.name !== this._name || dom.dataset.color !== this._color) {
       return false;
     }
     dom.toggleAttribute('data-hovered', this._hovered);
@@ -349,7 +354,12 @@ class RemoteCaretWidget extends WidgetType {
   }
 
   override eq(widget: this): boolean {
-    return widget._color === this._color && widget._name === this._name && widget._hovered === this._hovered;
+    return (
+      widget._peerId === this._peerId &&
+      widget._color === this._color &&
+      widget._name === this._name &&
+      widget._hovered === this._hovered
+    );
   }
 
   override get estimatedHeight() {

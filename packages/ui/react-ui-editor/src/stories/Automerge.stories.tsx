@@ -166,9 +166,9 @@ export const WithEcho: Story = {
   play: async ({ canvasElement }) => {
     // ECHO identity/space creation and invitation are async; wait for both peers to mount an editor.
     const editors = await waitFor(
-      () => {
+      async () => {
         const found = Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-editor'));
-        void expect(found).toHaveLength(2);
+        await expect(found).toHaveLength(2);
         return found;
       },
       { timeout: 15_000 },
@@ -206,9 +206,9 @@ export const WithEcho: Story = {
     }
     await expect(caret).toHaveTextContent(/.+/);
     caret.dispatchEvent(new MouseEvent('mouseenter'));
-    const info = await waitFor(() => {
+    const info = await waitFor(async () => {
       const found = editors[0].querySelector<HTMLElement>('.cm-tooltip.cm-collab-selectionInfo');
-      void expect(found).toBeInstanceOf(HTMLElement);
+      await expect(found).toBeInstanceOf(HTMLElement);
       return found;
     });
     if (!info) {
@@ -216,12 +216,12 @@ export const WithEcho: Story = {
     }
     await expect(info).toHaveTextContent(caret.textContent?.replaceAll('\u2060', '') ?? '');
     // CodeMirror places a tooltip on its next measure, so the geometry is awaited rather than read once.
-    await waitFor(() => {
+    await waitFor(async () => {
       const caretBox = caret.getBoundingClientRect();
       const infoBox = info.getBoundingClientRect();
-      void expect(Math.round(infoBox.bottom)).toBeLessThanOrEqual(Math.round(caretBox.top) + 1);
-      void expect(Math.round(infoBox.left)).toBeGreaterThanOrEqual(Math.round(caretBox.left) - 2);
-      void expect(infoBox.top).toBeGreaterThanOrEqual(0);
+      await expect(Math.round(infoBox.bottom)).toBeLessThanOrEqual(Math.round(caretBox.top) + 1);
+      await expect(Math.round(infoBox.left)).toBeGreaterThanOrEqual(Math.round(caretBox.left) - 2);
+      await expect(infoBox.top).toBeGreaterThanOrEqual(0);
     });
 
     // The peer moving its caret removes the hovered caret without a `mouseleave`; the name still goes.
@@ -230,9 +230,9 @@ export const WithEcho: Story = {
     await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull(), { timeout: 3_000 });
 
     // It outlasts the pointer leaving, so a name glimpsed on a 2px caret can still be read, then goes.
-    const movedCaret = await waitFor(() => {
+    const movedCaret = await waitFor(async () => {
       const found = editors[0].querySelector<HTMLElement>('.cm-collab-selectionCaret');
-      void expect(found).toBeInstanceOf(HTMLElement);
+      await expect(found).toBeInstanceOf(HTMLElement);
       return found;
     });
     movedCaret?.dispatchEvent(new MouseEvent('mouseenter'));
