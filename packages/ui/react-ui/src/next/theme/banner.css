@@ -4,7 +4,8 @@
 
 @layer dx-components {
   .dx-banner {
-    --dx-banner-surface: var(--color-neutral-surface);
+    /* A neutral banner is a note in the flow of its host, so it takes the host's surface; valences paint their own. */
+    --dx-banner-surface: transparent;
     --dx-banner-fg: var(--color-neutral-fg);
     --dx-valence-bg: var(--color-neutral-bg);
     --dx-valence-bg-hover: var(--color-neutral-bg-hover);
