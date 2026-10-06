@@ -59,7 +59,7 @@ import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
-import { PREVIEW_NODE_ID, createId, usePointerMachine, viewSize } from './usePointerMachine.ts';
+import { PREVIEW_NODE_ID, createId, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
@@ -498,7 +498,7 @@ const SceneViewRoot = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = viewSize(def.defaultSize, camera.zoom);
+      const size = def.defaultSize;
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
       // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
       const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));

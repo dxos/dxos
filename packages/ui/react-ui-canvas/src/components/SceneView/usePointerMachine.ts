@@ -23,14 +23,12 @@ import {
   type ElementId,
   type Endpoint,
   type Link,
-  MAJOR_GRID,
   type Node,
   type NodeId,
   type NodeType,
   type Point,
   type Port,
   type Scene,
-  type Size,
   type SplineLink,
   type Tool,
   endpointNode,
@@ -55,18 +53,6 @@ const PORT_SNAP_PX = 16;
 export const PREVIEW_NODE_ID = 'preview-node';
 
 export const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-
-/**
- * A type's default size in scene units such that it covers the same screen area whatever the camera is
- * doing. A nested scene is entered at a fraction of the parent's zoom, so a size fixed in scene units
- * arrives a quarter or less of its apparent size there; scaling by the zoom is what keeps a new node the
- * same on screen at every level, and it is stable — unlike the portal's own factor, which grows with the
- * child's bounds and so would feed back into the size of the next node drawn.
- */
-export const viewSize = ({ width, height }: Size, zoom: number): Size => ({
-  width: Math.max(MAJOR_GRID, Math.round(width / zoom / MAJOR_GRID) * MAJOR_GRID),
-  height: Math.max(MAJOR_GRID, Math.round(height / zoom / MAJOR_GRID) * MAJOR_GRID),
-});
 
 const distance = (left: Point, right: Point): [number, number] => [left.x - right.x, left.y - right.y];
 
@@ -640,14 +626,14 @@ export const usePointerMachine = ({
         return undefined;
       }
       const drawn = boundsFromPoints(drag.from, drag.to);
-      // Dropped from the palette there is no drawn box, so the type's default stands in, scaled to cover
-      // the same screen area at any zoom. A box drawn on the canvas is exactly what the pointer swept:
+      // Dropped from the palette there is no drawn box, so the type's default size stands in, in scene
+      // units whatever the zoom. A box drawn on the canvas is exactly what the pointer swept:
       // it follows the cursor as the frame shows it, and a gesture that snapped to nothing creates nothing
       // rather than planting a default-sized node under the click.
       if (!drag.dropped && (drawn.width === 0 || drawn.height === 0)) {
         return undefined;
       }
-      const size = drag.dropped ? viewSize(def.defaultSize, camera.zoom) : { ...drawn };
+      const size = drag.dropped ? { ...def.defaultSize } : { ...drawn };
       const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
@@ -658,7 +644,7 @@ export const usePointerMachine = ({
       pendingRef.current = { type: drag.type, node };
       return node;
     },
-    [nodeRegistry, scene.nodes, camera.zoom],
+    [nodeRegistry, scene.nodes],
   );
 
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
