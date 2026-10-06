@@ -64,12 +64,18 @@ test.describe('SceneView', () => {
     await page.mouse.move(entry.x + entry.width / 2, entry.y + entry.height / 2);
     await page.mouse.down();
     await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
-    await page.mouse.move(view.x + view.width * 0.7, view.y + view.height * 0.8, { steps: 10 });
-    // A drop carries the palette's own preview, so the canvas shows the frame alone.
+    const drop = { x: view.x + view.width * 0.7, y: view.y + view.height * 0.8 };
+    await page.mouse.move(drop.x, drop.y, { steps: 10 });
+    // The drag carries no image of its own, so the canvas shows the shape inside its frame.
     await expect(page.getByTestId('create-frame')).toHaveCount(1);
-    await expect(page.locator('[data-ghost]')).toHaveCount(0);
+    await expect(page.locator('[data-ghost]')).toHaveCount(1);
     await page.mouse.up();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
+    // The pointer was the shape's centre; snapping its top-left to the grid moves it by under a cell.
+    const created = await scene.box(page.locator('[data-node-id^="ellipse-"]'));
+    const cell = (64 * (await scene.zoom())) / 100;
+    expect(Math.abs(created.x + created.width / 2 - drop.x)).toBeLessThanOrEqual(cell);
+    expect(Math.abs(created.y + created.height / 2 - drop.y)).toBeLessThanOrEqual(cell);
   });
 
   test('hovering outlines the node and reveals its ports, and D labels every frame', async () => {
@@ -81,11 +87,34 @@ test.describe('SceneView', () => {
     await expect(ports).not.toHaveCount(0);
     await page.mouse.move(box.x + box.width + 200, box.y + box.height + 200);
     await expect(ports).toHaveCount(0);
+    // A selected node shows its handles, not its ports, even under the pointer.
+    await scene.clickNode('scene:root/a');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(ports).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press('d');
     await expect(page.getByTestId('node-debug')).toHaveCount(4);
     await page.keyboard.press('d');
     await expect(page.getByTestId('node-debug')).toHaveCount(0);
+  });
+
+  test('a ⌘-drag leaves the selection and drops a copy, which becomes the selection', async () => {
+    const id = 'scene:root/a';
+    const before = await scene.nodeCount();
+    const box = await scene.box(scene.node(id));
+    const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.keyboard.down('Meta');
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x, start.y + box.height * 1.5, { steps: 8 });
+    await page.mouse.up();
+    await page.keyboard.up('Meta');
+    await expect(page.locator('[data-node-id]')).toHaveCount(before + 1);
+    // The original has not moved; the selection is the copy.
+    expect(await scene.box(scene.node(id))).toEqual(box);
+    const selected = await scene.selectedNodes();
+    expect(selected).toHaveLength(1);
+    expect(selected[0]).not.toBe(id);
   });
 
   test('shift-resize keeps the centre; a plain resize keeps the opposite edge', async () => {
@@ -168,6 +197,9 @@ test.describe('SceneView', () => {
     expect(await scene.linkCount()).toBe(before + 1);
     // No node was created: the drop landed on an existing one rather than on empty canvas.
     expect(await scene.nodeCount()).toBe(4);
+    // The new link is the selection, and nothing else is.
+    await expect(page.locator('[data-link-id].stroke-primary-500')).toHaveCount(1);
+    expect(await scene.selectedNodes()).toEqual([]);
   });
 
   test('the line tool draws nothing when a press on a node never moves', async () => {
@@ -218,7 +250,7 @@ test.describe('SceneView', () => {
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
     expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
     // Geometry is two labelled number fields per row.
-    expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'W', 'H']));
+    expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });
 
   test('the geometry fields step by the grid and move the node', async () => {

@@ -46,6 +46,7 @@ import {
   isPointEndpoint,
 } from '../../model/types.ts';
 import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
@@ -59,7 +60,7 @@ import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
-import { PREVIEW_NODE_ID, createId, usePointerMachine, viewSize } from './usePointerMachine.ts';
+import { PREVIEW_NODE_ID, createId, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
@@ -356,7 +357,14 @@ const SceneViewRoot = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped.
   const displayScene = useMemo<Scene>(() => {
     if (drag?.kind === 'move') {
-      return reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
+      // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
+      let preview = 0;
+      const copy = drag.copy
+        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${preview++}`)
+        : undefined;
+      return copy
+        ? reduceIntent(scene, copy.intent)
+        : reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
     }
     if (drag?.kind === 'resize') {
       return reduceIntent(scene, { kind: 'resize', id: drag.id, bounds: drag.bounds });
@@ -381,10 +389,10 @@ const SceneViewRoot = ({
       const end: Endpoint = drag.target ?? { point: drag.to };
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
     }
-    // A node drawn on the canvas previews as the type's own view; one dragged in from the palette shows
-    // the frame alone, since the pointer is already carrying the palette's preview of it.
+    // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
+    // or dragged in from the palette (whose drag carries no image of its own).
     if (drag?.kind === 'create') {
-      return createPreview && !drag.dropped ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
+      return createPreview ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
     }
     return scene;
   }, [scene, drag, createPreview]);
@@ -444,9 +452,11 @@ const SceneViewRoot = ({
     if (!element) {
       return;
     }
+    // The pointer is the shape's centre; its top-left is what snaps, so the edges land on the grid.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
-      const from = { x: snap(point.x), y: snap(point.y) };
+      const size = nodeRegistry[type]?.defaultSize ?? { width: 0, height: 0 };
+      const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
       return { kind: 'create', type, from, to: from, dropped: true };
     };
     return dropTargetForElements({
@@ -467,7 +477,7 @@ const SceneViewRoot = ({
       onDragLeave: cancelDrag,
       onDrop: () => onPointerUpRef.current(),
     });
-  }, [capabilities.create, toScene, snap, setDrag, cancelDrag]);
+  }, [capabilities.create, nodeRegistry, toScene, snap, setDrag, cancelDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
@@ -498,7 +508,7 @@ const SceneViewRoot = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = viewSize(def.defaultSize, camera.zoom);
+      const size = def.defaultSize;
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
       // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
       const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
