@@ -211,3 +211,14 @@ before), not reasoned about from the source.
       frames the floor rather than the circuit. Only `template` (taller than the floor) and
       `artifact` fit to their own bounds. That is the open framing question below, not a separate
       fault.
+
+## Backlog
+
+- [ ] **Object classes and prototypes.** Define named classes of objects (a shared bundle of type, size,
+      style, port count and other non-text properties), and designate the current object as a prototype
+      that can be applied to others: a selection takes the prototype's properties, keeping its own text and
+      geometry. Builds on the multi-select properties panel (common schema, batched `update` intents) and
+      on `cloneShape` (`react-ui-canvas/src/utils/shapes.ts`), which already copies a shape's look without
+      its text. Open questions: whether an applied object stays linked to its prototype (edits propagate)
+      or is a one-off copy; where classes live (per scene, per canvas, or as ECHO objects in the space);
+      how the palette offers them.
