@@ -7,12 +7,9 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { useSceneProjection } from '../../hooks/index.ts';
-import { createSceneViewAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
-import { Properties } from '../Properties/index.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**
@@ -26,7 +23,8 @@ import { SceneView } from './SceneView.tsx';
  * 4. R / E / C / T / S then drag draws a rectangle, ellipse, UML class, text or nested scene; Delete removes the
  *    selection (nodes or links).
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
- * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
+ * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
+ *    selected element.
  */
 type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' | 'square' };
 
@@ -37,27 +35,23 @@ type EditorProps = {
   readonly?: boolean;
 };
 
-const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => {
-  const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
-  const projection = useSceneProjection({ store, atoms });
-  return (
-    <div className='dx-fill grid grid-cols-[1fr_20rem]'>
-      <SceneView.Root store={store} root={root} atoms={atoms} readonly={readonly}>
-        <SceneView.Canvas liveDepth={liveDepth} />
-        <SceneView.Navigation />
-        <SceneView.Actions />
-        <SceneView.Debug />
-        <SceneView.Palette />
-      </SceneView.Root>
-      <Properties projection={projection} atoms={atoms} readonly={readonly} classNames='border-l border-separator' />
-    </div>
-  );
-};
+const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => (
+  <SceneView.Root store={store} root={root} readonly={readonly}>
+    <SceneView.Canvas liveDepth={liveDepth} />
+    <SceneView.Navigation />
+    <SceneView.Actions />
+    <SceneView.Debug />
+    <SceneView.Palette />
+    <SceneView.Properties />
+  </SceneView.Root>
+);
 
 /** One square centred on the origin: something to select and style straight away. */
 const createSquareTree = () => {
   const root = 'scene:root';
-  const scene = SceneBuilder.create(root, 'root').rect('square', { x: -128, y: -128, width: 256, height: 256 }).build();
+  const scene = SceneBuilder.create(root, 'root')
+    .rect('square', { x: -128, y: -128, width: 256, height: 256 }, 'DXOS')
+    .build();
   return { scenes: [scene], root };
 };
 
