@@ -91,11 +91,11 @@ const createLatticeTree = () => {
     .rect('d', at(0, 0), 'D')
     .rect('e', at(0, 1), 'E')
     .rect('f', at(1, -1, 1, 3), 'F')
-    .line('ab', 'a', 'b')
-    .line('bc', 'b', 'c')
-    .line('bd', 'b', 'd')
-    .line('de', 'd', 'e')
-    .line('df', 'd', 'f')
+    .smart('ab', 'a', 'b')
+    .smart('bc', 'b', 'c')
+    .smart('bd', 'b', 'd')
+    .smart('de', 'd', 'e')
+    .smart('df', 'd', 'f')
     .build();
   return { scenes: [scene], root };
 };

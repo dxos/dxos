@@ -30,6 +30,7 @@ import {
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
 import { contentBounds } from '../../utils/hit.ts';
+import { type LatticeSpec } from '../../utils/lattice.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey } from '../../utils/parts.ts';
 import { type LinkGeometry, linkGeometry } from '../../utils/route.ts';
@@ -91,6 +92,8 @@ export type SceneLayerProps = {
   debug?: boolean;
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
+  /** The scene's lattice, when it has one: smart links route through its gutters. */
+  lattice?: LatticeSpec;
 };
 
 export const SceneLayer = memo(
@@ -108,6 +111,7 @@ export const SceneLayer = memo(
     ghost,
     debug,
     handlers,
+    lattice,
   }: SceneLayerProps) => {
     // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
     // hide under a neighbour, while the model's z stays what the user arranged.
@@ -120,7 +124,7 @@ export const SceneLayer = memo(
     const links = useMemo(
       () =>
         sortByZ(Object.values(scene.links))
-          .map((link) => linkGeometry(scene, registry, link))
+          .map((link) => linkGeometry(scene, registry, link, lattice))
           .filter((geometry): geometry is LinkGeometry => geometry !== undefined),
       [scene, registry],
     );

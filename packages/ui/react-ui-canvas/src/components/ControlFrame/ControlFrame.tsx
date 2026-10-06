@@ -29,6 +29,7 @@ import {
   isPointEndpoint,
 } from '../../model/types.ts';
 import { boundsFromPoints } from '../../utils/hit.ts';
+import { type LatticeSpec } from '../../utils/lattice.ts';
 import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
 import { curvePath, linkGeometry } from '../../utils/route.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
@@ -68,6 +69,8 @@ export type ControlFrameProps = {
   createFrame?: Bounds;
   /** The gesture in flight would be refused (an overlap on the lattice): its outlines turn red. */
   blocked?: boolean;
+  /** The scene's lattice, so a selected smart link's handles sit on its gutter route. */
+  lattice?: LatticeSpec;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -98,6 +101,7 @@ export const ControlFrame = memo(
     drag,
     createFrame,
     blocked,
+    lattice,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -201,7 +205,7 @@ export const ControlFrame = memo(
         )}
         {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
         {selectedLinks.map((link) => {
-          const geometry = capabilities.update ? linkGeometry(scene, registry, link) : undefined;
+          const geometry = capabilities.update ? linkGeometry(scene, registry, link, lattice) : undefined;
           if (!geometry) {
             return null;
           }

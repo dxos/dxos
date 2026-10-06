@@ -14,6 +14,7 @@ import {
   type Endpoint,
   type Link,
   MAJOR_GRID,
+  type Node,
   type Point,
   type Port,
   type PortEndpoint,
@@ -21,6 +22,8 @@ import {
   type Side,
   isPointEndpoint,
 } from '../model/types.ts';
+import { gutterRoute } from './gutter-route.ts';
+import { type LatticeSpec } from './lattice.ts';
 import { type PortTerminal, nearestPort, nodePorts, pairPorts, portPoint, sideNormal } from './ports.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -103,8 +106,8 @@ export const splinePath = (points: readonly Point[]): string => {
   return segments.join(' ');
 };
 
-/** The path of a link between two resolved ends, by its type. */
-export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd): string => {
+/** The path of a link between two resolved ends, by its type; on a lattice a smart link takes the gutters. */
+export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: LatticeRoute): string => {
   switch (link.type) {
     case 'line':
       return linePath(from.point, to.point);
@@ -113,9 +116,12 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd): string => {
     case 'spline':
       return splinePath([from.point, ...link.points, to.point]);
     case 'smart':
-      return splinePath(smartPoints(from, to));
+      return splinePath((lattice && gutterRoute(lattice.nodes, lattice.spec, from, to)) ?? smartPoints(from, to));
   }
 };
+
+/** What gutter routing needs: the lattice and the nodes whose frames block it. */
+export type LatticeRoute = { spec: LatticeSpec; nodes: readonly Node[] };
 
 /**
  * The polyline a smart link follows: a stub out of each port along its side's normal, then one segment
@@ -157,13 +163,19 @@ const routeEnd = (terminal: PortTerminal, port: Port): RouteEnd => ({
  * Resolve a link's ends and route it by its type: two node ends take the automatic (or pinned) port pair,
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
  */
-export const linkGeometry = (scene: Scene, registry: NodeRegistry, link: Link): LinkGeometry | undefined => {
+export const linkGeometry = (
+  scene: Scene,
+  registry: NodeRegistry,
+  link: Link,
+  lattice?: LatticeSpec,
+): LinkGeometry | undefined => {
   const ends = resolveEnds(scene, registry, link.source, link.target);
   if (!ends) {
     return undefined;
   }
   const [from, to] = ends;
-  return { link, path: linkPath(link, from, to), source: from, target: to };
+  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
+  return { link, path: linkPath(link, from, to, route), source: from, target: to };
 };
 
 const resolveEnds = (

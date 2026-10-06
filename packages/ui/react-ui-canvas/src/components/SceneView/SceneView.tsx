@@ -792,6 +792,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
             debug={debug}
             handlers={handlers}
+            lattice={projection.lattice}
           />
         </div>
         <ControlFrame
@@ -805,6 +806,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           capabilities={capabilities}
           createFrame={createFrame}
           blocked={blocked}
+          lattice={projection.lattice}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
