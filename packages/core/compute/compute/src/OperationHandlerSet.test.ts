@@ -281,12 +281,3 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
     expect((await reactive.getHandlerFor(KEY_A))?.meta.key).toEqual(KEY_A);
   });
 });
-
-describe('OperationHandlerSet.merge', () => {
-  test('stays remote only when every merged set is remote', ({ expect }) => {
-    const remote: OperationHandlerSet.OperationHandlerSet = { ...OperationHandlerSet.empty, remote: true };
-    expect(OperationHandlerSet.merge(remote, remote).remote).toBe(true);
-    expect(OperationHandlerSet.merge(remote, OperationHandlerSet.empty).remote).toBeUndefined();
-    expect(OperationHandlerSet.merge().remote).toBeUndefined();
-  });
-});

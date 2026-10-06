@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -121,6 +122,32 @@ const SlowChild = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
+
+/** A service no resolver in these tests provides. */
+class Unprovided extends Context.Service<Unprovided, { readonly value: number }>()('test/Unprovided') {}
+
+// Declares a service the local runtime cannot resolve, as an operation whose body runs on EDGE's operation-service does.
+const NeedsUnprovided = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.needsUnprovided'), name: 'NeedsUnprovided' },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Number,
+  services: [Unprovided],
+});
+
+// Stands in for a dispatching implementation: its own definition requires nothing here.
+const dispatchingHandlers = OperationHandlerSet.make(
+  Operation.make({
+    meta: { key: NeedsUnprovided.meta.key },
+    input: Schema.Struct({ value: Schema.Number }),
+    output: Schema.Number,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fn(function* (input) {
+        return input.value + 1;
+      }),
+    ),
+  ),
+);
 
 const handlers = OperationHandlerSet.make(
   Double.pipe(
@@ -422,6 +449,22 @@ describe('ManagerImpl', () => {
 
       const outputs = yield* Fiber.join(outputFiber);
       expect(outputs).toEqual([10]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'requires the services of the resolved implementation, not of the definition',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(yield* DurableOperation.resolve(NeedsUnprovided, dispatchingHandlers));
+      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.forkChild);
+      yield* handle.submitInput({ value: 1 });
+      expect(yield* Fiber.join(outputFiber)).toEqual([2]);
+
+      const exit = yield* manager
+        .spawn(DurableOperation.fromOperation(NeedsUnprovided, dispatchingHandlers))
+        .pipe(Effect.exit);
+      expect(Exit.isFailure(exit)).toBe(true);
     }, Effect.provide(TestLayer)),
   );
 

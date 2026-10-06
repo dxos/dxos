@@ -37,12 +37,6 @@ export interface OperationHandlerSet {
    * the key is not in this set.
    */
   getHandlerFor(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
-
-  /**
-   * The handlers dispatch each invocation to another runtime (e.g. EDGE's operation worker), which
-   * resolves the operations' services itself; the local process runtime then resolves none for them.
-   */
-  readonly remote?: boolean;
 }
 
 /**
@@ -159,8 +153,6 @@ export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
     getHandlerFor: (key) => resolveFromSets(sets, key),
     getHandlers,
     handlers: Effect.promise(getHandlers),
-    // Only an all-remote merge may skip local service resolution; one local set still needs its services here.
-    ...(sets.length > 0 && sets.every((set) => set.remote) ? { remote: true } : {}),
   };
 };
 
