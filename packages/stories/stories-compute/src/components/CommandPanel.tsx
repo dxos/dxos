@@ -5,8 +5,11 @@
 import React, { useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
-import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { Form, createSelectField } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import {
   MandelbrotFormValues,
@@ -60,7 +63,7 @@ export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: Co
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button
+          <Button.Root
             icon='ph--plus--regular'
             label='Create'
             disabled={!ready}

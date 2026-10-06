@@ -11,9 +11,9 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { Account } from '#types';
 
-import { ShareIdentity } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.ShareIdentity> = ClientOperation.ShareIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });

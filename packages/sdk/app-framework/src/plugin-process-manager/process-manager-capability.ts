@@ -21,7 +21,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
-import { makeGlobalTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -189,7 +189,7 @@ export default Capability.makeModule(
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
       // Over the OTel global provider, a proxy that no-ops until one is registered, so this is
       // installed whether or not observability exists.
-      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
+      Layer.succeed(Tracer.Tracer, OtelTracer.makeGlobal('@dxos/app-framework/process-manager')),
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(

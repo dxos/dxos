@@ -4,13 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { toAvatarHue } from './Avatar.tsx';
+import * as Avatar from './Avatar.tsx';
 
 describe('toAvatarHue', () => {
   test('a palette name is a hue; anything else is undefined', () => {
-    expect(toAvatarHue('red')).toBe('red');
-    expect(toAvatarHue('neutral')).toBe('neutral');
-    expect(toAvatarHue('not-a-hue')).toBeUndefined();
-    expect(toAvatarHue(undefined)).toBeUndefined();
+    expect(Avatar.toAvatarHue('red')).toBe('red');
+    expect(Avatar.toAvatarHue('neutral')).toBe('neutral');
+    expect(Avatar.toAvatarHue('not-a-hue')).toBeUndefined();
+    expect(Avatar.toAvatarHue(undefined)).toBeUndefined();
   });
 });

@@ -4,27 +4,20 @@
 
 import React, { type ComponentProps, forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
-import {
-  AttentionGlyph,
-  type AttentionGlyphProps,
-  Avatar,
-  Popover,
-  type ThemedClassName,
-  Tooltip,
-  toAvatarHue,
-  useDefaultValue,
-  useId,
-  useTranslation,
-} from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -46,7 +39,7 @@ export type SpacePresenceProps = {
 };
 
 export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
-  const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const db = Obj.getDatabase(object);
   const space = useSpace(spaceId ?? db?.spaceId);
@@ -106,7 +99,7 @@ export type Member = Space.Member & {
 
 type AvatarSize = ComponentProps<typeof Avatar.Root>['size'];
 
-export type MemberPresenceProps = ThemedClassName<{
+export type MemberPresenceProps = Util.ThemedClassName<{
   size?: AvatarSize;
   members?: Member[];
   showCount?: boolean;
@@ -115,7 +108,7 @@ export type MemberPresenceProps = ThemedClassName<{
 
 export const FullPresence = (props: MemberPresenceProps) => {
   const { size = 'md', onMemberClick } = props;
-  const members = useDefaultValue(props.members, () => []);
+  const members = UiHooks.useDefaultValue(props.members, () => []);
 
   if (members.length === 0) {
     return null;
@@ -193,11 +186,11 @@ const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
     const status = match ? 'current' : 'active';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
     const name = getName(member);
-    const nameId = useId('presence-name');
+    const nameId = UiHooks.useId('presence-name');
     const avatar = (
       <Avatar.Root
         status={status}
-        hue={toAvatarHue(member.data?.hue || fallbackValue.hue)}
+        hue={Avatar.toAvatarHue(member.data?.hue || fallbackValue.hue)}
         data-testid='spacePlugin.presence.member'
         data-status={status}
         size={size}
@@ -260,7 +253,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>

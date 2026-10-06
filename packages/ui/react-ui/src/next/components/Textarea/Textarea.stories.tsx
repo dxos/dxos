@@ -12,7 +12,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Field, Input, Textarea } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { Textarea } from './Textarea.tsx';
 
 type StoryArgs = SizeArgs & {
   /** Grow the Notes textarea with its content. */

@@ -14,7 +14,6 @@ import React, {
 } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type ChessModel,
@@ -24,6 +23,7 @@ import {
   type ChessboardProps as NaturalChessboardProps,
   getRawPgn,
 } from '@dxos/react-ui-gameboard';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { Chess } from '#types';
 
@@ -137,7 +137,7 @@ const Root = forwardRef<ChessboardController, RootProps>(({ state, children }, f
 
 type Role = 'card--content';
 
-type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
+type ContentProps = Util.ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
 const Content = ({ classNames, children }: ContentProps) => {
   return (

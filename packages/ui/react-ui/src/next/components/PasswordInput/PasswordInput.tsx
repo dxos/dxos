@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
+import { Button } from '../Button/Button.tsx';
 
 export type PasswordInputProps = ThemedClassName<
   Pick<

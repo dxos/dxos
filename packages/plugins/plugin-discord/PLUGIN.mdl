@@ -51,6 +51,19 @@ type PullResult
     added: number                    # number of new Message objects appended to the channel feed
 ```
 
+```mdl
+type DiscordChannel
+  desc: >
+    Config of a Discord-backed Channel (`Channel.backend.config`, backend kind
+    `org.dxos.channel.backend.discord`): the bot that posts and the Discord channels it listens in.
+    EDGE's gateway reads it from the space when the bot starts.
+  fields:
+    accessToken: Ref<AccessToken>   # pasted bot token
+    applicationId: string           # Discord application (bot) id; keys the EDGE gateway
+    guildId?: string
+    channels: string[]              # Discord channel ids; the first receives posts with no thread
+```
+
 ## Services
 
 ```mdl
@@ -135,6 +148,25 @@ op SyncDiscordChannel
     to keep the feed clean. Discord embeds and attachments are not yet mapped
     to ContentBlock — plain text only for now. A toast is emitted on success
     or failure via LayoutOperation.AddToast.
+```
+
+## Channel backend
+
+```mdl
+service DiscordChannelBackend
+  desc: >
+    plugin-thread `ChannelBackendProvider` for Discord channels, so agents and other callers reach
+    Discord through plugin-thread's generic channel operations rather than Discord-specific ones.
+  ops:
+    send(channel, message)              # REST post into the first configured Discord channel
+    threads.send(channel, thread, msg)  # REST post into a thread or DM channel id
+    openDirect(channel, person)         # DM channel from the person's `discord` identity
+    connection.start/stop/status        # PUT/DELETE/GET /compute/discord/bots/:applicationId on EDGE
+  note: >
+    Posts use plain fetch (no proxy) so they also run on EDGE; text past 2000 characters is split,
+    and mentions are never echoed. The receipt carries `properties.discord.messageId`, which EDGE's
+    reply mirror reads to skip posts the agent already made. The Channel's ObjectProperties surface
+    renders the config form, the bot status and Start/Stop.
 ```
 
 ## Features

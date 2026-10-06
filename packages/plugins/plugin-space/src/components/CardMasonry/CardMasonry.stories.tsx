@@ -9,15 +9,15 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
@@ -64,7 +64,7 @@ const withPlugins = (extraPlugins: Plugin.Plugin[] = []) =>
   withPluginManager({
     capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ...extraPlugins,
       StorybookPlugin.make({}),
       // Contributes the `CardContent` surfaces the cards' bodies render through; without it a card

@@ -12,7 +12,7 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { EDGE_ENDPOINT, WORKERS_AI_ENDPOINT, makeEdgeHttpClient } from './edge-http-client.ts';
 

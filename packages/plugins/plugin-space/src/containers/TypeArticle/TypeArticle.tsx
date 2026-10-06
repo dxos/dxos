@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -12,11 +12,15 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Empty, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -59,8 +63,8 @@ export type TypeArticleProps = {
  * type node resolved on demand.
  */
 export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
   const typeUri = Type.getURI(type);
   const objects = useQuery(space.db, Filter.type(typeUri));
@@ -90,7 +94,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   // TODO(burdon): Factor out as an aspect?
   const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
-  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { mergePreview } = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const stagedPreview = mergePreview?.typeUri === typeUri ? mergePreview : undefined;
 
   // Merged-away ids would otherwise linger in the shared selection and the companion's card stack.
@@ -324,7 +328,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 /** One layout's content, or the message standing in for it when the layout has nothing to show. */
 const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
   <Tabs.Content value={value} classNames='contents'>
-    {empty ? <Empty classNames='h-full'>{empty}</Empty> : children}
+    {empty ? <Status.Empty classNames='h-full'>{empty}</Status.Empty> : children}
   </Tabs.Content>
 );
 

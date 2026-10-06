@@ -8,10 +8,9 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
-import { type Label } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import { parseValue } from '@dxos/react-ui-form';
 import {
@@ -21,8 +20,14 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { formatForEditing } from '@dxos/schema';
-import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
+import type * as Theme from '@dxos/react-ui/Theme';
+import {
+  type ProjectionModel,
+  type PropertyType,
+  type ValidationError,
+  formatForEditing,
+  validateSchema,
+} from '@dxos/schema';
 
 import { type Table } from '../types/index.ts';
 import { extractOrder } from '../util/index.ts';
@@ -83,7 +88,7 @@ export type TableRow = Record<SchemaEx.JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  label: Label;
+  label: Theme.Label;
 };
 
 export type TableFeatures = {

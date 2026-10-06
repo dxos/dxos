@@ -8,7 +8,7 @@ import * as Queue from 'effect/Queue';
 import { describe, test } from 'vitest';
 
 import * as Database from '@dxos/echo/Database';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EventAttributes, RemoteEvents } from '@dxos/tracing';
 
 import { EVENTS, listen } from './object-events.ts';

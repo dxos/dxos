@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type ProcessItem, ProcessTile } from '../components/index.ts';
 import { useCompute } from './ComputeContext.tsx';

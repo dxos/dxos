@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants.ts';
 import { createIbkrConnectorEntry } from './connector.ts';

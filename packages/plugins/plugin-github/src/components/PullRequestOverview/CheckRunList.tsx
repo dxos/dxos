@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Empty, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -49,12 +50,12 @@ export type CheckRunListProps = {
 
 /** Every check on the head commit: its outcome, how long it took, and its logs a click away. */
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
   const summary = useCheckSummary(runs);
 
   if (!sorted || sorted.length === 0) {
-    return <Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Empty>;
+    return <Status.Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Status.Empty>;
   }
 
   return (
@@ -94,7 +95,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
 
 /** The label the checks section carries: the counts once there are runs to count. */
 export const useCheckSummary = (runs?: readonly GitHubOperation.CheckRun[]): string => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return useMemo(() => {
     if (!runs || runs.length === 0) {
       return t('checks.label');

@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator } from '@storybook/react-vite';
 import React, { memo, useMemo } from 'react';
 
-import { AtomEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
 
 /**
  * Adds Effect Atom registry context for storybook.

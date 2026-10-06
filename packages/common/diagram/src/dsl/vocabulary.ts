@@ -32,8 +32,8 @@ export const SEMANTIC_KEYWORDS = ['diagram', 'group', 'node', 'edge'] as const;
 /** Statement keywords. */
 export const STATEMENT_KEYWORDS = ['object', 'elements', 'move', 'remove', ...SEMANTIC_KEYWORDS] as const;
 
-/** Keywords inside semantic statements: `@cell(c,r)`, `via …`, `bus`. */
-export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus'] as const;
+/** Keywords inside semantic statements: `@cell(c,r)`, `via …`, `bus`, `compact`. */
+export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus', 'compact'] as const;
 
 /**
  * Words the grammar reserves, so the printer knows to quote an id that collides with one.
@@ -46,12 +46,13 @@ export const RESERVED: ReadonlySet<string> = new Set<string>([
   '_',
 ]);
 
-/** Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`. */
+/** Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`, `ratio` is `W:H`. */
 export type AttrType =
   | { type: 'number' }
   | { type: 'string' }
   | { type: 'boolean' }
   | { type: 'size' }
+  | { type: 'ratio' }
   | { type: 'enum'; values: readonly string[] };
 
 export type AttrSpec = AttrType & { name: string };
@@ -105,11 +106,13 @@ export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'flow', type: 'enum', values: Semantic.FLOWS },
   { name: 'grid', type: 'size' },
   { name: 'box', type: 'size' },
+  { name: 'aspect', type: 'ratio' },
 ];
 
 /** `group` attributes. */
 export const GROUP_ATTRS: readonly AttrSpec[] = [
   { name: 'gap', type: 'number' },
+  { name: 'max-width', type: 'number' },
   { name: 'color', type: 'enum', values: Scene.Color.literals },
 ];
 

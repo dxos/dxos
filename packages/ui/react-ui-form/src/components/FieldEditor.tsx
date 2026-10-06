@@ -6,9 +6,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Filter, Obj, type Registry, Type, type View } from '@dxos/echo';
 import { Format, FormatEnums, formatToType } from '@dxos/echo/Format';
-import { type SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   type ProjectionModel,
   type PropertyType,
@@ -39,12 +39,12 @@ const omitType = (props: SchemaEx.SchemaProperty[]) => props.filter((prop) => pr
  * FieldEditor's logic with Next renderers.
  */
 export const FieldEditor = ({ readonly, projection, field, registry, view, onSave, onCancel }: FieldEditorProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
   const [schemas, setSchemas] = useState<Type.Type[]>([]);
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!registry) {
       return;
     }

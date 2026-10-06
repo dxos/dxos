@@ -4,11 +4,12 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Dialog, type Size } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
-  size?: Size;
+  size?: Util.Size;
   /** Passed to `Dialog.Overlay` (default `center`). */
   blockAlign?: 'center' | 'start' | 'end';
 };

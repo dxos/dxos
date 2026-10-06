@@ -3,5 +3,4 @@
 //
 
 export * as DuffelPlugin from './DuffelPlugin.ts';
-export * from '#meta';
 export * from '#types';

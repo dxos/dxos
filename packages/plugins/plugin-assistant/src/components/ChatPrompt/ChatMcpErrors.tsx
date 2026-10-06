@@ -5,14 +5,16 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
 import { type AiChatProcessor } from '../../processor/index.ts';
 
-export type ChatMcpErrorsProps = ThemedClassName<{
+export type ChatMcpErrorsProps = Util.ThemedClassName<{
   processor: AiChatProcessor;
 }>;
 
@@ -21,7 +23,7 @@ export type ChatMcpErrorsProps = ThemedClassName<{
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
 export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const errors = useAtomValue(processor.mcpErrors);
 
   const handleDismiss = useCallback(() => {

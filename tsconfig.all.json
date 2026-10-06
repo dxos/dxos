@@ -361,6 +361,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-agent/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -533,6 +536,9 @@
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-messenger/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-mobile/tsconfig.json"

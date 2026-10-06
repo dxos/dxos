@@ -13,14 +13,15 @@ import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { type PropsWithChildren, useRef } from 'react';
 
-import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type PartEditing, type PartKey, isMultiline } from '../../utils/parts.ts';
 
-export type TextPartProps = ThemedClassName<
+export type TextPartProps = Util.ThemedClassName<
   PropsWithChildren<{
     part: PartKey;
     /** The part's current text, which the editor starts from. */
@@ -39,12 +40,12 @@ export const TextPart = ({ classNames, part, text, editing, children }: TextPart
     </div>
   );
 
-type PartEditorProps = ThemedClassName<{ part: PartKey; text: string; editing: PartEditing }>;
+type PartEditorProps = Util.ThemedClassName<{ part: PartKey; text: string; editing: PartEditing }>;
 
 const stop = (event: React.SyntheticEvent) => event.stopPropagation();
 
 const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const multiline = isMultiline(part);
   // Commit or cancel once: the editor unmounts on either, and its focus loss must not commit again.
   const done = useRef(false);

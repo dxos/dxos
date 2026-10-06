@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Portal } from '@ark-ui/react/portal';
 import {
   Tour as TourPrimitive,
@@ -21,7 +23,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
 
 /**
  * Creates the machine, which owns the steps, waits for each target, scrolls it into view, places the card beside it
@@ -224,36 +226,35 @@ const TourCloseTrigger = forwardRef<HTMLButtonElement, TourCloseTriggerProps>(
 );
 
 TourCloseTrigger.displayName = 'Tour.CloseTrigger';
-
-export const Tour = {
-  Root: TourRoot,
-  Content: TourContent,
-  Header: TourHeader,
-  Title: TourTitle,
-  Description: TourDescription,
-  ProgressText: TourProgressText,
-  Control: TourControl,
-  Actions: TourActions,
-  ActionTrigger: TourActionTrigger,
-  CloseTrigger: TourCloseTrigger,
-};
-
 export { useTour, useTourContext };
 
 export type {
-  TourActionsProps,
-  TourActionTriggerProps,
-  TourCloseTriggerProps,
-  TourContentProps,
-  TourControlProps,
-  TourDescriptionProps,
-  TourHeaderProps,
-  TourProgressTextProps,
-  TourRootProps,
-  TourStepAction,
-  TourStepDetails,
-  TourStepPlacement,
-  TourTitleProps,
+  TourActionsProps as ActionsProps,
+  TourActionTriggerProps as ActionTriggerProps,
+  TourCloseTriggerProps as CloseTriggerProps,
+  TourContentProps as ContentProps,
+  TourControlProps as ControlProps,
+  TourDescriptionProps as DescriptionProps,
+  TourHeaderProps as HeaderProps,
+  TourProgressTextProps as ProgressTextProps,
+  TourRootProps as RootProps,
+  TourStepAction as StepAction,
+  TourStepDetails as StepDetails,
+  TourStepPlacement as StepPlacement,
+  TourTitleProps as TitleProps,
   UseTourProps,
   UseTourReturn,
+};
+
+export {
+  TourActions as Actions,
+  TourActionTrigger as ActionTrigger,
+  TourCloseTrigger as CloseTrigger,
+  TourContent as Content,
+  TourControl as Control,
+  TourDescription as Description,
+  TourHeader as Header,
+  TourProgressText as ProgressText,
+  TourRoot as Root,
+  TourTitle as Title,
 };

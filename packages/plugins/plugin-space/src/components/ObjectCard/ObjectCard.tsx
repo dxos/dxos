@@ -4,19 +4,18 @@
 
 import React, { type ComponentType, type KeyboardEvent, type SyntheticEvent, useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import {
-  AppSurface,
-  CardMenuSlot,
-  ObjectCard as ObjectCardPrimitive,
-  useCardPivot,
-  useObjectMenuItems,
-  useObjectNavigate,
-} from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CardSlot from '@dxos/app-toolkit/CardSlot';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -39,14 +38,14 @@ export type ObjectCardProps = {
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
 export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: ObjectCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const objectMenuItems = useObjectMenuItems(subject, pivotId);
-  const handleOpen = useObjectNavigate(subject, detailOf);
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
+  const objectMenuItems = ToolkitHooks.useObjectMenuItems(subject, pivotId);
+  const handleOpen = ToolkitHooks.useObjectNavigate(subject, detailOf);
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (handleOpen && event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -62,7 +61,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <ObjectCardPrimitive.Root
+    <ToolkitObjectCard.Root
       ref={cardRef}
       classNames={[classNames, handleOpen && 'dx-hover']}
       onClick={handleOpen}
@@ -70,16 +69,16 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       role={handleOpen ? 'button' : undefined}
       tabIndex={handleOpen ? 0 : undefined}
     >
-      <ObjectCardPrimitive.Header
+      <ToolkitObjectCard.Header
         subject={subject}
         menu={
-          <Block rail='end'>
+          <Layout.Block rail='end'>
             {/* React portals bubble through the component tree, so the menu's clicks would reach the card. */}
             <div role='none' className='contents' onClick={stopPropagation}>
-              <CardMenuSlot subject={subject} menu={menu} />
+              <CardSlot.MenuSlot subject={subject} menu={menu} />
               {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
               <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                <Button
+                <Button.Root
                   iconOnly
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
@@ -87,13 +86,13 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
                 />
               </ActionMenu>
             </div>
-          </Block>
+          </Layout.Block>
         }
       />
       <Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
       </Card.Body>
-    </ObjectCardPrimitive.Root>
+    </ToolkitObjectCard.Root>
   );
 };
 

@@ -16,7 +16,8 @@ import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
 import { ArchivedAnnotation } from '@dxos/schema';
-import { Position, inferObjectOrder } from '@dxos/util';
+import { inferObjectOrder } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 
 import { FeedbackForm } from '#components';
@@ -14,7 +14,7 @@ import { FeedbackForm } from '#components';
  * Renders nothing when no downloader is contributed.
  */
 export const DownloadLogsAction = () => {
-  const [onDownloadLogs] = useCapabilities(ObservabilityCapabilities.LogDownloader);
+  const [onDownloadLogs] = Hooks.useCapabilities(ObservabilityCapabilities.LogDownloader);
   return <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />;
 };
 

@@ -24,15 +24,15 @@ import {
   formatSystemPrompt,
 } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
-import { type ServiceNotAvailableError } from '@dxos/compute';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -75,6 +75,8 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
+  /** Who this processor's prompts come from, when the chat is one of several people's with one agent. */
+  sender?: AgentService.PromptSender;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -259,7 +261,7 @@ export class AiChatProcessor {
      * Provided to every effect run by the processor so the underlying
      * {@link ProcessManagerRuntime} has access to space-affinity services.
      */
-    private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
+    private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceResolver.ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
@@ -355,7 +357,7 @@ export class AiChatProcessor {
         yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(createPromptContent(requestProp));
+        yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
         markWork('chat.prompt-submitted');
         log('chat processor submitPrompt returned, waiting for agent', {});
 
@@ -416,7 +418,7 @@ export class AiChatProcessor {
       await this._runtime.runPromise(
         Effect.gen({ self: this }, function* () {
           const session = yield* this.#getSession();
-          yield* session.submitPrompt(createPromptContent(requestProp));
+          yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
           markWork('chat.prompt-submitted');
         }).pipe(Effect.provide(this._spaceLayer)),
       );

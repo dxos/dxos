@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
 import { useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type Label } from '@dxos/ui-types/translations';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { DeckSchema } from '#types';
 
@@ -26,6 +27,8 @@ export type DeckCompanion = AppGraphNode.Node<
     position?: Position.Position;
     joyride?: string;
     mount?: AppNode.DeckCompanionMount;
+    /** Count shown on the rail tab while greater than zero. */
+    badge?: Atom.Atom<number | undefined>;
   }
 >;
 
@@ -33,12 +36,12 @@ const isDeckCompanion = (node: AppGraphNode.Node): node is DeckCompanion =>
   node.type === DeckSchema.DECK_COMPANION_TYPE;
 
 export const useDeckCompanions = (): DeckCompanion[] => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   useEffect(() => {
     AppGraph.expandSync(graph, GraphNode.RootId, AppNode.companion);
   }, [graph]);
 
-  return useConnections(graph, GraphNode.RootId, AppNode.companion)
+  return GraphHooks.useConnections(graph, GraphNode.RootId, AppNode.companion)
     .filter(isDeckCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 };

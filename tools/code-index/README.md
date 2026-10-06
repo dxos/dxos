@@ -10,12 +10,18 @@ The quad store (oxigraph over RocksDB) and the rule engine are a Rust Node-API a
 - [`SPEC.mdl`](./SPEC.mdl) — modules, commit protocol, features and tests.
 
 The addon needs a Rust toolchain ([rustup](https://rustup.rs); the crate's `rust-toolchain.toml`
-pins the version, and building RocksDB needs a C++ compiler and libclang). Build it once, and again
-after the crate changes — `moon run code-index:test` does this itself:
+pins the version, and building RocksDB needs a C++ compiler and libclang). The moon tasks build it,
+and the workspace packages the CLI imports, before they run — use them after a pull, since a stale
+addon refuses to open the store:
 
 ```bash
-moon run code-index-native:cargo-build
+moon run code-index:serve -- --provider anthropic     # the web UI, deps built first
+moon run code-index:cli -- index                      # any subcommand, deps built first
+moon run code-index-native:cargo-build                # just the addon
 ```
+
+Running `bun tools/code-index/bin/code-index.ts` directly skips those builds and is the faster loop
+once they are current:
 
 ```bash
 bun tools/code-index/bin/code-index.ts index          # incremental pass, closed by the reasoner

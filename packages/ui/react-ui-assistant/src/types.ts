@@ -32,4 +32,6 @@ export type ChatThreadEvent =
   /** A suggestion or select option was chosen — the text is ready to submit. */
   | { type: 'submit'; text: string }
   /** Soft-fork the thread from the given message (the prompt toolbar's rewind). */
-  | { type: 'rewind'; id: string };
+  | { type: 'rewind'; id: string }
+  /** A person chose one of a request block's options (allow or refuse an agent's tool call). */
+  | { type: 'respond'; messageId: string; requestId: string; optionId: string };

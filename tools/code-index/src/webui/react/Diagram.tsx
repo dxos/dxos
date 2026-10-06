@@ -6,7 +6,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { createPortal } from 'react-dom';
 
 import { type Scene } from '@dxos/diagram';
-import { SceneSvg } from '@dxos/plugin-illustrator/SceneSvg';
+import * as SceneSvg from '@dxos/plugin-illustrator/SceneSvg';
 
 import type * as Protocol from '../../workspace/Protocol.ts';
 
@@ -126,7 +126,7 @@ export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProp
         </button>
       </div>
       <div ref={wrapper} className={expanded ? 'flex-1 overflow-auto' : 'overflow-x-auto'}>
-        <SceneSvg
+        <SceneSvg.SceneSvg
           objects={objects}
           classNames='mx-auto block max-w-none'
           selection={selection}

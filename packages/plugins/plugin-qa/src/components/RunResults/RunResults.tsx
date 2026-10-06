@@ -4,10 +4,11 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Icon } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
@@ -20,7 +21,7 @@ export type RunResultsProps = { run: TestRun.TestRun };
  * article and the expanded feed row on the plan, so both offer the same controls.
  */
 export const RunResults = ({ run }: RunResultsProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [error, setError] = useState<string | undefined>();
   const [completing, setCompleting] = useState(false);
   // Read through the snapshot so results appearing on the run re-render this list; the operations
@@ -64,7 +65,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='grow text-fg-subtle text-sm'>{result.note ?? ''}</span>
           {result.artifacts && result.artifacts.length > 0 && (
             <span className='flex items-center gap-1 text-fg-subtle text-sm'>
-              <Icon icon='ph--paperclip--regular' size='md' />
+              <Icon.Icon icon='ph--paperclip--regular' size='md' />
               {result.artifacts.length}
             </span>
           )}
@@ -77,7 +78,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
           {snapshot.status === 'running' ? (
             <span className='flex items-center gap-1 text-fg-subtle'>
-              <Icon icon='ph--circle-dashed--regular' size='md' />
+              <Icon.Icon icon='ph--circle-dashed--regular' size='md' />
               <span className='text-sm'>pending</span>
             </span>
           ) : (
@@ -86,12 +87,12 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='grow text-fg-subtle text-sm'>unreported</span>
           {snapshot.status === 'running' && (
             <>
-              <Button onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
+              <Button.Root onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
                 Pass
-              </Button>
-              <Button onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
+              </Button.Root>
+              <Button.Root onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
                 Fail
-              </Button>
+              </Button.Root>
             </>
           )}
         </div>
@@ -99,10 +100,10 @@ export const RunResults = ({ run }: RunResultsProps) => {
 
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
-          <Button disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
-            <Icon icon='ph--flag-checkered--regular' size='md' />
+          <Button.Root disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
+            <Icon.Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
-          </Button>
+          </Button.Root>
         </div>
       )}
 

@@ -11,7 +11,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, type Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { mockAiService } from '@dxos/extractor/testing';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';

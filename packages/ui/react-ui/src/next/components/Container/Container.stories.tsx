@@ -12,9 +12,12 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, Input, Typography } from '../index.ts';
+import { Block } from '../Block/Block.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Input } from '../Input/Input.tsx';
 import { Label } from '../Label/Label.tsx';
-import { type CSSVariables } from './Container.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Container, type CSSVariables } from './Container.tsx';
 
 /** A narrow reading width, so the story's pane is wider than the document. */
 const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
@@ -24,14 +27,14 @@ const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 const Row = ({ id, label, testId }: { id: string; label: string; testId: string }) => (
   <Container layout='row' data-testid={testId}>
     <Block rail='start' data-testid={`${testId}-rail-start`}>
-      <Icon icon='ph--user--regular' />
+      <Icon.Icon icon='ph--user--regular' />
     </Block>
     <Label htmlFor={id} classNames='pe-(--dx-gap-size)' data-testid={`${testId}-label`}>
       {label}
     </Label>
     <Input id={id} data-testid={`${testId}-input`} />
     <Block rail='end' data-testid={`${testId}-rail-end`}>
-      <Icon icon='ph--x--regular' />
+      <Icon.Icon icon='ph--x--regular' />
     </Block>
   </Container>
 );
@@ -74,7 +77,7 @@ const SideBySide = ({ size }: { size: Size }) => (
   <Container layout='row' columns='repeat(3, minmax(0, 1fr))' gap='md' data-testid={`split-${size}`}>
     {(['left', 'right'] as const).map((side) => (
       <Container key={side} span={side === 'left' ? 1 : 2} data-testid={`split-${side}-${size}`}>
-        <Typography>{side === 'left' ? 'Shipping' : 'Billing'}</Typography>
+        <Typography.Text>{side === 'left' ? 'Shipping' : 'Billing'}</Typography.Text>
         <Container data-testid={`split-${side}-group-${size}`}>
           <Input aria-label={`${side} street`} data-testid={`split-${side}-input-${size}`} />
           <Container layout='row' columns='auto minmax(0, 1fr)' data-testid={`split-${side}-row-${size}`}>
@@ -96,12 +99,12 @@ const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
   <>
     <Section size={size} />
     <Container gap='lg' data-testid={`gap-${size}`}>
-      <Typography data-testid={`gap-first-${size}`}>A stack with a large row gap</Typography>
-      <Typography data-testid={`gap-second-${size}`}>between its children</Typography>
+      <Typography.Text data-testid={`gap-first-${size}`}>A stack with a large row gap</Typography.Text>
+      <Typography.Text data-testid={`gap-second-${size}`}>between its children</Typography.Text>
     </Container>
     <Spans size={size} />
     <Container gutter='rail' width='document' style={READING_WIDTH} data-testid={`reading-${size}`}>
-      <Typography>At the document width</Typography>
+      <Typography.Text>At the document width</Typography.Text>
     </Container>
     <SideBySide size={size} />
     {narrow && (

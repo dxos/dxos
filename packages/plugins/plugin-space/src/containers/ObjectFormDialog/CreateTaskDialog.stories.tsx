@@ -15,10 +15,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Milestone, Task } from '@dxos/types';
 
@@ -74,7 +74,7 @@ const meta = {
         }),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Task.Task, Milestone.Milestone],

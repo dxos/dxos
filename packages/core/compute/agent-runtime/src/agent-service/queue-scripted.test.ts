@@ -15,7 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Feed, Filter, Obj } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -160,6 +160,27 @@ describe('AgentProcess input queue (scripted)', () => {
 
         // The prompt reached the model, carried by the turn's own user message.
         expect(promptTexts(messages)).toContain('What is a feed?');
+      },
+      Effect.provide(replyLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    "a prompt's sender is carried onto the turn's user message",
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('The fix landed.', { sender: { name: 'Dima' } });
+        yield* session.waitForCompletion();
+
+        const { messages } = yield* readFeed(session.feed);
+        const turn = messages.find(
+          (message) =>
+            message.sender.role === 'user' && !isQueued(message) && Message.extractText(message) === 'The fix landed.',
+        );
+        expect(turn?.sender.name).toBe('Dima');
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,

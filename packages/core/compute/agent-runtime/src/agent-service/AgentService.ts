@@ -12,20 +12,12 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import {
-  type AgentLocation,
-  AgentService,
-  type Conversation,
-  type GetSessionOptions,
-  type Service,
-  type Session,
-  getSession,
-} from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
@@ -63,15 +55,10 @@ export interface CreateSessionOptions {
  */
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<Session, never, Database.Service | Registry.Service | AgentService> = Effect.fn('createSession')(
-  function* (opts) {
-    // A skill already in a database is bound as-is: it is either space-authored (no registry key at
-    // all) or a fork carrying the user's edits, and resolving it through the registry would substitute
-    // the pristine copy for the one the caller handed us. Anything else is referenced by its registry
-    // URI, so the registry stays the one copy rather than being cloned into the space.
-    const skills = (opts?.skills ?? []).map((skill) =>
-      Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(Skill.registryURI(Skill.getKey(skill))),
-    );
+) => Effect.Effect<AgentService.Session, never, Database.Service | Registry.Service | AgentService.AgentService> =
+  Effect.fn('createSession')(function* (opts) {
+    // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
+    const skills = (opts?.skills ?? []).map(Skill.makeRef);
 
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.context<Database.Service>();
@@ -89,10 +76,8 @@ export const createSession: (
     const chat = yield* Database.add(
       Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
     );
-    return yield* getSession(chat, { provider: opts?.provider });
-  },
-  Effect.scoped,
-);
+    return yield* AgentService.getSession(chat, { provider: opts?.provider });
+  }, Effect.scoped);
 
 export interface Options {
   systemPrompt?: string;
@@ -136,9 +121,9 @@ export interface Options {
  * `RemoteProcessManager.layerNoop`, so an edge session fails at spawn rather than silently running
  * locally.
  */
-export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.ManagerService> =>
+export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, never, Process.ManagerService> =>
   Layer.effect(
-    AgentService,
+    AgentService.AgentService,
     Effect.gen(function* () {
       const processManager = yield* Process.ManagerService;
 
@@ -150,7 +135,10 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
        * Where a session's agent runs. `edge` needs the space, since one remote runtime spans them,
        * and a chat with no space cannot name where its agent would run.
        */
-      const locationFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined): Process.Location => {
+      const locationFor = (
+        location: AgentService.AgentLocation | undefined,
+        spaceId: SpaceId | undefined,
+      ): Process.Location => {
         if (location !== 'edge') {
           return { kind: 'local' };
         }
@@ -170,9 +158,9 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
           model: string | undefined;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
-          location: AgentLocation;
+          location: AgentService.AgentLocation;
           handle: AgentHandle;
-          session: Session;
+          session: AgentService.Session;
         }
       >();
 
@@ -228,8 +216,8 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
         }
       });
 
-      const service: Service = {
-        getSession: (chat: Conversation, options?: GetSessionOptions) =>
+      const service: AgentService.Service = {
+        getSession: (chat: AgentService.Conversation, options?: AgentService.GetSessionOptions) =>
           Effect.suspend(() =>
             lockFor(chat.id).withPermits(1)(
               Effect.gen(function* () {
@@ -238,7 +226,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
                 // model and steering are whatever the chat points at when the process is spawned.
                 const model = chat.session?.model;
                 const instructions = chat.instructions?.uri;
-                const location: AgentLocation = options?.location ?? 'local';
+                const location: AgentService.AgentLocation = options?.location ?? 'local';
                 const cached = sessionCache.get(chat.id);
                 if (cached) {
                   if (
@@ -332,10 +320,13 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
                 // Releasing the cache first is what keeps this from recursing: `getSession` then
                 // takes its spawn path and returns a NEW session whose process is live, so that
                 // session's own `submitPrompt` submits directly.
-                const resubmit = (prompt: string | ContentBlock.Any[]): Effect.Effect<void> =>
+                const resubmit = (
+                  prompt: string | ContentBlock.Any[],
+                  submitOptions?: AgentService.SubmitPromptOptions,
+                ): Effect.Effect<void> =>
                   Effect.sync(releaseSession).pipe(
                     Effect.andThen(service.getSession(chat, options)),
-                    Effect.flatMap((next) => next.submitPrompt(prompt)),
+                    Effect.flatMap((next) => next.submitPrompt(prompt, submitOptions)),
                     Effect.provide(databaseContext),
                   );
                 const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
@@ -353,12 +344,12 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
 
 const makeSession = (
   process: AgentHandle,
-  chat: Conversation,
+  chat: AgentService.Conversation,
   feed: Feed.Feed,
   releaseSession: () => void,
   isFinished: Effect.Effect<boolean>,
-  resubmit: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>,
-): Session => ({
+  resubmit: (prompt: string | ContentBlock.Any[], options?: AgentService.SubmitPromptOptions) => Effect.Effect<void>,
+): AgentService.Session => ({
   chat,
   feed,
   getContext: () =>
@@ -380,8 +371,12 @@ const makeSession = (
     }).pipe(Effect.scoped),
   // Suspended so the state is read per call: a session outlives the process that served its last
   // turn, and submitting to a finished one drops the prompt.
-  submitPrompt: (prompt: string | ContentBlock.Any[]) =>
-    Effect.flatMap(isFinished, (finished) => (finished ? resubmit(prompt) : process.submitInput(prompt))),
+  submitPrompt: (prompt: string | ContentBlock.Any[], options?: AgentService.SubmitPromptOptions) =>
+    Effect.flatMap(isFinished, (finished) =>
+      finished
+        ? resubmit(prompt, options)
+        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt),
+    ),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(
     (get) =>

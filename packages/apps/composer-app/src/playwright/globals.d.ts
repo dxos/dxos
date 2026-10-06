@@ -14,10 +14,10 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 
 import type { ProfilerSnapshot } from '../util/profiler';
 
-// `globalThis.composer` itself is declared by `@dxos/app-framework`; a second `var composer` here
+// `globalThis.composer` itself is declared by `@dxos/app-framework/Devtools`; a second `var composer` here
 // would collide with it and resolve every member to `{}`. Merge the app-only hooks onto its
 // interface instead.
-declare module '@dxos/app-framework' {
+declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
     profiler?: { snapshot?: () => ProfilerSnapshot };
     /** The plugin manager; readers narrow the module shape to what they use. */

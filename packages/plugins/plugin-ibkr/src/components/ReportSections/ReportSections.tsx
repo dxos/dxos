@@ -5,8 +5,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { Select, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
 
 import { Ibkr } from '#types';
 
@@ -34,7 +35,7 @@ type Section = {
  * columns are formatted by the table's number format; dates and P&L are normalized into the row data.
  */
 export const ReportSections = ({ positions, trades, cash, openLots, closedLots }: ReportSectionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const sections = useMemo<Section[]>(() => {
     const all: (Section | false)[] = [

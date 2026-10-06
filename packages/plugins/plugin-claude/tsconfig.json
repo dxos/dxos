@@ -50,6 +50,12 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-code"
     }
   ]
 }

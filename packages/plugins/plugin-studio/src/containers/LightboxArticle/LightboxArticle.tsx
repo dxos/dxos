@@ -6,14 +6,14 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Card, Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board,
@@ -24,6 +24,8 @@ import {
   resizeToFit,
 } from '@dxos/react-ui-board';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Lightbox, MediaArtifact } from '#types';
@@ -66,7 +68,7 @@ export type LightboxArticleProps = AppSurface.ObjectArticleProps<Lightbox.Lightb
  */
 export const LightboxArticle = ({ role, subject: lightbox, attendableId }: LightboxArticleProps) => {
   const { hasAttention } = useAttention(attendableId);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const [items] = useObject(lightbox, 'items');
   const itemsAtom = useMemo(

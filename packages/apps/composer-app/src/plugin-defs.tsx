@@ -10,6 +10,7 @@ import { type AiService } from '@dxos/ai';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
+import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -58,7 +59,7 @@ import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
-import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
+import * as MapSolidMapPlugin from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
@@ -156,6 +157,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
+      AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
@@ -285,7 +287,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
-    isLocal && MapPluginSolid.make(),
+    isLocal && MapSolidMapPlugin.make(),
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),
@@ -334,6 +336,7 @@ const experimental: Plugin.Plugin[] = [
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),
   IdeogramPlugin.make(),
+  AgentPlugin.make(),
   IrohBeaconPlugin.make(),
   LaMetricPlugin.make(),
   LinearPlugin.make(),

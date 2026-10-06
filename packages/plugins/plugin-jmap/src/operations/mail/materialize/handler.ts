@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof JmapOperation.MaterializeJmapTarget>
         const connectionObj = connection.target;
         const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
         if (!connectionObj || !db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {

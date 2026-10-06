@@ -5,26 +5,26 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, screen, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
-import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
@@ -35,7 +35,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -189,10 +189,10 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ agentMode }: StoryArgs) => {
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
+  const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
 
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
@@ -203,8 +203,8 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
 
   // Push the variant's `agentMode` into the markdown plugin settings so that
   // CommentOperation.Create stamps new threads with the matching agent config.
-  const markdownSettings = useCapability(MarkdownCapabilities.Settings);
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const markdownSettings = Hooks.useCapability(MarkdownCapabilities.Settings);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   useEffect(() => {
     if (!markdownSettings) {
       return;
@@ -222,7 +222,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
@@ -357,5 +357,17 @@ export const WithCommentsAndSuggestions: Story = {
   args: {
     seedComments: true,
     seedAgentSuggestions: true,
+  },
+};
+
+/**
+ * The companion's toolbar adds a comment on the whole document, not anchored to a span, without selecting any text.
+ */
+export const TestUnanchoredComment: Story = {
+  play: async () => {
+    const button = await screen.findByTestId('comments.object-comment.add', undefined, { timeout: 30_000 });
+    await expect(screen.queryAllByTestId('thread.delete')).toHaveLength(0);
+    await userEvent.click(button);
+    await waitFor(() => expect(screen.getAllByTestId('thread.delete').length).toBeGreaterThan(0), { timeout: 10_000 });
   },
 };

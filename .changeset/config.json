@@ -240,6 +240,7 @@
     ],
     [
       "@dxos/cli",
+      "@dxos/plugin-agent",
       "@dxos/plugin-assistant",
       "@dxos/plugin-atproto",
       "@dxos/plugin-attention",
@@ -298,6 +299,7 @@
       "@dxos/plugin-markdown",
       "@dxos/plugin-meeting",
       "@dxos/plugin-mermaid",
+      "@dxos/plugin-messenger",
       "@dxos/plugin-mobile",
       "@dxos/plugin-native",
       "@dxos/plugin-navtree",

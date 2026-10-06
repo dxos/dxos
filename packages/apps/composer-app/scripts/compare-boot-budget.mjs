@@ -44,10 +44,23 @@ const chunks = [...new Set([...baseSizes.keys(), ...headSizes.keys()])]
 
 const percent = base.bytes === 0 ? 0 : (bytesDelta / base.bytes) * 100;
 const body = [
-  '### 📦 Boot graph grew',
+  '### Boot graph grew',
   '',
   'The eager boot graph (entry script + modulepreload closure) is larger than on the base commit.',
-  'Advisory only — the gate is the budget in `check-boot-budget.mjs`.',
+  '',
+  '**To the agent or author of this PR:** growth here is not forbidden, but it must be strongly',
+  'justified. Every user downloads and parses these bytes before the app starts. Before accepting it,',
+  'work out why the new code has to be in the boot graph:',
+  '',
+  '1. Does it run before the app is ready? If not, it should not be preloaded.',
+  '2. Can it load lazily instead (a dynamic import, a `Plugin.lazy` stub)?',
+  '3. Is it reached through a package barrel? Import its subpath instead (the',
+  '   `dxos-subpath-imports` lint).',
+  '4. Is it reached only through a barrel or the import map, while boot never runs it? Then it',
+  "   belongs on the boot partition's `exclude` list in `packages/apps/composer-app/vite.config.ts`.",
+  '',
+  'If none of these applies, say why in the PR description. Do not raise `MAX_PRELOAD_BYTES` in',
+  '`check-boot-budget.mjs` to make room: that is a decision for the team.',
   '',
   '| | base | this PR | Δ | budget |',
   '| --- | ---: | ---: | ---: | ---: |',
@@ -71,10 +84,6 @@ const body = [
         '</details>',
       ]
     : []),
-  '',
-  'If this is a leak rather than accepted growth, the usual cause is a boot-reachable import',
-  'reaching a package barrel instead of a light subpath (see the `dxos-subpath-imports` lint), or',
-  'a plugin stub pulling its implementation instead of staying a `Plugin.lazy` stub.',
 ].join('\n');
 
 console.log(

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useThemeMode } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -25,7 +25,7 @@ import { type UseTextEditorProps } from '../hooks/index.ts';
 type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
 
 const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source' }: StoryArgs) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
 
   const extensions = useMemo(
     () => [

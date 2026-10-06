@@ -4,7 +4,10 @@
 
 import React from 'react';
 
-import { Button, Grid, SystemButton, Tooltip } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -41,17 +44,17 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
         action={
-          onCopy && <Button iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
+          onCopy && <Button.Root iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
         }
       />
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
       {spaces.length > 0 && (
         <StatCard.Row>
-          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Layout.Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>space</span>
             <span>automerge</span>
             <span>feed</span>
-          </Grid>
+          </Layout.Grid>
         </StatCard.Row>
       )}
       {spaces.map((row) => {
@@ -64,7 +67,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
           >
-            <Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+            <Layout.Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.name}>
                 {/* Labelled: presets are icon-only by default, which left the row a bare icon with no space id. */}
                 <SystemButton.Clipboard
@@ -79,7 +82,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
               </Tooltip.Trigger>
               <Metric pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
               <Metric pending={feedPending} total={row.feedState?.total ?? 0} />
-            </Grid>
+            </Layout.Grid>
           </StatCard.Row>
         );
       })}

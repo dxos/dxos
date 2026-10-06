@@ -9,7 +9,7 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { MediaPlayer, type MediaPlayerProps } from '../index.ts';
+import { MediaPlayer, type MediaPlayerProps } from './MediaPlayer.tsx';
 
 /** An inline 16:9 picture, so the story needs no network. */
 const IMAGE = `data:image/svg+xml,${encodeURIComponent(

@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /** A description is a line in a row, not a document: no paragraph block, no heading scale. */
@@ -13,7 +13,7 @@ export const DESCRIPTION_COMPONENTS = {
   p: ({ children }: PropsWithChildren) => <span>{children}</span>,
 };
 
-export type TaskDescriptionProps = ThemedClassName<{
+export type TaskDescriptionProps = Util.ThemedClassName<{
   content: string;
   /** Renderers beyond the row's own — a host's link anchor, say. */
   components?: MarkdownViewProps['components'];

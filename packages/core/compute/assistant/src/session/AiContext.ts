@@ -16,7 +16,8 @@ import * as Schema from 'effect/Schema';
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
-import { AtomEx, RuntimeProvider } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -448,7 +449,13 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        const resolved = target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        if (!resolved) {
+          // A binding that cannot load (e.g. a registry skill the host never registered) would otherwise
+          // vanish from the session without trace.
+          log.warn('unresolved context binding', { uri: ref.uri });
+        }
+        return resolved;
       })
       .filter(isNonNullable);
   }
