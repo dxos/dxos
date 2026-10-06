@@ -413,6 +413,26 @@ a scene by mode.)
 | Properties                      | Geometry reads as Column / Row and Span X / Span Y (whole cells, step 1) via `fieldOverrides`; the scene's spec when nothing is selected.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Switching on                    | Every node is quantized once; a shape landing on occupied cells moves to the nearest free cells, in z-order, as one undoable batch.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
+**Lanes and crossings.** Routing each link on its own puts parallel links on the same gutter centre line,
+drawn on top of each other. The standard answer, from VLSI routing and orthogonal connector routing
+(libavoid: Wybrow, Marriott and Stuckey), splits the work in two:
+
+1. _Global routing_ — each link's path through the gutter network. `gutterRoute` is this step: a maze
+   search over gutter centre lines with a bend cost. Later: route a scene's links together with a
+   congestion cost per gutter segment (PathFinder's negotiated congestion: route all, raise the cost of
+   overused segments, rip up and reroute) and a cost for crossing another link, so links spread over
+   the gutters and cross less.
+2. _Detailed routing_ — giving each link its own lane in each gutter it uses. Links sharing a collinear
+   run are separated across the gutter, ordered so that their turn-offs do not cross (the
+   metro-line crossing problem), with ports sliding along their shape's side. `@dxos/diagram`'s
+   `Nudge.nudge` does exactly this over a set of orthogonal polylines, with shapes as obstacles.
+
+Since a link's lanes depend on the other links, routing becomes a per-scene pass: `sceneLinkGeometry`
+routes every smart link of a lattice scene, nudges the routes together (one minor grid unit apart), and
+each layer reads its links' geometry from that pass, memoized on the scene. Lanes per gutter are
+bounded by the gutter width over the spacing (64 / 16 gives three either side of the centre line), so a
+congested gutter is a signal for the global step, not something nudging can fix.
+
 **Later.** Reflow: an overlapping drop pushes the other shapes aside instead of being rejected.
 
 ## 9. Package layout
