@@ -81,6 +81,10 @@ test.describe('SceneView', () => {
     await expect(ports).not.toHaveCount(0);
     await page.mouse.move(box.x + box.width + 200, box.y + box.height + 200);
     await expect(ports).toHaveCount(0);
+    // A selected node shows its handles, not its ports, even under the pointer.
+    await scene.clickNode('scene:root/a');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(ports).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press('d');
     await expect(page.getByTestId('node-debug')).toHaveCount(4);
