@@ -385,16 +385,17 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 ## 8b. Lattice mode (designed 2026-10-06, not built)
 
 A per-scene constraint in which every shape occupies whole cells of a lattice coarser than the snap grid,
-with an inset between the shape and its cells, so the scene reads as a regular board with gutter channels
-between shapes.
+separated by fixed gutters, so the scene reads as a regular board with gutter channels between shapes.
 
-**Rule.** The lattice has a column width and a row height (not necessarily equal) and an inset per axis:
-`LatticeSpec { column, row, insetX, insetY }`, set per scene (`scene.layout = { kind: 'lattice', ...spec }`;
-absent is freehand) and edited in the properties panel when nothing is selected. A shape spans an **odd**
-number of cells on each axis (1x1, 3x1, 3x3, ...), so its centre always lies on a cell centre: a shape is
-`(col, row, spanX, spanY)` and its frame is `span x cell - 2 x inset` on each axis, centred there. Resizing
-moves the dragged edge by two cells with the opposite edge fixed (the only odd-preserving step). Shapes
-may not share a cell.
+**Rule.** The lattice is parameterized by the size of a one-cell shape and the gutter (channel) between
+shapes: `LatticeSpec { width, height, gutterX, gutterY }`, by default 256x128 and 128x64, set per scene
+(`scene.layout = { kind: 'lattice', ...spec }`; absent is freehand) and edited in the properties panel when
+nothing is selected. The pitch is a shape plus a gutter (384 x 192 by default). A shape spans an **odd**
+number of cells on each axis (1x1, 3x1, 3x3, ...) and covers the gutters between them, so its frame is
+`n x width + (n - 1) x gutterX` by `m x height + (m - 1) x gutterY` (a 3x1 shape is 1024 x 128), and its
+centre always lies on a cell centre: a shape is `(col, row, spanX, spanY)`. Every channel between shapes is
+exactly one gutter wide. Resizing moves the dragged edge by two cells with the opposite edge fixed (the
+only odd-preserving step). Shapes may not share a cell.
 
 **Where it lives.** Nodes stay in scene pixels: the lattice is a rule a projection enforces, not a second
 coordinate system, so persistence, the DSL bridge and freehand are untouched. (Storing cell units and
@@ -403,7 +404,7 @@ a scene by mode.)
 
 | Piece                           | Behaviour                                                                                                                                                                                                                        |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `quantize(bounds, spec)`        | Pure: nearest cell centre and nearest odd span per axis, then the inset frame.                                                                                                                                                   |
+| `quantize(bounds, spec)`        | Pure: nearest cell centre and nearest odd span per axis, then the frame its cells and inner gutters cover.                                                                                                                       |
 | Occupancy                       | The cells each shape covers; an intent that would overlap another shape's cells is rejected.                                                                                                                                     |
 | Lattice projection              | Wraps the freehand reducer; every `create`, `move`, `resize` and geometry `update` is quantized, then checked for occupancy, so no path (gesture, properties panel, DSL) can break the rule.                                     |
 | `Projection.constrain?(bounds)` | New optional hook the pointer machine's `settle` calls, so the ghost and resize previews show where the shape will land, and draw red when it would collide.                                                                     |
