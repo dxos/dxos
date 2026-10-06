@@ -64,12 +64,18 @@ test.describe('SceneView', () => {
     await page.mouse.move(entry.x + entry.width / 2, entry.y + entry.height / 2);
     await page.mouse.down();
     await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
-    await page.mouse.move(view.x + view.width * 0.7, view.y + view.height * 0.8, { steps: 10 });
-    // A drop carries the palette's own preview, so the canvas shows the frame alone.
+    const drop = { x: view.x + view.width * 0.7, y: view.y + view.height * 0.8 };
+    await page.mouse.move(drop.x, drop.y, { steps: 10 });
+    // The drag carries no image of its own, so the canvas shows the shape inside its frame.
     await expect(page.getByTestId('create-frame')).toHaveCount(1);
-    await expect(page.locator('[data-ghost]')).toHaveCount(0);
+    await expect(page.locator('[data-ghost]')).toHaveCount(1);
     await page.mouse.up();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
+    // The pointer was the shape's centre; snapping its top-left to the grid moves it by under a cell.
+    const created = await scene.box(page.locator('[data-node-id^="ellipse-"]'));
+    const cell = (64 * (await scene.zoom())) / 100;
+    expect(Math.abs(created.x + created.width / 2 - drop.x)).toBeLessThanOrEqual(cell);
+    expect(Math.abs(created.y + created.height / 2 - drop.y)).toBeLessThanOrEqual(cell);
   });
 
   test('hovering outlines the node and reveals its ports, and D labels every frame', async () => {

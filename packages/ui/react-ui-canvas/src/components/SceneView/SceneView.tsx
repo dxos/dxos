@@ -381,10 +381,10 @@ const SceneViewRoot = ({
       const end: Endpoint = drag.target ?? { point: drag.to };
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
     }
-    // A node drawn on the canvas previews as the type's own view; one dragged in from the palette shows
-    // the frame alone, since the pointer is already carrying the palette's preview of it.
+    // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
+    // or dragged in from the palette (whose drag carries no image of its own).
     if (drag?.kind === 'create') {
-      return createPreview && !drag.dropped ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
+      return createPreview ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
     }
     return scene;
   }, [scene, drag, createPreview]);
@@ -444,9 +444,11 @@ const SceneViewRoot = ({
     if (!element) {
       return;
     }
+    // The pointer is the shape's centre; its top-left is what snaps, so the edges land on the grid.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
-      const from = { x: snap(point.x), y: snap(point.y) };
+      const size = nodeRegistry[type]?.defaultSize ?? { width: 0, height: 0 };
+      const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
       return { kind: 'create', type, from, to: from, dropped: true };
     };
     return dropTargetForElements({
@@ -467,7 +469,7 @@ const SceneViewRoot = ({
       onDragLeave: cancelDrag,
       onDrop: () => onPointerUpRef.current(),
     });
-  }, [capabilities.create, toScene, snap, setDrag, cancelDrag]);
+  }, [capabilities.create, nodeRegistry, toScene, snap, setDrag, cancelDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
