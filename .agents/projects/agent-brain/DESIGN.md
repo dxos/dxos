@@ -5,8 +5,31 @@ Status: draft 1 (2026-10-06), in discussion. Builds on plugin-agent's
 [DESIGN.md](../../../packages/plugins/plugin-agent/docs/DESIGN.md), which describe the agent as built in
 PR #13590.
 
+## Summary
+
 The brain is what an agent knows (facts) and what it is trying to achieve (goals), and the machinery
-that re-evaluates the second whenever the first changes.
+that re-evaluates the second whenever the first changes. It lets an agent hold standing directives
+from people — "keep me informed about X", "get Dima to help with this", "complete my taxes" — across
+every conversation and runtime, and act on them when circumstances change rather than only when
+asked.
+
+- **One brain per agent, authoritative on EDGE** as a Durable Object; every runtime is a client, and
+  alarms give time-driven goals a durable home.
+- **Facts are RDF tuples in ECHO feeds** — one feed per source, one tuple per item, append-only; the
+  feeds are the record and the brain's index is derived and rebuildable.
+- **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
+  group or agent), prioritized, lasting a session or until cancelled, optionally carrying
+  instructions.
+- **Goals are hierarchical:** steps are sub-goals whose machinery is optional; a goal creates a
+  concrete `Task` only for substantive, assignable work, and the task links back to it.
+- **Goals compile to Datalog** (outcome, conditions, wake rules), evaluated incrementally without a
+  model; SPARQL stays for judgment-time retrieval. The text is the authority.
+- **Evaluation is two-stage:** cheap rule-driven wake, then model judgment; drivers (fact, time,
+  action) are the only part hardcoded, and a goal-pattern document teaches the judgment.
+- **State on the goal, history in its feed:** status and a one-line situation on the object; actions
+  and judgments recorded as tuples that other goals can match.
+- **Judgment runs in private threads:** a session goal in the current session's feed, a durable goal
+  in a background session per owning actor.
 
 ## Decisions
 
