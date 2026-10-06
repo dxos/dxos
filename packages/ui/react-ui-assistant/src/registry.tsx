@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
+import { type WidgetProps, type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
 
 import {
   FallbackWidget,
@@ -24,6 +24,10 @@ import {
  * empty box and grows a frame later, a row moving under a reader scrolling up.
  */
 const COLLAPSED_HEIGHT = 42;
+
+/** An `<option>` child of a `<select>` tag, as the XML parser emits it. */
+const isOption = (node: unknown): node is { _tag: 'option'; children?: WidgetProps['children'] } =>
+  typeof node === 'object' && node !== null && '_tag' in node && node._tag === 'option';
 
 /**
  * Widgets for the tags {@link createRenderer} emits.
@@ -84,9 +88,10 @@ export const assistantRegistry: XmlWidgetRegistry = {
   select: {
     block: true,
     factory: ({ children }) => {
-      const options = (children ?? [])
-        .map((option: any) => option?._tag === 'option' && getXmlTextChild(option.children))
-        .filter(Boolean) as string[];
+      const options = (children ?? []).flatMap((option) => {
+        const text = isOption(option) ? getXmlTextChild(option.children) : null;
+        return text ? [text] : [];
+      });
       return options.length ? new SelectWidget(options) : null;
     },
   },

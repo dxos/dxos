@@ -46,7 +46,10 @@ export const SyntheticWidget = ({ view, children }: SyntheticWidgetProps) => {
     >
       {/* `whitespace-pre-wrap`: the renderer collapses paragraph breaks but keeps single newlines,
           and a wake-up prompt puts its reminder on the line below its own preamble. */}
-      <div className={mx(PANEL_FRAME, 'p-trim-sm text-sm text-fg-muted whitespace-pre-wrap')} data-synthetic-text=''>
+      <div
+        className={mx(PANEL_FRAME, 'p-trim-sm text-sm text-fg-muted whitespace-pre-wrap tabular-nums')}
+        data-synthetic-text=''
+      >
         {text}
       </div>
     </WidgetPanel>
