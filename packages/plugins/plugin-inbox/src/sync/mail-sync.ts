@@ -237,6 +237,13 @@ type TagPushOutcome = {
 const NO_TAG_PUSH: TagPushOutcome = { nextHeads: undefined, pending: [] };
 
 /**
+ * Messages per {@link resolveForeignIds} query. Each match is returned in full (bodies included), so an
+ * unbounded id list — an additive reconcile over a whole mailbox — exceeds the 32 MiB RPC cap and the
+ * 128 MB isolate on EDGE.
+ */
+const RESOLVE_FOREIGN_IDS_CHUNK = 100;
+
+/**
  * Resolves message ids to provider foreign ids for messages the run did not already touch — a user
  * starring a message synced weeks ago. Bounded by the push diff, not the feed.
  */
@@ -246,14 +253,14 @@ const resolveForeignIds = Effect.fn('mail-sync.resolveForeignIds')(function* (
   messageIds: readonly string[],
 ) {
   const resolved = new Map<string, string>();
-  if (messageIds.length === 0) {
-    return resolved;
-  }
-  const messages = yield* Feed.query(feed, Query.select(Filter.id(...messageIds))).run;
-  for (const message of messages) {
-    for (const key of Obj.getMeta(message).keys) {
-      if (key.source === foreignKeySource) {
-        resolved.set(message.id, key.id);
+  for (let offset = 0; offset < messageIds.length; offset += RESOLVE_FOREIGN_IDS_CHUNK) {
+    const chunk = messageIds.slice(offset, offset + RESOLVE_FOREIGN_IDS_CHUNK);
+    const messages = yield* Feed.query(feed, Query.select(Filter.id(...chunk))).run;
+    for (const message of messages) {
+      for (const key of Obj.getMeta(message).keys) {
+        if (key.source === foreignKeySource) {
+          resolved.set(message.id, key.id);
+        }
       }
     }
   }
@@ -772,17 +779,17 @@ export const runMailSync = (
       newMessages: stats.newMessages,
       action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
     });
-    if (!capped && tagPush.pending.length === 0) {
-      // Additions weren't truncated and every tag op settled, so this run's chunk fully drained: mark
-      // backfill done (the backward half reached the horizon) and advance the sync state LAST, only
-      // after the merged stream committed and the push returned. A crash/cap leaves it unadvanced, so
-      // the next run re-fetches the same chunk (additions dedup-drop, tag ops re-apply idempotently).
+    if (tagPush.pending.length === 0) {
+      // Heads advance on capped runs too: a backfill caps every run, and without a base each run's
+      // additive reconcile re-pushes — and loads in full — every message synced so far until the
+      // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds.
       //
-      // The token and the tag heads go in ONE `Obj.update`. They describe the same position, and
-      // advancing the token without the heads leaves the next run diffing a fresh delta against a
-      // stale base — see `Cursor.writeSyncState`.
-      Cursor.completeBackfill(binding, horizon.getTime());
-      const nextToken = source.nextToken?.();
+      // The token and backfill mark advance LAST and only uncapped, after the merged stream committed
+      // and the push returned; a crash/cap leaves them, so the next run re-fetches the same chunk.
+      if (!capped) {
+        Cursor.completeBackfill(binding, horizon.getTime());
+      }
+      const nextToken = capped ? undefined : source.nextToken?.();
       if (nextToken !== undefined || tagPush.nextHeads !== undefined) {
         Cursor.writeSyncState(binding, { token: nextToken, tagHeads: tagPush.nextHeads });
       }

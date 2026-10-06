@@ -185,10 +185,17 @@ below. The push phase therefore runs **before** this block, `source.nextToken()`
 rather than written as it is captured, and the block becomes a single combined write:
 
 ```ts
-if (!capped && pending.length === 0) {
+if (pending.length === 0) {
+  const nextToken = capped ? undefined : source.nextToken?.();
   Cursor.writeSyncState(binding, { token: nextToken, tagHeads: nextHeads });
 }
 ```
+
+A capped run writes the heads alone. That is the safe direction: the next run re-reads, from the
+unadvanced token, a delta the base already holds, and re-applying it is idempotent. Withholding the
+heads instead is not safe for memory: a backfill caps every run, so the base would never exist, and
+every run's additive reconcile would re-push — and load in full — every message synced so far. On
+EDGE that grew until the operation-service isolate ran out of memory.
 
 With anything `pending`, neither field is written — the run requests `runAgain` and both the token and
 the base stay where they were, so the next run re-reads the same delta and re-derives the same diff.
