@@ -314,11 +314,6 @@ const styles = EditorView.theme({
     // A list item's hanging indent (`text-indent: -width`) is inherited and pulls the name out of its own background.
     textIndent: 0,
   },
-  // Nothing sits above the first line but the scroller's edge, which would clip the name.
-  '.cm-content > .cm-line:first-child .cm-collab-selectionInfo': {
-    bottom: 'auto',
-    top: '100%',
-  },
   '.cm-collab-selectionCaret:hover > .cm-collab-selectionInfo': {
     opacity: 1,
     transitionDelay: '0s',
