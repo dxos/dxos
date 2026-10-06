@@ -529,6 +529,31 @@ middleware. It has no byte counts: page↔worker messages are structured-cloned 
 serialization step to measure, and walking every payload to estimate one would cost more than the
 call. `network.byEndpoint` groups requests, bytes and socket frames by host and first path segment.
 
+### Scoring them
+
+`src/score/stages.ts` scores a counter per stage as `<counter> > <stage>` (`reactRenders >
+assistant-turns`), the shape `wall > <stage>` has, so the heatmap splits the stage and the counter
+from the id without knowing about counters. They roll up into a `work` group (`busy work` for the
+chat flow's busy space), so a work regression moves the suite score as one group rather than being
+diluted into the timings.
+
+- `DEFAULT_WORK_METRICS` — what the nightly rows already carry: React commits, renders and wasted
+  renders; `recalcStyleCount` and `layoutCount`; SQLite statements by kind and rows changed;
+  Automerge saves (all kinds summed) and bytes; ECHO index passes, query runs and recomputes. Scored
+  in each flow's own suite.
+- `COSTED_WORK_METRICS` — the trace and coverage counts. The nightly runs them in jobs of their own
+  (`perf-counters`, `chat-counters`) with `DX_PERF_COUNTERS=trace,calls,react`, scores only them as
+  the `composer-work` and `chat-work` suites, and publishes none of that pass's stage rows: no
+  `ci.perf-stage` tile pins `ciCounters`, so a row inflated 7–29% would read there as a regression.
+
+Budgets are opt-in per stage: a counter with no budget is not measured, rather than warned about,
+since a zero or a network-paced stage (`seed`, `await-replication`) has no budget on purpose.
+`score-perf.ts calibrate --run <dir> --run <dir> …` proposes them from several nights' artifacts
+(`proposeWorkBudgets`): the target is the median of each night's median; the limit three spreads
+above it, at least 5% and one count, where the spread is the larger of the night-to-night CV and the
+per-iteration CV over √n. A counter noisier than 10% per iteration is left out — it is not counting
+deterministic work.
+
 ## Instrument cost, measured
 
 One sample per configuration of the same flow, whole-flow wall time:
@@ -578,8 +603,8 @@ flag), so these are each costed counter's own increment.
 So the default is `react` alone: a few percent, the same order as the profiler. `trace` costs
 past that in CPU — `devtools.timeline` records an event per script entry in every realm — and
 `calls` far past it, since precise coverage keeps every function's invocation counter live; both
-run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) rather than inside the
-trended one.
+run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) and in the nightly's separate
+counters-on jobs, never inside the trended one.
 
 Across the same three iterations, the counts held where the stage is user-driven: on
 `assistant-turns`, `scroll-*`, `open-*` and `reopen-project` the coefficient of variation of
