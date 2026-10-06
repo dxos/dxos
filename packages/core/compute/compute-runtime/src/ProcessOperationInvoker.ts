@@ -64,6 +64,22 @@ export class Service extends Context.Service<
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
 >()('@dxos/functions/ProcessOperationInvoker') {}
 
+/**
+ * A settled process's fiber, holding only its exit: the live fiber's closures share a scope with the
+ * process handle, so caching them kept every invoked process's handle (trace buffer, services) alive.
+ */
+const settledFiber = <T>(pid: Process.ID, exit: Exit.Exit<T>): OperationFiber<T> => ({
+  pid,
+  await: Effect.succeed(exit),
+  poll: Effect.succeed(Option.some(exit)),
+});
+
+/**
+ * Settled exits kept for {@link ProcessOperationInvoker.attachFiber}, the same bound the manager keeps
+ * finished-process info under; an attacher reads a child's exit as soon as the child reports exiting.
+ */
+const SETTLED_FIBER_RETENTION = 200;
+
 const fiberFromProcess = <T>(handle: Process.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     // `forkDaemon` so the collector fiber's lifetime is independent of whichever
@@ -141,6 +157,32 @@ export const make = (opts: {
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.Fiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
+  const settledPids: Process.ID[] = [];
+
+  // Cached synchronously, so a handler answering its first input cannot race an attacher; the entry is
+  // swapped for its exit once the process settles, and settled entries are evicted oldest first.
+  const cacheFiber = <T>(fiber: OperationFiber<T>): Effect.Effect<void> =>
+    Effect.gen(function* () {
+      fiberCache.set(fiber.pid, fiber);
+      yield* fiber.await.pipe(
+        Effect.tap((exit) =>
+          Effect.sync(() => {
+            if (fiberCache.get(fiber.pid) !== fiber) {
+              return;
+            }
+            fiberCache.set(fiber.pid, settledFiber(fiber.pid, exit));
+            settledPids.push(fiber.pid);
+            while (settledPids.length > SETTLED_FIBER_RETENTION) {
+              const evicted = settledPids.shift();
+              if (evicted !== undefined) {
+                fiberCache.delete(evicted);
+              }
+            }
+          }),
+        ),
+        Effect.forkDetach,
+      );
+    });
 
   // Dispatches an operation to the remote (EDGE) runtime, keyed by its deployment id. Used when an
   // invocation opts into edge execution via `InvokeOptions.on === 'edge'`.
@@ -188,15 +230,7 @@ export const make = (opts: {
       // so that a handler producing output synchronously on the first input
       // can never race the collector.
       const fiber = yield* fiberFromProcess(handle);
-      // TODO(dmaretskyi): Bound `fiberCache` lifetime without breaking attach
-      // of completed processes (covered by the `attaches to a completed
-      // process` test and relied upon by `agent-process`'s `onChildEvent`).
-      // A naive delete-on-collector-completion observer prunes the entry
-      // before late attachers can read it, and `ProcessHandle.subscribeOutputs`
-      // does not replay a drained queue. Future fix needs either a replayable
-      // exit cache on the handle or coordinated eviction (e.g. ref-count or
-      // TTL).
-      fiberCache.set(handle.pid, fiber);
+      yield* cacheFiber(fiber);
       yield* handle.submitInput(input);
       markWork('process.input-submitted');
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
@@ -226,7 +260,7 @@ export const make = (opts: {
       }
       const handle = yield* opts.manager.attach<any, T>(pid);
       const newFiber = yield* fiberFromProcess(handle);
-      fiberCache.set(pid, newFiber);
+      yield* cacheFiber(newFiber);
       return newFiber;
     }).pipe(withFallbackTracer);
 

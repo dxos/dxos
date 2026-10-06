@@ -38,6 +38,7 @@ import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
+import * as Util from '@dxos/react-ui/Util';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -153,8 +154,10 @@ const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) :
 const MODULE_EVAL_TIME = Date.now();
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+  const stopTrimming = Util.trimReactPerformanceEntries();
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
+      stopTrimming();
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }

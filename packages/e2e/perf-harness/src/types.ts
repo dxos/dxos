@@ -422,6 +422,14 @@ export type StageRow = {
    * measured count into it would split the series the moment the count moved by one.
    */
   fixtureSize?: number;
+  /**
+   * Flow-specific whole-run readings, keyed by metric name (`retained tab heap per turn`); each is
+   * published as `reading > <name>` and scored as `run > <name>`.
+   *
+   * Set by the flow on a finished row, for a quantity no single stage boundary measures — e.g. a
+   * difference between readings taken after the last stage.
+   */
+  readings?: Record<string, number>;
   iteration: number;
   ok: boolean;
   error?: string;

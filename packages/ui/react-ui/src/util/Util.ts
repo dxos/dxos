@@ -10,3 +10,4 @@ export * from '../next/clickable.ts';
 export * from '../next/recipes.ts';
 export * from '../next/sizes.ts';
 export * from './slots.ts';
+export * from './react-timing.ts';

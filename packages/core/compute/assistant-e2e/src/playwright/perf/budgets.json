@@ -71,6 +71,11 @@
     "limit": 800000000,
     "unit": "bytes"
   },
+  "run > retained tab heap per turn": {
+    "target": 340000,
+    "limit": 510000,
+    "unit": "bytes"
+  },
   "run > total blocking time": {
     "target": 1100,
     "limit": 1650,
@@ -168,6 +173,11 @@
   "busy > run > peak app footprint": {
     "target": 560000000,
     "limit": 840000000,
+    "unit": "bytes"
+  },
+  "busy > run > retained tab heap per turn": {
+    "target": 270000,
+    "limit": 405000,
     "unit": "bytes"
   },
   "busy > run > total blocking time": {

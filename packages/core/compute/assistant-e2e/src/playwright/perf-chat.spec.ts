@@ -8,6 +8,7 @@ import path from 'node:path';
 import { log } from '@dxos/log';
 import {
   type Comparability,
+  type HeapReading,
   type StageRow,
   StageRunner,
   appendRows,
@@ -20,6 +21,7 @@ import {
   listTargets,
   parseCounters,
   publishPosthogBatch,
+  readHeap,
   readProcessFootprint,
   startProfiling,
   sumAppFootprint,
@@ -59,6 +61,12 @@ const storyUrl = (storyId: string) => `http://localhost:${PERF_PORT}/iframe.html
 
 /** The closing line the scripted model emits only after its twentieth tool result. */
 const DONE = /Done — ran 20 calculations/;
+
+/** Tool turns per prompt: the scripted model's `PERF_TOOL_TURNS`. */
+const TOOL_TURNS = 20;
+
+/** Tab heap a warm thread keeps per tool turn, from a second prompt sent after the last stage. */
+const RETAINED_PER_TURN = 'retained tab heap per turn';
 
 /** Idle after ready before the first measured stage, so boot's trailing work (and a dev server's module stream) lands outside it. */
 const SETTLE_MS = 10_000;
@@ -177,6 +185,11 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       }
     };
     page.context().on('request', onRequest);
+    const assertScripted = () => {
+      if (liveModelCalls.length > 0) {
+        throw new Error(`chat reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
+      }
+    };
 
     await runner.stage('assistant-turns', async () => {
       const prompt = chatPrompt(page);
@@ -187,9 +200,7 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
         .getByText(DONE)
         .first()
         .waitFor({ timeout: BUDGET_MS * 3 });
-      if (liveModelCalls.length > 0) {
-        throw new Error(`chat reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
-      }
+      assertScripted();
     });
 
     await runner.stage('scroll-thread', async () => {
@@ -205,6 +216,40 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     await runner.stage('idle', async () => {
       await page.waitForTimeout(IDLE_MS);
     });
+
+    // The first prompt's growth is mostly warm-up (compiled code, caches), so retention is read as the
+    // tab heap a second prompt adds over the idle row's. Outside any stage, since a stage would also
+    // add to the run's totals that the other budgets score.
+    const idleRow = runner.rows.find((row) => row.stage === 'idle');
+    // Failed after publishing, like a failed stage, so the rows already measured still reach the trend.
+    let retentionError: unknown;
+    if (idleRow?.ok) {
+      try {
+        await chatPrompt(page).click({ timeout: BUDGET_MS });
+        await page.keyboard.type('Run them again.');
+        await page.keyboard.press('Enter');
+        // The thread is virtualized and pinned to the bottom: the first closing line unmounts as this
+        // prompt's turns stream in, and the next one to mount is this prompt's.
+        await expect.poll(() => page.getByText(DONE).count(), { timeout: BUDGET_MS * 3 }).toBe(0);
+        await page
+          .getByText(DONE)
+          .first()
+          .waitFor({ timeout: BUDGET_MS * 3 });
+        assertScripted();
+        const before = tabHeapBytes(idleRow.heap);
+        const after = tabHeapBytes(await readHeap(targets));
+        if (before === undefined || after === undefined) {
+          throw new Error('no tab heap reading to measure retention against');
+        }
+        idleRow.readings = {
+          ...idleRow.readings,
+          [RETAINED_PER_TURN]: Math.max(0, (after - before) / TOOL_TURNS),
+        };
+      } catch (error) {
+        retentionError = error;
+        log.warn('retention reading failed', { error });
+      }
+    }
 
     page.context().off('request', onRequest);
 
@@ -229,6 +274,7 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     runner.dispose();
 
     expect(rows.filter((row) => !row.ok).map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
+    expect(retentionError).toBeUndefined();
   } finally {
     await context?.close().catch((error) => log.warn('context did not close', { error }));
     await instrumented.close();
@@ -248,6 +294,12 @@ test.describe('Assistant chat performance', () => {
 
 const MB = 1024 * 1024;
 
+/** The page realms' heap, or `undefined` when no page answered: a zero would read as no retention. */
+const tabHeapBytes = (heap: HeapReading[]): number | undefined => {
+  const pages = heap.filter(({ kind }) => kind === 'page');
+  return pages.length > 0 ? pages.reduce((total, { usedBytes }) => total + usedBytes, 0) : undefined;
+};
+
 const summarize = (row: StageRow) => ({
   stage: row.stage,
   ok: row.ok,
@@ -257,6 +309,7 @@ const summarize = (row: StageRow) => ({
   heapMB: Math.round(row.heapUsedTotalBytes / MB),
   domNodes: row.domNodes,
   lagMaxMs: row.responsiveness.lagMaxMs,
+  ...(row.readings ? { readings: row.readings } : {}),
   ...(row.latency
     ? {
         submitToRequestMs: row.latency.submitToRequestMs,

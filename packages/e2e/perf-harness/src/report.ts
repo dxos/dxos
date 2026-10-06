@@ -57,6 +57,11 @@ export type PosthogEvent = {
 /** The PostHog event name every stage row is captured under. */
 export const EVENT_NAME = 'ci.perf-stage';
 
+/** Prefixes a {@link StageRow.readings} entry's property, so the scorer can tell it from the fixed columns. */
+export const READING_PREFIX = 'reading > ';
+
+export const readingKey = (name: string): string => `${READING_PREFIX}${name}`;
+
 /**
  * Fixed per-realm property suffixes, keyed by target kind.
  *
@@ -420,6 +425,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       stageIndex: row.stageIndex,
       scale: row.scale,
       ...(row.fixtureSize === undefined ? {} : { fixtureSize: row.fixtureSize }),
+      ...Object.fromEntries(Object.entries(row.readings ?? {}).map(([name, value]) => [readingKey(name), value])),
       iteration: row.iteration,
       ok: row.ok,
 
