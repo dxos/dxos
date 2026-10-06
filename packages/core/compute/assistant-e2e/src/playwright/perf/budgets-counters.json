@@ -1,7 +1,7 @@
 {
   "forcedLayouts > assistant-turns": {
-    "target": 622,
-    "limit": 654,
+    "target": 613,
+    "limit": 644,
     "unit": "count"
   },
   "forcedLayouts > boot": {
@@ -10,28 +10,33 @@
     "unit": "count"
   },
   "forcedLayouts > scroll-thread": {
-    "target": 156,
-    "limit": 164,
+    "target": 157,
+    "limit": 165,
     "unit": "count"
   },
   "jsCalls > assistant-turns": {
-    "target": 23200000,
-    "limit": 24400000,
+    "target": 23700000,
+    "limit": 24900000,
     "unit": "count"
   },
   "jsCalls > boot": {
-    "target": 3770000,
-    "limit": 3960000,
+    "target": 3430000,
+    "limit": 3600000,
+    "unit": "count"
+  },
+  "jsCalls > idle": {
+    "target": 81900,
+    "limit": 86000,
     "unit": "count"
   },
   "jsCalls > scroll-thread": {
-    "target": 1100000,
-    "limit": 1160000,
+    "target": 1120000,
+    "limit": 1180000,
     "unit": "count"
   },
   "layoutDirtyObjects > assistant-turns": {
-    "target": 9560,
-    "limit": 10000,
+    "target": 9500,
+    "limit": 9980,
     "unit": "count"
   },
   "layoutDirtyObjects > boot": {
@@ -40,18 +45,18 @@
     "unit": "count"
   },
   "layoutDirtyObjects > scroll-thread": {
-    "target": 3820,
-    "limit": 4010,
+    "target": 3840,
+    "limit": 4030,
     "unit": "count"
   },
   "layouts > assistant-turns": {
-    "target": 654,
-    "limit": 689,
+    "target": 647,
+    "limit": 679,
     "unit": "count"
   },
   "layouts > boot": {
-    "target": 13,
-    "limit": 16,
+    "target": 12,
+    "limit": 13,
     "unit": "count"
   },
   "layouts > scroll-thread": {
@@ -60,28 +65,33 @@
     "unit": "count"
   },
   "styleRecalcElements > assistant-turns": {
-    "target": 4290,
-    "limit": 4580,
+    "target": 4220,
+    "limit": 4430,
     "unit": "count"
   },
   "styleRecalcElements > boot": {
-    "target": 1040,
-    "limit": 1090,
-    "unit": "count"
-  },
-  "styleRecalcElements > idle": {
     "target": 1010,
     "limit": 1060,
     "unit": "count"
   },
+  "styleRecalcElements > idle": {
+    "target": 997,
+    "limit": 1050,
+    "unit": "count"
+  },
   "styleRecalcElements > scroll-thread": {
-    "target": 2460,
-    "limit": 2580,
+    "target": 2480,
+    "limit": 2600,
     "unit": "count"
   },
   "styleRecalcs > assistant-turns": {
-    "target": 1540,
-    "limit": 1660,
+    "target": 1510,
+    "limit": 1590,
+    "unit": "count"
+  },
+  "styleRecalcs > boot": {
+    "target": 21.5,
+    "limit": 23,
     "unit": "count"
   },
   "styleRecalcs > idle": {
@@ -90,13 +100,13 @@
     "unit": "count"
   },
   "styleRecalcs > scroll-thread": {
-    "target": 310,
-    "limit": 326,
+    "target": 313,
+    "limit": 329,
     "unit": "count"
   },
   "busy > forcedLayouts > assistant-turns": {
-    "target": 648,
-    "limit": 680,
+    "target": 630,
+    "limit": 662,
     "unit": "count"
   },
   "busy > forcedLayouts > boot": {
@@ -110,53 +120,58 @@
     "unit": "count"
   },
   "busy > jsCalls > assistant-turns": {
-    "target": 28700000,
-    "limit": 30100000,
+    "target": 29000000,
+    "limit": 30500000,
     "unit": "count"
   },
   "busy > jsCalls > boot": {
-    "target": 4320000,
-    "limit": 4540000,
+    "target": 4000000,
+    "limit": 4200000,
+    "unit": "count"
+  },
+  "busy > jsCalls > idle": {
+    "target": 215000,
+    "limit": 270000,
     "unit": "count"
   },
   "busy > jsCalls > scroll-thread": {
-    "target": 1130000,
-    "limit": 1210000,
+    "target": 1100000,
+    "limit": 1160000,
     "unit": "count"
   },
   "busy > layoutDirtyObjects > assistant-turns": {
-    "target": 9820,
-    "limit": 10300,
+    "target": 9730,
+    "limit": 10200,
     "unit": "count"
   },
   "busy > layoutDirtyObjects > boot": {
-    "target": 1040,
-    "limit": 1090,
+    "target": 1030,
+    "limit": 1080,
     "unit": "count"
   },
   "busy > layoutDirtyObjects > scroll-thread": {
-    "target": 3820,
-    "limit": 4010,
+    "target": 3850,
+    "limit": 4040,
     "unit": "count"
   },
   "busy > layouts > assistant-turns": {
-    "target": 683,
-    "limit": 717,
+    "target": 664,
+    "limit": 697,
+    "unit": "count"
+  },
+  "busy > layouts > boot": {
+    "target": 12.5,
+    "limit": 14,
     "unit": "count"
   },
   "busy > layouts > scroll-thread": {
-    "target": 159,
-    "limit": 167,
-    "unit": "count"
-  },
-  "busy > styleRecalcElements > assistant-turns": {
-    "target": 4430,
-    "limit": 4670,
+    "target": 160,
+    "limit": 168,
     "unit": "count"
   },
   "busy > styleRecalcElements > boot": {
-    "target": 1060,
-    "limit": 1110,
+    "target": 1050,
+    "limit": 1100,
     "unit": "count"
   },
   "busy > styleRecalcElements > idle": {
@@ -170,8 +185,8 @@
     "unit": "count"
   },
   "busy > styleRecalcs > assistant-turns": {
-    "target": 1620,
-    "limit": 1720,
+    "target": 1580,
+    "limit": 1660,
     "unit": "count"
   },
   "busy > styleRecalcs > idle": {
@@ -180,8 +195,8 @@
     "unit": "count"
   },
   "busy > styleRecalcs > scroll-thread": {
-    "target": 309,
-    "limit": 324,
+    "target": 308,
+    "limit": 323,
     "unit": "count"
   }
 }
