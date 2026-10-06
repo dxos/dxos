@@ -26,6 +26,9 @@ asked.
   model; SPARQL stays for judgment-time retrieval. The text is the authority.
 - **Evaluation is two-stage:** cheap rule-driven wake, then model judgment; drivers (fact, time,
   action) are the only part hardcoded, and a goal-pattern document teaches the judgment.
+- **Goals carry priority and cost:** priority orders and arbitrates judgment; a budget per window
+  (calls, tokens, model tier) bounds spend, rolled up from sub-goals, degrading by batching before
+  pausing to ask the owner.
 - **State on the goal, history in its feed:** status and a one-line situation on the object; actions
   and judgments recorded as tuples that other goals can match.
 - **Judgment runs in private threads:** a session goal in the current session's feed, a durable goal
@@ -100,7 +103,8 @@ or may not say how to achieve it, and it may define conditions. It is distinct f
   cancel them.
 - **Long-running.** A goal holds until it is achieved or cancelled. Some last only the session
   ("help me draft this reply"); others last months ("learn French").
-- **Prioritized.** A goal may carry a priority, which orders the agent's attention when goals compete.
+- **Prioritized and budgeted.** A goal carries priority and cost metadata (see "Priority and cost"),
+  which order the agent's attention and bound what it spends.
 - **Like a system prompt, but structured.** Goals act as standing instructions, but as separate,
   addressable objects with an owner, status and history rather than one block of text.
 - **Outcome or condition.**
@@ -202,6 +206,27 @@ Goal 3 over a week:
 | Thu  | `wake(followup)` alarm after 2 days                                                       | active / "Followed up with Dima"                     | `followed-up dima`                   |
 | Thu  | Dima: "OK, I'll start on it"; `wake(reply)`; achieved; Rich's watch sees it               | achieved / "Dima committed Thursday"                 | `achieved`, `committed dima`         |
 
+### Priority and cost
+
+Every goal carries metadata the runtime reads directly, beside its status and situation:
+
+- **Priority** — orders judgment when several goals wake at once, decides which goal wins a conflict
+  (the judgment sees the priorities of the other goals in its session), and sets how promptly a
+  woken goal is judged: an urgent goal is judged on the fact that woke it; a low one may wait to
+  be batched.
+- **Budget** — what the goal may spend per window: judgment calls, model tokens, or both, and
+  optionally the model tier it is judged with. A sub-goal draws on its parent's budget unless given
+  its own.
+- **Spend** — what the goal has spent in the current window and in total, rolled up from its
+  sub-goals, so an owner can see what each directive costs ("keep my inbox empty" is costing more
+  than it is worth).
+
+When a goal nears its budget, the brain degrades rather than stops: it batches the facts that wake it
+into fewer judgments, lowers its cadence, or judges with a cheaper model. When the budget is spent, the
+goal pauses its wake rules and asks its owner, through the situation and a message, whether to raise
+the budget or narrow the goal. Priority and budget are set by the owner or proposed by the agent when
+the goal is created, as its instructions are.
+
 ### Where judgment runs
 
 The Durable Object never acts on its own; acting needs the agent's skills, channel backends,
@@ -276,4 +301,3 @@ Milestones, each ending in a demo that can be watched.
 
 1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
 2. Whether goals compile reliably to rules, and how a miscompiled rule is noticed (M1 answers this).
-3. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
