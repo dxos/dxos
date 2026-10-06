@@ -25,7 +25,13 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/assistant"
@@ -49,6 +55,12 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -56,6 +68,15 @@
     },
     {
       "path": "../plugin-code"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-tasks"
     }
   ]
 }
