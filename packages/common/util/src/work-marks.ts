@@ -49,7 +49,11 @@ const trim = (): void => {
   const keep = marks.slice(-CAPACITY);
   clearOwnMarks(marks);
   for (const mark of keep) {
-    performance.mark(mark.name, { startTime: mark.startTime, detail: mark.detail });
+    // workerd rejects a `detail` that is not an object, and a mark without one reads back as `null`.
+    performance.mark(
+      mark.name,
+      mark.detail == null ? { startTime: mark.startTime } : { startTime: mark.startTime, detail: mark.detail },
+    );
   }
   written = keep.length;
 };
@@ -66,7 +70,11 @@ export const absoluteNow = (): number => performance.timeOrigin + performance.no
  */
 export const markWork = (name: string, detail?: string): void => {
   // Wrapped in an object: workerd's `performance.mark` rejects a primitive `detail`.
-  performance.mark(WORK_MARK_PREFIX + name, detail === undefined ? undefined : { detail: { text: detail } });
+  if (detail === undefined) {
+    performance.mark(WORK_MARK_PREFIX + name);
+  } else {
+    performance.mark(WORK_MARK_PREFIX + name, { detail: { text: detail } });
+  }
   if (++written > CAPACITY * 2) {
     trim();
   }
