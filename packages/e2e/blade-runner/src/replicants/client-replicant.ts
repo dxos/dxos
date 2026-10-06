@@ -335,7 +335,13 @@ export class ClientReplicant {
   @trace.span()
   async createSpace({ label }: { label: string }): Promise<{ spaceId: string }> {
     const space = await this.#getClient().spaces.create({ name: label });
-    await awaitSpaceReady(space);
+    try {
+      await awaitSpaceReady(space);
+    } catch (err) {
+      // The caller never learns this id, so the run's own cleanup cannot reach the space.
+      await this.#deleteViaSelfServe([{ path: `/data/space/${space.id}`, label: space.id }]);
+      throw err;
+    }
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id };
   }
@@ -515,27 +521,37 @@ export class ClientReplicant {
    */
   @trace.span()
   async deleteOwnData({ spaceIds }: { spaceIds: string[] }): Promise<{ accepted: string[]; refused: string[] }> {
+    const identity = this.#getClient().halo.identity.get();
+    invariant(identity, 'no identity to delete');
+    return this.#deleteViaSelfServe([
+      ...spaceIds.map((spaceId) => ({ path: `/data/space/${spaceId}`, label: spaceId })),
+      { path: `/data/identity/${identity.did}`, label: identity.did },
+    ]);
+  }
+
+  /** Issues each self-serve DELETE with a presentation this identity signs; never throws. */
+  async #deleteViaSelfServe(
+    targets: { path: string; label: string }[],
+  ): Promise<{ accepted: string[]; refused: string[] }> {
     invariant(this.#config, 'never initialized');
     const edgeUrl = this.#config.edgeUrl;
     const client = this.#getClient();
-    const identity = client.halo.identity.get();
-    invariant(identity, 'no identity to delete');
 
     const accepted: string[] = [];
     const refused: string[] = [];
     const authentication = await authenticateViaChallengeEndpoint(edgeUrl, createEdgeIdentity(client));
     if (!authentication) {
       log.warn('cleanup: edge issued no auth challenge', { edgeUrl });
-      return { accepted, refused: [...spaceIds, identity.did] };
+      return { accepted, refused: targets.map(({ label }) => label) };
     }
     const authorization = encodeAuthHeader(authentication.presentation);
 
-    const remove = async (path: string, label: string): Promise<void> => {
+    for (const { path, label } of targets) {
       try {
         const response = await fetch(new URL(path, edgeUrl), { method: 'DELETE', headers: { authorization } });
         if (response.ok) {
           accepted.push(label);
-          return;
+          continue;
         }
         refused.push(label);
         log.warn('cleanup request refused', { path, status: response.status });
@@ -543,12 +559,7 @@ export class ClientReplicant {
         refused.push(label);
         log.warn('cleanup request threw', { path, err });
       }
-    };
-
-    for (const spaceId of spaceIds) {
-      await remove(`/data/space/${spaceId}`, spaceId);
     }
-    await remove(`/data/identity/${identity.did}`, identity.did);
     return { accepted, refused };
   }
 

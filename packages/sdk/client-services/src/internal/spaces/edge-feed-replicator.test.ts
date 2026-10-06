@@ -131,6 +131,14 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => messageSink.find((msg) => msg.type === 'data')).toBeDefined();
   });
 
+  test('rejects a non-positive resync interval', async () => {
+    const { endpoint } = await createEdge();
+    const { messenger } = await createClient(endpoint);
+    expect(() => new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random(), resyncInterval: 0 })).toThrow(
+      'resyncInterval must be positive',
+    );
+  });
+
   test('propagates errors unrelated to reconnect', async () => {
     const { endpoint, admitConnection } = await createEdge();
     const { messenger, sendSpy } = await createClient(endpoint);
@@ -508,19 +516,24 @@ describe('EdgeFeedReplicator', () => {
       await openAndClose(replicator);
       edge.admitConnection.wake();
       await caughtUp.holds([0, 1, 2]);
-
-      // The lagging feed asked about three times means resync ticks ran over the caught-up one in between.
+      // A re-ask decided while the first reply was still in flight is legitimate, and the tick that sent it
+      // sent the lagging feed's ask right after it; so asks only count from the first lagging ask on.
+      const caughtUpAt = edge.received.length;
+      let consumed = 0;
+      let settledAt: number | undefined;
       let laggingAsks = 0;
       while (laggingAsks < 3) {
         const message = await edge.next();
-        if (message.type === 'get-metadata' && message.feedKey === lagging.feedKey) {
+        consumed++;
+        if (consumed > caughtUpAt && message.type === 'get-metadata' && message.feedKey === lagging.feedKey) {
+          settledAt ??= consumed;
           laggingAsks++;
         }
       }
-      const caughtUpAsks = edge.received.filter(
-        (message) => message.type === 'get-metadata' && message.feedKey === caughtUp.feedKey,
-      );
-      expect(caughtUpAsks).toHaveLength(1);
+      const caughtUpAsks = edge.received
+        .slice(settledAt)
+        .filter((message) => message.type === 'get-metadata' && message.feedKey === caughtUp.feedKey);
+      expect(caughtUpAsks).toHaveLength(0);
     });
 
     test('a hole above the remote length does not block the feed', async () => {

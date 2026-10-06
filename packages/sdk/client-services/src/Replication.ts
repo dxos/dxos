@@ -67,6 +67,8 @@ export class EdgeFeedReplicator extends Resource {
 
   constructor({ messenger, spaceId, resyncInterval = RESYNC_INTERVAL_MS }: EdgeFeedReplicatorProps) {
     super();
+    // Timers clamp a non-positive delay to about 1ms, which would poll lagging feeds hot.
+    invariant(resyncInterval > 0, 'resyncInterval must be positive');
     this._messenger = messenger;
     this._spaceId = spaceId;
     this._resyncInterval = resyncInterval;
