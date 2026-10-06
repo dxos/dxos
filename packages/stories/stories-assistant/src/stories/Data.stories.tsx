@@ -17,7 +17,6 @@ import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo
 import { AccessToken } from '@dxos/link';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as CrmSkill from '@dxos/plugin-crm/CrmSkill';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -26,7 +25,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
-import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
+import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';

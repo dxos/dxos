@@ -168,6 +168,27 @@ describe('AgentProcess input queue (scripted)', () => {
   );
 
   it.effect(
+    "a prompt's sender is carried onto the turn's user message",
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('The fix landed.', { sender: { name: 'Dima' } });
+        yield* session.waitForCompletion();
+
+        const { messages } = yield* readFeed(session.feed);
+        const turn = messages.find(
+          (message) =>
+            message.sender.role === 'user' && !isQueued(message) && Message.extractText(message) === 'The fix landed.',
+        );
+        expect(turn?.sender.name).toBe('Dima');
+      },
+      Effect.provide(replyLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
     'several prompts submitted back to back all drain, in submission order',
     Effect.fnUntraced(
       function* (_) {

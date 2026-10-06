@@ -3,7 +3,7 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -96,11 +96,22 @@ export const withClientProvider = ({
   };
 };
 
+type LocalServicesOptions = NonNullable<Parameters<TestBuilder['createLocalClientServices']>[0]>;
+
 // TODO(burdon): Implement context per client for context.
 // TODO(burdon): Callback once all invitations have completed.
 // TODO(burdon): Delay/jitter for creation of other clients.
 export type WithMultiClientProviderProps = InitializeProps &
-  Omit<ClientProviderProps, 'onInitialized'> & { numClients?: number };
+  Omit<ClientProviderProps, 'onInitialized'> & {
+    numClients?: number;
+    /** One relay (e.g. `MemoryEdgeInbox`) shared by every client, so they can message each other without EDGE. */
+    inboxRelay?: LocalServicesOptions['inboxRelay'];
+    /**
+     * Wraps each client's story inside its `ClientProvider`, so the client can host what the story
+     * needs per client — e.g. a plugin manager adopting it (see plugin-client's `ClientPluginManager`).
+     */
+    wrapper?: ComponentType<PropsWithChildren<{ index: number }>>;
+  };
 
 /**
  * Decorator that creates a scaffold for multiple clients.
@@ -113,6 +124,8 @@ export const withMultiClientProvider = ({
   onCreateSpace,
   onCreateIdentity,
   onInitialized,
+  inboxRelay,
+  wrapper: Wrapper,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
   return (Story, context) => {
@@ -123,7 +136,7 @@ export const withMultiClientProvider = ({
       const buidler = new TestBuilder();
       return Array.from({ length: numClients }).map(() => {
         return {
-          services: buidler.createLocalClientServices(),
+          services: buidler.createLocalClientServices({ inboxRelay }),
         };
       });
     }, [numClients]);
@@ -177,7 +190,13 @@ export const withMultiClientProvider = ({
           >
             <ClientStory.Provider value={{ index, spaceId }}>
               <Status.ErrorBoundary name='client-provider'>
-                <Story />
+                {Wrapper ? (
+                  <Wrapper index={index}>
+                    <Story />
+                  </Wrapper>
+                ) : (
+                  <Story />
+                )}
               </Status.ErrorBoundary>
             </ClientStory.Provider>
           </ClientProvider>

@@ -10,6 +10,7 @@ import { type AiService } from '@dxos/ai';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
+import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -156,6 +157,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
+      AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
@@ -334,6 +336,7 @@ const experimental: Plugin.Plugin[] = [
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),
   IdeogramPlugin.make(),
+  AgentPlugin.make(),
   IrohBeaconPlugin.make(),
   LaMetricPlugin.make(),
   LinearPlugin.make(),

@@ -96,11 +96,6 @@
       "import": "./dist/lib/ns/CrmSkill.mjs"
     },
     "./package.json": "./package.json",
-    "./ProfileOf": {
-      "source": "./src/types/ProfileOf.ts",
-      "types": "./dist/types/src/types/ProfileOf.d.ts",
-      "import": "./dist/lib/ProfileOf.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -115,9 +110,6 @@
       ],
       "CrmOperation": [
         "dist/types/src/types/CrmOperation.d.ts"
-      ],
-      "ProfileOf": [
-        "dist/types/src/types/ProfileOf.d.ts"
       ]
     }
   },

@@ -139,6 +139,7 @@ export const ProfileContainer = () => {
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
               classNames='w-64 max-w-full min-w-0'
+              data-testid='clientPlugin.profile.displayName'
             />
           </Form.Field>
         );

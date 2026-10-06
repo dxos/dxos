@@ -14,3 +14,4 @@ export * from './agent-claude-plugin.ts';
 export * from './busy-space.ts';
 export * from './helpdesk-space.ts';
 export * from './voyage-space.ts';
+export * from './playground.ts';

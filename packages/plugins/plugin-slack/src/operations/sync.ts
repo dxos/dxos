@@ -9,18 +9,18 @@ import * as Layer from 'effect/Layer';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
+import { type AccessToken, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { SlackOperation } from '#types';
+import { SlackChannel, SlackOperation } from '#types';
 
 import { SLACK_SOURCE } from '../constants.ts';
-import { formatSlackSyncFailure } from '../errors.ts';
+import { SlackChannelTargetError, formatSlackSyncFailure } from '../errors.ts';
+import { appendToMirror, tsToIso, upgradeChannel } from '../mirror.ts';
 import { SlackApi } from '../services/index.ts';
 
 type SlackConversation = SlackApi.SlackConversation;
@@ -29,20 +29,6 @@ type SlackMessage = SlackApi.SlackMessage;
 /** Pull reconcile result. */
 export type PullResult = {
   added: number;
-};
-
-/**
- * Slack `ts` is a string like `"1700000000.000123"` — seconds with a 6-digit
- * subsecond fraction. Convert to ISO for `Message.created`. We strip subsecond
- * precision because `Date` only has millisecond resolution; the original `ts`
- * is preserved as the foreign key.
- */
-const tsToIso = (ts: string): string => {
-  const seconds = Number.parseFloat(ts);
-  if (!Number.isFinite(seconds)) {
-    return new Date().toISOString();
-  }
-  return new Date(seconds * 1000).toISOString();
 };
 
 const friendlyChannelName = (conversation: SlackConversation): string => {
@@ -134,9 +120,9 @@ export const findChannelForConversation: (
 );
 
 /**
- * Finds an existing Channel for a Slack conversation id, or creates a fresh
- * empty one (with the foreign key set and a backing feed). Idempotent:
- * re-running on the same `(space, conversationId)` returns the same Channel.
+ * Finds the Channel for a Slack conversation, or creates an empty one on the Slack backend (keyed by
+ * the conversation, mirroring into a fresh feed). Idempotent: re-running on the same
+ * `(space, conversationId)` returns the same Channel, upgrading one created before the backend.
  *
  * Used by the connector's `materializeTarget` to create the local root eagerly
  * when a binding is created, so the `Cursor`'s `spec.target` has somewhere to point.
@@ -144,17 +130,26 @@ export const findChannelForConversation: (
 export const findOrCreateChannelForTarget: (input: {
   externalId: string;
   name?: string;
+  accessToken: Ref.Ref<AccessToken.AccessToken>;
+  teamId?: string;
 }) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForTarget')(function* ({
   externalId,
   name,
+  accessToken,
+  teamId,
 }) {
   const existing = yield* findChannelForConversation(externalId);
   if (existing) {
+    yield* upgradeChannel(existing, { accessToken, conversationId: externalId });
     return existing;
   }
   const channel = Channel.make({
     [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: externalId }] },
     name: name ?? externalId,
+    backend: {
+      kind: SlackChannel.BACKEND_KIND,
+      config: SlackChannel.make({ accessToken, conversationId: externalId, teamId }),
+    },
   });
   return yield* Database.add(channel);
 });
@@ -288,6 +283,16 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                   }
                   const targetChannel = localRoot;
 
+                  // Channels synced before the Slack backend existed are moved onto it here, keeping their feed.
+                  const config = yield* upgradeChannel(targetChannel, {
+                    accessToken: accessTokenRef,
+                    conversationId: externalId,
+                  });
+                  if (!config) {
+                    return yield* Effect.fail(new SlackChannelTargetError({ context: { channel: targetChannel.id } }));
+                  }
+                  const feed = yield* Database.load(config.feed);
+
                   // One round-trip to fetch the conversation metadata so we can
                   // mirror a friendly name onto the local Channel.
                   const allConversations = yield* SlackApi.fetchConversations();
@@ -308,14 +313,8 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                     .map((message) => mapSlackMessage(message, userById, botById))
                     .filter((message): message is Message.Message => message !== undefined);
 
-                  if (mapped.length === 0) {
-                    return { added: 0 } satisfies PullResult;
-                  }
-
-                  yield* Database.load(targetChannel.backend.config);
-                  const feed = Channel.getFeed(targetChannel);
-                  invariant(feed, 'Channel is not feed-backed');
-                  yield* Feed.append(feed, mapped).pipe(Effect.provideService(Database.Origin, 'system'));
+                  // Messages the backend already posted and mirrored are skipped by their `ts`.
+                  const appended = yield* appendToMirror(feed, mapped);
 
                   // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
                   // succeeds so the next sync is incremental.
@@ -332,7 +331,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                     }
                   }
 
-                  return { added: mapped.length } satisfies PullResult;
+                  return { added: appended.length } satisfies PullResult;
                 }),
               );
 
