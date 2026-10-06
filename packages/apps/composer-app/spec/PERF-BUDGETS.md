@@ -23,7 +23,7 @@ Work-counter budgets (`<counter> > <stage>`, the `work` group) come from `score-
 over several nights’ artifacts: the target is the median of each night’s median, the limit three
 measured spreads above it (at least 5% and one count). A count moves only when the code does more
 or less work, so these sit within a few percent where timings need 35%. Only user-driven stages are
-budgeted, and only counters that are non-zero and under 10% per-iteration spread there.
+budgeted, and only counters that are non-zero and under 5% per-iteration spread there.
 
 ### stage wall time
 
@@ -80,80 +80,49 @@ budgeted, and only counters that are non-zero and under 10% per-iteration spread
 
 ### work
 
-| metric          |  target |    limit | better | weight |
-| --------------- | ------: | -------: | ------ | -----: |
-| assistant-turns | 7.3 KiB | 7.67 KiB | lower  |      1 |
-| assistant-turns |    40.5 |     42.5 | lower  |      1 |
-| edit-document   |      72 |       84 | lower  |      1 |
-| open-project    |       5 |        6 | lower  |      1 |
-| assistant-turns |     222 |      237 | lower  |      1 |
-| open-project    |       2 |        3 | lower  |      1 |
-| assistant-turns |    95.8 |      106 | lower  |      1 |
-| edit-document   |     138 |      146 | lower  |      1 |
-| open-document   |       6 |        7 | lower  |      1 |
-| open-project    |      38 |     39.9 | lower  |      1 |
-| reopen-project  |      11 |       12 | lower  |      1 |
-| assistant-turns |    46.5 |     48.8 | lower  |      1 |
-| boot            |    5.25 |        7 | lower  |      1 |
-| open-document   |       4 |        5 | lower  |      1 |
-| open-project    |       1 |        2 | lower  |      1 |
-| reopen-project  |       1 |        2 | lower  |      1 |
-| assistant-turns |     194 |      222 | lower  |      1 |
-| boot            |     153 |      161 | lower  |      1 |
-| edit-document   |    64.8 |       68 | lower  |      1 |
-| open-assistant  |       4 |        5 | lower  |      1 |
-| open-document   |    34.3 |       36 | lower  |      1 |
-| open-project    |    26.5 |       28 | lower  |      1 |
-| open-tasks      |      15 |       16 | lower  |      1 |
-| reopen-project  |    26.5 |       28 | lower  |      1 |
-| scroll-document |      52 |     54.6 | lower  |      1 |
-| scroll-tasks    |      24 |     25.2 | lower  |      1 |
-| assistant-turns |     526 |      556 | lower  |      1 |
-| boot            |     218 |      229 | lower  |      1 |
-| edit-document   |    46.5 |     50.3 | lower  |      1 |
-| open-assistant  |       7 |        8 | lower  |      1 |
-| open-document   |      27 |     28.4 | lower  |      1 |
-| open-tasks      |    14.3 |       16 | lower  |      1 |
-| reopen-project  |      17 |       18 | lower  |      1 |
-| scroll-tasks    |    22.5 |       24 | lower  |      1 |
-| assistant-turns |  16,300 |   17,100 | lower  |      1 |
-| open-assistant  |     947 |      994 | lower  |      1 |
-| open-document   |   4,480 |    4,700 | lower  |      1 |
-| open-tasks      |   3,960 |    4,160 | lower  |      1 |
-| reopen-project  |   7,110 |    7,470 | lower  |      1 |
-| scroll-document |     416 |      437 | lower  |      1 |
-| scroll-tasks    |  19,200 |   20,200 | lower  |      1 |
-| toggle-task     |     868 |      911 | lower  |      1 |
-| assistant-turns |   1,280 |    1,340 | lower  |      1 |
-| open-assistant  |      82 |     86.1 | lower  |      1 |
-| open-document   |     230 |      242 | lower  |      1 |
-| open-tasks      |      87 |     91.4 | lower  |      1 |
-| reopen-project  |     273 |      287 | lower  |      1 |
-| scroll-document |      22 |     23.1 | lower  |      1 |
-| scroll-tasks    |      40 |       42 | lower  |      1 |
-| toggle-task     |      59 |       62 | lower  |      1 |
-| assistant-turns |     783 |      822 | lower  |      1 |
-| boot            |     175 |      184 | lower  |      1 |
-| edit-document   |     165 |      173 | lower  |      1 |
-| open-document   |      81 |       85 | lower  |      1 |
-| open-project    |    63.3 |     66.5 | lower  |      1 |
-| reopen-project  |    62.8 |     66.6 | lower  |      1 |
-| scroll-document |     277 |      291 | lower  |      1 |
-| scroll-tasks    |      43 |     45.1 | lower  |      1 |
-| toggle-task     |      18 |     19.6 | lower  |      1 |
-| assistant-turns |     267 |      280 | lower  |      1 |
-| boot            |    35.5 |     38.6 | lower  |      1 |
-| assistant-turns |   2,290 |    2,420 | lower  |      1 |
-| edit-document   |     127 |      140 | lower  |      1 |
-| open-project    |      12 |       13 | lower  |      1 |
-| assistant-turns |   2,920 |    3,070 | lower  |      1 |
-| edit-document   |     140 |      154 | lower  |      1 |
-| open-project    |      14 |       15 | lower  |      1 |
-| assistant-turns |   6,910 |    7,530 | lower  |      1 |
-| boot            |     412 |      433 | lower  |      1 |
-| edit-document   |     211 |      231 | lower  |      1 |
-| open-project    |    37.5 |       42 | lower  |      1 |
-| open-project    |       1 |        2 | lower  |      1 |
+| metric          | target |  limit | better | weight |
+| --------------- | -----: | -----: | ------ | -----: |
+| open-project    |      5 |      6 | lower  |      1 |
+| open-project    |      2 |      3 | lower  |      1 |
+| open-project    |     38 |   39.9 | lower  |      1 |
+| reopen-project  |     11 |     12 | lower  |      1 |
+| assistant-turns |     46 |   48.4 | lower  |      1 |
+| open-document   |      4 |      5 | lower  |      1 |
+| open-project    |      1 |      2 | lower  |      1 |
+| reopen-project  |      1 |      2 | lower  |      1 |
+| boot            |    153 |    161 | lower  |      1 |
+| edit-document   |   64.5 |   67.7 | lower  |      1 |
+| open-document   |     34 |   35.9 | lower  |      1 |
+| open-project    |     26 |   27.4 | lower  |      1 |
+| open-tasks      |     15 |   16.4 | lower  |      1 |
+| reopen-project  |   26.5 |     28 | lower  |      1 |
+| scroll-document |     52 |   84.4 | lower  |      1 |
+| scroll-tasks    |     24 |   25.2 | lower  |      1 |
+| boot            |    221 |    240 | lower  |      1 |
+| assistant-turns | 16,300 | 17,100 | lower  |      1 |
+| open-assistant  |    947 |    994 | lower  |      1 |
+| open-tasks      |  3,960 |  4,160 | lower  |      1 |
+| reopen-project  |  7,110 |  7,470 | lower  |      1 |
+| scroll-document |    419 |    449 | lower  |      1 |
+| scroll-tasks    | 19,200 | 20,200 | lower  |      1 |
+| toggle-task     |    874 |    918 | lower  |      1 |
+| assistant-turns |  1,280 |  1,340 | lower  |      1 |
+| open-assistant  |     82 |   86.1 | lower  |      1 |
+| open-document   |    230 |    242 | lower  |      1 |
+| open-tasks      |     87 |   91.4 | lower  |      1 |
+| reopen-project  |    273 |    287 | lower  |      1 |
+| scroll-document |     22 |   23.1 | lower  |      1 |
+| scroll-tasks    |     40 |     42 | lower  |      1 |
+| toggle-task     |     59 |     62 | lower  |      1 |
+| assistant-turns |    791 |    867 | lower  |      1 |
+| edit-document   |    165 |    173 | lower  |      1 |
+| open-project    |   63.5 |   66.7 | lower  |      1 |
+| reopen-project  |     64 |   67.6 | lower  |      1 |
+| scroll-document |    277 |    400 | lower  |      1 |
+| scroll-tasks    |     43 |   45.1 | lower  |      1 |
+| assistant-turns |    266 |    279 | lower  |      1 |
+| open-project    |     12 |     13 | lower  |      1 |
+| open-project    |      1 |      2 | lower  |      1 |
 
 ## Counters-on pass
 

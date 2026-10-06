@@ -112,7 +112,7 @@ const renderDocs = (budgets: Record<string, Budget>, counters: Record<string, Bu
     'over several nights’ artifacts: the target is the median of each night’s median, the limit three',
     'measured spreads above it (at least 5% and one count). A count moves only when the code does more',
     'or less work, so these sit within a few percent where timings need 35%. Only user-driven stages are',
-    'budgeted, and only counters that are non-zero and under 10% per-iteration spread there.',
+    'budgeted, and only counters that are non-zero and under 5% per-iteration spread there.',
     '',
     tables(budgets),
     '',

@@ -551,7 +551,7 @@ since a zero or a network-paced stage (`seed`, `await-replication`) has no budge
 `score-perf.ts calibrate --run <dir> --run <dir> …` proposes them from several nights' artifacts
 (`proposeWorkBudgets`): the target is the median of each night's median; the limit three spreads
 above it, at least 5% and one count, where the spread is the larger of the night-to-night CV and the
-per-iteration CV over √n. A counter noisier than 10% per iteration is left out — it is not counting
+per-iteration CV over √n. A counter noisier than 5% per iteration is left out — it is not counting
 deterministic work.
 
 ## Instrument cost, measured

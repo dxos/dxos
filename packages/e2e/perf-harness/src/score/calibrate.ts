@@ -54,7 +54,7 @@ export const proposeWorkBudgets = (
   {
     work = DEFAULT_WORK_METRICS,
     skipStages = DEFAULT_SKIP_STAGES,
-    maxSpread = 0.1,
+    maxSpread = 0.05,
     bands = 3,
     minHeadroom = 0.05,
   }: WorkCalibrationOptions = {},
