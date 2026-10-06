@@ -3,15 +3,17 @@
 //
 
 //
-// Property panel for the selected element: a schema-driven form over the element's own Effect schema
-// (a node's from its registry definition), so every field a type has is editable without a per-type
-// form. Edits go through the projection as `update` intents; the panel never mutates the scene.
+// Property panel for the selection: a schema-driven form over the properties every selected element
+// declares alike (one element: its whole schema; a node's from its registry definition), so every field
+// a type has is editable without a per-type form. Values the elements disagree on show as mixed; an edit
+// writes only the changed fields, to every element, as one batch of `update` intents.
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormFieldRenderer, type FormUpdateMeta } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -23,13 +25,14 @@ import {
   CurveLink,
   type Element,
   LineLink,
-  type Link,
-  type Node,
+  type LinkType,
   NodeBase,
+  SmartLink,
   SplineLink,
   getElement,
   isLink,
 } from '../../model/types.ts';
+import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { resolveStyle } from '../../utils/style.ts';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
@@ -65,6 +68,30 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
 /** Renderers by field name for the built-in types' list fields; a host may pass its own. */
 export const DEFAULT_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
 
+const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
+  line: LineLink,
+  curve: CurveLink,
+  spline: SplineLink,
+  smart: SmartLink,
+};
+
+/** An element's own schema; a node type the registry does not know gets the shared fields. */
+const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
+  isLink(element) ? LINK_SCHEMAS[element.type] : (nodeDef(nodes, element)?.schema ?? NodeBase);
+
+/** What the form shows for an element: the toggles show what the frame draws, so an unset fill or border reads as on. */
+const formValues = (element: Element): Record<string, unknown> =>
+  isLink(element) ? element : { ...element, style: resolveStyle(element.style) };
+
+const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+/** The selection by kind, e.g. "3 nodes, 2 links". */
+const describeSelection = (elements: readonly Element[]) => {
+  const links = elements.filter(isLink).length;
+  const nodes = elements.length - links;
+  return [nodes > 0 && plural(nodes, 'node'), links > 0 && plural(links, 'link')].filter(Boolean).join(', ');
+};
+
 export type PropertiesProps = Util.ThemedClassName<{
   projection: Projection;
   atoms: SceneViewAtoms;
@@ -84,90 +111,72 @@ export const Properties = ({
 }: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
-  const ids = [...selection];
-  const element = ids.length === 1 ? getElement(scene, ids[0]) : undefined;
+  const elements = useMemo(() => [...selection].flatMap((id) => getElement(scene, id) ?? []), [scene, selection]);
   const readonly = readonlyProp || !projection.capabilities.update;
 
-  const onSave = useCallback(
-    (values: Element) => {
-      if (element) {
-        projection.apply({ kind: 'update', id: element.id, values });
-      }
-    },
-    [projection, element],
+  // Keyed by the selected types, so the schema (and the form built on it) holds while values change under it.
+  const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
+  const { values, mixed } = useMemo(
+    () => mergeValues(elements.map(formValues), Object.keys(formValues(elements[0] ?? {}))),
+    [elements],
   );
 
+  const onSave = useCallback(
+    (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
+      const paths = Object.keys(changed).filter((path) => changed[path as keyof typeof changed]);
+      projection.apply({
+        kind: 'batch',
+        intents: elements.map((element) => ({
+          kind: 'update' as const,
+          id: element.id,
+          values: patchValues(formValues(element), values, paths),
+        })),
+      });
+    },
+    [projection, elements],
+  );
+
+  if (elements.length === 0) {
+    return (
+      <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
+        <div className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</div>
+      </div>
+    );
+  }
+
+  const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
     <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
-      {!element ? (
-        <div className='p-2 text-sm text-fg-muted'>
-          {ids.length === 0 ? 'Select a node or link to edit its properties.' : `${ids.length} elements selected.`}
-        </div>
-      ) : isLink(element) ? (
-        <LinkForm key={element.id} link={element} readonly={readonly} onSave={onSave} />
+      {schema ? (
+        <Form.Root
+          key={[...selection].join()}
+          schema={schema}
+          values={values}
+          mixed={mixed}
+          fieldMap={fields}
+          readonly={readonly}
+          autoSave
+          onSave={onSave}
+        >
+          {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.Fields exclude={HIDDEN} />
+              {summary && (
+                <p className='text-sm text-fg-muted' data-testid='properties-summary'>
+                  {summary}
+                </p>
+              )}
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
       ) : (
-        <NodeForm key={element.id} node={element} nodes={nodes} fields={fields} readonly={readonly} onSave={onSave} />
+        <p className='p-2 text-sm text-fg-muted' data-testid='properties-summary'>
+          {summary}
+        </p>
       )}
     </div>
   );
-};
-
-type FormProps = { readonly: boolean; onSave: (values: Element) => void };
-
-// Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it.
-const formFields = (
-  <Form.Viewport scroll>
-    <Form.Content>
-      <Form.Fields exclude={HIDDEN} />
-    </Form.Content>
-  </Form.Viewport>
-);
-
-/** A node's form over its type's schema; a type the registry does not know gets the shared fields. */
-const NodeForm = ({
-  node,
-  nodes,
-  fields,
-  readonly,
-  onSave,
-}: FormProps & { node: Node; nodes: NodeRegistry; fields: FormFieldMap }) => {
-  // The toggles show what the frame draws, so an unset fill or border reads as on.
-  const values = useMemo(() => ({ ...node, style: resolveStyle(node.style) }), [node]);
-  return (
-    <Form.Root
-      schema={nodeDef(nodes, node)?.schema ?? NodeBase}
-      values={values}
-      fieldMap={fields}
-      readonly={readonly}
-      autoSave
-      onSave={onSave}
-    >
-      {formFields}
-    </Form.Root>
-  );
-};
-
-/** One `Form.Root` per link type: the schema and the values must agree, which a switch proves per branch. */
-const LinkForm = ({ link, readonly, onSave }: FormProps & { link: Link }) => {
-  const common = { readonly, autoSave: true, onSave };
-  switch (link.type) {
-    case 'line':
-      return (
-        <Form.Root schema={LineLink} values={link} {...common}>
-          {formFields}
-        </Form.Root>
-      );
-    case 'curve':
-      return (
-        <Form.Root schema={CurveLink} values={link} {...common}>
-          {formFields}
-        </Form.Root>
-      );
-    case 'spline':
-      return (
-        <Form.Root schema={SplineLink} values={link} {...common}>
-          {formFields}
-        </Form.Root>
-      );
-  }
 };

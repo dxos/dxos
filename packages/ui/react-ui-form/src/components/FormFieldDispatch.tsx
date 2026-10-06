@@ -230,6 +230,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     onBlur: fieldState.onBlur,
     status,
     error,
+    mixed,
     required: fieldProps.required,
     readonly,
     presentation: layout,

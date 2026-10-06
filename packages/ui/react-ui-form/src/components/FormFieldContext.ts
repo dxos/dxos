@@ -22,6 +22,8 @@ export type FormFieldBinding<T = any> = {
   onBlur: (event?: FocusEvent<HTMLElement>) => void;
   status: FormFieldStatus['status'];
   error?: string;
+  /** The edited objects disagree on this value (see `FormFieldStatus.mixed`). */
+  mixed?: boolean;
   required?: boolean;
   readonly?: boolean;
   presentation?: FormPresentation;

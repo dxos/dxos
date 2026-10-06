@@ -128,7 +128,8 @@ export const FormFieldRow = <T,>({
   const resolved = presentationFor(presentationProp ?? binding?.presentation ?? layout);
   const error = binding?.error ?? errorProp;
   const readonly = binding?.readonly ?? readonlyProp;
-  const required = binding ? binding.required && isEmptyValue(binding.value) : requiredProp;
+  // A mixed value is unset only because the objects disagree, not because it is missing.
+  const required = binding ? binding.required && !binding.mixed && isEmptyValue(binding.value) : requiredProp;
 
   let control: ReactNode = children;
   if (binding && resolved.isStatic) {
