@@ -181,14 +181,23 @@ judged depends on how long it lives:
   created it, may be relevant to parallel or later sessions, and assimilates what they learn: their
   facts reach it through the feeds whatever session produced them. When it acts, the agent service
   routes the result to the right place — the user's current session, or their channel.
-- **One background session per agent, with one private thread per durable goal.** It is the same
-  private-thread pattern as session goals, hosted in the brain's session instead of the user's. A
-  judgment for one goal can see the others' threads, so conflicts and priorities are weighed
-  together ("taxes" outranks "learn French" this week), and there is one place to read the brain's
-  thinking. Because the session sees every user's goals, anything it sends follows the audience
-  rule: one user's goals are never disclosed to another.
+- **One background session per user, with one private thread per durable goal** — provided private
+  threads can be implemented effectively (see open questions). A user's goals see each other's threads,
+  so their conflicts and priorities are weighed together ("taxes" outranks "learn French" this week),
+  while different users' goals are separated by construction rather than by an audience rule. Goals
+  that belong to no single user — the agent's own, or a team's — run in the agent's own background
+  session, under the same audience rule as any shared conversation.
 - **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
   private thread's history moves with it into the goal's feed.
+
+### Goals and tasks
+
+Tasks are the agent's plan for a goal, written by judgment. When a judgment decides on work that takes
+several steps ("complete my taxes": gather the W-2s, find last year's return, book the accountant), it
+creates `Task` objects under the goal, each owned by the agent or assigned to the user. Tasks are
+visible and checkable, and completing one is a fact the goal's wake rules can match. A goal with no
+plan ("keep me informed about Dima") has no tasks. Tasks are never a separate source of intent: a task
+exists because a goal needs it, and closing the goal closes its open tasks.
 
 ### Examples
 
@@ -205,7 +214,8 @@ judged depends on how long it lives:
 
 ## Open questions
 
-1. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
-2. How a goal relates to tasks (the agent's planned steps) and whether tasks are derived from goals.
+1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
+
+2. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
 3. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
 4. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
