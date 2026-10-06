@@ -166,6 +166,24 @@ Goal 3 over a week:
 | Thu  | `wake(followup)` alarm after 2 days                                                       | active / "Followed up with Dima"                     | `followed-up dima`                   |
 | Thu  | Dima: "OK, I'll start on it"; `wake(reply)`; achieved; Rich's watch sees it               | achieved / "Dima committed Thursday"                 | `achieved`, `committed dima`         |
 
+### Where judgment runs
+
+The Durable Object never acts on its own; acting needs the agent's skills, channel backends,
+`composeUpdate` and the pre-action constraint check, which live in agent sessions. Where a goal is
+judged depends on how long it lives:
+
+- **Session goals are judged in a private thread within the current session's feed.** The thread is
+  a side channel of the session's feed that the conversation view does not show, so background
+  reasoning never interleaves with what the user is doing, yet it has the session's full context. It
+  ends with the session.
+- **Durable goals are judged in the brain's own background sessions,** which the Durable Object
+  maintains and which represent its background thinking. A durable goal outlives the session that
+  created it, may be relevant to parallel or later sessions, and assimilates what they learn: their
+  facts reach it through the feeds whatever session produced them. When it acts, the agent service
+  routes the result to the right place — the user's current session, or their channel.
+- **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
+  private thread's history moves with it into the goal's feed.
+
 ### Examples
 
 | #   | Goal                                             | Kind                 | Drivers                      | What the agent does                                                    | Hard part                                                 |
@@ -182,7 +200,6 @@ Goal 3 over a week:
 ## Open questions
 
 1. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
-2. Where goal evaluation runs — in the Durable Object directly, or by waking an agent session.
-3. How a goal relates to tasks (the agent's planned steps) and whether tasks are derived from goals.
-4. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
-5. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
+2. How a goal relates to tasks (the agent's planned steps) and whether tasks are derived from goals.
+3. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
+4. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
