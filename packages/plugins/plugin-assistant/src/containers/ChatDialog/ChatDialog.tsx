@@ -65,7 +65,6 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
           {/* What the request is doing before the first token arrives. */}
           <Chat.Activity />
           {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
-          <Chat.Queue classNames='pb-1' />
           <Chat.Prompt {...chatProps} preset={preset?.id} expandable />
         </NaturalChatDialog.Footer>
       </NaturalChatDialog.Root>

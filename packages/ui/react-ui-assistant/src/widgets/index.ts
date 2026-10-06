@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './DeliveryWidget.ts';
 export * from './FallbackWidget.tsx';
 export * from './ReasoningWidget.ts';
 export * from './ReferenceWidget.ts';

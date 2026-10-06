@@ -61,6 +61,11 @@
     "limit": 150,
     "unit": "ms"
   },
+  "run > submit to queued visible": {
+    "target": 17,
+    "limit": 34,
+    "unit": "ms"
+  },
   "run > worst worker lag p95": {
     "target": 37,
     "limit": 56,
@@ -158,6 +163,11 @@
   "busy > run > worst tab lag p95": {
     "target": 480,
     "limit": 720,
+    "unit": "ms"
+  },
+  "busy > run > submit to queued visible": {
+    "target": 17,
+    "limit": 34,
     "unit": "ms"
   },
   "busy > run > worst worker lag p95": {

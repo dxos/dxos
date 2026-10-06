@@ -39,6 +39,16 @@ describe('perf score measurements', () => {
     expect(measurements).toContainEqual({ id: 'run > total blocking time', group: RUN_GROUP, value: 12 });
   });
 
+  test('scores submit-to-visible from the one stage that measured it', ({ expect }) => {
+    const measurements = toMeasurements([
+      row(0, 'boot'),
+      row(0, 'assistant-turns', { submitToQueuedVisibleMs: 14 }),
+      row(1, 'assistant-turns', { submitToQueuedVisibleMs: 18 }),
+      row(2, 'assistant-turns', { submitToQueuedVisibleMs: 16 }),
+    ]);
+    expect(measurements).toContainEqual({ id: 'run > submit to queued visible', group: RUN_GROUP, value: 16 });
+  });
+
   test('ignores a footprint reading from a stage that read no processes', ({ expect }) => {
     const measurements = toMeasurements([
       row(0, 'boot', { appFootprintBytes: 0, footprintProcesses: 0 }),
