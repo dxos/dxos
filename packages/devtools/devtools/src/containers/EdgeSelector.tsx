@@ -23,7 +23,7 @@ export const EdgeSelector = () => {
   const target = useMemo(() => getTarget(), [window.location.search]);
 
   const handleSetSignalServer = async (value: string) => {
-    await SaveConfig(selectEdge(await Storage(), config, value));
+    await SaveConfig(selectEdge(await Storage(), value));
     window.location.reload();
   };
 

@@ -16,47 +16,37 @@ const DEV_COMPOSER_BUILD: ConfigInit = {
   },
 };
 
-/** A build without accounts, such as a local `serve` with no `DX_HUB_URL`. */
-const NO_ACCOUNTS_BUILD: ConfigInit = { runtime: { services: { edge: { url: `${EDGE_URLS.preview}/` } } } };
-
 /** Persists a selection and returns the config the app reloads into: persisted settings over the build. */
-const pick = (edgeUrl: string, build: ConfigInit, settings: ConfigInit = {}) => {
-  const persisted = selectEdge(settings, new Config(settings, build), edgeUrl);
-  return { persisted, config: new Config(persisted, build) };
+const pick = (edgeUrl: string, settings: ConfigInit = {}) => {
+  const persisted = selectEdge(settings, edgeUrl);
+  return { persisted, config: new Config(persisted, DEV_COMPOSER_BUILD) };
 };
 
 describe('selectEdge', () => {
-  test('moves the hub with EDGE', ({ expect }) => {
+  test('moves the hub entry with EDGE', ({ expect }) => {
     // EDGE checks accounts against the hub it serves under `/hub`, so a hub left on the old EDGE is one it cannot see.
-    const { config } = pick(EDGE_URLS.dev, DEV_COMPOSER_BUILD);
+    const { config } = pick(EDGE_URLS.dev);
     expect(config.values.runtime?.services?.edge?.url).toBe(EDGE_URLS.dev);
-    expect(getEnvString(config, 'DX_HUB_URL')).toBe(`${EDGE_URLS.dev}/hub/`);
     expect(config.values.runtime?.services?.hub?.url).toBe(`${EDGE_URLS.dev}/hub/`);
   });
 
-  test('lists the selected EDGE in the build env the config panel shows', ({ expect }) => {
-    const { config } = pick(EDGE_URLS.dev, DEV_COMPOSER_BUILD);
-    expect(getEnvString(config, 'DX_EDGE_BASE_URL')).toBe(`${EDGE_URLS.dev}/`);
-  });
-
-  test('picking the build EDGE again restores the pair', ({ expect }) => {
-    const { persisted } = pick(EDGE_URLS.dev, DEV_COMPOSER_BUILD);
-    const { config } = pick(EDGE_URLS.preview, DEV_COMPOSER_BUILD, persisted);
-    expect(config.values.runtime?.services?.edge?.url).toBe(EDGE_URLS.preview);
+  test('leaves the build env alone', ({ expect }) => {
+    const { persisted, config } = pick(EDGE_URLS.dev);
+    expect(persisted.runtime?.app).toBeUndefined();
+    expect(getEnvString(config, 'DX_EDGE_BASE_URL')).toBe(`${EDGE_URLS.preview}/`);
     expect(getEnvString(config, 'DX_HUB_URL')).toBe(`${EDGE_URLS.preview}/hub/`);
   });
 
-  test('does not turn accounts on for a build without them', ({ expect }) => {
-    const { config } = pick(EDGE_URLS.dev, NO_ACCOUNTS_BUILD);
-    expect(getEnvString(config, 'DX_HUB_URL')).toBeUndefined();
-    expect(config.values.runtime?.services?.hub?.url).toBe(`${EDGE_URLS.dev}/hub/`);
+  test('picking another EDGE moves both entries again', ({ expect }) => {
+    const { persisted } = pick(EDGE_URLS.dev);
+    const { config } = pick(EDGE_URLS.preview, persisted);
+    expect(config.values.runtime?.services?.edge?.url).toBe(EDGE_URLS.preview);
+    expect(config.values.runtime?.services?.hub?.url).toBe(`${EDGE_URLS.preview}/hub/`);
   });
 
   test('keeps other persisted settings', ({ expect }) => {
     const idb = defs.Runtime_Client_Storage_StorageDriver.IDB;
-    const { config } = pick(EDGE_URLS.dev, DEV_COMPOSER_BUILD, {
-      runtime: { client: { storage: { dataStore: idb } } },
-    });
+    const { config } = pick(EDGE_URLS.dev, { runtime: { client: { storage: { dataStore: idb } } } });
     expect(config.values.runtime?.client?.storage?.dataStore).toBe(idb);
   });
 });
