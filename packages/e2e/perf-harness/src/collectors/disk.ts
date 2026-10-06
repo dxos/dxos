@@ -109,7 +109,12 @@ export const waitForQuietDisk = async (
   { quietMs = 5_000, timeoutMs = 120_000, pollMs = 250 }: WaitForQuietDiskOptions = {},
 ): Promise<void> => {
   const deadline = Date.now() + timeoutMs;
-  let writes = (await readDisk(targets)).writes;
+  const first = await readDisk(targets);
+  // With no realm publishing counters every reading is zero, which would read as quiet at once.
+  if (first.realms === 0) {
+    throw new Error('No attached realm publishes SQLite counters');
+  }
+  let writes = first.writes;
   let quietSince = Date.now();
   while (Date.now() - quietSince < quietMs) {
     if (Date.now() > deadline) {

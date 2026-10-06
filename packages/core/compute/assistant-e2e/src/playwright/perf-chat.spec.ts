@@ -247,11 +247,11 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     expect(rows.filter((row) => !row.ok).map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
     // Checked after publishing, so a regression still lands in the trend it is caught by.
     const boot = rows.find((row) => row.stage === 'boot');
-    if (boot && boot.disk.realms > 0) {
-      expect(boot.disk.writeBytes, 'reopening a seeded space should not write to SQLite').toBeLessThanOrEqual(
-        BOOT_WRITE_BYTES_CEILING,
-      );
-    }
+    // A boot row with no instrumented realm reports zero writes without having measured any.
+    expect(boot?.disk.realms, 'boot should read SQLite counters from at least one realm').toBeGreaterThan(0);
+    expect(boot?.disk.writeBytes, 'reopening a seeded space should not write to SQLite').toBeLessThanOrEqual(
+      BOOT_WRITE_BYTES_CEILING,
+    );
   } finally {
     await context?.close().catch((error) => log.warn('context did not close', { error }));
     await instrumented.close();
