@@ -549,16 +549,13 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
               onContactCreate={onContactCreate}
             />
           }
+          // The trailing cell is a flex row of its own.
           trailing={
-            <div className='flex items-center'>
+            <>
               <span className='px-2 whitespace-nowrap text-sm text-fg-muted'>{date}</span>
-              {isExpanded && (
-                <>
-                  {mailbox && <MessageStar message={target} mailbox={mailbox} />}
-                  <MessageMenu attendableId={attendableId} actions={menuActions} />
-                </>
-              )}
-            </div>
+              {isExpanded && mailbox && <MessageStar message={target} mailbox={mailbox} />}
+              {isExpanded && <MessageMenu attendableId={attendableId} actions={menuActions} />}
+            </>
           }
         >
           {/* The accordion heading: a real heading wrapping the control that folds its section, so the
