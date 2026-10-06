@@ -201,6 +201,11 @@ export const WithEcho: Story = {
     const info = editors[0].querySelector<HTMLElement>('.cm-collab-selectionInfo');
     const line = info?.closest<HTMLElement>('.cm-line');
     if (info && line) {
+      // Hung from the caret and kept inside the editor, even for a cursor at the start of the first line.
+      const editorBox = editors[0].getBoundingClientRect();
+      await expect(info.getBoundingClientRect().left).toBeGreaterThanOrEqual(editorBox.left);
+      await expect(info.getBoundingClientRect().top).toBeGreaterThanOrEqual(editorBox.top);
+
       line.style.textIndent = '-40px';
       const range = document.createRange();
       range.selectNodeContents(info);

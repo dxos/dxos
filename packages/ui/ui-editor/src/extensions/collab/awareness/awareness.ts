@@ -291,10 +291,11 @@ const styles = EditorView.theme({
     transformOrigin: 'center',
   },
   '.cm-collab-selectionInfo': {
+    // Hangs from the caret rather than centring on it, so a cursor at the start of a line keeps its
+    // name in the editor; `bottom: 100%` sits it on the line whatever the font size.
     position: 'absolute',
-    transform: 'translate(-50%, 0)',
-    top: '-20px',
-    left: 0,
+    bottom: '100%',
+    left: '-1px',
     fontSize: '.75em',
     fontFamily: 'sans-serif',
     fontStyle: 'normal',
@@ -312,6 +313,11 @@ const styles = EditorView.theme({
     whiteSpace: 'nowrap',
     // A list item's hanging indent (`text-indent: -width`) is inherited and pulls the name out of its own background.
     textIndent: 0,
+  },
+  // Nothing sits above the first line but the scroller's edge, which would clip the name.
+  '.cm-content > .cm-line:first-child .cm-collab-selectionInfo': {
+    bottom: 'auto',
+    top: '100%',
   },
   '.cm-collab-selectionCaret:hover > .cm-collab-selectionInfo': {
     opacity: 1,
