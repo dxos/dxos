@@ -16,7 +16,7 @@ _4 error(s), 2 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 9a7d9b5a-1 - ignored - no-casts - packages/common/log/src/processors/file-processor.ts:89
+- 9a7d9b5a-1 - resolved - no-casts - packages/common/log/src/processors/file-processor.ts:89
 - 9a7d9b5a-2 - ignored - no-env-vars-in-low-level-modules - packages/common/log/src/processors/file-processor.ts:89
 - 9a7d9b5a-3 - ignored - no-casts - packages/e2e/blade-runner/src/replicants/client-replicant.ts:697
 - 9a7d9b5a-4 - resolved - no-sleep-in-test - packages/sdk/client-services/src/internal/spaces/edge-feed-replicator.test.ts:25

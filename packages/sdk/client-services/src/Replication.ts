@@ -161,6 +161,10 @@ export class EdgeFeedReplicator extends Resource {
       // The metadata reply re-requests from the first missing block only if nothing claims it is in flight.
       this._requestedUpTo.delete(feed.key);
       await this._sendMessage(ctx, { type: 'get-metadata', feedKey: feed.key.toHex() });
+      // A reset during the send already cleared the state this pass would overwrite with stale backoff.
+      if (ctx.disposed) {
+        return;
+      }
     }
     this._behind = behind;
   }

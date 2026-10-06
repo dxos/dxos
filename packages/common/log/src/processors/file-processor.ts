@@ -85,16 +85,14 @@ export const createFileProcessor = ({
   };
 };
 
-let logFilePath: string | undefined;
-const getLogFilePath = () => {
-  logFilePath ??=
-    process.env.LOG_FILE ??
-    (process.env.HOME ? `${process.env.HOME}/.dxlog/${new Date().toISOString()}.log` : undefined);
+const logFilePath =
+  process.env.LOG_FILE ?? (process.env.HOME ? `${process.env.HOME}/.dxlog/${new Date().toISOString()}.log` : undefined);
 
-  return logFilePath!;
-};
-
-export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
-  pathOrFd: getLogFilePath(),
-  levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
-});
+/** A no-op when neither `LOG_FILE` nor `HOME` names a place for the file, rather than throwing on the first entry. */
+export const FILE_PROCESSOR: LogProcessor =
+  logFilePath === undefined
+    ? () => {}
+    : createFileProcessor({
+        pathOrFd: logFilePath,
+        levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+      });

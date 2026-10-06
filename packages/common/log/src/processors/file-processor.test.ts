@@ -5,7 +5,7 @@
 import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, test } from 'vitest';
+import { afterEach, describe, test, vi } from 'vitest';
 
 import { LogLevel } from '../config.ts';
 import { createLog } from '../log.ts';
@@ -14,6 +14,10 @@ import { createFileProcessor } from './file-processor.ts';
 const openDescriptors = () => readdirSync('/proc/self/fd').length;
 
 describe('createFileProcessor', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   test('writes the listed levels when no filters are given', ({ expect }) => {
     const file = join(mkdtempSync(join(tmpdir(), 'file-processor-')), 'out.log');
     const log = createLog();
@@ -40,6 +44,17 @@ describe('createFileProcessor', () => {
     log.info('dropped');
 
     expect(() => readFileSync(file, 'utf8')).toThrow();
+  });
+
+  test('FILE_PROCESSOR writes nothing when no path is configured', async ({ expect }) => {
+    vi.stubEnv('LOG_FILE', undefined);
+    vi.stubEnv('HOME', undefined);
+    vi.resetModules();
+    const { FILE_PROCESSOR } = await import('./file-processor.ts');
+    const log = createLog();
+    log.addProcessor(FILE_PROCESSOR);
+
+    expect(() => log.info('entry')).not.toThrow();
   });
 
   test.skipIf(process.platform !== 'linux')('opens the file once', ({ expect }) => {
