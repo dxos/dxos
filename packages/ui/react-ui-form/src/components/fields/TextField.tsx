@@ -40,6 +40,12 @@ export const TextField = ({
       value={value}
       onBlur={onBlur}
       onChange={(event) => onValueChange(type, event.target.value)}
+      // Enter commits the field as leaving it does, so an auto-saving form saves without the user tabbing away.
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+          onBlur();
+        }
+      }}
       data-testid={jsonPath}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />

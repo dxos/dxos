@@ -7,10 +7,10 @@ import React from 'react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
+import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../hooks/index.ts';
-import { translationKey } from '../../translations.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 

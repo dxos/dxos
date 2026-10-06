@@ -301,7 +301,7 @@ const SceneViewRoot = ({
     snap,
   });
 
-  const onKeyDown = useSceneKeys({
+  const onSceneKey = useSceneKeys({
     registry,
     atoms,
     scene,
@@ -330,6 +330,17 @@ const SceneViewRoot = ({
     removePoint,
     setTool,
   });
+
+  // Shortcuts belong to the canvas itself: keys typed into a control the view hosts (the properties
+  // panel, a toolbar) bubble here too, and must not toggle debug or delete the selection.
+  const onKeyDown = useCallback<typeof onSceneKey>(
+    (event) => {
+      if (event.target === event.currentTarget) {
+        onSceneKey(event);
+      }
+    },
+    [onSceneKey],
+  );
 
   //
   // Render.

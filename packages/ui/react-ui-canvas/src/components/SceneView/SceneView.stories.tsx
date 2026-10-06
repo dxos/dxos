@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { createMemoryStore } from '../../model/store.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
@@ -76,8 +77,8 @@ const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/scene/SceneView',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  // The properties panel is a react-ui-form form, whose strings (e.g. "Mixed") come from its own bundle.
-  parameters: { translations: formTranslations },
+  // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
+  parameters: { translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
