@@ -43,10 +43,13 @@ export const resizeNode = <N extends Node>(node: N, bounds: Bounds): N => ({
   size: { width: bounds.width, height: bounds.height },
 });
 
+/** The bounding box a new basic shape gets: rectangle, ellipse and class share it, so a new circle matches a new square. */
+export const DEFAULT_SHAPE_SIZE: Size = { width: 256, height: 256 };
+
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 256, height: 128 },
-  ellipse: { width: 256, height: 128 },
-  class: { width: 256, height: 192 },
+  rect: DEFAULT_SHAPE_SIZE,
+  ellipse: DEFAULT_SHAPE_SIZE,
+  class: DEFAULT_SHAPE_SIZE,
   note: { width: 256, height: 128 },
   scene: { width: 512, height: 320 },
 };
