@@ -61,27 +61,48 @@ rather than a batch:
 
 ```ts
 FactTuple {
-  subject: Term;              // entity IRI resolving to an ECHO object, or a label
+  id: string;                 // pipeline-rdf fact id; the key every Datalog predicate joins on
+  subject: StoredTerm;        // entity IRI resolving to an ECHO object, or a label
   predicate: string;          // open vocabulary
-  object: Term;               // entity, label or literal
+  object: StoredTerm;         // entity, label or literal
   validFrom?: string;
   validTo?: string;           // a status's horizon; expired facts are filtered, never deleted
-  polarity: 'positive' | 'negative';
-  confidence: number;
-  force?: 'assertive' | 'directive' | 'commissive' | 'expressive';
   quote?: string;
+  factuality: string;         // FactBank value: CT+, PR+, PS+, …
+  polarity: '+' | '-' | '?';
+  confidence?: number;
+  nature?: 'epistemic' | 'aleatory';
+  force: 'assertive' | 'directive' | 'commissive' | 'expressive';  // 'assertive' when the fact has no illocution
+  mood?: 'declarative' | 'interrogative' | 'imperative';
+  addressee?: string;
   speaker?: string;           // DXN of the speaker
   source: string;             // DXN of the message (or URL)
   saidAt: string;             // when it was said
+  span?: { start: number; end: number };
+  supersedes?: string[];      // the tuples a correction derives from
   recordedAt: string;         // when it was extracted
+  extractor: { id: string; model: string; version: string };
+  sourceHash: string;
   pass: string;               // extraction pass id, so a pass's facts can be grouped or replayed
-  supersedes?: string;        // the tuple a correction replaces
 }
+
+StoredTerm { entity?: string; label?: string; literal?: string }  // ECHO stores no non-discriminated unions
 ```
 
-Corrections and retractions are further tuples (`supersedes`, negative polarity); the feed is
-append-only. The tuple keeps pipeline-rdf's fields so its extraction stages and SPARQL engine still
-apply.
+Corrections and retractions are further tuples (`supersedes`, polarity `-`); the feed is
+append-only. The tuple is a flattening of pipeline-rdf's `Fact`, so its extraction stages and SPARQL
+engine still apply. Every `Fact` field has a home, so the mapping is lossless in both directions except
+for `force`, which a tuple always carries (`assertive` standing in for a `Fact` with no illocution):
+
+| `FactTuple`                                         | pipeline-rdf `Fact`                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `id`, `recordedAt`, `extractor`, `sourceHash`       | `id`, `recordedAt`, `extractor`, `sourceHash`                                  |
+| `subject`, `predicate`, `object` (`StoredTerm`)     | `assertion.subject`, `.predicate`, `.object` (`Term`)                          |
+| `validFrom`, `validTo`, `quote`                     | `assertion.validFrom`, `.validTo`, `.quote`                                    |
+| `factuality`, `polarity`, `confidence`, `nature`    | `factuality.value`, `.polarity`, `.confidence`, `.nature`                      |
+| `force`, `mood`, `addressee`                        | `illocution.force`, `.mood`, `.addressee`                                      |
+| `speaker`, `source`, `saidAt`, `span`, `supersedes` | `attribution.agent`, `.source`, `.generatedAtTime`, `.span`, `.wasDerivedFrom` |
+| `pass`                                              | (tuple-only: groups one extraction pass)                                       |
 
 ## Goals
 
@@ -164,8 +185,8 @@ layers, each with one job:
 build on each other (`wake`, `achieved` and `holds` reference one another), stratified negation gives
 `not achieved(goal)` a clear meaning, recursion covers relations like "part of" and "blocked by", and
 semi-naive evaluation re-derives only what a new fact affects, which suits a Durable Object following
-feeds. The fact tuples map directly to predicates (`fact(Id, S, P, O)`, `speaker(Id, dima)`,
-`force(Id, commissive)`). Built-ins supply what plain Datalog lacks: time (`elapsed`), text and
+feeds. The fact tuples map directly to predicates keyed by the tuple's id: `fact(Id, S, P, O)`,
+`speaker(Id, dima)`, `force(Id, commissive)`, `polarity(Id, "-")`, `about(Id, Text)`. Built-ins supply what plain Datalog lacks: time (`elapsed`), text and
 semantic matching (`about`), and counting. SPARQL — already shipped in pipeline-rdf — stays the tool
 for judgment-time retrieval ("everything Dima said about the plugin this week"), where it is strong.
 The cost is owning a dialect and an engine; the engine can stay small because rules come from the
@@ -174,10 +195,12 @@ compiler, not from people.
 Goal 3 below, compiled (Datalog notation, for readability):
 
 ```prolog
-wake(reply)    :- fact(dima, P, O), force(commissive), about(O, "agent plugin").
-wake(refusal)  :- fact(dima, P, O), force(commissive), polarity(negative), about(O, "agent plugin").
+wake(reply)    :- fact(F, _, _, _), speaker(F, dima), force(F, commissive), about(F, "agent plugin").
+wake(refusal)  :- fact(F, _, _, _), speaker(F, dima), force(F, commissive), polarity(F, "-"),
+                  about(F, "agent plugin").
 wake(followup) :- elapsed(goal, 2d), not achieved(goal).
-achieved(goal) :- fact(dima, works_on, "agent plugin"), force(commissive), polarity(positive).
+achieved(goal) :- fact(F, _, _, _), speaker(F, dima), force(F, commissive), polarity(F, "+"),
+                  about(F, "agent plugin").
 ```
 
 ### State
