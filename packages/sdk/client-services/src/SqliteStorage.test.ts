@@ -9,7 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 import * as SqliteStorage from './SqliteStorage.ts';
 

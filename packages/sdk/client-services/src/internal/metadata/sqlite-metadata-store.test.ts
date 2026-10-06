@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { fromPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { SqliteMetadataStore } from './sqlite-metadata-store.ts';
 
