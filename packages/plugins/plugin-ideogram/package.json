@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -40,6 +40,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./IdeogramEvents": {
+      "source": "./src/IdeogramEvents.ts",
+      "types": "./dist/types/src/IdeogramEvents.d.ts",
+      "import": "./dist/lib/ns/IdeogramEvents.mjs"
     },
     "./IdeogramPlugin": {
       "source": "./src/IdeogramPlugin.ts",

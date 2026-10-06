@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { makeCorrectionStage, makeSummarizationStage } from '../stages/index.ts';
 import { SAMPLE_MEETING, scriptedSource } from '../testing/index.ts';

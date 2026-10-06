@@ -4,13 +4,19 @@
 
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Block, Button, Card, Focus, Icon, Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
@@ -29,7 +35,7 @@ export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classN
 
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
@@ -47,12 +53,12 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     }
   }, [JSON.stringify(viewSnapshot?.query.ast)]);
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!query || !db) {
       return;
     }
 
-    const type = await resolveSchemaWithRegistry(db, query.ast);
+    const type = await ToolkitQuery.resolveSchemaWithRegistry(db, query.ast);
     setType(() => type);
   }, [db, query]);
 
@@ -126,16 +132,16 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
         <Focus.Item asChild>
           <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Header>
-              <Block>
-                <Icon icon={icon} />
-              </Block>
+              <Layout.Block>
+                <Icon.Icon icon={icon} />
+              </Layout.Block>
               <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Block rail='end'>
+              <Layout.Block rail='end'>
                 <ActionMenu>
-                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <Button.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
-              </Block>
+              </Layout.Block>
             </Card.Header>
             <Card.Body>
               <Item {...itemProps} menu={menu} />

@@ -10,18 +10,13 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./extraction": {
-      "source": "./src/extraction/index.ts",
-      "types": "./dist/types/src/extraction/index.d.ts",
-      "import": "./dist/lib/extraction.mjs"
     },
     "./Agent": {
       "source": "./src/types/Agent.ts",
@@ -57,6 +52,11 @@
       "source": "./src/util/execution-graph.ts",
       "types": "./dist/types/src/util/execution-graph.d.ts",
       "import": "./dist/lib/ExecutionGraph.mjs"
+    },
+    "./Extraction": {
+      "source": "./src/extraction/index.ts",
+      "types": "./dist/types/src/extraction/index.d.ts",
+      "import": "./dist/lib/extraction.mjs"
     },
     "./Harness": {
       "source": "./src/session/Harness.ts",

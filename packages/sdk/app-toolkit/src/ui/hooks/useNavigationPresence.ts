@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EID } from '@dxos/keys';
 
@@ -43,7 +43,7 @@ export const useNavigationPresence = (
   graph: AppGraph.ExpandableGraph,
   id: string | undefined,
 ): AppCapabilities.NavigationTargetVerdict => {
-  const loaders = useCapabilities(AppCapabilities.NavigationTargetLoader);
+  const loaders = Hooks.useCapabilities(AppCapabilities.NavigationTargetLoader);
   const present = !!id && Option.isSome(AppGraph.getNode(graph, id));
   const [verdict, setVerdict] = useState<AppCapabilities.NavigationTargetVerdict>('unknown');
 

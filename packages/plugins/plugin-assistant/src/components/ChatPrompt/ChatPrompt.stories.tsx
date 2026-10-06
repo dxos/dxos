@@ -6,18 +6,18 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useContext, useEffect } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as ChatType from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
@@ -49,8 +49,8 @@ type StoryArgs = {
 
 const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
   const [space] = useSpaces();
-  const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const [chat] = useQuery(space?.db, Filter.type(AssistantChat.Chat));
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
   const { preset, ...chatProps } = usePresets(settings, chat);
   const db = space?.db;
@@ -97,9 +97,9 @@ const meta = {
     withLayout({ layout: 'column', classNames: 'flex flex-col justify-end w-[30rem]' }),
     withPluginManager<StoryArgs>(({ args: { tasks = [], queued = [], alarmInMinutes } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [ChatType.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
+          types: [AssistantChat.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -107,9 +107,9 @@ const meta = {
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
               const feed = space.db.add(Feed.make());
-              const chat = space.db.add(ChatType.make({ name: 'Test', feed: Ref.make(feed) }));
+              const chat = space.db.add(AssistantChat.make({ name: 'Test', feed: Ref.make(feed) }));
               for (const { title, status } of tasks) {
-                ChatType.addTask(space.db, chat, title, { status });
+                AssistantChat.addTask(space.db, chat, title, { status });
               }
               // Queued input is feed state, so seeding it is exactly what a submit-while-busy does.
               const store = new SessionStore();
@@ -226,6 +226,33 @@ export const TestSendWhileRunning: Story = {
 
     await expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Send');
     await expect(canvas.getByTestId('assistant.send')).toBeEnabled();
+  },
+};
+
+/**
+ * A full queue (the default three prompts behind a running turn) takes no more: with text typed the control stays
+ * Stop rather than offering Send, and Enter leaves the text in the editor rather than queueing a fourth.
+ */
+export const TestQueueFull: Story = {
+  args: { running: true, queued: ['First', 'Second', 'Third'] },
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('assistant.queued-message')).toHaveLength(3), {
+      timeout: 30_000,
+    });
+
+    const editor = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
+    if (!editor) {
+      throw new Error('Prompt editor not rendered.');
+    }
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'a fourth');
+
+    // The one control stays Stop rather than turning into Send: the running turn can still be interrupted.
+    await expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Stop processing');
+    await userEvent.keyboard('{Enter}');
+    await expect(editor).toHaveTextContent('a fourth');
+    await expect(canvas.getAllByTestId('assistant.queued-message')).toHaveLength(3);
   },
 };
 

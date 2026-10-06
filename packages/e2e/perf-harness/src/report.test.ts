@@ -466,6 +466,31 @@ describe('work counter columns', () => {
     expect(properties).not.toHaveProperty('echoNewThing');
     expect(DATA_COUNTER_COLUMNS.map(dataColumn)).toContain('automergeSaveBytes');
   });
+
+  test('request latency is summarized into columns only on a stage that asked a model', ({ expect }) => {
+    expect(toPosthogEvent(row()).properties).not.toHaveProperty('submitToRequestP50Ms');
+    const { properties } = toPosthogEvent(
+      row({
+        latency: {
+          submitToRequestMs: [420],
+          turnToRequestMs: [90, 110, 300],
+          submitPath: [{ name: 'ai.request', kind: 'page', ms: 420 }],
+          turnPath: [],
+          realms: 3,
+        },
+      }),
+    );
+    expect(properties).toMatchObject({
+      submitToRequestP50Ms: 420,
+      submitToRequestMaxMs: 420,
+      submitToRequestCount: 1,
+      turnToRequestP50Ms: 110,
+      turnToRequestMaxMs: 300,
+      turnToRequestCount: 3,
+      markRealms: 3,
+    });
+    expect(properties).not.toHaveProperty('submitPath');
+  });
 });
 
 const row = (overrides: Partial<StageRow> = {}): StageRow => ({

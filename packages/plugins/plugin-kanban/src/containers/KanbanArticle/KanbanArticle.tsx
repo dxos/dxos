@@ -6,12 +6,14 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { type AppSurface, useSchemaFilter } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
@@ -33,9 +35,9 @@ export const KanbanArticle = (props: KanbanArticleProps) => {
 
 const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const registry = useContext(RegistryContext);
-  const schemas = useCapabilities(AppCapabilities.Schema);
+  const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const db = Obj.getDatabase(object);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [view] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
   const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
@@ -46,7 +48,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
     [schemaFromDb, schemas, typeUri],
   );
 
-  const baseFilter = useSchemaFilter(cardSchema);
+  const baseFilter = ToolkitHooks.useSchemaFilter(cardSchema);
   const items = useMemo(() => {
     if (!db) {
       return null;

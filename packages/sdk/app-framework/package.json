@@ -28,6 +28,11 @@
       "types": "./dist/types/src/common/activation-events.d.ts",
       "import": "./dist/lib/common/activation-events.mjs"
     },
+    "./App": {
+      "source": "./src/App.ts",
+      "types": "./dist/types/src/App.d.ts",
+      "import": "./dist/lib/ns/App.mjs"
+    },
     "./Capabilities": {
       "source": "./src/common/capabilities.ts",
       "types": "./dist/types/src/common/capabilities.d.ts",
@@ -43,11 +48,32 @@
       "types": "./dist/types/src/core/capability-manager.d.ts",
       "import": "./dist/lib/core/capability-manager.mjs"
     },
+    "./Cli": {
+      "source": "./src/Cli.ts",
+      "types": "./dist/types/src/Cli.d.ts",
+      "import": "./dist/lib/ns/Cli.mjs"
+    },
+    "./config": {
+      "source": "./src/config/index.ts",
+      "types": "./dist/types/src/config/index.d.ts",
+      "import": "./dist/lib/config.mjs"
+    },
+    "./Devtools": {
+      "source": "./src/Devtools.ts",
+      "types": "./dist/types/src/Devtools.d.ts",
+      "import": "./dist/lib/ns/Devtools.mjs"
+    },
     "./HistoryTracker": {
       "source": "./src/plugin-process-manager/history/history-tracker.ts",
       "types": "./dist/types/src/plugin-process-manager/history/history-tracker.d.ts",
       "import": "./dist/lib/plugin-process-manager/history/history-tracker.mjs"
     },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./package.json": "./package.json",
     "./Plugin": {
       "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/core/plugin.d.ts",
@@ -63,10 +89,20 @@
       "types": "./dist/types/src/core/plugin-manager/index.d.ts",
       "import": "./dist/lib/core/plugin-manager.mjs"
     },
+    "./PluginManagerProvider": {
+      "source": "./src/PluginManagerProvider.ts",
+      "types": "./dist/types/src/PluginManagerProvider.d.ts",
+      "import": "./dist/lib/ns/PluginManagerProvider.mjs"
+    },
     "./PluginManifest": {
       "source": "./src/core/plugin-manifest.ts",
       "types": "./dist/types/src/core/plugin-manifest.d.ts",
       "import": "./dist/lib/core/plugin-manifest.mjs"
+    },
+    "./ProcessManagerPlugin": {
+      "source": "./src/plugin-process-manager/ProcessManagerPlugin.ts",
+      "types": "./dist/types/src/plugin-process-manager/ProcessManagerPlugin.d.ts",
+      "import": "./dist/lib/plugin-process-manager/ProcessManagerPlugin.mjs"
     },
     "./Registry": {
       "source": "./src/core/registry.ts",
@@ -79,9 +115,29 @@
       "import": "./dist/lib/common/Role.mjs"
     },
     "./SharedPackages": {
-      "source": "./src/vite-plugin/packages.ts",
-      "types": "./dist/types/src/vite-plugin/packages.d.ts",
-      "import": "./dist/lib/vite-plugin/packages.mjs"
+      "source": "./src/SharedPackages.ts",
+      "types": "./dist/types/src/SharedPackages.d.ts",
+      "import": "./dist/lib/ns/SharedPackages.mjs"
+    },
+    "./Surface": {
+      "source": "./src/Surface.ts",
+      "types": "./dist/types/src/Surface.d.ts",
+      "import": "./dist/lib/ns/Surface.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./testing/react": {
+      "source": "./src/testing/react.tsx",
+      "types": "./dist/types/src/testing/react.d.ts",
+      "import": "./dist/lib/testing/react.mjs"
+    },
+    "./Translations": {
+      "source": "./src/Translations.ts",
+      "types": "./dist/types/src/Translations.d.ts",
+      "import": "./dist/lib/ns/Translations.mjs"
     },
     "./UndoMapping": {
       "source": "./src/plugin-process-manager/history/undo-mapping.ts",
@@ -98,36 +154,10 @@
       "types": "./dist/types/src/core/url-loader.d.ts",
       "import": "./dist/lib/core/url-loader.mjs"
     },
-    "./config": {
-      "source": "./src/config/index.ts",
-      "types": "./dist/types/src/config/index.d.ts",
-      "import": "./dist/lib/config.mjs"
-    },
     "./vite-plugin": {
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
-    },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "import": "./dist/lib/cli.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./testing-react": {
-      "source": "./src/testing/react.tsx",
-      "types": "./dist/types/src/testing/react.d.ts",
-      "import": "./dist/lib/testing/react.mjs"
-    },
-    "./ui": {
-      "source": "./src/ui/index.ts",
-      "types": "./dist/types/src/ui/index.d.ts",
-      "import": "./dist/lib/ui.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "bin": {
@@ -156,7 +186,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
@@ -170,6 +199,7 @@
   "devDependencies": {
     "@dxos/brand": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

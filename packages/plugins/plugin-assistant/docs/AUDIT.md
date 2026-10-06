@@ -107,7 +107,7 @@ ChatArticle                                        containers/ChatArticle       
         │       └── SurfaceWidget                  React                           [plugin] app-framework Surface + ChatSurface role
         ├── Chat.Status → ChatStatus               components/ChatPrompt/ChatStatus.tsx [echo]
         │   ├── ChatStatus (Root/Elapsed)          @dxos/react-ui-chat             [ui]
-        │   └── Matrix                             @dxos/react-ui-components       [ui]
+        │   └── Matrix                             @dxos/react-ui-experimental     [ui]
         ├── Chat.TaskList → TaskList               components/TaskList/            [echo] Outline
         └── Chat.Prompt → ChatPrompt               components/ChatPrompt/          [echo]
             ├── ChatEditor (+ commands, pendingText)  @dxos/react-ui-chat, @dxos/ui-editor [ui]
@@ -849,7 +849,7 @@ renders with no model. If track 0 fails, this still proceeds on the moved-as-is 
 
 `stories-assistant` is the full-stack integration surface (7 story files, ~10 peer plugins, live or
 scripted EDGE AI). It consumes exactly three things from the plugin —
-`@dxos/plugin-assistant/components` (`Chat`), `/hooks` (`useChatProcessor`, `usePresets`), and
+`@dxos/plugin-assistant/Chat` (`Chat`), `/Hooks` (`useChatProcessor`, `usePresets`), and
 `/Assistant` (`ChatViews`) — so the move costs it one import rewrite.
 
 It should **stay full-stack**: its value is proving the composition against real plugins and a real

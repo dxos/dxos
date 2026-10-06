@@ -49,8 +49,19 @@ export interface Api {
   readonly getProject: (id: string) => Effect.Effect<Project | undefined, LogError>;
   /** The project touched last — what a reload with no id in the URL opens. */
   readonly lastProject: () => Effect.Effect<Project | undefined, LogError>;
+  /**
+   * Deletes a project with its log and stored values; false when there was none. Whoever runs its
+   * turns stops them first, or they append to a project that is gone.
+   */
+  readonly deleteProject: (id: string) => Effect.Effect<boolean, LogError>;
   /** Appends one event and returns the entry it became. */
   readonly append: (projectId: string, event: Events.Event) => Effect.Effect<Events.Entry, LogError>;
+  /**
+   * Deletes the deltas that streamed `messageId`, once the `AssistantMessage` superseding them is
+   * appended. The one exception to append-only: deltas are scaffolding for a live reader, and a
+   * message settled in the log needs none of them to replay.
+   */
+  readonly compact: (projectId: string, messageId: string) => Effect.Effect<void, LogError>;
   /** The whole log from `after` (exclusive), in sequence order. */
   readonly read: (projectId: string, after?: number) => Effect.Effect<Events.Entry[], LogError>;
   /**
@@ -123,6 +134,12 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
                    VALUES (${projectId}, ${next}, ${event._tag}, ${JSON.stringify(encoded)})`.pipe(
           Effect.mapError(fail('Failed to append event')),
         );
+        // The listing reads the column rather than folding every project's log to find its title.
+        if (event._tag === 'TitleSet') {
+          yield* sql`UPDATE projects SET title = ${event.title} WHERE id = ${projectId}`.pipe(
+            Effect.mapError(fail('Failed to record title')),
+          );
+        }
         const entry: Events.Entry = { projectId, seq: next, event };
         yield* PubSub.publish(hub, entry);
         return entry;
@@ -161,8 +178,31 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
           Effect.mapError(fail('Failed to read last project')),
         ),
 
+      deleteProject: (id) =>
+        Effect.gen(function* () {
+          const existing = yield* getProject(id);
+          yield* sql`DELETE FROM events WHERE project_id = ${id}`;
+          yield* sql`DELETE FROM storage WHERE project_id = ${id}`;
+          yield* sql`DELETE FROM projects WHERE id = ${id}`;
+          return existing !== undefined;
+        }).pipe(
+          sql.withTransaction,
+          Effect.mapError(fail('Failed to delete project')),
+          // Under the append gate, so an append cannot read the log head while its rows are deleted.
+          Semaphore.withPermits(gate, 1),
+        ),
+
       append,
       read,
+
+      compact: (projectId, messageId) =>
+        sql`DELETE FROM events WHERE project_id = ${projectId} AND type = 'AssistantDelta'
+            AND json_extract(data, '$.messageId') = ${messageId}`.pipe(
+          Effect.asVoid,
+          Effect.mapError(fail('Failed to compact message deltas')),
+          // Under the append gate, so a concurrent append's `MAX(seq)` cannot read a row mid-delete.
+          Semaphore.withPermits(gate, 1),
+        ),
 
       getValue: (projectId, key) =>
         sql<{ value: string }>`SELECT value FROM storage WHERE project_id = ${projectId} AND key = ${key}`.pipe(

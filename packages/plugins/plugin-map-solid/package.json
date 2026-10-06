@@ -10,7 +10,10 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "./src/components/MapSurface/**",
+    "./dist/lib/**"
+  ],
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -49,6 +52,11 @@
       "source": "./src/MapPlugin.ts",
       "types": "./dist/types/src/MapPlugin.d.ts",
       "default": "./dist/lib/MapPlugin.mjs"
+    },
+    "./MapSolidEvents": {
+      "source": "./src/MapSolidEvents.ts",
+      "types": "./dist/types/src/MapSolidEvents.d.ts",
+      "import": "./dist/lib/ns/MapSolidEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

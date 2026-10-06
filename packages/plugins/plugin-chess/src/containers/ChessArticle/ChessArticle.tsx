@@ -5,12 +5,15 @@
 import { Chess as ChessJS } from 'chess.js';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
@@ -20,7 +23,7 @@ import { Chess } from '#types';
 export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
   const controller = useRef<ChessboardController>(null);
@@ -71,9 +74,9 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
         {role === AppSurface.Article.role && (
           <Panel.Header>
             <Toolbar.Root>
-              {isGameOver && <Button onClick={handleNewGame}>{t('new-game.button')}</Button>}
+              {isGameOver && <Button.Root onClick={handleNewGame}>{t('new-game.button')}</Button.Root>}
               <div className='grow' />
-              <Button
+              <Button.Root
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}

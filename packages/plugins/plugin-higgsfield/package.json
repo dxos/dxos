@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -40,6 +40,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./HiggsfieldEvents": {
+      "source": "./src/HiggsfieldEvents.ts",
+      "types": "./dist/types/src/HiggsfieldEvents.d.ts",
+      "import": "./dist/lib/ns/HiggsfieldEvents.mjs"
     },
     "./HiggsfieldPlugin": {
       "source": "./src/HiggsfieldPlugin.ts",

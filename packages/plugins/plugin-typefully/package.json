@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -58,6 +58,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./TypefullyEvents": {
+      "source": "./src/TypefullyEvents.ts",
+      "types": "./dist/types/src/TypefullyEvents.d.ts",
+      "import": "./dist/lib/ns/TypefullyEvents.mjs"
     },
     "./TypefullyPlugin": {
       "source": "./src/TypefullyPlugin.ts",

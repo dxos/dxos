@@ -12,7 +12,6 @@ import {
   Commands,
   HubHttpClient,
   IdentityLifecycle,
-  InboxMonitor,
   LayerSpecs,
   Migrations,
   NavigationHandler,
@@ -38,7 +37,6 @@ export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(met
     Plugin.addModule(Commands),
     Plugin.addModule(HubHttpClient),
     Plugin.addModule(IdentityLifecycle),
-    Plugin.addModule(InboxMonitor),
     Plugin.addModule(LayerSpecs),
     Plugin.addModule(Migrations),
     Plugin.addModule(NavigationHandler),
@@ -52,7 +50,7 @@ export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(met
     // Runtime event: spaces become ready when the client observes them, not at startup — see the
     // SpaceReplicationProgress module definition.
     Plugin.addModule(SpaceReplicationProgress),
-    // Project remote (edge) trace progress into the registry (DX-1125) — see the TraceProgress
+    // Project remote (EDGE) trace progress into the registry (DX-1125) — see the TraceProgress
     // module definition for its activation gating.
     Plugin.addModule(TraceProgress),
   )

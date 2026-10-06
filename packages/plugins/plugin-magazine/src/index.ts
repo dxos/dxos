@@ -3,5 +3,4 @@
 //
 
 export * as MagazinePlugin from './MagazinePlugin.ts';
-export * from '#meta';
 export * from '#types';

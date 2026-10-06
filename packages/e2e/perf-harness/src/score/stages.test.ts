@@ -49,6 +49,18 @@ describe('perf score measurements', () => {
     expect(measurements).toContainEqual({ id: 'run > retained tab heap per turn', group: RUN_GROUP, value: 20 });
   });
 
+  test('scores request latency only from stages that asked a model, as the median across iterations', ({ expect }) => {
+    const measurements = toMeasurements([
+      row(0, 'boot'),
+      row(0, 'assistant-turns', { turnToRequestP50Ms: 80, turnToRequestMaxMs: 400, turnToRequestCount: 20 }),
+      row(1, 'assistant-turns', { turnToRequestP50Ms: 120, turnToRequestMaxMs: 200, turnToRequestCount: 20 }),
+      row(2, 'assistant-turns', { turnToRequestP50Ms: 100, turnToRequestMaxMs: 300, turnToRequestCount: 20 }),
+    ]);
+    expect(measurements).toContainEqual({ id: 'run > turn to request p50', group: RUN_GROUP, value: 100 });
+    expect(measurements).toContainEqual({ id: 'run > turn to request max', group: RUN_GROUP, value: 300 });
+    expect(measurements.map(({ id }) => id)).not.toContain('run > submit to request p50');
+  });
+
   test('rejects a batch line that is not flat scalar properties', ({ expect }) => {
     expect(parseStageEvent({ properties: { stage: 'boot', wallMs: 1 } })).toEqual({
       properties: { stage: 'boot', wallMs: 1 },

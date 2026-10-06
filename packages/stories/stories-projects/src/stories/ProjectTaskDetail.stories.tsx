@@ -12,7 +12,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -169,7 +169,7 @@ export const Default: Story = {
     // The description is edited with the host's contributed extensions live in it: a task opened in
     // the pane decorates `#123` and a pull-request URL rather than showing raw markdown.
     await userEvent.click(await canvas.findByText(LINK_TASK_TITLE, undefined, { timeout: 10_000 }));
-    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskEditor.description"]');
+    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasksPlugin.fields"] .cm-editor');
     await waitFor(async () => await expect(editor()?.textContent).toContain('supersedes'), { timeout: 10_000 });
     await waitFor(
       async () =>

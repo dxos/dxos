@@ -2,11 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Button, Checkbox, Field, Icon, SystemButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
@@ -19,7 +25,7 @@ import {
   priorityTextStyle,
   statusIcon,
   statusTextStyle,
-} from './status-icons.ts';
+} from '../../util/status-icons.ts';
 import { useTaskListContext } from './TaskListContext.ts';
 
 /**
@@ -46,7 +52,7 @@ export type TaskStatusControlProps = {
 
 /** The status glyph, which is also the control that completes the task. */
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const status = task.status ?? 'todo';
   // Derived from the task rather than wired down from the list: a task an agent has taken and
   // started is being worked right now whoever renders it, and the row is the only place that says
@@ -77,10 +83,10 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
     // own width and stops lining up with the editable list's.
     return (
-      <Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
-        <Icon icon={icon} classNames={iconClassNames} />
+      <Layout.Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
+        <Icon.Icon icon={icon} classNames={iconClassNames} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </Block>
+      </Layout.Block>
     );
   }
 
@@ -88,7 +94,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // too, and a trigger above it would never receive it. The block still gives every control in the
   // row one rail-item square.
   const trigger = (
-    <Button
+    <Button.Root
       data-testid='taskList.item.status'
       // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
       // which the `Icon` root reads, so a colour set on the button is overridden at rest and
@@ -104,61 +110,82 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   );
 
   return (
-    <Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
         {trigger}
       </ActionMenu>
-    </Block>
+    </Layout.Block>
   );
 };
 
 TaskStatusControl.displayName = 'TaskList.StatusControl';
 
-/**
- * The task's mnemonic, as a chip that copies a reference to it.
- *
- * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it shows: a mnemonic is
- * only unique enough to read, while the URI resolves the task from anywhere it is pasted — a prompt,
- * an MCP call, another space.
- */
-export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
-  <SystemButton.Clipboard
-    classNames='font-mono'
-    size='sm'
-    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
-    hue={getHashHue(Obj.getMnemonic(task))}
-    label={Obj.getMnemonic(task)}
-    onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
-    data-testid='taskList.item.mnemonic'
-    onClick={(event) => event.stopPropagation()}
-  />
-);
-
-TaskMnemonic.displayName = 'TaskList.Mnemonic';
-
-export type TaskOrdinalProps = {
-  task: Task.Task;
-  ordinal: number;
+export type TaskMnemonicProps = {
+  task: Obj.Unknown | Obj.Snapshot;
+  /** The row's number down the list, shown in place of the clipboard until the button is hovered. */
+  ordinal?: number;
   classNames?: string;
 };
 
-/** The gutter's ordinal, tinted by outcome so a scan down the column reads as progress. */
-export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => {
-  const status = task.status ?? 'todo';
-  const hue = status === 'done' ? 'green' : status === 'failed' || status === 'cancelled' ? 'rose' : 'neutral';
+/**
+ * The task's reference: a button in the task's mnemonic hue that copies it. With an ordinal it shows the number, and
+ * the clipboard only on hover; without one, the clipboard. At least as wide as the clipboard button, so a one-digit
+ * number does not make a narrower target.
+ *
+ * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it names: a mnemonic is only unique enough
+ * to read, while the URI resolves the task from anywhere it is pasted — a prompt, an MCP call, another space.
+ */
+export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) => {
+  const mnemonic = Obj.getMnemonic(task);
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // The pending reset would otherwise set state on an unmounted component.
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  // Confirmed only once the write resolves: `writeText` rejects when the document is unfocused or permission is
+  // refused, and a check shown before that would report a copy that never happened.
+  const handleClick = (event: MouseEvent) => {
+    event.stopPropagation();
+    void navigator.clipboard
+      .writeText(Obj.getURI(task, { prefer: 'absolute' }).toString())
+      .then(() => {
+        setCopied(true);
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setCopied(false), 1_000);
+      })
+      .catch(() => setCopied(false));
+  };
+
+  const icon = <Icon.Icon icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'} />;
   return (
-    // The same square every other cell in the row occupies, so the badge centres under the pane's
-    // column rather than hugging the track's start.
-    <Block aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
-      <Tag hue={hue} classNames='tabular-nums'>
-        {ordinal}
-      </Tag>
-    </Block>
+    <Tooltip.Trigger asChild content={mnemonic}>
+      <Button.Root
+        size='sm'
+        compact
+        // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+        hue={getHashHue(mnemonic)}
+        aria-label={mnemonic}
+        data-testid='taskList.item.mnemonic'
+        classNames={mx('group justify-center min-w-(--dx-control-size) font-mono tabular-nums', classNames)}
+        onClick={handleClick}
+      >
+        {ordinal === undefined || copied ? (
+          icon
+        ) : (
+          <>
+            <span data-testid='taskList.item.ordinal' className='group-hover:hidden'>
+              {ordinal}
+            </span>
+            <span className='hidden group-hover:contents'>{icon}</span>
+          </>
+        )}
+      </Button.Root>
+    </Tooltip.Trigger>
   );
 };
 
-TaskOrdinal.displayName = 'TaskList.Ordinal';
+TaskMnemonic.displayName = 'TaskList.Mnemonic';
 
 export type TaskCheckboxProps = {
   classNames?: string;
@@ -173,13 +200,13 @@ export type TaskCheckboxProps = {
  * list that offers it keeps one row geometry and the trailing controls do not shift.
  */
 export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: TaskCheckboxProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
-    <Block aria-hidden={false} classNames={classNames}>
+    <Layout.Block aria-hidden={false} classNames={classNames}>
       <Field.Root>
-        <Checkbox
+        <Input.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -188,7 +215,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           onClick={(event) => event.stopPropagation()}
         />
       </Field.Root>
-    </Block>
+    </Layout.Block>
   );
 };
 
@@ -201,41 +228,58 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
  * reads as two empty controls rather than a dash beside a dot.
  */
-export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
+export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
-  const estimate = task.estimate;
-  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
+  return (
+    <TaskEstimatePicker
+      estimate={task.estimate}
+      onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
+      testId='taskList.item.estimate'
+      classNames={classNames}
+    />
+  );
+};
 
-  if (!onTaskUpdate) {
-    return <Block classNames={estimateTextStyle(estimate)}>{label}</Block>;
+export type TaskEstimatePickerProps = {
+  estimate?: Task.Estimate;
+  /** Omitted for a readonly label. */
+  onChange?: (estimate: Task.Estimate | undefined) => void;
+  testId?: string;
+  classNames?: string;
+};
+
+/** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
+export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
+  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
+
+  if (!onChange) {
+    return <Layout.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
   }
 
   return (
-    <>
-      <Block>
-        {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
-        <ActionMenu
-          deferUntilOpen
-          actions={() =>
-            [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-              createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
-                label: title,
-                checked: (estimate ?? 'none') === id,
-              }),
-            )
-          }
+    <Layout.Block classNames={classNames}>
+      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
+      <ActionMenu
+        deferUntilOpen
+        actions={() =>
+          [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onChange(id === 'none' ? undefined : id), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
+          )
+        }
+      >
+        <Button.Root
+          variant='ghost'
+          data-testid={testId}
+          classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+          onClick={(event: MouseEvent) => event.stopPropagation()}
         >
-          <Button
-            variant='ghost'
-            data-testid='taskList.item.estimate'
-            classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-            onClick={(event: MouseEvent) => event.stopPropagation()}
-          >
-            {label}
-          </Button>
-        </ActionMenu>
-      </Block>
-    </>
+          {label}
+        </Button.Root>
+      </ActionMenu>
+    </Layout.Block>
   );
 };
 
@@ -250,49 +294,69 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  * including one with no priority, which shows a dot — so setting a priority never depends on
  * discovering a hover affordance.
  */
-export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(translationKey);
+export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
-  const priority = task.priority ?? undefined;
+  return (
+    <TaskPriorityPicker
+      priority={task.priority ?? undefined}
+      onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
+      testId='taskList.item.priority'
+      classNames={classNames}
+    />
+  );
+};
+
+export type TaskPriorityPickerProps = {
+  priority?: Task.Priority;
+  /** Omitted for a readonly glyph. */
+  onChange?: (priority: Task.Priority | undefined) => void;
+  testId?: string;
+  classNames?: string;
+};
+
+/** The priority glyph and its menu over a bare value, for a row's task or a draft that has none yet. */
+export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: TaskPriorityPickerProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const icon = priorityIcon(priority);
   const styles = priorityTextStyle(priority);
 
-  if (!onTaskUpdate) {
+  if (!onChange) {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <Block>
-        <Icon icon={icon} classNames={mx(styles)} />
-      </Block>
+      <Layout.Block classNames={classNames}>
+        <Icon.Icon icon={icon} classNames={mx(styles)} />
+      </Layout.Block>
     );
   }
 
   return (
-    <Block>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
         actions={() =>
           [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
-            createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+            createMenuAction(`priority-${id}`, () => onChange(id === 'none' ? undefined : id), {
               label: t(`priority-${id}.label`),
-              icon: optionIcon,
+              // `None` takes the row's unset glyph, so every option has an icon and the labels align.
+              icon: optionIcon ?? UNSET_ICON,
               iconClassNames: priorityTextStyle(id),
-              checked: priority === id,
+              checked: (priority ?? 'none') === id,
             }),
           )
         }
       >
-        <Button
+        <Button.Root
           variant='ghost'
           icon={icon}
           iconOnly
           label={t('task-priority.label')}
-          data-testid='taskList.item.priority'
+          data-testid={testId}
           iconClassNames={styles}
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </Block>
+    </Layout.Block>
   );
 };

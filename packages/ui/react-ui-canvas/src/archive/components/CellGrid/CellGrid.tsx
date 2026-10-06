@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import type { ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { Ruler, TrackHeader } from './headers/index.ts';
@@ -15,7 +15,7 @@ import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, d
 import type { CellGridAtoms } from './state/atoms.ts';
 import type { Cell, Headers, Row } from './state/types.ts';
 
-export type CellGridProps<T = unknown> = ThemedClassName<
+export type CellGridProps<T = unknown> = Util.ThemedClassName<
   PointerHandlers & {
     atoms: CellGridAtoms<T>;
     rows: ReadonlyArray<Row>;
@@ -248,11 +248,11 @@ export const CellGrid = <T,>({
         inside the box. Without this offset the canvas gridlines land 1px down/right
         of the header dividers and the columns read as misaligned.
       */}
-      <canvas ref={staticCanvasRef} className='dx-fullscreen pointer-events-none' style={{ top: -1, left: -1 }} />
-      <canvas ref={overlayCanvasRef} className='dx-fullscreen pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={staticCanvasRef} className='dx-cover pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={overlayCanvasRef} className='dx-cover pointer-events-none' style={{ top: -1, left: -1 }} />
       <div
         ref={overlayInputRef}
-        className='dx-fullscreen touch-none'
+        className='dx-cover touch-none'
         style={{ paddingLeft: headers.left, paddingTop: headers.top }}
       />
       {headers.top > 0 && <Ruler viewport={viewportState} headers={headers} width={width} />}

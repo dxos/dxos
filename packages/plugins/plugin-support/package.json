@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -80,17 +80,11 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
+    "./FeedbackForm": {
+      "source": "./src/FeedbackForm.ts",
+      "types": "./dist/types/src/FeedbackForm.d.ts",
+      "import": "./dist/lib/ns/FeedbackForm.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./HelpCapabilities": {
       "source": "./src/types/HelpCapabilities.ts",
       "types": "./dist/types/src/types/HelpCapabilities.d.ts",
@@ -101,6 +95,7 @@
       "types": "./dist/types/src/types/HelpOperation.d.ts",
       "import": "./dist/lib/HelpOperation.mjs"
     },
+    "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -121,15 +116,25 @@
       "types": "./dist/types/src/types/SupportOperation.d.ts",
       "import": "./dist/lib/SupportOperation.mjs"
     },
+    "./SupportPlugin": {
+      "source": "./src/SupportPlugin.ts",
+      "types": "./dist/types/src/SupportPlugin.d.ts",
+      "import": "./dist/lib/SupportPlugin.mjs"
+    },
     "./SupportService": {
       "source": "./src/types/SupportService.ts",
       "types": "./dist/types/src/types/SupportService.d.ts",
       "import": "./dist/lib/SupportService.mjs"
     },
-    "./SupportPlugin": {
-      "source": "./src/SupportPlugin.ts",
-      "types": "./dist/types/src/SupportPlugin.d.ts",
-      "import": "./dist/lib/SupportPlugin.mjs"
+    "./SupportSurface": {
+      "source": "./src/SupportSurface.ts",
+      "types": "./dist/types/src/SupportSurface.d.ts",
+      "import": "./dist/lib/ns/SupportSurface.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

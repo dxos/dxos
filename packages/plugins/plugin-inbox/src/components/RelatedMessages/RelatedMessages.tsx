@@ -4,7 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -49,7 +51,7 @@ export const latestPerConversation = (messages: Message.Message[]): Message.Mess
 };
 
 export const RelatedMessages = ({ messages, summaries, onMessageClick }: RelatedMessagesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // One `now` for the whole list, so rows can't disagree about how old they are.
   const now = useMemo(() => new Date(), [messages]);
   // A row with nothing to say is dropped rather than rendered blank — `Card.Action` needs a label,
@@ -71,7 +73,7 @@ export const RelatedMessages = ({ messages, summaries, onMessageClick }: Related
           trailing={
             <>
               {message.created && <Card.Text variant='muted'>{formatAge(new Date(message.created), now)}</Card.Text>}
-              <Icon icon='ph--arrow-right--regular' />
+              <Icon.Icon icon='ph--arrow-right--regular' />
             </>
           }
           onClick={() => onMessageClick?.(message)}

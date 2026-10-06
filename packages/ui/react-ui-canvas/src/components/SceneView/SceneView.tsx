@@ -13,7 +13,9 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Menu, type ThemedClassName, virtualAnchor } from '@dxos/react-ui';
+import * as Menu from '@dxos/react-ui/Menu';
+import type * as Util from '@dxos/react-ui/Util';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
@@ -72,7 +74,7 @@ const FRAME_DASH = 4;
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
-export type SceneViewRootProps = ThemedClassName<{
+export type SceneViewRootProps = Util.ThemedClassName<{
   store: SceneStore;
   root: SceneId;
   nodes?: NodeRegistry;
@@ -769,7 +771,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         {overlay}
       </div>
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
-      {navigating && <div className='dx-fullscreen' data-testid='navigation-shield' />}
+      {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span
         ref={menuAnchorRef}
         className='absolute size-0 pointer-events-none'
@@ -778,7 +780,12 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
       <Menu.Root
         open={menu !== undefined}
         onOpenChange={({ open }) => !open && closeMenu()}
-        positioning={{ ...virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
+        positioning={{
+          ...VirtualAnchor.virtualAnchor(menuAnchorRef),
+          placement: 'right',
+          gutter: 4,
+          overflowPadding: 8,
+        }}
       >
         <Menu.Content>
           {menu?.kind === 'point' && (
@@ -833,7 +840,7 @@ SceneViewCanvas.displayName = 'SceneView.Canvas';
 // Toolbars
 //
 
-export type SceneViewBarProps = ThemedClassName<{}>;
+export type SceneViewBarProps = Util.ThemedClassName<{}>;
 
 /** Where the view is in the scene tree. */
 const SceneViewNavigation = ({ classNames = 'absolute top-2 left-2' }: SceneViewBarProps) => {

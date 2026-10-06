@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -58,20 +58,20 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./StatusBar": {
+      "source": "./src/StatusBar.ts",
+      "types": "./dist/types/src/StatusBar.d.ts",
+      "import": "./dist/lib/ns/StatusBar.mjs"
     },
     "./StatusBarPlugin": {
       "source": "./src/StatusBarPlugin.ts",
       "types": "./dist/types/src/StatusBarPlugin.d.ts",
       "import": "./dist/lib/StatusBarPlugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

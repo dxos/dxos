@@ -4,11 +4,11 @@
 
 import React, { type JSX, forwardRef, memo, useEffect, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'className' | 'ref'> &
-  ThemedClassName<{
+  Util.ThemedClassName<{
     videoStream?: MediaStream;
     flip?: boolean;
     // TODO(burdon): If screenshare then contain.

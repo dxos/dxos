@@ -31,6 +31,9 @@
       "path": "../../packages/core/echo/echo"
     },
     {
+      "path": "../../packages/plugins/plugin-illustrator"
+    },
+    {
       "path": "../../packages/sdk/types"
     },
     {
@@ -44,6 +47,12 @@
     },
     {
       "path": "../../packages/ui/react-ui-feed"
+    },
+    {
+      "path": "../../packages/ui/react-ui-markdown"
+    },
+    {
+      "path": "../../packages/ui/ui-editor"
     },
     {
       "path": "../../packages/ui/ui-theme"

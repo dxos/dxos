@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -17,10 +18,76 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AtomEx": {
+      "source": "./src/AtomEx.ts",
+      "types": "./dist/types/src/AtomEx.d.ts",
+      "import": "./dist/lib/AtomEx.mjs"
+    },
+    "./DynamicRuntime": {
+      "source": "./src/dynamic-runtime.ts",
+      "types": "./dist/types/src/dynamic-runtime.d.ts",
+      "import": "./dist/lib/DynamicRuntime.mjs"
+    },
+    "./EffectEx": {
+      "source": "./src/EffectEx.ts",
+      "types": "./dist/types/src/EffectEx.d.ts",
+      "import": "./dist/lib/EffectEx.mjs"
+    },
+    "./GlobalValue": {
+      "source": "./src/internal/GlobalValue.ts",
+      "types": "./dist/types/src/internal/GlobalValue.d.ts",
+      "import": "./dist/lib/GlobalValue.mjs"
+    },
+    "./Hook": {
+      "source": "./src/Hook.ts",
+      "types": "./dist/types/src/Hook.d.ts",
+      "import": "./dist/lib/Hook.mjs"
+    },
+    "./KvsStore": {
+      "source": "./src/KvsStore.ts",
+      "types": "./dist/types/src/KvsStore.d.ts",
+      "import": "./dist/lib/ns/KvsStore.mjs"
+    },
+    "./OtelTracer": {
+      "source": "./src/OtelTracer.ts",
+      "types": "./dist/types/src/OtelTracer.d.ts",
+      "import": "./dist/lib/ns/OtelTracer.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Performance": {
+      "source": "./src/Performance.ts",
+      "types": "./dist/types/src/Performance.d.ts",
+      "import": "./dist/lib/Performance.mjs"
+    },
+    "./RuntimeProvider": {
+      "source": "./src/RuntimeProvider.ts",
+      "types": "./dist/types/src/RuntimeProvider.d.ts",
+      "import": "./dist/lib/RuntimeProvider.mjs"
+    },
+    "./SchemaAST": {
+      "source": "./src/internal/schema-ast.ts",
+      "types": "./dist/types/src/internal/schema-ast.d.ts",
+      "import": "./dist/lib/SchemaAST.mjs"
+    },
+    "./SchemaEx": {
+      "source": "./src/SchemaEx.ts",
+      "types": "./dist/types/src/SchemaEx.d.ts",
+      "import": "./dist/lib/SchemaEx.mjs"
+    },
+    "./SpanAttributes": {
+      "source": "./src/SpanAttributes.ts",
+      "types": "./dist/types/src/SpanAttributes.d.ts",
+      "import": "./dist/lib/SpanAttributes.mjs"
+    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./Yield": {
+      "source": "./src/Yield.ts",
+      "types": "./dist/types/src/Yield.d.ts",
+      "import": "./dist/lib/Yield.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

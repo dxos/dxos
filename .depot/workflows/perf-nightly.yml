@@ -264,9 +264,9 @@ jobs:
           echo "::error::The benchmark run did not complete; see the log and the echo-bench artifact."
           exit 1
 
-  # The chat flow (`packages/core/compute/assistant-e2e/src/playwright/perf-chat.spec.ts`) against the
-  # Storybook chat story, in a blank space and a busy one, scored together into the `chat` suite against
-  # `src/playwright/perf/budgets.json`. Its own runner of the same fixed size, for the reason `echo-bench` has one.
+  # The chat flow (`packages/core/compute/assistant-e2e/src/playwright/perf-chat.spec.ts`) against a
+  # static build of the Storybook chat story (`storybook-react:bundle-perf`), in a blank space and a busy
+  # one, scored together into the `chat` suite against `src/playwright/perf/budgets.json`. Its own runner of the same fixed size, for the reason `echo-bench` has one.
   chat-bench:
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -308,7 +308,7 @@ jobs:
         id: flow
         continue-on-error: true
         env:
-          # Fewer than the projects flow's ten: every iteration reloads the story from a dev server.
+          # Fewer than the projects flow's ten: every iteration seeds and reloads a space.
           ITERATIONS: ${{ inputs.iterations || '5' }}
           # Rows are published per iteration by the flow, as the projects flow does.
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}

@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -75,12 +75,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./package.json": "./package.json",
     "./CrmEvents": {
       "source": "./src/types/CrmEvents.ts",
       "types": "./dist/types/src/types/CrmEvents.d.ts",
@@ -96,10 +90,16 @@
       "types": "./dist/types/src/CrmPlugin.d.ts",
       "import": "./dist/lib/CrmPlugin.mjs"
     },
-    "./ProfileOf": {
-      "source": "./src/types/ProfileOf.ts",
-      "types": "./dist/types/src/types/ProfileOf.d.ts",
-      "import": "./dist/lib/ProfileOf.mjs"
+    "./CrmSkill": {
+      "source": "./src/skills/crm/CrmSkill.ts",
+      "types": "./dist/types/src/skills/crm/CrmSkill.d.ts",
+      "import": "./dist/lib/ns/CrmSkill.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -110,9 +110,6 @@
       ],
       "CrmOperation": [
         "dist/types/src/types/CrmOperation.d.ts"
-      ],
-      "ProfileOf": [
-        "dist/types/src/types/ProfileOf.d.ts"
       ]
     }
   },

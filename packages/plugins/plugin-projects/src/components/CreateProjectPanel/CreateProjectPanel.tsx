@@ -5,11 +5,13 @@
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Field, Input, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 import { ProjectCapabilities } from '#types';
@@ -32,9 +34,9 @@ type CreateProjectValues = Schema.Schema.Type<typeof CreateProjectValues>;
  * which plugin-projects' CreateObjectEntry `createObject` resolves to run the template's `scaffold`.
  */
 export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templatesProp }: CreateProjectPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [name, setName] = useState('');
-  const capabilityTemplates = useCapabilities(ProjectCapabilities.Template);
+  const capabilityTemplates = Hooks.useCapabilities(ProjectCapabilities.Template);
 
   const templates = templatesProp ?? capabilityTemplates;
   // The global create dialog has no subject, so subject-required templates (e.g. an inbox research
@@ -70,7 +72,7 @@ export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templa
             chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
         <CreateProjectContent>
           <Field.Root>
-            <Input
+            <Input.Root
               autoFocus
               data-testid='create-project-panel.name-input'
               placeholder={t('create-panel.name.placeholder')}

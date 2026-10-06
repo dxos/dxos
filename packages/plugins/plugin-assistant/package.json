@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -84,32 +84,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./extensions": {
-      "source": "./src/extensions/index.ts",
-      "types": "./dist/types/src/extensions/index.d.ts",
-      "import": "./dist/lib/extensions.mjs"
-    },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
-    },
-    "./package.json": "./package.json",
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Assistant": {
       "source": "./src/types/Assistant.ts",
       "types": "./dist/types/src/types/Assistant.d.ts",
@@ -150,25 +124,61 @@
       "types": "./dist/types/src/types/AssistantService.d.ts",
       "import": "./dist/lib/AssistantService.mjs"
     },
+    "./AssistantSkill": {
+      "source": "./src/skills/assistant/AssistantSkill.ts",
+      "types": "./dist/types/src/skills/assistant/AssistantSkill.d.ts",
+      "import": "./dist/lib/AssistantSkill.mjs"
+    },
+    "./Chat": {
+      "source": "./src/Chat.ts",
+      "types": "./dist/types/src/Chat.d.ts",
+      "import": "./dist/lib/ns/Chat.mjs"
+    },
     "./ChatSurface": {
       "source": "./src/types/ChatSurface.ts",
       "types": "./dist/types/src/types/ChatSurface.d.ts",
       "import": "./dist/lib/ChatSurface.mjs"
+    },
+    "./Extensions": {
+      "source": "./src/Extensions.ts",
+      "types": "./dist/types/src/Extensions.d.ts",
+      "import": "./dist/lib/ns/Extensions.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./Ollama": {
       "source": "./src/types/Ollama.ts",
       "types": "./dist/types/src/types/Ollama.d.ts",
       "import": "./dist/lib/Ollama.mjs"
     },
+    "./package.json": "./package.json",
+    "./PluginManagerSkill": {
+      "source": "./src/skills/plugin-manager/PluginManagerSkill.ts",
+      "types": "./dist/types/src/skills/plugin-manager/PluginManagerSkill.d.ts",
+      "import": "./dist/lib/PluginManagerSkill.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./AssistantSkill": {
-      "source": "./src/skills/assistant/AssistantSkill.ts",
-      "types": "./dist/types/src/skills/assistant/AssistantSkill.d.ts",
-      "import": "./dist/lib/AssistantSkill.mjs"
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./TracePanel": {
+      "source": "./src/TracePanel.ts",
+      "types": "./dist/types/src/TracePanel.d.ts",
+      "import": "./dist/lib/ns/TracePanel.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -264,6 +274,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-experimental": "workspace:*",
     "@dxos/react-ui-feed": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

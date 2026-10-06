@@ -656,11 +656,13 @@ fn bind_outer(rule: &mut Rule) {
     ) {
         for (index, literal) in literals.iter().enumerate() {
             if let Literal::Neg { body, .. } | Literal::Collect { body, .. } = literal {
-                // What the formula can see: the enclosing context and its siblings.
+                // What the formula can see: the enclosing context and its siblings — but not a
+                // sibling formula's own variables, which are local to it as they are in EYE.
                 let mut visible = context.clone();
                 for (other, sibling) in literals.iter().enumerate() {
                     if other != index {
-                        vars_in(rule, sibling, &mut visible);
+                        visible.extend(rule.inputs(sibling));
+                        visible.extend(rule.outputs(sibling));
                     }
                 }
                 let mut inside = FxHashSet::default();

@@ -12,13 +12,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -133,7 +134,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           getTaskActions={getTaskActions}
         >
           <TaskList.Content />
-          <TaskList.Editor grid />
+          <TaskList.Editor />
         </TaskList.Root>
       </Panel.Body>
     </Panel.Root>
@@ -142,7 +143,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
 
 /** Editable plain-markdown view of the same text, without the outliner extension. */
 const SourceView = ({ text }: { text: Text.Text }) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       id: `${text.id}-source`,
@@ -174,7 +175,7 @@ const meta = {
     // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
     // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
     // the outline builds the same editor with an empty list.
-    withPluginManager({ plugins: corePlugins() }),
+    withPluginManager({ plugins: CorePlugins.make() }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

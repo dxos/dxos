@@ -25,7 +25,7 @@ backend batch, then advance the row. Deletion runs the other way.
 - [x] **API vs implementation as separate facts** — `apiDependsOn` / `implDependsOn`, split on the erased boundary.
 - [x] **`deus:snippet` per symbol** — declaration with implementation abbreviated, verified by re-parsing every snippet in the index.
 - [x] **Incremental crawl keyed on path + mtime** — 0.2s when nothing changed, 4.4s for two files.
-- [x] **`deus:canonicalName`** — the name an external importer writes: the bare identifier, or `<Namespace>.<identifier>` when a barrel publishes the module whole (`export * as N from './y'`). The parser asserts `namespaceOf` on the barrel's namespace symbol; `rules/60-canonical.n3` joins it to the other file's identifiers, with scoped negation so exactly one name is concluded per symbol.
+- [x] **`deus:canonicalName`** — the name an external importer writes when it is not the declared name: `<Namespace>.<identifier>` when a barrel publishes the module whole (`export * as N from './y'`). The parser asserts `namespaceOf` on the barrel's namespace symbol; `rules/60-canonical.n3` joins it to the other file's identifiers. Anything else is imported by its `deus:name`, which queries fall back to.
 
 ## Phase 2: the workspace
 
@@ -80,9 +80,7 @@ that raised it.
   - Deliberately not fixed by changing the ledger's type and the graph IRI shape mid-PR.
 - [ ] **Exercise the Ollama path against a live model**
   - Wired and typed but never run: this sandbox cannot host a 20B model. Everything else was verified end to end on Anthropic.
-- [ ] **`commit` is the bottleneck** (~369s cold, 634s summed over 8 workers on a `--force` re-index)
-  - Quads are written one file at a time through LevelDB, and the cost scales with what is already in the store.
-  - Batching across files is the obvious lever; not measured yet.
+- [x] **`commit` is the bottleneck** — the native backend (`design/NATIVE-BACKEND.md`), the only one, bulk-loads each commit off the event loop.
 
 ## Phase 5: type propagation
 

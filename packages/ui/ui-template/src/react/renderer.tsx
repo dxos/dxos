@@ -14,22 +14,15 @@
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import {
-  type Align,
-  Button,
-  Combobox,
-  Container,
-  Field,
-  Flex,
-  type Gap,
-  Grid,
-  Input,
-  type Justify,
-  Tabs,
-  Listbox as UiListbox,
-} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as UiListbox from '@dxos/react-ui/Listbox';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model.ts';
@@ -42,9 +35,9 @@ const asText = (value: unknown): string => (value == null ? '' : String(value));
 const oneOf = <T extends string>(values: readonly T[], value: unknown): T | undefined =>
   values.find((candidate) => candidate === value);
 
-const GAPS: readonly Gap[] = ['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', 'form', 'form-section'];
-const ALIGNS: readonly Align[] = ['start', 'center', 'end', 'baseline', 'stretch'];
-const JUSTIFIES: readonly Justify[] = ['start', 'center', 'end', 'between', 'around', 'evenly'];
+const GAPS: readonly Layout.Gap[] = ['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', 'form', 'form-section'];
+const ALIGNS: readonly Layout.Align[] = ['start', 'center', 'end', 'baseline', 'stretch'];
+const JUSTIFIES: readonly Layout.Justify[] = ['start', 'center', 'end', 'between', 'around', 'evenly'];
 
 /**
  * `gap`/`align`/`justify` come off the node's static props and are handed to `Flex` unchanged —
@@ -59,13 +52,41 @@ const flexProps = (props: Readonly<Record<string, string | number | boolean>>) =
 });
 
 /** A `columns`/`rows` aspect: whitespace-separated CSS tracks, bare numbers read as `<n>fr`. */
-const tracks = (value: string | number | boolean | undefined): (string | number)[] | undefined =>
-  typeof value === 'string' && value.trim()
-    ? value
-        .trim()
-        .split(/\s+/)
-        .map((track) => (/^\d+$/.test(track) ? Number(track) : track))
-    : undefined;
+const LENGTH = /^(\d+(\.\d+)?(rem|em|px|ch|%|vw|vh)|(var|calc|minmax)\(.*\))$/;
+
+const isLength = (token: string): token is Layout.GridLength => LENGTH.test(token);
+
+/** One CSS track as a Grid token: `Nfr` and a bare number are shares, `*-content` the content sizes; anything else is dropped. */
+const toTrack = (token: string): Layout.GridTrack | undefined => {
+  const share = /^(\d+(?:\.\d+)?)(fr)?$/.exec(token);
+  if (share) {
+    return Number(share[1]);
+  }
+  switch (token) {
+    case 'fill':
+    case 'min':
+    case 'max':
+    case 'auto':
+      return token;
+    case 'min-content':
+      return 'min';
+    case 'max-content':
+      return 'max';
+  }
+  return isLength(token) ? token : undefined;
+};
+
+const tracks = (value: string | number | boolean | undefined): Layout.GridTrack[] | undefined => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined;
+  }
+  const parsed = value
+    .trim()
+    .split(/\s+/)
+    .map(toTrack)
+    .filter((track) => track !== undefined);
+  return parsed.length > 0 ? parsed : undefined;
+};
 
 /** Resolve a per-item binding (`item-id`, `item-label`) declared on the collection node itself. */
 const itemField = (node: Node, scope: Scope, item: unknown, name: string): unknown => {
@@ -99,13 +120,13 @@ const isMultiSelectDriver = (value: unknown): value is MultiSelectDriver =>
  * (sticky), and the attended container's ring goes primary. Hook use forces a real component —
  * renderer entries are plain functions.
  */
-const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: string; gap?: Gap }>) => {
+const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: string; gap?: Layout.Gap }>) => {
   const { attended, attend } = useAttention();
   return (
     // The slottable Flex exposes no event props; a display:contents trap adds no box (the same
     // pattern the Esc key trap used) and hears every focus entering the container.
     <div role='none' className='contents' onFocusCapture={id ? () => attend(id) : undefined}>
-      <Flex
+      <Layout.Flex
         column
         gap={gap}
         classNames={mx(
@@ -114,7 +135,7 @@ const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: str
         )}
       >
         {children}
-      </Flex>
+      </Layout.Flex>
     </div>
   );
 };
@@ -156,15 +177,15 @@ export const createReactRenderer = ({
     }
     if (cols || rows) {
       return (
-        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-expand'>
+        <Layout.Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} classNames='dx-expand'>
           {children}
-        </Grid>
+        </Layout.Grid>
       );
     } else {
       return (
-        <Flex key={path} {...flexProps(props)} classNames='dx-expand'>
+        <Layout.Flex key={path} {...flexProps(props)} classNames='dx-expand'>
           {children}
-        </Flex>
+        </Layout.Flex>
       );
     }
   },
@@ -182,22 +203,22 @@ export const createReactRenderer = ({
       // published state, never a component callback.
       const disabled = node.data?.enabled ? !present(data.enabled) : undefined;
       return (
-        <Button key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
+        <Button.Root key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
           {asText(props.label)}
-        </Button>
+        </Button.Root>
       );
     } else {
       return (
         <Field.Root key={path}>
-          <Container gutter='none'>
+          <Layout.Container gutter='none'>
             {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
-            <Input
+            <Input.Root
               placeholder={asText(props.placeholder)}
               value={asText(data.value)}
               // MVU: the input is controlled from published state; each change dispatches.
               onChange={(event) => handlers.input?.(event.target.value)}
             />
-          </Container>
+          </Layout.Container>
         </Field.Root>
       );
     }
@@ -268,15 +289,15 @@ export const createReactRenderer = ({
     }
 
     return (
-      <Container key={path} gap='sm' role='list' gutter='none'>
+      <Layout.Container key={path} gap='sm' role='list' gutter='none'>
         {items.map((item, index) => (
-          <Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>
+          <Layout.Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>
             {node.children?.length
               ? renderChildren({ ...scope, item }, `[${index}]`)
               : asText(itemField(node, scope, item, 'label') ?? item)}
-          </Flex>
+          </Layout.Flex>
         ))}
-      </Container>
+      </Layout.Container>
     );
   },
 
@@ -347,9 +368,9 @@ export const createReactRenderer = ({
   },
 
   command: ({ path, children }) => (
-    <Flex key={path} align='center' role='toolbar'>
+    <Layout.Flex key={path} align='center' role='toolbar'>
       {children}
-    </Flex>
+    </Layout.Flex>
   ),
 
   /**
@@ -383,9 +404,9 @@ export const createReactRenderer = ({
 
   // The walker already narrowed `children` to the matched branch's subtree.
   switch: ({ path, children }) => (
-    <Flex key={path} column grow>
+    <Layout.Flex key={path} column grow>
       {children}
-    </Flex>
+    </Layout.Flex>
   ),
 
   // display:contents — a `show` inside a grid row must not break track placement with a box.

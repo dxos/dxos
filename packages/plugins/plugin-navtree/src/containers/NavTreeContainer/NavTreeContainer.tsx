@@ -10,17 +10,20 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { useMainSidebars, useMediaQuery } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -93,19 +96,22 @@ export type NavTreeContainerProps = {
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
-    const [isLg] = useMediaQuery('lg');
-    const { invokePromise } = useOperationInvoker();
-    const runAction = useActionRunner();
-    const builder = useAppGraph();
+    const [isLg] = UiHooks.useMediaQuery('lg');
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const runAction = GraphHooks.useActionRunner();
+    const builder = ToolkitHooks.useAppGraph();
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
     // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
     // the message and the sidebar is never blank.
-    const tabPresence = useNavigationPresence(builder.graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
+    const tabPresence = ToolkitHooks.useNavigationPresence(
+      builder.graph,
+      tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab,
+    );
     const tabUnavailable = tab !== DeckSchema.DEFAULT_DECK_ID && tabPresence !== 'exists';
     const { getItem, setItem } = useNavTreeState();
-    const layout = useLayout();
+    const layout = ToolkitHooks.useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
-    const { navigationSidebarState } = useMainSidebars(meta.profile.key);
+    const { navigationSidebarState } = Main.useMainSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,

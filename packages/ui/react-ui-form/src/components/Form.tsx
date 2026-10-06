@@ -5,21 +5,15 @@
 import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import {
-  Button,
-  Container,
-  DIALOG_AUTOFOCUS_ATTRIBUTE,
-  Field,
-  Group,
-  type Gutter,
-  Panel,
-  type PanelRootProps,
-  ScrollArea,
-  SystemButton,
-  composable,
-  useDefaultGutter,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
@@ -45,20 +39,20 @@ export type FormViewportProps = PropsWithChildren<{
    */
   scroll?: boolean;
   /** The pane's size when `scroll`; otherwise the form inherits its host's. */
-  size?: PanelRootProps['size'];
+  size?: Panel.RootProps['size'];
   /** The form keeps the reading width (`document`, the default), centred in a wider host; `full` spans the host. */
   width?: 'document' | 'full';
-  gutter?: Gutter;
+  gutter?: Layout.Gutter;
 }>;
 
 /**
  * The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. Composable, so a
  * form component can be the `asChild` child of a host that merges its layout props and ref onto it. The gutter defaults
- * to the enclosing panel's (`sm`, the form inset), else `sm`.
+ * to the host's: a panel's (`sm`, the form inset) or a dialog or popover body's (`inherit`, joining its rails), else `sm`.
  */
-export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
+export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {
-    const defaultGutter = useDefaultGutter();
+    const defaultGutter = Layout.useDefaultGutter();
     const documentWidth = width === 'document' ? width : undefined;
     return scroll ? (
       <Panel.Root
@@ -72,15 +66,15 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               {/* The block inset keeps the last section off the pane's bottom edge when scrolled to the end. */}
-              <Container padBlock>{children}</Container>
+              <Layout.Container padBlock>{children}</Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
       </Panel.Root>
     ) : (
-      <Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
+      <Layout.Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
         {children}
-      </Container>
+      </Layout.Container>
     );
   },
 );
@@ -98,14 +92,14 @@ export type FormContentProps = PropsWithChildren<{}>;
  * settings row and section below it shares. Forwards its ref so a consumer can scope its own key handling to the form.
  */
 export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ children }, forwardedRef) => {
-  const { form, testId, variant } = useFormContext('Form.Content');
+  const { form, readonly, testId, variant } = useFormContext('Form.Content');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs(forwardedRef, localRef);
-  useKeyHandler(localRef, form);
+  useKeyHandler(localRef, form, { readonly });
   const settings = variant === 'settings';
   // A settings form is a reading-width column of its own tracks (the current Form's `dx-document` settings content).
   return (
-    <Container
+    <Layout.Container
       role='form'
       gutter={settings ? 'none' : 'inherit'}
       width={settings ? 'document' : undefined}
@@ -115,7 +109,7 @@ export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ child
       ref={ref}
     >
       {children}
-    </Container>
+    </Layout.Container>
   );
 });
 
@@ -132,7 +126,7 @@ export type FormActionsProps = {
 };
 
 export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     form: { canSave, onSave, onCancel },
     readonly,
@@ -143,7 +137,7 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
   }
 
   return (
-    <Group justify='end'>
+    <Button.Group justify='end'>
       {onCancel && (
         <SystemButton.Cancel
           iconOnly={false}
@@ -151,7 +145,7 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
           onClick={onCancel}
           data-testid='cancel-button'
           // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than commits.
-          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+          {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
@@ -164,7 +158,7 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
           data-testid='save-button'
         />
       )}
-    </Group>
+    </Button.Group>
   );
 };
 
@@ -184,7 +178,7 @@ export type FormSubmitProps = {
 };
 
 export const FormSubmit = ({ label, disabled, icon, busy }: FormSubmitProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     form: { canSave, onSave },
     readonly,
@@ -203,13 +197,13 @@ export const FormSubmit = ({ label, disabled, icon, busy }: FormSubmitProps) => 
   } as const;
 
   return (
-    <Group fill>
+    <Button.Group fill>
       {icon || busy ? (
-        <Button {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
+        <Button.Root {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
       ) : (
         <SystemButton.Save {...buttonProps} iconOnly={false} />
       )}
-    </Group>
+    </Button.Group>
   );
 };
 

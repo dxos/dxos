@@ -2,23 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Button, ControlFrame, Typography, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
+import { useFormContext } from '../../hooks/index.ts';
 import { presentationFor } from '../presentation.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
+
+/**
+ * Fits the editor to the field: a long unbroken token (an inline-code URL) breaks anywhere rather than widening the
+ * content, and the editor fills the frame's height, so its scroller ends at the frame's foot instead of mid-field.
+ */
+const fieldTheme = EditorView.theme({
+  '&': { minHeight: '100%' },
+  '.cm-content': { overflowWrap: 'anywhere' },
+  // Elsewhere inline code is one clipped line (fixed height, no wrapping), which in a field widens the content instead.
+  '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
+});
 
 /**
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
@@ -53,7 +69,7 @@ export const MarkdownField = ({
 
   const text = typeof value === 'string' ? value : '';
   return isStatic ? (
-    <Typography>{text}</Typography>
+    <Typography.Text>{text}</Typography.Text>
   ) : (
     <StringMarkdownEditor
       value={text}
@@ -72,13 +88,16 @@ type StringMarkdownEditorProps = {
 };
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
+  const { markdownExtensions } = useFormContext('MarkdownField');
+  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
+  const fieldExtensions = useMemo(() => [fieldTheme, ...(markdownExtensions ?? [])], [markdownExtensions]);
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   return (
-    <ControlFrame rows={ROWS} disabled={readonly}>
+    <Input.Frame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
-    </ControlFrame>
+    </Input.Frame>
   );
 };
 
@@ -86,7 +105,7 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
 const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const content = Obj.instanceOf(Text.Text, target) ? target.content : undefined;
-  return content ? <Typography>{content}</Typography> : null;
+  return content ? <Typography.Text>{content}</Typography.Text> : null;
 };
 
 type RefMarkdownEditorProps = {
@@ -102,17 +121,22 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
     () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: dataExtensions });
+  const { markdownExtensions } = useFormContext('MarkdownField');
+  const fieldExtensions = useMemo(
+    () => [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
+    [dataExtensions, markdownExtensions],
+  );
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   if (!text) {
     return null;
   }
 
   return (
-    <ControlFrame rows={ROWS} disabled={readonly}>
+    <Input.Frame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} />
       </Editor.Root>
-    </ControlFrame>
+    </Input.Frame>
   );
 };
 
@@ -122,10 +146,10 @@ type CreateTextButtonProps = {
 };
 
 const CreateTextButton = ({ db, onCreate }: CreateTextButtonProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
-    <Button icon='ph--plus--regular' disabled={!db} onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}>
+    <Button.Root icon='ph--plus--regular' disabled={!db} onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}>
       {t('create-text.label')}
-    </Button>
+    </Button.Root>
   );
 };

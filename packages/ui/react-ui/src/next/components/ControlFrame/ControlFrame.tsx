@@ -4,9 +4,9 @@
 
 import React, { type CSSProperties, type ReactNode } from 'react';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
 
 export type ControlFrameVariant = 'default' | 'subdued' | 'mono';
 

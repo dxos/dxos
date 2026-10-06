@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, {
   type FocusEvent,
@@ -17,7 +19,7 @@ import { useFocusGroup } from '@dxos/react-focus';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { type Axis } from '@dxos/ui-types';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { FocusContext, type FocusState } from './FocusContext.ts';
 
@@ -189,10 +191,7 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
 );
 
 FocusItem.displayName = 'Focus.Item';
+export type { FocusGroupProps as GroupProps, FocusItemProps as ItemProps };
 
-export const Focus = {
-  Group: FocusGroup,
-  Item: FocusItem,
-};
-
-export type { FocusGroupProps, FocusItemProps };
+export { FocusGroup as Group, FocusItem as Item };
+export { type FocusContextValue, type FocusState, useFocus } from './FocusContext.ts';

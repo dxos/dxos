@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
-import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { InboxOperationError } from '../operations/errors.ts';
@@ -42,7 +42,7 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
       }
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 
-      return makeRoutine({
+      return Wire.makeRoutine({
         name: name ?? `Analyze — ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({

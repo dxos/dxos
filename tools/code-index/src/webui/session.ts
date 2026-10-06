@@ -7,6 +7,7 @@ import { createSignal, onCleanup } from 'solid-js';
 import * as Events from '../workspace/Events.ts';
 import * as Fold from '../workspace/Fold.ts';
 import { api } from './client.ts';
+import * as Pending from './pending.ts';
 
 /**
  * A project, as the browser sees it: one signal holding the fold of its log. Nothing here decides
@@ -28,24 +29,25 @@ export type Session = {
  */
 export const openSession = (projectId: string): Session => {
   const [state, setState] = createSignal<Fold.State>(Fold.empty);
-  // Covers only the gap between the click and the log echoing the message back; from then on the
-  // fold's `running` is the answer, which is why a reload mid-turn still shows the agent working.
-  const [sending, setSending] = createSignal(false);
+  // Covers only the gap between the click and the log echoing this prompt back; from then on the
+  // fold's open turns are the answer, which is why a reload mid-turn still shows the agent working.
+  const [pending, setPending] = createSignal<Pending.Pending>(Pending.none);
 
   const stop = api.watch(projectId, 0, (entry) => {
     setState((previous) => Fold.apply(previous, entry));
-    if (entry.event._tag === 'UserMessage') {
-      setSending(false);
-    }
+    setPending((previous) => Pending.settle(previous, entry));
   });
   onCleanup(stop);
 
   return {
     state,
-    busy: () => sending() || state().running,
+    busy: () => Pending.isBusy(state(), pending()),
     send: (text) => {
-      setSending(true);
-      void api.dispatch(projectId, new Events.UserMessage({ text })).catch(() => setSending(false));
+      const turnId = Events.newTurnId();
+      setPending((previous) => Pending.add(previous, turnId));
+      void api
+        .dispatch(projectId, new Events.UserMessage({ text, turnId }))
+        .catch(() => setPending((previous) => Pending.remove(previous, turnId)));
     },
     clearCanvas: () => {
       void api.dispatch(projectId, new Events.CanvasCleared({}));

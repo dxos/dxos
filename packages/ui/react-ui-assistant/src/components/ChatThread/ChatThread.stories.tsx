@@ -6,11 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { Button, Field, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
 import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
 import { translations } from '../../translations.ts';
@@ -135,7 +139,7 @@ const DefaultStory = ({
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button
+              <Button.Root
                 icon={auto ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={auto ? 'Stop the agent' : 'Let the agent talk'}
@@ -150,7 +154,7 @@ const DefaultStory = ({
           <Panel.Body classNames='flex flex-col'>
             <div className='dx-expand relative'>
               <PromptOutline model={model} />
-              <ChatThread.Viewport classNames='dx-fullscreen' />
+              <ChatThread.Viewport classNames='dx-cover' />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />
@@ -186,7 +190,7 @@ const PromptInput = ({
   return (
     <div className='p-2'>
       <Field.Root>
-        <Input
+        <Input.Root
           placeholder={busy ? 'Answering…' : 'Ask something…'}
           value={prompt}
           data-testid='assistant.prompt'
@@ -333,6 +337,11 @@ const type = (input: HTMLInputElement, value: string) => {
 
 /** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
 export const Default: Story = {};
+
+/** The raw document, tags and all: no widgets, but the tags are highlighted so the structure reads. */
+export const DebugView: Story = {
+  args: { viewType: 'debug' },
+};
 
 /**
  * A turn that calls several tools, one of which fails.

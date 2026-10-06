@@ -15,19 +15,16 @@ import React, {
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import {
-  Button,
-  Field,
-  Icon,
-  Input,
-  Tag,
-  Toolbar,
-  composable,
-  composableProps,
-  useDynamicRef,
-  useTranslation,
-} from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Util from '@dxos/react-ui/Util';
+import { type Task } from '@dxos/types';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -36,11 +33,14 @@ import { translationKey } from '#translations';
 
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
-
-//
-// Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
-//
+import {
+  TaskEstimateControl,
+  TaskEstimatePicker,
+  TaskPriorityIcon,
+  TaskPriorityPicker,
+  TaskStatusControl,
+} from './TaskRowCells.tsx';
+import { TRACK } from './tracks.ts';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -56,33 +56,17 @@ export type TaskListEditorProps = ComposableProps<{
   /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
   descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
-   * Lay the pane out on the list's own column template, so the title field starts where the rows'
-   * titles do and the icon sits under their status controls. Off by default: a pane used away from
-   * a list (a dialog, a story) has no columns to line up with.
-   */
-  grid?: boolean;
-  /**
    * Only ever create — the pane ignores the selection instead of editing it. For a host whose detail
    * lives elsewhere (a task plank opened from the row): there, a selected row would otherwise turn
    * the only create affordance into an editor, leaving no way to type a new task.
    */
   createOnly?: boolean;
   /**
-   * Render the task's own controls — the leading status glyph and the trailing estimate and
-   * priority. Off for a host that carries them in its own toolbar, where the pane IS the task
-   * rather than one row of a list; the pane then has no icon column, so its fields start where the
-   * rest of the host's content does.
-   */
-  showControls?: boolean;
-  /**
    * Take files dropped or pasted on the pane while creating, held as chips until the task is created
    * and then handed to `onTaskCreate` with it. A host sets this only when it can store a file.
    */
   acceptFiles?: boolean;
 }>;
-
-/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
-const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 /**
  * The detail half of the list: it edits whichever task is selected, and creates one when none is.
@@ -94,25 +78,23 @@ const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.
  * room to answer and to read — the detail article — and under a list they grew the strip by a line
  * per entry, pushing the list itself off the screen.
  */
-export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
+export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProps>(
   (
     {
       placeholder,
       showDescription = false,
       descriptionPlaceholder,
       descriptionExtensions,
-      grid,
       createOnly = false,
-      showControls = true,
       acceptFiles = false,
       ...props
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(translationKey);
-    const { className, ...rest } = composableProps(props);
+    const { t } = Hooks.useTranslation(translationKey);
+    const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, gridTemplateColumns, showEstimates, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, columns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -128,6 +110,9 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // synchronously — a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
+    // Set on the create row before the task exists, and sent with its draft.
+    const [draftPriority, setDraftPriority] = useState<Task.Priority>();
+    const [draftEstimate, setDraftEstimate] = useState<Task.Estimate>();
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -182,6 +167,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           const kept = new Set(result?.rejectedFiles ?? []);
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
           setDraft((draft) => (draft === sentTitle ? '' : draft));
+          setDraftPriority(undefined);
+          setDraftEstimate(undefined);
           if (draftDescription.current === sentDescription) {
             draftDescription.current = '';
             setCreateEpoch((epoch) => epoch + 1);
@@ -191,7 +178,12 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         creating.current = true;
         try {
           result = onTaskCreate?.(
-            { title, ...(description.length > 0 && { description }) },
+            {
+              title,
+              ...(description.length > 0 && { description }),
+              ...(draftPriority && { priority: draftPriority }),
+              ...(draftEstimate && { estimate: draftEstimate }),
+            },
             sent.length > 0 ? sent : undefined,
           );
         } catch (error) {
@@ -205,7 +197,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           log.catch(error);
         });
       }
-    }, [draft, files, task, current, onTaskCreate, onTaskUpdate]);
+    }, [draft, draftPriority, draftEstimate, files, task, current, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
     // and half a title would become one — clicking the list, the thread, or anywhere else would
@@ -248,7 +240,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // Read through a ref so the extension is built once: a new extensions array rebuilds the editor
     // and drops focus, and `handleSubmit` changes on every keystroke of the title. Synced in an effect
     // so the keymap only ever sees a committed render's handler.
-    const submitRef = useDynamicRef(handleSubmit);
+    const submitRef = Hooks.useDynamicRef(handleSubmit);
     const extensions = useMemo(
       () => [...(descriptionExtensions ?? []), submitOnModEnter({ onSubmit: () => submitRef.current() })],
       [descriptionExtensions],
@@ -328,40 +320,34 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // status column takes the icon, and the title column takes the field — which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
+    // Valid only with a title: a task cannot be created, or renamed, to nothing.
+    const canSave = draft.trim().length > 0;
+    // Something to throw away: an edit in progress, or a draft.
+    const canCancel = !!current || canSave;
+    // Editing, the task's own controls; creating, the same pickers over the draft, so a task can be sized and ranked
+    // as it is added.
+    const editing = !!(task && current);
 
     return (
-      // One grid, not a row of grids: the title and the description line up column for column, and
-      // the toolbar can sit on the title line while coming LAST in the DOM — so Tab runs title →
-      // description → buttons rather than stopping at a button on the way to the text.
+      // The pane's own grid on the list's template, so its cells sit in the rows' columns: the field where the titles
+      // are read, the pickers under the rows' estimate and priority.
       <div
         {...rest}
-        // Two rows, placed explicitly rather than by flow: header (icon, title, toolbar) and
-        // description. Auto-placement drops a cell into whatever track is free, which put the
-        // description in the icon column whenever the toolbar was absent.
         className={mx(
-          // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
-          // repeated on every cell that might start a row, and is missed by whichever one is added next.
+          // The gap between the lines is the grid's, not a margin on each cell: a margin has to be repeated on every
+          // cell that might start a line, and is missed by whichever one is added next.
           'grid w-full min-w-0 shrink-0',
-          // The description row only when there is one: an empty second track still takes the row gap,
-          // which left the pane a gap taller than a task row.
-          hasDescription ? 'grid-rows-[auto_auto] gap-y-2' : 'grid-rows-[auto]',
+          (hasDescription || (takesFiles && files.length > 0)) && 'gap-y-2',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
-          // No leading control means no icon track: the title then starts where the host's own
-          // content does, rather than 2rem inside it with nothing in the gap.
-          !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
-          // The tree's rows sit inside its content's inset gutter, so the pane insets by the same gap.
-          grid && 'px-(--dx-gap-size)',
+          // The tree's rows pad their ends by the same gap, so the pane's fields start where the rows' cells do.
+          !flush && 'px-(--dx-gap-size)',
           className,
         )}
-        // On the list's own template the pane's cells name their tracks, so the icon sits under the
-        // rows' status controls and the field under their titles whatever the list's options are;
-        // the toggle and gutter tracks stay empty.
-        //
-        // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the
-        // variable says "the content track", and `Field.Root` hands it to the field it wraps — which
-        // in THIS grid names a different column, and put the title in the controls' track.
-        style={{ ...(grid ? { gridTemplateColumns } : {}), '--dx-col': 'auto' } as CSSProperties}
+        // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the variable says "the
+        // content track", and `Field.Root` hands it to the field it wraps — which in THIS grid names a different
+        // column, and put the title in the controls' track.
+        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
@@ -372,76 +358,71 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         })}
         ref={forwardedRef}
       >
-        {/* Placed explicitly: with a gutter the pane leaves that track empty, and implicit placement
-            would drop the icon into it. Editing, the cell is the row's own status control — the
-            same glyph, and the same menu, so status is set where the task is read rather than only
-            from the row behind the pane. Creating, there is no task to carry a status yet. */}
-        {showControls &&
-          (task && current ? (
-            <TaskStatusControl
-              task={task}
-              classNames={mx('self-start', grid ? 'col-[status]' : 'col-start-1')}
-              onTaskUpdate={onTaskUpdate}
-            />
-          ) : (
-            <span
-              className={mx('flex items-center justify-center h-(--dx-control)', grid ? 'col-[status]' : 'col-start-1')}
-            >
-              <Icon icon='ph--plus--regular' tone='subtle' />
-            </span>
-          ))}
-
-        <Field.Root>
-          <Input
-            variant='subdued'
-            // An input clips its overflow rather than wrapping it, so a long title ends mid-word
-            // against the trailing controls with nothing to say it continues; the ellipsis says so.
-            // (Shown while the field is not focused, which is how a pane holds it open.)
-            classNames={mx(
-              'px-0 text-ellipsis',
-              grid ? 'col-start-[title] -col-end-2' : showControls ? 'col-start-2' : 'col-start-1',
-            )}
+        {/* Each cell placed by its track's name, as the rows' are. In the DOM the description follows the title, though
+            the pickers sit beside it, so Tab runs from the title into the description before the trailing controls. */}
+        {editing ? (
+          // The row's own status control — the same glyph and menu, so status is set where the task is read.
+          <TaskStatusControl task={task} classNames={mx(TRACK.status, 'self-start')} onTaskUpdate={onTaskUpdate} />
+        ) : (
+          // Creating, there is no task to carry a status yet.
+          <span className={mx(TRACK.status, 'flex items-center justify-center h-(--dx-control) self-start')}>
+            <Icon.Icon icon='ph--plus--regular' tone='subtle' />
+          </span>
+        )}
+        {/* The field's root is the grid item, so it takes the placement. */}
+        <Field.Root classNames='row-start-1 col-start-[title] col-end-[assignee] min-w-0'>
+          <Input.Root
+            // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the trailing
+            // controls with nothing to say it continues; the ellipsis says so.
+            classNames='grow text-ellipsis'
             data-testid='taskList.edit.title'
-            // A host may name the row ("Add a step"), but the default is the package's own string:
-            // an English literal in the component is a string no translation can reach.
+            // A host may name the row ("Add a step"), but the default is the package's own string: an English literal
+            // in the component is a string no translation can reach.
             placeholder={current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder'))}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleTitleKeyDown}
             onBlur={handleTitleBlur}
+            // Only when there is something valid to save. `false` rather than nothing, so the field keeps its frame (and
+            // its test id) either way.
+            end={
+              canSave && (
+                <SystemButton.Save
+                  variant='primary'
+                  data-testid='taskList.edit.save'
+                  // Out of the tab order: Enter in the field saves, and Tab goes on to the description.
+                  tabIndex={-1}
+                  onClick={handleSave}
+                  onMouseDown={(event) => event.preventDefault()}
+                />
+              )
+            }
           />
         </Field.Root>
-
         {hasDescription && (
-          <div
+          // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
+          <Input.Frame
+            rows={2}
             data-testid='taskList.edit.description'
-            // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
-            // description left to auto-place would take the cell it vacates and fall into the icon
-            // column — a field one word wide. It runs to the row's end: the toolbar sits on the
-            // title line only.
-            className={mx(
-              'flex min-w-0 row-start-2 -col-end-1',
-              grid ? 'col-start-[title]' : showControls ? 'col-start-2' : 'col-start-1',
-            )}
+            classNames='row-start-2 col-[title/assignee] min-w-0'
           >
-            {/* A description is markdown, so it is edited as markdown. `editing` is held open —
-                the pane IS the editor, so there is nothing to click into — and the key remounts
-                it per task, since a field held open never re-reads its subject.
-                Creating, the field is uncontrolled: there is no task to read a value from, so it
+            {/* A description is markdown, so it is edited as markdown. `editing` is held open — the pane IS the editor,
+                so there is nothing to click into — and the key remounts it per task, since a field held open never
+                re-reads its subject. Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
-              // A long description scrolls within the field rather than growing the pane past the
-              // list it edits from: eight lines, with the scroller's line-height set to the lines'
-              // (CodeMirror's base theme gives it a smaller one) so `lh` measures a real line.
+              // A long description scrolls within the field rather than growing the pane past the list it edits from:
+              // eight lines, with the scroller's line-height set to the lines' (CodeMirror's base theme gives it a
+              // smaller one) so `lh` measures a real line.
               classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
               editing
               multiline
               placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
               extensions={extensions}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-              // land the reader in the description instead of the list.
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in
+              // the description instead of the list.
               autoFocus={false}
               {...(current && { value: current.description ?? '' })}
               onValueChange={(description) => {
@@ -452,28 +433,59 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 }
               }}
             />
-          </div>
+          </Input.Frame>
+        )}
+        {showEstimates &&
+          (editing ? (
+            <TaskEstimateControl task={task} classNames={TRACK.estimate} />
+          ) : (
+            <TaskEstimatePicker
+              estimate={draftEstimate}
+              onChange={setDraftEstimate}
+              testId='taskList.edit.estimate'
+              classNames={TRACK.estimate}
+            />
+          ))}
+        {editing ? (
+          <TaskPriorityIcon task={task} classNames={TRACK.priority} />
+        ) : (
+          <TaskPriorityPicker
+            priority={draftPriority}
+            onChange={setDraftPriority}
+            testId='taskList.edit.priority'
+            classNames={TRACK.priority}
+          />
+        )}
+        {canCancel && (
+          // In the rows' menu column: the way out of the pane, there while it holds something to throw away.
+          <SystemButton.Cancel
+            variant='ghost'
+            classNames={TRACK.actions}
+            data-testid='taskList.edit.cancel'
+            onClick={handleCancel}
+            onMouseDown={(event) => event.preventDefault()}
+          />
         )}
 
         {takesFiles &&
           files.length > 0 && (
-            // The third row, under the description: what the task will be created with.
+            // Under the description: what the task will be created with.
             <div
               className={mx(
-                'flex flex-wrap items-center gap-1 min-w-0 row-start-3 -col-end-1',
-                grid ? 'col-start-[title]' : showControls ? 'col-start-2' : 'col-start-1',
+                'col-start-[title] -col-end-1 flex flex-wrap items-center gap-1 min-w-0',
+                hasDescription ? 'row-start-3' : 'row-start-2',
               )}
             >
               {files.map((file, index) => (
-                <Tag
+                <Tag.Tag
                   key={`${file.name}-${index}`}
                   hue='neutral'
                   classNames='inline-flex items-center gap-1'
                   data-testid='taskList.edit.file'
                 >
-                  <Icon icon='ph--paperclip--regular' size='xs' />
+                  <Icon.Icon icon='ph--paperclip--regular' size='xs' />
                   <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Button
+                  <Button.Root
                     variant='ghost'
                     size='sm'
                     iconOnly
@@ -483,52 +495,16 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                     classNames='p-0 min-h-0 h-auto'
                     onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
                   />
-                </Tag>
+                </Tag.Tag>
               ))}
             </div>
           )}
-
-        {/* Save and Cancel belong to creating: the held-open description has no blur to commit it, so
-            the add row needs both. Editing, the fields commit themselves — and a host carrying the
-            task's controls in its own toolbar (`showControls` off) has no use for a second bar of
-            chrome floating over the title. */}
-        {(showControls ? current || draft.trim().length > 0 : !current && draft.trim().length > 0) && (
-          <Toolbar.Root
-            size='sm'
-            classNames={mx(
-              'row-start-1 justify-end p-0 bg-transparent',
-              // `-2` is the icon column once the pane has only two tracks, which would put the
-              // controls where the title goes and squeeze the field into the min-content track.
-              showControls ? 'col-start-[-2]' : 'col-start-2',
-            )}
-          >
-            {/* Only when editing an existing task: the create row has nothing to set an estimate or
-                priority on until it is saved. */}
-            {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
-            {showControls && task && <TaskPriorityIcon task={task} />}
-            <Button
-              variant='ghost'
-              iconOnly
-              icon='ph--check--regular'
-              data-testid='taskList.edit.save'
-              label={t('save-task.label')}
-              onClick={handleSave}
-              onMouseDown={(event) => event.preventDefault()}
-            />
-            <Button
-              variant='ghost'
-              iconOnly
-              icon='ph--x--regular'
-              data-testid='taskList.edit.cancel'
-              label={t('cancel-edit.label')}
-              onClick={handleCancel}
-              onMouseDown={(event) => event.preventDefault()}
-            />
-          </Toolbar.Root>
-        )}
       </div>
     );
   },
 );
+
+/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
+const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 TaskListEditor.displayName = 'TaskList.Editor';

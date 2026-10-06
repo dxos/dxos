@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { BaseError } from '@dxos/errors';
 
 /**
@@ -77,7 +77,7 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
     }
     return typeof code === 'number' ? `Discord API error ${code}` : `Discord API error (HTTP ${error.response.status})`;
   }
-  if (SyncDatabaseMissingError.is(error)) {
+  if (ConnectorSync.DatabaseMissingError.is(error)) {
     return error.message;
   }
   if (error instanceof BaseError) {
@@ -95,3 +95,9 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
   }
   return String(error);
 };
+
+/**
+ * A Discord-backed channel could not do what it was asked: the config is missing or invalid, the
+ * token is unusable, or Discord refused. The message is a reason a person can act on.
+ */
+export class DiscordChannelError extends BaseError.extend('DiscordChannelError', 'Discord channel request failed.') {}

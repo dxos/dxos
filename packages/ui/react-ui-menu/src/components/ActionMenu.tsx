@@ -14,7 +14,11 @@ import React, {
 } from 'react';
 
 import { keySymbols } from '@dxos/react-focus';
-import { Icon, Menu, type MenuOption, toLocalizedString, useTranslation, useVirtualAnchor } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -46,12 +50,12 @@ const isCheckable = (item: MenuItem): item is MenuAction =>
 const useItemData = (
   id: string,
   properties: Pick<MenuItemChrome, 'label' | 'icon' | 'disabled' | 'keyBinding'>,
-): MenuOption => {
-  const { t } = useTranslation(translationKey);
+): Menu.Option => {
+  const { t } = Hooks.useTranslation(translationKey);
   const shortcut = resolveKeyBinding(properties.keyBinding);
   return {
     value: id,
-    label: toLocalizedString(properties.label, t),
+    label: Theme.toLocalizedString(properties.label, t),
     icon: properties.icon,
     shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
     disabled: properties.disabled,
@@ -118,7 +122,11 @@ const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
       onClick={handleClick}
       closeOnSelect={false}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    />
+    >
+      <ItemIcon menu={menu} action={action} />
+      <Menu.ItemText />
+      <Menu.ItemIndicator />
+    </Menu.CheckboxItem>
   );
 };
 
@@ -130,7 +138,12 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
       item={item}
       onClick={handleClick}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    />
+    >
+      {/* Composed rather than the default row, so the icon takes the action's classes (a priority's hue). */}
+      <ItemIcon menu={menu} action={action} />
+      <Menu.ItemText />
+      <Menu.ItemIndicator />
+    </Menu.RadioItem>
   );
 };
 
@@ -146,7 +159,7 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
       >
         <ItemIcon menu={menu} action={group} />
         <Menu.ItemText />
-        <Icon icon='ph--caret-right--regular' />
+        <Icon.Icon icon='ph--caret-right--regular' />
       </Menu.TriggerItem>
       <Menu.Content>
         <ActionMenuItems menu={menu} group={group} />
@@ -292,7 +305,6 @@ export const ActionMenu = ({
   );
 
   const [built, setBuilt] = useState(false);
-  const [deferredOpen, setDeferredOpen] = useState(false);
   // Only a menu that owns its open state and renders its own trigger can wait for a click.
   const deferred = !!deferUntilOpen && !virtualRef && open === undefined && defaultOpen === undefined;
   const trigger = isValidElement<{
@@ -305,12 +317,9 @@ export const ActionMenu = ({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (deferred) {
-        setDeferredOpen(next);
-      }
       onOpenChange?.(next);
     },
-    [deferred, onOpenChange],
+    [onOpenChange],
   );
 
   const handleTriggerClick = useCallback(
@@ -325,7 +334,7 @@ export const ActionMenu = ({
   // Next's Content portals into a ref.
   const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
 
-  const positioning = useVirtualAnchor(virtualRef);
+  const positioning = VirtualAnchor.useVirtualAnchor(virtualRef);
 
   if (deferred && !built && trigger) {
     return cloneElement(trigger, {
@@ -338,8 +347,10 @@ export const ActionMenu = ({
 
   return (
     <Menu.Root
-      open={deferred ? deferredOpen : open}
-      defaultOpen={defaultOpen}
+      // A deferred menu mounts on its first click, so it mounts open and owns its state from then on: a controlled
+      // close always refocuses the trigger, which would pull focus back from whatever an outside click focused.
+      open={deferred ? undefined : open}
+      defaultOpen={deferred ? true : defaultOpen}
       onOpenChange={({ open }) => handleOpenChange(open)}
       positioning={positioning}
     >

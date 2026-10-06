@@ -365,6 +365,28 @@ serving more calls than it holds reports a percentile over the stage's TAIL; `rp
 `rpcSamples` in the trended columns is what says so. A realm that published no counters at all is
 absent from the array entirely, which `rpcRealms` counts.
 
+### `latency` — prompt to model request
+
+How long the app holds a chat turn's input before asking the model, joined from every realm's
+work marks (`markWork` in `@dxos/util`): User Timing marks named `dxos:<name>`, which also show on the
+DevTools Timings track. The harness reads each realm's marks with `performance.getEntriesByType` and
+places them at `performance.timeOrigin + startTime`, so a mark taken in a worker compares with one
+taken in the tab, which `startTime` alone does not allow. `chat.submit` is taken by the chat UI;
+`ai.request` and `ai.response` by `@dxos/ai` around every model call, for the scripted model and
+HTTP providers alike. The calls offering a toolkit are the agent's turns.
+
+| Field               | Trended as                         | Meaning                                                                                       |
+| ------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `submitToRequestMs` | `submitToRequest{P50,Max,Count}Ms` | A user submit to the first agent request it caused.                                           |
+| `turnToRequestMs`   | `turnToRequest{P50,Max,Count}Ms`   | The end of one agent response to the next request: tool calls, their writes, context rebuild. |
+| `submitPath`        | NDJSON only                        | Every mark between the first submit and its request, in ms since the submit.                  |
+| `turnPath`          | NDJSON only                        | Each mark's median offset into the later turns.                                               |
+| `realms`            | `markRealms`                       | Realms that wrote any work mark; `0` means nothing was instrumented.                          |
+
+The paths are how a regression is attributed: the marks name the hops from the UI handler through
+the agent process waking, history and context assembly, to the request. The row is absent from a
+stage that made no model request.
+
 ### `stillFrameMaxMs`, `stillFrameCount` — `diagnose` only
 
 Inter-frame gaps from `Page.screencastFrame` timestamps: `stillFrameMaxMs` is the longest interval

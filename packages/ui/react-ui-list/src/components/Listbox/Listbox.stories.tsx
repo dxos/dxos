@@ -7,14 +7,18 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
-import { Input, type ListboxOption, Panel, Toolbar, Typography, Listbox as UiListbox } from '@dxos/react-ui';
+import * as Input from '@dxos/react-ui/Input';
+import * as UiListbox from '@dxos/react-ui/Listbox';
+import * as Panel from '@dxos/react-ui/Panel';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { translations } from '@dxos/react-ui/translations';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { Listbox } from './Listbox.tsx';
 import { listboxSelection } from './selection.ts';
 
-const ITEMS: ListboxOption[] = [
+const ITEMS: UiListbox.Option[] = [
   { value: 'alpha', label: 'Alpha', description: 'The first letter' },
   { value: 'bravo', label: 'Bravo' },
   { value: 'charlie', label: 'Charlie', disabled: true },
@@ -22,7 +26,7 @@ const ITEMS: ListboxOption[] = [
   { value: 'echo', label: 'Echo' },
 ];
 
-const LONG: ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
+const LONG: UiListbox.Option[] = Array.from({ length: 40 }, (_, index) => ({
   value: `item-${index + 1}`,
   label: `Item ${index + 1}`,
 }));
@@ -56,7 +60,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Typography data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography>
+      <Typography.Text data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography.Text>
       <Listbox.Root items={ITEMS}>
         <Listbox.Content aria-label='Plain'>
           {ITEMS.map((item) => (
@@ -74,12 +78,12 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </UiListbox.Content>
       </UiListbox.Root>
-      <Typography data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography>
+      <Typography.Text data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography.Text>
       <div className='h-48'>
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Input
+              <Input.Root
                 aria-label='Filter'
                 placeholder='Filter…'
                 value={filter}

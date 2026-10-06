@@ -26,47 +26,49 @@ import {
   watchResizeObserverLoop,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Select, type SelectOption, Tag, Toolbar } from '../index.ts';
+import * as Tag from '../Tag/Tag.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Select from './Select.tsx';
 
-const OPTIONS: SelectOption[] = [
+const OPTIONS: Select.Option[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
   { value: 'black', label: 'Black', disabled: true },
 ];
 
-const ICON_OPTIONS: SelectOption[] = [
+const ICON_OPTIONS: Select.Option[] = [
   { value: 'list', label: 'List', icon: 'ph--list--regular' },
   { value: 'grid', label: 'Grid', icon: 'ph--squares-four--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
-/** Labels of very different widths, for the `fit='options'` trigger. */
-const DENSITY: SelectOption[] = [
+/** Labels of very different widths, for the `fixed` trigger. */
+const DENSITY: Select.Option[] = [
   { value: 'xs', label: 'XS' },
   { value: 'comfortable', label: 'Comfortable spacing' },
   { value: 'md', label: 'Medium' },
 ];
 
 /** Enough options to overflow the popup's 20rem cap at every size. */
-const LONG: SelectOption[] = Array.from({ length: 30 }, (_, index) => ({
+const LONG: Select.Option[] = Array.from({ length: 30 }, (_, index) => ({
   value: `option-${index + 1}`,
   label: `Option ${index + 1}`,
 }));
 
-const FRUIT: SelectOption[] = [
+const FRUIT: Select.Option[] = [
   { value: 'apple', label: 'Apple', icon: 'ph--circle--fill', iconHue: 'red' },
   { value: 'pear', label: 'Pear', icon: 'ph--circle--fill', iconHue: 'lime' },
 ];
 
-const VEGETABLES: SelectOption[] = [
+const VEGETABLES: Select.Option[] = [
   { value: 'kale', label: 'Kale', icon: 'ph--circle--fill', iconHue: 'emerald' },
   { value: 'leek', label: 'Leek' },
 ];
 
 /**
  * A plain select, one whose options have leading icons, then a grouped select with hued icons and custom item content,
- * a `multiple` select and a loading one, then a `fit='options'` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
+ * a `multiple` select and a loading one, then a `fixed` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `sm` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
@@ -94,7 +96,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <Toolbar.Root>
       <Select.Root items={[...FRUIT, ...VEGETABLES]}>
         <Select.Trigger placeholder='Produce' aria-label='Produce' />
-        <Select.Content size='lg'>
+        <Select.Content size='sm'>
           {[
             { label: 'Fruit', items: FRUIT },
             { label: 'Vegetables', items: VEGETABLES },
@@ -106,7 +108,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
                   <Select.Item key={item.value} item={item}>
                     <Select.ItemIcon icon='ph--circle--fill' hue='amber' />
                     <Select.ItemText>
-                      <Tag hue='amber'>Leek</Tag>
+                      <Tag.Tag hue='amber'>Leek</Tag.Tag>
                     </Select.ItemText>
                     <Select.ItemIndicator />
                   </Select.Item>
@@ -141,7 +143,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     </Toolbar.Root>
     <Toolbar.Root>
       <Select.Root items={DENSITY}>
-        <Select.Trigger fit='options' placeholder='Density' aria-label='Density' data-testid={`fit-${size}`} />
+        <Select.Trigger fixed placeholder='Density' aria-label='Density' data-testid={`fixed-${size}`} />
         <Select.Content>
           {DENSITY.map((item) => (
             <Select.Item key={item.value} item={item} />
@@ -155,7 +157,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 const meta = {
   title: 'ui/react-ui-core/components/Select',
   render: DefaultStory,
-  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ layout: 'column' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
@@ -174,7 +176,7 @@ export const Default: Story = {};
  * `hue` colours an option's icon, and an Item's children replace its whole row, composed from parts. A `multiple` select stays open
  * while choosing and lists every choice; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the
  * highlight in view; a `loading` trigger is busy and spins in place of its caret. A popup is at least its trigger's
- * width and grows to fit its widest option; a `fit='options'` trigger keeps the widest option's width whatever is
+ * width and grows to fit its widest option; a `fixed` trigger keeps the widest option's width whatever is
  * chosen. A listbox takes its trigger row's size unless given its own. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
@@ -216,7 +218,12 @@ export const Test: Story = {
     const separator = listbox.querySelector<HTMLElement>('[data-scope="separator"]');
     await expect(separator).toHaveAttribute('aria-hidden', 'true');
     await expect(within(listbox).queryByRole('separator')).toBeNull();
-    await expect(separator?.getBoundingClientRect().width).toBeCloseTo(listbox.clientWidth, 0);
+    // It spans the listbox's content box, inside the popup's uniform inset.
+    const { paddingLeft, paddingRight } = getComputedStyle(listbox);
+    await expect(separator?.getBoundingClientRect().width).toBeCloseTo(
+      listbox.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
+      0,
+    );
 
     await userEvent.click(within(listbox).getByRole('option', { name: 'Green' }));
     await waitFor(() => expect(trigger).toHaveTextContent('Green'));
@@ -261,7 +268,7 @@ export const Test: Story = {
     await userEvent.click(produce);
     const produceList = await body.findByRole('listbox');
     // An explicit size wins over the inherited one.
-    await expectPopupSize(produceList, 'lg');
+    await expectPopupSize(produceList, 'sm');
     await expect(within(produceList).getByRole('group', { name: 'Fruit' })).toBeInTheDocument();
     const vegetables = within(produceList).getByRole('group', { name: 'Vegetables' });
     await expect(within(vegetables).getAllByRole('option')).toHaveLength(2);
@@ -320,25 +327,31 @@ export const Test: Story = {
     await expect(lookup).toHaveAttribute('aria-busy', 'true');
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
     await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
+    // With no options yet, opening it shows no empty popup.
+    await userEvent.click(lookup);
+    await expect(body.queryByRole('listbox')).toBeNull();
+    await userEvent.keyboard('{Escape}');
 
-    // `fit='options'`: as wide as the widest option, whichever is chosen.
+    // `fixed`: as wide as the widest option, whichever is chosen.
     for (const size of SIZES) {
-      const fit = byTestId(canvasElement, `fit-${size}`);
-      const width = fit.getBoundingClientRect().width;
-      const value = fit.querySelector<HTMLElement>('[data-part="value-text"]');
+      const fixed = byTestId(canvasElement, `fixed-${size}`);
+      const width = fixed.getBoundingClientRect().width;
+      const value = fixed.querySelector<HTMLElement>('[data-part="value-text"]');
       const widest = Math.max(
-        ...Array.from(fit.querySelectorAll<HTMLElement>('[data-part="value-sizer"] > *')).map(
+        ...Array.from(fixed.querySelectorAll<HTMLElement>('[data-part="value-sizer"] > *')).map(
           (label) => label.scrollWidth,
         ),
       );
-      await expect(value?.getBoundingClientRect().width ?? 0, `fit-${size} value`).toBeGreaterThanOrEqual(widest - 0.5);
+      await expect(value?.getBoundingClientRect().width ?? 0, `fixed-${size} value`).toBeGreaterThanOrEqual(
+        widest - 0.5,
+      );
       if (size === 'md') {
         for (const { label } of DENSITY) {
-          await userEvent.click(fit);
+          await userEvent.click(fixed);
           await userEvent.click(await body.findByRole('option', { name: label }));
           await waitFor(() => expect(value).toHaveTextContent(label));
           await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
-          await expect(fit.getBoundingClientRect().width, `fit-md with ${label}`).toBeCloseTo(width, 0);
+          await expect(fixed.getBoundingClientRect().width, `fit-md with ${label}`).toBeCloseTo(width, 0);
         }
       }
     }

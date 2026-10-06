@@ -73,6 +73,19 @@
     grid-column: var(--dx-item-text-column);
     grid-row: 2;
   }
+  /* A full-width part (an expanded detail) takes its own row under the others, across every column. */
+  .dx-listbox-item.dx-container > [data-place='full'] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  /*
+   * With a description the other parts sit on the title's line rather than centring across both: each is a block tall
+   * from the row's top, and the title's top padding is half a block less its line, so their centres meet.
+   */
+  .dx-listbox-item.dx-container:has(> .dx-listbox-item-description)
+    > :not(.dx-listbox-item-text, .dx-listbox-item-description, .dx-drop-indicator) {
+    align-self: start;
+  }
 
   /* Text over description: together they take one block plus a line, not a block each. */
   .dx-listbox-item:has(> .dx-listbox-item-description) > .dx-listbox-item-text {
@@ -86,6 +99,10 @@
   }
   .dx-listbox-item > .dx-listbox-item-text:first-child,
   .dx-listbox-item > .dx-listbox-item-text:first-child + .dx-listbox-item-description {
+    padding-inline-start: var(--dx-gap-size);
+  }
+  /* An avatar fills its block where an icon sits inside one, so the text keeps an icon's distance from it. */
+  .dx-listbox-item > .dx-listbox-item-icon:has(.dx-avatar) ~ :is(.dx-listbox-item-text, .dx-listbox-item-description) {
     padding-inline-start: var(--dx-gap-size);
   }
 

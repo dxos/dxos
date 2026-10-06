@@ -5,10 +5,11 @@
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -22,8 +23,12 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as QrCode from '@dxos/react-ui/QrCode';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -58,9 +63,9 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const config = useConfig();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state),
@@ -136,20 +141,49 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         const result = data ?? {
           joinUrl: '',
           failed: identityKeys.map((key) => ({ key, error: error?.message ?? 'Unknown error' })),
+          notNotified: [],
         };
-        if (result.failed.length > 0) {
-          const names = result.failed
+        const namesOf = (entries: readonly { key: string }[]) =>
+          entries
             .map(({ key }) => {
               const contact = contacts.find((candidate) => contactKeyHex(candidate) === key);
               return contact ? contactDisplayName(contact) : key.slice(0, 8);
             })
             .join(', ');
+        if (result.failed.length > 0) {
+          const names = namesOf(result.failed);
           await invokePromise(LayoutOperation.AddToast, {
             id: `${meta.profile.key}/add-members-failed`,
             title: ['add-members-failed-toast.title', { ns: meta.profile.key }],
             // Label tuples carry no interpolation values, so the names are resolved here.
             description: t('add-members-failed-toast.description', { names }),
             icon: 'ph--warning--regular',
+          });
+        }
+        if (result.notNotified.length > 0) {
+          const names = namesOf(result.notNotified);
+          const accountRequired = result.notNotified.some(({ reason }) => reason === 'account-required');
+          const { joinUrl } = result;
+          await invokePromise(LayoutOperation.AddToast, {
+            id: `${meta.profile.key}/add-members-not-notified`,
+            title: ['add-members-not-notified-toast.title', { ns: meta.profile.key }],
+            // Label tuples carry no interpolation values, so the names are resolved here.
+            description: t(
+              accountRequired
+                ? 'add-members-not-notified-account-toast.description'
+                : 'add-members-not-notified-toast.description',
+              { names },
+            ),
+            icon: 'ph--bell-slash--regular',
+            ...(joinUrl
+              ? {
+                  actionLabel: ['copy-link.label', { ns: meta.profile.key }],
+                  onAction: () =>
+                    void navigator.clipboard
+                      .writeText(joinUrl)
+                      .catch((error) => log.warn('failed to copy join link', { error })),
+                }
+              : {}),
           });
         }
 
@@ -256,15 +290,15 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel?: () => void }) => {
-  const { t } = useTranslation(shellTranslationKey);
-  const qrLabel = useId('members-container__qr-code');
+  const { t } = UiHooks.useTranslation(shellTranslationKey);
+  const qrLabel = UiHooks.useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
     <>
       <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-fg-muted'>
-          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
+          <QrCode.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>
@@ -274,15 +308,15 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         </span>
         <SystemButton.Clipboard value={url ?? 'never'} />
       </div>
-      <Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Button.Root>
     </>
   );
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel?: () => void }) => {
-  const { t } = useTranslation(shellTranslationKey);
+  const { t } = UiHooks.useTranslation(shellTranslationKey);
   const emoji = hexToEmoji(id);
 
   return (
@@ -291,18 +325,18 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Button.Root>
     </>
   );
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
+    <Icon.Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
+    <Icon.Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

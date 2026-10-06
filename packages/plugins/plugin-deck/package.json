@@ -10,7 +10,9 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -74,27 +76,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
-    },
-    "./overlays": {
-      "source": "./src/containers/Overlays/index.ts",
-      "types": "./dist/types/src/containers/Overlays/index.d.ts",
-      "import": "./dist/lib/overlays.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./CompanionViewState": {
       "source": "./src/types/CompanionViewState.ts",
       "types": "./dist/types/src/types/CompanionViewState.d.ts",
@@ -125,10 +106,31 @@
       "types": "./dist/types/src/types/DeckSchema.d.ts",
       "import": "./dist/lib/DeckSchema.mjs"
     },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./Overlays": {
+      "source": "./src/Overlays.ts",
+      "types": "./dist/types/src/Overlays.d.ts",
+      "import": "./dist/lib/ns/Overlays.mjs"
+    },
+    "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

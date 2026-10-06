@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#api": {
@@ -138,6 +138,8 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-code": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

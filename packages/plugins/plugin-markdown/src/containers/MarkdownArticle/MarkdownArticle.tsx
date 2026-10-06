@@ -7,18 +7,18 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ViewState } from '@dxos/react-ui-attention';
 import {
   Editor,
@@ -28,6 +28,7 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 
@@ -123,7 +124,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   const { subject: object, id, settings, viewMode } = props;
   // At most one contributed binding hook is honored; the boundary key remounts the subtree
   // whenever the effective hook's identity changes, keeping hook order legal.
-  const bindingHooks = useCapabilities(MarkdownCapabilities.EditorBindingHook);
+  const bindingHooks = Hooks.useCapabilities(MarkdownCapabilities.EditorBindingHook);
   if (bindingHooks.length > 1) {
     log.warn('multiple EditorBindingHook contributions; only the first is honored', {
       count: bindingHooks.length,
@@ -171,7 +172,7 @@ const MarkdownArticleImpl = forwardRef<
     const identity = useIdentity();
 
     // Extensions from other plugins, given the binding's review context.
-    const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+    const otherExtensionProviders = Hooks.useCapabilities(MarkdownCapabilities.ExtensionProvider);
     const extensionProps = binding.extensionProps;
     const extensions = useMemo<Extension[]>(() => {
       if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
@@ -204,9 +205,9 @@ const MarkdownArticleImpl = forwardRef<
     // Toolbar actions from the app graph. Branch selection / suggest / return-to-main live in the
     // History companion (the advanced path); the ambient review mode (incl. Suggesting) is surfaced in
     // the editor view-mode dropdown below.
-    const builder = useAppGraph();
+    const builder = ToolkitHooks.useAppGraph();
     const { graph } = builder;
-    const runAction = useActionRunner();
+    const runAction = GraphHooks.useActionRunner();
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction })),
       [graph, attendableId, id],
@@ -218,7 +219,7 @@ const MarkdownArticleImpl = forwardRef<
     // mode can never be updated out of step here. Off the ambient path (an explicit branch/checkpoint
     // is selected) the review mode has no effect, so only the built-in editor modes are shown.
     const { ambient, activeReviewMode, selectViewMode } = binding;
-    const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
+    const viewModeExtensions = Hooks.useCapabilities(MarkdownCapabilities.ViewModeExtension);
 
     // Bumped on every dropdown selection: the menu returns focus to its trigger on close, so the
     // editor must be handed the focus back (the caret survives in editor state) — see RefocusEditor.
@@ -254,7 +255,7 @@ const MarkdownArticleImpl = forwardRef<
     }, [viewMode, ambient, activeReviewMode, selectViewMode, viewModeExtensions]);
 
     // File upload.
-    const [upload] = useCapabilities(AppCapabilities.FileUploader);
+    const [upload] = Hooks.useCapabilities(AppCapabilities.FileUploader);
     const handleFileUpload = useMemo(() => {
       if (!db || !upload) {
         return undefined;
@@ -267,11 +268,11 @@ const MarkdownArticleImpl = forwardRef<
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
     // Open linked objects.
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     // Contributed slash-menu commands, one group per contributing plugin. Each entry names an
     // operation; selecting it hands the operation the surface and the offset the trigger was
     // consumed at, and the handler reaches the live view through `EditorViews`.
-    const menuExtensions = useCapabilities(MarkdownCapabilities.MenuExtension);
+    const menuExtensions = Hooks.useCapabilities(MarkdownCapabilities.MenuExtension);
     const slashCommandGroups = useMemo<EditorMenuGroup[]>(() => {
       const groups = new Map<string, EditorMenuGroup>();
       for (const extension of [...menuExtensions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
@@ -412,7 +413,7 @@ const RefocusEditor = ({ request }: { request: number }) => {
 
 const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: string }) => {
   const { controller } = useEditorContext('MarkdownArticle.RegisterEditorView');
-  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const [editorViews] = Hooks.useCapabilities(MarkdownCapabilities.EditorViews);
   const view = controller?.view;
   useEffect(() => {
     // Boot-waterfall milestone (once per page): the first editor can accept input from here —

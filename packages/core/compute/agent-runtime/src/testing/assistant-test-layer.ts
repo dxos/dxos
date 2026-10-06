@@ -15,15 +15,14 @@ import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
 import { Alarm, Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
   ProcessManager,
-  ProcessMonitor,
   RemoteProcessManager,
   RemoteTraceMonitor,
   TriggerDispatcher,
   TriggerStateStore,
+  UnifiedProcessManager,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
@@ -102,7 +101,7 @@ export type AssistantTestServices =
   | ProcessManager.Service
   | RemoteProcessManager.Service
   | ProcessManager.ProcessOperationInvoker.Service
-  | Process.ProcessMonitorService
+  | Process.ManagerService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
@@ -140,10 +139,10 @@ export const AssistantTestLayer = (
     // Captures must sit above the layers they read (a provideMerge chain feeds upward).
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(ProcessMonitor.layer),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
-    // Below `AgentService` in the chain, which now requires the remote manager too: a local test
-    // stack has no EDGE, so both the monitor's remote half and `location: 'edge'` see nothing.
+    Layer.provideMerge(UnifiedProcessManager.layer),
+    // A local test stack has no EDGE, so both the manager's remote half and `location: 'edge'` see
+    // nothing.
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
@@ -218,13 +217,13 @@ export const AssistantTestServiceResolverLayer = (
         ServiceResolver.succeed(Harness.HarnessService, (context) =>
           Effect.gen(function* () {
             if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(Harness.HarnessService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(Harness.HarnessService.key));
             }
             // Read the manager lazily: the resolver is invoked at spawn time, by which point the
             // holder has been filled (see the construction-cycle note in `AssistantTestLayer`).
             const processManager = processManagerHolder.current;
             if (!processManager) {
-              return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(ProcessManager.Service.key));
             }
             const runtime = yield* Effect.context<Database.Service>();
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
@@ -236,7 +235,7 @@ export const AssistantTestServiceResolverLayer = (
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(AgentService.key));
             }
             return agentService;
           }),

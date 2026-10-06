@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -26,6 +26,16 @@
       "node": "./dist/lib/capabilities.node.mjs",
       "tauri": "./dist/lib/capabilities.tauri.mjs",
       "browser": "./dist/lib/capabilities.browser.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/components.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -60,11 +70,10 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./DiscordChannel": {
+      "source": "./src/types/DiscordChannel.ts",
+      "types": "./dist/types/src/types/DiscordChannel.d.ts",
+      "import": "./dist/lib/DiscordChannel.mjs"
     },
     "./DiscordEvents": {
       "source": "./src/types/DiscordEvents.ts",
@@ -81,15 +90,29 @@
       "types": "./dist/types/src/DiscordPlugin.d.ts",
       "import": "./dist/lib/DiscordPlugin.mjs"
     },
+    "./DiscordSource": {
+      "source": "./src/DiscordSource.ts",
+      "types": "./dist/types/src/DiscordSource.d.ts",
+      "import": "./dist/lib/ns/DiscordSource.mjs"
+    },
     "./DiscordTargetOptions": {
       "source": "./src/types/DiscordTargetOptions.ts",
       "types": "./dist/types/src/types/DiscordTargetOptions.d.ts",
       "import": "./dist/lib/DiscordTargetOptions.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "DiscordChannel": [
+        "dist/types/src/types/DiscordChannel.d.ts"
+      ],
       "DiscordEvents": [
         "dist/types/src/types/DiscordEvents.d.ts"
       ],
@@ -112,9 +135,11 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -126,9 +151,14 @@
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "dfx": "catalog:",
     "effect": "catalog:"
@@ -136,11 +166,23 @@
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "effect": "catalog:"
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

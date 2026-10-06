@@ -17,13 +17,14 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import { translations as githubTranslations } from '@dxos/plugin-github/translations';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
@@ -141,9 +142,9 @@ const RemountStory = () => {
   const [mount, setMount] = useState(0);
   return (
     <div className='flex flex-col dx-expand'>
-      <Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+      <Button.Root data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
         Remount
-      </Button>
+      </Button.Root>
       <DefaultStory key={mount} />
     </div>
   );
@@ -153,13 +154,12 @@ const meta = {
   title: 'plugins/plugin-tasks/containers/TaskSetArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // The plugin manager, not a bare client provider: the article invokes the task verbs through
     // `useOperationInvoker`, which throws without PluginManagerContext.
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [TaskSet.TaskSet, Task.Task, Milestone.Milestone, Person.Person, File.File, Blob.Blob],
           onClientInitialized: ({ client }) =>
@@ -188,11 +188,13 @@ const meta = {
       ],
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, so the popover the layout renders outside the story still reads the story's translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...reactUiTranslations],
+    translations: [...translations, ...githubTranslations, ...reactUiTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -642,7 +644,7 @@ export const CreateWithAttachment: Story = {
       timeout: 10_000,
     });
 
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Dial in the grinder{Enter}');
 
     const context = seeded;
@@ -666,7 +668,7 @@ export const CreateWithAttachment: Story = {
     for (const type of ['dragenter', 'dragover', 'drop']) {
       pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: refused }));
     }
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Publish the page{Enter}');
     await waitFor(
       async () =>

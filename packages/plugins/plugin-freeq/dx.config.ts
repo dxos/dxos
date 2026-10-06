@@ -27,5 +27,6 @@ export default Config2.make({
     `,
     icon: { key: 'ph--dog--regular', hue: 'amber' },
     tags: ['labs', 'connector'],
+    dependsOn: ['org.dxos.plugin.thread'],
   },
 });

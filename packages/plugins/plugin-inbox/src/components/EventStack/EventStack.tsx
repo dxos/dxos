@@ -4,9 +4,13 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, Focus, ScrollArea, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { CardTile } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicScrollController, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -37,7 +41,7 @@ export type EventStackProps = {
   onAction?: EventStackActionHandler;
 };
 
-export const EventStack = composable<HTMLDivElement, EventStackProps>(
+export const EventStack = Util.composable<HTMLDivElement, EventStackProps>(
   ({ events = [], currentId, selectedIds, starredIds, controllerRef, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(
@@ -69,7 +73,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -114,7 +118,7 @@ type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' |
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
   const { event, starred, onAction } = data;
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { setCurrentId, setSelected } = useMosaicContainer('EventTile');
 
   // Click / Enter commit both current and selection. Arrow keys only move focus.

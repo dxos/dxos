@@ -4,13 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ChatQueueProps = ThemedClassName<{
+export type ChatQueueProps = Util.ThemedClassName<{
   /** Queued input awaiting processing, in append order. */
   messages: readonly Message.Message[];
   onCancel?: (message: Message.Message) => void;
@@ -28,8 +30,14 @@ export const ChatQueue = ({ classNames, messages, onCancel }: ChatQueueProps) =>
   }
 
   return (
-    <Listbox.Root items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}>
-      <Listbox.Content classNames={['w-full gap-1 items-end', classNames]}>
+    // Small rows: a queued prompt is a note above the composer, not a list to work through.
+    <Listbox.Root
+      size='sm'
+      items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}
+    >
+      {/* The content is a grid, so the bubbles are right-aligned by `justify-items`, not `items-end`; no gutter, so
+          they end flush with what sits under them (the status chip). */}
+      <Listbox.Content gutter='none' classNames={['w-full gap-y-1 justify-items-end', classNames]}>
         {messages.map((message) => (
           <QueuedItem key={message.id} message={message} onCancel={onCancel} />
         ))}
@@ -44,7 +52,7 @@ type QueuedItemProps = {
 };
 
 const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCancel = useCallback(() => {
     onCancel?.(message);
@@ -60,7 +68,7 @@ const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
           overflows its max-width and the start of the prompt is what gets cut. */}
       <span className='min-w-0 truncate'>{Message.extractText(message)}</span>
       {onCancel && (
-        <Button
+        <Button.Root
           iconOnly
           icon='ph--x--regular'
           variant='ghost'

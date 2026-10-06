@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ReactNode, useId } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +13,13 @@ import { type MessageValence } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps, slottable } from '../../../util/index.ts';
+import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Block } from '../Block/index.ts';
-import { Button } from '../Button/index.ts';
-import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Typography } from '../Typography/index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
 
 const BANNER_ICONS: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',
@@ -39,6 +41,8 @@ type BannerRootProps = {
   valence?: MessageValence;
   /** Overrides the valence's icon in the Title's start rail. */
   icon?: string;
+  /** Inset by a gutter of its own; by default only outside a grid, so `false` for a host that already pads it. */
+  inset?: boolean;
 };
 
 /**
@@ -47,11 +51,12 @@ type BannerRootProps = {
  * any other an alert. Buttons with `variant='valence'` inside it take its colours.
  */
 const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
-  ({ children, valence = 'neutral', icon, ...props }, forwardedRef) => {
+  ({ children, valence = 'neutral', icon, inset: insetProp, ...props }, forwardedRef) => {
     const titleId = useId();
     const descriptionId = useId();
     // Outside a Container (a pane's body) there is no gutter to sit in, so the banner insets itself as a form's would be.
-    const inset = !useInGrid();
+    const inGrid = useInGrid();
+    const inset = insetProp ?? !inGrid;
     const { style, ...attributes } = containerAttributes({ gutter: 'rail' });
     const {
       className,
@@ -121,11 +126,11 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
         ref={forwardedRef}
       >
         <Block rail='start'>
-          <Icon icon={icon} />
+          <Icon.Icon icon={icon} />
         </Block>
-        <Typography asChild>
+        <Typography.Text asChild>
           <h2 id={titleId}>{children}</h2>
-        </Typography>
+        </Typography.Text>
         {onClose && (
           <Block rail='end'>
             <Button icon='ph--x--regular' label={t('toolbar-close.label')} iconOnly variant='ghost' onClick={onClose} />
@@ -163,11 +168,6 @@ const BannerBody = slottable<HTMLParagraphElement>(({ children, asChild, ...prop
 });
 
 BannerBody.displayName = 'Banner.Body';
+export type { BannerRootProps as RootProps, BannerTitleProps as TitleProps };
 
-export const Banner = {
-  Root: BannerRoot,
-  Title: BannerTitle,
-  Body: BannerBody,
-};
-
-export type { BannerRootProps, BannerTitleProps };
+export { BannerBody as Body, BannerRoot as Root, BannerTitle as Title };

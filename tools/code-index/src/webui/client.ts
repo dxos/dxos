@@ -13,6 +13,7 @@ import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import * as Stream from 'effect/Stream';
 
 import type * as Events from '../workspace/Events.ts';
+import type * as IndexState from '../workspace/IndexState.ts';
 import * as Protocol from '../workspace/Protocol.ts';
 
 /**
@@ -54,6 +55,11 @@ export const api = {
 
   createProject: (title?: string) => call((client) => client.CreateProject({ title })),
 
+  deleteProject: (projectId: string) => call((client) => client.DeleteProject({ projectId })),
+
+  /** What a diagram box's `ref` names in the index: an IRI, or a path, package or symbol name. */
+  describe: (target: string) => call((client) => client.Describe({ target })),
+
   /** Sends an event. A `UserMessage` starts a turn; anything else is only recorded. */
   dispatch: (projectId: string, event: Events.Event) => call((client) => client.Dispatch({ projectId, event })),
 
@@ -65,6 +71,18 @@ export const api = {
     const fiber = runtime.runFork(
       Effect.flatMap(Client, (client) =>
         client.Watch({ projectId, after }).pipe(Stream.runForEach((entry) => Effect.sync(() => onEntry(entry)))),
+      ),
+    );
+    return () => {
+      runtime.runFork(Fiber.interrupt(fiber));
+    };
+  },
+
+  /** Subscribes to the indexer's status, current value first; the returned function stops it. */
+  watchIndex: (onStatus: (status: IndexState.Status) => void): (() => void) => {
+    const fiber = runtime.runFork(
+      Effect.flatMap(Client, (client) =>
+        client.WatchIndex().pipe(Stream.runForEach((status) => Effect.sync(() => onStatus(status)))),
       ),
     );
     return () => {

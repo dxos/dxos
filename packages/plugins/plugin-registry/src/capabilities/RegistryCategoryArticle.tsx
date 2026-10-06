@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { useSettingsDivergedKeys } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 
 import { RegistryArticle } from '#containers';
 
@@ -18,7 +18,7 @@ import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks/in
  * Shared with the graph builder via {@link getCategoryPredicate} so the category lists and their counts agree.
  */
 const useCategoryPredicate = (category: string): PluginPredicate => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const remoteIds = useRemotePluginIds();
   const core = useMemo(() => manager.getCore(), [manager]);
   const enabled = useMemo(() => manager.getEnabled(), [manager]);
@@ -38,11 +38,11 @@ export type RegistryCategoryArticleProps = {
  * none of which can live in a surface's `props` mapper.
  */
 export const RegistryCategoryArticle = ({ category }: RegistryCategoryArticleProps) => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const filter = useCategoryPredicate(category);
   const { entries } = useRegistryPlugins();
   const extraTagsById = useAutoTags(entries);
-  const deviceOnlyIds = useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
+  const deviceOnlyIds = Hooks.useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
   const filtered = useMemo(() => manager.getPlugins().filter(filter), [manager, filter]);
 
   return (

@@ -7,31 +7,19 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
-import {
-  useAtomCapability,
-  useAtomCapabilityState,
-  useCapabilities,
-  useOperationInvoker,
-  useOptionalCapability,
-} from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import {
-  type AppSurface,
-  useAppGraph,
-  useDetailNavigation,
-  useProgressMonitor,
-  useShowItem,
-} from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder, formatTag } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -43,6 +31,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -96,24 +86,24 @@ export const MailboxArticle = ({
   systemTag,
   attendableId,
 }: MailboxArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const settings = useAtomCapability(InboxCapabilities.Settings);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const settings = Hooks.useAtomCapability(InboxCapabilities.Settings);
   const db = Obj.getDatabase(mailbox);
   // The mailbox view's graph node id: messages open as its children and it roots their level chain.
   const id = attendableId ?? (db ? getMailboxPath(db.spaceId, mailbox.id) : Obj.getURI(mailbox));
   const currentId = useSelection(id, 'single');
-  const showItem = useShowItem();
-  const runAction = useActionRunner();
+  const showItem = ToolkitHooks.useShowItem();
+  const runAction = GraphHooks.useActionRunner();
 
   // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
-  const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const scanProgress = useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
+  const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
+  const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
   const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -294,7 +284,7 @@ export const MailboxArticle = ({
 
   const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
-  const openDetail = useDetailNavigation({
+  const openDetail = ToolkitHooks.useDetailNavigation({
     contextId: id,
     getPath: (messageId) => getFeedObjectPath(id, messageId),
   });
@@ -443,7 +433,7 @@ export const MailboxArticle = ({
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
       </Panel.Header>
       <Panel.Body>
-        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+        <Status.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -459,7 +449,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred>
+        </Status.Deferred>
       </Panel.Body>
       <Panel.Footer>
         <ProgressMeter
@@ -599,9 +589,9 @@ const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
   { sortDescending, nodeId, filterElement, hideFilterEditor }: MailboxActionsOptions,
 ) => {
-  const { graph } = useAppGraph();
-  const invoker = useOperationInvoker();
-  const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const invoker = Hooks.useOperationInvoker();
+  const [settings, setSettings] = Hooks.useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
@@ -613,8 +603,8 @@ const useMailboxActions = (
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
   // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
-  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
   const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
