@@ -9,7 +9,7 @@ import { translations as debugTranslations } from '@dxos/react-ui-debug/translat
 import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { AgentProvider, StoryRole } from '../modules/index.ts';
-import { EDGE_DEV_URL, EDGE_LOCAL_URL, makeEdgeConfig, surfacesPlugin } from './story-config.ts';
+import { EDGE_DEV_URL, EDGE_LOCAL_URL, makeEdgeConfig, surfacesPlugin } from '../testing/story-config.ts';
 
 /** Agents run only in this runtime. */
 const LocalProvider = ({ children }: PropsWithChildren) => <AgentProvider>{children}</AgentProvider>;

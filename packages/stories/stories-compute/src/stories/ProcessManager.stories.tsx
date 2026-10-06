@@ -10,7 +10,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { ComputeProvider, StoryRole } from '../modules/index.ts';
-import { EDGE_DEV_URL, EDGE_LOCAL_URL, makeEdgeConfig, surfacesPlugin } from './story-config.ts';
+import { EDGE_DEV_URL, EDGE_LOCAL_URL, makeEdgeConfig, surfacesPlugin } from '../testing/story-config.ts';
 
 /** Processes run only in this runtime. */
 const LocalProvider = ({ children }: PropsWithChildren) => <ComputeProvider>{children}</ComputeProvider>;
