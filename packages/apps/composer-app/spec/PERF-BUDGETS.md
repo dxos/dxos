@@ -86,40 +86,35 @@ budgeted, and only counters that are non-zero and under 5% per-iteration spread 
 | open-project    |      2 |      3 | lower  |      1 |
 | open-project    |     38 |   39.9 | lower  |      1 |
 | reopen-project  |     11 |     12 | lower  |      1 |
-| assistant-turns |     46 |   48.4 | lower  |      1 |
+| assistant-turns |     46 |   48.7 | lower  |      1 |
 | open-document   |      4 |      5 | lower  |      1 |
 | open-project    |      1 |      2 | lower  |      1 |
 | reopen-project  |      1 |      2 | lower  |      1 |
-| boot            |    153 |    161 | lower  |      1 |
-| edit-document   |   64.5 |   67.7 | lower  |      1 |
-| open-document   |     34 |   35.9 | lower  |      1 |
+| edit-document   |     65 |   68.3 | lower  |      1 |
 | open-project    |     26 |   27.4 | lower  |      1 |
 | open-tasks      |     15 |   16.4 | lower  |      1 |
 | reopen-project  |   26.5 |     28 | lower  |      1 |
-| scroll-document |     52 |   84.4 | lower  |      1 |
+| scroll-document |     32 |   56.3 | lower  |      1 |
 | scroll-tasks    |     24 |   25.2 | lower  |      1 |
-| boot            |    221 |    240 | lower  |      1 |
+| boot            |    221 |    241 | lower  |      1 |
 | assistant-turns | 16,300 | 17,100 | lower  |      1 |
-| open-assistant  |    947 |    994 | lower  |      1 |
+| open-assistant  |    949 |    996 | lower  |      1 |
 | open-tasks      |  3,960 |  4,160 | lower  |      1 |
-| reopen-project  |  7,110 |  7,470 | lower  |      1 |
-| scroll-document |    419 |    449 | lower  |      1 |
+| reopen-project  |  7,140 |  7,500 | lower  |      1 |
+| scroll-document |    421 |    446 | lower  |      1 |
 | scroll-tasks    | 19,200 | 20,200 | lower  |      1 |
-| toggle-task     |    874 |    918 | lower  |      1 |
-| assistant-turns |  1,280 |  1,340 | lower  |      1 |
+| toggle-task     |    870 |    914 | lower  |      1 |
+| assistant-turns |  1,280 |  1,350 | lower  |      1 |
 | open-assistant  |     82 |   86.1 | lower  |      1 |
-| open-document   |    230 |    242 | lower  |      1 |
 | open-tasks      |     87 |   91.4 | lower  |      1 |
-| reopen-project  |    273 |    287 | lower  |      1 |
+| reopen-project  |    275 |    289 | lower  |      1 |
 | scroll-document |     22 |   23.1 | lower  |      1 |
 | scroll-tasks    |     40 |     42 | lower  |      1 |
 | toggle-task     |     59 |     62 | lower  |      1 |
-| assistant-turns |    791 |    867 | lower  |      1 |
-| edit-document   |    165 |    173 | lower  |      1 |
+| edit-document   |    163 |    171 | lower  |      1 |
 | open-project    |   63.5 |   66.7 | lower  |      1 |
-| reopen-project  |     64 |   67.6 | lower  |      1 |
-| scroll-document |    277 |    400 | lower  |      1 |
-| scroll-tasks    |     43 |   45.1 | lower  |      1 |
+| reopen-project  |     64 |   67.8 | lower  |      1 |
+| scroll-document |    199 |    300 | lower  |      1 |
 | assistant-turns |    266 |    279 | lower  |      1 |
 | open-project    |     12 |     13 | lower  |      1 |
 | open-project    |      1 |      2 | lower  |      1 |
@@ -129,3 +124,55 @@ budgeted, and only counters that are non-zero and under 5% per-iteration spread 
 The costed counters (`DX_PERF_COUNTERS=trace,calls,react`: a trace per stage and V8 precise
 coverage) cost 7–29% of wall time, so a separate job runs them and scores only them, as the
 `composer-work` suite; its timings are never scored or published.
+
+### work (src/playwright/perf/budgets-counters.json)
+
+| metric                                |      target |       limit | better | weight |
+| ------------------------------------- | ----------: | ----------: | ------ | -----: |
+| edit-document › forcedLayouts         |          62 |        65.1 | lower  |      1 |
+| open-assistant › forcedLayouts        |           2 |           3 | lower  |      1 |
+| open-project › forcedLayouts          |          13 |          14 | lower  |      1 |
+| open-tasks › forcedLayouts            |          13 |          14 | lower  |      1 |
+| reopen-project › forcedLayouts        |          14 |          15 | lower  |      1 |
+| scroll-document › forcedLayouts       |          27 |        28.4 | lower  |      1 |
+| scroll-tasks › forcedLayouts          |          15 |          16 | lower  |      1 |
+| assistant-turns › jsCalls             | 154,000,000 | 162,000,000 | lower  |      1 |
+| boot › jsCalls                        |  13,400,000 |  14,100,000 | lower  |      1 |
+| edit-document › jsCalls               |  16,900,000 |  17,700,000 | lower  |      1 |
+| open-assistant › jsCalls              |   6,640,000 |   6,970,000 | lower  |      1 |
+| open-document › jsCalls               |   6,620,000 |   7,090,000 | lower  |      1 |
+| open-project › jsCalls                |   8,530,000 |   8,990,000 | lower  |      1 |
+| open-space › jsCalls                  |     548,000 |     575,000 | lower  |      1 |
+| reopen-project › jsCalls              |   2,800,000 |   2,940,000 | lower  |      1 |
+| scroll-document › jsCalls             |   1,990,000 |   2,390,000 | lower  |      1 |
+| assistant-turns › layoutDirtyObjects  |      10,000 |      10,500 | lower  |      1 |
+| boot › layoutDirtyObjects             |       6,320 |       6,740 | lower  |      1 |
+| edit-document › layoutDirtyObjects    |       1,220 |       1,280 | lower  |      1 |
+| open-assistant › layoutDirtyObjects   |          70 |        73.5 | lower  |      1 |
+| open-document › layoutDirtyObjects    |       1,860 |       1,950 | lower  |      1 |
+| open-project › layoutDirtyObjects     |       1,600 |       1,680 | lower  |      1 |
+| open-tasks › layoutDirtyObjects       |         386 |         410 | lower  |      1 |
+| reopen-project › layoutDirtyObjects   |         575 |         604 | lower  |      1 |
+| scroll-document › layoutDirtyObjects  |         642 |         674 | lower  |      1 |
+| scroll-tasks › layoutDirtyObjects     |         560 |         588 | lower  |      1 |
+| assistant-turns › layouts             |         417 |         450 | lower  |      1 |
+| edit-document › layouts               |          64 |        67.2 | lower  |      1 |
+| open-assistant › layouts              |           4 |           5 | lower  |      1 |
+| open-document › layouts               |        33.5 |        35.6 | lower  |      1 |
+| open-project › layouts                |          25 |        26.6 | lower  |      1 |
+| reopen-project › layouts              |          27 |        28.4 | lower  |      1 |
+| scroll-document › layouts             |          31 |        32.6 | lower  |      1 |
+| scroll-tasks › layouts                |          24 |        25.2 | lower  |      1 |
+| assistant-turns › styleRecalcElements |       3,840 |       4,030 | lower  |      1 |
+| edit-document › styleRecalcElements   |         199 |         209 | lower  |      1 |
+| open-document › styleRecalcElements   |       2,480 |       2,600 | lower  |      1 |
+| open-project › styleRecalcElements    |       1,560 |       1,640 | lower  |      1 |
+| reopen-project › styleRecalcElements  |       4,350 |       4,570 | lower  |      1 |
+| scroll-document › styleRecalcElements |         452 |         475 | lower  |      1 |
+| scroll-tasks › styleRecalcElements    |       1,080 |       1,130 | lower  |      1 |
+| toggle-task › styleRecalcElements     |         935 |         982 | lower  |      1 |
+| assistant-turns › styleRecalcs        |       1,160 |       1,220 | lower  |      1 |
+| edit-document › styleRecalcs          |         146 |         153 | lower  |      1 |
+| open-project › styleRecalcs           |          45 |        47.8 | lower  |      1 |
+| reopen-project › styleRecalcs         |        44.5 |        46.7 | lower  |      1 |
+| scroll-document › styleRecalcs        |         137 |         144 | lower  |      1 |

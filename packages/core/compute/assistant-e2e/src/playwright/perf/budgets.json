@@ -217,19 +217,14 @@
     "limit": 92.4,
     "unit": "count"
   },
-  "echoQueryRecomputes > boot": {
-    "target": 22,
-    "limit": 23.1,
-    "unit": "count"
-  },
   "layoutCount > assistant-turns": {
-    "target": 627,
-    "limit": 665,
+    "target": 629,
+    "limit": 697,
     "unit": "count"
   },
   "layoutCount > boot": {
     "target": 13,
-    "limit": 14.5,
+    "limit": 14.9,
     "unit": "count"
   },
   "layoutCount > scroll-thread": {
@@ -238,8 +233,8 @@
     "unit": "count"
   },
   "reactCommits > assistant-turns": {
-    "target": 935,
-    "limit": 989,
+    "target": 939,
+    "limit": 1020,
     "unit": "count"
   },
   "reactCommits > boot": {
@@ -253,28 +248,18 @@
     "unit": "count"
   },
   "reactRenders > assistant-turns": {
-    "target": 27500,
-    "limit": 28900,
-    "unit": "count"
-  },
-  "reactRenders > boot": {
-    "target": 1940,
-    "limit": 2040,
+    "target": 27700,
+    "limit": 29100,
     "unit": "count"
   },
   "reactRenders > scroll-thread": {
-    "target": 2860,
-    "limit": 3000,
+    "target": 2870,
+    "limit": 3010,
     "unit": "count"
   },
   "reactWastedRenders > assistant-turns": {
-    "target": 3210,
-    "limit": 3370,
-    "unit": "count"
-  },
-  "reactWastedRenders > boot": {
-    "target": 219,
-    "limit": 230,
+    "target": 3240,
+    "limit": 3400,
     "unit": "count"
   },
   "reactWastedRenders > scroll-thread": {
@@ -283,8 +268,8 @@
     "unit": "count"
   },
   "recalcStyleCount > assistant-turns": {
-    "target": 1770,
-    "limit": 1890,
+    "target": 1810,
+    "limit": 2000,
     "unit": "count"
   },
   "recalcStyleCount > idle": {
@@ -293,8 +278,8 @@
     "unit": "count"
   },
   "recalcStyleCount > scroll-thread": {
-    "target": 510,
-    "limit": 536,
+    "target": 511,
+    "limit": 537,
     "unit": "count"
   },
   "sqliteDeletes > assistant-turns": {
@@ -313,8 +298,8 @@
     "unit": "count"
   },
   "sqliteSelects > assistant-turns": {
-    "target": 1900,
-    "limit": 2000,
+    "target": 1890,
+    "limit": 1980,
     "unit": "count"
   },
   "sqliteUpdates > assistant-turns": {
@@ -334,22 +319,17 @@
   },
   "busy > echoIndexPasses > assistant-turns": {
     "target": 140,
-    "limit": 147,
+    "limit": 148,
     "unit": "count"
   },
   "busy > echoQueryRecomputes > assistant-turns": {
-    "target": 87.5,
-    "limit": 91.9,
+    "target": 88,
+    "limit": 92.4,
     "unit": "count"
   },
   "busy > layoutCount > assistant-turns": {
-    "target": 634,
-    "limit": 666,
-    "unit": "count"
-  },
-  "busy > layoutCount > boot": {
-    "target": 13.5,
-    "limit": 15,
+    "target": 639,
+    "limit": 689,
     "unit": "count"
   },
   "busy > layoutCount > scroll-thread": {
@@ -358,13 +338,13 @@
     "unit": "count"
   },
   "busy > reactCommits > assistant-turns": {
-    "target": 946,
-    "limit": 993,
+    "target": 952,
+    "limit": 1000,
     "unit": "count"
   },
   "busy > reactCommits > boot": {
-    "target": 147,
-    "limit": 154,
+    "target": 146,
+    "limit": 153,
     "unit": "count"
   },
   "busy > reactCommits > scroll-thread": {
@@ -373,13 +353,13 @@
     "unit": "count"
   },
   "busy > reactRenders > assistant-turns": {
-    "target": 27700,
-    "limit": 29100,
+    "target": 27800,
+    "limit": 29200,
     "unit": "count"
   },
   "busy > reactRenders > scroll-thread": {
-    "target": 2860,
-    "limit": 3000,
+    "target": 2870,
+    "limit": 3010,
     "unit": "count"
   },
   "busy > reactWastedRenders > assistant-turns": {
@@ -394,7 +374,7 @@
   },
   "busy > recalcStyleCount > assistant-turns": {
     "target": 1810,
-    "limit": 1900,
+    "limit": 1930,
     "unit": "count"
   },
   "busy > recalcStyleCount > idle": {

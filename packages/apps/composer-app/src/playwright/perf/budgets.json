@@ -215,7 +215,7 @@
   },
   "echoQueryRuns > assistant-turns": {
     "target": 46,
-    "limit": 48.4,
+    "limit": 48.7,
     "unit": "count"
   },
   "echoQueryRuns > open-document": {
@@ -233,19 +233,9 @@
     "limit": 2,
     "unit": "count"
   },
-  "layoutCount > boot": {
-    "target": 153,
-    "limit": 161,
-    "unit": "count"
-  },
   "layoutCount > edit-document": {
-    "target": 64.5,
-    "limit": 67.7,
-    "unit": "count"
-  },
-  "layoutCount > open-document": {
-    "target": 34,
-    "limit": 35.9,
+    "target": 65,
+    "limit": 68.3,
     "unit": "count"
   },
   "layoutCount > open-project": {
@@ -264,8 +254,8 @@
     "unit": "count"
   },
   "layoutCount > scroll-document": {
-    "target": 52,
-    "limit": 84.4,
+    "target": 32,
+    "limit": 56.3,
     "unit": "count"
   },
   "layoutCount > scroll-tasks": {
@@ -275,7 +265,7 @@
   },
   "reactCommits > boot": {
     "target": 221,
-    "limit": 240,
+    "limit": 241,
     "unit": "count"
   },
   "reactRenders > assistant-turns": {
@@ -284,8 +274,8 @@
     "unit": "count"
   },
   "reactRenders > open-assistant": {
-    "target": 947,
-    "limit": 994,
+    "target": 949,
+    "limit": 996,
     "unit": "count"
   },
   "reactRenders > open-tasks": {
@@ -294,13 +284,13 @@
     "unit": "count"
   },
   "reactRenders > reopen-project": {
-    "target": 7110,
-    "limit": 7470,
+    "target": 7140,
+    "limit": 7500,
     "unit": "count"
   },
   "reactRenders > scroll-document": {
-    "target": 419,
-    "limit": 449,
+    "target": 421,
+    "limit": 446,
     "unit": "count"
   },
   "reactRenders > scroll-tasks": {
@@ -309,23 +299,18 @@
     "unit": "count"
   },
   "reactRenders > toggle-task": {
-    "target": 874,
-    "limit": 918,
+    "target": 870,
+    "limit": 914,
     "unit": "count"
   },
   "reactWastedRenders > assistant-turns": {
     "target": 1280,
-    "limit": 1340,
+    "limit": 1350,
     "unit": "count"
   },
   "reactWastedRenders > open-assistant": {
     "target": 82,
     "limit": 86.1,
-    "unit": "count"
-  },
-  "reactWastedRenders > open-document": {
-    "target": 230,
-    "limit": 242,
     "unit": "count"
   },
   "reactWastedRenders > open-tasks": {
@@ -334,8 +319,8 @@
     "unit": "count"
   },
   "reactWastedRenders > reopen-project": {
-    "target": 273,
-    "limit": 287,
+    "target": 275,
+    "limit": 289,
     "unit": "count"
   },
   "reactWastedRenders > scroll-document": {
@@ -353,14 +338,9 @@
     "limit": 62,
     "unit": "count"
   },
-  "recalcStyleCount > assistant-turns": {
-    "target": 791,
-    "limit": 867,
-    "unit": "count"
-  },
   "recalcStyleCount > edit-document": {
-    "target": 165,
-    "limit": 173,
+    "target": 163,
+    "limit": 171,
     "unit": "count"
   },
   "recalcStyleCount > open-project": {
@@ -370,17 +350,12 @@
   },
   "recalcStyleCount > reopen-project": {
     "target": 64,
-    "limit": 67.6,
+    "limit": 67.8,
     "unit": "count"
   },
   "recalcStyleCount > scroll-document": {
-    "target": 277,
-    "limit": 400,
-    "unit": "count"
-  },
-  "recalcStyleCount > scroll-tasks": {
-    "target": 43,
-    "limit": 45.1,
+    "target": 199,
+    "limit": 300,
     "unit": "count"
   },
   "sqliteDeletes > assistant-turns": {
