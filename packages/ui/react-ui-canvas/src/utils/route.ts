@@ -11,8 +11,8 @@
 
 import { type NodeRegistry } from '../model/registry.ts';
 import {
-  type Endpoint,
   DEFAULT_GRID,
+  type Endpoint,
   type Link,
   MAJOR_GRID,
   type Node,

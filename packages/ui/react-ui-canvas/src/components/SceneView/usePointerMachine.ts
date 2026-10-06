@@ -742,6 +742,10 @@ export const usePointerMachine = ({
           // pressing and releasing draws nothing. Read from the raw gesture, since settling has already
           // snapped the landing point away from it.
           if (raw.kind === 'link' && !isLinkDrawn(raw, minor)) {
+            // A click on the background with a link tool is a way out of the tool, as Escape is.
+            if (isPointEndpoint(raw.source)) {
+              setTool({ kind: 'select' });
+            }
             break;
           }
           let target = current.target;

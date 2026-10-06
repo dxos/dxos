@@ -189,6 +189,9 @@ test.describe('SceneView', () => {
     await expect(page.locator('[data-link-id]')).toHaveCount(3);
     await page.mouse.up();
     expect(await scene.linkCount()).toBe(3);
+    // A click on the background ends the link tool: the select tool is back.
+    await expect(page.getByTestId('palette-L')).not.toHaveClass(/bg-primary-500\/20/);
+    await expect(page.getByTestId('palette-V')).toHaveClass(/bg-primary-500\/20/);
   });
 
   test('picking a creation tool clears the selection', async () => {
