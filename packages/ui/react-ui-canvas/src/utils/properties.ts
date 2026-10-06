@@ -10,7 +10,7 @@
 import * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
-import { getPropertySignatures, pick } from '@dxos/effect/SchemaAST';
+import { getChecks, getPropertySignatures, pick } from '@dxos/effect/SchemaAST';
 
 type Values = Readonly<Record<string, unknown>>;
 
@@ -19,15 +19,35 @@ const isPlainObject = (value: unknown): value is Values =>
 
 const isOptional = (ast: SchemaAST.AST) => ast.context?.isOptional ?? false;
 
+/** A check as comparable data: the filter and its payload (`isBetween` with its bounds), if it declares them. */
+const checkKey = (check: SchemaAST.Check<any>): string | undefined => {
+  const representation = check.annotations?.representation;
+  return representation === undefined ? undefined : JSON.stringify(representation);
+};
+
+/** Whether two types carry the same checks, so a value one accepts the other does too. */
+const sameChecks = (left: SchemaAST.AST, right: SchemaAST.AST): boolean => {
+  const [leftChecks, rightChecks] = [getChecks(left), getChecks(right)];
+  // A check that declares no representation cannot be compared, so only the same check matches it.
+  const same = (check: SchemaAST.Check<any>, other: SchemaAST.Check<any>) => {
+    const key = checkKey(check);
+    return check === other || (key !== undefined && key === checkKey(other));
+  };
+  return (
+    leftChecks.length === rightChecks.length && leftChecks.every((check, index) => same(check, rightChecks[index]))
+  );
+};
+
 /**
  * Whether two property types describe the same values, so one field can edit both. Separately declared
- * types compare by structure: `locked` on a node and on a link is the same optional boolean.
+ * types compare by structure and by their checks: `locked` on a node and on a link is the same optional
+ * boolean, but numbers bounded differently are not, since the form validates against only one of them.
  */
 export const sameType = (left: SchemaAST.AST, right: SchemaAST.AST): boolean => {
   if (left === right) {
     return true;
   }
-  if (left._tag !== right._tag || isOptional(left) !== isOptional(right)) {
+  if (left._tag !== right._tag || isOptional(left) !== isOptional(right) || !sameChecks(left, right)) {
     return false;
   }
   if (left._tag === 'Literal' && right._tag === 'Literal') {

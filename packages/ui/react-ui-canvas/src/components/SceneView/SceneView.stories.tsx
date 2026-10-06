@@ -11,6 +11,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { createMemoryStore } from '../../model/store.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
+import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
 
@@ -52,7 +53,11 @@ const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => (
 const createSquareTree = () => {
   const root = 'scene:root';
   const scene = SceneBuilder.create(root, 'root')
-    .rect('square', { x: -128, y: -128, width: 256, height: 256 }, 'DXOS')
+    .rect(
+      'square',
+      { x: -DEFAULT_SHAPE_SIZE.width / 2, y: -DEFAULT_SHAPE_SIZE.height / 2, ...DEFAULT_SHAPE_SIZE },
+      'DXOS',
+    )
     .build();
   return { scenes: [scene], root };
 };
