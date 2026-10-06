@@ -23,7 +23,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { assistantRegistry } from '../../registry.tsx';
+import { assistantRegistry, createDeliveryWidget } from '../../registry.tsx';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
 import { translationKey } from '../../translations.ts';
 import { type ChatThreadEvent, type ChatView } from '../../types.ts';
@@ -105,13 +105,24 @@ const ChatThreadRoot = ({
   onRangeChange,
   controllerRef,
 }: ChatThreadRootProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
+  const delivery = useMemo(
+    () =>
+      createDeliveryWidget({
+        sent: t('delivery-sent.label'),
+        delivered: t('delivery-delivered.label'),
+        read: t('delivery-read.label'),
+        failed: t('delivery-failed.label'),
+        remove: t('delivery-remove.label'),
+      }),
+    [t],
+  );
   // Debug shows the raw document: an empty registry renders no widgets, so the tags stay visible as
   // the text they are, but still highlighted as tags.
   const merged = useMemo(
-    () =>
-      viewType === 'debug' ? DEBUG_REGISTRY : registry ? { ...assistantRegistry, ...registry } : assistantRegistry,
-    [registry, viewType],
+    () => (viewType === 'debug' ? DEBUG_REGISTRY : { ...assistantRegistry, delivery, ...registry }),
+    [registry, viewType, delivery],
   );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
 
@@ -176,12 +187,13 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
       if (!(target instanceof Element)) {
         return;
       }
-      const action = target.closest<HTMLElement>('[data-action="submit"]');
-      const text = action?.getAttribute('data-value');
-      if (text) {
+      const action = target.closest<HTMLElement>('[data-action]');
+      const value = action?.getAttribute('data-value');
+      const threadEvent = value ? toThreadEvent(action?.getAttribute('data-action'), value) : undefined;
+      if (threadEvent) {
         event.preventDefault();
         event.stopPropagation();
-        onEvent?.({ type: 'submit', text });
+        onEvent?.(threadEvent);
         return;
       }
 
@@ -224,6 +236,18 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
 };
 
 ChatThreadViewport.displayName = CHAT_THREAD_VIEWPORT_NAME;
+
+/** A widget's `data-action` button as the event it stands for; the value is the text or the message id. */
+const toThreadEvent = (action: string | null | undefined, value: string): ChatThreadEvent | undefined => {
+  switch (action) {
+    case 'submit':
+      return { type: 'submit', text: value };
+    case 'remove':
+      return { type: 'remove-prompt', id: value };
+    default:
+      return undefined;
+  }
+};
 
 //
 // ScrollToBottom

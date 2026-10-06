@@ -7,8 +7,10 @@ import { describe, test } from 'vitest';
 
 import { Alarm, ConsumedAnnotation, InFlightAnnotation, QueuedAnnotation } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
-import { Message } from '@dxos/types';
+import { getDelivery } from '@dxos/react-ui-assistant/types';
+import { ContentBlock, Message } from '@dxos/types';
 
+import { type OutboxEntry } from './outbox.ts';
 import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 describe('byAppendOrder', () => {
@@ -149,47 +151,51 @@ describe('projectThread', () => {
 });
 
 describe('queue projection', () => {
-  test('a queued message is held out of the thread and listed as queued', ({ expect }) => {
+  test('a waiting queue entry is a delivered row after the turns', ({ expect }) => {
     const asked = message('answered');
     const waiting = queued(message('waiting'));
-    const { messages, queued: pending } = projectThread({ feedMessages: [asked, waiting] });
+    const { messages, delivery, queued: count, tail } = projectThread({ feedMessages: [waiting, asked] });
 
-    expect(text(messages)).toEqual(['answered']);
-    expect(text(pending)).toEqual(['waiting']);
+    expect(text(messages)).toEqual(['answered', 'waiting']);
+    expect(delivery.get(waiting.id)).toEqual({ status: 'delivered', entryId: waiting.id });
+    expect(statusOf(messages[1])).toBe('delivered');
+    expect(count).toBe(1);
+    expect(tail).toBe(1);
   });
 
-  test('a consumed queue entry leaves the queue — the turn it drove is the thread entry', ({ expect }) => {
+  test('a consumed queue entry leaves the tail — the turn it drove is the thread entry', ({ expect }) => {
     const entry = consumed(queued(message('do the thing')));
     const turn = message('do the thing');
-    const { messages, queued: pending } = projectThread({ feedMessages: [entry, turn] });
+    const { messages, queued: count } = projectThread({ feedMessages: [entry, turn] });
 
     // Exactly once in the thread, and no longer waiting.
     expect(text(messages)).toEqual(['do the thing']);
-    expect(pending).toEqual([]);
+    expect(statusOf(messages[0])).toBeUndefined();
+    expect(count).toBe(0);
   });
 
   // Regression: the entry stayed in the queue until the ack, which lands only after the turn — so the
   // prompt was rendered in the queue and the thread at once for the whole turn.
-  test('an entry the running turn took up leaves the queue as soon as the thread shows it', ({ expect }) => {
+  test('an entry the running turn took up leaves the tail as soon as the thread shows it', ({ expect }) => {
     const entry = inFlight(queued(message('do the thing')));
     const turn = message('do the thing');
-    const { messages, queued: pending } = projectThread({ feedMessages: [entry, turn] });
+    const { messages, queued: count } = projectThread({ feedMessages: [entry, turn] });
     expect(text(messages)).toEqual(['do the thing']);
-    expect(pending).toEqual([]);
+    expect(count).toBe(0);
   });
 
   test('an in-flight entry does not take the rest of the queue with it', ({ expect }) => {
     const running = inFlight(queued(positioned(message('running'), 1)));
     const waiting = queued(positioned(message('waiting'), 2));
     const turn = positioned(message('running'), 3);
-    const { queued: pending } = projectThread({ feedMessages: [running, waiting, turn] });
-    expect(text(pending)).toEqual(['waiting']);
+    const { messages } = projectThread({ feedMessages: [running, waiting, turn] });
+    expect(text(messages)).toEqual(['running', 'waiting']);
   });
 
-  test('queued messages are ordered by append order', ({ expect }) => {
+  test('waiting entries are ordered by append order', ({ expect }) => {
     const second = queued(positioned(message('second'), 2));
     const first = queued(positioned(message('first'), 1));
-    expect(text(projectThread({ feedMessages: [second, first] }).queued)).toEqual(['first', 'second']);
+    expect(text(projectThread({ feedMessages: [second, first] }).messages)).toEqual(['first', 'second']);
   });
 
   // A rewind truncates the thread; the queue is work that has not run, so it is unaffected.
@@ -197,13 +203,156 @@ describe('queue projection', () => {
     const first = message('first');
     const discarded = message('discarded');
     const waiting = queued(message('waiting'));
-    const { messages, queued: pending } = projectThread({
+    const { messages } = projectThread({
       feedMessages: [first, discarded, waiting],
       rewindFrom: discarded.id,
     });
 
-    expect(text(messages)).toEqual(['first']);
-    expect(text(pending)).toEqual(['waiting']);
+    expect(text(messages)).toEqual(['first', 'waiting']);
+  });
+});
+
+describe('optimistic prompts', () => {
+  test('a prompt shows as sent before anything reaches the feed', ({ expect }) => {
+    const earlier = message('earlier');
+    const prompt = outboxEntry('hello', [earlier]);
+    const { messages, delivery, queued: count } = projectThread({ feedMessages: [earlier], outbox: [prompt] });
+
+    expect(text(messages)).toEqual(['earlier', 'hello']);
+    expect(messages[1].id).toBe(prompt.id);
+    expect(statusOf(messages[1])).toBe('sent');
+    expect(delivery.get(prompt.id)?.status).toBe('sent');
+    expect(count).toBe(1);
+  });
+
+  // The row is keyed by the outbox id at every step, which is what keeps it from remounting (or
+  // showing twice) as the queue entry and then the turn's own message land.
+  test('reconciles in place: sent, then delivered, then read, one row with one identity', ({ expect }) => {
+    const earlier = message('earlier');
+    const prompt = outboxEntry('hello', [earlier]);
+
+    const sent = projectThread({ feedMessages: [earlier], outbox: [prompt] });
+
+    const entry = queued(message('hello'));
+    const delivered = projectThread({ feedMessages: [earlier, entry], outbox: [prompt] });
+    expect(text(delivered.messages)).toEqual(['earlier', 'hello']);
+    expect(delivered.messages[1].id).toBe(prompt.id);
+    expect(statusOf(delivered.messages[1])).toBe('delivered');
+    expect(delivered.delivery.get(prompt.id)?.entryId).toBe(entry.id);
+
+    inFlight(entry);
+    const turn = message('hello');
+    const read = projectThread({ feedMessages: [earlier, entry, turn], outbox: [prompt] });
+    expect(text(read.messages)).toEqual(['earlier', 'hello']);
+    expect(read.messages[1].id).toBe(prompt.id);
+    expect(statusOf(read.messages[1])).toBe('read');
+    expect(read.delivery.get(prompt.id)?.turnId).toBe(turn.id);
+    expect(read.queued).toBe(0);
+
+    // The same position throughout: the last row before anything the turn appends.
+    const answer = message('hi there', 'assistant');
+    const answered = projectThread({ feedMessages: [earlier, entry, turn, answer], outbox: [prompt] });
+    expect(text(answered.messages)).toEqual(['earlier', 'hello', 'hi there']);
+    expect(answered.messages[1].id).toBe(prompt.id);
+    expect(sent.messages[1].id).toBe(answered.messages[1].id);
+  });
+
+  test('a row that has not changed status is the same object, so it does not re-render', ({ expect }) => {
+    const prompt = outboxEntry('hello', []);
+    const first = projectThread({ feedMessages: [], outbox: [prompt] });
+    const second = projectThread({ feedMessages: [message('unrelated', 'assistant')], outbox: [prompt] });
+    expect(second.messages[1]).toBe(first.messages[0]);
+  });
+
+  test('a queue entry that is read before its turn replicates stays at the tail as read', ({ expect }) => {
+    const prompt = outboxEntry('hello', []);
+    const entry = inFlight(queued(message('hello')));
+    const { messages } = projectThread({ feedMessages: [entry], outbox: [prompt] });
+    expect(text(messages)).toEqual(['hello']);
+    expect(statusOf(messages[0])).toBe('read');
+  });
+
+  test('several queued prompts keep their submit order through every stage', ({ expect }) => {
+    const first = outboxEntry('first', []);
+    const second = outboxEntry('second', []);
+    const third = outboxEntry('third', []);
+    const outbox = [first, second, third];
+
+    // Only the second has landed: rows stay in submit order, not landing order.
+    const secondEntry = queued(positioned(message('second'), 1));
+    const partial = projectThread({ feedMessages: [secondEntry], outbox });
+    expect(text(partial.messages)).toEqual(['first', 'second', 'third']);
+    expect(partial.messages.map(statusOf)).toEqual(['sent', 'delivered', 'sent']);
+
+    // The first is taken up and answered while the others wait behind it.
+    const firstEntry = inFlight(queued(positioned(message('first'), 0)));
+    const thirdEntry = queued(positioned(message('third'), 2));
+    const firstTurn = positioned(message('first'), 3);
+    const answer = positioned(message('one', 'assistant'), 4);
+    const running = projectThread({
+      feedMessages: [secondEntry, thirdEntry, firstEntry, firstTurn, answer],
+      outbox,
+    });
+    expect(text(running.messages)).toEqual(['first', 'one', 'second', 'third']);
+    expect(running.messages.map((row) => row.id)).toEqual([first.id, answer.id, second.id, third.id]);
+    expect(running.messages.map(statusOf)).toEqual(['read', undefined, 'delivered', 'delivered']);
+    expect(running.queued).toBe(2);
+    expect(running.tail).toBe(2);
+  });
+
+  test('identical prompts pair with their own copies, in order', ({ expect }) => {
+    const first = outboxEntry('yes', []);
+    const second = outboxEntry('yes', []);
+    const entry = queued(positioned(message('yes'), 1));
+    const { messages } = projectThread({ feedMessages: [entry], outbox: [first, second] });
+    expect(messages.map((row) => row.id)).toEqual([first.id, second.id]);
+    expect(messages.map(statusOf)).toEqual(['delivered', 'sent']);
+  });
+
+  test('an identical prompt from before the submit is not taken for this one', ({ expect }) => {
+    const old = message('yes');
+    const answer = message('ok', 'assistant');
+    const prompt = outboxEntry('yes', [old, answer]);
+    const { messages } = projectThread({ feedMessages: [old, answer], outbox: [prompt] });
+    expect(text(messages)).toEqual(['yes', 'ok', 'yes']);
+    expect(messages[0].id).toBe(old.id);
+    expect(statusOf(messages[2])).toBe('sent');
+  });
+
+  test('the turn matches with the blocks the agent prepends to the prompt', ({ expect }) => {
+    const prompt = outboxEntry('hello', []);
+    const turn = Message.make({
+      created: new Date(clock++).toISOString(),
+      sender: 'user',
+      blocks: [
+        { _tag: 'text', text: 'Objects changed since the last turn.', disposition: 'synthetic' },
+        { _tag: 'text', text: 'hello' },
+      ],
+    });
+    const { messages, delivery } = projectThread({ feedMessages: [turn], outbox: [prompt] });
+    expect(messages).toHaveLength(1);
+    expect(messages[0].id).toBe(prompt.id);
+    expect(delivery.get(prompt.id)?.turnId).toBe(turn.id);
+  });
+
+  test('a failed prompt shows as failed until something of it lands', ({ expect }) => {
+    const prompt: OutboxEntry = { ...outboxEntry('hello', []), state: 'failed', error: new Error('offline') };
+    expect(projectThread({ feedMessages: [], outbox: [prompt] }).messages.map(statusOf)).toEqual(['failed']);
+    // Not counted against the queue limit: it is not waiting on the agent.
+    expect(projectThread({ feedMessages: [], outbox: [prompt] }).queued).toBe(0);
+  });
+
+  test('a prompt whose turn was rewound away leaves the thread with it', ({ expect }) => {
+    const prompt = outboxEntry('hello', []);
+    const entry = consumed(queued(message('hello')));
+    const turn = message('hello');
+    const answer = message('hi', 'assistant');
+    const { messages } = projectThread({
+      feedMessages: [entry, turn, answer],
+      outbox: [prompt],
+      rewindFrom: turn.id,
+    });
+    expect(messages).toEqual([]);
   });
 });
 
@@ -426,3 +575,14 @@ const text = (messages: readonly Message.Message[]) =>
   messages.map((message) => (message.blocks[0] as { text: string }).text);
 
 const sortText = (messages: Message.Message[]) => text(Array.sort(messages, byAppendOrder));
+
+const statusOf = (message: Message.Message) => getDelivery(message);
+
+/** A prompt as `AiChatProcessor.send` holds it, submitted while the feed held `known`. */
+const outboxEntry = (text: string, known: readonly Message.Message[]): OutboxEntry => ({
+  id: Obj.ID.random(),
+  created: new Date(clock++).toISOString(),
+  blocks: [ContentBlock.Text.make({ text })],
+  known: new Set(known.map(({ id }) => id)),
+  state: 'submitted',
+});
