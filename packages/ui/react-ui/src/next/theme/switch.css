@@ -18,6 +18,10 @@
     opacity: 0.5;
     cursor: default;
   }
+  /* Neither on nor off: a switch has no indeterminate state, so the track is dimmed and the label says why. */
+  .dx-switch[data-mixed] .dx-switch-control {
+    opacity: 0.5;
+  }
 
   .dx-switch-control {
     --dx-switch-inset: 2px;
