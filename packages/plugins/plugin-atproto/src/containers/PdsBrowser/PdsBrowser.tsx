@@ -105,8 +105,8 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
         )}
       </Panel.Body>
     </Panel.Root>
-    <Panel.Root classNames='flex-1 min-w-0'>
-      <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
+    <Panel.Root classNames='flex-1'>
+      <Panel.Body classNames='flex flex-col'>{detail}</Panel.Body>
     </Panel.Root>
   </Layout.Flex>
 );
@@ -315,7 +315,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body classNames='flex flex-col dx-grow py-2'>
+      <Panel.Body classNames='flex flex-col py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <PaneList
           rows={collectionRows}
