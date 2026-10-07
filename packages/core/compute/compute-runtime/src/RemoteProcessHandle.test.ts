@@ -194,6 +194,32 @@ describe('RemoteProcessHandle event polling', () => {
     expect([...collected]).toEqual(['hello']);
   });
 
+  test('an output that lands before the subscription starts is still read', async ({ expect }) => {
+    // The host answers the input before the caller subscribes, as `Process.spawn` + `awaitOutput` do.
+    const log = makeOutputLog([], Process.State.RUNNING, 'reply');
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(log.control, undefined, Duration.millis(1), EchoOutput);
+        yield* handle.submitInput(undefined);
+        return yield* Stream.runCollect(handle.subscribeOutputs());
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['reply']);
+  });
+
+  test('an exited process replays its outputs to a late subscriber', async ({ expect }) => {
+    const log = makeOutputLog(['earlier'], Process.State.SUCCEEDED);
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(log.control, undefined, Duration.millis(1), EchoOutput);
+        return yield* Stream.runCollect(handle.subscribeOutputs());
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['earlier']);
+  });
+
   test('a host that stays unreachable still ends the subscription', async ({ expect }) => {
     const control: RemoteProcessManager.Control = {
       ...makeControl([]),
@@ -238,6 +264,31 @@ const traceMessage = (text: string): Trace.Message =>
  * A host whose ring holds `buffered` and which never settles, so a polled subscription stays open
  * — the shape that makes the difference between the two paths observable.
  */
+/** A host whose log holds only outputs; an input appends `reply` (when given) and ends the process. */
+const makeOutputLog = (initial: readonly string[], initialState: Process.State, reply?: string) => {
+  const outputs = [...initial];
+  let state = initialState;
+  const control: RemoteProcessManager.Control = {
+    ...makeControl([]),
+    status: () => Effect.sync(() => snapshot(state)),
+    submitInput: () =>
+      Effect.sync(() => {
+        if (reply !== undefined) {
+          outputs.push(reply);
+        }
+        state = Process.State.SUCCEEDED;
+      }),
+    readEvents: ({ cursor }) =>
+      Effect.sync(() => ({
+        events: outputs.slice(cursor).map((data, index) => ({ _tag: 'output' as const, seq: cursor + index, data })),
+        cursor: Math.max(cursor === Number.MAX_SAFE_INTEGER ? outputs.length : cursor, outputs.length),
+        truncated: false,
+        snapshot: snapshot(state),
+      })),
+  };
+  return { control };
+};
+
 const makeControl = (buffered: readonly Trace.Message[], onRead?: () => void): RemoteProcessManager.Control => ({
   spawn: () => Effect.sync(() => snapshot(Process.State.RUNNING)),
   list: () => Effect.sync(() => [snapshot(Process.State.RUNNING)]),

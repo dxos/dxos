@@ -131,7 +131,9 @@ export const make = ({
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(function* () {
       yield* Ref.update(pendingCount, (count) => count + 1);
+      // Through the output, not just the spawn: `awaitFollowups` waits for the operation to finish.
       const fiber = yield* spawn(op, input, options, true).pipe(
+        Effect.flatMap((handle) => Process.awaitOutput(handle)),
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.tapCause((cause) =>
           Effect.sync(() => {

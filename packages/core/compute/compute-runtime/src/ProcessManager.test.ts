@@ -1311,6 +1311,40 @@ describe('Process.spawn', () => {
 // hosting `InvokeOptions.spaceId`.
 //
 
+describe('ProcessOperationInvoker schedule', () => {
+  const Gated = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.gated'), name: 'Gated' },
+    input: Schema.Void,
+    output: Schema.Void,
+  });
+
+  it.effect(
+    'awaitFollowups waits for a scheduled operation to finish, not just to start',
+    Effect.fn(function* ({ expect }) {
+      const gate = yield* Deferred.make<void>();
+      const finished = yield* Deferred.make<void>();
+      const gatedHandlers = OperationHandlerSet.make(
+        Gated.pipe(
+          Operation.withHandler(() => Deferred.await(gate).pipe(Effect.andThen(Deferred.succeed(finished, undefined)))),
+        ),
+      );
+      const manager = yield* Process.ManagerService;
+      const invoker = ProcessOperationInvoker.make({ manager, handlerSet: gatedHandlers });
+
+      yield* invoker.schedule(Gated, undefined);
+      const followups = yield* Effect.forkChild(invoker.awaitFollowups);
+      yield* Effect.yieldNow;
+      expect(yield* invoker.pendingFollowups).toEqual(1);
+      expect(followups.pollUnsafe()).toBeUndefined();
+
+      yield* Deferred.succeed(gate, undefined);
+      yield* Fiber.join(followups);
+      expect(yield* Deferred.isDone(finished)).toEqual(true);
+      expect(yield* invoker.pendingFollowups).toEqual(0);
+    }, Effect.provide(TestLayer)),
+  );
+});
+
 describe('ProcessOperationInvoker edge dispatch', () => {
   const spaceId = Key.SpaceId.random();
 
