@@ -40,8 +40,8 @@ type Command =
 type Session = {
   readonly database: string;
   readonly queue: Queue.Queue<Command>;
-  /** Replies not yet answered; failed together when the session ends. */
-  readonly pending: Set<Deferred.Deferred<any, SqlError.SqlError>>;
+  /** Commands not yet answered; settled together when the session ends. */
+  readonly pending: Set<Command>;
   closed: boolean;
 };
 
@@ -149,8 +149,9 @@ export const makeGuardedExecutor = Effect.fn('SqlService.makeGuardedExecutor')(f
       if (!session || session.closed || (database !== undefined && session.database !== database)) {
         return yield* authorizationError(`Unknown transaction ${transaction}.`);
       }
-      session.pending.add(reply);
-      yield* Queue.offer(session.queue, make(reply));
+      const command = make(reply);
+      session.pending.add(command);
+      yield* Queue.offer(session.queue, command);
       return yield* Deferred.await(reply);
     });
 
@@ -179,7 +180,7 @@ export const makeGuardedExecutor = Effect.fn('SqlService.makeGuardedExecutor')(f
           }
           return yield* Effect.fail(new Rollback());
         }
-        session.pending.delete(command.reply);
+        session.pending.delete(command);
         yield* executeGuarded(command.request).pipe(
           Effect.exit,
           Effect.flatMap((exit) => Deferred.done(command.reply, exit)),
@@ -196,8 +197,10 @@ export const makeGuardedExecutor = Effect.fn('SqlService.makeGuardedExecutor')(f
           const rolledBack = Exit.isFailure(exit) && Cause.squash(exit.cause) instanceof Rollback;
           const result = Exit.isSuccess(exit) || rolledBack ? Exit.void : Exit.fail(toSqlError(exit.cause));
           yield* Deferred.done(started, result);
-          for (const reply of session.pending) {
-            yield* Deferred.done(reply, result);
+          for (const command of session.pending) {
+            yield* command._tag === 'end'
+              ? Deferred.done(command.reply, result)
+              : Deferred.fail(command.reply, authorizationError(`Transaction ${transaction} has ended.`));
           }
         }),
       ),
