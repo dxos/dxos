@@ -410,4 +410,4 @@ Consequences for M2, settled in the vocabulary and runtime rather than the promp
 
 ## Open questions
 
-1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
+1. Private threads ([THREADS.md](./THREADS.md)): whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
