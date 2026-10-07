@@ -606,23 +606,23 @@ export class WebSocketMuxer {
   /** Hands one frame to the socket, keeping the open-sequence and credit accounting in step with what was written. */
   private _write(channelId: number | undefined, chunk: MessageChunk): void {
     this._ws.send(chunk.payload);
-    if (channelId === undefined || !isSegment(chunk.payload)) {
+    if (channelId === undefined) {
       return;
     }
-    if (isTerminator(chunk.payload)) {
-      this._outOpenSequences.delete(channelId);
-    } else {
-      this._outOpenSequences.add(channelId);
+    const completesMessage = !isSegment(chunk.payload) || isTerminator(chunk.payload);
+    if (isSegment(chunk.payload)) {
+      if (completesMessage) {
+        this._outOpenSequences.delete(channelId);
+      } else {
+        this._outOpenSequences.add(channelId);
+      }
     }
-    if (this._flowControl) {
-      this._outSent.set(
-        channelId,
-        sum(this._outSent.get(channelId), {
-          bytes: chunk.payloadBytes,
-          messages: isTerminator(chunk.payload) ? 1 : 0,
-        }),
-      );
-    }
+    // Counted without flow control too, where nothing is ever acknowledged: the total then shows how far this end has
+    // run ahead of its peer.
+    this._outSent.set(
+      channelId,
+      sum(this._outSent.get(channelId), { bytes: chunk.payloadBytes, messages: completesMessage ? 1 : 0 }),
+    );
   }
 
   /** Rejects every queued send and drops the frames they had yet to write. */
