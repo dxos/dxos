@@ -52,7 +52,7 @@ const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
  * beats the generic array field's row of inputs. Blank lines survive while typing (they round-trip
  * through split/join) and are dropped on blur, when the form saves.
  */
-const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getValue, onValueChange, onBlur }) => {
+export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getValue, onValueChange, onBlur }) => {
   const lines: string[] = getValue() ?? [];
   return (
     <Form.Field path={jsonPath} label={label} readonly={readonly}>
@@ -74,10 +74,8 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   );
 };
 
-/** Renderers by field path for the built-in types' list fields and the style grid; a host may pass its own. */
+/** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
-  'attributes': LinesField,
-  'methods': LinesField,
   'style.hue': StyleGridField,
 };
 
@@ -136,7 +134,7 @@ export const Properties = ({
   projection,
   atoms,
   nodes = defaultNodeRegistry,
-  fields = DEFAULT_FIELDS,
+  fields,
   readonly: readonlyProp = false,
 }: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
@@ -182,6 +180,19 @@ export const Properties = ({
     );
   }
 
+  // The selected node types' own renderers over the panel's; a host's `fields` win over both.
+  const fieldMap = useMemo(
+    () => ({
+      ...DEFAULT_FIELDS,
+      ...Object.assign(
+        {},
+        ...elements.map((element) => (isLink(element) ? {} : (nodeDef(nodes, element)?.fields ?? {}))),
+      ),
+      ...fields,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [typesKey, nodes, fields],
+  );
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
     <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
@@ -191,7 +202,7 @@ export const Properties = ({
           schema={schema}
           values={values}
           fieldOverrides={fieldOverrides}
-          fieldMap={fields}
+          fieldMap={fieldMap}
           readonly={readonly}
           autoSave
           onSave={onSave}

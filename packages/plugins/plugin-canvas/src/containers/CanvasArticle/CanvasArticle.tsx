@@ -3,14 +3,20 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { SceneView, useRegistry } from '@dxos/react-ui-canvas/scene';
+import {
+  SceneView,
+  createNodeRegistry,
+  defaultNodePrototypes,
+  defaultNodeTypes,
+  useRegistry,
+} from '@dxos/react-ui-canvas/scene';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { type BoundCanvasStore, bindCanvasStore } from '#model';
@@ -23,6 +29,16 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const registry = useRegistry();
   const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  // The built-in node types and whatever other plugins contribute (a contribution may replace a built-in).
+  const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
+  const nodes = useMemo(
+    () =>
+      createNodeRegistry(
+        { ...defaultNodeTypes, ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])) },
+        defaultNodePrototypes,
+      ),
+    [contributed],
+  );
   // Bound for the canvas's lifetime in this view; a new canvas rebinds.
   const [bound, setBound] = useState<BoundCanvasStore>();
   useEffect(() => {
@@ -36,7 +52,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
-          <SceneView.Root key={bound.root} store={bound.store} root={bound.root}>
+          <SceneView.Root key={bound.root} store={bound.store} root={bound.root} nodes={nodes}>
             <SceneView.Canvas liveDepth={settings.liveDepth} />
             {/* Unset means shown: settings saved before the default existed hold neither key. */}
             {(settings.showToolbar ?? true) && (

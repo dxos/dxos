@@ -16,6 +16,8 @@
 import type * as Schema from 'effect/Schema';
 import { type ComponentType } from 'react';
 
+import { type FormFieldMap } from '@dxos/react-ui-form';
+
 import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
 import { type PartEditing, type PartField } from '../utils/parts.ts';
 import { DEFAULT_SIZES, createNode } from '../utils/shapes.ts';
@@ -82,6 +84,8 @@ export type NodeDef = {
   openable?: boolean;
   /** The text properties edited in place, in order; the first is the node's main text. */
   parts?: readonly PartField[];
+  /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
+  fields?: FormFieldMap;
 };
 
 /**
