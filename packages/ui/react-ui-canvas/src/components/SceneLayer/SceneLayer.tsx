@@ -209,6 +209,9 @@ export const SceneLayer = memo(
 
 SceneLayer.displayName = 'SceneLayer';
 
+/** The width of a node frame's border, which a nested scene drawn inside it steps out over. */
+const FRAME_BORDER = '--scene-frame-border' as const;
+
 /** A link's stroke, in screen px. */
 const LINK_WIDTH = 2;
 
@@ -331,6 +334,17 @@ const NodeFrame = memo(
     );
     // Being zoomed into, the frame becomes the child scene's canvas, so it drops its fill (the first class)
     // at once and keeps only its own border, not the selection's or the hover's.
+    // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
+    // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
+    const frameStyle: CSSProperties & Record<`--${string}`, string> = {
+      left: bounds.x,
+      top: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      fontSize: node.style?.fontSize,
+      [FRAME_BORDER]: chromeFade ? '0px' : '4px',
+      ...fade,
+    };
     const frameLook = props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered);
     return (
       <div
@@ -341,16 +355,7 @@ const NodeFrame = memo(
           interactive && !node.locked && 'cursor-grab',
           ghost && 'opacity-50 border-dashed pointer-events-none',
         )}
-        // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
-        // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
-        style={{
-          left: bounds.x,
-          top: bounds.y,
-          width: bounds.width,
-          height: bounds.height,
-          fontSize: node.style?.fontSize,
-          ...fade,
-        }}
+        style={frameStyle}
         data-node-id={node.id}
         data-ghost={ghost || undefined}
         onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
@@ -461,10 +466,16 @@ export const PortalNodeView = (props: NodeViewProps) => {
           // The nested layer is read-only: only the root scene receives handlers.
           // Pulled out by the frame's border, so the child's origin is the node's corner as
           // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
-          // the scene jumped by that at the drill-in swap.
+          // the scene jumped by that at the drill-in swap. The width is the frame's own (`FRAME_BORDER`),
+          // since a fading frame trades its border for padding.
           <div
-            className='absolute -top-1 -left-1 pointer-events-none'
-            style={{ transform: portalTransform(node, bounds), transformOrigin: '0 0' }}
+            className='absolute pointer-events-none'
+            style={{
+              top: `calc(-1 * var(${FRAME_BORDER}, 4px))`,
+              left: `calc(-1 * var(${FRAME_BORDER}, 4px))`,
+              transform: portalTransform(node, bounds),
+              transformOrigin: '0 0',
+            }}
           >
             <SceneLayer
               store={store}
