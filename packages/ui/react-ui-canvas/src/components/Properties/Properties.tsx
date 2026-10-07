@@ -48,7 +48,7 @@ import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { resolveStyle } from '../../utils/style.ts';
-import { StyleGridField } from './StyleGrid.tsx';
+import { LineHueField, StyleGridField } from './StyleGrid.tsx';
 
 /** Identity, ordering, geometry lists and a scene shape's child-scene id are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'scene'];
@@ -83,6 +83,7 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 /** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
+  'line.hue': LineHueField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {

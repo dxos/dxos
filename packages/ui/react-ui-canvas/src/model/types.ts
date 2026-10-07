@@ -229,7 +229,7 @@ export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 /** How a link's line is drawn; unset draws it neutral and solid. */
 export const LinkLine = Schema.Struct({
   hue: Schema.optional(StyleHue.annotate({ title: 'Color' })),
-  dash: Schema.optional(Schema.Literals(['solid', 'dashed']).annotate({ title: 'Pattern' })),
+  dash: Schema.optional(Schema.Literals(['solid', 'dashed', 'dotted']).annotate({ title: 'Pattern' })),
 });
 export type LinkLine = Schema.Schema.Type<typeof LinkLine>;
 

@@ -23,6 +23,7 @@ import {
   type Node,
   type NodeId,
   type Scene,
+  type LinkLine,
   type StyleHue,
   isBoxNode,
   isEllipseNode,
@@ -172,7 +173,8 @@ export const SceneLayer = memo(
                   selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(link.line?.hue).stroke,
                 )}
                 strokeWidth={LINK_WIDTH}
-                strokeDasharray={link.line?.dash === 'dashed' ? `${4 * LINK_WIDTH} ${3 * LINK_WIDTH}` : undefined}
+                strokeDasharray={dashArray(link.line?.dash)}
+                strokeLinecap={link.line?.dash === 'dotted' ? 'round' : undefined}
                 data-link-id={link.id}
               />
             </g>
@@ -226,6 +228,10 @@ const LINK_WIDTH = 2;
 
 /** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
 const CellContext = createContext(DEFAULT_CELL);
+
+/** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
+const dashArray = (dash: LinkLine['dash']): string | undefined =>
+  dash === 'dashed' ? `${4 * LINK_WIDTH} ${3 * LINK_WIDTH}` : dash === 'dotted' ? `0 ${2.5 * LINK_WIDTH}` : undefined;
 
 /** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
 const END_BOX = 0.25;
