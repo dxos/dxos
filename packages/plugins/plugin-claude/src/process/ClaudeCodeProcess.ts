@@ -99,13 +99,20 @@ export const make = (options: Options): AgentProcessDefinition =>
                 },
               })
               .pipe(Scope.provide(scope));
+            // Ends the agent's output when it exits, even while something it started still holds the pipe:
+            // the session is dropped only once that output ends, and until then every turn goes to a dead agent.
+            const exited = new AbortController();
+            const stdout = child.stdout.pipeThrough(new TransformStream<Uint8Array, Uint8Array>(), {
+              signal: exited.signal,
+            });
             yield* child.exited.pipe(
               Effect.tap((code) => Effect.sync(() => log('claude code exited', { chat: chat.id, code }))),
+              Effect.tap(() => Effect.sync(() => exited.abort())),
               Effect.andThen(Scope.close(scope, Exit.void)),
               Effect.forkIn(processScope),
             );
             yield* drainStderr(child.stderr).pipe(Effect.forkIn(scope));
-            return acp.ndJsonStream(child.stdin, child.stdout);
+            return acp.ndJsonStream(child.stdin, stdout);
           }).pipe(
             Effect.mapError(
               (error) =>

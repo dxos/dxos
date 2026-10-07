@@ -4,18 +4,21 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { beforeAll, expect } from 'vitest';
+import { afterAll, beforeAll, expect } from 'vitest';
 
+import { type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Chat from '@dxos/assistant/Chat';
+import * as NodeShell from '@dxos/compute-runtime/node-shell';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AccessToken } from '@dxos/link';
 import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import * as ComposerMcp from '@dxos/plugin-code/ComposerMcp';
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
@@ -26,29 +29,31 @@ import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHand
 import { Text } from '@dxos/schema';
 import { Message, Milestone, Outline, RemoteSession, Task, TaskSet } from '@dxos/types';
 
-import { CLAUDE_CODE_AGENT } from '../constants.ts';
+import { CLAUDE_CODE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
+import * as ClaudeCodeProcess from '../process/ClaudeCodeProcess.ts';
 import {
-  API_KEY,
   type Decision,
+  HAS_CREDENTIAL,
+  OAUTH_TOKEN,
+  adapterCommand,
   answerPermissions,
   eventually,
   installAdapter,
-  makeAdapter,
+  isolateEnvironment,
   processesUnder,
   serveComposerMcp,
 } from './harness.ts';
 
 /**
- * End to end: a chat whose harness is Claude Code runs through `AgentService`, whose turns
- * `AcpAgent` produces against the real ACP adapter and the real Claude Code on the Anthropic API,
- * with Composer's own MCP surface served over the chat's space. The adapter is started as the desktop
- * app's agent helper starts it. Every claim is read back out of the database, the workspace or the
- * process table, never taken from what the agent says it did.
+ * End to end: a chat that names the Claude Code process runs through `AgentService` as a durable
+ * process, which starts the real ACP adapter through `ShellService` and drives the real Claude Code on
+ * the Anthropic API, with Composer's own MCP surface served over the chat's space. Every claim is read
+ * back out of the database, the workspace or the process table, never taken from what the agent says it did.
  *
  * Runs on the live clock (`it.live`): every wait here is on a real process, which a test clock would freeze.
  *
- * Tagged `manual`: it spends real tokens, so `DX_RUN_MANUAL_TESTS=1` with `DX_ANTHROPIC_API_KEY`
- * opts in and CI never selects it. See the package README for the command.
+ * Tagged `manual`: it spends real tokens, so `DX_RUN_MANUAL_TESTS=1` with `DX_CLAUDE_CODE_OAUTH_TOKEN`
+ * or `DX_ANTHROPIC_API_KEY` opts in and CI never selects it. See the package README for the command.
  */
 
 /** Per turn: a real agent with tools is slow, and the reply is all a turn waits on. */
@@ -71,12 +76,13 @@ const TYPES = [
   Outline.Outline,
   RemoteSession.RemoteSession,
   Text.Text,
+  AccessToken.AccessToken,
 ];
 
 let adapter: { dir: string; entry: string };
 
-/** Set per test, since the agent needs the sessions and tools that test made. */
-let claudeCode: AcpAgent.AgentOptions | undefined;
+/** Set per test, since the process needs the sessions and tools that test made. */
+let definition: AgentProcessDefinition | undefined;
 
 const TestLayer = AssistantTestLayer({
   types: TYPES,
@@ -86,11 +92,9 @@ const TestLayer = AssistantTestLayer({
     SpaceOperationHandlerSet.handlers,
   ],
   skills: [ProjectSkill.make()],
-  // As plugin-assistant routes a chat whose harness is Claude Code to its agent's turns.
-  agent: {
-    makeTurnProducer: (options) =>
-      claudeCode ? AcpAgent.makeTurnProducer(claudeCode)(options) : Effect.die(new Error('the test set no agent')),
-  },
+  // As plugin-claude contributes the process a chat names.
+  agent: { processes: () => (definition ? [definition] : []) },
+  extraServices: NodeShell.layer,
 });
 
 type SetupOptions = {
@@ -111,15 +115,17 @@ const setup = Effect.fnUntraced(function* ({ composer = false, decide = () => 'a
       `default: ${db.spaceId}\nspaces:\n  - ${db.spaceId}\n`,
     );
   }
+  if (OAUTH_TOKEN.length > 0) {
+    // As a person connects their subscription through the Claude Code connector.
+    yield* Database.add(Obj.make(AccessToken.AccessToken, { source: CLAUDE_CODE_TOKEN_SOURCE, token: OAUTH_TOKEN }));
+  }
   const sessions = yield* AcpAgent.Sessions.make();
   const host = composer ? yield* serveComposerMcp({ registry: yield* Registry.Service }) : undefined;
-  const started = makeAdapter(adapter.entry);
-  yield* Effect.addFinalizer(() => Effect.sync(() => started.stop()));
-  claudeCode = {
+  definition = ClaudeCodeProcess.make({
     id: CLAUDE_CODE_AGENT,
     sessions,
     workspace: () => Effect.succeed(workspace),
-    connect: started.connect,
+    command: adapterCommand(adapter.entry),
     // Asks before anything that writes, so a permission is something a person has to give.
     mode: () => 'default',
     // As the app opens a session: Composer's lookups run without asking, its writes ask.
@@ -131,10 +137,10 @@ const setup = Effect.fnUntraced(function* ({ composer = false, decide = () => 'a
       },
     },
     tools: host?.tools,
-  };
+  });
 
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: CLAUDE_CODE_AGENT } }));
+  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }));
   const asked = yield* answerPermissions({ chat, feed, sessions, decide });
   const session = yield* AgentService.getSession(chat);
   return { workspace, sessions, host, chat, feed, asked, session };
@@ -205,10 +211,16 @@ const tasksIn = Effect.fnUntraced(function* (taskSet: TaskSet.TaskSet) {
   return yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
 });
 
-describe.skipIf(!API_KEY)('Claude Code, end to end', { tags: ['manual'] }, () => {
+describe.skipIf(!HAS_CREDENTIAL)('Claude Code, end to end', { tags: ['manual'] }, () => {
   beforeAll(() => {
+    isolateEnvironment();
     adapter = installAdapter();
   }, 300_000);
+
+  // The adapter install is a few hundred megabytes; left behind, every run eats the disk.
+  afterAll(() => {
+    rmSync(adapter.dir, { recursive: true, force: true });
+  });
 
   describe('turns', () => {
     it.live(
@@ -474,11 +486,9 @@ describe.skipIf(!API_KEY)('Claude Code, end to end', { tags: ['manual'] }, () =>
   // Flows the suite covers once the work they exercise lands; each names what it will assert.
   describe('planned', () => {
     it.todo('remote: a chat on Claude Code runs in an EDGE sandbox, with the same turns, tools and permissions');
-    it.todo('remote: the sandbox starts Claude Code with CLAUDE_CODE_OAUTH_TOKEN from the space, never logged');
     it.todo('remote: Composer MCP reaches the sandboxed agent with the credentials provisioned for it');
     it.todo('registry: a chat names its process by a dxn: reference, resolved through the operation registry');
     it.todo('shell: ShellService runs, streams and kills bash commands, through Tauri and the vite dev server');
-    it.todo('shell: every ShellService child ends when the compute process that started it ends');
     it.todo("shell: plugin-computer's Bash and ApplyEdits run through ShellService");
   });
 });
