@@ -38,6 +38,12 @@ const POLL_INTERVAL = Duration.seconds(1);
 /** Foreign-key source under which a chat records the EDGE process that runs it. */
 export const processKeySource = (agent: string): string => `edge-process:${agent}`;
 
+/**
+ * Foreign-key source under which a chat records the turn it is waiting on: a client that closed
+ * mid-turn leaves it behind, and the next client picks that turn up instead of prompting again.
+ */
+export const turnKeySource = (agent: string): string => `edge-turn:${agent}`;
+
 export type Definition = {
   /** The harness id chats name (`chat.session.harness`). */
   id: string;
@@ -150,8 +156,24 @@ export const runTurn = (
     });
     yield* lendCredential;
 
-    // Read from the current end, so a turn shows only what it caused.
-    let cursor = (yield* target.control.readEvents({ ...target, cursor: Number.MAX_SAFE_INTEGER })).cursor;
+    // A turn some client started and never saw end (Composer closed mid-turn) ran on without it. This
+    // prompt is that turn redelivered, so it is picked up where it is rather than sent as a new one.
+    const pending = pendingTurnOf(chat, options.definition.id);
+    const turnId = pending?.turnId ?? Obj.ID.random();
+    // Read from the current end, so a turn shows only what it caused; a picked-up turn from its own start.
+    const start =
+      pending?.cursor ?? (yield* target.control.readEvents({ ...target, cursor: Number.MAX_SAFE_INTEGER })).cursor;
+    let cursor = start;
+    // The agent's messages the earlier client already added; replaying the turn produces them again.
+    let folded = 0;
+    const record = () =>
+      Obj.update(chat, (chat) => {
+        Obj.deleteKeys(chat, turnKeySource(options.definition.id));
+        Obj.getMeta(chat).keys.push({
+          source: turnKeySource(options.definition.id),
+          id: encodePendingTurn({ turnId, cursor: start, folded }),
+        });
+      });
 
     const produced: Message.Message[] = [];
     const append = (messages: Message.Message[]) =>
@@ -172,8 +194,23 @@ export const runTurn = (
         yield* Feed.append(feed, messages);
       });
 
-    yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
-    const turnId = Obj.ID.random();
+    /** Adds what the agent produced, past what an earlier client already added for this turn. */
+    const fold = (messages: Message.Message[]) =>
+      Effect.gen(function* () {
+        const fresh = messages.slice(Math.max(0, (pending?.folded ?? 0) - folded));
+        folded += messages.length;
+        if (fresh.length > 0) {
+          yield* append(fresh);
+          record();
+        }
+      });
+
+    if (!pending) {
+      yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
+    }
+    // Recorded before the prompt goes, so a client that closes right after still leaves it behind; the
+    // prompt is sent again on pick-up, since EDGE drops a repeat of the same key.
+    record();
     yield* target.control.submitInput({
       ...target,
       input: { _tag: 'prompt', turnId, text: promptText(request.prompt) } satisfies EdgeProtocol.Input,
@@ -197,7 +234,7 @@ export const runTurn = (
             if (output.turnId !== turnId || !isSessionUpdate(output.update)) {
               return false;
             }
-            yield* append(projection.apply(output.update));
+            yield* fold(projection.apply(output.update));
             const partial = projection.partial;
             if (partial) {
               yield* Trace.write(Trace.PartialBlock, { ...partial, role: 'assistant' });
@@ -221,7 +258,7 @@ export const runTurn = (
                     : { outcome: 'selected' as const, optionId: output.resolution.optionId },
               }),
             };
-            yield* append([
+            yield* fold([
               ...projection.reveal(output.request.toolCall.toolCallId),
               Message.make({ sender: 'assistant', blocks: [block] }),
             ]);
@@ -231,7 +268,7 @@ export const runTurn = (
             if (output.turnId !== turnId) {
               return false;
             }
-            yield* append(
+            yield* fold(
               projection.finish({
                 stopReason: toStopReason(output.stopReason),
                 durationMs: Date.now() - started,
@@ -266,6 +303,11 @@ export const runTurn = (
     }
   }).pipe(
     Effect.scoped,
+    // However this client sees the turn end, nothing is left to pick up; only a client that vanished
+    // mid-turn, which runs no finalizer, leaves the record behind.
+    Effect.ensuring(
+      Effect.sync(() => Obj.update(chat, (chat) => Obj.deleteKeys(chat, turnKeySource(options.definition.id)))),
+    ),
     // Interrupting the turn cancels it on EDGE; the session stays.
     Effect.onInterrupt(() =>
       Effect.gen(function* () {
@@ -336,6 +378,19 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
 const processOf = (chat: Chat.Chat, agent: string): Process.ID | undefined => {
   const id = Obj.getKeys(chat, processKeySource(agent)).at(-1)?.id;
   return id === undefined ? undefined : Process.ID.make(id);
+};
+
+type PendingTurn = { turnId: string; cursor: number; folded: number };
+
+const encodePendingTurn = ({ turnId, cursor, folded }: PendingTurn): string => `${turnId}:${cursor}:${folded}`;
+
+/** The turn the chat recorded as still running on EDGE, if a client closed before it ended. */
+const pendingTurnOf = (chat: Chat.Chat, agent: string): PendingTurn | undefined => {
+  const id = Obj.getKeys(chat, turnKeySource(agent)).at(-1)?.id;
+  const [turnId, cursor, folded] = id?.split(':') ?? [];
+  return turnId && cursor !== undefined && folded !== undefined
+    ? { turnId, cursor: Number(cursor), folded: Number(folded) }
+    : undefined;
 };
 
 const ENDED: ReadonlySet<Process.State> = new Set([

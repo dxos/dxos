@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
@@ -230,6 +231,58 @@ describe('EdgeAgent', () => {
       yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'go' });
       expect(yield* transcript(feed)).toContainEqual(['assistant', 'text:fresh']);
       expect(yield* transcript(feed)).not.toContainEqual(['assistant', 'text:stale']);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('picks up a turn a closed client left running, without prompting again or repeating what it showed', () =>
+    Effect.gen(function* () {
+      const permission = (turnId: string): EdgeProtocol.Output => ({
+        _tag: 'permission',
+        turnId,
+        requestId: 'permission-1',
+        request: {
+          toolCall: { toolCallId: 'call-1', title: 'Run sleep 60' },
+          options: [{ optionId: 'allow', name: 'Allow', kind: 'allow_once' }],
+        },
+        resolution: { optionId: 'allow' },
+      });
+      // The turn's first output; the rest arrives on EDGE once the first client is gone.
+      const { feed, chat, edge, options } = yield* setup((turnId) => [text(turnId, 'sleeping'), permission(turnId)]);
+      const first = yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'sleep, then write' }).pipe(
+        Effect.forkChild,
+      );
+      const recorded = yield* Effect.gen(function* () {
+        while (true) {
+          const [key] = Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'));
+          if (key && key.id.endsWith(':2')) {
+            return { source: key.source, id: key.id };
+          }
+          yield* Effect.sleep('20 millis');
+        }
+      });
+      const [prompt] = edge.inputs;
+      const turnId = recorded.id.split(':')[0];
+
+      // Composer closing runs no finalizer: the record stays, and nothing cancels the turn on EDGE.
+      yield* Fiber.interrupt(first);
+      Obj.update(chat, (chat) => {
+        Obj.getMeta(chat).keys.push(recorded);
+      });
+      edge.inputs.length = 0;
+      edge.emit(text(turnId, 'wrote slow.txt'), { _tag: 'turn-end', turnId, stopReason: 'end_turn' });
+
+      // The redelivered prompt picks the same turn up.
+      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'sleep, then write' });
+      expect(yield* transcript(feed)).toEqual([
+        ['user', 'text:sleep, then write'],
+        ['assistant', 'text:sleeping'],
+        ['assistant', 'request:Run sleep 60:allow'],
+        ['assistant', 'text:wrote slow.txt'],
+        ['assistant', 'stats'],
+      ]);
+      // Sent again under the same key, which EDGE drops as a repeat, and no new turn.
+      expect(edge.inputs).toEqual([prompt]);
+      expect(Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'))).toEqual([]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
