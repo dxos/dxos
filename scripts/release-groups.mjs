@@ -276,7 +276,9 @@ async function pushTags(tags) {
     : [];
   for (let attempt = 1; ; attempt++) {
     try {
-      execFileSync('git', [...auth, 'push', 'origin', ...refs], {
+      // `--no-verify` skips git-lfs's pre-push hook. Its lock check cannot authenticate from the header and
+      // fails with "Unable to verify locks", and a tag on a commit already on main has no LFS objects to upload.
+      execFileSync('git', [...auth, 'push', '--no-verify', 'origin', ...refs], {
         cwd: ROOT,
         stdio: 'inherit',
         timeout: PUSH_TIMEOUT,
