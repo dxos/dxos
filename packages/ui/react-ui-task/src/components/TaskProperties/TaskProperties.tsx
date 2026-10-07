@@ -59,7 +59,6 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  */
 export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  // The live task's identity never changes, so the fields are read through a subscription or an edit would not repaint.
   const [snapshot] = useObject(task);
   const status = snapshot.status ?? 'todo';
   const priority = snapshot.priority ?? undefined;

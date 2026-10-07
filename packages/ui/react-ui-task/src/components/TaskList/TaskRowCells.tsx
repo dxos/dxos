@@ -54,8 +54,6 @@ export type TaskStatusControlProps = {
 /** The status glyph, which is also the control that completes the task. */
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  // Subscribed here, not left to the row: the live task's identity never changes, so a compiled
-  // parent hands this control the same props and it would not re-render on a status write.
   const [snapshot] = useObject(task);
   const status = snapshot.status ?? 'todo';
   // Derived from the task rather than wired down from the list: a task an agent has taken and
