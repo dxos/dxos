@@ -43,45 +43,45 @@ export const DEFAULT_TONE: NodeTone = 2;
 type ToneClasses = { surface: string; text: string };
 
 /**
- * The fills either side of a hue's `surface` role (its 400): the solid `bg` role (600) under light text (tone 1),
- * and the scale's 200 under its darkest text (tone 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
+ * The fills either side of a hue's `surface` role (its 400): the scale's 500 under light text (tone 1), and its
+ * 300 under its darkest text (tone 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
  */
 const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
   neutral: {
-    light: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
-    strong: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-neutral-300', text: 'text-neutral-900' },
+    strong: { surface: 'bg-neutral-500', text: 'text-neutral-50' },
   },
   red: {
-    light: { surface: 'bg-red-200', text: 'text-red-900' },
-    strong: { surface: 'bg-red-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-red-300', text: 'text-red-900' },
+    strong: { surface: 'bg-red-500', text: 'text-neutral-50' },
   },
   orange: {
-    light: { surface: 'bg-orange-200', text: 'text-orange-900' },
-    strong: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-orange-300', text: 'text-orange-900' },
+    strong: { surface: 'bg-orange-500', text: 'text-neutral-50' },
   },
   amber: {
-    light: { surface: 'bg-amber-200', text: 'text-amber-900' },
-    strong: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-amber-300', text: 'text-amber-900' },
+    strong: { surface: 'bg-amber-500', text: 'text-neutral-50' },
   },
   green: {
-    light: { surface: 'bg-green-200', text: 'text-green-900' },
-    strong: { surface: 'bg-green-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-green-300', text: 'text-green-900' },
+    strong: { surface: 'bg-green-500', text: 'text-neutral-50' },
   },
   teal: {
-    light: { surface: 'bg-teal-200', text: 'text-teal-900' },
-    strong: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-teal-300', text: 'text-teal-900' },
+    strong: { surface: 'bg-teal-500', text: 'text-neutral-50' },
   },
   sky: {
-    light: { surface: 'bg-sky-200', text: 'text-sky-900' },
-    strong: { surface: 'bg-sky-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-sky-300', text: 'text-sky-900' },
+    strong: { surface: 'bg-sky-500', text: 'text-neutral-50' },
   },
   blue: {
-    light: { surface: 'bg-blue-200', text: 'text-blue-900' },
-    strong: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-blue-300', text: 'text-blue-900' },
+    strong: { surface: 'bg-blue-500', text: 'text-neutral-50' },
   },
   violet: {
-    light: { surface: 'bg-violet-200', text: 'text-violet-900' },
-    strong: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-violet-300', text: 'text-violet-900' },
+    strong: { surface: 'bg-violet-500', text: 'text-neutral-50' },
   },
 };
 
