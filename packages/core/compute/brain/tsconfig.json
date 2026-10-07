@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/datalog"
+    },
+    {
+      "path": "../pipeline-rdf"
+    }
+  ]
+}
