@@ -87,7 +87,6 @@ const DefaultStory = ({ presets, started }: StoryArgs) => {
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatOptions',
-  component: ChatOptions as any,
   render: DefaultStory,
   decorators: [
     withTheme(),

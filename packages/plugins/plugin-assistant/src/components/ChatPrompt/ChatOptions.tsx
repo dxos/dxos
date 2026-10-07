@@ -218,15 +218,15 @@ const AgentBadge = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   }
 
   return (
-    // Titled with the reason when the agent cannot run here, which is why the chat's turns would fail.
-    <span
-      className='flex items-center gap-1 px-1 text-xs text-fg-muted whitespace-nowrap'
-      title={agent.description}
+    <Layout.Flex
+      align='center'
+      gap='xs'
+      classNames='text-xs text-fg-muted whitespace-nowrap'
       data-testid='assistant.agent'
     >
       <Icon.Icon icon={agent.icon} size='sm' />
       <span>{agent.label}</span>
-    </span>
+    </Layout.Flex>
   );
 };
 
