@@ -35,8 +35,15 @@ export const DslIdentity = Schema.Struct({
 });
 export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
 
-/** Names the root scene; one per canvas, under the key `canvas`. */
-export const CanvasRecord = Schema.Struct({ kind: Schema.Literal('canvas'), root: Schema.String });
+/** Names the root scene and holds the drawing's settings; one per canvas, under the key `canvas`. */
+export const CanvasRecord = Schema.Struct({
+  kind: Schema.Literal('canvas'),
+  root: Schema.String,
+  /** Shapes snap to the lattice's cells and links route along its gutters. */
+  lattice: Schema.optional(Schema.Boolean),
+  /** Minor grid spacing in scene px; the engine's default when unset. */
+  grid: Schema.optional(Schema.Number),
+});
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
 /** One per scene, under `scene:<id>`; its nodes and links are records of their own that name it. */
@@ -118,7 +125,12 @@ export const migrateContent = (content: ContentMap): boolean => {
     id: ROOT_SCENE_ID,
     ...(isSceneRecord(legacy) && legacy.name ? { name: legacy.name } : {}),
   } satisfies SceneRecord;
-  content[CANVAS_KEY] = { kind: 'canvas', root: ROOT_SCENE_ID } satisfies CanvasRecord;
+  const canvas = content[CANVAS_KEY];
+  content[CANVAS_KEY] = {
+    ...(isCanvasRecord(canvas) ? clone(canvas) : {}),
+    kind: 'canvas',
+    root: ROOT_SCENE_ID,
+  } satisfies CanvasRecord;
   for (const [key, value] of Object.entries(content)) {
     const record: unknown = value;
     if (isNodeRecord(record)) {
@@ -152,6 +164,27 @@ export const seedContent = (content: ContentMap, root: SceneId = ROOT_SCENE_ID):
   content[CANVAS_KEY] = { kind: 'canvas', root } satisfies CanvasRecord;
   content[sceneKey(root)] = { kind: 'scene', id: root } satisfies SceneRecord;
   return root;
+};
+
+/** The canvas record, when the content has been seeded. */
+export const canvasRecordOf = (content: ContentMap): CanvasRecord | undefined => {
+  const canvas = content[CANVAS_KEY];
+  return isCanvasRecord(canvas) ? canvas : undefined;
+};
+
+/** Updates the canvas record's settings in place; the content must have been seeded. */
+export const updateCanvasRecord = (content: ContentMap, values: Partial<Omit<CanvasRecord, 'kind' | 'root'>>) => {
+  const canvas = canvasRecordOf(content);
+  if (canvas) {
+    // ECHO stores no `undefined`, so an unset value removes its key.
+    const next: Record<string, unknown> = { ...clone(canvas), ...values };
+    for (const key of Object.keys(next)) {
+      if (next[key] === undefined) {
+        delete next[key];
+      }
+    }
+    content[CANVAS_KEY] = next;
+  }
 };
 
 /** The root scene id, when the content has been seeded. */

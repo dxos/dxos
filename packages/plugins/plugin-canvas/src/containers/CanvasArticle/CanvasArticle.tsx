@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Entity, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
@@ -16,6 +17,7 @@ import {
   type Element,
   SceneView,
   type SceneViewPropertiesProps,
+  createLatticeProjection,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
@@ -30,6 +32,7 @@ import {
   CanvasSceneNode,
   UNTITLED_DRAWING,
   bindCanvasStore,
+  canvasRecordOf,
   drawingUri,
   parseLinkedSceneId,
 } from '#model';
@@ -68,6 +71,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   }, [registry, canvas]);
 
   const db = Obj.getDatabase(canvas);
+  // The drawing's settings, edited in the properties companion: the lattice picks the projection.
+  const [snapshot] = useObject(canvas);
+  const record = canvasRecordOf(snapshot.content);
+  const lattice = record?.lattice === true;
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
@@ -123,6 +130,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             store={bound.store}
             root={bound.root}
             nodes={nodes}
+            createProjection={lattice ? createLatticeProjection : undefined}
+            grid={record?.grid}
             initialCamera={savedCamera}
             onCameraChange={handleCameraChange}
           >

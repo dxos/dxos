@@ -6,7 +6,17 @@ import { describe, test } from 'vitest';
 
 import { type ContentMap } from '@dxos/diagram';
 
-import { ROOT_SCENE_ID, hasLegacyRoot, migrateContent, readScenes, rootOf, seedContent } from './content.ts';
+import {
+  ROOT_SCENE_ID,
+  canvasRecordOf,
+  hasLegacyRoot,
+  migrateContent,
+  readScenes,
+  rootOf,
+  seedContent,
+  updateCanvasRecord,
+  writeScenes,
+} from './content.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
 
@@ -45,5 +55,16 @@ describe('content', () => {
     expect(scenes.f.nodes.up).toMatchObject({ scene: 'root' });
     // Already migrated: nothing more to do.
     expect(migrateContent(content)).toBe(false);
+  });
+
+  test('the drawing settings live on the canvas record and survive scene writes', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    updateCanvasRecord(content, { lattice: true, grid: 24 });
+    writeScenes(content, readScenes(content));
+    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true, grid: 24 });
+    // An unset value removes its key rather than storing `undefined`.
+    updateCanvasRecord(content, { grid: undefined });
+    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
   });
 });
