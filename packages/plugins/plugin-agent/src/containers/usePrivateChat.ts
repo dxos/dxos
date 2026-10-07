@@ -4,10 +4,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj, Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 
 import { AgentOperation } from '#types';
@@ -24,6 +27,7 @@ export type PrivateChatState = {
  * Opens (or creates) the viewing member's private chat with the agent, hosted on EDGE.
  */
 export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
+  const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const db = Obj.getDatabase(agent);
@@ -41,6 +45,11 @@ export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
     setChat(undefined);
     setFailed(false);
     void (async () => {
+      // Operation handlers register on Idle, which a page opened straight onto the agent reaches only after this mounts.
+      await EffectEx.runPromise(manager.activate(ActivationEvents.Idle)).catch(() => undefined);
+      if (cancelled) {
+        return;
+      }
       const { data, error } = await invokePromise(
         AgentOperation.OpenPrivateChat,
         {
@@ -75,7 +84,7 @@ export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
     return () => {
       cancelled = true;
     };
-  }, [invokePromise, agent, db, identity?.did, identity?.displayName, attempt]);
+  }, [manager, invokePromise, agent, db, identity?.did, identity?.displayName, attempt]);
 
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
   return { chat, failed, retry };

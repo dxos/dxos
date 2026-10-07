@@ -33,7 +33,7 @@ export type Commitment = {
 };
 
 const termLabel = (term: RDF.Assertion['subject']): string =>
-  'entity' in term ? (term.label ?? term.entity) : term.literal;
+  term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 const toCommitment = (fact: RDF.Fact): Commitment => ({
   who: termLabel(fact.assertion.subject),

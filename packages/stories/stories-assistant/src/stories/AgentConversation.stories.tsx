@@ -50,6 +50,7 @@ const TYPES = [
   HasSubject.HasSubject,
   Memory.Memory,
   FactEntry.FactEntry,
+  FactEntry.ExtractionPass,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,

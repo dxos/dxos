@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Leading auxiliary / copula / article words dropped from a predicate so "is a man" keys as "man"
 // and "is working at" keys the same as "works at".
 const LEADING_NOISE = new Set([
@@ -57,7 +59,7 @@ const stem = (word: string): string => {
  * collapse (e.g. `Works at` / `is working at` / `worked at` → `work at`). True synonyms (`at` vs `for`,
  * `works` vs `employed by`) are NOT merged — that needs a controlled vocabulary (deferred). Idempotent.
  */
-export const normalizePredicate = (predicate: string): string => {
+export const normalize = (predicate: string): string => {
   const tokens = predicate
     .toLowerCase()
     .trim()

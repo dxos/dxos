@@ -236,9 +236,9 @@ export const ReadSource = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    entry: Schema.optional(
-      Ref.Ref(FactEntry.FactEntry).annotate({
-        description: 'The annotation entry appended; absent when a chat has no messages since the last read.',
+    pass: Schema.optional(
+      Ref.Ref(FactEntry.ExtractionPass).annotate({
+        description: 'The extraction pass recorded; absent when a chat has no messages since the last read.',
       }),
     ),
     facts: Schema.Number.annotate({ description: 'Facts recorded.' }),

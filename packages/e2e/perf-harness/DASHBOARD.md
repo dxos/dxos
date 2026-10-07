@@ -355,7 +355,9 @@ dashboard, **[ECHO benchmarks (nightly)](https://eu.posthog.com/project/126171/d
 - **`ci.perf-score`** is written once a night by `scripts/score-perf.ts` (and `bench-score` for
   ECHO), one row per metric, group and overall, each carrying the target and limit it was scored
   against. Scores run 0-1: 1 at or under target, 0.5 at the limit, floored at 0.01; the curve and the
-  geometric-mean roll-up are in `src/score/score.ts`.
+  geometric-mean roll-up are in `src/score/score.ts`. Work counters score as `<counter> > <stage>`
+  in a `work` group of the same suite; the counters-on pass scores its costed counts alone, as the
+  `composer-work` and `chat-work` suites (METRICS.md §"Scoring them").
 - **Budget-position tiles** plot `ln(value/target) / ln(limit/target)` per metric, so every metric
   shares one axis: 0 is the target, 1 the limit.
 

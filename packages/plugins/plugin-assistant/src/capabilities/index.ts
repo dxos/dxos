@@ -94,7 +94,7 @@ export const CompanionChatProvisioner = Capability.lazyModule(
 export const QuestionResumer = Capability.lazyModule(
   'QuestionResumer',
   // Headless hosts (EDGE) provide no operation invoker; it resumes questions only in the app.
-  { requires: [Capabilities.OperationInvoker], provides: [], environments: ['node'] },
+  { requires: [Capabilities.OperationInvoker], provides: [], environments: ['browser', 'node', 'tauri'] },
   () => import('./question-resumer.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {

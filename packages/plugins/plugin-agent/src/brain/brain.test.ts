@@ -132,6 +132,7 @@ const TestLayer = brain.layer.pipe(
         Relay.Relay,
         Message.Message,
         FactEntry.FactEntry,
+        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
