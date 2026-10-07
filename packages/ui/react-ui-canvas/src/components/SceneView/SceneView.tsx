@@ -82,7 +82,7 @@ import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
-const DEFAULT_MARGIN = 1.5;
+const DEFAULT_MARGIN = 2;
 /** Quiet time after the camera's last move before `onCameraChange` reports it. */
 const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
