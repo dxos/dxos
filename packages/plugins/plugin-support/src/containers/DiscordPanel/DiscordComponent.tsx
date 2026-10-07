@@ -179,9 +179,9 @@ const Channels = () => {
 };
 
 const STATUS_RING: Record<WidgetMember['status'], string> = {
-  online: 'bg-success-surface',
-  idle: 'bg-warning-surface',
-  dnd: 'bg-error-surface',
+  online: 'bg-success-bg',
+  idle: 'bg-warning-bg',
+  dnd: 'bg-error-bg',
 };
 
 const MemberRow = ({ member }: { member: WidgetMember }) => (
