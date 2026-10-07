@@ -302,6 +302,14 @@ takes are recorded as facts, so goals depend on each other ("keep me informed" s
 
 Nothing on the goal is unjustified by its feed, and `not achieved(goal)` stays a field lookup.
 
+**Goals are projected into the fact index.** The goal object stays the record (people edit and list
+goals as ECHO objects), but the brain derives facts from each goal's state and indexes them with the
+rest: `goal(G, owner, rich)`, `goal(G, status, active)`, `goal(G, priority, high)`,
+`subgoal(P, C)`, and links to `Task`s. The projection is rebuilt from the objects like the rest of the
+index, so it never diverges from them. Rules and judgment-time SPARQL can then reason about goals
+themselves — "wake when my taxes goal becomes urgent", "hold off while any of my goals is blocked on
+Dima" — instead of seeing only what the runtime passes in (`achieved`, sub-goal status).
+
 Goal 3 over a week:
 
 | When | Event                                                                                   | Status / situation                                   | Goal feed                            |
