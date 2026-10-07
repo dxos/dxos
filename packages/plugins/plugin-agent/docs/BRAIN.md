@@ -24,7 +24,7 @@ asked.
 - **Goals compile to Datalog** — `achieved`/`holds`, conditions, `wake` and `blocks` rules — over a
   canonical predicate vocabulary; a compilation goes active only after independent test facts replay
   correctly. The text is the authority. SPARQL stays for judgment-time retrieval.
-- **Datalog, not SPARQL or N3, runs the rules** (M1): all three compile equally well, but only a small
+- **Datalog, not SPARQL or N3, runs the rules** (M1): all three parse and conform equally well, but only a small
   pure-TypeScript engine is portable, incremental and fast enough per fact.
 - **Two packages:** `@dxos/datalog` (the generic engine) and `@dxos/brain` (facts, vocabulary,
   built-ins, compiler, `GoalRules`, the example scenarios as tests); both public.
@@ -292,8 +292,10 @@ two cannot drift); `Compiler` expands shorthand and checks arity, safety, strati
 vocabulary. The compiler marks each goal's achievement as `rule` or `judgment`: rules are reliable for
 single-event outcomes with a named person or event, constraints and checkable states (an empty
 inbox); everything else is judged. **A compilation goes active only after replay:** 3–5 test facts,
-including near misses, with their expected effects, written independently of the compiler (its own
-probes caught none of the wrong compilations in M1), are replayed through `GoalRules`. A read-back of
+including near misses, are replayed through `GoalRules`. Both the facts and their expected effects
+come from an oracle independent of the compiler — a separate model call that sees only the goal text,
+never the rules — because the compiler's own probes encode its own reading of the goal and caught none
+of the wrong compilations in M1. A read-back of
 the rules in plain English is shown to the user as an explanation, not used as a gate.
 
 ### Evaluation
@@ -453,7 +455,7 @@ spike code was throwaway, its scenarios now live in `@dxos/brain/testing`).
 | Per evaluation               | 0.02 ms per fact | ~15 ms per query   | 28–76 ms, a new Prolog VM per call               |
 | Goal 3 at 5,000 facts        | 154 ms           | —                  | 3.9 s                                            |
 
-- **Datalog runs the rules; N3 is at most an export format.** The languages compile equally well;
+- **Datalog runs the rules; N3 is at most an export format.** The languages parse and conform equally well;
   portability, speed and stratified negation decided it. EYE evaluates the whole graph per fact,
   starts a new VM per call, and never retracts a conclusion, so a wake guarded by `not achieved` fired
   after achievement; n3.js's reasoner has no negation.
