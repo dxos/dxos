@@ -11,13 +11,14 @@ import { AiAssistantError } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
+import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EdgeProcessControl } from '@dxos/edge-compute';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AccessToken } from '@dxos/link';
 import * as EdgeAgent from '@dxos/plugin-code/EdgeAgent';
-import { Message } from '@dxos/types';
+import { Message, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { anthropicCredential } from '../capabilities/claude-code-edge-agent.ts';
 import { CLAUDE_CODE_EDGE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
@@ -46,12 +47,21 @@ const options: EdgeAgent.Options = {
     label: 'Claude Code (cloud)',
     icon: 'px--anthropic--regular',
     credential: anthropicCredential,
+    gitCredential: EdgeAgent.githubCredential,
   },
   control: () => control,
 };
 
 const TestLayer = AssistantTestLayer({
-  types: [Feed.Feed, Message.Message, AccessToken.AccessToken],
+  types: [
+    Feed.Feed,
+    Message.Message,
+    AccessToken.AccessToken,
+    Project.Project,
+    Repo.Repo,
+    TaskSet.TaskSet,
+    Outline.Outline,
+  ],
   // As plugin-assistant routes a chat whose harness is Claude Code (cloud) to its agent's turns.
   agent: {
     makeTurnProducer: ({ chat, feed }) =>
@@ -151,6 +161,27 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
         TestHelpers.provideTestContext,
       ),
       { timeout: 2 * TURN_TIMEOUT + 60_000 },
+    );
+
+    it.live.skipIf(FAKE_AGENT)(
+      "works in the project's repositories, checked out in the sandbox through EDGE's git proxy",
+      Effect.fnUntraced(
+        function* (_) {
+          const repo = yield* Database.add(Repo.make({ owner: 'octocat', name: 'Hello-World' }));
+          const project = yield* Database.add(Project.make({ repositories: [Ref.make(repo)] }));
+          const { chat, session } = yield* setup();
+          Obj.setParent(chat, project);
+          const reply = yield* turn(
+            session,
+            'Print the first line of Hello-World/README in the current directory, and nothing else.',
+          );
+          expect(reply).toContain('Hello World');
+        },
+        Effect.scoped,
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: TURN_TIMEOUT + 120_000 },
     );
   },
 );
