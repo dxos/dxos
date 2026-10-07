@@ -46,8 +46,9 @@ immutable source). The source remains the full-fidelity record.
 input `{ agent, source?, url?, text? }`). It reads the source's text — a chat renders as
 `[time] speaker: text` lines, a markdown transcript keeps its `**Speaker:**` paragraphs — runs
 pipeline-rdf's extraction (chunked) as a direct model call with no chat or session, attributes each
-fact to the utterance its quote comes from (speaker, message DXN, time), and appends one entry to the
-source's feed. A chat is read incrementally from the last entry's `through` cursor; the up to eight
+fact to the utterance its quote comes from (speaker, message DXN, time), and appends one entry per fact
+to the source's feed, then an `ExtractionPass` marker that closes the pass. A chat is read incrementally
+from the last marker's `through` cursor; the up to eight
 messages before it are shown to the extractor under an "Earlier messages, for context only" heading, so
 "ok i'll start working on it" resolves to what "it" was, and only facts quoting a new message are kept
 (so context is never extracted twice). `readSource` also returns that rendered window as `transcript`,
@@ -56,18 +57,26 @@ which composed notifications use (§5). The feed is a `Feed` parented to the age
 finds it with `Filter.foreignKeys`/`Filter.childOf` and no hierarchy traversal. The conversation skill
 calls it when asked to read a document or link; the playground calls it on its seed transcript.
 
-An entry is one extraction pass and carries a batch of facts in the `@dxos/pipeline-rdf` `Fact` shape,
-so its extraction stages and SPARQL engine are reused:
+An entry holds one fact in the `@dxos/pipeline-rdf` `Fact` shape, so its extraction stages and SPARQL
+engine are reused, and one fact per entry so a single fact can be forgotten (its entry removed) and
+referenced directly. The fact is wrapped because an ECHO object id must be an ECHO id, while a fact's
+`id` is the `source#hash#index` that triples and `wasDerivedFrom` refer to; the entry carries that id
+as the foreign key `{ source: 'org.dxos.agent.fact', id: fact.id }`, so it is found without a scan.
 
 ```ts
-FactEntry {                     // org.dxos.type.agent.factEntry 0.2.0; one feed item per extraction pass
+FactEntry {                     // org.dxos.type.agent.factEntry 0.2.0; one feed item per fact
+  fact: Fact;                   // pipeline-rdf's Fact as is; its Term is tagged by `kind`, so ECHO stores it
+}                               // @meta.keys: [{ source: 'org.dxos.agent.fact', id: fact.id }]
+
+ExtractionPass {                // org.dxos.type.agent.extractionPass 0.1.0; appended after the pass's facts
   source?: Ref<Obj>;            // the document or chat read (absent for a web page)
   url?: string;                 // the web page read
   name?: string;                // the source's display name
   recordedAt: string;           // when the agent extracted it
+  through?: string;             // a chat's last message read; the next read starts after it
   extractor: { id: string; model: string; version: string };
-  facts: Fact[];                // pipeline-rdf's Fact as is; its Term is tagged by `kind`, so ECHO stores it
-}
+  facts: number;                // how many facts the pass appended
+}                               // its ECHO id is the `pass` of each of those facts
 
 Fact {                          // pipeline-rdf
   assertion: { subject, predicate, object, validFrom?, validTo?, quote? };  // subject/object: { kind: 'entity', entity, label? } | { kind: 'literal', literal }
@@ -79,16 +88,24 @@ Fact {                          // pipeline-rdf
     agent?: string;             // the speaker's DXN
     span?: { start, end };      // where in the message text
   };
+  pass?: string;                // the ExtractionPass that recorded it
 }
 ```
+
+- **A pass counts once its marker is in the feed.** Readers (recall, the knowledge panel, the brain's
+  indexer) keep only facts whose `pass` names a marker present in the feed, so a pass interrupted
+  between its facts and its marker is ignored, and `readSource` resumes a chat from the last marker's
+  cursor and reads the interrupted messages again.
 
 - **Every fact records timestamp, speaker and source.** pipeline-rdf requires `source` and
   `generatedAtTime`; `readSource` sets `agent` (the speaker, as a pipeline-rdf entity id such as
   `dima`) whenever the fact's quote locates the utterance. Sources are DXN strings (or a URL) in RDF;
   the UI resolves them to ECHO refs to jump to the message. Later: the speaker's DXN once the sender
   is a resolved `Person`.
-- **Append-only.** A correction is a new fact that supersedes (`wasDerivedFrom`); a retraction is a
-  fact with negative polarity. The feed is an audit trail of what the agent believed and when.
+- **Append-only, except forgetting.** A correction is a new fact that supersedes (`wasDerivedFrom`); a
+  retraction is a fact with negative polarity. The feed is an audit trail of what the agent believed
+  and when. Forgetting (`forgetFact`) is the one removal: it deletes the fact's entries, found by
+  their foreign key, so recall stops returning it; the brain's index drops it on its next rebuild.
 - **Expiry is a query concern.** `validTo` bounds a status ("on the Discord bot this week"); expired
   facts are filtered at recall, never deleted.
 - **Predicates are open.** "commits", "owns", "is blocked by" — the RDF vocabulary grows freely.

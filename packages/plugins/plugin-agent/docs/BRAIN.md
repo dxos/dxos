@@ -15,9 +15,10 @@ asked.
 
 - **One brain per agent, authoritative on EDGE** as a Durable Object, with an in-process copy in the
   browser; every layer runs unchanged in the browser, on Workers and in Node.
-- **Facts are pipeline-rdf `RDF.Fact`s stored as they are in ECHO feeds** — one feed per source,
-  append-only, with no second fact shape; the feeds are the record and the brain's index
-  (pipeline-rdf's SQLite schema) is derived and rebuildable.
+- **Facts are pipeline-rdf `RDF.Fact`s stored as they are in ECHO feeds** — one feed per source, one
+  feed item per fact (so a fact can be forgotten on its own), each extraction pass closed by a marker;
+  append-only apart from forgetting, with no second fact shape; the feeds are the record and the
+  brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
   group or agent), hierarchical (steps are sub-goals), carrying priority, a budget and optional
   instructions; a goal creates a concrete `Task` only for substantive, assignable work.
@@ -48,7 +49,7 @@ Source: [diagrams/brain-flows.dx](./diagrams/brain-flows.dx), rendered with plug
 | -------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1. Facts       | `@dxos/pipeline-rdf`           | `RDF.Fact` = `Assertion` (subject/object `Term`, predicate, validity, quote) + `Factuality` + `Illocution` + `Attribution`; `RDF.Entity`                                                         |
 | 2. RDF form    | `@dxos/pipeline-rdf`           | The vocabulary (`sx:` = `https://dxos.org/semantic#`, `prov:`, entity and fact IRIs) and the `Fact` ↔ triples mapping; `FactStore` (SQLite: `triples`, `entities`, per-source `cursors`; SPARQL) |
-| 3. Feed record | plugin-agent                   | `RDF.Fact` unchanged (its `Term` is tagged, so ECHO stores it), in an ECHO feed item, one feed per source                                                                                        |
+| 3. Feed record | plugin-agent                   | `FactEntry` wrapping one `RDF.Fact` unchanged (its `Term` is tagged, so ECHO stores it) per feed item, keyed by the fact's id; an `ExtractionPass` marker closes each pass; one feed per source  |
 | 4. Rules       | `@dxos/datalog`, `@dxos/brain` | Relations `fact(F, S, P, O)` + metadata keyed by `F`; canonical `Vocabulary`; built-ins `about`, `concerns`, `elapsed`, …; compiled programs                                                     |
 | 5. Goals       | `@dxos/brain`, plugin-agent    | `Goal` directive (text, owner `Actor`, status, priority, budget, situation, drivers, compiled rules) with its own fact feed; sub-goals; `Task`s for concrete work                                |
 
@@ -57,9 +58,10 @@ Source: [diagrams/brain-flows.dx](./diagrams/brain-flows.dx), rendered with plug
 1. A source — a chat turn, a document, a web page — is read by pipeline-rdf's extraction stages into
    `RDF.Fact`s, attributed to the speaker, message and time; predicates are normalized
    (`RDF.Predicate.normalize`).
-2. The `Fact`s are appended to the source's fact feed as they are — the record, append-only;
-   corrections are new facts.
-3. The brain follows each feed from its cursor, writes the facts to its index (pipeline-rdf's SQLite
+2. The `Fact`s are appended to the source's fact feed as they are, one `FactEntry` each, then the
+   pass's `ExtractionPass` marker — the record, append-only; corrections are new facts, and only a
+   forgotten fact is removed.
+3. The brain follows each feed from its cursor, skips facts whose pass has no marker yet, writes the facts to its index (pipeline-rdf's SQLite
    schema: triples, entities for `concerns`, full-text for `about`) and encodes them as Datalog
    relations (`Encoding`), mapping surface predicates onto the canonical `Vocabulary`.
 
@@ -124,6 +126,18 @@ append by roughly one sync round.
 Each source the agent reads (a chat, a thread, a document, a web page) has its own fact feed, keyed by
 the source as today (`org.dxos.agent.annotations` foreign key), and each feed item is one fact.
 
+Two decisions shape the feed (2026-10-07):
+
+- **`FactEntry` goes from 0.1.0 to 0.2.0 with no migration.** Entries written as 0.1.0 (the flattened
+  fact copy) are no longer read; a chat source has no 0.2.0 pass marker, so it is re-read from the
+  start and its facts are re-extracted.
+- **One feed item per fact**, a `FactEntry` wrapping the `RDF.Fact`, so a single fact can be forgotten
+  cleanly (its entry removed) and referenced directly (by the foreign key
+  `{ source: 'org.dxos.agent.fact', id: fact.id }`). An `ExtractionPass` marker appended after a pass's
+  facts restores the atomicity the per-pass batch had: every fact's `pass` is the marker's id, readers
+  ignore facts whose marker is absent, and `readSource` resumes a chat from the last marker's
+  `through` cursor.
+
 ### pipeline-rdf is the common type
 
 `@dxos/pipeline-rdf` defines the fact model every layer reuses, as Effect Schemas under the `RDF`
@@ -159,15 +173,19 @@ that possible:
   string literal already tells the two apart — so stored triples read back as before.
 - **`pass?`** (top level) is the extraction pass id, grouping the facts one run produced so they can be
   replayed or retracted together. It is not part of `extractor`, which names the program rather than
-  the run. It serializes as an optional `sx:pass` triple.
+  the run. It serializes as an optional `sx:pass` triple. `readSource` sets it to the id of the pass's
+  `ExtractionPass` marker.
 
 Corrections and retractions are further facts (`attribution.wasDerivedFrom` lists what a correction
-supersedes; polarity `-`); the feed is append-only. A fact without an `illocution` is `assertive`.
+supersedes; polarity `-`); the feed is append-only except that forgetting a fact (`forgetFact`) removes
+its entries. A fact without an `illocution` is `assertive`.
 
 An ECHO object's `id` must be an ECHO object id, while a fact's `id` is a deterministic
 `source#hash#index` that RDF reification and `wasDerivedFrom` refer to. So a fact is stored inside an
-ECHO object rather than as one: today plugin-agent's `FactEntry` (`org.dxos.type.agent.factEntry`
-0.2.0), one feed item per extraction pass, holding `facts: RDF.Fact[]`.
+ECHO object rather than as one: plugin-agent's `FactEntry` (`org.dxos.type.agent.factEntry` 0.2.0),
+one feed item per fact, holding `fact: RDF.Fact` and keyed by `fact.id`. The pass's source, name,
+time, extractor, `through` cursor and fact count live once on its `ExtractionPass`
+(`org.dxos.type.agent.extractionPass` 0.1.0), not on each fact.
 
 ### Encoding and vocabulary
 
@@ -190,7 +208,9 @@ non-canonical or misspelled predicate is a compile error rather than a silent mi
 | Fact text (`about`)                    | SQLite FTS5; vectors later for meaning                                |
 
 On start the Durable Object loads base facts from SQLite into the engine, then evaluates incrementally
-as feeds advance; rebuilding means clearing the cursors and replaying the feeds.
+as feeds advance; rebuilding means clearing the cursors and replaying the feeds. A feed is indexed up to
+its last `ExtractionPass` marker, so a pass still being appended is picked up whole once it closes. A
+forgotten fact leaves the index on the next rebuild (incremental removal is an M3 follow-up).
 
 ## Goals
 
@@ -408,6 +428,10 @@ threads by construction, isolates their queue, alarms and rewind, is found throu
 
 Both are public. Stories: `stories-brain` GoalCompiler (goal text → compiled rules → replay).
 
+plugin-agent owns the feed record: `FactEntry` (one `RDF.Fact` per feed item, keyed by `fact.id`) and
+`ExtractionPass` (the marker closing a pass) in `src/types/FactEntry.ts`; `readSource` writes them, and
+`queryFacts` / `forgetFact` (`src/operations/annotations.ts`) read completed passes and remove a fact.
+
 ## Implementation
 
 | #   | Milestone                   | Status | Delivers                                                                                                                                                                                         | Demo                                                                                                                        |
@@ -415,7 +439,7 @@ Both are public. Stories: `stories-brain` GoalCompiler (goal text → compiled r
 | M0  | Private threads             | Design | A child feed per thread; a position-ordered merge with the session's history; `getSession(chat, { thread })` under its own process key (THREADS.md)                                              | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view                                     |
 | M1  | Goal compilation spike      | Done   | Compiled the eight goals to Datalog, SPARQL and N3; measured validity, correctness, replay vs read-back, portability ("M1 findings")                                                             | The results tables below                                                                                                    |
 | —   | Engine and brain packages   | Built  | `@dxos/datalog`, `@dxos/brain` with the eight scenarios as tests; pipeline-rdf `RDF.Vocab` / `RDF.Mapping` / `RDF.Predicate` exported and illocution preserved; GoalCompiler story (in progress) | GoalCompiler story: goal text → rules → replay                                                                              |
-| M2  | Facts and goals, in-process | Next   | `readSource` writes `RDF.Fact`s; `Goal` directives with feeds; the in-process brain on `@dxos/brain`; judgment in the session's private thread                                                   | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment); goals and sub-goals in the Goals tab |
+| M2  | Facts and goals, in-process | Next   | `readSource` writes one `RDF.Fact` per feed item with pass markers (done); `Goal` directives with feeds; the in-process brain on `@dxos/brain`; judgment in the session's private thread         | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment); goals and sub-goals in the Goals tab |
 | M3  | Brain on EDGE               |        | A Durable Object per agent follows the feeds, keeps the SQLite index, evaluates rules, schedules alarms, runs background sessions per actor; the agent service routes results                    | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart                    |
 | M4  | Planning and constraints    |        | Judgment decomposes goals into sub-goals and tasks; action drivers enforce constraints; session → durable promotion                                                                              | "Complete my taxes" grows sub-goals; "never on Fridays" rewrites a proposed meeting                                         |
 | M5  | Pattern library and evals   |        | The goal-pattern skill; eval personas over the eight goals; cost controls (batching, judgment limits)                                                                                            | An eval report with judgment-call counts                                                                                    |
