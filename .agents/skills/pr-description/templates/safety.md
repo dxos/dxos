@@ -1,7 +1,8 @@
 # Safety (always)
 
 Every PR carries this section, last. Copy this block verbatim and replace every `{{…}}` slot. Every
-row is answered; `No` is an answer and must be written.
+row is answered; `No` is an answer and must be written. The answers are mirrored as PR labels — see
+[Labels](#labels).
 
 ```markdown
 ## Safety
@@ -33,6 +34,43 @@ Each answer cell starts with exactly one of the words shown, followed, where the
 | `{{PERFORMANCE}}`   | `None`, or `Yes: <what could get slower or bigger> — <how you checked>`.                           |
 | `{{RISK_LEVEL}}`    | `Low`, `Medium`, or `High`.                                                                        |
 | `{{RISK_REASON}}`   | One or two sentences: what breaks and for whom if this is wrong, and what limits the blast radius. |
+
+## Labels
+
+The table stays in the body, and its answers are **also** applied as PR labels, so the PR list can
+be filtered and sorted by risk without opening each body. A label is applied when its row's answer
+starts with the word in the **Applied when** column; the risk label is the only one every PR
+carries. Labels and table must agree: when a rewrite changes an answer, change the label with it.
+
+| Label               | Applied when                 | Colour   |
+| ------------------- | ---------------------------- | -------- |
+| `risk: low`         | `{{RISK_LEVEL}}` is `Low`    | `0e8a16` |
+| `risk: medium`      | `{{RISK_LEVEL}}` is `Medium` | `fbca04` |
+| `risk: high`        | `{{RISK_LEVEL}}` is `High`   | `b60205` |
+| `breaking: storage` | `{{STORAGE}}` is `Yes`       | `b60205` |
+| `breaking: wire`    | `{{WIRE}}` is `Yes`          | `b60205` |
+| `api: changes`      | `{{NEW_APIS}}` is `Yes`      | `1d76db` |
+| `tests: changed`    | `{{CHANGES_TESTS}}` is `Yes` | `d93f0b` |
+| `tests: none added` | `{{ADDS_TESTS}}` is `No`     | `d93f0b` |
+| `revert: unsafe`    | `{{REVERTABLE}}` is `No`     | `b60205` |
+| `perf: risk`        | `{{PERFORMANCE}}` is `Yes`   | `fbca04` |
+
+Every label flags something a reviewer should look at, so the absence of one means the safe
+answer; the one exception, `tests: none added`, is applied when tests are _missing_ for the same
+reason. Exactly one `risk:` label is always present, which is how a missing Safety pass shows up.
+
+Apply them when opening the PR and re-sync on every body rewrite, removing any label whose answer
+changed. Create a label that does not exist yet with the colour above, never a different name or
+spelling:
+
+```bash
+gh label create 'breaking: wire' --color b60205 2>/dev/null || true    # once per repo, per label
+gh pr edit "$PR" --add-label 'risk: medium,breaking: wire' --remove-label 'risk: low'
+```
+
+Without `gh` (cloud sandbox), set the full label list with the GitHub MCP `issue_write`
+(`method: update`, `labels: [...]`) on the PR number; it replaces the list, so include labels other
+people added.
 
 ## Guidance
 
