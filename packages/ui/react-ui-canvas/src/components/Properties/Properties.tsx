@@ -26,6 +26,7 @@ import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -183,14 +184,6 @@ export const Properties = ({
     [projection, elements, nodes],
   );
 
-  if (elements.length === 0) {
-    return (
-      <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
-        <div className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</div>
-      </div>
-    );
-  }
-
   // The selected node types' own renderers over the panel's; a host's `fields` win over both.
   const fieldMap = useMemo(
     () => ({
@@ -204,9 +197,26 @@ export const Properties = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [typesKey, nodes, fields],
   );
+
+  if (elements.length === 0) {
+    return (
+      <div
+        className={mx('flex flex-col overflow-hidden', classNames)}
+        data-testid='properties'
+        {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
+      >
+        <div className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</div>
+      </div>
+    );
+  }
+
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
-    <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
+    <div
+      className={mx('flex flex-col overflow-hidden', classNames)}
+      data-testid='properties'
+      {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
+    >
       {schema ? (
         <Form.Root
           key={[...selection].join()}
