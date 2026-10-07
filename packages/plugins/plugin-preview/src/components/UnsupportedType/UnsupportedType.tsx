@@ -6,6 +6,7 @@ import React from 'react';
 
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
@@ -26,13 +27,15 @@ export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Body classNames='grid place-items-center p-8'>
-        <Banner.Root valence='info' icon='ph--puzzle-piece--regular'>
-          <Banner.Title>{t('unsupported-type.title')}</Banner.Title>
-          <Banner.Body data-testid='previewPlugin.unsupportedType'>
-            {t('unsupported-type.message', { typename })}
-          </Banner.Body>
-        </Banner.Root>
+      <Panel.Body asChild>
+        <Layout.Grid center classNames='p-8'>
+          <Banner.Root valence='info' icon='ph--puzzle-piece--regular'>
+            <Banner.Title>{t('unsupported-type.title')}</Banner.Title>
+            <Banner.Body data-testid='previewPlugin.unsupportedType'>
+              {t('unsupported-type.message', { typename })}
+            </Banner.Body>
+          </Banner.Root>
+        </Layout.Grid>
       </Panel.Body>
     </Panel.Root>
   );
