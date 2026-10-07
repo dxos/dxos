@@ -49,7 +49,7 @@ const DefaultStory = () => {
   return (
     // `items-start`: each bar fills its box, as SceneView floats it, so the column must not stretch them.
     <div className='flex flex-col items-start gap-2 p-2'>
-      <NavigationToolbar actions={actions}>depth {actions.path.length - 1}</NavigationToolbar>
+      <NavigationToolbar actions={actions} />
       <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
       <CameraToolbar actions={actions}>
         {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · guides {guides ? 'on' : 'off'} · debug{' '}

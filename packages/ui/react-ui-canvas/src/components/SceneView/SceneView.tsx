@@ -1009,10 +1009,10 @@ const barFrame = 'absolute w-max max-w-[50%]';
 
 /** Where the view is in the scene tree. */
 const SceneViewNavigation = ({ classNames = 'top-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions, path } = useSceneViewContext('SceneView.Navigation');
+  const { toolbarActions } = useSceneViewContext('SceneView.Navigation');
   return (
     <div className={mx(barFrame, classNames)}>
-      <NavigationToolbar actions={toolbarActions}>depth {path.length - 1}</NavigationToolbar>
+      <NavigationToolbar actions={toolbarActions} />
     </div>
   );
 };
