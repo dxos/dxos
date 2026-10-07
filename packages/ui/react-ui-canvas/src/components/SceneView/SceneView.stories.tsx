@@ -90,10 +90,10 @@ const createLatticeTree = () => {
   const smart = (from: string, to: string) => SceneBuilder.link('smart', from, to);
   return SceneBuilder.scene(root, [
     ...[box('a', at(-1, -1), 'A'), box('b', at(-1, 0), 'B'), box('c', at(-1, 1), 'C')].map((element) =>
-      element.properties({ style: { hue: 'green' } }),
+      element.properties({ style: { hue: 'neutral' } }),
     ),
-    box('d', at(0, 0), 'D'),
-    box('e', at(0, 1), 'E'),
+    box('d', at(0, 0), 'D').properties({ style: { hue: 'green', tone: 1 } }),
+    box('e', at(0, 1), 'E').properties({ style: { hue: 'green', tone: 3 } }),
     // Unlabelled, so the scene shows its contents.
     SceneBuilder.scene('f', [
       // One hue at each of its tones, lightest to strongest.
@@ -106,7 +106,7 @@ const createLatticeTree = () => {
     ])
       .name('F')
       .at(at(1, -1, 1, 2))
-      .properties({ portsPerSide: 4 }),
+      .properties({ style: { hue: 'blue' }, portsPerSide: 4 }),
     smart('a', 'b'),
     smart('b', 'c'),
     smart('b', 'd'),

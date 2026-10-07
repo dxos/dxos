@@ -50,31 +50,31 @@ describe('parts', () => {
     expect(frameClasses(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm', 'shadow']);
   });
 
-  test('every tone keeps the hue border; outline drops the fill, unset is medium', ({ expect }) => {
-    expect(hueClasses('blue', 'outline')).toEqual({
+  test('every tone keeps the hue border; tone 0 drops the fill, unset is tone 2', ({ expect }) => {
+    expect(hueClasses('blue', 0)).toEqual({
       surface: 'bg-transparent',
       text: '',
       border: 'border-blue-border',
     });
-    expect(hueClasses('blue', 'light')).toEqual({
+    expect(hueClasses('blue', 1)).toEqual({
       surface: 'bg-blue-200',
       text: 'text-blue-900',
       border: 'border-blue-border',
     });
-    expect(hueClasses('blue')).toEqual(hueClasses('blue', 'medium'));
-    expect(hueClasses('blue', 'medium')).toEqual({
+    expect(hueClasses('blue')).toEqual(hueClasses('blue', 2));
+    expect(hueClasses('blue', 2)).toEqual({
       surface: 'bg-blue-surface',
       text: 'text-blue-fg',
       border: 'border-blue-border',
     });
-    expect(hueClasses('blue', 'strong')).toEqual({
+    expect(hueClasses('blue', 3)).toEqual({
       surface: 'bg-blue-bg',
       text: 'text-neutral-50',
       border: 'border-blue-border',
     });
     // A hue the picker does not offer draws its stronger tones as medium; no hue ignores the tone.
-    expect(hueClasses('lime', 'strong')).toEqual(hueClasses('lime'));
-    expect(hueClasses(undefined, 'strong')).toEqual(hueClasses(undefined));
+    expect(hueClasses('lime', 3)).toEqual(hueClasses('lime'));
+    expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
   });
 
   test('an unset fill or border resolves to drawn', ({ expect }) => {

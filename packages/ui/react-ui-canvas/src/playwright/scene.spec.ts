@@ -289,11 +289,11 @@ test.describe('SceneView', () => {
     const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
     // An unstyled node matches no swatch.
     await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
-    await option('blue:strong').click();
-    await expect(option('blue:strong')).toHaveAttribute('aria-checked', 'true');
+    await option('blue:3').click();
+    await expect(option('blue:3')).toHaveAttribute('aria-checked', 'true');
     await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-bg/);
-    await option('neutral:outline').click();
-    await expect(option('neutral:outline')).toHaveAttribute('aria-checked', 'true');
+    await option('neutral:0').click();
+    await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');
     // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
     await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
     await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-bg/);

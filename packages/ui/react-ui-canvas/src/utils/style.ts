@@ -36,50 +36,56 @@ const HUES: Record<string, HueClasses> = {
 export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'violet', 'pink'] as const;
 export type StyleHue = (typeof STYLE_HUES)[number];
 
-export const TONES: readonly NodeTone[] = ['outline', 'light', 'medium', 'strong'];
+export const TONES: readonly NodeTone[] = [0, 1, 2, 3];
+
+/** What each tone is called, for labels. */
+export const TONE_NAMES: Record<NodeTone, string> = { 0: 'outline', 1: 'light', 2: 'medium', 3: 'strong' };
+
+/** The tone a hue without one draws at: the look a hue had before tones. */
+export const DEFAULT_TONE: NodeTone = 2;
 
 type ToneClasses = { surface: string; text: string };
 
 /**
  * The fills lighter and stronger than a hue's `surface` role: the scale's 200 under its darkest text, and the
- * hue's solid `bg` role under light text. `medium` is the role pair in `HUES`; `outline` has no fill.
+ * hue's solid `bg` role under light text (tones 1 and 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
  */
-const TONE_FILLS: Record<StyleHue, Record<'light' | 'strong', ToneClasses>> = {
+const TONE_FILLS: Record<StyleHue, Record<1 | 3, ToneClasses>> = {
   neutral: {
-    light: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
-    strong: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
+    3: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
   },
   red: {
-    light: { surface: 'bg-red-200', text: 'text-red-900' },
-    strong: { surface: 'bg-red-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-red-200', text: 'text-red-900' },
+    3: { surface: 'bg-red-bg', text: 'text-neutral-50' },
   },
   orange: {
-    light: { surface: 'bg-orange-200', text: 'text-orange-900' },
-    strong: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-orange-200', text: 'text-orange-900' },
+    3: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
   },
   amber: {
-    light: { surface: 'bg-amber-200', text: 'text-amber-900' },
-    strong: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-amber-200', text: 'text-amber-900' },
+    3: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
   },
   green: {
-    light: { surface: 'bg-green-200', text: 'text-green-900' },
-    strong: { surface: 'bg-green-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-green-200', text: 'text-green-900' },
+    3: { surface: 'bg-green-bg', text: 'text-neutral-50' },
   },
   teal: {
-    light: { surface: 'bg-teal-200', text: 'text-teal-900' },
-    strong: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-teal-200', text: 'text-teal-900' },
+    3: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
   },
   blue: {
-    light: { surface: 'bg-blue-200', text: 'text-blue-900' },
-    strong: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-blue-200', text: 'text-blue-900' },
+    3: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
   },
   violet: {
-    light: { surface: 'bg-violet-200', text: 'text-violet-900' },
-    strong: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-violet-200', text: 'text-violet-900' },
+    3: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
   },
   pink: {
-    light: { surface: 'bg-pink-200', text: 'text-pink-900' },
-    strong: { surface: 'bg-pink-bg', text: 'text-neutral-50' },
+    1: { surface: 'bg-pink-200', text: 'text-pink-900' },
+    3: { surface: 'bg-pink-bg', text: 'text-neutral-50' },
   },
 };
 
@@ -89,18 +95,18 @@ const isStyleHue = (hue: string): hue is StyleHue => STYLE_HUES.some((candidate)
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
 
 /**
- * The classes a hue at a tone draws with. Every tone keeps the hue's border; `outline` drops the fill and
+ * The classes a hue at a tone draws with. Every tone keeps the hue's border; tone 0 drops the fill and
  * keeps the default text, and a tone a hue has no fills for draws as `medium`.
  */
-export const hueClasses = (hue: string | undefined, tone: NodeTone = 'medium'): HueClasses => {
+export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TONE): HueClasses => {
   const base = (hue && HUES[hue]) || DEFAULT;
   if (!hue || base === DEFAULT) {
     return base;
   }
-  if (tone === 'outline') {
+  if (tone === 0) {
     return { surface: 'bg-transparent', text: '', border: base.border };
   }
-  if (tone !== 'medium' && isStyleHue(hue)) {
+  if ((tone === 1 || tone === 3) && isStyleHue(hue)) {
     return { ...TONE_FILLS[hue][tone], border: base.border };
   }
   return base;

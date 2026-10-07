@@ -9,7 +9,7 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { NodeStyle, type NodeTone } from '../../model/types.ts';
-import { STYLE_HUES, type StyleHue, TONES, hueClasses } from '../../utils/style.ts';
+import { DEFAULT_TONE, STYLE_HUES, type StyleHue, TONE_NAMES, TONES, hueClasses } from '../../utils/style.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
 
@@ -20,8 +20,8 @@ const choiceKey = ({ hue, tone }: StyleChoice) => `${hue}${SEPARATOR}${tone}`;
 const parseChoice = (key: string): StyleChoice | undefined => {
   const [hue, tone] = key.split(SEPARATOR);
   const styleHue = STYLE_HUES.find((candidate) => candidate === hue);
-  const nodeTone = TONES.find((candidate) => candidate === tone);
-  return styleHue && nodeTone ? { hue: styleHue, tone: nodeTone } : undefined;
+  const nodeTone = TONES.find((candidate) => String(candidate) === tone);
+  return styleHue !== undefined && nodeTone !== undefined ? { hue: styleHue, tone: nodeTone } : undefined;
 };
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -31,7 +31,7 @@ const ITEM_CLASSES = 'min-w-0 px-0 aria-checked:bg-transparent aria-checked:hove
 
 export type StyleGridProps = {
   hue?: string;
-  /** Unset is `medium`, as the frame draws it. */
+  /** Unset is the default tone, as the frame draws it. */
   tone?: NodeTone;
   /** Several nodes disagree: no swatch is selected until one is picked. */
   indeterminate?: boolean;
@@ -43,7 +43,7 @@ export type StyleGridProps = {
  * Each offered hue in a column and its tones down the rows, every swatch drawn with the classes the node
  * itself would take, so a pick is a preview. A hue the grid does not offer, or none, selects nothing.
  */
-export const StyleGrid = ({ hue, tone = 'medium', indeterminate, readonly, onValueChange }: StyleGridProps) => {
+export const StyleGrid = ({ hue, tone = DEFAULT_TONE, indeterminate, readonly, onValueChange }: StyleGridProps) => {
   const selected = indeterminate || !hue ? '' : `${hue}${SEPARATOR}${tone}`;
   return (
     <ToggleGroup.Root
@@ -75,7 +75,7 @@ export const StyleGrid = ({ hue, tone = 'medium', indeterminate, readonly, onVal
             >
               <span
                 role='img'
-                aria-label={`${capitalize(columnHue)}, ${rowTone}`}
+                aria-label={`${capitalize(columnHue)}, ${TONE_NAMES[rowTone]}`}
                 className={mx(
                   'size-5 rounded-xs border-2',
                   classes.surface,
