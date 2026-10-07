@@ -96,7 +96,7 @@ export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 export const NodeStyle = Schema.Struct({
   /** One of the theme's hues, colouring fill, text and border together. */
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
-  /** The hue's fill; unset is 3, the look a hue had before tones. */
+  /** The hue's fill; unset is 2, the look a hue had before tones. */
   tone: Schema.optional(NodeTone),
   rounded: Schema.optional(Schema.Boolean),
   fill: Schema.optional(Schema.Boolean),

@@ -38,49 +38,49 @@ export const TONES: readonly NodeTone[] = [0, 1, 2, 3];
 export const TONE_NAMES: Record<NodeTone, string> = { 0: 'outline', 1: 'strong', 2: 'medium', 3: 'light' };
 
 /** The tone a hue without one draws at: the look a hue had before tones. */
-export const DEFAULT_TONE: NodeTone = 3;
+export const DEFAULT_TONE: NodeTone = 2;
 
 type ToneClasses = { surface: string; text: string };
 
 /**
- * The fills stronger than a hue's `surface` role: its solid `bg` role under light text (tone 1), and the scale's
- * 500, between the two, under the hue's own text (tone 2). Tone 3 is the role pair in `HUES`; tone 0 has no fill.
+ * The fills either side of a hue's `surface` role (its 400): the solid `bg` role (600) under light text (tone 1),
+ * and the scale's 200 under its darkest text (tone 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
  */
-const TONE_FILLS: Record<StyleHue, Record<'strong' | 'middle', ToneClasses>> = {
+const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
   neutral: {
-    middle: { surface: 'bg-neutral-500', text: 'text-neutral-fg' },
+    light: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
     strong: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
   },
   red: {
-    middle: { surface: 'bg-red-500', text: 'text-red-fg' },
+    light: { surface: 'bg-red-200', text: 'text-red-900' },
     strong: { surface: 'bg-red-bg', text: 'text-neutral-50' },
   },
   orange: {
-    middle: { surface: 'bg-orange-500', text: 'text-orange-fg' },
+    light: { surface: 'bg-orange-200', text: 'text-orange-900' },
     strong: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
   },
   amber: {
-    middle: { surface: 'bg-amber-500', text: 'text-amber-fg' },
+    light: { surface: 'bg-amber-200', text: 'text-amber-900' },
     strong: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
   },
   green: {
-    middle: { surface: 'bg-green-500', text: 'text-green-fg' },
+    light: { surface: 'bg-green-200', text: 'text-green-900' },
     strong: { surface: 'bg-green-bg', text: 'text-neutral-50' },
   },
   teal: {
-    middle: { surface: 'bg-teal-500', text: 'text-teal-fg' },
+    light: { surface: 'bg-teal-200', text: 'text-teal-900' },
     strong: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
   },
   sky: {
-    middle: { surface: 'bg-sky-500', text: 'text-sky-fg' },
+    light: { surface: 'bg-sky-200', text: 'text-sky-900' },
     strong: { surface: 'bg-sky-bg', text: 'text-neutral-50' },
   },
   blue: {
-    middle: { surface: 'bg-blue-500', text: 'text-blue-fg' },
+    light: { surface: 'bg-blue-200', text: 'text-blue-900' },
     strong: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
   },
   violet: {
-    middle: { surface: 'bg-violet-500', text: 'text-violet-fg' },
+    light: { surface: 'bg-violet-200', text: 'text-violet-900' },
     strong: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
   },
 };
@@ -92,7 +92,7 @@ const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'bor
 
 /**
  * The classes a hue at a tone draws with. Every tone keeps the hue's border; tone 0 drops the fill and
- * keeps the default text, and a tone a hue has no fills for draws as `light` (its role pair).
+ * keeps the default text, and a tone a hue has no fills for draws as `medium` (its role pair).
  */
 export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TONE): HueClasses => {
   const base = (hue && HUES[hue]) || DEFAULT;
@@ -102,8 +102,8 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
   if (tone === 0) {
     return { surface: 'bg-transparent', text: '', border: base.border };
   }
-  if ((tone === 1 || tone === 2) && isStyleHue(hue)) {
-    return { ...TONE_FILLS[hue][tone === 1 ? 'strong' : 'middle'], border: base.border };
+  if ((tone === 1 || tone === 3) && isStyleHue(hue)) {
+    return { ...TONE_FILLS[hue][tone === 1 ? 'strong' : 'light'], border: base.border };
   }
   return base;
 };
