@@ -1,9 +1,9 @@
 # Agent Brain — design
 
-Status: draft 2 (2026-10-07): design settled except private threads (M0); M1 done; `@dxos/datalog` and `@dxos/brain` built. Builds on plugin-agent's
-[ONTOLOGY.md](./ONTOLOGY.md) (draft 3) and
-[DESIGN.md](./DESIGN.md), which describe the agent as built in
-PR #13590.
+Status: draft 2 (2026-10-07). The design is settled except private threads (M0, see
+[THREADS.md](./THREADS.md)); the M1 spike is done and `@dxos/datalog` and `@dxos/brain` are built.
+Builds on [ONTOLOGY.md](./ONTOLOGY.md) (draft 3) and [DESIGN.md](./DESIGN.md), which describe the agent
+as built in PR #13590.
 
 ## Summary
 
@@ -45,7 +45,7 @@ types are defined once and the layers above reuse them.
 | 1. Facts       | `@dxos/pipeline-rdf`           | `RDF.Fact` = `Assertion` (subject/object `Term`, predicate, validity, quote) + `Factuality` + `Illocution` + `Attribution`; `RDF.Entity`                                                         |
 | 2. RDF form    | `@dxos/pipeline-rdf`           | The vocabulary (`sx:` = `https://dxos.org/semantic#`, `prov:`, entity and fact IRIs) and the `Fact` ↔ triples mapping; `FactStore` (SQLite: `triples`, `entities`, per-source `cursors`; SPARQL) |
 | 3. Feed record | `@dxos/brain`                  | `FactTuple`: a flattened `Fact` (with `StoredTerm`, `pass`, `supersedes`), one ECHO feed item, one feed per source                                                                               |
-| 4. Rules       | `@dxos/datalog`, `@dxos/brain` | Relations `fact(F, S, P, O)` + metadata keyed by `F`; canonical `Vocabulary`; built-ins `about`, `concerns`, `elapsed`, … ; compiled programs                                                    |
+| 4. Rules       | `@dxos/datalog`, `@dxos/brain` | Relations `fact(F, S, P, O)` + metadata keyed by `F`; canonical `Vocabulary`; built-ins `about`, `concerns`, `elapsed`, …; compiled programs                                                     |
 | 5. Goals       | `@dxos/brain`, plugin-agent    | `Goal` directive (text, owner `Actor`, status, priority, budget, situation, drivers, compiled rules) with its own fact feed; sub-goals; `Task`s for concrete work                                |
 
 **Facts flow (ingest).**
@@ -81,51 +81,77 @@ types are defined once and the layers above reuse them.
 4. The judgment, the action and the new status are appended to the goal's own feed as `FactTuple`s
    and the situation is rewritten — so they are facts other goals can match, and the loop continues.
 
-**Threads.** A private thread is a child feed of a session (THREADS.md): the session's history merged
-by feed position with the thread's own, hidden from every reader of the chat by construction. A
-session goal's thread lives under the session; a durable goal's thread lives under the background
-session of its owning actor, which the EDGE Durable Object maintains. Promoting a goal re-parents its
-thread feed.
+**Threads.** A private thread is a child feed of a session ([THREADS.md](./THREADS.md)): the session's
+history merged by feed position with the thread's own, hidden from every reader of the chat by
+construction. A session goal's thread lives under the session; a durable goal's thread lives under the
+background session of its owning actor, which the EDGE Durable Object maintains. Promoting a goal
+re-parents its thread feed.
 
 **Where it runs.** One brain per agent, authoritative in an EDGE Durable Object (feeds, index, rules,
 alarms for time drivers, background sessions); an in-process copy in the browser for tests, stories
 and offline work. Every layer runs unchanged in the browser, on Workers and in Node.
 
-## Decisions
+## Runtime
 
-### 1. One brain per agent, authoritative on EDGE
+### One brain per agent, authoritative on EDGE
 
 Each agent has one brain, hosted on EDGE as a Durable Object. Every runtime that runs the agent's
 sessions — the browser, EDGE workers, a CLI — is a client of it. This closes the gap in the current
 build, where watches live in one runtime's memory: a watch set from a chat in the browser cannot see
 turns of a chat served on EDGE, and every watch is lost on restart. The Durable Object's alarms give
-time-driven evaluation a durable home.
-
-A local stand-in with the same interface runs in-process for tests, stories and offline work.
+time-driven evaluation a durable home. An in-process stand-in with the same interface runs in the
+browser for tests, stories and offline work.
 
 **Portability is a hard requirement:** everything the brain runs — the rule engine, the fact index,
-the compiler's replay gate — must run both in the browser and on Cloudflare Workers (workerd, inside
-the Durable Object), as well as in Node for tests. That rules out engines that need Node built-ins,
-threads, runtime `eval`, or a bundle beyond Workers' script size limit.
+the compiler's replay gate — must run in the browser, on Cloudflare Workers (workerd, inside the
+Durable Object) and in Node for tests. That rules out engines that need Node built-ins, threads,
+runtime `eval`, or a bundle beyond Workers' script size limit — which is what decided the rule engine
+(see "M1 findings").
 
-### 2. Facts live in feeds; the brain's index is derived
+## Facts
+
+### Feeds are the record; the index is derived
 
 ECHO feeds are the record of what the agent believes. The Durable Object follows them and keeps a
 derived index it can rebuild from scratch at any time. People can read, correct and delete facts in
 Composer, and any runtime can append them, including offline. The cost is that evaluation lags an
 append by roughly one sync round.
 
-### 3. One feed item per fact, one feed per source
-
 Each source the agent reads (a chat, a thread, a document, a web page) has its own fact feed, keyed by
-the source as today (`org.dxos.agent.annotations` foreign key). Each feed item is a single RDF tuple
-rather than a batch:
+the source as today (`org.dxos.agent.annotations` foreign key), and each feed item is one fact.
+
+### pipeline-rdf is the common type
+
+`@dxos/pipeline-rdf` defines the fact model every layer reuses, as Effect Schemas under the `RDF`
+namespace:
+
+| Type          | Fields                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| `Fact`        | `id`, `assertion`, `factuality`, `illocution?`, `attribution`, `recordedAt`, `extractor`, `sourceHash` |
+| `Assertion`   | `subject: Term`, `predicate`, `object: Term`, `validFrom?`, `validTo?`, `quote?`                       |
+| `Term`        | `{ entity, label? }` or `{ literal }`                                                                  |
+| `Factuality`  | `value` (FactBank: `CT+ CT- PR+ PR- PS+ PS- CTu Uu`), `polarity` (`+ - ?`), `confidence?`, `nature?`   |
+| `Illocution`  | `force` (`assertive`, `directive`, `commissive`, `expressive`), `mood?`, `addressee?`                  |
+| `Attribution` | `agent?` (speaker), `source` (message DXN), `generatedAtTime`, `wasDerivedFrom?`, `span?`              |
+| `Entity`      | `id`, `kind` (`person org place event concept thing`), `label`, `aliases`, `ref?` (an ECHO object)     |
+
+Its RDF form — the `sx:` (`https://dxos.org/semantic#`) and `prov:` vocabulary, entity and fact IRIs,
+and the `Fact` ↔ triples reification — is the one RDF definition: the brain reuses it for any RDF or N3
+output rather than inventing its own namespace. `FactStore` persists that form in SQLite (`triples`
+indexed by subject–predicate–object and predicate–object, `entities`, per-source `cursors`) and answers
+SPARQL. Two fixes make it fit for the brain (in progress): the mapping and its predicate normalization
+are exported publicly, and the mapping serializes `illocution` (`sx:force`, `sx:mood`, `sx:addressee`),
+which it previously dropped — a fact read back from `FactStore` had lost its speech act.
+
+### `FactTuple`
+
+A feed item is a flattened `Fact`:
 
 ```ts
 FactTuple {
   id: string;                 // pipeline-rdf fact id; the key every Datalog predicate joins on
   subject: StoredTerm;        // entity IRI resolving to an ECHO object, or a label
-  predicate: string;          // open vocabulary
+  predicate: string;          // as extracted; canonicalized at encoding
   object: StoredTerm;         // entity, label or literal
   validFrom?: string;
   validTo?: string;           // a status's horizon; expired facts are filtered, never deleted
@@ -148,13 +174,12 @@ FactTuple {
   pass: string;               // extraction pass id, so a pass's facts can be grouped or replayed
 }
 
-StoredTerm { entity?: string; label?: string; literal?: string }  // ECHO stores no non-discriminated unions
+StoredTerm { entity?: string; label?: string; literal?: string }  // ECHO stores only tagged unions
 ```
 
-Corrections and retractions are further tuples (`supersedes`, polarity `-`); the feed is
-append-only. The tuple is a flattening of pipeline-rdf's `Fact`, so its extraction stages and SPARQL
-engine still apply. Every `Fact` field has a home, so the mapping is lossless in both directions except
-for `force`, which a tuple always carries (`assertive` standing in for a `Fact` with no illocution):
+Corrections and retractions are further tuples (`supersedes`, polarity `-`); the feed is append-only.
+The mapping to `RDF.Fact` is lossless in both directions (`FactTuple.fromFact` / `toFact`, with a
+round-trip test); a bare `assertive` illocution reads back as absent.
 
 | `FactTuple`                                         | pipeline-rdf `Fact`                                                            |
 | --------------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -166,6 +191,29 @@ for `force`, which a tuple always carries (`assertive` standing in for a `Fact` 
 | `speaker`, `source`, `saidAt`, `span`, `supersedes` | `attribution.agent`, `.source`, `.generatedAtTime`, `.span`, `.wasDerivedFrom` |
 | `pass`                                              | (tuple-only: groups one extraction pass)                                       |
 
+### Encoding and vocabulary
+
+Storage in the rule engine is generic — `fact(F, S, P, O)` plus metadata relations keyed by `F`
+(`speaker`, `force`, `polarity`, `mood`, `factuality`, `saidAt`, `source`, `surface`, …), lossless
+with `FactTuple` and RDF. The extractor's predicates are unstable (`working-on`, `will-work-on`,
+`works_on`), so surface predicates are normalized with pipeline-rdf's `normalizePredicate` and mapped
+onto a small **canonical vocabulary**, keeping the original as `surface(F, "will-work-on")`. Rules may
+use shorthand for canonical predicates — `helps_with(dima, X)` expands to
+`fact(_, dima, helps_with, X)`, and `helps_with(F, dima, X)` exposes the id — and shorthand on a
+non-canonical or misspelled predicate is a compile error rather than a silent miss.
+
+### Indexing
+
+| Index                                  | Where                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| Rule joins (hash per bound-column set) | In memory, `@dxos/datalog`                                            |
+| Fact tuples, with a cursor per source  | SQLite (pipeline-rdf's schema), in the Durable Object and the browser |
+| Entities and aliases (`concerns`)      | SQLite `entities`                                                     |
+| Fact text (`about`)                    | SQLite FTS5; vectors later for meaning                                |
+
+On start the Durable Object loads base facts from SQLite into the engine, then evaluates incrementally
+as feeds advance; rebuilding means clearing the cursors and replaying the feeds.
+
 ## Goals
 
 Goals are the centre of the design. The concept is distinct from ECHO's existing `Trigger` (a
@@ -175,53 +223,26 @@ against everything the agent knows.
 ### What a goal is
 
 A goal is a **directive** — an order given to the agent. It defines a future outcome or state; it may
-or may not say how to achieve it, and it may define conditions. It is distinct from a `@dxos/types`
-`Task`, which is a concrete action with a history (see "Goals, sub-goals and tasks").
+or may not say how to achieve it, and it may define conditions.
 
 - **Plain text.** A user states a goal in natural language and it evolves through discussion with the
-  agent. A DSL for more precise goals may come later; v1 assumes text.
-- **Owned by an actor.** A goal is associated with an `Actor`: a user, a group, or an agent — and an
-  agent is just a user, so the agent's own goals need no special case. The agent can enumerate an
-  actor's goals ("what are you doing for me?"), and the owner can inspect, reprioritize, edit and
-  cancel them.
+  agent.
+- **Owned by an actor.** A goal belongs to an `Actor`: a user, a group, or an agent — and an agent is
+  just a user, so the agent's own goals need no special case. The agent can enumerate an actor's goals
+  ("what are you doing for me?"), and the owner can inspect, reprioritize, edit and cancel them.
 - **Long-running.** A goal holds until it is achieved or cancelled. Some last only the session
   ("help me draft this reply"); others last months ("learn French").
-- **Prioritized and budgeted.** A goal carries priority and cost metadata (see "Priority and cost"),
-  which order the agent's attention and bound what it spends.
-- **Like a system prompt, but structured.** Goals act as standing instructions, but as separate,
-  addressable objects with an owner, status and history rather than one block of text.
-- **Outcome or condition.**
-  - An **outcome** is a future state: "complete my taxes", "learn French", "get Dima to help with the
-    agent plugin". It is achieved once and then closes.
-  - A **condition** holds continuously: "keep my inbox empty", "keep me informed about X". It is
-    never achieved; it is maintained.
-- **Carries instructions.** A goal may include instructions — a prompt — for how to act on it
-  ("archive newsletters, flag anything from investors"). The user may write them, or the agent may
-  propose them in discussion and the user confirms.
-- **The agent decides actionability.** Whether a goal calls for action now, given the current
-  circumstances, is the agent's judgment, not a compiled rule.
+- **Outcome, condition or constraint.** An **outcome** is a future state, achieved once ("complete my
+  taxes"); a **condition** holds continuously and is maintained ("keep my inbox empty", "keep me
+  informed about X"); a **constraint** limits the agent's actions ("never book meetings on Fridays").
+  These are read from the text, not types in code.
+- **Carries instructions.** A goal may include a prompt for how to act on it ("archive newsletters,
+  flag anything from investors"), written by the user or proposed by the agent and confirmed.
+- **Like a system prompt, but structured:** separate, addressable objects with an owner, status and
+  history rather than one block of text.
+- **The agent decides actionability.** Whether a goal calls for action now is judgment, not a rule.
 
-### Evaluation
-
-Goals are evaluated whenever the facts change. Evaluating every goal with a model call on every fact
-does not scale, so evaluation is two-stage:
-
-1. **Wake (cheap, in the Durable Object).** When facts are appended, the Durable Object evaluates
-   each goal's compiled wake rules (below) over the fact index. Most facts wake no goal, and no
-   model is called.
-2. **Judgment (model call).** For each relevant goal, the agent is given the goal, its instructions,
-   the new facts, the related facts and the source context, and decides: nothing to do; act (and
-   how); the goal is achieved; or the goal needs the user (ambiguous, blocked, conflicting).
-
-Not every goal is driven by facts:
-
-- **Time-driven** goals have deadlines or a cadence ("taxes by April 15", "practise French daily"),
-  scheduled with Durable Object alarms.
-- **Action-driven** goals are constraints ("never book meetings on Fridays", "don't DM me after
-  6pm"). They are checked when the agent is about to act, not when facts arrive.
-
-An action the agent takes is itself recorded as facts, so goals can depend on each other ("keep me
-informed" sees the relay that "get Dima to help" sent).
+plugin-agent's current `Goal` type becomes this directive.
 
 ### Representation
 
@@ -229,132 +250,117 @@ The runtime needs to know only _when_ to wake a goal; that must be cheap and det
 goal means and what to do is judgment, which belongs to the model. So a goal is represented in three
 layers, each with one job:
 
-1. **Drivers — the only part hardcoded in code.** `fact`, `time` and `action`, because each maps to
-   one runtime mechanism: an index subscription, a Durable Object alarm, a hook before every action
-   the agent takes. A goal may have several. "Outcome" and "condition" are not types in code — the
-   model reads them from the text — so a new kind of goal never needs a code change.
+1. **Drivers — the only part hardcoded.** `fact`, `time` and `action`, because each maps to one
+   runtime mechanism: an index subscription, a Durable Object alarm, a hook before every action the
+   agent takes. A goal may have several.
 2. **Goal patterns — a document the model reads.** A skill of goal patterns with worked examples (the
    table below) teaches the agent how to read a goal, propose its instructions, decide whether it is
    actionable and recognise achievement. It grows by adding examples, and the evals score against it.
-3. **Compiled rules — never written by users.** When a goal is created or edited, the agent compiles
-   its text into a separate rule DSL over the fact tuples (Datalog-style): the outcome or state the
-   goal wants (`achieved` / `holds`), its conditions, and the wake rules that decide when to judge it.
-   The Durable Object evaluates them without a model. The compiled rules sit beside the text so they can be inspected. The text is the
-   authority: when the rules and the text disagree, the agent recompiles; it never rewrites the text
-   to fit the rules.
+3. **Compiled rules — never written by users.** The goal's text compiled to Datalog over the fact
+   tuples: `achieved` / `holds`, conditions, `wake` rules, and `blocks` for constraints. The compiled
+   rules sit beside the text so they can be inspected. The text is the authority: when the two
+   disagree, the agent recompiles; it never rewrites the text to fit the rules.
 
-**Rule language: Datalog for goals, SPARQL for retrieval.** Goals compile to Datalog from M1: rules
-build on each other (`wake`, `achieved` and `holds` reference one another), stratified negation gives
-`not achieved(goal)` a clear meaning, recursion covers relations like "part of" and "blocked by", and
-semi-naive evaluation re-derives only what a new fact affects, which suits a Durable Object following
-feeds. The fact tuples map directly to predicates keyed by the tuple's id: `fact(Id, S, P, O)`,
-`speaker(Id, dima)`, `force(Id, commissive)`, `polarity(Id, "-")`, `about(Id, Text)`. Built-ins supply what plain Datalog lacks: time (`elapsed`), text and
-semantic matching (`about`), and counting. SPARQL — already shipped in pipeline-rdf — stays the tool
-for judgment-time retrieval ("everything Dima said about the plugin this week"), where it is strong.
-The cost is owning a dialect and an engine; the engine can stay small because rules come from the
-compiler, not from people.
+**Rule language: Datalog for goals, SPARQL for retrieval.** Rules build on each other (`wake`,
+`achieved` and `holds` reference one another), stratified negation gives `not achieved(goal)` a clear
+meaning, recursion covers relations like "part of" and "blocked by", and incremental evaluation
+re-derives only what a new fact affects, which suits a Durable Object following feeds. Built-ins
+supply what plain Datalog lacks: `about` (text, later meaning; may bind the fact), `concerns` (an
+entity, so "my taxes" means Rich's), `elapsed`, `every`, `due`, `weekday`, `hour`, and aggregates for
+counting. SPARQL — shipped in pipeline-rdf — stays the tool for judgment-time retrieval ("everything
+Dima said about the plugin this week").
 
-Goal 3 below, compiled (Datalog notation, for readability):
+Goal 3 below, compiled:
 
 ```prolog
-wake(reply)    :- fact(F, _, _, _), speaker(F, dima), force(F, commissive), about(F, "agent plugin").
-wake(refusal)  :- fact(F, _, _, _), speaker(F, dima), force(F, commissive), polarity(F, "-"),
-                  about(F, "agent plugin").
+dima(F)        :- speaker(F, dima), force(F, commissive), about(F, "agent plugin").
+wake(reply)    :- dima(F), not achieved(goal).
+wake(reply)    :- dima(F), achieved(goal).
 wake(followup) :- elapsed(goal, 2d), not achieved(goal).
-achieved(goal) :- fact(F, _, _, _), speaker(F, dima), force(F, commissive), polarity(F, "+"),
-                  about(F, "agent plugin").
+achieved(goal) :- dima(F), polarity(F, "+").
 ```
+
+### Compilation
+
+A Sonnet-class model compiles the goal (`CompilePrompt`, built from the canonical vocabulary so the
+two cannot drift); `Compiler` expands shorthand and checks arity, safety, stratification and the
+vocabulary. The compiler marks each goal's achievement as `rule` or `judgment`: rules are reliable for
+single-event outcomes with a named person or event, constraints and checkable states (an empty
+inbox); everything else is judged. **A compilation goes active only after replay:** 3–5 test facts,
+including near misses, with their expected effects, written independently of the compiler (its own
+probes caught none of the wrong compilations in M1), are replayed through `GoalRules`. A read-back of
+the rules in plain English is shown to the user as an explanation, not used as a gate.
+
+### Evaluation
+
+Goals are evaluated whenever the facts change, in two stages:
+
+1. **Wake (cheap, no model).** `GoalRules` evaluates each goal's rules incrementally on every new fact
+   and clock tick. A goal wakes when a `wake` rule gains a new binding, when `achieved` first becomes
+   true, or when a sub-goal changes status; each wake carries the facts behind it. Most facts wake no
+   goal.
+2. **Judgment (model call).** A woken goal is judged in its private thread (below), given the goal,
+   its instructions and situation, the triggering facts and the context; it decides to do nothing, act,
+   mark the goal achieved, or ask its owner (ambiguous, blocked, conflicting).
+
+Time-driven goals ("taxes by April 15", "practise French daily") wake on Durable Object alarms.
+Constraints are checked before every action (`checkAction`), not when facts arrive. Actions the agent
+takes are recorded as facts, so goals depend on each other ("keep me informed" sees the relay that
+"get Dima to help" sent).
 
 ### State
 
-Goal state is split by who reads it:
-
 - **On the goal object — what the runtime and UI read directly.** `status` (`active` | `paused` |
-  `achieved` | `cancelled`), priority, drivers, the compiled wake rules, and a **situation**: one or two
-  sentences the agent rewrites after each judgment ("Asked Dima Monday; he deferred Tuesday; following
-  up Thursday"). The situation is what a user sees when they ask what the agent is doing for them, and
-  what the model reads first at the next judgment.
+  `achieved` | `cancelled`), priority, budget and spend, drivers, the compiled rules, and a
+  **situation**: one or two sentences the agent rewrites after each judgment ("Asked Dima Monday; he
+  deferred Tuesday; following up Thursday") — what a user sees when they ask what the agent is doing,
+  and what the model reads first at the next judgment.
 - **In the goal's own fact feed — the history.** A goal is a source like any chat, so its actions and
-  judgments are recorded as tuples: `(goal, relayed, <message>)`, `(goal, awaiting, dima)`,
+  judgments are tuples: `(goal, relayed, <message>)`, `(goal, awaiting, dima)`,
   `(goal, declined-by, dima)`, `(goal, judged, "remind him it's the priority")`. The history is
-  append-only and auditable, and other goals' wake rules can match it ("keep me informed" sees the
-  relay).
+  append-only and auditable, and other goals' rules can match it.
 
 Nothing on the goal is unjustified by its feed, and `not achieved(goal)` stays a field lookup.
 
 Goal 3 over a week:
 
-| When | Event                                                                                     | Status / situation                                   | Goal feed                            |
-| ---- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
-| Mon  | Rich: "get Dima to help me with the agent plugin"; created, compiled, judged actionable   | active / "Asked Dima; waiting"                       | `relayed <msg>`, `awaiting dima`     |
-| Tue  | Dima: "busy with the release this week"; `wake(refusal)`; instructions say press priority | active / "Dima deferred; told him it's the priority" | `declined-by dima`, `relayed <msg2>` |
-| Thu  | `wake(followup)` alarm after 2 days                                                       | active / "Followed up with Dima"                     | `followed-up dima`                   |
-| Thu  | Dima: "OK, I'll start on it"; `wake(reply)`; achieved; Rich's watch sees it               | achieved / "Dima committed Thursday"                 | `achieved`, `committed dima`         |
+| When | Event                                                                                   | Status / situation                                   | Goal feed                            |
+| ---- | --------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
+| Mon  | Rich: "get Dima to help me with the agent plugin"; created, compiled, judged actionable | active / "Asked Dima; waiting"                       | `relayed <msg>`, `awaiting dima`     |
+| Tue  | Dima: "busy with the release this week"; `wake(reply)`; instructions say press priority | active / "Dima deferred; told him it's the priority" | `declined-by dima`, `relayed <msg2>` |
+| Thu  | `wake(followup)` alarm after 2 days                                                     | active / "Followed up with Dima"                     | `followed-up dima`                   |
+| Thu  | Dima: "OK, I'll start on it"; achieved; Rich's watch sees it                            | achieved / "Dima committed Thursday"                 | `achieved`, `committed dima`         |
 
 ### Priority and cost
 
-Every goal carries metadata the runtime reads directly, beside its status and situation:
-
 - **Priority** — orders judgment when several goals wake at once, decides which goal wins a conflict
-  (the judgment sees the priorities of the other goals in its session), and sets how promptly a
-  woken goal is judged: an urgent goal is judged on the fact that woke it; a low one may wait to
-  be batched.
+  (the judgment sees the priorities of the other goals in its session), and sets how promptly a woken
+  goal is judged: an urgent goal on the fact that woke it; a low one may wait to be batched.
 - **Budget** — what the goal may spend per window: judgment calls, model tokens, or both, and
-  optionally the model tier it is judged with. A sub-goal draws on its parent's budget unless given
-  its own.
+  optionally the model tier. A sub-goal draws on its parent's budget unless given its own.
 - **Spend** — what the goal has spent in the current window and in total, rolled up from its
-  sub-goals, so an owner can see what each directive costs ("keep my inbox empty" is costing more
-  than it is worth).
+  sub-goals, so an owner can see what each directive costs.
 
-When a goal nears its budget, the brain degrades rather than stops: it batches the facts that wake it
-into fewer judgments, lowers its cadence, or judges with a cheaper model. When the budget is spent, the
-goal pauses its wake rules and asks its owner, through the situation and a message, whether to raise
-the budget or narrow the goal. Priority and budget are set by the owner or proposed by the agent when
-the goal is created, as its instructions are.
-
-### Where judgment runs
-
-The Durable Object never acts on its own; acting needs the agent's skills, channel backends,
-`composeUpdate` and the pre-action constraint check, which live in agent sessions. Where a goal is
-judged depends on how long it lives:
-
-- **Session goals are judged in a private thread within the current session's feed.** The thread is
-  a side channel of the session's feed that the conversation view does not show, so background
-  reasoning never interleaves with what the user is doing, yet it has the session's full context. It
-  ends with the session.
-- **Durable goals are judged in the brain's own background sessions,** which the Durable Object
-  maintains and which represent its background thinking. A durable goal outlives the session that
-  created it, may be relevant to parallel or later sessions, and assimilates what they learn: their
-  facts reach it through the feeds whatever session produced them. When it acts, the agent service
-  routes the result to the right place — the user's current session, or their channel.
-- **One background session per owning actor, with one private thread per durable goal** — provided
-  private threads can be implemented effectively (see M0). An actor's goals see each other's threads,
-  so their conflicts and priorities are weighed together ("taxes" outranks "learn French" this week),
-  while different actors' goals are separated by construction. Because a group and the agent itself
-  are actors too, team goals and the agent's own goals each get their own session; a group's session
-  follows the audience rule of that group.
-- **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
-  private thread's history moves with it into the goal's feed.
+Near its budget the brain degrades rather than stops: it batches the facts that wake a goal into fewer
+judgments, lowers its cadence, or judges with a cheaper model. When the budget is spent, the goal
+pauses its wake rules and asks its owner whether to raise the budget or narrow the goal. Priority and
+budget are set by the owner or proposed by the agent at creation, as instructions are.
 
 ### Goals, sub-goals and tasks
 
-**Goals are directives, and hierarchical.** A goal's steps are sub-goals, parented to it in the ECHO
-parent tree, each with its own text, compiled rules, status, situation and feed. "Complete my taxes"
-is judged into "gather the W-2s", "find last year's return" and "book the accountant". The machinery
-is optional per goal, so a sub-goal costs nothing until judgment gives it drivers ("book the
-accountant" gains a follow-up rule when the accountant does not reply). A sub-goal's change of status
-is a fact its parent's rules can match; closing a goal closes its open sub-goals.
+**Goals are hierarchical.** A goal's steps are sub-goals, parented to it in the ECHO parent tree, each
+with its own text, rules, status, situation and feed. "Complete my taxes" is judged into "gather the
+W-2s", "find last year's return" and "book the accountant". The machinery is optional per goal, so a
+sub-goal costs nothing until judgment gives it drivers ("book the accountant" gains a follow-up rule
+when the accountant does not reply). A sub-goal's change of status wakes its parent; closing a goal
+closes its open sub-goals.
 
 **Tasks are concrete, and a record of work.** A `@dxos/types` `Task` is a detailed action with a
-history, assignee and status, and once done it is the record that the work happened. It is not
-conditional and has none of a goal's kinds. Earlier drafts conflated the two; they are separate:
-
-- A goal (or sub-goal) **creates a `Task`** only when the step is substantive enough to warrant one:
-  long-lived, assignable to a person, or worth keeping as a record of work. "Book the accountant" may
-  become a `Task` assigned to the user; "check Dima's reply" never does.
-- The `Task` links back to the goal that created it, and its completion is a fact the goal's rules
-  match. The task carries the work; the goal carries the intent.
-- plugin-agent's current `Goal` type becomes this directive; tasks stay as they are.
+history, assignee and status, and once done it is the record that the work happened; it is never
+conditional. A goal creates a `Task` only when a step is substantive: long-lived, assignable to a
+person, or worth keeping as a record ("book the accountant" may become a `Task` assigned to the user;
+"check Dima's reply" never does). The `Task` links back to its goal, and its completion is a fact the
+goal's rules match. The task carries the work; the goal carries the intent.
 
 ### Examples
 
@@ -364,74 +370,73 @@ conditional and has none of a goal's kinds. Earlier drafts conflated the two; th
 | 2   | "Let me know when the release ships"             | Outcome              | fact                         | Tells the user once, then closes the goal                              | Recognising "shipped" across wordings                     |
 | 3   | "Get Dima to help me with the agent plugin"      | Outcome              | fact, time (2-day follow-up) | Relays the request; closes on "OK, I'll start"; escalates on a refusal | Acts now and also waits, with a timeout                   |
 | 4   | "Keep my inbox empty"                            | Condition            | fact (each new email)        | Triages each email using the goal's instructions                       | Volume: cheap wake rules and batching                     |
-| 5   | "Complete my taxes by April 15"                  | Outcome              | time (deadline), fact        | Breaks the goal into tasks, reminds, gathers documents                 | Goal → tasks, and tracking progress                       |
+| 5   | "Complete my taxes by April 15"                  | Outcome              | time (deadline), fact        | Breaks the goal into sub-goals, reminds, gathers documents             | Achievement depends on sub-goals created later            |
 | 6   | "Learn French"                                   | Outcome (open-ended) | time (daily cadence)         | Starts a practice session on schedule                                  | Achievement is fuzzy; the user closes it                  |
 | 7   | "Never book meetings on Fridays"                 | Constraint           | action                       | Blocks or rewrites the action                                          | Checked before every action, not on facts                 |
 | 8   | "Help me draft this PR description"              | Outcome (session)    | fact (the conversation)      | Normal chat work                                                       | Whether a session goal is a goal or just the task at hand |
 
-### Packages, dialect and fact encoding
+These eight are the test scenarios in `@dxos/brain/testing` (each a fact timeline with expected wakes
+and achievement, plus reference and deliberately wrong compilations).
 
-- **`@dxos/datalog`** (`packages/common/datalog`) — a generic, dependency-free Datalog engine: parser,
-  static checks (arity, safety, stratification), incremental semi-naive evaluation, provenance (which
-  facts derived a conclusion) and a registry for built-ins. Pure TypeScript, so it runs unchanged in
-  the browser, in a workerd Durable Object and in Node.
-- **`@dxos/brain`** (`packages/core/compute/brain`) — the agent-specific layer on top: the `FactTuple`
-  ↔ predicate mapping, the `about` / `concerns` / `elapsed` built-ins, goal compilation and the replay
-  gate, and the example scenarios as evals. Used in-process by plugin-agent (M2) and by the EDGE
-  Durable Object (M3). Its relation to plugin-brain's per-space fact store is settled in M2.
-- **Dialect:** stratified negation, aggregates (`count`, `min`, `max`, `sum`) and built-ins,
-  Soufflé-like syntax, evaluated incrementally. No probabilistic, answer-set or existential rules:
-  every program terminates and is cheap enough to evaluate per fact.
-- **Fact encoding:** storage is generic — `fact(F, S, P, O)` plus metadata relations keyed by `F`
-  (`speaker`, `force`, `polarity`, `saidAt`, …), lossless with `FactTuple` and RDF. Rules may use
-  shorthand for canonical predicates — `helps_with(dima, X)` expands to `fact(_, dima, helps_with, X)`,
-  and `helps_with(F, dima, X)` exposes the id — and the extractor maps surface predicates to a canonical
-  vocabulary, keeping the original as `surface(F, "will-work-on")`, so a misspelled predicate is a
-  compile error rather than a silent miss.
+## Judgment and threads
+
+The Durable Object never acts on its own; acting needs the agent's skills, channel backends,
+`composeUpdate` and the constraint check, which live in agent sessions. Where a goal is judged
+depends on how long it lives:
+
+- **Session goals** are judged in a private thread of the current session: hidden from the
+  conversation view, so background reasoning never interleaves with what the user is doing, yet with
+  the session's full context. It ends with the session.
+- **Durable goals** are judged in the brain's own background sessions, which the Durable Object
+  maintains. A durable goal outlives the session that created it and assimilates what parallel and
+  later sessions learn, since their facts reach it through the feeds. When it acts, the agent service
+  routes the result to the owner's current session or channel.
+- **One background session per owning actor, with one private thread per durable goal.** An actor's
+  goals see each other's threads, so their conflicts and priorities are weighed together ("taxes"
+  outranks "learn French" this week), while different actors' goals are separated by construction. A
+  group's session follows that group's audience rule.
+- **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
+  thread moves with it.
+
+How a private thread is represented is analysed in [THREADS.md](./THREADS.md). ECHO Feeds' existing
+soft fork (per-item lineage) cannot carry threads as is; the recommendation is a **child feed per
+thread**, whose history is the session feed merged with the thread feed by feed position. It hides
+threads by construction, isolates their queue, alarms and rewind, is found through existing indexes
+(the parent index and feed positions), and makes promotion a re-parent.
+
+## Packages
+
+- **`@dxos/datalog`** (`packages/common/datalog`) — a generic, dependency-free, synchronous Datalog
+  engine. `Parser` (Soufflé-like syntax: facts, rules, `not`, comparisons, aggregates
+  `count`/`min`/`max`/`sum`; errors with line and column), `Checker` (arity, safety with built-in
+  binding modes, stratification), `Builtin` (registry with binding modes), `Engine` (incremental
+  `update` returning only new or removed tuples, `query`, provenance). No probabilistic, answer-set or
+  existential rules: every program terminates. Tested in Node and workerd.
+- **`@dxos/brain`** (`packages/core/compute/brain`) — the agent layer: `FactTuple`, `Encoding`,
+  `Vocabulary`, `Builtins`, `Compiler`, `CompilePrompt`, `GoalRules` (`update` → wakes, `achieved`,
+  `holds`; `checkAction`), and `testing` (the eight scenarios, reference and wrong compilations,
+  `simulate`). Depends on `@dxos/datalog` and `@dxos/pipeline-rdf`. Used in-process by plugin-agent
+  (M2) and by the EDGE Durable Object (M3).
+
+Both are public. Stories: `stories-brain` GoalCompiler (goal text → compiled rules → replay).
 
 ## Implementation
 
-Milestones, each ending in a demo that can be watched.
-
-| #   | Milestone                   | Delivers                                                                                                                                                                                                                                                                                | Demo                                                                                                                                        |
-| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0  | Private threads             | A session feed carries threads the conversation view hides; agent-runtime runs a turn inside a thread with the session's context. Decides per-user vs per-agent background sessions.                                                                                                    | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view.                                                    |
-| M1  | Goal compilation spike      | Compile the eight example goals to Datalog (and to SPARQL `ASK` for comparison) with the goal-pattern prompt; measure how often the rules are valid and match the text, and how a miscompile is caught (read-back, replay of recent facts). Throwaway code; the findings feed M2.       | A table of the eight goals, their compiled rules and a pass/fail per goal, with the failure modes.                                          |
-| M2  | Facts and goals, in-process | `readSource` writes one tuple per feed item; hierarchical `Goal` objects (status, priority, situation, drivers, wake rules) with their own feeds; the in-process brain: a Datalog engine (adopted or written) evaluating compiled goal rules, judgment in the session's private thread. | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment) in one runtime; goals and sub-goals in the Goals tab. |
-| M3  | Brain on EDGE               | A Durable Object per agent follows the fact feeds, rebuilds its index, evaluates wake rules, schedules time drivers with alarms and runs per-user background sessions; the agent service routes results to sessions and channels.                                                       | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart (shortened timeout).               |
-| M4  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                                                             | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
-| M5  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                                                                  | An eval report across the example goals, with judgment-call counts.                                                                         |
+| #   | Milestone                   | Status | Delivers                                                                                                                                                                             | Demo                                                                                                                        |
+| --- | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| M0  | Private threads             | Design | A child feed per thread; a position-ordered merge with the session's history; `getSession(chat, { thread })` under its own process key (THREADS.md)                                  | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view                                     |
+| M1  | Goal compilation spike      | Done   | Compiled the eight goals to Datalog, SPARQL and N3; measured validity, correctness, replay vs read-back, portability ("M1 findings")                                                 | The results tables below                                                                                                    |
+| —   | Engine and brain packages   | Built  | `@dxos/datalog`, `@dxos/brain` with the eight scenarios as tests; pipeline-rdf vocabulary and mapping exported, illocution preserved (in progress); GoalCompiler story (in progress) | GoalCompiler story: goal text → rules → replay                                                                              |
+| M2  | Facts and goals, in-process | Next   | `readSource` writes `FactTuple`s; `Goal` directives with feeds; the in-process brain on `@dxos/brain`; judgment in the session's private thread                                      | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment); goals and sub-goals in the Goals tab |
+| M3  | Brain on EDGE               |        | A Durable Object per agent follows the feeds, keeps the SQLite index, evaluates rules, schedules alarms, runs background sessions per actor; the agent service routes results        | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart                    |
+| M4  | Planning and constraints    |        | Judgment decomposes goals into sub-goals and tasks; action drivers enforce constraints; session → durable promotion                                                                  | "Complete my taxes" grows sub-goals; "never on Fridays" rewrites a proposed meeting                                         |
+| M5  | Pattern library and evals   |        | The goal-pattern skill; eval personas over the eight goals; cost controls (batching, judgment limits)                                                                                | An eval report with judgment-call counts                                                                                    |
 
 ### M1 findings (2026-10-07)
 
-The spike compiled the eight example goals three times each to Datalog and to SPARQL `ASK`, replayed
-each against a hand-written fact timeline, and tested read-back as a miscompile detector (~$3.25 in
-model calls; code was throwaway).
-
-| Compiler                   | Datalog parse / conform / correct (of 24) | SPARQL parse / conform / correct (of 24) |
-| -------------------------- | ----------------------------------------- | ---------------------------------------- |
-| Sonnet 5.5, first prompt   | 24 / 15 / 13                              | 24 / 24 / 16                             |
-| Sonnet 5.5, revised prompt | 24 / 24 / 18                              | 24 / 24 / 18                             |
-| Haiku 4.5, revised prompt  | 15 / 15 / 11                              | 17 / 17 / 8                              |
-
-"Correct" allows extra wakes, which judgment absorbs. Goals 1, 2, 3, 4, 6 and 7 compiled correctly in
-every run; 5 (taxes) and 8 (session PR draft) failed every run, both on what "achieved" means.
-
-- **Datalog is confirmed** for goal rules: the two languages scored the same, and Datalog's static
-  checks (arity, safety, stratification) caught bad rules before they ran, while helper predicates and
-  `not achieved(goal)` compose. SPARQL stays for retrieval.
-- **Replay catches miscompiles; read-back does not.** Read-back flagged 57–83% of wrong compilations
-  and 19–61% of correct ones, and approved the most dangerous miscompile (taxes closing only if Rich
-  himself said so). Replaying test facts caught every one.
-- **Compile with Sonnet-class models only.** Haiku wrote Prolog disjunction, mis-keyed joins, and a
-  SPARQL rule under which a refusal achieves goal 3.
-- **Main failure modes:** `about(F, …)` written with `F` unbound (the model reads it as "find facts
-  about X"); wake rules guarded by `not achieved` that never fire on the achieving fact; achievement
-  tied to a speaker or speech-act label the goal never named; possessives ("my taxes") that keyword
-  matching cannot scope; no compilation ever woke on a sub-goal's status change.
-
-**N3 comparison.** A follow-up run compiled the same goals to N3 and executed them with EYE (its
-JavaScript/WASM build). The three languages compile equally well; portability decided it:
+The spike compiled the eight example goals three times each, replayed each compilation against a
+hand-written fact timeline, and tested read-back as a miscompile detector (~$4.19 in model calls;
+spike code was throwaway, its scenarios now live in `@dxos/brain/testing`).
 
 | Sonnet 5.5, 8 goals × 3 runs | Datalog          | SPARQL `ASK`       | N3 / EYE                                         |
 | ---------------------------- | ---------------- | ------------------ | ------------------------------------------------ |
@@ -443,28 +448,28 @@ JavaScript/WASM build). The three languages compile equally well; portability de
 | Per evaluation               | 0.02 ms per fact | ~15 ms per query   | 28–76 ms, a new Prolog VM per call               |
 | Goal 3 at 5,000 facts        | 154 ms           | —                  | 3.9 s                                            |
 
-**Decision: Datalog runs the rules; N3 is at most an export format** for inspection or RDF tooling. EYE
-evaluates in batches (the whole graph per fact), starts a new VM per call, needs workerd workarounds,
-and its negation is not stratified — a wake guarded by `not achieved` fired after achievement, since
-EYE never retracts a conclusion. n3.js's reasoner is portable but has no negation.
-
-Consequences for M2, settled in the vocabulary and runtime rather than the prompt:
-
-1. `about` is an index lookup that may bind `F`; a `concerns(F, Entity)` built-in scopes possessive
-   goals ("my taxes" concerns Rich).
-2. A wake fires when a rule gains a new binding; the runtime always wakes a goal when `achieved` first
-   becomes true, and when a sub-goal's status changes.
-3. The compiler marks each goal's achievement as `rule` or `judgment`. Rules are reliable for
-   single-event outcomes with a named person or event (#2, #3), constraints (#7) and checkable states
-   (an empty inbox); everything else is judged.
-4. **Compilations are gated on replay with independent probes:** 3–5 test facts per goal, including
-   near-misses, with their expected effects, replayed before the goal goes active. The probes must come
-   from a source independent of the compiler — in the N3 run the compiler's own probes rejected none of
-   the four wrong compilations. Read-back becomes an explanation shown to the user, not a gate.
-5. The engine: the spike's ~300-line evaluator was adequate; M2 adds incremental per-fact evaluation,
-   provenance (which fact woke a goal) and a semantic-index `about`. The eight scenarios become the
-   first evals.
+- **Datalog runs the rules; N3 is at most an export format.** The languages compile equally well;
+  portability, speed and stratified negation decided it. EYE evaluates the whole graph per fact,
+  starts a new VM per call, and never retracts a conclusion, so a wake guarded by `not achieved` fired
+  after achievement; n3.js's reasoner has no negation.
+- **Replay catches miscompiles; read-back does not.** Read-back flagged 57–83% of wrong compilations
+  and 19–61% of correct ones, and approved the most dangerous miscompile (taxes closing only if Rich
+  himself said so). Replay caught every one — but only with test facts independent of the compiler.
+- **Compile with Sonnet-class models only.** Haiku (15–17 of 24 parsing, 8–11 correct) wrote Prolog
+  disjunction, mis-keyed joins, and a rule under which a refusal achieves goal 3.
+- **Failure modes, now settled in the runtime and vocabulary rather than the prompt:** `about(F, …)`
+  with `F` unbound (so `about` may bind `F`); wake rules guarded by `not achieved` that never fire on
+  the achieving fact (so the runtime wakes on first achievement); achievement tied to a speaker or
+  speech act the goal never named; possessives keyword matching cannot scope (so `concerns`); no
+  compilation woke on a sub-goal's status change (so the runtime does).
 
 ## Open questions
 
-1. Private threads ([THREADS.md](./THREADS.md)): whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
+1. **Private threads** ([THREADS.md](./THREADS.md)): approve the child-feed design for M0, or extend
+   Feeds' soft fork into real branches.
+2. **plugin-brain:** whether its per-space fact store and the agent's brain merge, or the brain stays
+   per agent and reads the same feeds (settle in M2).
+3. **Directives in ONTOLOGY.md:** whether `Instruction` and `Preference` (§4) become constraint and
+   condition goals, or stay separate types.
+4. **Index loading:** in-memory relations loaded from SQLite on start (current plan) versus querying
+   SQLite on demand, once an agent's facts outgrow a Durable Object's memory.
