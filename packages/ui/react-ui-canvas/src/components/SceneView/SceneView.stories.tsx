@@ -124,9 +124,9 @@ const createLatticeTree = () => {
 };
 
 /**
- * Three levels, every shape 256×128: A, scene B, C; inside B, D, scene E, F; inside E, X, Y, Z with a box
- * above X, below Z and beside each; each level's shapes linked. Open the scenes to check that a shape is the
- * same size at the same zoom on every level.
+ * Three levels, every shape 256×128: A, scene B, C; inside B, D, scene E, F, with two empty scenes either side
+ * of E; inside E, X, Y, Z with a box above X, below Z and beside each; each level's shapes linked. Open the
+ * scenes to check that a shape is the same size at the same zoom on every level.
  */
 const createScenesTree = () => {
   const root = 'scene:root';
@@ -163,8 +163,14 @@ const createScenesTree = () => {
         .at(at(0))
         .name('E'),
       rect('f', 256),
+      // Empty scenes either side of E, two each way.
+      ...[-768, -384, 384, 768].map((x) => SceneBuilder.scene(`e${x}`, []).at(at(0, x)).name('Untitled')),
       link('d', 'e'),
-      link('d', 'f'),
+      link('e', 'f'),
+      link('e-768', 'e-384'),
+      link('e-384', 'e'),
+      link('e', 'e384'),
+      link('e384', 'e768'),
     ])
       .at(at(0))
       .name('B'),
