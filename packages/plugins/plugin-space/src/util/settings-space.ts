@@ -187,6 +187,6 @@ export const catchNonInterrupt =
       Effect.catchCause((cause) =>
         Cause.hasInterruptsOnly(cause)
           ? Effect.failCause(cause)
-          : Effect.sync(() => log.warn(message, { ...context?.(), cause })),
+          : Effect.sync(() => log.warn(message, { ...context?.(), cause: Cause.pretty(cause) })),
       ),
     );

@@ -99,50 +99,21 @@ describe('Spaces', () => {
     await expect(client.spaces.create()).rejects.toBe(error);
   });
 
-  test('a space whose database failed to open initializes again when it returns to ready', async () => {
-    const testBuilder = new TestBuilder();
-    onTestFinished(() => testBuilder.destroy());
-    const host = testBuilder.createClientServicesHost();
-    await host.open(new Context());
-    onTestFinished(() => host.close(Context.default()));
-
-    const [creator, creatorServer] = testBuilder.createClientServer(host);
-    void creatorServer.open();
-    await creator.initialize();
-    await creator.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
-    const { id: spaceId } = await creator.spaces.create();
-    await creator.destroy();
-    await creatorServer.close();
-
-    const error = new Error('Database open failed.');
-    const open = DatabaseImpl.prototype.open;
-    let failures = 0;
-    const openSpy = vi
-      .spyOn(DatabaseImpl.prototype, 'open')
-      .mockImplementation(async function (this: DatabaseImpl, ctx) {
-        if (this.spaceId === spaceId && failures++ === 0) {
-          throw error;
-        }
-        return open.call(this, ctx);
-      });
-    onTestFinished(() => openSpy.mockRestore());
-
-    const [client, server] = testBuilder.createClientServer(host);
-    void server.open();
-    onTestFinished(() => server.close());
-    await client.initialize();
-    onTestFinished(() => client.destroy());
-
-    await expect.poll(() => failures).toBe(1);
-    const space = client.spaces.get().find((space) => space.id === spaceId);
-    invariant(space);
-    await expect(space.waitUntilReady()).rejects.toBe(error);
-
-    // Closing and reopening returns the space to ready, which starts initialization over.
-    await space.close();
-    await space.open();
-    await expect.poll(() => space.state.get(), { timeout: 10_000 }).toBe(SpaceState.SPACE_READY);
+  test('waitUntilReady retries a space whose database failed to open', async () => {
+    const { space } = await openSpaceWhoseDatabaseOpenFails(1);
     await space.waitUntilReady();
+    expect(space.state.get()).toBe(SpaceState.SPACE_READY);
+  });
+
+  test('waitUntilReady rejects when the retry fails too', async () => {
+    const { space, error } = await openSpaceWhoseDatabaseOpenFails(2);
+    await expect(space.waitUntilReady()).rejects.toBe(error);
+    await space.waitUntilReady();
+  });
+
+  test('a space whose database failed to open initializes again while it stays ready', async () => {
+    const { space } = await openSpaceWhoseDatabaseOpenFails(1);
+    await expect.poll(() => space.state.get(), { timeout: 5_000 }).toBe(SpaceState.SPACE_READY);
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.
@@ -1057,5 +1028,50 @@ describe('Spaces', () => {
 
   const waitForSpaceState = async (space: Space, state: SpaceState, timeout: number) => {
     await expect.poll(() => space.state.get(), { timeout }).toEqual(state);
+  };
+
+  /**
+   * A restarted client whose first `failures` opens of an existing space's database fail in the
+   * schema preload, after the entity manager has loaded the space's objects.
+   */
+  const openSpaceWhoseDatabaseOpenFails = async (failures: number) => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+    const host = testBuilder.createClientServicesHost();
+    await host.open(new Context());
+    onTestFinished(() => host.close(Context.default()));
+
+    const [creator, creatorServer] = testBuilder.createClientServer(host);
+    void creatorServer.open();
+    await creator.initialize();
+    await creator.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
+    const { id: spaceId } = await creator.spaces.create();
+    await creator.destroy();
+    await creatorServer.close();
+
+    const error = new Error('Schema preload timed out.');
+    const query = DatabaseImpl.prototype.query;
+    let preloads = 0;
+    const querySpy = vi.spyOn(DatabaseImpl.prototype, 'query').mockImplementation(function (
+      this: DatabaseImpl,
+      ...args: Parameters<DatabaseImpl['query']>
+    ) {
+      if (this.spaceId === spaceId && !this.isOpen && preloads++ < failures) {
+        throw error;
+      }
+      return query.apply(this, args);
+    });
+    onTestFinished(() => querySpy.mockRestore());
+
+    const [client, server] = testBuilder.createClientServer(host);
+    void server.open();
+    onTestFinished(() => server.close());
+    await client.initialize();
+    onTestFinished(() => client.destroy());
+
+    await expect.poll(() => preloads).toBeGreaterThanOrEqual(1);
+    const space = client.spaces.get().find((space) => space.id === spaceId);
+    invariant(space);
+    return { space, error };
   };
 });

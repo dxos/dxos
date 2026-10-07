@@ -165,7 +165,17 @@ export abstract class Resource implements Lifecycle {
     this.#closePromise = null;
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
     this.#internalCtx = this.#createContext(this.#parentCtx);
-    await this._open(this.#parentCtx);
+    try {
+      await this._open(this.#parentCtx);
+    } catch (err) {
+      // `close()` is a no-op while CLOSED, so a failed open must release its own contexts and forget
+      // its promise, or every later `open()` replays this rejection instead of calling `_open` again.
+      this.#openPromise = null;
+      await this.#internalCtx.dispose();
+      await this.#parentCtx.dispose();
+      this.#internalCtx = this.#createContext();
+      throw err;
+    }
     this.#lifecycleState = LifecycleState.OPEN;
   }
 

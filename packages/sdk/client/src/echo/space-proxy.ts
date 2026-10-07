@@ -70,6 +70,10 @@ import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
+/** Delay before retrying a failed initialization, doubling per consecutive failure up to the cap. */
+const INITIALIZATION_RETRY_DELAY = 1_000;
+const INITIALIZATION_RETRY_MAX_DELAY = 30_000;
+
 /**
  * Returns the {@link Space} that owns the given object, or `undefined`.
  *
@@ -137,6 +141,12 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   /** Set by a failed initialization, whose rejected triggers the next attempt re-arms. */
   private _initializationFailed = false;
+
+  /** Consecutive failed initializations, which set the backoff before the next retry. */
+  private _initializationFailures = 0;
+
+  /** Parent of the last initialization attempt, reused by retries that no space update drives. */
+  private _initializationParentCtx: Context | undefined;
 
   /**
    * @internal
@@ -423,6 +433,10 @@ export class SpaceProxy implements Space, CustomInspectable {
       return;
     }
 
+    if (this._initializationFailed) {
+      await this._ctx.dispose();
+    }
+    this._initializationParentCtx = ctx;
     this._ctx = new Context({ parent: ctx });
     if (this._initializationFailed) {
       this._initializationFailed = false;
@@ -440,18 +454,39 @@ export class SpaceProxy implements Space, CustomInspectable {
       const error = err instanceof Error ? err : new Error(String(err));
       this._databaseInitialized.throw(error);
       this._initializationComplete.throw(error);
-      // Starts over when the space next returns to ready (see `_processSpaceUpdate`).
+      // Starts over when the space next returns to ready (see `_processSpaceUpdate`), or on retry.
       this._initializationFailed = true;
       this._initializing = false;
+      this._scheduleInitializationRetry();
       throw err;
     }
 
     this._initialized = true;
     this._initializing = false;
+    this._initializationFailures = 0;
     this._initializationComplete.wake();
     this._stateUpdate.emit(this._currentState);
     this._data.members && this._membersUpdate.emit(this._data.members);
     log('initialized', { space: this.key });
+  }
+
+  /** A space the host keeps ready sends no update that would restart a failed initialization. */
+  private _scheduleInitializationRetry(): void {
+    const delay = Math.min(
+      INITIALIZATION_RETRY_DELAY * 2 ** this._initializationFailures++,
+      INITIALIZATION_RETRY_MAX_DELAY,
+    );
+    scheduleTask(this._ctx, () => this._retryInitialization(), delay);
+  }
+
+  @synchronized
+  private async _retryInitialization(): Promise<void> {
+    const ctx = this._initializationParentCtx;
+    if (!ctx || !this._initializationFailed || this._initializing || this._data.state !== SpaceState.SPACE_READY) {
+      return;
+    }
+    log('retrying initialization', { space: this.key, failures: this._initializationFailures });
+    await this._initialize(ctx).catch((error) => log.warn('space initialization failed', { space: this.key, error }));
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -523,6 +558,8 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._initializationComplete.reset();
     this._databaseInitialized.reset();
     this._initializing = false;
+    this._initializationFailed = false;
+    this._initializationFailures = 0;
     this._initialized = false;
     this._databaseOpen = false;
     // Dropped with the database it tracked, so the next update re-applies the root rather than
@@ -578,8 +615,12 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   /**
    * Waits until the space is in the ready state, with database initialized.
+   * A failed initialization is retried first, so the call rejects only if that attempt fails too.
    */
   async waitUntilReady(): Promise<this> {
+    if (this._initializationFailed) {
+      await this._retryInitialization();
+    }
     await cancelWithContext(this._ctx, this._initializationComplete.wait());
     return this;
   }

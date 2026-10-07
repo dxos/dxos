@@ -400,14 +400,20 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _open(): Promise<void> {
-    await this._entityManager.open(this._ctx);
+    try {
+      await this._entityManager.open(this._ctx);
 
-    if (this._rootUrl !== undefined) {
-      await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
-    }
+      if (this._rootUrl !== undefined) {
+        await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
+      }
 
-    if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema)).run();
+      if (this._preloadSchemaOnOpen) {
+        await this.query(Filter.type(PersistentSchema)).run();
+      }
+    } catch (err) {
+      // A failed open can be retried, and the retry re-creates a core for every inline object.
+      await this._entityManager.close();
+      throw err;
     }
 
     if (this._reactiveSchemaQuery) {
