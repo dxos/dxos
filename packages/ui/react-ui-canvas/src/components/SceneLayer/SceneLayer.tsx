@@ -40,9 +40,8 @@ import { nodeBounds } from '../../utils/shapes.ts';
 import { frameClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
-/** Screen px below which a portal is a solid tile; above `PREVIEW_PX` it mounts the child scene live. */
+/** Screen px below which a portal is a solid tile; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
-export const PREVIEW_PX = 260;
 /** Default for `liveDepth`: root plus this many live nested levels (decision 10). */
 export const MAX_LIVE_DEPTH = 1;
 /** Hysteresis at the tier boundaries so a portal does not flicker while zooming across one. */
@@ -54,14 +53,11 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
   const { width, height } = nodeBounds(node);
   const px = Math.min(width, height) * zoom;
   const dot = previous === 'dot' ? DOT_PX * (1 + TIER_HYSTERESIS) : DOT_PX * (1 - TIER_HYSTERESIS);
-  const preview = previous === 'preview' ? PREVIEW_PX * (1 + TIER_HYSTERESIS) : PREVIEW_PX * (1 - TIER_HYSTERESIS);
   if (px < dot) {
     return 'dot';
   }
-  if (px < preview || depth >= liveDepth) {
-    return 'preview';
-  }
-  return 'live';
+  // Past `liveDepth` the child is summarised rather than mounted, which bounds how many scenes render live.
+  return depth >= liveDepth ? 'preview' : 'live';
 };
 
 export type ElementHandlers = {
