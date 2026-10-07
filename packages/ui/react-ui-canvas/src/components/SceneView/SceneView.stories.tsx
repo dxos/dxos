@@ -86,25 +86,42 @@ type Story = StoryObj<typeof meta>;
 
 /** An empty canvas: draw the first node, then link it. */
 export const Default: Story = {
-  args: { depth: 0, liveDepth: 1 },
+  args: {
+    depth: 0,
+    liveDepth: 1,
+  },
 };
 
 /** One scene, no portals: selection, move, resize, linking and the palette. */
 export const Freehand: Story = {
-  args: { depth: 1, liveDepth: 1 },
+  args: {
+    depth: 1,
+    liveDepth: 1,
+  },
 };
 
 /** Four levels of portals: drill in and out, tiers, auto drill; `liveDepth` sets how many levels render live. */
 export const Nested: Story = {
-  args: { depth: 4, liveDepth: 1 },
+  args: {
+    depth: 4,
+    liveDepth: 1,
+  },
 };
 
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
 export const Readonly: Story = {
-  args: { depth: 1, liveDepth: 1, readonly: true },
+  args: {
+    depth: 1,
+    liveDepth: 1,
+    readonly: true,
+  },
 };
 
 /** A three-level class model: drill into a subsystem's portal to open its own classes. */
 export const Classes: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'classes' },
+  args: {
+    depth: 0,
+    liveDepth: 1,
+    fixture: 'classes',
+  },
 };
