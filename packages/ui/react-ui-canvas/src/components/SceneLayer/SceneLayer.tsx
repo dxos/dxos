@@ -212,11 +212,11 @@ const FRAME_BORDER = '--scene-frame-border' as const;
 const LINK_WIDTH = 2;
 
 /** Bounding box of every end, in scene units. */
-const END_BOX = 32;
+const END_BOX = 16;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
 const Markers = ({ id }: { id: string }) => {
-  // Each end fills a 32×32 box in scene units, so it scales with the shapes it joins: the arrow and the
+  // Each end fills a 16×16 box in scene units, so it scales with the shapes it joins: the arrow and the
   // triangle 10 of their 12 view units, the circle 8 of its 10.
   const arrow = END_BOX;
   const triangle = (END_BOX * 12) / 10;
