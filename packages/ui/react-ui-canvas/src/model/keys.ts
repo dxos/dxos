@@ -36,6 +36,7 @@ export type KeyAction =
   | 'selectAll'
   | 'snap'
   | 'guides'
+  | 'lattice'
   | 'debug';
 
 /** Every action's chords; the first is the one shown in labels. */
@@ -55,8 +56,10 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   undo: [{ key: 'z', meta: true, shift: false }],
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
-  snap: [{ key: 'g' }],
+  // Not with Shift: Shift+G is the lattice toggle.
+  snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],
+  lattice: [{ key: 'G', shift: true }],
   debug: [{ key: 'd' }],
 };
 

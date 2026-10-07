@@ -35,6 +35,9 @@ export type ToolbarActions = {
   toggleSnap: () => void;
   guides: boolean;
   toggleGuides: () => void;
+  /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; absent elsewhere. */
+  lattice?: boolean;
+  toggleLattice?: () => void;
   debug: boolean;
   toggleDebug: () => void;
   canUndo: boolean;
@@ -139,7 +142,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, and to the lattice in lattice mode`}
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
@@ -153,6 +156,17 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-guides'
         onClick={actions.toggleGuides}
       />
+      {actions.toggleLattice && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--squares-four--regular'
+          label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
+          classNames={mx(actions.lattice && 'bg-primary-500/20')}
+          data-testid='toolbar-lattice'
+          onClick={actions.toggleLattice}
+        />
+      )}
       <Toolbar.Separator variant='line' />
       <Button.Root
         variant='ghost'

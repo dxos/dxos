@@ -82,6 +82,8 @@ export type SceneViewAtoms = {
   snap: Atom.Writable<boolean>;
   /** Guides shown: the scene's page frame and, on a lattice, its cells. */
   guides: Atom.Writable<boolean>;
+  /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
+  lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** Projection snapshots for undo and redo (`undo.ts`). */
@@ -107,6 +109,7 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   guides: Atom.keepAlive(Atom.make<boolean>(true)),
+  lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),

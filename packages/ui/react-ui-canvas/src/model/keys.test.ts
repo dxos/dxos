@@ -36,6 +36,7 @@ describe('keys', () => {
     expect(isToolKey(press('r', { altKey: true }))).toBe(false);
     expect(keyAction(press('g'))).toBe('snap');
     expect(keyAction(press(';'))).toBe('guides');
+    expect(keyAction(press('G', { shiftKey: true }))).toBe('lattice');
   });
 
   test('every binding matches itself and labels read as a menu shows them', ({ expect }) => {

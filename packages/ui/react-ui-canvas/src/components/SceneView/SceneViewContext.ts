@@ -63,6 +63,8 @@ export type SceneViewContextValue = {
   grid: number;
   snapEnabled: boolean;
   guides: boolean;
+  /** On a lattice scene, snap lands on the lattice rather than the basic grid. */
+  latticeOn: boolean;
 
   selection: ReadonlySet<ElementId>;
   hover: ElementId | undefined;

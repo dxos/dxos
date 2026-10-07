@@ -39,11 +39,17 @@ export const useSceneProjection = ({
     () =>
       projection ??
       withUndo(
-        createProjection({ registry, store, sceneId, constrained: () => registry.get(atoms.snap) }),
+        createProjection({
+          registry,
+          store,
+          sceneId,
+          // Snap lands on the lattice only while both snap and the lattice toggle are on.
+          constrained: () => registry.get(atoms.snap) && registry.get(atoms.lattice),
+        }),
         registry,
         atoms.undo,
         sceneId,
       ),
-    [projection, createProjection, registry, store, sceneId, atoms.undo, atoms.snap],
+    [projection, createProjection, registry, store, sceneId, atoms.undo, atoms.snap, atoms.lattice],
   );
 };

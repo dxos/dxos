@@ -140,6 +140,7 @@ const SceneViewRoot = ({
   const editing = useAtomValue(atoms.editing);
   const debug = useAtomValue(atoms.debug);
   const guides = useAtomValue(atoms.guides);
+  const latticeOn = useAtomValue(atoms.lattice);
   const sceneId = path[path.length - 1];
   const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;
   const canRedo = !readonly && undoState.key === sceneId && undoState.future.length > 0;
@@ -246,6 +247,10 @@ const SceneViewRoot = ({
     () => registry.set(atoms.guides, !registry.get(atoms.guides)),
     [registry, atoms.guides],
   );
+  const toggleLattice = useCallback(
+    () => registry.set(atoms.lattice, !registry.get(atoms.lattice)),
+    [registry, atoms.lattice],
+  );
   const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
   const {
     onBackgroundPointerDown,
@@ -325,6 +330,7 @@ const SceneViewRoot = ({
     select,
     toggleSnap,
     toggleGuides,
+    toggleLattice,
     toggleDebug,
     onUndo,
     onRedo,
@@ -566,6 +572,8 @@ const SceneViewRoot = ({
       toggleSnap,
       guides,
       toggleGuides,
+      // Only a lattice scene has a lattice to snap to.
+      ...(projection.lattice ? { lattice: latticeOn, toggleLattice } : {}),
       debug,
       toggleDebug,
       canUndo,
@@ -597,6 +605,8 @@ const SceneViewRoot = ({
       toggleSnap,
       guides,
       toggleGuides,
+      latticeOn,
+      toggleLattice,
       debug,
       toggleDebug,
       canUndo,
@@ -640,6 +650,7 @@ const SceneViewRoot = ({
       grid={grid}
       snapEnabled={snapEnabled}
       guides={guides}
+      latticeOn={latticeOn}
       selection={selection}
       hover={hover}
       selectedPoint={selectedPoint}
@@ -737,6 +748,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     grid,
     snapEnabled,
     guides,
+    latticeOn,
     selection,
     hover,
     selectedPoint,
@@ -788,7 +800,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             CSS border because a border's width is rounded to whole local pixels, which puts a floor of
             one scene unit under it — exactly the thickening that zooming in would cause. */}
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-        {guides && projection.lattice && <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />}
+        {guides && latticeOn && projection.lattice && (
+          <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />
+        )}
         {guides && (
           <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
             <rect
@@ -818,8 +832,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
             debug={debug}
             handlers={handlers}
-            // Routes follow the gutters only while the lattice is in force (snap on).
-            lattice={snapEnabled ? projection.lattice : undefined}
+            // Routes follow the gutters only while the lattice is in force (snap and lattice on).
+            lattice={snapEnabled && latticeOn ? projection.lattice : undefined}
           />
         </div>
         <ControlFrame
@@ -833,7 +847,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           capabilities={capabilities}
           createFrame={createFrame}
           blocked={blocked}
-          lattice={snapEnabled ? projection.lattice : undefined}
+          lattice={snapEnabled && latticeOn ? projection.lattice : undefined}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
