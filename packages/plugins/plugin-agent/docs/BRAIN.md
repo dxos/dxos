@@ -353,6 +353,24 @@ every run; 5 (taxes) and 8 (session PR draft) failed every run, both on what "ac
   tied to a speaker or speech-act label the goal never named; possessives ("my taxes") that keyword
   matching cannot scope; no compilation ever woke on a sub-goal's status change.
 
+**N3 comparison.** A follow-up run compiled the same goals to N3 and executed them with EYE (its
+JavaScript/WASM build). The three languages compile equally well; portability decided it:
+
+| Sonnet 5.5, 8 goals × 3 runs | Datalog          | SPARQL `ASK`       | N3 / EYE                                         |
+| ---------------------------- | ---------------- | ------------------ | ------------------------------------------------ |
+| Parses, conforms             | 24, 24           | 24, 24             | 24, 24                                           |
+| Safe (extra wakes allowed)   | 18               | 18                 | 20 (gains come from built-ins, not the language) |
+| Engine, gzipped              | 3.9 KB           | 398 KB             | 1.2–2.5 MB                                       |
+| Runs in workerd              | yes, unmodified  | with 2 shims       | not as shipped; with 2 workarounds               |
+| Browser, plain ESM           | yes              | needs a Node alias | yes, needs CSP `wasm-unsafe-eval`                |
+| Per evaluation               | 0.02 ms per fact | ~15 ms per query   | 28–76 ms, a new Prolog VM per call               |
+| Goal 3 at 5,000 facts        | 154 ms           | —                  | 3.9 s                                            |
+
+**Decision: Datalog runs the rules; N3 is at most an export format** for inspection or RDF tooling. EYE
+evaluates in batches (the whole graph per fact), starts a new VM per call, needs workerd workarounds,
+and its negation is not stratified — a wake guarded by `not achieved` fired after achievement, since
+EYE never retracts a conclusion. n3.js's reasoner is portable but has no negation.
+
 Consequences for M2, settled in the vocabulary and runtime rather than the prompt:
 
 1. `about` is an index lookup that may bind `F`; a `concerns(F, Entity)` built-in scopes possessive
@@ -362,9 +380,10 @@ Consequences for M2, settled in the vocabulary and runtime rather than the promp
 3. The compiler marks each goal's achievement as `rule` or `judgment`. Rules are reliable for
    single-event outcomes with a named person or event (#2, #3), constraints (#7) and checkable states
    (an empty inbox); everything else is judged.
-4. **Compilations are gated on replay:** the compiler also emits 3–5 test facts, including near-misses,
-   with their expected effects, and the runtime replays them before the goal goes active. Read-back
-   becomes an explanation shown to the user, not a gate.
+4. **Compilations are gated on replay with independent probes:** 3–5 test facts per goal, including
+   near-misses, with their expected effects, replayed before the goal goes active. The probes must come
+   from a source independent of the compiler — in the N3 run the compiler's own probes rejected none of
+   the four wrong compilations. Read-back becomes an explanation shown to the user, not a gate.
 5. The engine: the spike's ~300-line evaluator was adequate; M2 adds incremental per-fact evaluation,
    provenance (which fact woke a goal) and a semantic-index `about`. The eight scenarios become the
    first evals.
