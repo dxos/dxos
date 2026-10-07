@@ -25,8 +25,9 @@ import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type SceneViewAtoms } from '../../model/atoms.ts';
+import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
-import { type NodeRegistry, defaultNodeRegistry, nodeDef } from '../../model/registry.ts';
+import { type NodeRegistry, defaultNodeRegistry } from '../../model/registry.ts';
 import {
   CurveLink,
   type Element,

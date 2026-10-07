@@ -268,6 +268,13 @@ test.describe('SceneView', () => {
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
+  test('a scene shape opens from its zoom-in control', async () => {
+    await page.getByTestId('toolbar-create').click();
+    await page.getByTestId('create-scene').click();
+    await page.getByTestId('portal-open').first().click();
+    await expect(page.getByTestId('toolbar-up')).toBeEnabled();
+  });
+
   test('the properties panel edits the selected class', async () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();

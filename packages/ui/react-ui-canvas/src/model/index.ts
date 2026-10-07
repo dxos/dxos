@@ -8,6 +8,7 @@ export * from './projection.ts';
 export * from './projections/constrained.ts';
 export * from './projections/dynamic.ts';
 export * from './projections/lattice.ts';
+export * from './node-def.ts';
 export * from './registry.ts';
 export * from './store.ts';
 export * from './types.ts';

@@ -13,7 +13,8 @@ import React, { memo } from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
-import { type NodeRegistry, nodeDef } from '../../model/registry.ts';
+import { nodeDef } from '../../model/node-def.ts';
+import { type NodeRegistry } from '../../model/registry.ts';
 import {
   type Bounds,
   type Capabilities,

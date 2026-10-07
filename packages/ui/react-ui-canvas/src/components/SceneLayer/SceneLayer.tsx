@@ -10,9 +10,11 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { memo, useId, useMemo } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
-import { type NodeRegistry, type NodeViewProps, nodeDef } from '../../model/registry.ts';
+import { nodeDef } from '../../model/node-def.ts';
+import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
   type ElementId,
@@ -21,12 +23,13 @@ import {
   type Node,
   type NodeId,
   type Scene,
+  isBoxNode,
   isClassNode,
   isEllipseNode,
   isNoteNode,
   isPortalNode,
-  isRectNode,
   linkMarkers,
+  showsContents,
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
 import { contentBounds } from '../../utils/hit.ts';
@@ -70,6 +73,8 @@ export type ElementHandlers = {
   /** The in-place editor of `part` finished with `text` (commit) or was dismissed (cancel). */
   onPartCommit?: (node: Node, part: PartKey, text: string) => void;
   onPartCancel?: () => void;
+  /** A node's own open control was pressed (a portal's zoom-in icon). */
+  onNodeOpen?: (node: Node) => void;
 };
 
 export type SceneLayerProps = {
@@ -254,6 +259,10 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
         : undefined,
     [editingPart, handlers, node],
   );
+  const onOpen = useMemo(
+    () => (interactive && handlers.onNodeOpen ? () => handlers.onNodeOpen?.(node) : undefined),
+    [interactive, handlers, node],
+  );
   return (
     <div
       className={mx(
@@ -275,7 +284,7 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
       data-ghost={ghost || undefined}
       onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
     >
-      <Component {...props} editing={editing} />
+      <Component {...props} editing={editing} onOpen={onOpen} />
       {debug && (
         <div
           className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
@@ -296,24 +305,29 @@ NodeFrame.displayName = 'NodeFrame';
  */
 const sizeClass = (node: Node, className: string) => (node.style?.fontSize === undefined ? className : undefined);
 
-const LabelNodeView = ({ node, editing }: NodeViewProps) => {
-  const label = isRectNode(node) || isEllipseNode(node) ? (node.label ?? '') : '';
-  return (
-    <TextPart
-      part='label'
-      text={label}
-      editing={editing}
-      classNames={mx(
-        'dx-cover flex items-center justify-center text-center whitespace-pre-wrap',
-        sizeClass(node, 'text-2xl'),
-      )}
-    >
-      {label}
-    </TextPart>
-  );
-};
+type LabelPartProps = Pick<NodeViewProps, 'node' | 'editing'> & { label: string };
 
-export const RectNodeView = LabelNodeView;
+/** The centred, editable label of a box (and an ellipse). */
+const LabelPart = ({ node, editing, label }: LabelPartProps) => (
+  <TextPart
+    part='label'
+    text={label}
+    editing={editing}
+    classNames={mx(
+      'dx-cover flex items-center justify-center text-center whitespace-pre-wrap',
+      sizeClass(node, 'text-2xl'),
+    )}
+  >
+    {label}
+  </TextPart>
+);
+
+const LabelNodeView = ({ node, editing }: NodeViewProps) => (
+  <LabelPart node={node} editing={editing} label={isBoxNode(node) || isEllipseNode(node) ? (node.label ?? '') : ''} />
+);
+
+/** The `box` prototype's body: its centred label. */
+export const BoxNodeView = LabelNodeView;
 
 export const EllipseNodeView = LabelNodeView;
 
@@ -359,16 +373,31 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
   );
 };
 
-export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, opening }: NodeViewProps) => {
+/**
+ * A box over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
+ * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
+ */
+export const PortalNodeView = (props: NodeViewProps) => {
+  const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
   const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
+  const contents = opening || (isPortalNode(node) && showsContents(node));
   // Being entered, the portal is already the child scene on the canvas: live, and without the tile tint.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
+  const title = (isPortalNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
+  if (!contents) {
+    return (
+      <>
+        <LabelPart node={node} editing={editing} label={title} />
+        {onOpen && <OpenControl onOpen={onOpen} />}
+      </>
+    );
+  }
   return (
     <div className={mx('dx-cover', tier === 'dot' && 'bg-primary-500/40')}>
       {tier === 'preview' && child && (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
-          <span className='text-2xl'>{child.name ?? child.id}</span>
+          <span className='text-2xl'>{title}</span>
           <span className='text-fg-muted'>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links
           </span>
@@ -395,11 +424,26 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
             />
           </div>
         )}
-      {!opening && (
-        <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>
-          {child?.name ?? child?.id}
-        </span>
-      )}
+      {!opening && <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>{title}</span>}
+      {!opening && onOpen && <OpenControl onOpen={onOpen} />}
     </div>
   );
 };
+
+/** The zoom-in control at a portal's top-right; it takes the press, so it neither drags nor selects the node. */
+const OpenControl = ({ onOpen }: { onOpen: () => void }) => (
+  <Button.Root
+    variant='ghost'
+    iconOnly
+    icon='ph--arrows-out--regular'
+    label='Open scene'
+    classNames='absolute top-1 right-1'
+    data-testid='portal-open'
+    onPointerDown={(event) => event.stopPropagation()}
+    onDoubleClick={(event) => event.stopPropagation()}
+    onClick={(event) => {
+      event.stopPropagation();
+      onOpen();
+    }}
+  />
+);

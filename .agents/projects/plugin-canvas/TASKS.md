@@ -214,6 +214,10 @@ before), not reasoned about from the source.
 
 ## Backlog
 
+- [x] **Type prototypes.** `createNodeRegistry(types, prototypes)` with `extends`; `rect` and `scene` share the
+      `box` prototype (DESIGN §4c). Scene shapes: centred label, `contents` option, zoom-in control.
+- [ ] **Instance prototypes** (DESIGN §4c): `prototype?: NodeId`, `resolveNode`, inherited values as
+      placeholders, reset-to-prototype. Candidate: `ellipse` on `box` with its own view and one port per side.
 - [ ] **Object classes and prototypes.** Define named classes of objects (a shared bundle of type, size,
       style, port count and other non-text properties), and designate the current object as a prototype
       that can be applied to others: a selection takes the prototype's properties, keeping its own text and

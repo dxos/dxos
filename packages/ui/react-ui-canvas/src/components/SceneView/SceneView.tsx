@@ -20,6 +20,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
 import { type Drag, type SceneViewAtoms, createSceneViewAtoms } from '../../model/atoms.ts';
+import { nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
   type Projection,
@@ -31,7 +32,6 @@ import {
   type NodeRegistry,
   defaultLinkRegistry,
   defaultNodeRegistry,
-  nodeDef,
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
@@ -430,8 +430,16 @@ const SceneViewRoot = ({
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 
   const handlers = useMemo<ElementHandlers>(
-    () => ({ onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel }),
-    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel],
+    () => ({
+      onNodePointerDown,
+      onLinkPointerDown,
+      onLinkDoubleClick,
+      onLinkContextMenu,
+      onPartCommit,
+      onPartCancel,
+      onNodeOpen: drillIn,
+    }),
+    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel, drillIn],
   );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
@@ -445,7 +453,11 @@ const SceneViewRoot = ({
         return;
       }
       const target = document.elementFromPoint(event.clientX, event.clientY);
-      const partElement = target instanceof Element ? target.closest('[data-part]') : null;
+      // A floating panel over the node took the clicks, so the node beneath is not the one meant.
+      if (!(target instanceof Element) || !target.closest('[data-node-id]')) {
+        return;
+      }
+      const partElement = target.closest('[data-part]');
       const part =
         partElement?.closest('[data-node-id]')?.getAttribute('data-node-id') === node.id
           ? partKey(partElement?.getAttribute('data-part'))

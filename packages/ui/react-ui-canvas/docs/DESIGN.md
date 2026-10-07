@@ -231,6 +231,39 @@ The model on the wire between the layers is the positioned `Scene` of §4: `{ id
 
 Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped for a node gesture; a link band follows the pointer and snaps on release) and the surface renders the scene with `reduceIntent` applied locally for preview → pointer-up emits one `Intent` → the projection applies, rewrites or rejects it and writes its model (the store, a constraint set, an overlay) → the projection's `scene` atom re-emits → the surface re-renders. The undo unit is the intent.
 
+## 4c. Prototypes (designed 2026-10-07; type prototypes built)
+
+Shapes that look and behave alike should share one definition and differ only where they say so. There is
+one rule, applied at two levels: **a value left unset is taken from the prototype, recursively.**
+
+**Type prototypes (built).** A node type may be declared on a prototype: `NodeDefSpec = Partial<NodeDef> &
+{ extends?: string }`. `createNodeRegistry(types, prototypes)` resolves each type once, its own fields over
+its prototype chain's, and throws on an unknown prototype, a cycle, or a type left without a required field
+(`name`, `icon`, `schema`, `component`, `create`, `defaultSize`). A prototype is not a type: it is not in the
+registry, the palette or the scene schema, so lookups stay one record read. Schemas compose the same way by
+spreading the prototype's field set (`boxFields`) into each type's struct.
+
+| Prototype / type | Declares                                                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                       |
+| `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                          |
+| `scene`          | `extends: 'box'`; its schema adds `scene` and `contents`, its view adds the child scene and an open control, `openable`, 512x256. |
+
+The scene shape is a box: a centred label, the type's ports, and a zoom-in control (react-ui `Button`,
+top-right) that drills in like a double-click. `contents` chooses the body: the child scene (preview, then
+live, decision 10) or the label. Unset, it shows the child while there is no label, so an unnamed portal
+still reads as its contents and naming one turns it into a plain box.
+
+**Instance prototypes (designed, not built; TASKS "Object classes and prototypes").** A node may name a
+prototype node: `prototype?: NodeId` (same scene first; a canvas-level class library later). Its unset
+properties resolve from the prototype's at read time — `resolveNode(scene, node)`, cycle-guarded, before
+rendering, hit-testing and the properties form — so editing the prototype restyles every node built on it.
+The resolution is shallow per field (`style` merges per key); identity, place, text parts and the child
+scene are never inherited (`cloneShape`'s `OWN_FIELDS`). The properties form shows an inherited value as
+the field's placeholder and a "reset to prototype" action clears an override, reusing the multi-select
+indeterminate machinery. Applying a prototype once without the link is `cloneShape`; detaching copies the
+resolved values in.
+
 ## 5. Coordinate system and camera
 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to

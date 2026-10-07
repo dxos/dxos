@@ -14,8 +14,9 @@ import {
 
 import { type useRegistry } from '../../hooks/index.ts';
 import { type ControlPointRef, type Drag, type Handle, type SceneViewAtoms } from '../../model/atoms.ts';
+import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
-import { type CreateProps, type NodeRegistry, nodeDef } from '../../model/registry.ts';
+import { type CreateProps, type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
   type Camera,
