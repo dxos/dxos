@@ -47,6 +47,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               </>
             )}
             {(settings.showPalette ?? true) && <SceneView.Palette />}
+            {/* Floats over the canvas while something is selected; renders nothing otherwise. */}
+            <SceneView.Properties />
           </SceneView.Root>
         )}
       </Panel.Body>
