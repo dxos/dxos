@@ -792,7 +792,7 @@ export const usePointerMachine = ({
               target,
               midpoint: { x: snap((current.from.x + current.to.x) / 2), y: snap((current.from.y + current.to.y) / 2) },
               // A link between ports that declare a direction is drawn with one.
-              directed: isDirected(scene, nodeRegistry, current.source, target),
+              ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
             });
             projection.apply({ kind: 'link', link });
             // What the user just made is what they act on next (style, delete): the link, and the node

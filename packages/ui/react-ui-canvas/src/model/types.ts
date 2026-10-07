@@ -227,9 +227,7 @@ const linkBase = {
   locked: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
-  /** Shorthand for `ends: { end: 'arrow' }`; ports with `accepts` constrain which end lands where. */
-  directed: Schema.optional(Schema.Boolean),
-  /** Explicit end markers; when present they replace what `directed` implies. */
+  /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
 };
 
@@ -262,8 +260,8 @@ export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline', 'smar
 
 export type Element = Node | Link;
 
-/** The markers a link draws: its explicit `ends`, else an arrowhead at the target when it is `directed`. */
-export const linkMarkers = (link: Link): LinkEnds => link.ends ?? (link.directed ? { end: 'arrow' } : {});
+/** The markers a link draws. */
+export const linkMarkers = (link: Link): LinkEnds => link.ends ?? {};
 
 export const isNode = (element: Element): element is Node => 'center' in element;
 export const isLink = (element: Element): element is Link => 'source' in element;
