@@ -49,13 +49,14 @@ const BUMP_ORDER = ['patch', 'minor', 'major'];
 const git = (...args) =>
   execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
-/** `git merge-base --is-ancestor` exits 1 for "no"; any other failure (e.g. a shallow clone) still throws. */
+const GIT_NOT_ANCESTOR_STATUS = 1;
+
 function isAncestor(ancestor, descendant) {
   try {
     git('merge-base', '--is-ancestor', ancestor, descendant);
     return true;
   } catch (err) {
-    if (err.status === 1) {
+    if (err.status === GIT_NOT_ANCESTOR_STATUS) {
       return false;
     }
     throw err;
@@ -331,9 +332,8 @@ try {
     const { tag } = release;
     if (git('tag', '-l', tag)) {
       const tagged = git('rev-parse', `${tag}^{commit}`);
-      // A changeset bumps only its own group, so the other group can carry its version, and that version's
-      // tag on an earlier release commit, into this release unchanged.
-      if (tagged !== sha && isAncestor(tagged, sha)) {
+      const unchangedSinceEarlierRelease = tagged !== sha && isAncestor(tagged, sha);
+      if (unchangedSinceEarlierRelease) {
         console.log(`${tag} was released at ${tagged.slice(0, 9)}; skipping`);
         continue;
       }
