@@ -110,6 +110,57 @@ All of A–C depend on the same core piece: a history that merges two lines by f
 positions come from one counter per space and namespace, so items in different feeds of the same space
 are comparable, which makes B's merge sound.
 
+## Indexing
+
+How each design finds a session's threads and loads a turn's history, against what ECHO indexes today.
+
+### What is indexed
+
+- **Objects** — `echo_entities` (`echo-sqlite/src/migrations/0001_init.sql`) is indexed on
+  `(space_id, type_dxn, id)`, `(space_id, kind)`, `(space_id, parent_id)`, `source_id`, `target_id`,
+  `created_at` and `updated_at`; `echo_refs` on `(space_id, target_id, prop_path)` (reverse references);
+  `echo_fts` is an FTS5 trigram table.
+- **Feed items** — ordered by a **global position** (`KEY_QUEUE_POSITION` in the item's `@meta`), from
+  one counter per space and namespace, so items in different feeds of a space compare. A query is scoped
+  to a feed with `.from(feed)`.
+- **Not indexed** — `Filter.annotation` (and `has-parent`) run as post-filters after the main select
+  (`echo-host/src/query/query-planner.ts`), so filtering a feed by an annotation scans it.
+
+### Positions are assigned by EDGE
+
+Only one peer — EDGE — assigns positions (`feed-store.ts`, `assignPositions`). A block written locally
+has none until acknowledged, and `Feed.getPosition` returns `+Infinity` for it so it sorts last, as the
+newest. Within one feed that preserves append order. Across feeds it does not: two unacknowledged items
+from different feeds tie, so a merge of a main feed and a thread feed must break ties by local insertion
+order (or `created`) until EDGE assigns positions, and re-sort once it does. This applies to every
+design that orders across feeds — B, C, and `SessionLink` today.
+
+### Per design
+
+**B — child feed per thread** needs no new index:
+
+| Query                               | Answered by                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| A session's private threads         | `Filter.type(Feed)` + `childOf(chat)` — the `(space_id, parent_id)` index |
+| A goal's thread                     | A `Ref<Feed>` on the goal — direct lookup                                 |
+| Which goal owns a thread            | The reverse reference — `echo_refs` on `target_id`                        |
+| A thread's items, in order          | `.from(threadFeed)`, ordered by position                                  |
+| A turn's history (session + thread) | A merge of two position-ordered streams; linear, no filtering             |
+| The user's chat history             | The main feed alone; thread items are never read                          |
+
+Promotion re-parents the thread feed (one `parent_id` update) and repoints the goal's ref.
+
+**A — tagged messages in one feed** pays on every read: the main history ("no thread tag") and each
+thread ("tag = T") both scan and post-filter the whole session feed, and the cost grows with every
+goal's reasoning. Making it cheap needs a new indexed column for the thread tag on feed items — a
+storage change to `echo-sqlite`. Promotion copies items to another feed.
+
+**C — hidden `Chat` per thread** indexes like B (the thread chat is found by `parent_id`; its feed is its
+own), plus an exclusion filter on every chat list.
+
+**D — branches in one feed** needs what A needs (items of a branch are found by scanning lineage)
+plus a stored head per branch.
+
 ## Recommendation
 
 **B — a child feed per thread.** It is the only design that hides threads by construction rather than
