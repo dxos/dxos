@@ -40,7 +40,7 @@ import { nodeBounds } from '../../utils/shapes.ts';
 import { frameClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
-/** Screen px below which a portal is a solid tile; above it a portal showing its contents mounts the child live. */
+/** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
 /** Default for `liveDepth`: root plus this many live nested levels (decision 10). */
 export const MAX_LIVE_DEPTH = 1;
@@ -434,11 +434,12 @@ export const PortalNodeView = (props: NodeViewProps) => {
   const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
   const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
   const contents = opening || (isPortalNode(node) && showsContents(node));
-  // Being entered, the portal is already the child scene on the canvas: live, and without the tile tint.
+  // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
   const title = (isPortalNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
-  if (!contents) {
+  // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
+  if (!contents || tier === 'dot') {
     return (
       <>
         <LabelPart node={node} editing={editing} label={title} />
@@ -447,7 +448,7 @@ export const PortalNodeView = (props: NodeViewProps) => {
     );
   }
   return (
-    <div className={mx('dx-cover', tier === 'dot' && 'bg-primary-500/40')}>
+    <div className='dx-cover'>
       {tier === 'preview' && child && (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
           <span className='text-2xl'>{title}</span>

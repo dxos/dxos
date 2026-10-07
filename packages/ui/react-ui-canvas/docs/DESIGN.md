@@ -288,7 +288,7 @@ resolved values in.
   a root covering < 30% of what it covered on arrival (the history entry for the path) yields to its parent, so a
   child capped at 1:1, or a frame that shrinks as its first node is drawn, is never thrown out on arrival. The
   swap preserves coverage, so the two rules cannot oscillate.
-- **Tiers** for a portal showing its contents, by on-screen size (`min(size) × composed zoom`): `< 40px` tile,
+- **Tiers** for a portal showing its contents, by on-screen size (`min(size) × composed zoom`): `< 40px` its title alone, as a closed scene,
   else the live child scene while `depth < liveDepth`, and past it a title + node count (later: a rasterised
   thumbnail). Hysteresis of ±10% at the tile boundary.
 
