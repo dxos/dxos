@@ -13,12 +13,14 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
+import { type Database } from '@dxos/echo';
 import {
   Form,
   type FormFieldMap,
   type FormFieldOverride,
   type FormFieldRenderer,
   type FormUpdateMeta,
+  type RefFieldDataProps,
 } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
@@ -127,6 +129,12 @@ export type PropertiesProps = Util.ThemedClassName<{
   fields?: FormFieldMap;
   /** Show the fields without letting them change; also implied by a projection that cannot `update`. */
   readonly?: boolean;
+  /** The database a reference field picks from; without it reference fields are read-only. */
+  db?: Database.Database;
+  /** Narrows a reference field's candidates (e.g. to objects of one kind). */
+  getOptions?: RefFieldDataProps['getOptions'];
+  /** A host's per-selection field overrides (e.g. a field it allows only in some states), over the panel's own. */
+  overrides?: (elements: readonly Element[]) => Record<string, FormFieldOverride>;
 }>;
 
 export const Properties = ({
@@ -136,6 +144,9 @@ export const Properties = ({
   nodes = defaultNodeRegistry,
   fields,
   readonly: readonlyProp = false,
+  db,
+  getOptions,
+  overrides,
 }: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
@@ -150,12 +161,12 @@ export const Properties = ({
     const shown = elements.map((element) => formValues(nodes, element));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
-    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_OVERRIDES };
+    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_OVERRIDES, ...overrides?.(elements) };
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
     return { values, fieldOverrides };
-  }, [elements, nodes]);
+  }, [elements, nodes, overrides]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -203,6 +214,8 @@ export const Properties = ({
           values={values}
           fieldOverrides={fieldOverrides}
           fieldMap={fieldMap}
+          db={db}
+          getOptions={getOptions}
           readonly={readonly}
           autoSave
           onSave={onSave}

@@ -3,24 +3,28 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import {
+  type Element,
   SceneView,
+  type SceneViewPropertiesProps,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
+  isLink,
+  isPortalNode,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { type BoundCanvasStore, bindCanvasStore } from '#model';
-import { CanvasCapabilities } from '#types';
+import { type BoundCanvasStore, CanvasSceneNode, bindCanvasStore, parseLinkedSceneId, sourceUri } from '#model';
+import { Canvas, CanvasCapabilities } from '#types';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
@@ -34,7 +38,12 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const nodes = useMemo(
     () =>
       createNodeRegistry(
-        { ...defaultNodeTypes, ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])) },
+        {
+          ...defaultNodeTypes,
+          // The canvas's scene shape may show another drawing (`source`), which the store binds alongside.
+          scene: { ...defaultNodeTypes.scene, schema: CanvasSceneNode },
+          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
+        },
         defaultNodePrototypes,
       ),
     [contributed],
@@ -46,6 +55,43 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     setBound(next);
     return () => next.dispose();
   }, [registry, canvas]);
+
+  const db = Obj.getDatabase(canvas);
+
+  // A scene shape links only to another canvas drawing: never to itself, nor to a drawing of another renderer.
+  const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
+    (results) =>
+      results
+        .filter((result) => {
+          if (!Obj.instanceOf(Drawing.Drawing, result)) {
+            return false;
+          }
+          const target = result.canvas.target;
+          return target !== canvas && (target === undefined || target.schema === Canvas.SCENE_SCHEMA);
+        })
+        .map((result) => {
+          const id = Entity.getURI(result, { prefer: 'named' });
+          return { id, label: Entity.getLabel(result) ?? id };
+        }),
+    [canvas],
+  );
+
+  // A shape may take a drawing only while its own child scene is empty, so linking never hides what was drawn there.
+  const overrides = useCallback(
+    (elements: readonly Element[]): ReturnType<NonNullable<SceneViewPropertiesProps['overrides']>> => {
+      const scenes = bound ? registry.get(bound.store.scenes) : {};
+      const locked = elements.some((element) => {
+        if (isLink(element) || !isPortalNode(element) || sourceUri(element) || parseLinkedSceneId(element.scene)) {
+          return false;
+        }
+        const child = scenes[element.scene];
+        return child !== undefined && Object.keys(child.nodes).length > 0;
+      });
+      return locked ? { source: { readonly: true } } : {};
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [registry, bound],
+  );
 
   return (
     <Panel.Root role={role}>
@@ -64,7 +110,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             )}
             {(settings.showPalette ?? true) && <SceneView.Palette />}
             {/* Floats over the canvas while something is selected; renders nothing otherwise. */}
-            <SceneView.Properties />
+            <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} />
           </SceneView.Root>
         )}
       </Panel.Body>

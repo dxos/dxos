@@ -1010,12 +1010,17 @@ SceneViewPalette.displayName = 'SceneView.Palette';
 // Properties
 //
 
-export type SceneViewPropertiesProps = Util.ThemedClassName<Pick<PropertiesProps, 'fields'>>;
+export type SceneViewPropertiesProps = Util.ThemedClassName<
+  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'>
+>;
 
 /** The selected element's properties as a floating panel; absent while nothing is selected. */
 const SceneViewProperties = ({
   classNames = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]',
   fields,
+  db,
+  getOptions,
+  overrides,
 }: SceneViewPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, selection } = useSceneViewContext('SceneView.Properties');
   if (selection.size === 0) {
@@ -1029,6 +1034,9 @@ const SceneViewProperties = ({
       atoms={atoms}
       nodes={nodeRegistry}
       fields={fields}
+      db={db}
+      getOptions={getOptions}
+      overrides={overrides}
       readonly={!capabilities.update}
     />
   );

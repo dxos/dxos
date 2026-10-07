@@ -8989,6 +8989,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
@@ -9005,6 +9008,9 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
