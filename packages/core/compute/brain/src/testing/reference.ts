@@ -5,7 +5,7 @@
 import { trim } from '@dxos/util';
 
 /** Hand-written reference compilations of the eight example goals, keyed by scenario number. */
-export const GOLD: Readonly<Record<number, string>> = {
+export const REFERENCE: Readonly<Record<number, string>> = {
   1: trim`
     wake(dima_work) :- speaker(F, dima), not force(F, expressive).
     wake(dima_work) :- fact(F, dima, _, _), not speaker(F, dima).
@@ -55,7 +55,7 @@ export const GOLD: Readonly<Record<number, string>> = {
 };
 
 /** Plausible but wrong compilations; replaying the scenario must reject each one. */
-export const NEGATIVE: ReadonlyArray<{ readonly scenario: number; readonly note: string; readonly source: string }> = [
+export const WRONG: ReadonlyArray<{ readonly scenario: number; readonly note: string; readonly source: string }> = [
   {
     scenario: 3,
     note: 'achievement ignores polarity, so a refusal achieves the goal',

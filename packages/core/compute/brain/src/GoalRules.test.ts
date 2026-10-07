@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as GoalRules from './GoalRules.ts';
-import { GOLD, NEGATIVE, SCENARIOS, simulate, toFactTuple } from './testing/index.ts';
+import { REFERENCE, WRONG, SCENARIOS, simulate, toFactTuple } from './testing/index.ts';
 
 describe('GoalRules', () => {
   describe('example goals replay against their reference compilations', () => {
@@ -15,7 +15,7 @@ describe('GoalRules', () => {
         const scenario = SCENARIOS.find((candidate) => candidate.n === number);
         expect(scenario).toBeDefined();
         if (scenario) {
-          const result = simulate(scenario, GOLD[number]);
+          const result = simulate(scenario, REFERENCE[number]);
           expect(result.failures).toEqual([]);
         }
       },
@@ -23,7 +23,7 @@ describe('GoalRules', () => {
   });
 
   describe('replay rejects wrong compilations', () => {
-    test.for(NEGATIVE.map(({ scenario, note, source }) => [scenario, note, source] as const))(
+    test.for(WRONG.map(({ scenario, note, source }) => [scenario, note, source] as const))(
       'goal %i: %s',
       ([number, , source], { expect }) => {
         const scenario = SCENARIOS.find((candidate) => candidate.n === number);
@@ -87,7 +87,7 @@ describe('GoalRules', () => {
   });
 
   test('checks proposed actions without keeping them', ({ expect }) => {
-    const rules = GoalRules.make({ source: GOLD[7], createdAt: 0 });
+    const rules = GoalRules.make({ source: REFERENCE[7], createdAt: 0 });
     const friday = { id: 'a1', kind: 'book_meeting', args: { start: '2027-01-08T15:00:00Z' } };
     expect(rules.checkAction(friday).blocked).toBe(true);
     expect(rules.checkAction({ ...friday, id: 'a2', args: { start: '2027-01-05T10:00:00Z' } }).blocked).toBe(false);

@@ -40,6 +40,10 @@ asked.
 Five layers, from extracted propositions up to goals and the threads that judge them. Each layer's
 types are defined once and the layers above reuse them.
 
+![Brain flows: facts are ingested into the index; goals are compiled and checked; GoalRules wakes goals that are judged in private threads, whose actions pass the constraint check and whose judgments feed back as facts](./diagrams/brain-flows.dx.svg)
+
+Source: [diagrams/brain-flows.dx](./diagrams/brain-flows.dx), rendered with plugin-illustrator.
+
 | Layer          | Package                        | Types                                                                                                                                                                                            |
 | -------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1. Facts       | `@dxos/pipeline-rdf`           | `RDF.Fact` = `Assertion` (subject/object `Term`, predicate, validity, quote) + `Factuality` + `Illocution` + `Attribution`; `RDF.Entity`                                                         |
@@ -52,7 +56,7 @@ types are defined once and the layers above reuse them.
 
 1. A source — a chat turn, a document, a web page — is read by pipeline-rdf's extraction stages into
    `RDF.Fact`s, attributed to the speaker, message and time; predicates are normalized
-   (`normalizePredicate`).
+   (`RDF.Predicate.normalize`).
 2. Each `Fact` becomes a `FactTuple` (lossless, `FactTuple.fromFact`) appended to the source's fact
    feed — the record, append-only; corrections are new tuples.
 3. The brain follows each feed from its cursor, writes the facts to its index (pipeline-rdf's SQLite
@@ -139,9 +143,10 @@ Its RDF form — the `sx:` (`https://dxos.org/semantic#`) and `prov:` vocabulary
 and the `Fact` ↔ triples reification — is the one RDF definition: the brain reuses it for any RDF or N3
 output rather than inventing its own namespace. `FactStore` persists that form in SQLite (`triples`
 indexed by subject–predicate–object and predicate–object, `entities`, per-source `cursors`) and answers
-SPARQL. Two fixes make it fit for the brain (in progress): the mapping and its predicate normalization
-are exported publicly, and the mapping serializes `illocution` (`sx:force`, `sx:mood`, `sx:addressee`),
-which it previously dropped — a fact read back from `FactStore` had lost its speech act.
+SPARQL. They are public as `RDF.Vocab` (namespaces and IRI helpers), `RDF.Mapping` (`factToTriples`,
+`triplesToFacts`) and `RDF.Predicate` (`normalize`). The mapping serializes `illocution` (`sx:force`,
+`sx:mood`, `sx:addressee`), which it previously dropped — a fact read back from `FactStore` had lost
+its speech act; round-trip tests cover both stores.
 
 ### `FactTuple`
 
@@ -196,7 +201,7 @@ round-trip test); a bare `assertive` illocution reads back as absent.
 Storage in the rule engine is generic — `fact(F, S, P, O)` plus metadata relations keyed by `F`
 (`speaker`, `force`, `polarity`, `mood`, `factuality`, `saidAt`, `source`, `surface`, …), lossless
 with `FactTuple` and RDF. The extractor's predicates are unstable (`working-on`, `will-work-on`,
-`works_on`), so surface predicates are normalized with pipeline-rdf's `normalizePredicate` and mapped
+`works_on`), so surface predicates are normalized with pipeline-rdf's `RDF.Predicate.normalize` and mapped
 onto a small **canonical vocabulary**, keeping the original as `surface(F, "will-work-on")`. Rules may
 use shorthand for canonical predicates — `helps_with(dima, X)` expands to
 `fact(_, dima, helps_with, X)`, and `helps_with(F, dima, X)` exposes the id — and shorthand on a
@@ -422,15 +427,15 @@ Both are public. Stories: `stories-brain` GoalCompiler (goal text → compiled r
 
 ## Implementation
 
-| #   | Milestone                   | Status | Delivers                                                                                                                                                                             | Demo                                                                                                                        |
-| --- | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| M0  | Private threads             | Design | A child feed per thread; a position-ordered merge with the session's history; `getSession(chat, { thread })` under its own process key (THREADS.md)                                  | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view                                     |
-| M1  | Goal compilation spike      | Done   | Compiled the eight goals to Datalog, SPARQL and N3; measured validity, correctness, replay vs read-back, portability ("M1 findings")                                                 | The results tables below                                                                                                    |
-| —   | Engine and brain packages   | Built  | `@dxos/datalog`, `@dxos/brain` with the eight scenarios as tests; pipeline-rdf vocabulary and mapping exported, illocution preserved (in progress); GoalCompiler story (in progress) | GoalCompiler story: goal text → rules → replay                                                                              |
-| M2  | Facts and goals, in-process | Next   | `readSource` writes `FactTuple`s; `Goal` directives with feeds; the in-process brain on `@dxos/brain`; judgment in the session's private thread                                      | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment); goals and sub-goals in the Goals tab |
-| M3  | Brain on EDGE               |        | A Durable Object per agent follows the feeds, keeps the SQLite index, evaluates rules, schedules alarms, runs background sessions per actor; the agent service routes results        | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart                    |
-| M4  | Planning and constraints    |        | Judgment decomposes goals into sub-goals and tasks; action drivers enforce constraints; session → durable promotion                                                                  | "Complete my taxes" grows sub-goals; "never on Fridays" rewrites a proposed meeting                                         |
-| M5  | Pattern library and evals   |        | The goal-pattern skill; eval personas over the eight goals; cost controls (batching, judgment limits)                                                                                | An eval report with judgment-call counts                                                                                    |
+| #   | Milestone                   | Status | Delivers                                                                                                                                                                                         | Demo                                                                                                                        |
+| --- | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| M0  | Private threads             | Design | A child feed per thread; a position-ordered merge with the session's history; `getSession(chat, { thread })` under its own process key (THREADS.md)                                              | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view                                     |
+| M1  | Goal compilation spike      | Done   | Compiled the eight goals to Datalog, SPARQL and N3; measured validity, correctness, replay vs read-back, portability ("M1 findings")                                                             | The results tables below                                                                                                    |
+| —   | Engine and brain packages   | Built  | `@dxos/datalog`, `@dxos/brain` with the eight scenarios as tests; pipeline-rdf `RDF.Vocab` / `RDF.Mapping` / `RDF.Predicate` exported and illocution preserved; GoalCompiler story (in progress) | GoalCompiler story: goal text → rules → replay                                                                              |
+| M2  | Facts and goals, in-process | Next   | `readSource` writes `FactTuple`s; `Goal` directives with feeds; the in-process brain on `@dxos/brain`; judgment in the session's private thread                                                  | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment); goals and sub-goals in the Goals tab |
+| M3  | Brain on EDGE               |        | A Durable Object per agent follows the feeds, keeps the SQLite index, evaluates rules, schedules alarms, runs background sessions per actor; the agent service routes results                    | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart                    |
+| M4  | Planning and constraints    |        | Judgment decomposes goals into sub-goals and tasks; action drivers enforce constraints; session → durable promotion                                                                              | "Complete my taxes" grows sub-goals; "never on Fridays" rewrites a proposed meeting                                         |
+| M5  | Pattern library and evals   |        | The goal-pattern skill; eval personas over the eight goals; cost controls (batching, judgment limits)                                                                                            | An eval report with judgment-call counts                                                                                    |
 
 ### M1 findings (2026-10-07)
 
