@@ -358,8 +358,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
             // A result reported inside the turn it belongs to is still sitting in the queue; it is
-            // not outstanding work, and counting it as such keeps the agent from ever completing —
-            // the head-drop at the top of `onAlarm` cannot help, because nothing arms another wake.
+            // not outstanding work, and counting it as such keeps the agent from ever completing.
             for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
               log('drop tool result reported within its turn', { pid });
             }
@@ -447,8 +446,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // too, but that path returns in milliseconds and the turn settling clears the line.
               yield* Trace.emitRequestPhase('preparing');
 
-              for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
+              const skipped = dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid));
+              for (const pid of skipped) {
                 log.info('skip tool result that was reported synchronously', { pid });
+              }
+              // A result queued after its turn persisted would otherwise survive in storage, and the
+              // reload reconcile would un-report it and replay it.
+              if (skipped.length > 0) {
+                yield* ToolResultsCell.set(toolResults);
               }
 
               // Undelivered tool results drain first; then the feed queue, then a due alarm.
@@ -604,6 +609,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 );
               log('end request');
               turnRan = true;
+              // Persisted only once pruned: the reload reconcile un-reports every queued result, so a
+              // delivered result left here is replayed as a fresh turn after the next reload.
+              for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
+                log('drop tool result reported within its turn', { pid });
+              }
               yield* ToolResultsCell.set(toolResults);
 
               // Ack only now: the turn is what the queue entry was for, so a process that dies before
@@ -923,11 +933,11 @@ export const isAgentWorkPending = ({
   toolCallManager.hasPendingToolResults();
 
 /**
- * Discards tool results at the head of the queue whose values already reached the agent.
+ * Discards every queued tool result whose value already reached the agent, wherever it sits.
  *
- * A tool that returned inside its turn is reported synchronously AND left queued; after a reload the
- * queue is replayed, so without this the model would be handed a result it has already seen. Only the
- * head is examined: a result further back belongs to a turn that has not run yet.
+ * A tool that returned inside its turn is reported synchronously AND may be left queued. The whole
+ * queue is scanned because a replayed turn queues its own results behind the one it replays, so a
+ * head-only drop lets one unreported result pin the backlog and wake the agent forever.
  *
  * Mutates `queue` and returns the pids dropped, so the caller owns the logging.
  */
@@ -935,14 +945,10 @@ export const dropReportedToolResults = (
   queue: ToolResultEvent[],
   isReported: (pid: Process.ID) => boolean,
 ): readonly Process.ID[] => {
-  const dropped: Process.ID[] = [];
-  while (queue.length > 0) {
-    const head = queue[0];
-    if (!isReported(head.pid)) {
-      break;
-    }
-    queue.shift();
-    dropped.push(head.pid);
+  const dropped = queue.filter((item) => isReported(item.pid)).map((item) => item.pid);
+  if (dropped.length > 0) {
+    const kept = queue.filter((item) => !isReported(item.pid));
+    queue.splice(0, queue.length, ...kept);
   }
   return dropped;
 };

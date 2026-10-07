@@ -38,7 +38,12 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
+import {
+  AssistantTestLayer,
+  WaitForMessageTimeoutError,
+  messageTextIncludes,
+  waitForMessage,
+} from '../testing/index.ts';
 import * as ResearchService from '../testing/ResearchService.ts';
 import { AGENT_PROCESS_KEY } from './agent-process.ts';
 import * as AgentService from './AgentService.ts';
@@ -318,7 +323,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
-    'recovers queued tool results after reload',
+    'does not replay a tool result delivered within its turn after reload',
     Effect.fnUntraced(
       function* (_) {
         let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
@@ -327,10 +332,6 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeOneTask();
-        // Settle the turn before tearing down, so what survives the reload is the queued tool result
-        // alone. Without this the prompt's queue entry may also still be unacked, and recovery
-        // delivers the result AND redelivers the prompt — which re-issues the tool this test is
-        // asserting does not run twice.
         yield* session.waitForCompletion();
 
         const processManager = yield* ProcessManager.ProcessManagerService;
@@ -338,27 +339,24 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* processManager.startup();
         yield* ComputeAgentService.hydrate();
 
+        // No `waitForCompletion` here: with nothing left to do, a process restored mid-shutdown has no
+        // turn to settle. The turn itself already answered from the result.
         session = yield* ComputeAgentService.getSession(session.chat);
-        yield* session.waitForCompletion();
-
-        // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
-        // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
-        // the side effects of an operation that had already completed.
-        expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
-        session = yield* ComputeAgentService.getSession(session.chat);
-
-        // The recovery turn begins when the rehydrated process fires its alarm, which is after
-        // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
-        // reply instead. Asserting on the ASSISTANT's text and on a fact only the tool result carries:
-        // the prompt itself says "Cyberdyne", so matching that over every message would pass even when
-        // the recovered result never reached the model.
-        const recovered = yield* waitForMessage(
+        yield* waitForMessage(
           session.feed,
           (message) =>
             message.sender.role === 'assistant' && Message.extractText(message).toLocaleLowerCase().includes('nasdaq'),
           { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 15_000 },
         );
-        expect(Message.extractText(recovered).toLocaleLowerCase()).toContain('nasdaq');
+
+        // Replaying the delivered result would wake the agent for a turn about a result it has seen,
+        // the loop that kept a test space alive; a replay starts on the rehydrated process's alarm, so
+        // it is waited for rather than read once.
+        const replay = yield* waitForMessage(session.feed, messageTextIncludes('<result pid='), {
+          timeout: 1_000,
+        }).pipe(Effect.flip);
+        expect(replay).toBeInstanceOf(WaitForMessageTimeoutError);
+        expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
