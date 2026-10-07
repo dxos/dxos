@@ -123,7 +123,7 @@ export const migrateContent = (content: ContentMap): boolean => {
   content[sceneKey(ROOT_SCENE_ID)] = {
     kind: 'scene',
     id: ROOT_SCENE_ID,
-    ...(isSceneRecord(legacy) && legacy.name ? { name: legacy.name } : {}),
+    ...(isSceneRecord(legacy) && legacy.name !== undefined ? { name: legacy.name } : {}),
   } satisfies SceneRecord;
   const canvas = content[CANVAS_KEY];
   content[CANVAS_KEY] = {

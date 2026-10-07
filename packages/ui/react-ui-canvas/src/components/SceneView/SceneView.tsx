@@ -50,7 +50,7 @@ import {
 import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
-import { boundsFromPoints, hitTest, unionBounds } from '../../utils/hit.ts';
+import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { createLink, nodeBounds } from '../../utils/shapes.ts';
@@ -552,14 +552,16 @@ const SceneViewRoot = ({
     [camera, viewport],
   );
 
-  // Shapes may land on free cells beyond the scene's frame, so the cells cover whatever is in view as well.
-  const latticeBounds = useMemo(() => {
-    const visible = boundsFromPoints(
-      screenToScene(camera, { x: 0, y: 0 }),
-      screenToScene(camera, { x: viewport.width, y: viewport.height }),
-    );
-    return unionBounds([bounds, visible]) ?? bounds;
-  }, [camera, viewport, bounds]);
+  // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
+  // since a union with a distant frame would exceed the grid's cell budget and hide the lattice.
+  const latticeBounds = useMemo(
+    () =>
+      boundsFromPoints(
+        screenToScene(camera, { x: 0, y: 0 }),
+        screenToScene(camera, { x: viewport.width, y: viewport.height }),
+      ),
+    [camera, viewport],
+  );
 
   const zoomBy = useCallback(
     (factor: number) => {

@@ -202,7 +202,8 @@ const check = (registry: NodeRegistry, node: Node): void => {
 
 /** Two elements given one id would leave only the second, so the fixture fails instead. */
 const claim = (taken: Record<string, unknown>, id: string, sceneId: SceneId): void => {
-  if (id in taken) {
+  // Own keys only: an id like `constructor` is not taken by the record's prototype.
+  if (Object.hasOwn(taken, id)) {
     throw new Error(`Duplicate id ${id} in scene ${sceneId}.`);
   }
 };
@@ -214,7 +215,7 @@ const linkId = (source: Endpoint, target: Endpoint): string => {
 
 const uniqueId = (taken: Record<string, unknown>, id: string): string => {
   let candidate = id;
-  for (let suffix = 2; candidate in taken; ++suffix) {
+  for (let suffix = 2; Object.hasOwn(taken, candidate); ++suffix) {
     candidate = `${id}-${suffix}`;
   }
   return candidate;

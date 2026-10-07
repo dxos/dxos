@@ -49,6 +49,43 @@ const gutterLines = (low: number, high: number, pitch: number): number[] => {
   return Array.from({ length: last - first + 1 }, (_, index) => (first + index + 0.5) * pitch);
 };
 
+type Region = { left: number; right: number; top: number; bottom: number };
+
+/**
+ * The span the search covers: the ends, grown by every frame within `MARGIN` pitches of it until none is
+ * left, so a way round an obstacle (and round whatever it abuts) is in range, while a distant shape that
+ * cannot be in the way adds no lines to the grid.
+ */
+const searchRegion = (start: Point, end: Point, frames: readonly Bounds[], pitchX: number, pitchY: number): Region => {
+  const region: Region = {
+    left: Math.min(start.x, end.x),
+    right: Math.max(start.x, end.x),
+    top: Math.min(start.y, end.y),
+    bottom: Math.max(start.y, end.y),
+  };
+  const [reachX, reachY] = [MARGIN * pitchX, MARGIN * pitchY];
+  const pending = new Set(frames);
+  for (let grown = true; grown;) {
+    grown = false;
+    for (const frame of pending) {
+      const near =
+        frame.x <= region.right + reachX &&
+        frame.x + frame.width >= region.left - reachX &&
+        frame.y <= region.bottom + reachY &&
+        frame.y + frame.height >= region.top - reachY;
+      if (near) {
+        region.left = Math.min(region.left, frame.x);
+        region.right = Math.max(region.right, frame.x + frame.width);
+        region.top = Math.min(region.top, frame.y);
+        region.bottom = Math.max(region.bottom, frame.y + frame.height);
+        pending.delete(frame);
+        grown = true;
+      }
+    }
+  }
+  return region;
+};
+
 const sortedUnique = (values: number[]): number[] =>
   [...new Set(values.map((value) => Math.round(value * 1000) / 1000))].sort((left, right) => left - right);
 
@@ -67,13 +104,10 @@ export const gutterRoute = (
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const start = gutterExit(from, spec);
   const end = gutterExit(to, spec);
-  // The search spans the shapes' frames as well as the ends, so a way round a wide obstacle is never out of
-  // range of the margin and the route never falls back to cutting through it.
   const frames = nodes.map(nodeBounds);
-  const extentX = [start.x, end.x, ...frames.flatMap((frame) => [frame.x, frame.x + frame.width])];
-  const extentY = [start.y, end.y, ...frames.flatMap((frame) => [frame.y, frame.y + frame.height])];
-  const verticals = gutterLines(Math.min(...extentX), Math.max(...extentX), pitchX);
-  const horizontals = gutterLines(Math.min(...extentY), Math.max(...extentY), pitchY);
+  const region = searchRegion(start, end, frames, pitchX, pitchY);
+  const verticals = gutterLines(region.left, region.right, pitchX);
+  const horizontals = gutterLines(region.top, region.bottom, pitchY);
   const xs = sortedUnique([...verticals, start.x, end.x]);
   const ys = sortedUnique([...horizontals, start.y, end.y]);
   const clear = (a: Point, b: Point) => !frames.some((frame) => crosses(a, b, frame));

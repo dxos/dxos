@@ -87,6 +87,13 @@ describe('SceneBuilder', () => {
     expect(() => SceneBuilder.scene('s', [rect, generated, generated.id('a-a')]).build()).toThrow(/Duplicate id a-a/);
   });
 
+  test('an id an object inherits is not taken', ({ expect }) => {
+    const rect = SceneBuilder.rect('constructor', box(0, 0));
+    expect(() =>
+      SceneBuilder.scene('s', [rect, SceneBuilder.link('line', 'constructor', 'constructor').id('toString')]).build(),
+    ).not.toThrow();
+  });
+
   test('a node its type does not describe fails the build', ({ expect }) => {
     const host = SceneBuilder.node('rect', 'a', box(0, 0)).properties({ portsPerSide: 2 });
     expect(() => SceneBuilder.scene('s', [host]).build()).not.toThrow();

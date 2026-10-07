@@ -138,6 +138,19 @@ describe('gutter route', () => {
     }
   });
 
+  test('a distant shape adds no lines to the search', ({ expect }) => {
+    // A shape a million pitches away is no obstacle; the route between B and D is found as without it.
+    const far = cellNode('far', 1_000_000, 1_000_000);
+    const ends = [
+      { point: { x: -256, y: 0 }, side: 'e' },
+      { point: { x: -128, y: 0 }, side: 'w' },
+    ] as const;
+    const started = performance.now();
+    const route = gutterRoute([...nodes, far], spec, ...ends);
+    expect(performance.now() - started).toBeLessThan(1_000);
+    expect(route).toEqual(gutterRoute(nodes, spec, ...ends));
+  });
+
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
     const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>
