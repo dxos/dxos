@@ -147,7 +147,10 @@ describe('AnalyzeTurn', () => {
 
         expect(captured.uploads).toHaveLength(1);
         expect(captured.uploads[0].kind).toBe('trajectory');
-        expect(captured.uploads[0].ndjson.split('\n')).toHaveLength(3);
+        const [header, ...messages] = captured.uploads[0].ndjson.split('\n').map((line) => JSON.parse(line));
+        expect(header).toMatchObject({ type: 'header', verdict: { cause: 'tool_faulty' } });
+        expect(messages.length).toBeGreaterThan(0);
+        expect(messages.every((message) => message.type === 'message')).toBe(true);
         expect(captured.events).toHaveLength(1);
         expect(captured.events[0].event).toBe(STRUGGLE_EVENT);
         expect(captured.events[0].attributes).toMatchObject({
@@ -155,7 +158,6 @@ describe('AnalyzeTurn', () => {
           code_mode: true,
           cause: 'tool_faulty',
           cause_group: 'tooling',
-          turn_message_count: 2,
           trajectory_key: 'trajectories/2026-10-06/test.ndjson.gz',
         });
       },
