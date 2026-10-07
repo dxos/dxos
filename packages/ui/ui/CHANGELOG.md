@@ -1,5 +1,12 @@
 # @dxos/ui
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes
