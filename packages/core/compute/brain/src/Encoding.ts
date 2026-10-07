@@ -5,11 +5,11 @@
 // @import-as-namespace
 
 import type * as Engine from '@dxos/datalog/Engine';
+import { RDF } from '@dxos/pipeline-rdf';
 
-import * as FactTuple from './FactTuple.ts';
 import type * as Vocabulary from './Vocabulary.ts';
 
-/** Relations every fact tuple contributes to, keyed by the tuple id `F`. */
+/** Relations every fact contributes to, keyed by the fact id `F`. */
 export const FACT_RELATIONS = {
   fact: 4,
   speaker: 2,
@@ -43,52 +43,53 @@ export const GOAL_RELATIONS = {
 export const RELATIONS: Readonly<Record<string, number>> = { ...FACT_RELATIONS, ...GOAL_RELATIONS };
 
 /**
- * Encodes a tuple as `fact(F, S, P, O)` plus one metadata relation per present field. `P` is the
- * canonical predicate when the vocabulary knows the surface form, which `surface(F, …)` keeps.
+ * Encodes a fact as `fact(F, S, P, O)` plus one metadata relation per present field. `P` is the
+ * canonical predicate when the vocabulary knows the surface form, which `surface(F, …)` keeps; a fact
+ * without an illocution is `assertive`, and `supersedes` lists `attribution.wasDerivedFrom`.
  */
-export const encode = (tuple: FactTuple.FactTuple, vocabulary?: Vocabulary.Vocabulary): Engine.Entry[] => {
-  const id = tuple.id;
+export const encode = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): Engine.Entry[] => {
+  const { id, assertion, factuality, illocution, attribution } = fact;
   const entries: Engine.Entry[] = [
     {
       relation: 'fact',
       tuple: [
         id,
-        FactTuple.termValue(tuple.subject),
-        vocabulary?.resolve(tuple.predicate) ?? tuple.predicate,
-        FactTuple.termValue(tuple.object),
+        RDF.termValue(assertion.subject),
+        vocabulary?.resolve(assertion.predicate) ?? assertion.predicate,
+        RDF.termValue(assertion.object),
       ],
     },
-    { relation: 'surface', tuple: [id, tuple.predicate] },
-    { relation: 'force', tuple: [id, tuple.force] },
-    { relation: 'polarity', tuple: [id, tuple.polarity] },
-    { relation: 'factuality', tuple: [id, tuple.factuality] },
-    { relation: 'source', tuple: [id, tuple.source] },
-    { relation: 'saidAt', tuple: [id, tuple.saidAt] },
-    { relation: 'recordedAt', tuple: [id, tuple.recordedAt] },
-    { relation: 'pass', tuple: [id, tuple.pass] },
+    { relation: 'surface', tuple: [id, assertion.predicate] },
+    { relation: 'force', tuple: [id, illocution?.force ?? 'assertive'] },
+    { relation: 'polarity', tuple: [id, factuality.polarity] },
+    { relation: 'factuality', tuple: [id, factuality.value] },
+    { relation: 'source', tuple: [id, attribution.source] },
+    { relation: 'saidAt', tuple: [id, attribution.generatedAtTime] },
+    { relation: 'recordedAt', tuple: [id, fact.recordedAt] },
   ];
   const optional: ReadonlyArray<[string, string | number | undefined]> = [
-    ['speaker', tuple.speaker],
-    ['mood', tuple.mood],
-    ['addressee', tuple.addressee],
-    ['quote', tuple.quote],
-    ['validFrom', tuple.validFrom],
-    ['validTo', tuple.validTo],
-    ['confidence', tuple.confidence],
-    ['nature', tuple.nature],
+    ['speaker', attribution.agent],
+    ['mood', illocution?.mood],
+    ['addressee', illocution?.addressee],
+    ['quote', assertion.quote],
+    ['validFrom', assertion.validFrom],
+    ['validTo', assertion.validTo],
+    ['confidence', factuality.confidence],
+    ['nature', factuality.nature],
+    ['pass', fact.pass],
   ];
   for (const [relation, value] of optional) {
     if (value !== undefined) {
       entries.push({ relation, tuple: [id, value] });
     }
   }
-  for (const superseded of tuple.supersedes ?? []) {
+  for (const superseded of attribution.wasDerivedFrom ?? []) {
     entries.push({ relation: 'supersedes', tuple: [id, superseded] });
   }
   return entries;
 };
 
-/** The fact tuple ids among base entries (from provenance). */
+/** The fact ids among base entries (from provenance). */
 export const factIds = (entries: ReadonlyArray<Engine.Entry>): string[] => [
   ...new Set(
     entries.flatMap(({ relation, tuple }) =>

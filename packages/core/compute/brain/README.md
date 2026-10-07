@@ -1,15 +1,13 @@
 # @dxos/brain
 
-The agent brain's rule layer: fact tuples encoded as Datalog relations, a canonical predicate
+The agent brain's rule layer: pipeline-rdf facts encoded as Datalog relations, a canonical predicate
 vocabulary, the goal built-ins, and an incremental evaluator that decides when a goal wakes. Rules
 run on [`@dxos/datalog`](../../../common/datalog), so the same code runs in plugin-agent and in the
 EDGE Durable Object. Design: `packages/plugins/plugin-agent/docs/BRAIN.md`.
 
 ## Modules
 
-- **`FactTuple`** — the Effect Schema of one extracted proposition (ECHO-compatible `StoredTerm`), and
-  a lossless `fromFact` / `toFact` mapping to pipeline-rdf's `Fact`.
-- **`Encoding`** — `fact(F, S, P, O)` plus metadata relations keyed by `F` (`speaker`, `force`,
+- **`Encoding`** — encodes a pipeline-rdf `RDF.Fact` as `fact(F, S, P, O)` plus metadata relations keyed by `F` (`speaker`, `force`,
   `polarity`, `mood`, `factuality`, `saidAt`, `source`, `surface`, …) and the goal relations
   (`subgoal`, `status`, `action`, `actionArg`).
 - **`Vocabulary`** — canonical predicates and their surface synonyms. Extraction stores the canonical
@@ -26,7 +24,7 @@ EDGE Durable Object. Design: `packages/plugins/plugin-agent/docs/BRAIN.md`.
 
 ```ts
 const rules = GoalRules.make({ source, createdAt: Date.now() });
-const { wakes, achieved } = rules.update({ at: Date.now(), facts: [tuple] });
+const { wakes, achieved } = rules.update({ at: Date.now(), facts: [fact] });
 ```
 
 ## Testing

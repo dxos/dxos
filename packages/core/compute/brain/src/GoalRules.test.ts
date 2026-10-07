@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as GoalRules from './GoalRules.ts';
-import { REFERENCE, SCENARIOS, WRONG, simulate, toFactTuple } from './testing/index.ts';
+import { REFERENCE, SCENARIOS, WRONG, simulate, toFact } from './testing/index.ts';
 
 describe('GoalRules', () => {
   describe('example goals replay against their reference compilations', () => {
@@ -45,7 +45,7 @@ describe('GoalRules', () => {
       return rules.update({
         at: Date.parse(saidAt),
         facts: [
-          toFactTuple(
+          toFact(
             {
               id,
               speaker: 'dima',

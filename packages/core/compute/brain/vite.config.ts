@@ -11,7 +11,6 @@ export default defineConfig({
     CompilePrompt: 'src/CompilePrompt.ts',
     Compiler: 'src/Compiler.ts',
     Encoding: 'src/Encoding.ts',
-    FactTuple: 'src/FactTuple.ts',
     GoalRules: 'src/GoalRules.ts',
     Vocabulary: 'src/Vocabulary.ts',
     testing: 'src/testing/index.ts',

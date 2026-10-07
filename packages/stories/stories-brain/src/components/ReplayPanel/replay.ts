@@ -5,7 +5,7 @@
 import * as Builtins from '@dxos/brain/Builtins';
 import * as Compiler from '@dxos/brain/Compiler';
 import * as GoalRules from '@dxos/brain/GoalRules';
-import { type Expectation, type Scenario, type ScenarioFact, simulate, toFactTuple } from '@dxos/brain/testing';
+import { type Expectation, type Scenario, type ScenarioFact, simulate, toFact } from '@dxos/brain/testing';
 
 /** A fact as the replay shows and the custom form enters it. */
 export type ReplayFact = Pick<ScenarioFact, 'speaker' | 'quote' | 'force' | 'polarity'> & {
@@ -107,7 +107,7 @@ export const replayCustom = (source: string, createdAt: string, events: Readonly
     const evaluation = rules.update({
       at: now,
       facts: facts.map((fact) =>
-        toFactTuple(
+        toFact(
           {
             id: fact.id,
             speaker: fact.speaker,

@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { RDF } from '@dxos/pipeline-rdf';
+
 import * as Compiler from '../Compiler.ts';
-import type * as FactTuple from '../FactTuple.ts';
 import * as GoalRules from '../GoalRules.ts';
 import type * as Vocabulary from '../Vocabulary.ts';
 import { type Scenario, type ScenarioFact, type Step } from './scenarios.ts';
@@ -27,20 +28,18 @@ export type SimulationResult = {
   readonly failures: ReadonlyArray<string>;
 };
 
-/** Converts a scripted fact to a tuple said at `saidAt`. */
-export const toFactTuple = (fact: ScenarioFact, saidAt: string): FactTuple.FactTuple => ({
+/** Converts a scripted fact to an `RDF.Fact` said (and recorded) at `saidAt`. */
+export const toFact = (fact: ScenarioFact, saidAt: string): RDF.Fact => ({
   id: fact.id,
-  subject: { entity: fact.s },
-  predicate: fact.p,
-  object: { entity: fact.o },
-  quote: fact.quote,
-  factuality: fact.factuality,
-  polarity: fact.polarity,
-  force: fact.force,
-  mood: fact.mood,
-  speaker: fact.speaker,
-  source: fact.source,
-  saidAt,
+  assertion: {
+    subject: { kind: 'entity', entity: fact.s },
+    predicate: fact.p,
+    object: { kind: 'entity', entity: fact.o },
+    quote: fact.quote,
+  },
+  factuality: { value: fact.factuality, polarity: fact.polarity },
+  illocution: { force: fact.force, mood: fact.mood },
+  attribution: { agent: fact.speaker, source: fact.source, generatedAtTime: saidAt },
   recordedAt: saidAt,
   extractor: { id: 'scenario', model: 'none', version: '1' },
   sourceHash: fact.id,
@@ -86,7 +85,7 @@ export const simulate = (
     Object.assign(statuses, step.status ?? {});
     const evaluation = rules.update({
       at: Date.parse(step.at),
-      facts: (step.facts ?? []).map((fact) => toFactTuple(fact, step.at)),
+      facts: (step.facts ?? []).map((fact) => toFact(fact, step.at)),
       subgoals: { ...statuses },
     });
     const blocks = (step.actions ?? []).some((action) => rules.checkAction(action).blocked);

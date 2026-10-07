@@ -6,11 +6,11 @@
 
 import type * as Ast from '@dxos/datalog/Ast';
 import * as Engine from '@dxos/datalog/Engine';
+import { RDF } from '@dxos/pipeline-rdf';
 
 import * as Builtins from './Builtins.ts';
 import * as Compiler from './Compiler.ts';
 import * as Encoding from './Encoding.ts';
-import * as FactTuple from './FactTuple.ts';
 import type * as Vocabulary from './Vocabulary.ts';
 
 /** A reason to run judgment on the goal. */
@@ -18,7 +18,7 @@ export type Wake = {
   /** The wake rule's label, `achieved`, or the sub-goal whose status changed. */
   readonly label: string;
   readonly cause: 'rule' | 'achieved' | 'subgoal';
-  /** Ids of the fact tuples the waking derivation rests on. */
+  /** Ids of the facts the waking derivation rests on. */
   readonly facts: ReadonlyArray<string>;
 };
 
@@ -38,7 +38,7 @@ export type Action = {
 
 export type ActionCheck = {
   readonly blocked: boolean;
-  /** Ids of the fact tuples that contributed to the block (empty when only the action did). */
+  /** Ids of the facts that contributed to the block (empty when only the action did). */
   readonly facts: ReadonlyArray<string>;
 };
 
@@ -50,13 +50,13 @@ export type Options = {
   readonly text?: Builtins.TextIndex;
   readonly entities?: Builtins.EntityIndex;
   /** Entities a fact concerns; defaults to its subject. */
-  readonly concerns?: (fact: FactTuple.FactTuple) => ReadonlyArray<string>;
+  readonly concerns?: (fact: RDF.Fact) => ReadonlyArray<string>;
 };
 
 export type Input = {
   /** Evaluation time (epoch ms); a change re-evaluates time built-ins. */
   readonly at: number;
-  readonly facts?: ReadonlyArray<FactTuple.FactTuple>;
+  readonly facts?: ReadonlyArray<RDF.Fact>;
   /** Current status of each sub-goal; a new id adds the sub-goal. */
   readonly subgoals?: Readonly<Record<string, string>>;
 };
@@ -72,7 +72,7 @@ export class GoalRules {
   readonly #vocabulary: Vocabulary.Vocabulary;
   readonly #text: Builtins.TextIndex;
   readonly #entities: Builtins.EntityIndex;
-  readonly #concerns: (fact: FactTuple.FactTuple) => ReadonlyArray<string>;
+  readonly #concerns: (fact: RDF.Fact) => ReadonlyArray<string>;
   readonly #saidAt = new Map<string, number>();
   readonly #subgoals = new Map<string, string>();
   #now: number;
@@ -86,7 +86,7 @@ export class GoalRules {
     this.#vocabulary = options.vocabulary ?? Compiler.defaultVocabulary();
     this.#text = options.text ?? new Builtins.KeywordIndex();
     this.#entities = options.entities ?? new Builtins.MemoryEntityIndex();
-    this.#concerns = options.concerns ?? ((fact) => [FactTuple.termValue(fact.subject)]);
+    this.#concerns = options.concerns ?? ((fact) => [RDF.termValue(fact.assertion.subject)]);
     const builtins = Builtins.make({
       clock: {
         now: () => this.#now,
@@ -117,7 +117,7 @@ export class GoalRules {
     const insert: Engine.Entry[] = [];
     const retract: Engine.Entry[] = [];
     for (const fact of facts) {
-      this.#saidAt.set(fact.id, Date.parse(fact.saidAt));
+      this.#saidAt.set(fact.id, Date.parse(fact.attribution.generatedAtTime));
       this.#text.add(fact.id, factText(fact));
       this.#entities.add(fact.id, this.#concerns(fact));
       insert.push(...Encoding.encode(fact, this.#vocabulary));
@@ -177,5 +177,7 @@ export class GoalRules {
 export const make = (options: Options): GoalRules => new GoalRules(options);
 
 /** The text `about` matches: what was said plus the triple. */
-const factText = (fact: FactTuple.FactTuple): string =>
-  [fact.quote ?? '', FactTuple.termValue(fact.subject), fact.predicate, FactTuple.termValue(fact.object)].join(' ');
+const factText = ({ assertion }: RDF.Fact): string =>
+  [assertion.quote ?? '', RDF.termValue(assertion.subject), assertion.predicate, RDF.termValue(assertion.object)].join(
+    ' ',
+  );
