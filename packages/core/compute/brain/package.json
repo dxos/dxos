@@ -62,7 +62,8 @@
   ],
   "dependencies": {
     "@dxos/datalog": "workspace:*",
-    "@dxos/pipeline-rdf": "workspace:*"
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "effect": "catalog:",

@@ -2,33 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
+import { trim } from '@dxos/util';
+
 /** Hand-written reference compilations of the eight example goals, keyed by scenario number. */
 export const GOLD: Readonly<Record<number, string>> = {
-  1: `
+  1: trim`
     wake(dima_work) :- speaker(F, dima), not force(F, expressive).
     wake(dima_work) :- fact(F, dima, _, _), not speaker(F, dima).
   `,
-  2: `
+  2: trim`
     shipped(F) :- about(F, "release"), about(F, "shipped"), polarity(F, "+"), not mood(F, interrogative), factuality(F, "CT+").
     candidate(F) :- fact(F, _, _, _), about(F, "release").
     wake(release) :- candidate(F), not achieved(goal).
     achieved(goal) :- shipped(F), fact(N, goal, notified, _), saidAt(F, T1), saidAt(N, T2), T2 >= T1.
   `,
-  3: `
+  3: trim`
     dima(F) :- speaker(F, dima), force(F, commissive), about(F, "agent plugin").
     wake(reply) :- dima(F), not achieved(goal).
     wake(reply) :- dima(F), achieved(goal).
     wake(followup) :- elapsed(goal, 2d), not achieved(goal).
     achieved(goal) :- dima(F), polarity(F, "+").
   `,
-  4: `
+  4: trim`
     gone(M) :- fact(_, M, archived, inbox).
     gone(M) :- fact(_, M, deleted, inbox).
     waiting(M) :- fact(_, M, received, inbox), not gone(M).
     wake(email) :- fact(F, M, received, inbox).
     holds(goal) :- not waiting(_).
   `,
-  5: `
+  5: trim`
     filed(F) :- about(F, "tax return"), about(F, "filed"), polarity(F, "+"), not speaker(F, alice).
     achieved(goal) :- filed(F).
     wake(remind) :- due("2027-04-15T00:00:00Z", 30d), not achieved(goal).
@@ -37,15 +39,15 @@ export const GOLD: Readonly<Record<number, string>> = {
     wake(progress) :- subgoal(goal, G), status(G, achieved).
     wake(progress) :- speaker(F, rich), about(F, "tax").
   `,
-  6: `
+  6: trim`
     wake(practice) :- every(1d), not achieved(goal).
   `,
-  7: `
+  7: trim`
     meeting(A) :- action(A, book_meeting).
     meeting(A) :- action(A, update_meeting).
     blocks(A) :- meeting(A), actionArg(A, start, T), weekday(T, friday).
   `,
-  8: `
+  8: trim`
     mine(F) :- source(F, "session:s42"), speaker(F, rich).
     wake(turn) :- mine(F), not achieved(goal).
     achieved(goal) :- mine(F), force(F, commissive), polarity(F, "+"), fact(D, goal, drafted, _).
@@ -57,7 +59,7 @@ export const NEGATIVE: ReadonlyArray<{ readonly scenario: number; readonly note:
   {
     scenario: 3,
     note: 'achievement ignores polarity, so a refusal achieves the goal',
-    source: `
+    source: trim`
       achieved(goal) :- speaker(F, dima), force(F, commissive), about(F, "agent plugin").
       wake(followup) :- elapsed(goal, 2d).
       wake(reply) :- speaker(F, dima).
@@ -76,7 +78,7 @@ export const NEGATIVE: ReadonlyArray<{ readonly scenario: number; readonly note:
   {
     scenario: 4,
     note: 'holds on any archived email instead of on an empty inbox',
-    source: `
+    source: trim`
       holds(goal) :- fact(_, M, archived, inbox).
       wake(e) :- fact(F, _, received, inbox).
     `,

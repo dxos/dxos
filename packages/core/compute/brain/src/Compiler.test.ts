@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as Ast from '@dxos/datalog/Ast';
+import { trim } from '@dxos/util';
 
 import * as Compiler from './Compiler.ts';
 import * as Vocabulary from './Vocabulary.ts';
@@ -14,7 +15,7 @@ const codes = (source: string, options?: Compiler.Options) =>
 
 describe('Compiler', () => {
   test('expands shorthand for canonical predicates', ({ expect }) => {
-    const { program } = Compiler.compileOrThrow(`
+    const { program } = Compiler.compileOrThrow(trim`
       achieved(goal) :- helps_with(dima, "agent plugin").
       wake(reply) :- helps_with(F, dima, X), polarity(F, "-").
     `);
@@ -28,7 +29,7 @@ describe('Compiler', () => {
   });
 
   test('leaves rule-defined predicates alone even when they share a vocabulary name', ({ expect }) => {
-    const { program } = Compiler.compileOrThrow(`
+    const { program } = Compiler.compileOrThrow(trim`
       shipped(F) :- about(F, "release"), polarity(F, "+").
       achieved(goal) :- shipped(F).
     `);
