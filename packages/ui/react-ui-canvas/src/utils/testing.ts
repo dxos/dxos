@@ -91,7 +91,7 @@ const classLevel = (level: LevelDef, path: string): SceneElement => {
   const associations = level.classes.slice(1).map((current, index) =>
     SceneBuilder.link('line', `${id}/${level.classes[index].key}#${portId('e')}`, `${id}/${current.key}#${portId('w')}`)
       .id(`${id}/assoc${index + 1}`)
-      .properties({ directed: true }),
+      .properties({ ends: { end: 'arrow' } }),
   );
   const children = (level.children ?? []).map((child, index) =>
     classLevel(child, `${path}/${child.key}`).at({ x: cell(2) + index * cell(10), y: cell(7), ...PORTAL_SIZE }),
@@ -162,7 +162,9 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
   }),
   labelled(SceneBuilder.rect, elementId('c'), units(-22, 6, 8, 6), `${name} · C`),
   SceneBuilder.link('curve', elementId('a'), elementId('b')).id(elementId('ab')),
-  SceneBuilder.link('line', elementId('a'), elementId('c')).id(elementId('ac')).properties({ directed: true }),
+  SceneBuilder.link('line', elementId('a'), elementId('c'))
+    .id(elementId('ac'))
+    .properties({ ends: { end: 'arrow' } }),
   // Pinned ports rather than automatic ones, so the spline leaves and arrives where its corners turn.
   SceneBuilder.link('spline', `${elementId('b')}#${portId('s')}`, `${elementId('c')}#${portId('n', 3)}`)
     .id(elementId('bc'))
@@ -176,7 +178,9 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
 
 const childElements = (name: string, elementId: (suffix: string) => string, variant: Variant): BuilderElement[] => {
   const directed = (id: string, from: string, to: string) =>
-    SceneBuilder.link('line', from, to).id(elementId(id)).properties({ directed: true });
+    SceneBuilder.link('line', from, to)
+      .id(elementId(id))
+      .properties({ ends: { end: 'arrow' } });
   switch (variant) {
     case 'flow':
       return [

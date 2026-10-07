@@ -67,4 +67,24 @@ describe('content', () => {
     updateCanvasRecord(content, { grid: undefined });
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
   });
+
+  test('a link saved as directed reads as an arrow at its end', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    content['link:l'] = {
+      kind: 'link',
+      scene: ROOT_SCENE_ID,
+      link: {
+        type: 'line',
+        id: 'l',
+        z: 'a',
+        source: { point: { x: 0, y: 0 } },
+        target: { point: { x: 1, y: 0 } },
+        directed: true,
+      },
+    };
+    const link = readScenes(content)[ROOT_SCENE_ID].links.l;
+    expect(link.ends).toEqual({ end: 'arrow' });
+    expect('directed' in link).toBe(false);
+  });
 });

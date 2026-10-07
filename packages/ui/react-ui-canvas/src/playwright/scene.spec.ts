@@ -291,14 +291,15 @@ test.describe('SceneView', () => {
     const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
     // An unstyled node matches no swatch.
     await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
-    await option('blue:3').click();
-    await expect(option('blue:3')).toHaveAttribute('aria-checked', 'true');
-    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-bg/);
+    // Tone 1 is the strongest fill.
+    await option('blue:1').click();
+    await expect(option('blue:1')).toHaveAttribute('aria-checked', 'true');
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-500/);
     await option('neutral:0').click();
     await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');
     // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
     await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
-    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-bg/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-500/);
   });
 
   test('the geometry fields step by the grid and move the node', async () => {

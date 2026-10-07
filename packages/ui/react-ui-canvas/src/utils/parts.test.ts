@@ -76,9 +76,10 @@ describe('parts', () => {
       text: '',
       border: 'border-blue-border',
     });
+    // Tones 1 to 3 run strongest to lightest.
     expect(hueClasses('blue', 1)).toEqual({
-      surface: 'bg-blue-200',
-      text: 'text-blue-900',
+      surface: 'bg-blue-500',
+      text: 'text-neutral-50',
       border: 'border-blue-border',
     });
     expect(hueClasses('blue')).toEqual(hueClasses('blue', 2));
@@ -88,11 +89,11 @@ describe('parts', () => {
       border: 'border-blue-border',
     });
     expect(hueClasses('blue', 3)).toEqual({
-      surface: 'bg-blue-bg',
-      text: 'text-neutral-50',
+      surface: 'bg-blue-300',
+      text: 'text-blue-900',
       border: 'border-blue-border',
     });
-    // A hue the picker does not offer draws its stronger tones as medium; no hue ignores the tone.
+    // A hue the picker does not offer draws its stronger tones as its role pair; no hue ignores the tone.
     expect(hueClasses('lime', 3)).toEqual(hueClasses('lime'));
     expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
   });
