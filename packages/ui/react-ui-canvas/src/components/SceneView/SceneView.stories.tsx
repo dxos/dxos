@@ -124,20 +124,42 @@ const createLatticeTree = () => {
 };
 
 /**
- * Three levels of the same column, every shape 256×128: A, scene B, C; inside B, D, scene E, F; inside E,
- * X, Y, Z; each level's shapes linked. Open the scenes to check that a shape is the same size at the same zoom on every level.
+ * Three levels, every shape 256×128: A, scene B, C; inside B, D, scene E, F; inside E, X, Y, Z with a box
+ * above X, below Z and beside each; each level's shapes linked. Open the scenes to check that a shape is the
+ * same size at the same zoom on every level.
  */
 const createScenesTree = () => {
   const root = 'scene:root';
   const size = { width: 256, height: 128 };
-  const at = (y: number) => ({ x: -size.width / 2, y: y - size.height / 2, ...size });
+  const at = (y: number, x = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
   const rect = (id: string, y: number) => SceneBuilder.rect(id, at(y)).properties({ label: id.toUpperCase() });
+  // An unlabelled box beside the column.
+  const box = (id: string, y: number, x: number) => SceneBuilder.rect(id, at(y, x));
   const link = (from: string, to: string) => SceneBuilder.link('smart', from, to);
   return SceneBuilder.scene(root, [
     rect('a', -256),
     SceneBuilder.scene('b', [
       rect('d', -256),
-      SceneBuilder.scene('e', [rect('x', -256), rect('y', 0), rect('z', 256), link('x', 'y'), link('y', 'z')])
+      // X, Y, Z down the middle, with a box above X, below Z and either side of each.
+      SceneBuilder.scene('e', [
+        box('n', -512, 0),
+        box('xw', -256, -384),
+        rect('x', -256),
+        box('xe', -256, 384),
+        rect('y', 0),
+        box('zw', 256, -384),
+        rect('z', 256),
+        box('ze', 256, 384),
+        box('s', 512, 0),
+        link('n', 'x'),
+        link('xw', 'x'),
+        link('x', 'xe'),
+        link('x', 'y'),
+        link('y', 'z'),
+        link('zw', 'z'),
+        link('z', 'ze'),
+        link('z', 's'),
+      ])
         .at(at(0))
         .name('E'),
       rect('f', 256),
