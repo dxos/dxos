@@ -214,6 +214,10 @@ before), not reasoned about from the source.
 
 ## Backlog
 
+- [x] **Type prototypes.** `createNodeRegistry(types, prototypes)` with `extends`; `rect` and `scene` share the
+      `box` prototype (DESIGN §4c). Scene shapes: centred label, `contents` option, zoom-in control.
+- [ ] **Instance prototypes** (DESIGN §4c): `prototype?: NodeId`, `resolveNode`, inherited values as
+      placeholders, reset-to-prototype. Candidate: `ellipse` on `box` with its own view and one port per side.
 - [ ] **Object classes and prototypes.** Define named classes of objects (a shared bundle of type, size,
       style, port count and other non-text properties), and designate the current object as a prototype
       that can be applied to others: a selection takes the prototype's properties, keeping its own text and
@@ -228,3 +232,9 @@ before), not reasoned about from the source.
       where it drops, red on collision); (4) lattice grid layer + story; (5) Column/Row/Span fields and
       the scene's spec in the properties panel; (6) lattice-aware `smart` routing on `makeAvoidingRouter` + `nudge`; (7) toolbar toggle and switch-on quantization with nearest-free-cell placement.
       Later: reflow instead of rejection.
+- [ ] **Lattice: dynamic ports.** Instead of a fixed number of ports per side, place a link's port where
+      its incident segment can stay straight (e.g. aligned with the gutter line or the other end), so the
+      route needs no jog at the shape. Interacts with pinned ports and `portsPerSide`.
+- [x] **Lattice: route around occupied cells only.** Gutter routing currently keeps every run on a gutter
+      centre line; instead let a route cross free cells directly and detour through the gutters only
+      around occupied ones (`utils/gutter-route.ts`).

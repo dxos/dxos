@@ -25,8 +25,9 @@ import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type SceneViewAtoms } from '../../model/atoms.ts';
+import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
-import { type NodeRegistry, defaultNodeRegistry, nodeDef } from '../../model/registry.ts';
+import { type NodeRegistry, defaultNodeRegistry } from '../../model/registry.ts';
 import {
   CurveLink,
   type Element,
@@ -41,6 +42,7 @@ import {
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { resolveStyle } from '../../utils/style.ts';
+import { StyleGridField } from './StyleGrid.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
@@ -72,8 +74,12 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   );
 };
 
-/** Renderers by field name for the built-in types' list fields; a host may pass its own. */
-export const DEFAULT_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
+/** Renderers by field path for the built-in types' list fields and the style grid; a host may pass its own. */
+export const DEFAULT_FIELDS: FormFieldMap = {
+  'attributes': LinesField,
+  'methods': LinesField,
+  'style.hue': StyleGridField,
+};
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
   line: LineLink,
@@ -96,10 +102,13 @@ const formValues = (nodes: NodeRegistry, element: Element): Record<string, unkno
     : { ...element, style: resolveStyle(element.style), portsPerSide: portsPerSideOf(nodes, element) };
 
 /**
- * The ranges the panel offers. They are the editor's, not the model's: a check on the stored schema would
- * make a record outside them (an older or imported scene) fail validation and drop out of the scene.
+ * How the panel presents fields. Ranges are the editor's, not the model's: a check on the stored schema would
+ * make a record outside them (an older or imported scene) fail validation and drop out of the scene. The style
+ * grid at `style.hue` also sets `style.tone`, which has no field of its own.
  */
-const FIELD_LIMITS: Record<string, FormFieldOverride> = {
+const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
+  'style.hue': { label: 'Style' },
+  'style.tone': { hidden: true },
   'style.fontSize': { min: 8, max: 80, step: 1 },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
 };
@@ -143,7 +152,7 @@ export const Properties = ({
     const shown = elements.map((element) => formValues(nodes, element));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
-    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_LIMITS };
+    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_OVERRIDES };
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }

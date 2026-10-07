@@ -83,10 +83,16 @@ export type Port = Schema.Schema.Type<typeof Port>;
 // Nodes
 //
 
+/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are lighter to stronger fills. */
+export const NodeTone = Schema.Literals([0, 1, 2, 3]);
+export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
+
 /** Presentation choices a node carries; every field is optional and the frame supplies the default look. */
 export const NodeStyle = Schema.Struct({
   /** One of the theme's hues, colouring fill, text and border together. */
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  /** The hue's fill; unset is 2, the look a hue had before tones. */
+  tone: Schema.optional(NodeTone),
   rounded: Schema.optional(Schema.Boolean),
   fill: Schema.optional(Schema.Boolean),
   border: Schema.optional(Schema.Boolean),
@@ -119,10 +125,15 @@ export const nodeBase = {
 export const NodeBase = Schema.Struct({ type: Schema.String, ...nodeBase });
 export type NodeBase = Schema.Schema.Type<typeof NodeBase>;
 
+/** The fields of the `box` prototype (a framed shape with a centred label), shared by the types built on it. */
+export const boxFields = {
+  label: Schema.optional(Schema.String),
+};
+
 export const RectNode = Schema.Struct({
   type: Schema.Literal('rect'),
   ...nodeBase,
-  label: Schema.optional(Schema.String),
+  ...boxFields,
 });
 export type RectNode = Schema.Schema.Type<typeof RectNode>;
 
@@ -156,7 +167,10 @@ export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
 export const PortalNode = Schema.Struct({
   type: Schema.Literal('scene'),
   ...nodeBase,
+  ...boxFields,
   scene: Schema.String,
+  /** Draw the child scene inside the frame rather than the label; unset, it does so while there is no label. */
+  contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
 });
 export type PortalNode = Schema.Schema.Type<typeof PortalNode>;
 
@@ -177,6 +191,10 @@ export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type 
 export const isClassNode = (node: NodeBase): node is ClassNode => node.type === 'class';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isPortalNode = (node: NodeBase): node is PortalNode => node.type === 'scene';
+/** A node built on the `box` prototype, carrying a centred, editable label. */
+export const isBoxNode = (node: NodeBase): node is RectNode | PortalNode => isRectNode(node) || isPortalNode(node);
+/** Whether a portal draws its child scene: as set, else while it has no label to show instead. */
+export const showsContents = (node: PortalNode): boolean => node.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
 //
@@ -206,10 +224,11 @@ export const Marker = Schema.Literals(['arrow', 'circle']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
 /** Markers at the source (`start`) and target (`end`) of a link. */
+/** A link's end markers; the properties form shows them side by side, as the two ends of the line. */
 export const LinkEnds = Schema.Struct({
   start: Schema.optional(Marker),
   end: Schema.optional(Marker),
-});
+}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
 export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 
 const linkBase = {
