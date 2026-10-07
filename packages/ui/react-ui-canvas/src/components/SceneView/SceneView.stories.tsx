@@ -77,20 +77,29 @@ const createSquareTree = () => {
 
 /**
  * Shapes on the default lattice, three columns by three rows around the origin: A, B, C down the first
- * column; D and E below a free cell in the second; F spanning all three rows of the third. Linked through
- * the gutters, two of the links sharing gutters to show the lanes.
+ * column; D and E below a free cell in the second; F, a scene of its own, spanning all three rows of the
+ * third. Linked through the gutters, two of the links sharing gutters to show the lanes.
  */
 const createLatticeTree = () => {
   const root = 'scene:root';
   const at = (col: number, row: number, spanX = 1, spanY = 1) =>
     cellBounds({ col, row, spanX, spanY }, DEFAULT_LATTICE);
+  const child = 'scene:f';
+  const inner = SceneBuilder.create(child, 'F')
+    .rect('f1', at(0, -1), 'F1')
+    .rect('f2', at(0, 0), 'F2')
+    .rect('f3', at(0, 1), 'F3')
+    .smart('f12', 'f1', 'f2')
+    .smart('f23', 'f2', 'f3')
+    .build();
   const scene = SceneBuilder.create(root, 'root')
     .rect('a', at(-1, -1), 'A')
     .rect('b', at(-1, 0), 'B')
     .rect('c', at(-1, 1), 'C')
     .rect('d', at(0, 0), 'D')
     .rect('e', at(0, 1), 'E')
-    .rect('f', at(1, -1, 1, 3), 'F')
+    // Unlabelled, so the scene shows its contents.
+    .portal('f', at(1, -1, 1, 3), child)
     .smart('ab', 'a', 'b')
     .smart('bc', 'b', 'c')
     .smart('bd', 'b', 'd')
@@ -103,7 +112,7 @@ const createLatticeTree = () => {
     // Level ports with only a free cell between them: the route runs straight through it.
     .smart('af', 'a#e2', 'f#w1')
     .build();
-  return { scenes: [scene], root };
+  return { scenes: [scene, inner], root };
 };
 
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
