@@ -191,6 +191,8 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       (state) => watchesOn(state, 'alice').length > 0,
     );
     expect(watchesOn(state, 'alice')[0].ongoing).toBe(true);
+    // Evaluated on EDGE by rules that name Alice by her identity.
+    expect(watchesOn(state, 'alice')[0].rules).toContain(SCENARIO.alice.did);
     const goals = await eventually(
       () => space.db.query(Filter.type(Goal.Goal)).run(),
       (goals) => goals.some(({ title }) => title.toLowerCase().includes('alice')),
@@ -207,7 +209,8 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       ({ facts }) => facts.some((fact) => JSON.stringify(fact.assertion).toLowerCase().includes('indexer')),
     );
     const fact = state.facts.find((fact) => JSON.stringify(fact.assertion).toLowerCase().includes('indexer'));
-    expect(fact?.attribution.agent).toBe('bob');
+    // Bob's private chat says who he is: the fact is his identity's, not a name's.
+    expect(fact?.attribution.agent).toBe(SCENARIO.bob.did);
   });
 
   test('E2E 1: Alice asks to be kept posted on Bob; Bob says what he is working on; Alice is told', async () => {

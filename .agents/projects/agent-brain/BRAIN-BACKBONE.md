@@ -1,6 +1,6 @@
 # `@dxos/brain` as the brain service's backbone — plan
 
-Status: proposal (2026-10-07). Builds on `packages/plugins/plugin-agent/docs/BRAIN.md` (draft 2) and the
+Status: implemented (2026-10-07) in dxos#13786 and its EDGE counterpart; see DECISIONS.md for what changed on the way. Builds on `packages/plugins/plugin-agent/docs/BRAIN.md` (draft 2) and the
 push + subscribe `BrainService` (dxos#13777, edge#1245).
 
 ## Goal
