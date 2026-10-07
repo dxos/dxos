@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Tool } from 'effect/ai/McpSchema';
 import React from 'react';
 
 import type * as CompilePrompt from '@dxos/brain/CompilePrompt';
@@ -13,6 +14,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -39,7 +41,7 @@ export type GoalPanelProps = Util.ThemedClassName<{
   onCompile: () => void;
 }>;
 
-/** Goal column: the goal text and instructions, an example picker, and the Compile trigger. */
+/** Goal column: an example picker, the goal text and instructions, and the Compile trigger, with a progress bar in the footer while compiling. */
 export const GoalPanel = ({
   classNames,
   examples,
@@ -59,30 +61,19 @@ export const GoalPanel = ({
   <Panel.Root classNames={classNames}>
     <Panel.Header>
       <Toolbar.Root>
-        <Select.Root
-          items={examples}
-          value={[example]}
-          onValueChange={({ value }) => value[0] && onExampleChange(value[0])}
-        >
-          <Select.Trigger placeholder='Example' aria-label='Example goal' data-testid='goal-compiler.example' />
-          <Select.Content>
-            {examples.map((item) => (
-              <Select.Item key={item.value} item={item} />
-            ))}
-          </Select.Content>
-        </Select.Root>
+        <Button.Root
+          icon='ph--sparkle--regular'
+          label='Compile'
+          disabled={busy || goal.trim().length === 0}
+          onClick={onCompile}
+          data-testid='goal-compiler.compile'
+        />
+        <Toolbar.Separator variant='gap' />
         <Input.Switch
           label='Ollama'
           checked={ollama}
           disabled={busy}
           onCheckedChange={({ checked }) => onOllamaChange(checked)}
-        />
-        <Button.Root
-          icon={busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
-          label='Compile'
-          disabled={busy || goal.trim().length === 0}
-          onClick={onCompile}
-          data-testid='goal-compiler.compile'
         />
       </Toolbar.Root>
     </Panel.Header>
@@ -90,6 +81,21 @@ export const GoalPanel = ({
       <ScrollArea.Root>
         <ScrollArea.Viewport asChild>
           <Layout.Container gap='md' padBlock>
+            <Field.Root>
+              <Select.Root
+                items={examples}
+                value={[example]}
+                onValueChange={({ value }) => value[0] && onExampleChange(value[0])}
+              >
+                <Select.Label>Example</Select.Label>
+                <Select.Trigger placeholder='Example' data-testid='goal-compiler.example' />
+                <Select.Content>
+                  {examples.map((item) => (
+                    <Select.Item key={item.value} item={item} />
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </Field.Root>
             <Field.Root>
               <Field.Label>Goal</Field.Label>
               <Input.Root
@@ -130,5 +136,8 @@ export const GoalPanel = ({
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
+    <Panel.Footer>
+      {busy && <Status.Progress indeterminate label='Compiling' data-testid='goal-compiler.progress' />}
+    </Panel.Footer>
   </Panel.Root>
 );

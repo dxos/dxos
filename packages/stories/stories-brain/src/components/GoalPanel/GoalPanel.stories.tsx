@@ -44,3 +44,7 @@ export const Default: Story = {
     onCompile: () => {},
   },
 };
+
+export const Busy: Story = {
+  args: { ...Default.args, busy: true, reply: undefined },
+};

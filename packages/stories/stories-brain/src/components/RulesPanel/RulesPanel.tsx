@@ -13,7 +13,7 @@ import * as Listbox from '@dxos/react-ui/Listbox';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
-import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { createBasicExtensions, createThemeExtensions, datalog } from '@dxos/ui-editor';
 
 export type RulesPanelProps = Util.ThemedClassName<{
   source: string;
@@ -30,7 +30,8 @@ export const RulesPanel = ({ classNames, source, diagnostics, onSourceChange, on
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineNumbers: true, lineWrapping: true, placeholder: 'wake(label) :- …' }),
-      createThemeExtensions({ themeMode, monospace: true }),
+      createThemeExtensions({ themeMode, monospace: true, syntaxHighlighting: true }),
+      datalog(),
     ],
     [themeMode],
   );
