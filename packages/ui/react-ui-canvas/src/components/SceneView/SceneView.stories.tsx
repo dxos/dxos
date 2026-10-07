@@ -78,8 +78,8 @@ const createSquareTree = () => {
 
 /**
  * Shapes on the default lattice, three columns by three rows around the origin: A, B, C down the first
- * column; D and E below a free cell in the second; F, a scene of its own, spanning all three rows of the
- * third. Linked through the gutters, two of the links sharing gutters to show the lanes.
+ * column; D and E below a free cell in the second; F, a scene of its own with four ports a side, spanning
+ * the top two rows of the third. Linked through the gutters, two of the links sharing gutters to show the lanes.
  */
 const createLatticeTree = () => {
   const root = 'scene:root';
@@ -98,11 +98,14 @@ const createLatticeTree = () => {
       box('f1', at(0, -1), 'F1'),
       box('f2', at(0, 0), 'F2'),
       box('f3', at(0, 1), 'F3'),
+      box('f4', at(0, 2), 'F4'),
       smart('f1', 'f2'),
       smart('f2', 'f3'),
+      smart('f3', 'f4'),
     ])
       .name('F')
-      .at(at(1, -1, 1, 3)),
+      .at(at(1, -1, 1, 2))
+      .properties({ portsPerSide: 4 }),
     smart('a', 'b'),
     smart('b', 'c'),
     smart('b', 'd'),
