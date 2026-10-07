@@ -16,6 +16,7 @@ import { BrainSkill } from '#skills';
 import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
+import * as Identity from './identity.ts';
 import { agentEntity, readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
@@ -72,6 +73,7 @@ export const deliver: (
   const brain = yield* BrainService.BrainService;
   const fired: string[] = [];
   const undelivered: string[] = [];
+  const roster = yield* Identity.loadRoster;
 
   for (const subscription of yield* brain.subscriptions(agent.id)) {
     const events = yield* brain.take(subscription.id);
@@ -102,6 +104,7 @@ export const deliver: (
       request: subscription.request ?? goal?.title ?? subscription.then.message,
       facts: matched,
       transcript,
+      speakerName: (entity) => Identity.displayName(roster, entity),
       hint: Trigger.renderMessage(
         subscription,
         first
