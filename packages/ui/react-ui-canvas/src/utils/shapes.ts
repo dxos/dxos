@@ -17,7 +17,6 @@ import {
   type Link,
   type LinkEnds,
   type LinkType,
-  MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Size,
@@ -41,32 +40,29 @@ export const resizeNode = <N extends Node>(node: N, bounds: Bounds): N => ({
   size: { width: bounds.width, height: bounds.height },
 });
 
-/** Scene px of one nominal unit (a major grid cell) at the default grid. */
-export const DEFAULT_CELL = DEFAULT_GRID * MAJOR_GRID_RATIO;
-
-/** A nominal size (in major grid cells) in scene px, for a drawing whose major cell is `cell` px. */
-export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
+/** A nominal size (in grid units) in scene px, for a drawing whose grid is `cell` px. */
+export const nominalSize = (size: Size, cell: number = DEFAULT_GRID): Size => ({
   width: size.width * cell,
   height: size.height * cell,
 });
 
 /**
- * The built-in types' sizes when created, in nominal units: major grid cells, so a new shape fits the drawing's
- * grid whatever its size. Rectangle and ellipse share one, so a new circle matches a new square.
+ * The built-in types' sizes when created, in nominal units: one unit is the drawing's grid size, so a new
+ * shape is as large as the grid. Rectangle and ellipse share one, so a new circle matches a new square.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 8, height: 8 },
-  ellipse: { width: 8, height: 8 },
-  note: { width: 8, height: 4 },
-  scene: { width: 16, height: 8 },
+  rect: { width: 1, height: 1 },
+  ellipse: { width: 1, height: 1 },
+  note: { width: 1, height: 1 },
+  scene: { width: 2, height: 1 },
 };
 
 /** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: nominalSize({ width: 4, height: 4 }),
-  ellipse: nominalSize({ width: 4, height: 4 }),
-  note: nominalSize({ width: 4, height: 2 }),
-  scene: nominalSize({ width: 8, height: 4 }),
+  rect: { width: 256, height: 256 },
+  ellipse: { width: 256, height: 256 },
+  note: { width: 256, height: 128 },
+  scene: { width: 512, height: 256 },
 };
 
 /** The bounding box a new basic shape gets at the default grid. */

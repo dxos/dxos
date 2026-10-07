@@ -91,7 +91,7 @@ export type UsePointerMachineOptions = {
   /** Set once the user takes the camera over, which stops the view re-fitting itself. */
   interactedRef: MutableRefObject<boolean>;
   select: (ids: Iterable<ElementId>) => void;
-  /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
+  /** Scene px of one nominal unit (the model's grid size), which a new node's default size is counted in. */
   cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
   Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor'>;

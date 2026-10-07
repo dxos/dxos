@@ -72,7 +72,7 @@ export type NodeDef = {
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
   create: (props: CreateProps) => Node;
-  /** Size when created, in nominal units: major grid cells, scaled by the drawing's major grid. */
+  /** Size when created, in nominal units: one unit is the drawing's grid size. */
   defaultSize: Size;
   /** Explicit port layout; absent, the type gets `portsPerSide` ports spread along each side. */
   ports?: (node: Node) => readonly Port[];

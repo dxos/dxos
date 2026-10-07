@@ -31,7 +31,7 @@ const functionDef: NodeDef = {
   schema: FunctionNode,
   component: UnknownNodeView,
   create: ({ id, z, center, size }) => ({ type: 'function', id, z, center, size, fn: 'identity' }),
-  defaultSize: { width: 2, height: 1 },
+  defaultSize: { width: 8, height: 4 },
   ports: () => [
     { id: 'in', side: 'w', offset: 0.5, accepts: 'in' },
     { id: 'out', side: 'e', offset: 0.5, accepts: 'out' },
