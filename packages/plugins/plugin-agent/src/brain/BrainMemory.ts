@@ -58,6 +58,23 @@ export type MakeOptions = {
   now?: () => number;
 };
 
+/**
+ * Most event ids one subscription remembers as queued, and most events its outbox holds: an ongoing watch
+ * queues without end, so past this the oldest are forgotten (a re-pushed fact that old may queue again).
+ */
+export const MAX_EVENTS = 10_000;
+
+/** Adds to an insertion-ordered set, dropping the oldest entries past `max`. */
+const remember = (set: Set<string>, value: string, max: number): void => {
+  set.add(value);
+  for (const oldest of set) {
+    if (set.size <= max) {
+      break;
+    }
+    set.delete(oldest);
+  }
+};
+
 const toError = (cause: unknown) =>
   new BrainService.BrainError({ message: cause instanceof Error ? cause.message : String(cause), cause });
 
@@ -98,11 +115,11 @@ export const make = (
       const seen = queued.get(event.subscription) ?? new Set<string>();
       queued.set(event.subscription, seen);
       if (!seen.has(event.id)) {
-        seen.add(event.id);
-        outboxes.set(event.subscription, [
-          ...(outboxes.get(event.subscription) ?? []),
-          BrainService.fromEvaluator(event),
-        ]);
+        remember(seen, event.id, MAX_EVENTS);
+        outboxes.set(
+          event.subscription,
+          [...(outboxes.get(event.subscription) ?? []), BrainService.fromEvaluator(event)].slice(-MAX_EVENTS),
+        );
         count++;
       }
     }
@@ -130,19 +147,18 @@ export const make = (
           Effect.map((found): RDF.Fact[] => found),
           Effect.mapError(toError),
         ),
-    subscribe: (trigger) =>
-      Effect.gen(function* () {
-        const held = triggers.list(trigger.agent).filter(({ id }) => id !== trigger.id);
-        if (held.length >= BrainService.MAX_TRIGGERS) {
-          return false;
-        }
-        yield* Effect.try({
-          try: () => evaluator(trigger.agent).add(BrainService.toSubscription(trigger)),
-          catch: toError,
-        });
-        triggers.add(trigger);
-        return true;
-      }),
+    subscribe: Effect.fnUntraced(function* (trigger) {
+      const held = triggers.list(trigger.agent).filter(({ id }) => id !== trigger.id);
+      if (held.length >= BrainService.MAX_TRIGGERS) {
+        return false;
+      }
+      yield* Effect.try({
+        try: () => evaluator(trigger.agent).add(BrainService.toSubscription(trigger)),
+        catch: toError,
+      });
+      triggers.add(trigger);
+      return true;
+    }),
     subscriptions: (agent) => Effect.sync(() => triggers.list(agent)),
     unsubscribe: (id) =>
       Effect.sync(() => {

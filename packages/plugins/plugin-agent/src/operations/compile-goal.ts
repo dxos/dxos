@@ -5,6 +5,7 @@
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { AiService } from '@dxos/ai';
 import * as CompilePrompt from '@dxos/brain/CompilePrompt';
@@ -16,6 +17,12 @@ export const COMPILE_MODEL = 'com.anthropic.model.claude-sonnet-5.default';
 
 /** Compile attempts before giving up; each retry is told what the previous one got wrong. */
 const ATTEMPTS = 2;
+
+/**
+ * Longest a compilation may take before the caller keeps its own rules: it runs inside the operation that
+ * sets a watch, which EDGE cuts off at 60 s.
+ */
+export const COMPILE_BUDGET = '40 seconds';
 
 export type CompileGoalProps = {
   goal: string;
@@ -60,15 +67,24 @@ export const compileGoal = (
       .filter((line) => line !== undefined)
       .join('\n');
 
-    const timeline = yield* LanguageModel.generateText({
-      prompt: `${Oracle.SYSTEM_PROMPT}\n\n${Oracle.userMessage({ ...props, people: props.people })}`,
-    }).pipe(Effect.map(({ text }) => Oracle.parseReply(text).steps));
+    const compile = (feedback?: string) =>
+      LanguageModel.generateText({
+        prompt: `${CompilePrompt.SYSTEM_PROMPT}\n\n${user}${feedback ? `\n\nYour previous rules were wrong:\n${feedback}` : ''}`,
+      }).pipe(Effect.map(({ text }) => text));
+    // The oracle never sees the rules, so it runs alongside the first compilation.
+    const [timeline, first] = yield* Effect.all(
+      [
+        LanguageModel.generateText({
+          prompt: `${Oracle.SYSTEM_PROMPT}\n\n${Oracle.userMessage({ ...props, people: props.people })}`,
+        }).pipe(Effect.map(({ text }) => Oracle.parseReply(text).steps)),
+        compile(),
+      ],
+      { concurrency: 2 },
+    );
 
     let feedback: string | undefined;
     for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
-      const { text } = yield* LanguageModel.generateText({
-        prompt: `${CompilePrompt.SYSTEM_PROMPT}\n\n${user}${feedback ? `\n\nYour previous rules were wrong:\n${feedback}` : ''}`,
-      });
+      const text = attempt === 0 ? first : yield* compile(feedback);
       const reply = yield* Effect.try(() => CompilePrompt.parseReply(text)).pipe(Effect.option);
       if (reply._tag === 'None') {
         feedback = 'The reply did not follow the output format.';
@@ -88,6 +104,8 @@ export const compileGoal = (
     yield* Effect.logInfo('goal not compiled', { goal: props.goal, feedback });
     return undefined;
   }).pipe(
+    Effect.timeoutOption(COMPILE_BUDGET),
+    Effect.map(Option.getOrUndefined),
     Effect.provide(AiService.languageModel(COMPILE_MODEL).pipe(Layer.orDie)),
     Effect.catchCause((cause) =>
       Effect.logInfo('goal compilation failed', { goal: props.goal, cause }).pipe(Effect.as(undefined)),
