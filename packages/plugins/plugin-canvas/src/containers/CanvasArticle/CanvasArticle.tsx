@@ -23,7 +23,7 @@ import {
 } from '@dxos/react-ui-canvas/scene';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { type BoundCanvasStore, CanvasSceneNode, bindCanvasStore, parseLinkedSceneId, sourceUri } from '#model';
+import { type BoundCanvasStore, CanvasSceneNode, bindCanvasStore, drawingUri, parseLinkedSceneId } from '#model';
 import { Canvas, CanvasCapabilities } from '#types';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -40,7 +40,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       createNodeRegistry(
         {
           ...defaultNodeTypes,
-          // The canvas's scene shape may show another drawing (`source`), which the store binds alongside.
+          // The canvas's scene shape may show another drawing (`drawing`), which the store binds alongside.
           scene: { ...defaultNodeTypes.scene, schema: CanvasSceneNode },
           ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
         },
@@ -81,13 +81,13 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     (elements: readonly Element[]): ReturnType<NonNullable<SceneViewPropertiesProps['overrides']>> => {
       const scenes = bound ? registry.get(bound.store.scenes) : {};
       const locked = elements.some((element) => {
-        if (isLink(element) || !isPortalNode(element) || sourceUri(element) || parseLinkedSceneId(element.scene)) {
+        if (isLink(element) || !isPortalNode(element) || drawingUri(element) || parseLinkedSceneId(element.scene)) {
           return false;
         }
         const child = scenes[element.scene];
         return child !== undefined && Object.keys(child.nodes).length > 0;
       });
-      return locked ? { source: { readonly: true } } : {};
+      return locked ? { drawing: { readonly: true } } : {};
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [registry, bound],

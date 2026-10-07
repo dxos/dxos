@@ -38,7 +38,7 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'scene', z: 'a0', ...frame, scene: 'f', source: Ref.make(other) },
+        node: { id: 'f', type: 'scene', z: 'a0', ...frame, scene: 'f', drawing: Ref.make(other) },
       };
     });
     await db.flush();
@@ -77,7 +77,7 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'scene', z: 'a0', ...frame, scene: 'f', source: Ref.make(self) },
+        node: { id: 'f', type: 'scene', z: 'a0', ...frame, scene: 'f', drawing: Ref.make(self) },
       };
     });
     await db.flush();

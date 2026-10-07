@@ -3,7 +3,7 @@
 //
 
 //
-// The canvas's own scene shape: the engine's portal plus an optional reference to another drawing. Unset,
+// The canvas's own scene shape: the engine's portal plus an optional `drawing`, a reference to another one. Unset,
 // the shape opens its child scene in this drawing; set, it shows the referenced drawing's root scene, which
 // the store binds alongside this one (`store.ts`).
 //
@@ -18,7 +18,7 @@ import { type NodeBase, PortalNode, type SceneId } from '@dxos/react-ui-canvas/s
 export const CanvasSceneNode = Schema.Struct({
   ...PortalNode.fields,
   /** Another drawing whose root scene the shape shows instead of its own child scene. */
-  source: Schema.optional(Ref.Ref(Drawing.Drawing).annotate({ title: 'Drawing' })),
+  drawing: Schema.optional(Ref.Ref(Drawing.Drawing).annotate({ title: 'Drawing' })),
 });
 export type CanvasSceneNode = Schema.Schema.Type<typeof CanvasSceneNode>;
 
@@ -34,14 +34,14 @@ export const parseLinkedSceneId = (id: SceneId): { uri: string; scene: SceneId }
   return index < 0 ? undefined : { uri: id.slice(0, index), scene: id.slice(index + 1) };
 };
 
-/** The URI a scene shape's `source` names, whether it is a live `Ref` or its stored (encoded) form. */
-export const sourceUri = (node: NodeBase): URI.URI | undefined => {
-  const source: unknown = Reflect.get(node, 'source');
-  if (Ref.isRef(source)) {
-    return source.uri;
+/** The URI a scene shape's `drawing` names, whether it is a live `Ref` or its stored (encoded) form. */
+export const drawingUri = (node: NodeBase): URI.URI | undefined => {
+  const drawing: unknown = Reflect.get(node, 'drawing');
+  if (Ref.isRef(drawing)) {
+    return drawing.uri;
   }
-  if (typeof source === 'object' && source !== null) {
-    const encoded: unknown = Reflect.get(source, '/');
+  if (typeof drawing === 'object' && drawing !== null) {
+    const encoded: unknown = Reflect.get(drawing, '/');
     return URI.isURI(encoded) ? encoded : undefined;
   }
   return undefined;

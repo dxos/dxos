@@ -7,7 +7,7 @@
 // records and every store write goes back as record-level changes inside one `Obj.update`, so the
 // view stays the memory store's client and ECHO merges edits element by element.
 //
-// A scene shape with a `source` shows another drawing: that drawing's canvas is bound alongside, its
+// A scene shape with a `drawing` shows that drawing: that drawing's canvas is bound alongside, its
 // scenes join the store under ids prefixed with the drawing's URI, the shape opens its root, and edits
 // inside it are written to that drawing. Only this drawing's own links are followed (a linked drawing's
 // links show their local scenes), so a reference cannot cycle.
@@ -42,7 +42,7 @@ import {
   seedContent,
   writeScenes,
 } from './content.ts';
-import { linkedSceneId, parseLinkedSceneId, sourceUri } from './scene-node.ts';
+import { drawingUri, linkedSceneId, parseLinkedSceneId } from './scene-node.ts';
 
 export type BoundCanvasStore = {
   store: SceneStore;
@@ -88,15 +88,15 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
     const scenes: Record<SceneId, Scene> = {};
     for (const scene of Object.values(readScenes(clone(canvas.content)))) {
       scenes[scene.id] = mapNodes(scene, (node) => {
-        const uri = isPortalNode(node) ? sourceUri(node) : undefined;
+        const uri = isPortalNode(node) ? drawingUri(node) : undefined;
         if (!uri || !isPortalNode(node)) {
           return node;
         }
         ensure(uri);
         // The form edits the reference as a live `Ref`; writes store it in its encoded form again.
-        const source = db?.makeRef(uri);
+        const drawing = db?.makeRef(uri);
         const link = linked.get(uri);
-        return { ...(link ? withScene(node, linkedSceneId(uri, link.root)) : node), ...(source ? { source } : {}) };
+        return { ...(link ? withScene(node, linkedSceneId(uri, link.root)) : node), ...(drawing ? { drawing } : {}) };
       });
     }
     for (const [uri, link] of linked) {
