@@ -10,7 +10,7 @@ import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import packageJson from '../package.json' with { type: 'json' };
+import { version } from '../package.json';
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { type EdgeWsConnectionCallbacks } from './edge-ws-connection.ts';
@@ -163,7 +163,7 @@ describe('EdgeWsConnection client version', () => {
     expect(FakeWebSocket.instances.at(-1)?.protocols).toEqual([
       EdgeWebsocketProtocol.V0,
       EdgeWebsocketProtocol.V1,
-      `dxos-version.${packageJson.version}`,
+      `dxos-version.${version}`,
       'base64url.bearer.authorization.dxos.org.AAAA',
     ]);
   });
