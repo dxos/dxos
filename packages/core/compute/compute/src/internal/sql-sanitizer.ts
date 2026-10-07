@@ -54,6 +54,9 @@ const CLAUSE_END = new Set([
 /** Words that may sit between a table-position keyword and the name itself. */
 const NAME_PREFIX_WORDS = new Set(['if', 'not', 'exists', 'or', 'rollback', 'abort', 'replace', 'fail', 'ignore']);
 
+/** Words that open a subquery rather than a parenthesized join. */
+const SUBQUERY_START = new Set(['select', 'with', 'values']);
+
 const OBJECT_KINDS = new Set(['table', 'index', 'view', 'trigger']);
 
 type Token =
@@ -254,7 +257,14 @@ export const sanitize = (sql: string): SanitizeResult => {
     if (token.type === 'punct') {
       if (token.value === '(') {
         depth++;
-        pendingTable = false;
+        const next = statement[index + 1];
+        const subquery = next?.type === 'word' && SUBQUERY_START.has(next.value);
+        if (pendingTable && !subquery) {
+          // `FROM (t)`, `FROM (a, b)`: a parenthesized join still names tables, so keep reading them.
+          fromDepths.add(depth);
+        } else {
+          pendingTable = false;
+        }
       } else if (token.value === ')') {
         fromDepths.delete(depth);
         depth--;

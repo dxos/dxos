@@ -74,6 +74,7 @@ describe('SqlService', () => {
           otherRead: yield* attempt('b', 'SELECT * FROM owned'),
           otherDrop: yield* attempt('b', 'DROP TABLE owned'),
           hostRead: yield* attempt('a', 'SELECT * FROM keyring'),
+          hostReadParenthesized: yield* attempt('a', 'SELECT * FROM (owned, keyring)'),
           hostIndex: yield* attempt('a', 'CREATE INDEX steal ON keyring (secret)'),
           catalog: yield* attempt('a', 'SELECT name FROM sqlite_master'),
         };
@@ -81,7 +82,14 @@ describe('SqlService', () => {
     );
 
     expect(Exit.isSuccess(exits.ownRead)).toBe(true);
-    for (const exit of [exits.otherRead, exits.otherDrop, exits.hostRead, exits.hostIndex, exits.catalog]) {
+    for (const exit of [
+      exits.otherRead,
+      exits.otherDrop,
+      exits.hostRead,
+      exits.hostReadParenthesized,
+      exits.hostIndex,
+      exits.catalog,
+    ]) {
       expect(reasonTag(exit)).toBe('AuthorizationError');
     }
   });

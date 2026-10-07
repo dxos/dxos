@@ -31,6 +31,14 @@ describe('sanitize', () => {
     ).toEqual(['items']);
   });
 
+  test('reads tables inside a parenthesized join', ({ expect }) => {
+    expect(tables('SELECT * FROM (keyring)').tables).toEqual(['keyring']);
+    expect(tables('SELECT * FROM ((owned, keyring))').tables).toEqual(['owned', 'keyring']);
+    expect(tables('SELECT * FROM a JOIN (b JOIN c ON b.id = c.id) ON a.id = b.id').tables).toEqual(['a', 'b', 'c']);
+    expect(tables('CREATE VIEW v AS SELECT * FROM (keyring)').tables).toEqual(['v', 'keyring']);
+    expect(tables('SELECT * FROM (SELECT x FROM items) AS sub').tables).toEqual(['items']);
+  });
+
   test('ignores names inside literals and comments', ({ expect }) => {
     expect(tables("SELECT 'FROM sqlite_master', X'00' FROM items -- FROM sqlite_master").tables).toEqual(['items']);
     expect(tables('SELECT /* FROM keyring */ 1').tables).toEqual([]);
