@@ -112,7 +112,7 @@ node .agents/skills/autocue/scripts/driver.mjs --port 7335 --url http://127.0.0.
 
 # Every op carries that driver's token (written to <out>/token).
 op() { curl -sS -H "x-demo-token: $(cat /tmp/sbs/$1/token)" "localhost:$2/cmd" -d "$3"; }
-op josiah 7334 '{"op":"caption","text":"Josiah asks Kai to keep him posted"}'
+op josiah 7334 '{"op":"caption","value":"Josiah asks Kai to keep him posted"}'
 ```
 
 1. **Boot one at a time.** Start the second driver once the first shows the deck: two cold boots at once

@@ -349,8 +349,11 @@ try {
       out: path.join(options.out, 'side-by-side.webm'),
       fps: options.fps,
       mp4: options.mp4 === 'on',
-    });
+      // Reported in the summary rather than thrown, which would drop the step results it prints.
+    }).catch((error) => ({ error: String(error?.message ?? error) }));
   }
-  console.log(JSON.stringify({ ok: !failed, steps: results, timeline: timeline.peers, composed }, null, 2));
+  console.log(
+    JSON.stringify({ ok: !failed && !composed?.error, steps: results, timeline: timeline.peers, composed }, null, 2),
+  );
   process.exitCode = failed ? 1 : 0;
 }
