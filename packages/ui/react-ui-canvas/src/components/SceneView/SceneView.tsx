@@ -905,6 +905,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             handlers={handlers}
             // Routes follow the gutters in lattice mode, whether or not snap is on.
             lattice={latticeOn ? projection.lattice : undefined}
+            cell={grid * MAJOR_GRID_RATIO}
           />
         </div>
         <ControlFrame

@@ -8,7 +8,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type CSSProperties, memo, useId, useMemo } from 'react';
+import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -36,7 +36,7 @@ import { type LatticeSpec } from '../../utils/lattice.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
-import { nodeBounds } from '../../utils/shapes.ts';
+import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
 import { frameClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
@@ -96,6 +96,8 @@ export type SceneLayerProps = {
   handlers?: ElementHandlers;
   /** The scene's lattice, when it has one: smart links route through its gutters. */
   lattice?: LatticeSpec;
+  /** Scene px of one nominal unit (the drawing's major grid cell); a nested layer inherits its parent's. */
+  cell?: number;
 };
 
 export const SceneLayer = memo(
@@ -115,7 +117,10 @@ export const SceneLayer = memo(
     debug,
     handlers,
     lattice,
+    cell: cellProp,
   }: SceneLayerProps) => {
+    const inherited = useContext(CellContext);
+    const cell = cellProp ?? inherited;
     // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
     // hide under a neighbour, while the model's z stays what the user arranged.
     const nodes = useMemo(() => {
@@ -137,10 +142,10 @@ export const SceneLayer = memo(
       marker ? `url(#${markerId}-${marker}-${end})` : undefined;
 
     return (
-      <>
+      <CellContext.Provider value={cell}>
         <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           <defs>
-            <Markers id={markerId} />
+            <Markers id={markerId} cell={cell} />
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -198,7 +203,7 @@ export const SceneLayer = memo(
             />
           ))}
         </svg>
-      </>
+      </CellContext.Provider>
     );
   },
 );
@@ -211,16 +216,20 @@ const FRAME_BORDER = '--scene-frame-border' as const;
 /** A link's stroke, in scene units like a node's 4px border, so a link keeps its weight beside the shapes at any zoom. */
 const LINK_WIDTH = 2;
 
-/** Bounding box of every end, in scene units. */
-const END_BOX = 16;
+/** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
+const CellContext = createContext(DEFAULT_CELL);
+
+/** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
+const END_BOX = 0.25;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id }: { id: string }) => {
-  // Each end fills a 16×16 box in scene units, so it scales with the shapes it joins: the arrow and the
-  // triangle 10 of their 12 view units, the circle 8 of its 10.
-  const arrow = END_BOX;
-  const triangle = (END_BOX * 12) / 10;
-  const circle = (END_BOX * 10) / 8;
+const Markers = ({ id, cell }: { id: string; cell: number }) => {
+  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
+  // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
+  const box = END_BOX * cell;
+  const arrow = box;
+  const triangle = (box * 12) / 10;
+  const circle = (box * 10) / 8;
   // An outline matches the line's width, in its marker's view units.
   const outline = (size: number, view: number) => (LINK_WIDTH * view) / size;
   const ends = ['start', 'end'] as const;
