@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { DrawingSkill } from '#skills';
+import { UmlSkill } from '#skills';
 
-const skillDefinition = () =>
-  Effect.succeed([Capability.contributeAll(AppCapabilities.SkillDefinition, [DrawingSkill])]);
+const skillDefinition = () => Effect.succeed([Capability.contributeAll(AppCapabilities.SkillDefinition, [UmlSkill])]);
 
 export default skillDefinition;

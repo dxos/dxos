@@ -26,8 +26,8 @@ import { SceneView } from './SceneView.tsx';
  * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows a diamond per control point and a dot per span midpoint:
  *    drag a diamond to move a point, drag a dot to add one there, alt-click a diamond to remove one.
- * 4. R / E / C / T / S then drag draws a rectangle, ellipse, UML class, text or nested scene; Delete removes the
- *    selection (nodes or links).
+ * 4. R / E / T / S then drag draws a rectangle, ellipse, text or nested scene (the UML class is plugin-uml's);
+ *    Delete removes the selection (nodes or links).
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
  *    selected element.

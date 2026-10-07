@@ -7,9 +7,9 @@ import React from 'react';
 
 import { Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import * as UmlSkill from '@dxos/plugin-illustrator/UmlSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as UmlSkill from '@dxos/plugin-uml/UmlSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
@@ -97,15 +97,22 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
   skills: [AssistantSkill.key, MarkdownSkill.key, UmlSkill.key],
   lazyPlugins: async () => {
     // SpacePlugin contributes the `versioning-state` capability the markdown article reads.
-    const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin] = await Promise.all([
+    const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin, UmlPlugin] = await Promise.all([
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-illustrator/IllustratorPlugin'),
       import('@dxos/plugin-markdown/MarkdownPlugin'),
       import('@dxos/plugin-space/SpacePlugin'),
       import('@dxos/plugin-tldraw/TldrawPlugin'),
+      import('@dxos/plugin-uml/UmlPlugin'),
     ]);
     return {
-      plugins: [IllustratorPlugin.make(), MarkdownPlugin.make(), SpacePlugin.make({}), TldrawPlugin.make()],
+      plugins: [
+        IllustratorPlugin.make(),
+        MarkdownPlugin.make(),
+        SpacePlugin.make({}),
+        TldrawPlugin.make(),
+        UmlPlugin.make(),
+      ],
       types: [Drawing.Drawing, Drawing.Canvas],
     };
   },

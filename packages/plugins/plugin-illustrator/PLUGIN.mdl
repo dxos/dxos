@@ -100,11 +100,6 @@ component SvgVariant
 ```mdl
 component DrawingSkill
   desc: Free-form drawing via the scene DSL; the agent does the layout.
-
-component UmlSkill
-  desc: UML class diagrams from source code (bound documents or a fetched GitHub reference):
-        the agent extracts the class model, emits a mermaid classDiagram, and the generate
-        operation compiles and lays it out.
 ```
 
 ## QA
@@ -157,7 +152,7 @@ test QA-1: Create, edit, and read back a drawing
 
 ```mdl
 test QA-2: Generate a UML class diagram from mermaid source
-  desc: The UmlSkill path — replace a drawing's contents with a class diagram compiled from mermaid source, with layout owned by the dialect.
+  desc: The UML skill's path (the skill is plugin-uml's) — replace a drawing's contents with a class diagram compiled from mermaid source, with layout owned by the dialect.
   actors: agent
   covers: []
   status: unverified

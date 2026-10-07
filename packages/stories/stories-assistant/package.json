@@ -85,6 +85,7 @@
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
+    "@dxos/plugin-uml": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",

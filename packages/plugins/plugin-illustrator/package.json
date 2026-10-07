@@ -144,11 +144,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./UmlSkill": {
-      "source": "./src/skills/UmlSkill.ts",
-      "types": "./dist/types/src/skills/UmlSkill.d.ts",
-      "import": "./dist/lib/UmlSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

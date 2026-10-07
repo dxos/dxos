@@ -151,7 +151,11 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
     const z = keys[order];
     switch (child.kind) {
       case 'node': {
-        const node = { ...child.node, z };
+        // A host's type starts from its own `create`, as a built-in starts from `createNode`, so a
+        // fixture sets only what it means and the type supplies the rest of its content.
+        const def = isBuiltinType(child.node.type) ? undefined : registry[child.node.type];
+        const fresh = def?.create({ id: child.node.id, z, center: child.node.center, size: child.node.size });
+        const node = { ...fresh, ...child.node, z };
         check(registry, node);
         claim(nodes, node.id, element.id);
         nodes[node.id] = node;

@@ -5,9 +5,8 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import { trim } from '@dxos/util';
-
-import { DrawingOperation } from '#types';
 
 export const key = 'org.dxos.skill.uml';
 
