@@ -6,6 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
+import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 export const AssistantOperationHandlerSet = OperationHandlerSet.lazy([
@@ -18,10 +19,10 @@ export const AssistantOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./generate-home-suggestions.ts')),
   ),
   AssistantOperation.RespondToRequest.pipe(Operation.lazyHandler(() => import('./respond-to-request.ts'))),
-  AssistantOperation.AnalyzeTurn.pipe(Operation.lazyHandler(() => import('./analyze-turn.ts'))),
   AssistantOperation.RunPromptInChat.pipe(Operation.lazyHandler(() => import('./run-prompt-in-chat.ts'))),
   RoutineOperation.RunPromptInNewChat.pipe(Operation.lazyHandler(() => import('./run-prompt-in-new-chat.ts'))),
   AssistantOperation.SetCurrentChat.pipe(Operation.lazyHandler(() => import('./set-current-chat.ts'))),
   AssistantOperation.SetTracePanelDebug.pipe(Operation.lazyHandler(() => import('./set-trace-panel-debug.ts'))),
   AssistantOperation.UpdateChatName.pipe(Operation.lazyHandler(() => import('./update-chat-name.ts'))),
+  TurnReviewSkill.AnalyzeTurn.pipe(Operation.lazyHandler(() => import('./analyze-turn.ts'))),
 ]);

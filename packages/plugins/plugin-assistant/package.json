@@ -175,6 +175,11 @@
       "types": "./dist/types/src/TracePanel.d.ts",
       "import": "./dist/lib/ns/TracePanel.mjs"
     },
+    "./TurnReviewSkill": {
+      "source": "./src/skills/turn-review/TurnReviewSkill.ts",
+      "types": "./dist/types/src/skills/turn-review/TurnReviewSkill.d.ts",
+      "import": "./dist/lib/TurnReviewSkill.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",

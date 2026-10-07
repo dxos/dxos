@@ -163,14 +163,8 @@ op UpdateChatName
 ```mdl
 op AnalyzeTurn
   key: org.dxos.operation.assistant.analyzeTurn
-  desc: Judges the chat's latest turn with a small model and reports it when the agent struggled because of its prompting or tooling.
-  input:
-    chat: Chat
-    outcome: success | error
-    error?: string
-    since: string
-    model?: string
-    skills: string[]
+  desc: TurnReviewSkill's background end-request hook. Judges the turn that just ended with a small model and reports it when the agent struggled because of its prompting or tooling.
+  input: {}
   output: void
   effects: [echo:read, ai:infer, http:post]
 ```
@@ -316,8 +310,9 @@ feat F-8: Agent Struggle Reports
 
   req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
   req F-8.2:
-    when: a turn the chat processor issued settles (success, or an error other than over-quota) with reporting enabled
-    then: op:AnalyzeTurn is scheduled detached, so the review never delays the next turn
+    when: the chat processor issues a request with reporting enabled
+    then: TurnReviewSkill is bound to the chat; its end-request hook (op:AnalyzeTurn) runs in the background, so
+          the request settles without waiting for the review and the agent process awaits it before finishing
   req F-8.3:
     when: the reviewer judges the agent struggled from missing/wrong instructions or a missing/faulty tool
     then: the trajectory is uploaded to the feedback-logs bucket under `trajectories/` and an `agent_struggle` event is captured

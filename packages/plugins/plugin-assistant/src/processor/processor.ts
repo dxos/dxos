@@ -29,6 +29,7 @@ import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
@@ -38,6 +39,7 @@ import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
+import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
@@ -77,8 +79,8 @@ export type AiChatProcessorOptions = {
   system?: string;
   /** Who this processor's prompts come from, when the chat is one of several people's with one agent. */
   sender?: AgentService.PromptSender;
-  /** Schedules {@link AssistantOperation.AnalyzeTurn} after each turn this processor issues (opt-in setting). */
-  analyzeTurns?: boolean;
+  /** Binds {@link TurnReviewSkill} so each turn is reviewed for struggles (opt-in setting). */
+  reportStruggles?: boolean;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -338,7 +340,6 @@ export class AiChatProcessor {
       await this.cancel();
     }
 
-    const since = new Date().toISOString();
     try {
       this.#lastRequest = requestProp;
       this.#registry.set(this.error, Option.none());
@@ -347,6 +348,7 @@ export class AiChatProcessor {
       // that resolve is itself part of the wait the reader is watching.
       this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
+      await this.#ensureTurnReview();
 
       const effect = Effect.gen({ self: this }, function* () {
         // NOTE: Gets or creates a session for the feed.
@@ -394,17 +396,11 @@ export class AiChatProcessor {
       this.#registry.set(this.error, Option.none());
       this.#lastRequest = undefined;
       this.#requestFiber = undefined;
-      this.#scheduleReview(since, 'success');
     } catch (err) {
       // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
       // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
-      const error = parseError(err);
-      this.#registry.set(this.error, Option.some(error));
-      // An over-quota rejection says nothing about prompting or tooling.
-      if (!(error instanceof AiUsageQuotaError)) {
-        this.#scheduleReview(since, 'error', error.message);
-      }
+      this.#registry.set(this.error, Option.some(parseError(err)));
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
@@ -705,24 +701,18 @@ export class AiChatProcessor {
   }
 
   /**
-   * Schedules the struggle review detached, so it never delays the next turn; the handler re-checks
-   * the opt-in, since this flag is only as fresh as the render that built the processor.
+   * Binds the turn-review skill before a request while the user is opted in; its background
+   * end-request hook does the review, so nothing here waits on it. Left bound after an opt-out,
+   * since the hook re-checks the setting.
    */
-  #scheduleReview(since: string, outcome: AssistantOperation.TurnOutcome, error?: string): void {
-    const chat = this._options.chat?.target;
-    const spaceId = chat && Obj.getDatabase(chat)?.spaceId;
-    if (!this._options.analyzeTurns || !chat || !spaceId) {
+  async #ensureTurnReview(): Promise<void> {
+    if (!this._options.reportStruggles) {
       return;
     }
-
-    const skills = this.context.getSkills().map((skill) => skill.name);
-    this._runtime.runFork(
-      Operation.schedule(
-        AssistantOperation.AnalyzeTurn,
-        { chat, outcome, error, since, model: this._options.model, skills },
-        { spaceId },
-      ),
-    );
+    const bound = this.context.getSkills().some((skill) => Obj.getMeta(skill).key === TurnReviewSkill.key);
+    if (!bound) {
+      await this.context.bind({ skills: [Ref.fromURI(Skill.registryURI(TurnReviewSkill.key))] });
+    }
   }
 
   /**

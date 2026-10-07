@@ -73,12 +73,12 @@ export const isReportable = (verdict: TurnVerdict): boolean =>
 
 export const REVIEW_SYSTEM_PROMPT = trim`
   You review transcripts of an AI agent working inside Composer, a collaborative workspace app.
-  Decide whether the agent struggled in the LATEST TURN (messages after the <latest_turn> marker).
+  Decide whether the agent struggled in the LATEST TURN (messages inside the <latest_turn> tags).
   Earlier messages are context only.
 
   Signs of struggling: repeated or looping tool calls, tool errors, calling tools with invalid
   arguments, guessing at tool names or object ids, apologizing and retrying, giving up, asking the
-  user for information it should have been able to obtain, or ending the turn with an error.
+  user for information it should have been able to obtain, or giving an incomplete answer.
 
   Classify the root cause:
   - system_prompt_missing: the agent lacked instructions or context it needed (e.g. how a feature
@@ -118,32 +118,26 @@ const formatMessage = (message: Message.Message): string => {
   return `${(message.sender.role ?? 'unknown').toUpperCase()}:\n${lines.join('\n')}`;
 };
 
-export type ReviewInput = {
-  history: readonly Message.Message[];
-  /** ISO timestamp the turn was submitted at. */
-  since: string;
-  outcome: 'success' | 'error';
-  error?: string;
-};
-
-/** Splits the history at the turn's start; ISO timestamps compare correctly as strings. */
-export const splitTurn = (history: readonly Message.Message[], since: string) => {
-  const index = history.findIndex((message) => message.created >= since);
+/**
+ * Splits the history at the turn that just ended: it starts at the last user message, which is what
+ * the agent was answering. Hooks fire per request, so everything after it is this turn's work.
+ */
+export const splitTurn = (history: readonly Message.Message[]) => {
+  const index = history.findLastIndex((message) => message.sender.role === 'user');
   return index === -1
-    ? { context: history, turn: [] as readonly Message.Message[] }
+    ? { context: [] as readonly Message.Message[], turn: history }
     : { context: history.slice(0, index), turn: history.slice(index) };
 };
 
 /** The reviewer's prompt; context is trimmed from the front when the transcript runs long. */
-export const formatReviewPrompt = ({ history, since, outcome, error }: ReviewInput): string => {
-  const { context, turn } = splitTurn(history, since);
+export const formatReviewPrompt = (history: readonly Message.Message[]): string => {
+  const { context, turn } = splitTurn(history);
   const turnText = turn.map(formatMessage).join('\n\n');
-  const ending = outcome === 'error' ? `The turn ended with an error: ${error ?? 'unknown'}` : 'The turn completed.';
   const budget = Math.max(0, MAX_TRANSCRIPT_CHARS - turnText.length);
   const contextText = context.map(formatMessage).join('\n\n');
   const clippedContext =
     contextText.length > budget ? `…${contextText.slice(contextText.length - budget)}` : contextText;
-  return [clippedContext, '<latest_turn>', clip(turnText, MAX_TRANSCRIPT_CHARS), '</latest_turn>', ending]
+  return [clippedContext, '<latest_turn>', clip(turnText, MAX_TRANSCRIPT_CHARS), '</latest_turn>']
     .filter((part) => part.length > 0)
     .join('\n\n');
 };
@@ -165,9 +159,6 @@ export const countToolCalls = (messages: readonly Message.Message[]) => {
 
 export type TrajectoryHeader = {
   sessionId: string;
-  outcome: 'success' | 'error';
-  error?: string;
-  since: string;
   model?: string;
   codeMode: boolean;
   skills: readonly string[];
@@ -194,22 +185,17 @@ export type StruggleEventInput = TrajectoryHeader & {
  */
 export const toStruggleEventProperties = ({
   sessionId,
-  outcome,
-  error,
   model,
   codeMode,
   skills,
   verdict,
   history,
-  since,
   trajectoryKey,
 }: StruggleEventInput): Record<string, unknown> => {
-  const { turn } = splitTurn(history, since);
+  const { turn } = splitTurn(history);
   const { calls, errors } = countToolCalls(turn);
   return {
     $ai_session_id: sessionId,
-    outcome,
-    error,
     model,
     code_mode: codeMode,
     skills: skills.join(','),

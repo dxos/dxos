@@ -33,8 +33,6 @@ const HISTORY = [
   }),
 ];
 
-const SINCE = '2026-10-06T10:00:00.000Z';
-
 const VERDICT: TurnVerdict = {
   struggled: true,
   cause: 'system_prompt_missing',
@@ -44,8 +42,8 @@ const VERDICT: TurnVerdict = {
 };
 
 describe('turn review', () => {
-  test('splits the history at the turn start', ({ expect }) => {
-    const { context, turn } = splitTurn(HISTORY, SINCE);
+  test('the turn starts at the last user message', ({ expect }) => {
+    const { context, turn } = splitTurn(HISTORY);
     expect(context).toHaveLength(2);
     expect(turn).toHaveLength(2);
   });
@@ -58,19 +56,16 @@ describe('turn review', () => {
     expect(isReportable({ ...VERDICT, struggled: false })).toBe(false);
   });
 
-  test('the prompt marks the latest turn and its ending', ({ expect }) => {
-    const prompt = formatReviewPrompt({ history: HISTORY, since: SINCE, outcome: 'error', error: 'Timed out' });
-    const [before, after] = prompt.split('<latest_turn>');
+  test('the prompt marks the latest turn', ({ expect }) => {
+    const [before, after] = formatReviewPrompt(HISTORY).split('<latest_turn>');
     expect(before).toContain('earlier question');
+    expect(after).toContain('latest question');
     expect(after).toContain('[tool error search] boom');
-    expect(after).toContain('The turn ended with an error: Timed out');
   });
 
   test('trajectory and event carry the turn metadata', ({ expect }) => {
     const header = {
       sessionId: 'echo://space/feed',
-      outcome: 'error' as const,
-      since: SINCE,
       model: 'dxn:com.anthropic.model.claude-sonnet-5.default',
       codeMode: false,
       skills: ['Markdown', 'Tables'],

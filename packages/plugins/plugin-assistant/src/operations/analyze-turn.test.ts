@@ -9,24 +9,28 @@ import * as Layer from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Chat from '@dxos/assistant/Chat';
-import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { ProcessManager } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as Skill from '@dxos/compute/Skill';
+import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { Message } from '@dxos/types';
 
 import { AssistantOperationHandlerSet } from '#operations';
-import { type Assistant, AssistantCapabilities, AssistantOperation } from '#types';
+import { TurnReviewSkill } from '#skills';
+import { type Assistant, AssistantCapabilities } from '#types';
 
-import { STRUGGLE_EVENT, type TurnVerdict } from '../review/turn-review.ts';
+import { REVIEW_SYSTEM_PROMPT, STRUGGLE_EVENT, type TurnVerdict } from '../review/turn-review.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -98,41 +102,36 @@ const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telem
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Message.Message],
-  aiService: ScriptedLanguageModel.scriptedAiService(() => ({
-    parts: [ScriptedLanguageModel.text(JSON.stringify(VERDICT))],
+  types: [Chat.Chat, Feed.Feed, Message.Message, Skill.Skill],
+  skills: [TurnReviewSkill.make()],
+  // The reviewer gets the verdict; the conversational turn gets a plain reply.
+  aiService: ScriptedLanguageModel.scriptedAiService((request) => ({
+    parts: [
+      ScriptedLanguageModel.text(
+        request.system.includes(REVIEW_SYSTEM_PROMPT) ? JSON.stringify(VERDICT) : 'I could not search your notes.',
+      ),
+    ],
   })),
   extraServices: Layer.succeed(Capability.Service, manager),
 });
 
-const SINCE = '2026-10-06T10:00:00.000Z';
+const MODEL = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
-const makeChat = Effect.fnUntraced(function* () {
-  const { db } = yield* Database.Service;
-  const feed = db.add(Feed.make());
-  const chat = db.add(Chat.make({ feed: Ref.make(feed) }));
-  yield* Feed.append(feed, [
-    Message.make({ created: SINCE, sender: 'user', blocks: [{ _tag: 'text', text: 'Find my notes.' }] }),
-    Message.make({
-      created: '2026-10-06T10:00:01.000Z',
-      sender: 'assistant',
-      blocks: [
-        { _tag: 'toolCall', toolCallId: '1', name: 'search', input: '{"query":"notes"}', providerExecuted: false },
-      ],
-    }),
-  ]);
-  yield* Database.flush();
-  return chat;
-});
-
-const review = (chat: Chat.Chat) =>
-  Operation.invoke(AssistantOperation.AnalyzeTurn, {
-    chat,
-    outcome: 'success',
-    since: SINCE,
-    model: 'dxn:com.anthropic.model.claude-sonnet-5.default',
-    skills: ['Markdown', 'Tables'],
+/** Runs one turn with the turn-review skill bound and waits for the agent process, hooks included, to finish. */
+const runTurn = Effect.fnUntraced(function* () {
+  const session = yield* AgentService.createSession({ skills: [TurnReviewSkill.make()], model: MODEL });
+  yield* session.submitPrompt('Find my notes.');
+  yield* session.waitForCompletion();
+  const processManager = yield* ProcessManager.ProcessManagerService;
+  // The agent process finishes only after its background hooks, so its exit is the review's.
+  const handles = yield* processManager.list({ target: Obj.getURI(session.chat) });
+  expect(handles.length).toBeGreaterThan(0);
+  yield* Effect.promise(async () => {
+    await expect
+      .poll(() => handles.every((handle) => handle.status.state === Process.State.SUCCEEDED), { timeout: 10_000 })
+      .toBe(true);
   });
+});
 
 describe('AnalyzeTurn', () => {
   beforeEach(() => {
@@ -144,7 +143,7 @@ describe('AnalyzeTurn', () => {
     Effect.fnUntraced(
       function* (_) {
         setup({ reportStruggles: true, telemetry: true });
-        yield* review(yield* makeChat());
+        yield* runTurn();
 
         expect(captured.uploads).toHaveLength(1);
         expect(captured.uploads[0].kind).toBe('trajectory');
@@ -154,10 +153,9 @@ describe('AnalyzeTurn', () => {
         expect(captured.events[0].attributes).toMatchObject({
           model: 'dxn:com.anthropic.model.claude-sonnet-5.default',
           code_mode: true,
-          skills: 'Markdown,Tables',
           cause: 'tool_faulty',
           cause_group: 'tooling',
-          turn_tool_call_count: 1,
+          turn_message_count: 2,
           trajectory_key: 'trajectories/2026-10-06/test.ndjson.gz',
         });
       },
@@ -171,7 +169,7 @@ describe('AnalyzeTurn', () => {
     Effect.fnUntraced(
       function* (_) {
         setup({ reportStruggles: false, telemetry: true });
-        yield* review(yield* makeChat());
+        yield* runTurn();
         expect(captured).toEqual({ events: [], uploads: [] });
       },
       Effect.provide(TestLayer),
@@ -184,7 +182,7 @@ describe('AnalyzeTurn', () => {
     Effect.fnUntraced(
       function* (_) {
         setup({ reportStruggles: true, telemetry: false });
-        yield* review(yield* makeChat());
+        yield* runTurn();
         expect(captured).toEqual({ events: [], uploads: [] });
       },
       Effect.provide(TestLayer),
