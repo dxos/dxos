@@ -832,8 +832,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
             debug={debug}
             handlers={handlers}
-            // Routes follow the gutters only while the lattice is in force (snap and lattice on).
-            lattice={snapEnabled && latticeOn ? projection.lattice : undefined}
+            // Routes follow the gutters in lattice mode, whether or not snap is on.
+            lattice={latticeOn ? projection.lattice : undefined}
           />
         </div>
         <ControlFrame
@@ -847,7 +847,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           capabilities={capabilities}
           createFrame={createFrame}
           blocked={blocked}
-          lattice={snapEnabled && latticeOn ? projection.lattice : undefined}
+          lattice={latticeOn ? projection.lattice : undefined}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
