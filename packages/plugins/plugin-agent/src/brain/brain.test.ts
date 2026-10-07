@@ -229,16 +229,17 @@ describe('agent brain (local)', () => {
 
         const store = brain.facts(agent.id);
         expect(store).toBeDefined();
-        const facts = store ? yield* store.query({ subjectEntity: 'bob' }) : [];
+        // Bob is known by his identity: the speaker and the subject of what he said are his DID.
+        const facts = store ? yield* store.query({ subjectEntity: SCENARIO.bob.did }) : [];
         expect(facts.map(({ assertion, attribution }) => ({ assertion, speaker: attribution.agent }))).toEqual([
           {
             assertion: expect.objectContaining({
-              subject: expect.objectContaining({ entity: 'bob' }),
+              subject: expect.objectContaining({ entity: SCENARIO.bob.did, label: 'Bob' }),
               predicate: 'works on',
               object: expect.objectContaining({ entity: SCENARIO.workEntity }),
               quote: SCENARIO.bob.working,
             }),
-            speaker: 'bob',
+            speaker: SCENARIO.bob.did,
           },
         ]);
       },

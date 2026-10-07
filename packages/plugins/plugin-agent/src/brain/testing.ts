@@ -6,11 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as AgentService from '@dxos/compute/AgentService';
-import { type FactStoreApi } from '@dxos/pipeline-rdf';
 
 import { BrainService } from '#types';
 
-import { TriggerRegistry } from '../triggers.ts';
 import * as BrainMemory from './BrainMemory.ts';
 
 export type TestBrainOptions = {
@@ -27,8 +25,8 @@ export type TestBrainOptions = {
  * to the test body, and every build sees the same stores.
  */
 export const makeTestBrain = ({ wake = 'session' }: TestBrainOptions = {}) => {
-  const triggers = new TriggerRegistry();
-  const stores = new Map<string, FactStoreApi>();
+  const state = BrainMemory.makeState();
+  const { triggers, stores } = state;
   const wakes: BrainService.WakeRequest[] = [];
 
   const layer: Layer.Layer<BrainService.BrainService, never, AgentService.AgentService> = Layer.effect(
@@ -36,7 +34,7 @@ export const makeTestBrain = ({ wake = 'session' }: TestBrainOptions = {}) => {
     AgentService.AgentService.pipe(
       Effect.map((agents) => {
         // Built once per layer, each with its own host's agents, over the same stores.
-        const { service: memory } = BrainMemory.make(agents, { triggers, stores });
+        const { service: memory } = BrainMemory.make(agents, { state });
         // Triggers come back through JSON, as from EDGE's brain: their refs then have no resolver of their own.
         const service: BrainService.Service = {
           ...memory,

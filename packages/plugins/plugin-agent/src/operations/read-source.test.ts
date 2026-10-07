@@ -221,7 +221,7 @@ describe('ReadSource', () => {
   );
 
   it.effect(
-    "attributes a private chat's unnamed prompts to the person it is with",
+    "attributes a private chat's unnamed prompts to its owner's identity",
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
@@ -240,7 +240,9 @@ describe('ReadSource', () => {
         yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
         const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
         const [entry] = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entry.fact.attribution.agent).toBe('dima');
+        expect(entry.fact.attribution.agent).toBe('did:halo:dima');
+        // The owner named as a subject is the same entity.
+        expect(entry.fact.assertion.subject).toMatchObject({ kind: 'entity', entity: 'did:halo:dima' });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

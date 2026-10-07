@@ -10,6 +10,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Evaluator from '@dxos/brain/Evaluator';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -25,6 +26,7 @@ import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import {
   AgentOperation,
+  BrainService,
   FactEntry,
   Goal,
   Memory,
@@ -83,30 +85,57 @@ const fact = ({
 
 const PR_IS_UP: Trigger.FactPattern = { speaker: 'Dima', about: 'indexer PR', force: 'assertive', polarity: '+' };
 
-describe('matchesPattern', () => {
+/** Whether the pattern, translated to rules and evaluated by the brain, wakes on the fact. */
+const wakes = (
+  pattern: Trigger.FactPattern,
+  subject: RDF.Fact,
+  {
+    after = '2026-10-03T00:00:00.000Z',
+    person,
+  }: { after?: string; person?: (name: string) => string | undefined } = {},
+): boolean => {
+  const evaluator = Evaluator.make();
+  evaluator.add({ id: 'watch', rules: Trigger.toRules(pattern, { createdAt: after, person }), createdAt: after });
+  return evaluator.push([subject], { at: Date.parse(subject.attribution.generatedAtTime) }).length > 0;
+};
+
+describe('toRules', () => {
   it('matches on speaker, force, polarity and the words the fact mentions', ({ expect }) => {
-    expect(Trigger.matchesPattern(PR_IS_UP, fact())).toBe(true);
+    expect(wakes(PR_IS_UP, fact())).toBe(true);
     // A plain assertion records no illocution; a commitment is not the PR being up.
-    expect(Trigger.matchesPattern(PR_IS_UP, fact({ force: 'commissive' }))).toBe(false);
-    expect(Trigger.matchesPattern(PR_IS_UP, fact({ speaker: 'rich' }))).toBe(false);
-    expect(Trigger.matchesPattern(PR_IS_UP, fact({ polarity: '-' }))).toBe(false);
-    expect(Trigger.matchesPattern(PR_IS_UP, fact({ subject: 'release', quote: 'The release is up.' }))).toBe(false);
-    // Words match anywhere in the fact, and as prefixes from three letters.
-    expect(Trigger.matchesPattern({ about: 'indexers' }, fact())).toBe(false);
-    expect(Trigger.matchesPattern({ about: 'index' }, fact())).toBe(true);
-    expect(Trigger.matchesPattern({ about: 'pr' }, fact({ subject: 'prior art', quote: 'Prior art is up.' }))).toBe(
-      false,
-    );
-    expect(Trigger.matchesPattern({ subject: 'indexer', text: 'is up' }, fact())).toBe(true);
+    expect(wakes(PR_IS_UP, fact({ force: 'commissive' }))).toBe(false);
+    expect(wakes(PR_IS_UP, fact({ speaker: 'rich' }))).toBe(false);
+    expect(wakes(PR_IS_UP, fact({ polarity: '-' }))).toBe(false);
+    expect(wakes(PR_IS_UP, fact({ subject: 'release', quote: 'The release is up.' }))).toBe(false);
+    // Words match anywhere in the fact, stemmed, and as prefixes from four letters.
+    expect(wakes({ about: 'indexers' }, fact())).toBe(true);
+    expect(wakes({ about: 'index' }, fact())).toBe(true);
+    expect(wakes({ about: 'pr' }, fact({ subject: 'prior art', quote: 'Prior art is up.' }))).toBe(false);
+    expect(wakes({ subject: 'indexer', text: 'is up' }, fact())).toBe(true);
   });
 
-  it('names a speaker by their first name and bounds the time the fact was said', ({ expect }) => {
-    expect(Trigger.matchesPattern({ speaker: 'Rich' }, fact({ speaker: 'rich-burdon' }))).toBe(true);
-    expect(Trigger.matchesPattern({ speaker: 'Rich Burdon' }, fact({ speaker: 'rich' }))).toBe(true);
-    expect(Trigger.matchesPattern({ speaker: 'Richard' }, fact({ speaker: 'rich' }))).toBe(false);
-    expect(Trigger.matchesPattern(PR_IS_UP, fact(), { after: '2026-10-03T13:00:00.000Z' })).toBe(false);
-    expect(Trigger.matchesPattern({ ...PR_IS_UP, before: '2026-10-03T11:00:00.000Z' }, fact())).toBe(false);
-    expect(Trigger.matchesPattern({ ...PR_IS_UP, after: '2026-10-03T11:00:00.000Z' }, fact())).toBe(true);
+  it('names a known person by their identity and bounds the time the fact was said', ({ expect }) => {
+    const rich = 'did:halo:RICH';
+    const person = (name: string) => (['rich', 'rich-burdon'].includes(normalizeEntityId(name)) ? rich : undefined);
+    expect(wakes({ speaker: 'Rich' }, fact({ speaker: rich }), { person })).toBe(true);
+    expect(wakes({ speaker: 'Rich Burdon' }, fact({ speaker: rich }), { person })).toBe(true);
+    expect(wakes({ speaker: 'Richard' }, fact({ speaker: rich }), { person })).toBe(false);
+    // Someone the roster does not know is named by the slug of their name.
+    expect(wakes({ speaker: 'Dima' }, fact())).toBe(true);
+    expect(wakes(PR_IS_UP, fact(), { after: '2026-10-03T13:00:00.000Z' })).toBe(false);
+    expect(wakes({ ...PR_IS_UP, before: '2026-10-03T11:00:00.000Z' }, fact())).toBe(false);
+    expect(wakes({ ...PR_IS_UP, after: '2026-10-03T11:00:00.000Z' }, fact(), { after: SAID_AT })).toBe(true);
+  });
+
+  it('matches a known person as the subject by identity', ({ expect }) => {
+    const dima = 'did:halo:DIMA';
+    const subject: RDF.Fact = {
+      ...fact(),
+      assertion: { ...fact().assertion, subject: { kind: 'entity', entity: dima, label: 'Dima' } },
+    };
+    expect(wakes({ subject: 'Dima' }, subject, { person: (name) => (name === 'Dima' ? dima : undefined) })).toBe(true);
+    // `about` still finds a person by the name their entity carries as its label.
+    expect(wakes({ about: 'Dima' }, subject)).toBe(true);
   });
 });
 
@@ -411,15 +440,17 @@ describe('end-of-turn triggers', () => {
           }),
         );
         yield* Database.flush();
-        brain.triggers.add({
-          id: 'posted',
-          agent: agent.id,
-          goal: Ref.make(goal),
-          when: { speaker: 'Dima', after: '2026-10-03T00:00:00.000Z' },
-          then: { _tag: 'notify', recipient: Ref.make<Obj.Unknown>(josiah), message: 'Update on Dima: {fact}' },
-          ongoing: true,
-          createdAt: '2026-10-03T00:00:00.000Z',
-        });
+        yield* BrainService.BrainService.use((service) =>
+          service.subscribe({
+            id: 'posted',
+            agent: agent.id,
+            goal: Ref.make(goal),
+            when: { speaker: 'Dima', after: '2026-10-03T00:00:00.000Z' },
+            then: { _tag: 'notify', recipient: Ref.make<Obj.Unknown>(josiah), message: 'Update on Dima: {fact}' },
+            ongoing: true,
+            createdAt: '2026-10-03T00:00:00.000Z',
+          }),
+        );
 
         // 1. Each of Dima's facts is passed on, composed; the watch stays and the goal stays open.
         yield* pushFacts(agent, [

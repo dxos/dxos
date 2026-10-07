@@ -8,9 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
-import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 
-import * as FactEntry from './FactEntry.ts';
 import * as Goal from './Goal.ts';
 
 /** pipeline-rdf's illocutionary forces; a fact without an illocution is assertive. */
@@ -81,6 +80,11 @@ export const Trigger = Schema.Struct({
   then: Action,
   /** Keeps watching after it fires ("keep me posted"), passing each matching fact on; its goal stays open. */
   ongoing: Schema.optional(Schema.Boolean),
+  /**
+   * The goal rules (`@dxos/brain` Datalog) the brain evaluates: compiled from the goal's text, or `when`
+   * translated by {@link toRules}. Absent on triggers stored before rules existed; see {@link rulesOf}.
+   */
+  rules: Schema.optional(Schema.String),
   createdAt: Format.DateTime,
 });
 
@@ -116,67 +120,60 @@ export const renderMessage = (trigger: Trigger, fact: string): string =>
       : trigger.then.message;
 
 //
-// Matching
+// Rules
 //
 
-const words = (text: string): string[] => text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+/** A Datalog string constant. */
+const quote = (value: string): string => JSON.stringify(value);
 
-/** Every word of `needle` occurs in `haystack`; words of three letters or more also match as a prefix ("PR" ≠ "prior", "indexer" ~ "indexers"). */
-const mentions = (haystack: string, needle: string): boolean => {
-  const available = words(haystack);
-  return words(needle).every((word) =>
-    available.some((candidate) => (word.length < 3 ? candidate === word : candidate.startsWith(word))),
-  );
+/** An ISO time in the one format facts are stamped with, so comparing the strings compares the times. */
+const isoTime = (time: string): string => {
+  const parsed = Date.parse(time);
+  return Number.isNaN(parsed) ? time : new Date(parsed).toISOString();
 };
 
-/** A speaker's slug names a person by their whole name or its first word: "rich" is "Rich Burdon". */
-const isSpeaker = (name: string, speaker: string | undefined): boolean => {
-  if (speaker === undefined) {
-    return false;
-  }
-  const slug = normalizeEntityId(name);
-  return speaker === slug || speaker.startsWith(`${slug}-`) || slug.startsWith(`${speaker}-`);
+/** The label a translated pattern wakes with. */
+export const MATCH_LABEL = 'match';
+
+export type RulesOptions = {
+  /** When the watch began: facts said earlier never wake it, unless the pattern sets its own `after`. */
+  createdAt: string;
+  /** A person's entity id (their identity DID) by name, when known; others are named by the slug of the name. */
+  person?: (name: string) => string | undefined;
 };
 
-const time = (iso: string): number => Date.parse(iso);
-
-export type MatchOptions = {
-  /** Facts said before this instant never match, unless the pattern sets its own `after`. */
-  after?: string;
+/**
+ * Translates a pattern into goal rules (`@dxos/brain`): one `wake` rule binding the fact, so every new
+ * matching fact wakes the subscription once. Content (`about`, `text`, and a `subject` that is not a
+ * known person) is matched by `about`, the brain's stemmed keyword match over the quote and the triple.
+ */
+export const toRules = (pattern: FactPattern, { createdAt, person }: RulesOptions): string => {
+  const body = ['fact(F, _, _, _)'];
+  if (pattern.speaker !== undefined) {
+    body.push(`speaker(F, ${quote(person?.(pattern.speaker) ?? normalizeEntityId(pattern.speaker))})`);
+  }
+  if (pattern.subject !== undefined) {
+    const entity = person?.(pattern.subject);
+    body.push(entity === undefined ? `about(F, ${quote(pattern.subject)})` : `fact(F, ${quote(entity)}, _, _)`);
+  }
+  for (const words of [pattern.about, pattern.text]) {
+    if (words !== undefined && words.trim().length > 0) {
+      body.push(`about(F, ${quote(words)})`);
+    }
+  }
+  if (pattern.force !== undefined) {
+    body.push(`force(F, ${quote(pattern.force)})`);
+  }
+  if (pattern.polarity !== undefined) {
+    body.push(`polarity(F, ${quote(pattern.polarity)})`);
+  }
+  body.push('saidAt(F, T)', `T >= ${quote(isoTime(pattern.after ?? createdAt))}`);
+  if (pattern.before !== undefined) {
+    body.push(`T < ${quote(isoTime(pattern.before))}`);
+  }
+  return `wake(${MATCH_LABEL}) :- ${body.join(', ')}.`;
 };
 
-/** Whether the fact satisfies every field the pattern sets. */
-export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: MatchOptions = {}): boolean => {
-  const { assertion, attribution, factuality, illocution } = fact;
-  const said = time(attribution.generatedAtTime);
-  const since = pattern.after ?? after;
-  if (since !== undefined && said < time(since)) {
-    return false;
-  }
-  if (pattern.before !== undefined && said >= time(pattern.before)) {
-    return false;
-  }
-  if (pattern.speaker !== undefined && !isSpeaker(pattern.speaker, attribution.agent)) {
-    return false;
-  }
-  // pipeline-rdf records no illocution for a plain assertion.
-  if (pattern.force !== undefined && (illocution?.force ?? 'assertive') !== pattern.force) {
-    return false;
-  }
-  if (pattern.polarity !== undefined && factuality.polarity !== pattern.polarity) {
-    return false;
-  }
-  if (pattern.subject !== undefined && !mentions(FactEntry.termText(assertion.subject), pattern.subject)) {
-    return false;
-  }
-  if (pattern.about !== undefined && !mentions(`${FactEntry.factText(fact)} ${assertion.quote ?? ''}`, pattern.about)) {
-    return false;
-  }
-  if (
-    pattern.text !== undefined &&
-    !(assertion.quote ?? FactEntry.factText(fact)).toLowerCase().includes(pattern.text.toLowerCase())
-  ) {
-    return false;
-  }
-  return true;
-};
+/** The rules a trigger is evaluated by: its own, or its pattern translated with names as slugs. */
+export const rulesOf = (trigger: Trigger): string =>
+  trigger.rules ?? toRules(trigger.when, { createdAt: trigger.createdAt });

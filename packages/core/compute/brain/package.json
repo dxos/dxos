@@ -38,6 +38,11 @@
       "types": "./dist/types/src/Encoding.d.ts",
       "import": "./dist/lib/Encoding.mjs"
     },
+    "./Evaluator": {
+      "source": "./src/Evaluator.ts",
+      "types": "./dist/types/src/Evaluator.d.ts",
+      "import": "./dist/lib/Evaluator.mjs"
+    },
     "./GoalRules": {
       "source": "./src/GoalRules.ts",
       "types": "./dist/types/src/GoalRules.d.ts",

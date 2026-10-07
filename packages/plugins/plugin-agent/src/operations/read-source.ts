@@ -20,13 +20,17 @@ import { AgentOperation, ChatParticipant, FactEntry, Profile } from '#types';
 
 import { ensureAnnotationFeed } from './annotations.ts';
 import { AgentOperationError } from './errors.ts';
+import * as Identity from './identity.ts';
 
 const EXTRACTOR: FactEntry.Extractor = { id: 'org.dxos.pipeline-rdf.extract', model: 'default', version: '1' };
 
 /** One utterance of a source, so a fact quoting it can be attributed to its speaker and time. */
 type Segment = {
   text: string;
+  /** The speaker's display name, shown to the extractor. */
   speaker?: string;
+  /** The speaker's entity id (their identity DID when known), which the fact is attributed to. */
+  entity?: string;
   /** DXN of the message, when the utterance is one. */
   source?: string;
   at?: string;
@@ -52,26 +56,37 @@ const segmentMarkdown = (content: string): Segment[] =>
 /** The name the agent's own messages are attributed to in extracted facts. */
 export const agentSpeaker = (agent: Agent.Agent): string => agent.name ?? 'Agent';
 
+/** The entity id the agent's own messages are attributed to, so its words can be pushed as quiet. */
+export const agentEntity = (agent: Agent.Agent): string => normalizeEntityId(agentSpeaker(agent));
+
+type Speaker = { readonly name: string; readonly entity: string };
+
 /**
- * The display name of a message's sender: its name, its contact, the person a participant chat is with
- * (Composer's prompts carry neither name nor contact, and a goal watching that person's words matches by
- * name), or its role.
+ * Who sent a message: a display name for the extractor and an entity id for the facts. The id is the
+ * sender's identity DID when it can be found — on the message, as the private chat's owner (Composer's
+ * prompts carry neither name nor contact), through the sender's contact or the chat's participant — and
+ * otherwise the slug of their name.
  */
 const speakerOf = Effect.fnUntraced(function* (
   agent: Agent.Agent,
   message: Message.Message,
-  participant: Obj.Unknown | undefined,
+  { owner, participant, roster }: { owner?: string; participant?: Obj.Unknown; roster: Identity.Roster },
 ) {
-  if (message.sender.name) {
-    return message.sender.name;
-  }
-  if (message.sender.contact) {
-    return Profile.displayName(yield* Database.load(message.sender.contact));
-  }
   if (message.sender.role === 'assistant') {
-    return agentSpeaker(agent);
+    return { name: agentSpeaker(agent), entity: agentEntity(agent) } satisfies Speaker;
   }
-  return participant ? Profile.displayName(participant) : 'User';
+  const contact = message.sender.contact
+    ? yield* Database.load(message.sender.contact).pipe(Effect.orElseSucceed(() => undefined))
+    : undefined;
+  const person = contact ?? participant;
+  const name = message.sender.name ?? (person ? Profile.displayName(person) : 'User');
+  const entity =
+    message.sender.identityDid ??
+    owner ??
+    Identity.identityOf(contact) ??
+    Identity.identityOf(participant) ??
+    Identity.resolveName(roster, name);
+  return { name, entity } satisfies Speaker;
 });
 
 /** Feed items in append order. */
@@ -98,6 +113,8 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
   const start = index + 1;
   const participantId = ChatParticipant.get(chat);
   const participant = participantId ? (yield* Database.query(Filter.id(participantId)).run).at(0) : undefined;
+  const owner = ChatParticipant.getOwner(chat);
+  const roster = yield* Identity.loadRoster;
   const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
     // Synthetic text (a woken chat's relay, system notes) is not something anyone said.
     const text = message.blocks
@@ -107,9 +124,11 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
     if (message.sender.role === 'tool' || text.length === 0) {
       return undefined;
     }
+    const speaker = yield* speakerOf(agent, message, { owner, participant, roster });
     return {
       text,
-      speaker: yield* speakerOf(agent, message, participant),
+      speaker: speaker.name,
+      entity: speaker.entity,
       source: Obj.getURI(message),
       at: message.created,
     } satisfies Segment;
@@ -171,18 +190,20 @@ const quotesAny = (fact: RDF.Fact, segments: readonly Segment[]): boolean => {
  * Attributes a fact to the utterance its quote comes from; the extractor sees the whole transcript
  * so pronouns resolve, and only knows the speaker of a fact through its quote.
  */
-const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
+const attribute = (fact: RDF.Fact, segments: readonly Segment[], roster: Identity.Roster): RDF.Fact => {
   const quote = fact.assertion.quote ? normalize(fact.assertion.quote) : undefined;
   const segment = quote ? segments.find(({ text }) => normalize(text).includes(quote)) : undefined;
+  const resolved = Identity.resolveFact(roster, fact);
   if (!segment) {
-    return fact;
+    return resolved;
   }
 
+  const entity = segment.entity ?? (segment.speaker ? Identity.resolveName(roster, segment.speaker) : undefined);
   return {
-    ...fact,
+    ...resolved,
     attribution: {
-      ...fact.attribution,
-      ...(segment.speaker ? { agent: normalizeEntityId(segment.speaker) } : {}),
+      ...resolved.attribution,
+      ...(entity ? { agent: entity } : {}),
       ...(segment.source ? { source: segment.source } : {}),
       ...(segment.at ? { generatedAtTime: segment.at } : {}),
     },
@@ -243,8 +264,8 @@ export const readSource: (
 const extract = (body: Pick<SourceText, 'text' | 'segments'>, uri: string) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
-    : extractDocFacts({ text: body.text, source: uri }).pipe(
-        Effect.map((facts) => facts.map((fact) => attribute(fact, body.segments))),
+    : Effect.all([extractDocFacts({ text: body.text, source: uri }), Identity.loadRoster]).pipe(
+        Effect.map(([facts, roster]) => facts.map((fact) => attribute(fact, body.segments, roster))),
       );
 
 /** Appends each fact as its own entry, then the pass marker: a pass is complete once its marker is in the feed. */

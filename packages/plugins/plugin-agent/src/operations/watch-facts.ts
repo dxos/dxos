@@ -12,6 +12,7 @@ import { Organization, Person } from '@dxos/types';
 import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
 
 import { AgentOperationError } from './errors.ts';
+import * as Identity from './identity.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
   Operation.withHandler(
@@ -58,6 +59,10 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
+      const createdAt = DateTime.formatIso(yield* DateTime.now);
+      // People named in the pattern are matched by identity DID, as `readSource` attributes their words.
+      const roster = yield* Identity.loadRoster;
+      const rules = Trigger.toRules(when, { createdAt, person: (name) => roster.byName.get(Identity.slug(name)) });
       const trigger: Trigger.Trigger = {
         id: Trigger.makeId(agent.id),
         agent: agent.id,
@@ -66,7 +71,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         when,
         then: { _tag: 'notify', recipient: recipient ?? requesterRef, message },
         ...(ongoing ? { ongoing } : {}),
-        createdAt: DateTime.formatIso(yield* DateTime.now),
+        rules,
+        createdAt,
       };
       if (!(yield* brain.subscribe(trigger))) {
         return yield* Effect.fail(registryFull());

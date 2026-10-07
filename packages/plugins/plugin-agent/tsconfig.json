@@ -43,6 +43,9 @@
       "path": "../../core/compute/assistant"
     },
     {
+      "path": "../../core/compute/brain"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {

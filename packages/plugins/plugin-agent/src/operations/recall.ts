@@ -11,6 +11,7 @@ import { HasSubject } from '@dxos/types';
 import { FactEntry, Goal, Memory, MemoryOperation, Profile } from '#types';
 
 import { queryFacts } from './annotations.ts';
+import * as Identity from './identity.ts';
 
 /** pipeline-rdf's entity id for a surface form (`normalizeEntityId`), restated to keep its query engine out of this module. */
 const slug = (label: string): string =>
@@ -20,19 +21,21 @@ const slug = (label: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-/** The entity ids a fact about the subject may use: its names and a person's first name. */
+/** The entity ids a fact about the subject may use: a person's identity DID, its names and a person's first name. */
 const entityIds = (entity: Obj.Unknown): Set<string> => {
+  const did = Identity.identityOf(entity);
   const name = (field: string): string | undefined => {
     const value = Reflect.get(entity, field);
     return typeof value === 'string' && value.length > 0 ? value : undefined;
   };
   const fullName = name('fullName');
-  return new Set(
-    [fullName, fullName?.split(/\s+/)[0], name('preferredName'), name('nickname'), name('name')]
+  return new Set([
+    ...(did ? [did] : []),
+    ...[fullName, fullName?.split(/\s+/)[0], name('preferredName'), name('nickname'), name('name')]
       .filter((value) => value !== undefined)
       .map(slug)
       .filter((value) => value.length > 0),
-  );
+  ]);
 };
 
 const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOperation.Recall.pipe(
@@ -54,6 +57,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
 
       // Expired facts stay in the feed as history; recall leaves them out.
       const now = new Date().toISOString();
+      const roster = yield* Identity.loadRoster;
       const ids = entity ? entityIds(entity) : undefined;
       const facts = (yield* queryFacts)
         .filter(({ fact }) => !fact.assertion.validTo || fact.assertion.validTo > now)
@@ -89,7 +93,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
         facts: facts.map(({ pass, fact }) => ({
           fact: FactEntry.factText(fact),
           ...(fact.assertion.quote ? { quote: fact.assertion.quote } : {}),
-          ...(fact.attribution.agent ? { speaker: fact.attribution.agent } : {}),
+          ...(fact.attribution.agent ? { speaker: Identity.displayName(roster, fact.attribution.agent) } : {}),
           source: fact.attribution.source,
           ...(pass.name ? { sourceName: pass.name } : {}),
           saidAt: fact.attribution.generatedAtTime,
