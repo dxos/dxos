@@ -16,6 +16,7 @@ import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -229,12 +230,11 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
     });
 
     return (
-      <div
+      <Layout.Grid
+        grow
+        center
         {...Util.composableProps(props, {
-          classNames: [
-            'dx-expand overflow-hidden grid place-items-center bg-scrim-surface [container-type:size]',
-            fullscreen && 'dx-cover',
-          ],
+          classNames: ['overflow-hidden bg-scrim-surface [container-type:size]', fullscreen && 'dx-cover'],
         })}
         ref={forwardedRef}
       >
@@ -251,7 +251,7 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
             <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
         </div>
-      </div>
+      </Layout.Grid>
     );
   },
 );
