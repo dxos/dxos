@@ -145,7 +145,7 @@ const BootLoaderStory = (props: StoryProps) => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/BootLoader',
+  title: 'sdk/app-framework/BootLoader/swarm',
   render: (args: StoryProps) => <BootLoaderStory {...args} />,
   argTypes: {
     variant: { control: 'select', options: ['random', ...SWARM_VARIANTS] },
