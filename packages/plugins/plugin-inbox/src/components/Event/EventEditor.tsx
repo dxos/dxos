@@ -177,12 +177,6 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update, people],
   );
 
-  // Flex, NOT a nested grid: `Card.Row` places its grandchildren with `col-start-2` (so a control
-  // wrapped in an `Field.Root` still lands in the content column), which collapsed a nested grid's
-  // children into its second track and pushed the date fields to the right edge. Grid placement is
-  // inert on flex children, so the row's rule cannot reach into this layout.
-  const fieldClasses = 'flex items-center gap-2';
-
   // The trailing control of each date row (all-day switch, duration select) takes the SAME fixed
   // width, so the two rows' leading date fields end at the same x and the controls line up as a
   // column — which the nested grid used to provide.
@@ -211,7 +205,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               <Icon.Icon icon='ph--calendar--regular' />
             </Layout.Block>
           </Layout.Block>
-          <div className={fieldClasses}>
+          {/* Flex, NOT a nested grid: `Card.Row`'s grid placement would collapse a nested grid's children into one track. */}
+          <Layout.Flex align='center' gap='sm'>
             <div className='grow'>
               {allDay ? (
                 <Input.Date type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
@@ -228,7 +223,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               onCheckedChange={({ checked }) => handleAllDayChange(checked)}
               label={t('event-all-day.label')}
             />
-          </div>
+          </Layout.Flex>
         </Card.Row>
       </Field.Root>
 
@@ -240,7 +235,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 <Icon.Icon icon='ph--calendar--regular' />
               </Layout.Block>
             </Layout.Block>
-            <div className={fieldClasses}>
+            <Layout.Flex align='center' gap='sm'>
               <div className='grow'>
                 <Input.Date
                   type='datetime-local'
@@ -251,7 +246,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               <div className={trailingClasses}>
                 <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
               </div>
-            </div>
+            </Layout.Flex>
           </Card.Row>
         </Field.Root>
       )}
