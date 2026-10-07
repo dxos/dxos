@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-list",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "A list component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,12 +10,18 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./util": {
+      "source": "./src/util/index.ts",
+      "types": "./dist/types/src/util/index.d.ts",
+      "import": "./dist/lib/util.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -24,31 +30,21 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
-    "@dxos/debug": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/react-list": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/react-accordion": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",

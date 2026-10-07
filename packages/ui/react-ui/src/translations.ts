@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from './providers/ThemeProvider/Theme.tsx';
 
 export const translationKey = '@dxos/react-ui';
 
@@ -10,10 +10,23 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'empty.label': 'No items',
+        'error-fallback.title.label': 'Runtime Error',
+        'error-fallback.stack.label': 'Stack',
+        'error-fallback.data.label': 'Data',
+        'steps.step.label': 'Step {{index}}',
+        'remove.label': 'Delete',
+
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',
         'toolbar-close.label': 'Close',
         'toolbar-delete.label': 'Delete',
+
+        'floating-panel.minimize.label': 'Minimize',
+        'floating-panel.maximize.label': 'Maximize',
+        'floating-panel.restore.label': 'Restore',
+
+        'drawer.resize.label': 'Resize drawer',
 
         'system-button.star.label': 'Star',
         'system-button.unstar.label': 'Unstar',
@@ -21,13 +34,19 @@ export const translations = [
         'system-button.unbookmark.label': 'Remove bookmark',
         'system-button.expand.label': 'Expand',
         'system-button.collapse.label': 'Collapse',
+        'system-button.ai.label': 'Run AI',
         'system-button.add.label': 'Add',
         'system-button.delete.label': 'Delete',
+        'system-button.remove.label': 'Delete',
         'system-button.edit.label': 'Edit',
         'system-button.close.label': 'Close',
+        'system-button.open.label': 'Open',
+        'system-button.save.label': 'Save',
+        'system-button.cancel.label': 'Cancel',
         'system-button.upload.label': 'Upload',
         'system-button.download.label': 'Download',
         'system-button.clipboard.label': 'Copy',
+        'system-button.copied.label': 'Copied',
 
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',
@@ -42,10 +61,32 @@ export const translations = [
 
         'calendar.nav.previous.label': 'Previous month',
         'calendar.nav.next.label': 'Next month',
+        'calendar.nav.previous-year.label': 'Previous year',
+        'calendar.nav.next-year.label': 'Next year',
+        'calendar.nav.previous-decade.label': 'Previous decade',
+        'calendar.nav.next-decade.label': 'Next decade',
         'calendar.footer.today.label': 'Today',
 
         'trigger-button.label': 'Open',
+
+        'number-input.increment.label': 'Increment',
+        'number-input.decrement.label': 'Decrement',
+        'password-input.show.label': 'Show password',
+        'password-input.hide.label': 'Hide password',
+        'tag.delete.label': 'Remove {{label}}',
+
+        'combobox.search.label': 'Search',
+        'combobox.empty.label': 'No results',
+        'combobox.loading.label': 'Loading…',
+        'combobox.create.label': 'Create “{{query}}”',
+
+        'drag-handle.label': 'Drag to rearrange',
+        'drag-handle.role.label': 'drag handle',
+        'drag-handle.grabbed.message': 'Grabbed. Press the arrow keys to move, Space to drop.',
+        'drag-handle.moved-up.message': 'Moved up.',
+        'drag-handle.moved-down.message': 'Moved down.',
+        'drag-handle.dropped.message': 'Dropped.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

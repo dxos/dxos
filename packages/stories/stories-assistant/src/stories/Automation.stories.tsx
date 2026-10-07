@@ -4,20 +4,21 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Reply } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Query, Ref } from '@dxos/echo';
 import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
-import { meta as automationMeta } from '@dxos/plugin-routine';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Automation',
   render: ModuleContainer,
@@ -46,7 +47,7 @@ export const WithTriggers: Story = {
     layout: [
       [StoryRole.Chat],
       [
-        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        { type: AppSurface.Article, data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` } },
         StoryRole.Invocations,
       ],
     ],
@@ -56,14 +57,14 @@ export const WithTriggers: Story = {
 export const WithChessTrigger: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+      const [{ Chess }, ChessPlugin, { Game }, GamePlugin] = await Promise.all([
         import('@dxos/plugin-chess'),
-        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
-        import('@dxos/plugin-game/plugin'),
+        import('@dxos/plugin-game/GamePlugin'),
       ]);
       return {
-        plugins: [GamePlugin(), ChessPlugin()],
+        plugins: [GamePlugin.make(), ChessPlugin.make()],
         types: [Game.Game, Chess.State],
       };
     },
@@ -108,7 +109,10 @@ export const WithChessTrigger: Story = {
       return [
         [Cell.article(game)],
         [
-          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          {
+            type: AppSurface.Article,
+            data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` },
+          },
           StoryRole.Invocations,
         ],
       ];
@@ -120,18 +124,17 @@ export const WithChessTrigger: Story = {
 export const WithPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(Operation.serialize(RunInstructions));
+      space.db.add(Operation.serialize(AgentOperation.RunInstructions));
       space.db.add(
         Instructions.make({
           name: 'Research',
-          description: 'Research organization',
           text: 'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],
         }),

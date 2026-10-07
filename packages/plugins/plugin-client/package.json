@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,22 +10,30 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
-        "node": "./src/capabilities/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "node": "./dist/lib/capabilities/node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
-    "#capabilities/node": {
-      "source": "./src/capabilities/node.ts",
-      "types": "./dist/types/src/capabilities/node.d.ts",
-      "default": "./dist/lib/capabilities/node.mjs"
+    "#commands": {
+      "source": {
+        "node": "./src/capabilities/commands.node.ts",
+        "default": "./src/capabilities/commands.ts"
+      },
+      "types": "./dist/types/src/capabilities/commands.d.ts",
+      "node": "./dist/lib/commands.node.mjs",
+      "default": "./dist/lib/commands.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -48,15 +56,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/ClientPlugin.workerd.ts",
-        "node": "./src/ClientPlugin.node.ts",
-        "default": "./src/ClientPlugin.ts"
-      },
-      "types": "./dist/types/src/ClientPlugin.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
-      "default": "./dist/lib/ClientPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -67,6 +69,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -100,15 +107,35 @@
       "types": "./dist/types/src/types/ClientEvents.d.ts",
       "import": "./dist/lib/ClientEvents.mjs"
     },
+    "./ClientOperation": {
+      "source": "./src/types/ClientOperation.ts",
+      "types": "./dist/types/src/types/ClientOperation.d.ts",
+      "import": "./dist/lib/ClientOperation.mjs"
+    },
     "./ClientOptions": {
       "source": "./src/types/ClientOptions.ts",
       "types": "./dist/types/src/types/ClientOptions.d.ts",
       "import": "./dist/lib/ClientOptions.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./ClientPlugin": {
+      "source": "./src/ClientPlugin.ts",
+      "types": "./dist/types/src/ClientPlugin.d.ts",
+      "import": "./dist/lib/ClientPlugin.mjs"
+    },
+    "./CliLogin": {
+      "source": "./src/types/CliLogin.ts",
+      "types": "./dist/types/src/types/CliLogin.d.ts",
+      "import": "./dist/lib/CliLogin.mjs"
+    },
+    "./HaloServices": {
+      "source": "./src/HaloServices.ts",
+      "types": "./dist/types/src/HaloServices.d.ts",
+      "import": "./dist/lib/ns/HaloServices.mjs"
+    },
+    "./PasskeyError": {
+      "source": "./src/types/PasskeyError.ts",
+      "types": "./dist/types/src/types/PasskeyError.d.ts",
+      "import": "./dist/lib/PasskeyError.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -150,7 +177,9 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
@@ -162,17 +191,17 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -181,20 +210,14 @@
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
-    "react-qr-rounded": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -205,8 +228,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -7,16 +7,15 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
-import { AccessToken, Cursor } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
-import { TRELLO_SOURCE } from '../constants';
-import { TrelloApi } from '../services';
-import { findOrCreateKanbanForBoard, pushBoardCards, reconcileBoardCards } from './sync';
+import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloApi } from '../services/index.ts';
+import { findOrCreateKanbanForBoard, pushBoardCards, reconcileBoardCards } from './sync.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;

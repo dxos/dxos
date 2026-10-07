@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
-import { createEditorViewStateStore } from './editor-view-state';
+import { MarkdownCapabilities } from '#types';
+
+import { createEditorViewStateStore } from './editor-view-state.ts';
 
 const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => {
   const views = new Map<string, MarkdownCapabilities.EditorViewEntry>();

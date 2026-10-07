@@ -1,8 +1,7 @@
+import * as Hooks from '@dxos/react-ui/Hooks';
 //
 // Copyright 2025 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 // Kept out of `ChatStatus.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
@@ -18,4 +17,4 @@ export type ChatStatusContextValue = {
   running: boolean;
 };
 
-export const [ChatStatusProvider, useChatStatusContext] = createContext<ChatStatusContextValue>('ChatStatus');
+export const [ChatStatusProvider, useChatStatusContext] = Hooks.createContext<ChatStatusContextValue>('ChatStatus');

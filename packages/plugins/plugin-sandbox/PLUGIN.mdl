@@ -4,7 +4,83 @@ name: SandboxPlugin
 version: 0.1.0
 ---
 
-Sandbox plugin for DXOS Composer providing isolated shell environments.
+Sandbox plugin for DXOS Composer providing isolated shell environments, and the git repositories that
+keep what they build.
+
+It also contributes the **Composer Plugin (Sandbox)** project template: a project whose agent builds a
+TypeScript Composer plugin in an EDGE sandbox, serves the build from the container, and offers the exposed
+URL back to load — the Coding (Dev) template's demo without a locally served Composer.
+
+## Exposed ports
+
+`exposePort` issues a URL that proxies any request to that port in the container with no `Authorization`,
+so a browser can fetch a manifest and import a module from it: on its own host,
+`https://<port>-<sandboxId>-<token><suffix>/` (`-dev.dx.pub` on dev, `.dx.pub` in production), or under
+`<edge>/sandbox/preview/<sandboxId>/<port>/<token>/` where an env has no preview hosts. The random token is
+the only credential, and it is checked before the container is touched. Given the `command` that serves
+the port, the service starts it when it is not running and again whenever the container has slept, so the
+URL lives as long as the sandbox.
+
+`exec` streams the command's output from the service and returns once it exits, so a command of several
+minutes runs in one call; a request answered only at the end lost its connection while the command ran.
+
+## Backends
+
+The operations run against `SandboxService.Service`, which the plugin contributes to the process
+runtime as an application-affinity `LayerSpec`. Sandboxes run on EDGE's sandbox-service unless the
+plugin's **Backend** setting is `local`, its default in the desktop app (`DX_SANDBOX_BACKEND=local|edge`
+overrides it under Node or Bun). Local sandboxes are processes confined by the OS sandbox (bubblewrap on Linux, Seatbelt on
+macOS) via `@carderne/sandbox-runtime`:
+
+- **Where they run**: in-process under Node or Bun. In the desktop app, whose webview cannot spawn
+  processes, the plugin starts `dx-sandbox` (this package's `compile-sidecar` output) and the
+  webview reaches it on a loopback port with a per-launch token passed over stdin. The launcher is
+  annotated `environments: ['tauri']`, so only the Tauri (desktop and iOS) bundles carry it.
+- **Filesystem**: each sandbox is `$DX_SANDBOX_ROOT/<id>/` (default `~/.local/state/dxos/sandboxes`).
+  Commands write only its `workspace/` (their cwd and `$HOME`) and `tmp/`; the user's home directory
+  and other sandboxes are unreadable. `/workspace/…` paths in file operations map onto `workspace/`.
+- **Network**: only package registries, pkg.pr.new and GitHub (`DEFAULT_ALLOWED_DOMAINS`) are reachable.
+- **Toolchain**: in the desktop app, commands find `bun` and `bunx` first on their `PATH`. They are the helper
+  itself, a `bun build --compile` executable run with `BUN_BE_BUN=1`, so a sandbox installs and builds
+  JavaScript on a machine with no node or bun of its own.
+- **Limits**: per-command CPU time, writable memory (Linux only) and file size, plus the wall-clock
+  `timeout`, which kills the command's whole process group.
+- **Environment**: the host's environment is not inherited; only `PATH`, `HOME`, `TMPDIR`, `LANG`,
+  `WORKSPACE` and the operation's `env` are set, plus the helper's own `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE`
+  (and read access to the bundles they name), so installs work behind a TLS-inspecting proxy.
+
+## Repositories
+
+Sandboxes are ephemeral; a `Repository` is durable. Each is a git repository hosted by EDGE on
+[Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), named after its space and object
+id, so the space is part of its identity. The ECHO object is created locally and the repository on
+EDGE by the first read of it (or by attaching it), so a repository made offline, or on another
+device, is backed as soon as anything uses it.
+
+- **Attached, not driven.** A sandbox's `repositories` are part of its configuration, like its
+  `credentials`: set when the sandbox is created or by `attachRepository`, and held by EDGE with the
+  sandbox. Every command the sandbox runs then has each one as a git remote named after the
+  repository (`$DX_REPOSITORIES` lists them), so the agent moves work with plain git —
+  `git push <remote> HEAD:main`, `git pull <remote> main`. No operation pushes or pulls for it.
+- **Credentials per command.** EDGE mints a write token per attached repository for each command,
+  passes it as the process's git config (an `http.<remote>.extraHeader` scoped to that remote's URL,
+  never the remote URL itself), revokes it when the command ends, and scrubs it from the output. The
+  token never reaches the client.
+- **Reads** (branches, log, tree, file) come from a shallow in-memory clone EDGE keeps per
+  repository, fetched to 200 commits per branch, so history beyond that is not browsable.
+- Only EDGE sandboxes can have repositories attached; a local sandbox has no route to the service's
+  git remote.
+- The article surface browses a repository: a branch picker, a lazily listed file tree beside the
+  selected file, and the history, where picking a commit browses the files at it.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term   | URI                       |
+|--------|---------------------------|
+| `test` | `org.dxos.mdl.test@1.0`   |
+| `op`   | `org.dxos.mdl.op@1.1`     |
 
 ## Types
 
@@ -15,16 +91,27 @@ type Sandbox
     baseImage?: string
     createdAt?: string
     expiresAt?: string
+    repositories?: Ref<Repository>[]   # git remotes in every command; see Repositories
+```
+
+```mdl
+type Repository
+  fields:
+    name?: string
+    description?: string
+    defaultBranch?: string
 ```
 
 ## Operations
 
 ```mdl
 op createSandbox
+  key: org.dxos.operation.sandbox.create
   desc: Creates a new sandbox environment persisted as an ECHO object in the space.
   input:
     name?: string
     baseImage?: string
+    repositories?: Ref<Repository>[]   # attached as git remotes
   output:
     sandboxId: string    # ECHO object URI of the created sandbox
   effects: [echo:write, sandbox:create]
@@ -32,6 +119,7 @@ op createSandbox
 
 ```mdl
 op exec
+  key: org.dxos.operation.sandbox.exec
   desc: Runs a shell command in the sandbox.
   input:
     sandbox: Ref<Sandbox>
@@ -40,16 +128,33 @@ op exec
     env?: Record<string, string>
     timeout?: number
     stdin?: string
+    background?: boolean # start and return at once, leaving the command running (EDGE only)
   output:
     stdout: string
     stderr: string
     exitCode: number
     success: boolean
+    processId?: string   # set for a background command
   effects: [sandbox:exec]
 ```
 
 ```mdl
+op exposePort
+  key: org.dxos.operation.sandbox.exposePort
+  desc: Publishes a port the sandbox listens on at a public URL loadable without credentials (EDGE only).
+  input:
+    sandbox: Ref<Sandbox>
+    port: number         # 1024-65535, except 3000
+    command?: string     # serves the port; started now if not running, and again after the container restarts
+    cwd?: string
+  output:
+    url: string          # ends in `/`; the token in the path is the only credential
+  effects: [sandbox:expose]
+```
+
+```mdl
 op uploadFile
+  key: org.dxos.operation.sandbox.uploadFile
   desc: Uploads a file from ECHO into the sandbox filesystem.
   input:
     sandbox: Ref<Sandbox>
@@ -62,6 +167,7 @@ op uploadFile
 
 ```mdl
 op downloadFile
+  key: org.dxos.operation.sandbox.downloadFile
   desc: Downloads a file from the sandbox filesystem into ECHO.
   input:
     sandbox: Ref<Sandbox>
@@ -70,4 +176,187 @@ op downloadFile
   output:
     objectId: string     # ECHO object URI of the File
   effects: [sandbox:read, echo:write]
+```
+
+```mdl
+op publishFiles
+  key: org.dxos.operation.sandbox.publishFiles
+  desc: Serves a directory of a local sandbox read-only over HTTP on this machine and returns its base URL.
+  input:
+    sandbox: Ref<Sandbox>
+    path: string         # directory, relative to the workspace or under /workspace
+  output:
+    url: string          # ends in "/"; empty when it failed
+    error?: string       # set iff url is empty
+  effects: [sandbox:read, sandbox:serve]
+```
+
+Only the desktop app's helper publishes: it serves the directory at `http://localhost:<port>/files/<key>/`
+without the bearer token, since a module loader cannot send one, so the 128-bit key minted per call is the
+credential. Paths that climb out of the directory, and symlinks out of the workspace, answer 404; files are served
+`nosniff` under `Content-Security-Policy: sandbox`, and keys are forgotten when the helper exits.
+Under the EDGE backend, or in-process under Node, the output carries the reason instead.
+
+```mdl
+op attachRepository
+  key: org.dxos.operation.sandbox.attachRepository
+  desc: Attaches a repository to a sandbox; every later command has it as a git remote.
+  input:
+    sandbox: Ref<Sandbox>
+    repository: Ref<Repository>
+  output:
+    remote: string           # the git remote name commands address the repository by
+  effects: [echo:write, sandbox:configure, repository:create]
+```
+
+```mdl
+op createRepository
+  key: org.dxos.operation.sandbox.createRepository
+  desc: Creates a git repository persisted as an ECHO object, backed by Cloudflare Artifacts on EDGE.
+  input:
+    name?: string
+    description?: string
+    defaultBranch?: string   # default "main"
+  output:
+    repositoryId: string     # ECHO object URI of the created repository
+    remote: string           # git remote; a sandbox it is attached to can push to it
+  effects: [echo:write, repository:create]
+```
+
+```mdl
+op listRepositoryBranches
+  key: org.dxos.operation.sandbox.listRepositoryBranches
+  desc: Lists a repository's branches and the commit each points at.
+  input:
+    repository: Ref<Repository>
+  output:
+    defaultBranch: string
+    branches: { name: string, commit: string }[]
+  effects: [repository:read]
+```
+
+```mdl
+op getRepositoryLog
+  key: org.dxos.operation.sandbox.getRepositoryLog
+  desc: Lists commits newest first.
+  input:
+    repository: Ref<Repository>
+    ref?: string             # branch or full commit hash
+    limit?: number           # at most 100, default 30
+    offset?: number
+  output:
+    commits: Commit[]
+  effects: [repository:read]
+```
+
+```mdl
+op listRepositoryFiles
+  key: org.dxos.operation.sandbox.listRepositoryFiles
+  desc: Lists a directory of a repository at a branch or commit.
+  input:
+    repository: Ref<Repository>
+    ref?: string
+    path?: string            # the root when omitted
+  output:
+    commit?: string          # absent for an empty repository
+    entries: { name: string, path: string, type: string, hash: string, mode: string }[]
+  effects: [repository:read]
+```
+
+```mdl
+op readRepositoryFile
+  key: org.dxos.operation.sandbox.readRepositoryFile
+  desc: Reads a file of a repository at a branch or commit; binary content is base64.
+  input:
+    repository: Ref<Repository>
+    ref?: string
+    path: string
+  output:
+    path: string
+    hash: string
+    content: string
+    encoding: "utf-8" | "base64"
+    size: number
+  effects: [repository:read]
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Create a sandbox and run a command
+  desc: The core sandbox round-trip — create an isolated shell environment, exec a command in it.
+  actors: agent
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sandbox is enabled — it is OFF by default everywhere except dev builds (`isDev`); it
+      must be enabled via Settings -> plugin registry otherwise
+    - no Sandbox named "QA Sandbox" exists — ABORT rather than reusing one this test did not create
+  steps:
+    - name: Create the sandbox
+      do: From the global action menu, choose "Create Sandbox" and name it "QA Sandbox".
+      invoke: [op:createSandbox] { name: "QA Sandbox" }
+      capture: created
+      expect: a Sandbox named "QA Sandbox" now exists and its shell is reachable
+      assert: return !!$created.sandboxId
+
+    - name: Run a command
+      do: Open the sandbox terminal and run `echo hello`.
+      invoke: [op:exec] { sandbox: { "/": $created.sandboxId }, command: "echo hello" }
+      expect: the terminal prints "hello" and the command exits 0
+      assert: return $result.success && $result.stdout.trim() === 'hello';
+  after:
+    - name: Delete the sandbox
+      do: Right-click "QA Sandbox" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $created.sandboxId }], target: $given.space }
+      expect: the row leaves the navtree and the underlying shell environment is torn down
+```
+
+```mdl
+test QA-2: Build in a sandbox, push to a repository with git, pick it up in another sandbox
+  desc: A sandbox's work outlives it — attach a repository, push with plain git, browse it, pull it into a fresh sandbox.
+  actors: agent
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sandbox is enabled, with the EDGE backend
+    - no Sandbox or Repository named "QA Repo" exists — ABORT rather than reusing one this test did not create
+  steps:
+    - name: Create the repository
+      do: From the create menu, add a Repository named "QA Repo".
+      invoke: [op:createRepository] { name: "QA Repo" }
+      capture: repository
+      expect: a Repository named "QA Repo" appears; opening it says nothing has been pushed yet
+      assert: return !!$repository.repositoryId
+
+    - name: Create a sandbox with the repository attached
+      do: Ask the assistant to create a sandbox named "QA Repo" with the repository attached.
+      invoke: [op:createSandbox] { name: "QA Repo", repositories: [{ "/": $repository.repositoryId }] }
+      capture: sandbox
+      assert: return !!$sandbox.sandboxId
+
+    - name: Build something and push it with git
+      do: Ask the assistant to build a page in /workspace/site and push it to the repository with git.
+      invoke: [op:exec] { sandbox: { "/": $sandbox.sandboxId }, command: "mkdir -p /workspace/site && cd /workspace/site && echo '<h1>hi</h1>' > index.html && git init -q -b main && git add -A && git -c user.name=QA -c user.email=qa@dxos.org commit -qm 'QA build' && git push -q qa-repo HEAD:main" }
+      expect: the push exits 0; no token appears in the output
+      assert: return $result.success && !/art_v1_/.test($result.stdout + $result.stderr)
+
+    - name: Browse it
+      do: Open "QA Repo"; the tree lists index.html, and History shows "QA build".
+      invoke: [op:readRepositoryFile] { repository: { "/": $repository.repositoryId }, path: "index.html" }
+      assert: return $result.content.trim() === '<h1>hi</h1>'
+
+    - name: Pick it up in a fresh directory
+      do: Ask the assistant to pull the repository into /workspace/copy with git.
+      invoke: [op:exec] { sandbox: { "/": $sandbox.sandboxId }, command: "mkdir -p /workspace/copy && cd /workspace/copy && git init -q -b main && git pull -q qa-repo main && cat index.html" }
+      assert: return $result.success && $result.stdout.trim() === '<h1>hi</h1>'
+  after:
+    - name: Delete the sandbox and the repository
+      do: Delete "QA Repo" (both) from the navtree.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandbox.sandboxId }, { "/": $repository.repositoryId }], target: $given.space }
 ```

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { SelectionModel } from '@dxos/graph';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import {
   type GraphController,
   GraphForceProjector,
@@ -16,6 +16,7 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
+import * as Util from '@dxos/react-ui/Util';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { getHashStyles } from '@dxos/ui-theme';
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -25,17 +26,17 @@ const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] 
 export type ForceGraphProps = {
   model?: SpaceGraphModel;
   grid?: boolean;
-  selection?: SelectionModel;
+  selection?: SelectionModel.SelectionModel;
   onInspect?: GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect'];
 } & Pick<GraphProps, 'drag'>;
 
-export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
+export const ForceGraph = Util.composable<HTMLDivElement, ForceGraphProps>(
   ({ model, selection: selectionProp, grid, drag, onInspect, ...props }, forwardedRef) => {
     // TODO(wittjosiah): This should go into Graph.tsx but for some reason doesn't work.
     useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
 
     const graph = useRef<GraphController>(null);
-    const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+    const selection = useMemo(() => selectionProp ?? new SelectionModel.SelectionModel(), [selectionProp]);
     useEffect(() => {
       const unsubscribe = selection.subscribe(() => graph.current?.repaint());
       return unsubscribe;
@@ -75,7 +76,7 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
     );
 
     return (
-      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         <SVG.Root ref={svgRef}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}

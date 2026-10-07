@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { composable } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/util';
 
-import { SyntaxHighlighter, type SyntaxHighlighterProps } from '../SyntaxHighlighter';
+import { SyntaxHighlighter, type SyntaxHighlighterProps } from '../SyntaxHighlighter/index.ts';
 
 export type JsonReplacer = CreateReplacerProps | ((key: string, value: any) => any);
 
@@ -23,18 +23,19 @@ const resolveReplacer = (replacer?: JsonReplacer) => {
   if (!replacer) {
     return undefined;
   }
+
   return typeof replacer === 'function' ? replacer : createReplacer(replacer);
 };
 
 /**
- * Inline, non-scrolling JSON renderer.
+ * JSON in the family's themed `ScrollArea`: the shorthand for showing a value.
  *
  * Thin wrapper around `SyntaxHighlighter` that stringifies `data` with an optional replacer.
  * `replacer` accepts either `CreateReplacerProps` (declarative truncation) or a raw
- * `JSON.stringify`-compatible function (for bespoke serialization).
- * For filtering and scroll behaviour, compose with the `Syntax.*` namespace.
+ * `JSON.stringify`-compatible function (for bespoke serialization). `scroll` picks the axes
+ * (default: all). Compose with the `Syntax.*` namespace only for filtering or a depth control.
  */
-export const JsonHighlighter = composable<HTMLDivElement, JsonHighlighterProps>(
+export const JsonHighlighter = Util.composable<HTMLDivElement, JsonHighlighterProps>(
   ({ data, replacer, indent = 2, testId, ...props }, forwardedRef) => {
     return (
       <SyntaxHighlighter {...props} language='json' data-testid={testId} ref={forwardedRef}>

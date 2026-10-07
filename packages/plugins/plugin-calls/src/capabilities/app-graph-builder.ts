@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { Position } from '@dxos/util';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
-
-import * as CallsCapabilities from '../types/CallsCapabilities';
+import { CallsCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,9 +21,10 @@ export default Capability.makeModule(
     const callManagerAtom = yield* Capability.atom(CallsCapabilities.Manager);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'activeCall',
-        match: NodeMatcher.whenRoot,
+        relation: AppNode.companion,
+        match: GraphNodeMatcher.whenRoot,
         connector: (node, get) => {
           const [call] = get(callManagerAtom);
           if (!call) {

@@ -5,11 +5,12 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 export const CrmOperationHandlerSet = OperationHandlerSet.lazy([
-  CrmOperation.AttachImage.pipe(Operation.lazyHandler(() => import('./attach-image'))),
-  CrmOperation.ProcessMailbox.pipe(Operation.lazyHandler(() => import('./process-mailbox'))),
-  CrmOperation.ResearchPerson.pipe(Operation.lazyHandler(() => import('./research-person'))),
-  CrmOperation.ResearchOrganization.pipe(Operation.lazyHandler(() => import('./research-organization'))),
+  CrmOperation.AttachImage.pipe(Operation.lazyHandler(() => import('./attach-image.ts'))),
+  CrmOperation.EnrichImages.pipe(Operation.lazyHandler(() => import('./enrich-images.ts'))),
+  CrmOperation.ProcessMailbox.pipe(Operation.lazyHandler(() => import('./process-mailbox.ts'))),
+  CrmOperation.ResearchPerson.pipe(Operation.lazyHandler(() => import('./research-person.ts'))),
+  CrmOperation.ResearchOrganization.pipe(Operation.lazyHandler(() => import('./research-organization.ts'))),
 ]);

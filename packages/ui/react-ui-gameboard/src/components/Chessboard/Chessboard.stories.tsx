@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import * as Button from '@dxos/react-ui/Button';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
-import { ChessModel } from './chess';
-import { Chessboard, type ChessboardProps } from './Chessboard';
+import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard/index.ts';
+import { ChessModel } from './chess.ts';
+import { Chessboard, type ChessboardProps } from './Chessboard.tsx';
 
 type StoryArgs = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   pgn?: string;
@@ -35,14 +35,14 @@ const DefaultStory = ({ orientation: _orientation, pgn, ...props }: StoryArgs) =
   return (
     <div className='flex flex-col grow gap-2 overflow-hidden'>
       <Toolbar.Root>
-        <Button onClick={() => model.update()}>Reset</Button>
-        <Button onClick={() => model.makeRandomMove()}>Move</Button>
+        <Button.Root onClick={() => model.update()}>Reset</Button.Root>
+        <Button.Root onClick={() => model.makeRandomMove()}>Move</Button.Root>
         <div className='grow'></div>
-        <Button
+        <Button.Root
           onClick={() => setOrientation((orientation) => (!orientation || orientation === 'white' ? 'black' : 'white'))}
         >
           Toggle
-        </Button>
+        </Button.Root>
       </Toolbar.Root>
       <Gameboard.Root model={model} onDrop={handleDrop}>
         <Gameboard.Content grow contain>

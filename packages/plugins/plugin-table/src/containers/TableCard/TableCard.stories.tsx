@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
@@ -20,7 +20,7 @@ import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { TableCard } from './TableCard';
+import { TableCard } from './TableCard.tsx';
 
 random.seed(1234);
 
@@ -89,7 +89,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin()],
+      plugins: [ProcessManagerPlugin.make()],
     }),
   ],
   parameters: {

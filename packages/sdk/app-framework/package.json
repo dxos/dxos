@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,11 @@
       "types": "./dist/types/src/common/activation-events.d.ts",
       "import": "./dist/lib/common/activation-events.mjs"
     },
+    "./App": {
+      "source": "./src/App.ts",
+      "types": "./dist/types/src/App.d.ts",
+      "import": "./dist/lib/ns/App.mjs"
+    },
     "./Capabilities": {
       "source": "./src/common/capabilities.ts",
       "types": "./dist/types/src/common/capabilities.d.ts",
@@ -38,53 +43,126 @@
       "types": "./dist/types/src/core/capability.d.ts",
       "import": "./dist/lib/core/capability.mjs"
     },
-    "./Plugin": {
-      "source": "./src/core/plugin.ts",
-      "types": "./dist/types/src/core/plugin.d.ts",
-      "import": "./dist/lib/core/plugin.mjs"
+    "./CapabilityManager": {
+      "source": "./src/core/capability-manager.ts",
+      "types": "./dist/types/src/core/capability-manager.d.ts",
+      "import": "./dist/lib/core/capability-manager.mjs"
     },
-    "./PluginManager": {
-      "source": "./src/core/plugin-manager/index.ts",
-      "types": "./dist/types/src/core/plugin-manager/index.d.ts",
-      "import": "./dist/lib/core/plugin-manager.mjs"
-    },
-    "./UrlLoader": {
-      "source": "./src/core/url-loader.ts",
-      "types": "./dist/types/src/core/url-loader.d.ts",
-      "import": "./dist/lib/core/url-loader.mjs"
+    "./Cli": {
+      "source": "./src/Cli.ts",
+      "types": "./dist/types/src/Cli.d.ts",
+      "import": "./dist/lib/ns/Cli.mjs"
     },
     "./config": {
       "source": "./src/config/index.ts",
       "types": "./dist/types/src/config/index.d.ts",
       "import": "./dist/lib/config.mjs"
     },
-    "./vite-plugin": {
-      "types": "./dist/types/src/vite-plugin/index.d.ts",
-      "import": "./dist/lib/vite-plugin.mjs"
+    "./Devtools": {
+      "source": "./src/Devtools.ts",
+      "types": "./dist/types/src/Devtools.d.ts",
+      "import": "./dist/lib/ns/Devtools.mjs"
     },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "import": "./dist/lib/cli.mjs"
+    "./HistoryTracker": {
+      "source": "./src/plugin-process-manager/history/history-tracker.ts",
+      "types": "./dist/types/src/plugin-process-manager/history/history-tracker.d.ts",
+      "import": "./dist/lib/plugin-process-manager/history/history-tracker.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Plugin": {
+      "source": "./src/core/plugin.ts",
+      "types": "./dist/types/src/core/plugin.d.ts",
+      "import": "./dist/lib/core/plugin.mjs"
+    },
+    "./PluginAssetCache": {
+      "source": "./src/core/plugin-asset-cache.ts",
+      "types": "./dist/types/src/core/plugin-asset-cache.d.ts",
+      "import": "./dist/lib/core/plugin-asset-cache.mjs"
+    },
+    "./PluginManager": {
+      "source": "./src/core/plugin-manager/index.ts",
+      "types": "./dist/types/src/core/plugin-manager/index.d.ts",
+      "import": "./dist/lib/core/plugin-manager.mjs"
+    },
+    "./PluginManagerProvider": {
+      "source": "./src/PluginManagerProvider.ts",
+      "types": "./dist/types/src/PluginManagerProvider.d.ts",
+      "import": "./dist/lib/ns/PluginManagerProvider.mjs"
+    },
+    "./PluginManifest": {
+      "source": "./src/core/plugin-manifest.ts",
+      "types": "./dist/types/src/core/plugin-manifest.d.ts",
+      "import": "./dist/lib/core/plugin-manifest.mjs"
+    },
+    "./ProcessManagerPlugin": {
+      "source": "./src/plugin-process-manager/ProcessManagerPlugin.ts",
+      "types": "./dist/types/src/plugin-process-manager/ProcessManagerPlugin.d.ts",
+      "import": "./dist/lib/plugin-process-manager/ProcessManagerPlugin.mjs"
+    },
+    "./Registry": {
+      "source": "./src/core/registry.ts",
+      "types": "./dist/types/src/core/registry.d.ts",
+      "import": "./dist/lib/core/registry.mjs"
+    },
+    "./Role": {
+      "source": "./src/common/Role.ts",
+      "types": "./dist/types/src/common/Role.d.ts",
+      "import": "./dist/lib/common/Role.mjs"
+    },
+    "./SharedPackages": {
+      "source": "./src/SharedPackages.ts",
+      "types": "./dist/types/src/SharedPackages.d.ts",
+      "import": "./dist/lib/ns/SharedPackages.mjs"
+    },
+    "./Surface": {
+      "source": "./src/Surface.ts",
+      "types": "./dist/types/src/Surface.d.ts",
+      "import": "./dist/lib/ns/Surface.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./testing-react": {
+    "./testing/react": {
       "source": "./src/testing/react.tsx",
       "types": "./dist/types/src/testing/react.d.ts",
       "import": "./dist/lib/testing/react.mjs"
     },
-    "./ui": {
-      "source": "./src/ui/index.ts",
-      "types": "./dist/types/src/ui/index.d.ts",
-      "import": "./dist/lib/ui.mjs"
+    "./Translations": {
+      "source": "./src/Translations.ts",
+      "types": "./dist/types/src/Translations.d.ts",
+      "import": "./dist/lib/ns/Translations.mjs"
     },
-    "./package.json": "./package.json"
+    "./UndoMapping": {
+      "source": "./src/plugin-process-manager/history/undo-mapping.ts",
+      "types": "./dist/types/src/plugin-process-manager/history/undo-mapping.d.ts",
+      "import": "./dist/lib/plugin-process-manager/history/undo-mapping.mjs"
+    },
+    "./UndoRegistry": {
+      "source": "./src/plugin-process-manager/history/undo-registry.ts",
+      "types": "./dist/types/src/plugin-process-manager/history/undo-registry.d.ts",
+      "import": "./dist/lib/plugin-process-manager/history/undo-registry.mjs"
+    },
+    "./UrlLoader": {
+      "source": "./src/core/url-loader.ts",
+      "types": "./dist/types/src/core/url-loader.d.ts",
+      "import": "./dist/lib/core/url-loader.mjs"
+    },
+    "./vite-plugin": {
+      "types": "./dist/types/src/vite-plugin/index.d.ts",
+      "import": "./dist/lib/vite-plugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "bin": {
+    "dx-plugin": "./bin/dx-plugin.mjs"
+  },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },
@@ -96,6 +174,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -107,14 +186,10 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "babel-preset-solid": "catalog:",
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
@@ -122,15 +197,16 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-addon-logger": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
+    "@typescript/typescript6": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -139,8 +215,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@testing-library/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

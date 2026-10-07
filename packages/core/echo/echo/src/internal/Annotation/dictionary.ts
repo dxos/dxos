@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Types from 'effect/Types';
 
-import type * as Annotation from '../../Annotation';
+import type * as Annotation from '../../Annotation.ts';
 
 /**
  * Unique identifier for an annotation.
@@ -18,7 +18,7 @@ export type Key = Schema.Schema.Type<typeof Key>;
 /**
  * Set of annotation values stored on entity meta or nested in schemas.
  */
-export const Dictionary = Schema.Record({ key: Key, value: Schema.Unknown });
+export const Dictionary = Schema.Record(Key, Schema.Unknown);
 export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> {}
 
 /**

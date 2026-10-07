@@ -16,8 +16,7 @@ export default Config2.make({
       ("then" — a persistent compute operation and instructions), enabling automated pipelines that
       react to changes in real time without manual intervention.
 
-      Routines are configured in their own article and surfaced on a per-object "Routines" companion
-      that lists the routines connected to each object. A per-space TriggerDispatcher manages
+      Routines are configured in their own article. A per-space TriggerDispatcher manages
       execution: running each trigger locally in the browser, or delegating it to the DXOS edge for
       server-side reliability when the trigger's "remote" flag is set; the space settings page toggles
       trigger execution for the whole space.

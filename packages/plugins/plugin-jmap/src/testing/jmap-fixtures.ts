@@ -6,8 +6,8 @@ import { subDays } from 'date-fns';
 
 import { random } from '@dxos/random';
 
-import { JmapMail } from '../apis';
-import { type JmapDataset } from '../services';
+import { JmapMail } from '#apis';
+import { type JmapDataset } from '#services';
 
 export interface GenerateJmapDatasetOptions {
   /** Number of emails to generate. */

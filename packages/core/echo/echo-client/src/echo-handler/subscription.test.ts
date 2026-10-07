@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -12,8 +12,8 @@ import { Trigger } from '@dxos/async';
 import { Annotation, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
-import { createSubscription } from './subscription';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createSubscription } from './subscription.ts';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;
@@ -218,7 +218,7 @@ describe('create subscription', () => {
     const { db } = await builder.createDatabase();
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
@@ -245,13 +245,13 @@ describe('create subscription', () => {
     const { db } = await builder.createDatabase();
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order2',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
     Obj.update(task, (task) => Annotation.set(task, OrderAnnotation, { typeA: ['x', 'y'] }));
 
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const atomA = Annotation.atomProperty(task, OrderAnnotation, 'typeA');
     let fires = 0;
     registry.subscribe(atomA, () => {
@@ -271,13 +271,13 @@ describe('create subscription', () => {
     const { db } = await builder.createDatabase();
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order3',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
     Obj.update(task, (task) => Annotation.set(task, OrderAnnotation, { typeA: ['x', 'y'] }));
 
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const atomA = Annotation.atomProperty(task, OrderAnnotation, 'typeA');
     // Mirror the graph-builder connector: a dependent computation that `get`s the atom.
     const derived = Atom.make((get) => get(atomA)?.length ?? 0);

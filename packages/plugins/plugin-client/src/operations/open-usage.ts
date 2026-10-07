@@ -8,15 +8,16 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as Account from '../types/Account';
-import { OpenUsage } from './definitions';
+import { Account } from '#types';
 
-const handler: Operation.WithHandler<typeof OpenUsage> = OpenUsage.pipe(
+import * as ClientOperation from '../types/ClientOperation.ts';
+
+const handler: Operation.WithHandler<typeof ClientOperation.OpenUsage> = ClientOperation.OpenUsage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [GraphPath.getSpacePath(Account.id, Account.Usage)],
+        subject: [Account.path(Account.Usage)],
       });
     }),
   ),

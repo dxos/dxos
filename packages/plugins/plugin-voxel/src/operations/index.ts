@@ -5,11 +5,11 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as VoxelOperation from '../types/VoxelOperation';
+import { VoxelOperation } from '#types';
 
 export const VoxelOperationHandlerSet = OperationHandlerSet.lazy([
-  VoxelOperation.AddVoxels.pipe(Operation.lazyHandler(() => import('./add-voxels'))),
-  VoxelOperation.GenerateShape.pipe(Operation.lazyHandler(() => import('./generate-shape'))),
-  VoxelOperation.QueryWorld.pipe(Operation.lazyHandler(() => import('./query-world'))),
-  VoxelOperation.RemoveVoxels.pipe(Operation.lazyHandler(() => import('./remove-voxels'))),
+  VoxelOperation.AddVoxels.pipe(Operation.lazyHandler(() => import('./add-voxels.ts'))),
+  VoxelOperation.GenerateShape.pipe(Operation.lazyHandler(() => import('./generate-shape.ts'))),
+  VoxelOperation.QueryWorld.pipe(Operation.lazyHandler(() => import('./query-world.ts'))),
+  VoxelOperation.RemoveVoxels.pipe(Operation.lazyHandler(() => import('./remove-voxels.ts'))),
 ]);

@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { SlackApi } from '../services';
-import * as SlackOperation from '../types/SlackOperation';
+import { SlackOperation } from '#types';
+
+import { SlackApi } from '../services/index.ts';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:
@@ -72,7 +73,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.GetSlackChannels> = S
           },
         }));
         return { targets };
-      }).pipe(Effect.provide(SlackApi.SlackCredentials.fromConnection(connection)));
+      }).pipe(Effect.provide(SlackApi.fromConnection(connection)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

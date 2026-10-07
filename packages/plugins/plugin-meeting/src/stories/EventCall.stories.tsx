@@ -7,28 +7,29 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
-import { MeetingPlugin } from '../MeetingPlugin';
-import * as Meeting from '../types/Meeting';
+import { MeetingPlugin } from '#plugin';
+import { Meeting } from '#types';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */
@@ -56,8 +57,8 @@ const DefaultStory = (_: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-2 gap-2'>
-      <div className='dx-expander'>
+    <div className='dx-expand grid grid-cols-2 gap-2'>
+      <div className='dx-expand'>
         <Surface.Surface
           type={AppSurface.Article}
           data={{ subject: event, attendableId: Obj.getURI(event), companionTo: calendar }}
@@ -65,7 +66,7 @@ const DefaultStory = (_: StoryArgs) => {
         />
       </div>
       {meeting && (
-        <div className='dx-expander'>
+        <div className='dx-expand'>
           <Surface.Surface
             type={AppSurface.Article}
             data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
@@ -84,8 +85,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             Calendar.Calendar,
@@ -101,8 +102,8 @@ const meta = {
           config: new Config({
             runtime: {
               services: {
-                edge: { url: 'https://edge.dxos.workers.dev/' },
-                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+                edge: { url: 'https://dev.dxos.network/' },
+                iceProviders: [{ urls: 'https://dxos.network/ice' }],
               },
             },
           }),
@@ -188,13 +189,13 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
-        InboxPlugin(),
-        CallsPlugin(),
-        TranscriptionPlugin(),
+        StorybookPlugin.make({}),
+        InboxPlugin.make(),
+        CallsPlugin.make(),
+        TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

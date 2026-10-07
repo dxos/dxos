@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { DXN } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
-import { Capabilities } from '../../../common';
-import { PluginManagerContext } from '../../../context';
-import { Capability, Plugin } from '../../../core';
-import { useApp } from '../../hooks';
+import { Capabilities } from '../../../common/index.ts';
+import { PluginManagerContext } from '../../../context.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { useApp } from '../../hooks/index.ts';
 
 // Define the Counter capability
 const Counter = Capability.makeSingleton<{ count: number; increment: () => void }>()('org.dxos.test.counter');

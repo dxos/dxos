@@ -4,20 +4,20 @@
 
 // @import-as-namespace
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { type Client } from '@dxos/client';
+import { type Config } from '@dxos/config';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 
-import { AtprotoRepoError, EdgeNotConfiguredError, MissingHandleError, PdsResolutionError } from '../errors';
-import { canonicalStringify } from '../hash';
+import { AtprotoRepoError, EdgeNotConfiguredError, MissingHandleError, PdsResolutionError } from '../errors.ts';
+import { canonicalStringify } from '../hash.ts';
 
 export type PutRecordParams = {
   collection: string;
@@ -68,7 +68,7 @@ export interface Repo {
   readonly listRecords: (params: ListRecordsParams) => Effect.Effect<ListRecordsResult, AtprotoRepoError>;
 }
 
-export class Service extends Context.Tag('@dxos/plugin-atproto/AtprotoRepo')<Service, Repo>() {}
+export class Service extends Context.Service<Service, Repo>()('@dxos/plugin-atproto/AtprotoRepo') {}
 
 //
 // Mock implementation.
@@ -150,7 +150,7 @@ const ListRecordsResponse = Schema.Struct({
     Schema.Struct({
       uri: Schema.String,
       cid: Schema.String,
-      value: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+      value: Schema.Record(Schema.String, Schema.Unknown),
     }),
   ),
   cursor: Schema.optional(Schema.String),
@@ -158,9 +158,9 @@ const ListRecordsResponse = Schema.Struct({
 
 const rkeyFromUri = (uri: string): string => uri.slice(uri.lastIndexOf('/') + 1);
 
-const getJson = <A>(client: HttpClient.HttpClient, url: string, schema: Schema.Schema<A>) =>
+const getJson = <A>(client: HttpClient.HttpClient, url: string, schema: Schema.Codec<A>) =>
   client.execute(HttpClientRequest.get(url)).pipe(
-    Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknown(schema))),
+    Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema))),
     Effect.scoped,
   );
 
@@ -195,7 +195,7 @@ const resolvePds = (handleOrDid: string, client: HttpClient.HttpClient): Effect.
 
 const resolveCredentials = (
   connectionRef: Ref.Ref<Connection.Connection>,
-  client: Client,
+  config: Config,
   httpClient: HttpClient.HttpClient,
 ) =>
   Effect.gen(function* () {
@@ -205,7 +205,7 @@ const resolveCredentials = (
     if (!handle) {
       return yield* Effect.fail(new MissingHandleError({ message: 'Connection access token has no account handle.' }));
     }
-    const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
+    const edgeBaseUrl = config.values.runtime?.services?.edge?.url;
     if (!edgeBaseUrl) {
       return yield* Effect.fail(new EdgeNotConfiguredError({ message: 'EDGE services are not configured.' }));
     }
@@ -233,7 +233,7 @@ const proxyWrite = <A>(
   creds: Credentials,
   nsid: string,
   body: Record<string, unknown>,
-  schema: Schema.Schema<A>,
+  schema: Schema.Codec<A>,
 ): Effect.Effect<A, AtprotoRepoError> => {
   const endpoint = `${creds.pdsBaseUrl.replace(/\/$/, '')}/xrpc/${nsid}`;
   const proxyUrl = new URL('/atproto/proxy', creds.edgeBaseUrl).toString();
@@ -264,7 +264,7 @@ const proxyWrite = <A>(
             new AtprotoRepoError({ message: `${nsid} failed (${response.status})${text ? `: ${text}` : ''}` }),
           );
         }
-        return yield* Schema.decodeUnknown(schema)(yield* response.json);
+        return yield* Schema.decodeUnknownEffect(schema)(yield* response.json);
       }),
     ),
     Effect.scoped,
@@ -353,12 +353,12 @@ const makePublic = (client: HttpClient.HttpClient, pdsBaseUrl: string, handle: s
  * Live repo layer for a given connection. Resolves credentials + PDS once; provides its own HTTP
  * client, so its only remaining requirement is the errors it can fail with.
  */
-export const layerLive = (options: { connection: Ref.Ref<Connection.Connection>; client: Client }) =>
+export const layerLive = (options: { connection: Ref.Ref<Connection.Connection>; config: Config }) =>
   Layer.effect(
     Service,
     Effect.gen(function* () {
       const httpClient = yield* HttpClient.HttpClient;
-      const creds = yield* resolveCredentials(options.connection, options.client, httpClient);
+      const creds = yield* resolveCredentials(options.connection, options.config, httpClient);
       return makeLive(httpClient, creds);
     }),
   ).pipe(Layer.provide(FetchHttpClient.layer));

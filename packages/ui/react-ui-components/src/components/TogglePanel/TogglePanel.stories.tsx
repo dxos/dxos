@@ -2,17 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';
+import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';
 
 class Generator {
   private readonly _current: Atom.Writable<string>;
@@ -22,7 +28,7 @@ class Generator {
   readonly count: Atom.Atom<number>;
   readonly text: Atom.Atom<string[]>;
 
-  constructor(private readonly _registry: Registry.Registry) {
+  constructor(private readonly _registry: Registry.AtomRegistry) {
     this._current = Atom.make<string>(random.lorem.sentence(5));
     this._lines = Atom.make<string[]>([]);
     this.count = Atom.make((get) => get(this._lines).length);
@@ -71,24 +77,20 @@ const DefaultStory = (props: TogglePanelRootProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Input.Root>
-            <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
-          </Input.Root>
+          <Field.Root>
+            <Input.Switch checked={running} onCheckedChange={({ checked }) => setRunning(checked)} />
+          </Field.Root>
           <div className='grow' />
           <div>{count}</div>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <TogglePanel.Root {...props}>
           <TogglePanel.Content>
             <TogglePanel.Header
-              icon={
-                running ? (
-                  <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
-                ) : undefined
-              }
+              icon={running ? <Icon.Icon icon={'ph--circle-notch--regular'} size='md' tone='subtle' spin /> : undefined}
             >
               Test
             </TogglePanel.Header>
@@ -99,7 +101,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
             </TogglePanel.Body>
           </TogglePanel.Content>
         </TogglePanel.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

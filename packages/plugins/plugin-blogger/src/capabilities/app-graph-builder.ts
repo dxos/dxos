@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -13,15 +15,16 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { Position, isNonNullable } from '@dxos/util';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
+import { Blog } from '#types';
 
-import { getPublicationsSectionId } from '../paths';
-import * as Blog from '../types/Blog';
+import { getPublicationsSectionId } from '../paths.ts';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
@@ -49,7 +52,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // "Publications" section under each space's content group.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'publicationsSection',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         connector: (space, get) => {
@@ -76,9 +79,13 @@ export default Capability.makeModule(
 
       // A branch node per Publication under the section, each with its Posts as children, plus the
       // "+ Publication" action on the section.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'publicationNodes',
-        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, getPublicationsSectionId()] },
+        url: {
+          key: 'publication',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.content, getPublicationsSectionId()],
+        },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -96,7 +103,7 @@ export default Capability.makeModule(
                 })
                 .filter(isNonNullable);
 
-              return Node.make({
+              return AppGraphNode.make({
                 id: publication.id,
                 type: PUBLICATION_NODE_TYPE,
                 data: publication,
@@ -116,7 +123,7 @@ export default Capability.makeModule(
         },
         actions: (space) =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'add-publication',
               data: () => Operation.invoke(BloggerOperation.AddPublication, { target: space.db }),
               properties: {
@@ -129,9 +136,9 @@ export default Capability.makeModule(
       }),
 
       // "+ Post" action on each Publication node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'publicationActions',
-        match: NodeMatcher.whenNodeType(PUBLICATION_NODE_TYPE),
+        match: GraphNodeMatcher.whenNodeType(PUBLICATION_NODE_TYPE),
         actions: (node) => {
           if (!Obj.instanceOf(Blog.Publication, node.data)) {
             return Effect.succeed([]);
@@ -144,7 +151,7 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'add-post',
               data: () =>
                 Operation.invoke(BloggerOperation.AddPost, { publication: Ref.make(publication), target: db }),
@@ -154,9 +161,10 @@ export default Capability.makeModule(
                 disposition: 'list-item-primary',
               },
             }),
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: SpaceOperation.RemoveObjects.meta.key,
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }),
+              data: () =>
+                Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }, { spaceId: db?.spaceId }),
               properties: {
                 label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Blog.Publication)),
                 icon: 'ph--trash--regular',
@@ -168,11 +176,9 @@ export default Capability.makeModule(
         },
       }),
 
-      // Comments companion for the Post plank: anchors the comments panel to the post's single body
-      // `Markdown.Document` (where post comments are anchored), and contributes a hidden, addressable
-      // node for that doc so the in-editor comment toolbar action resolves.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'postComments',
+        relation: AppNode.companion,
         match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
         connector: ({ post }, get) => {
           const snapshot = get(Obj.atom(post));
@@ -191,12 +197,28 @@ export default Capability.makeModule(
               data: contentDoc,
               position: Position.first,
             }),
+          ]);
+        },
+      }),
+
+      AppGraphBuilder.createExtension({
+        id: 'postContentDoc',
+        match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
+        connector: ({ post }, get) => {
+          const snapshot = get(Obj.atom(post));
+          get(Obj.atom(snapshot.content));
+          const contentDoc = snapshot.content.target;
+          if (!contentDoc) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             // Hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
             // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` — the id
             // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-review's
             // `commentToolbar` matches on `node.data` (not the node type/id), so a custom `type` keeps
             // object/delete actions off this node. `disposition: 'hidden'` keeps it out of the navtree.
-            Node.make({
+            AppGraphNode.make({
               id: contentDoc.id,
               type: CONTENT_DOC_NODE_TYPE,
               data: contentDoc,

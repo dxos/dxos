@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 
-import { type SignalMethods, type SignalStatus } from '../signal-methods';
+import { type SignalMethods, type SignalStatus } from '../signal-methods.ts';
 
 /**
  * Manages a collection of signaling clients.
@@ -17,7 +17,6 @@ export interface SignalManager extends SignalMethods, Required<Lifecycle> {
   getStatus?: () => SignalStatus[];
 }
 
-export class SignalManagerService extends Context.Tag('@dxos/messaging/SignalManager')<
-  SignalManagerService,
-  SignalManager
->() {}
+export class SignalManagerService extends Context.Service<SignalManagerService, SignalManager>()(
+  '@dxos/messaging/SignalManager',
+) {}

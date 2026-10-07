@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { Key, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -12,26 +13,24 @@ import { Text } from '@dxos/schema';
  * Heads are content-addressed change hashes, stable across peers, so a checkpoint is zero-copy.
  * Generic over any object holding a `history` field (see model.ts).
  */
-export const Version = Schema.mutable(
-  Schema.Struct({
-    id: Schema.String,
-    name: Schema.String,
-    target: Ref.Ref(Text.Text),
-    heads: Schema.mutable(Schema.Array(Schema.String)),
-    /**
-     * Core-branch registry key when the checkpoint was taken on a branch (the branch's heads live in
-     * the branch document, not the root's, so viewing must resolve the branch). Absent = the base
-     * document. Matches {@link Branch.key}.
-     */
-    branch: Schema.optional(Schema.String),
-    createdAt: Schema.String,
-    creator: Schema.optional(Schema.String),
-    message: Schema.optional(Schema.String),
-  }),
-);
+export const Version = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  target: Ref.Ref(Text.Text),
+  heads: Schema.mutable(Schema.Array(Schema.String)),
+  /**
+   * Core-branch registry key when the checkpoint was taken on a branch (the branch's heads live in
+   * the branch document, not the root's, so viewing must resolve the branch). Absent = the base
+   * document. Matches {@link Branch.key}.
+   */
+  branch: Schema.optional(Schema.String),
+  createdAt: Schema.String,
+  creator: Schema.optional(Schema.String),
+  message: Schema.optional(Schema.String),
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Version extends Schema.Schema.Type<typeof Version> {}
 
-export const BranchStatus = Schema.Literal('active', 'merged', 'archived');
+export const BranchStatus = Schema.Literals(['active', 'merged', 'archived']);
 export type BranchStatus = Schema.Schema.Type<typeof BranchStatus>;
 
 /**
@@ -43,32 +42,28 @@ export type BranchStatus = Schema.Schema.Type<typeof BranchStatus>;
  * Legacy content-copy branches (pre core-branching) carry a separate forked Text in `content` and
  * merge textually; they remain readable/mergeable until migrated (convergence plan stage 4).
  */
-export const Branch = Schema.mutable(
-  Schema.Struct({
-    id: Schema.String,
-    name: Schema.String,
-    /** Core-branch registry name (the space-root registry key on the parent object). */
-    key: Schema.optional(Schema.String),
-    /** Legacy content-copy branches only: the forked Text. Core branches have no separate Text. */
-    content: Schema.optional(Ref.Ref(Text.Text)),
-    parent: Ref.Ref(Text.Text),
-    anchor: Schema.mutable(Schema.Array(Schema.String)),
-    status: BranchStatus,
-    createdAt: Schema.String,
-    creator: Schema.optional(Schema.String),
-    /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent ⇒ draft. */
-    kind: Schema.optional(Schema.Literal('suggestion', 'draft')),
-    mergedAt: Schema.optional(Schema.String),
-  }),
-);
+export const Branch = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  /** Core-branch registry name (the space-root registry key on the parent object). */
+  key: Schema.optional(Schema.String),
+  /** Legacy content-copy branches only: the forked Text. Core branches have no separate Text. */
+  content: Schema.optional(Ref.Ref(Text.Text)),
+  parent: Ref.Ref(Text.Text),
+  anchor: Schema.mutable(Schema.Array(Schema.String)),
+  status: BranchStatus,
+  createdAt: Schema.String,
+  creator: Schema.optional(Schema.String),
+  /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent ⇒ draft. */
+  kind: Schema.optional(Schema.Literals(['suggestion', 'draft'])),
+  mergedAt: Schema.optional(Schema.String),
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Branch extends Schema.Schema.Type<typeof Branch> {}
 
-export const History = Schema.mutable(
-  Schema.Struct({
-    branches: Schema.mutable(Schema.Array(Branch)),
-    versions: Schema.mutable(Schema.Array(Version)),
-  }),
-);
+export const History = Schema.Struct({
+  branches: Schema.mutable(Schema.Array(Branch)),
+  versions: Schema.mutable(Schema.Array(Version)),
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface History extends Schema.Schema.Type<typeof History> {}
 
 export type MakeVersionProps = Pick<Version, 'target' | 'heads' | 'name'> &

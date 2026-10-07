@@ -1,0 +1,207 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { latch } from '@dxos/async';
+import { log } from '@dxos/log';
+import { random } from '@dxos/random';
+
+import { type HypercoreBlockSelector, HypercoreSetIterator } from './hypercore-set-iterator.ts';
+import { TestItemBuilder } from './testing/index.ts';
+import { type HypercoreBlock } from './types.ts';
+
+// Random selector.
+const randomFeedBlockSelector: HypercoreBlockSelector<any> = (blocks: HypercoreBlock<any>[]) =>
+  random.number.int({ min: 0, max: blocks.length - 1 });
+
+// TODO(burdon): Create randomized setTimeout to test race conditions.
+
+describe('HypercoreSetIterator', () => {
+  // TODO(burdon): Test when feed is added on-the-fly.
+
+  test('opens and closes multiple times', async () => {
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
+    await iterator.open();
+    await iterator.open();
+    expect(iterator.isOpen).to.be.true;
+    expect(iterator.isRunning).to.be.true;
+
+    await iterator.start();
+    await iterator.start();
+    expect(iterator.isOpen).to.be.true;
+    expect(iterator.isRunning).to.be.true;
+
+    await iterator.stop();
+    await iterator.stop();
+    expect(iterator.isOpen).to.be.true;
+    expect(iterator.isRunning).to.be.false;
+
+    await iterator.start();
+    await iterator.start();
+    expect(iterator.isOpen).to.be.true;
+    expect(iterator.isRunning).to.be.true;
+
+    await iterator.close();
+    await iterator.close();
+    expect(iterator.isOpen).to.be.false;
+    expect(iterator.isRunning).to.be.false;
+  });
+
+  test('responds immediately when a feed is appended', async () => {
+    const builder = new TestItemBuilder();
+    const hypercoreStore = builder.createHypercoreStore();
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
+    await iterator.open();
+
+    const numFeeds = 3;
+    const numBlocks = 10;
+    const feeds = await Promise.all(
+      Array.from(Array(numFeeds)).map(async () => {
+        const key = await builder.keyring.createKey();
+        const feed = await hypercoreStore.openHypercore(key, { writable: true });
+        await iterator.addHypercore(feed);
+        return feed;
+      }),
+    );
+
+    const [done, received] = latch({ count: numBlocks });
+
+    {
+      // Read block.
+      setTimeout(async () => {
+        for await (const block of iterator) {
+          log('received', block);
+          received();
+        }
+      });
+
+      // Write block.
+      setTimeout(async () => {
+        const feed = random.helpers.arrayElement(feeds);
+        await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
+          count: numBlocks,
+        });
+      }, 100);
+    }
+
+    await done();
+    await iterator.stop();
+    await iterator.close();
+  });
+
+  test('reads blocks in order', { timeout: 3000 }, async () => {
+    const builder = new TestItemBuilder();
+    const hypercoreStore = builder.createHypercoreStore();
+
+    // TODO(burdon): Randomize?
+    const numFeeds = 3;
+    const numBlocks = 30;
+
+    // TODO(burdon): Test with starting index.
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
+
+    // Write blocks.
+    setTimeout(
+      async () => {
+        // Create feeds.
+        // TODO(burdon): Test adding feeds on-the-fly.
+        const writers = await Promise.all(
+          Array.from(Array(numFeeds)).map(async () => {
+            const key = await builder.keyring.createKey();
+            const feed = await hypercoreStore.openHypercore(key, { writable: true });
+            await iterator.addHypercore(feed);
+            return feed.createHypercoreWriter();
+          }),
+        );
+
+        expect(iterator.size).to.eq(numFeeds);
+
+        for (const _ of Array.from(Array(numBlocks))) {
+          const writer = random.helpers.arrayElement(writers);
+          const receipts = await builder.generator.writeBlocks(writer, {
+            count: 1,
+          });
+          log('wrote', receipts);
+        }
+      },
+      random.number.int({ min: 0, max: 100 }),
+    );
+
+    // Open and start iterator.
+    await iterator.open();
+    expect(iterator.isOpen).to.be.true;
+    expect(iterator.isRunning).to.be.true;
+
+    // Read blocks.
+    const [readAll, read] = latch({ count: numBlocks });
+    setTimeout(
+      async () => {
+        for await (const block of iterator) {
+          const { feedKey, seq } = block;
+          const count = read();
+          log('read', { feedKey, seq, count });
+          if (count === numBlocks) {
+            await iterator.stop();
+          }
+        }
+      },
+      random.number.int({ min: 0, max: 100 }),
+    );
+
+    // Wait until all written and read.
+    const count = await readAll();
+    expect(count).to.eq(numBlocks);
+
+    // Written blocks.
+    const written = hypercoreStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
+    const feeds = hypercoreStore.feeds.map((feed) => ({
+      feedKey: feed.key,
+      length: feed.properties.length,
+    }));
+
+    log('written', { feeds, written });
+    expect(written).to.eq(numBlocks);
+
+    expect(iterator.isRunning).to.be.false;
+    await iterator.close();
+    await hypercoreStore.close();
+  });
+
+  test('start from non-zero index', async () => {
+    const builder = new TestItemBuilder();
+    const hypercoreStore = builder.createHypercoreStore();
+
+    const key = await builder.keyring.createKey();
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector, {
+      start: [
+        {
+          feedKey: feed.key,
+          index: 2,
+        },
+      ],
+    });
+    await iterator.open();
+    await iterator.addHypercore(feed);
+
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
+      count: 10,
+    });
+
+    let index = 2;
+    for await (const block of iterator) {
+      log('received', block);
+      expect(block.seq).to.eq(index);
+
+      if (++index === 10) {
+        break;
+      }
+    }
+
+    await iterator.stop();
+    await iterator.close();
+  });
+});

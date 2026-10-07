@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type EditorViewProps, Editor as TextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type Extension,
   compactSlots,
@@ -16,7 +17,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-export type EditorProps = ThemedClassName<
+export type EditorProps = Util.ThemedClassName<
   Pick<EditorViewProps, 'value' | 'onChange'> & {
     /** Domain-specific extensions composed after the basic/theme defaults (automerge binding, composer actions, …). */
     extensions?: Extension[];
@@ -45,7 +46,7 @@ export const Editor = ({
   compact,
   classNames,
 }: EditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () =>
       [
@@ -60,7 +61,7 @@ export const Editor = ({
   return (
     <TextEditor.Root>
       <TextEditor.View
-        classNames={mx('dx-expander dx-input', classNames)}
+        classNames={mx('dx-expand dx-input-box', classNames)}
         extensions={extensions}
         value={value}
         onChange={onChange}

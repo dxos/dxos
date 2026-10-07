@@ -5,23 +5,36 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
-import { RegistryCapabilities } from '../types';
+import { translations } from '#translations';
+import { RegistryCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const DevPluginLoader = Capability.lazyModule(
   'DevPluginLoader',
   { requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings], provides: [] },
-  () => import('./dev-plugin-loader'),
+  () => import('./dev-plugin-loader.ts'),
 );
-// Empty in the browser: `registry publish` reaches the vite plugin's Node-only build tooling, so only the
-// node barrel loads the command graph. The export still has to exist here — `#capabilities`
-// resolves its types through this file for both variants.
-export const Commands = AppCapability.commands([]);
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const PrivateRegistry = Capability.lazyModule(
+  'PrivateRegistry',
+  {
+    requires: [Capabilities.PluginManager, ClientCapabilities.Client, ClientCapabilities.IdentityService],
+    provides: [],
+    // An initialized client, since the module reads the identity synchronously.
+    activatesOn: ClientEvents.Initialized,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./private-registry.ts'),
+);
+export const Commands = AppCapability.commands(() => import('#commands'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
 });
-export const RegistrySettings = AppCapability.settings(() => import('./settings'), {
+export const RegistrySettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [RegistryCapabilities.Settings],
 });
+export const Translations = AppCapability.translations(translations);

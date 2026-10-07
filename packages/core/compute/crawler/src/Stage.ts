@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Stage } from '@dxos/pipeline';
 
-import { type StateError } from './errors';
-import { StateStore } from './StateStore';
-import type * as Type from './types';
+import { type StateError } from './errors.ts';
+import * as StateStore from './StateStore.ts';
+import type * as Type from './types.ts';
 
 /**
  * An event-tap stage: applies `fn` to events matching `tags`, passes EVERY event through unchanged
@@ -19,16 +19,14 @@ export const tapStage = <E, R>(
   name: string,
   tags: ReadonlyArray<Type.EventTag>,
   fn: (event: Type.Event) => Effect.Effect<void, E, R>,
-): Stage.Stage<Type.Event, Type.Event, StateError, R | StateStore> =>
+): Stage.Stage<Type.Event, Type.Event, StateError, R | StateStore.StateStore> =>
   Stage.map(name, (event: Type.Event) =>
     (tags.includes(event._tag) ? fn(event) : Effect.void).pipe(
-      Effect.catchAll((error) =>
-        Effect.flatMap(StateStore, (store) =>
-          store.setStatus(
-            event.target.id,
-            event.target.status,
-            `${name}: ${error instanceof Error ? error.message : String(error)}`,
-          ),
+      Effect.catch((error) =>
+        StateStore.setStatus(
+          event.target.id,
+          event.target.status,
+          `${name}: ${error instanceof Error ? error.message : String(error)}`,
         ),
       ),
       Effect.as(event),

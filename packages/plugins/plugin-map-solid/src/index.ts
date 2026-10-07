@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './events';
-export * from './meta';
+export * as MapPlugin from './MapPlugin.ts';
+export * as MapSolidEvents from './MapSolidEvents.ts';

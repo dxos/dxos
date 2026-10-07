@@ -16,17 +16,30 @@ import React, {
   useState,
 } from 'react';
 
+import * as Account from '@dxos/app-toolkit/Account';
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { log } from '@dxos/log';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../../meta';
-import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
+import { meta } from '../../../meta.ts';
+import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 
-const supportsPasskeys =
-  (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
+const supportsPasskeys = NativePasskey.getPasskeySupport() !== 'none';
+
+/** Ceiling on the OAuth wait, since a user who closes the provider's page reports nothing. */
+const OAUTH_PENDING_TIMEOUT = 5 * 60 * 1000;
 
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
 const ATMOSPHERE_PROVIDER = 'atproto';
@@ -41,13 +54,26 @@ const errorMessageKeys: Record<WelcomeError, string> = {
   'passkey-failed': 'passkey-failed-error.message',
 };
 
+/**
+ * Variants used when a passkey is the only permitted login method: the default messages send the user
+ * to email or another device, which aren't on offer there.
+ */
+const passkeyOnlyErrorMessageKeys: Partial<Record<WelcomeError, string>> = {
+  'passkey-rejected': 'passkey-rejected-passkey-only-error.message',
+  'passkey-failed': 'passkey-failed-passkey-only-error.message',
+};
+
+/** Message for a passkey failure; drops the "try another method" advice when there is no other method. */
+const passkeyErrorKey = (error: WelcomeError, passkeyOnly: boolean): string =>
+  (passkeyOnly ? passkeyOnlyErrorMessageKeys[error] : undefined) ?? errorMessageKeys[error];
+
 // Flat, full-width tabs with a bottom border that highlights the active one.
 const tabClassNames =
-  'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
-  'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
-  'data-[state=active]:border-white data-[state=active]:text-white';
+  'flex-1 h-auto rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
+  'border-b-2 border-transparent text-fg-muted transition-colors hover:text-white ' +
+  'aria-selected:border-white aria-selected:text-white';
 
-const ComposerLogoMark = ({ classNames }: ThemedClassName) => (
+const ComposerLogoMark = ({ classNames }: Util.ThemedClassName) => (
   <span className={mx('font-["Poiret One"]', classNames)} style={{ fontFamily: 'Poiret One' }}>
     composer
   </span>
@@ -72,15 +98,24 @@ export const Welcome = ({
   onCreateAccountWithOAuth,
   onJoinWaitlist,
 }: WelcomeScreenProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
-  // Default primary login method: prefer passkey when supported, otherwise email.
-  const defaultLoginPrimary: LoginMethod = supportsPasskeys && onPasskey ? 'passkey' : 'email';
+  // Default primary login method: prefer passkey when supported, then email, then the Atmosphere form.
+  const defaultLoginPrimary: LoginMethod =
+    supportsPasskeys && onPasskey ? 'passkey' : onEmailLogin ? 'email' : 'atproto';
+
+  // A sign-up mode is offered only when its handlers can complete it: a code needs both a validator
+  // and a creation path, and the screen supplies the waitlist alone once an identity exists. With
+  // neither (the iOS app) the screen collapses to the login form with no tablist.
+  const codeSignupEnabled = !!onValidateInvitationCode && (!!onCreateAccount || !!onCreateAccountWithOAuth);
+  const waitlistEnabled = !!onJoinWaitlist;
+  const signupEnabled = codeSignupEnabled || waitlistEnabled;
+  const defaultSignupMode: SignupMode = codeSignupEnabled ? 'code' : 'waitlist';
 
   // Tab + sub-state. Live in component state since they're transient UI.
   const [tab, setTab] = useState<Tab>('login');
   const [loginPrimary, setLoginPrimary] = useState<LoginMethod>(defaultLoginPrimary);
-  const [signupMode, setSignupMode] = useState<SignupMode>('code');
+  const [signupMode, setSignupMode] = useState<SignupMode>(defaultSignupMode);
   const [signupStep, setSignupStep] = useState<SignupStep>('collect');
 
   // Inputs.
@@ -94,7 +129,52 @@ export const Welcome = ({
   // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
+  // Separate from `pending`, whose call resolves as soon as the provider's page opens — this stays
+  // set for the part the user actually waits on.
+  const [oauthPending, setOauthPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+  // OAuth leaves the app, so without this the other methods stay live and a competing attempt can
+  // start against a flow already in progress.
+  const formPending = pending || oauthPending;
+
+  // Nothing reports success: the flow completes by navigating this screen away.
+  useEffect(() => {
+    if (error) {
+      setOauthPending(false);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (!oauthPending) {
+      return;
+    }
+    const timeout = setTimeout(() => setOauthPending(false), OAUTH_PENDING_TIMEOUT);
+    return () => clearTimeout(timeout);
+  }, [oauthPending]);
+
+  // On desktop the wait ends when the callback lands, whatever it says: finalizing navigates this
+  // screen away, and a failure is reported only as a toast, which would otherwise leave the form
+  // locked until the ceiling above. The browser path reloads instead, so it never gets here.
+  useEffect(() => {
+    if (!oauthPending || !NativeOAuth.supportsNativeOAuth()) {
+      return;
+    }
+    let unlisten: (() => void) | undefined;
+    let stopped = false;
+    void NativeOAuth.listenForNativeOAuthCallback(OAUTH_RECOVERY_REDIRECT_PATH, () => setOauthPending(false)).then(
+      (fn) => {
+        unlisten = fn;
+        if (stopped) {
+          fn();
+        }
+      },
+      (error) => log.warn('failed to listen for OAuth callback', { error }),
+    );
+    return () => {
+      stopped = true;
+      unlisten?.();
+    };
+  }, [oauthPending]);
 
   const focusPrimaryField = useCallback(() => {
     if (state !== WelcomeState.INIT) {
@@ -162,7 +242,7 @@ export const Welcome = ({
   //
 
   const handleValidateCode = useCallback(async () => {
-    if (!validInvitationCode(code)) {
+    if (!Account.isValidAccessCodeFormat(code)) {
       setCodeError(t('invitation-code-format-error.message'));
       codeRef.current?.focus();
       return;
@@ -219,38 +299,28 @@ export const Welcome = ({
     }
   }, [waitlistEmail, onJoinWaitlist]);
 
-  // Wrap the OAuth flows so `pending` is set for their full duration. The OAuth popup flow is async
-  // and `pending` drives `submitDisabled`, so this keeps the Continue button disabled while the
-  // popup is open — preventing a second click from opening a duplicate popup (which clobbers the
-  // first and trips "OAuth popup closed before completing").
+  // Held past the call's own resolution, which lands when the provider's page opens rather than
+  // when the user is done with it.
   const handleCreateAccountWithOAuth = useCallback(
     async (args: { code: string; provider: string; loginHint?: string }) => {
-      if (pending) {
+      if (formPending) {
         return;
       }
-      setPending(true);
-      try {
-        await onCreateAccountWithOAuth?.(args);
-      } finally {
-        setPending(false);
-      }
+      setOauthPending(true);
+      await onCreateAccountWithOAuth?.(args);
     },
-    [pending, onCreateAccountWithOAuth],
+    [formPending, onCreateAccountWithOAuth],
   );
 
   const handleRecoverWithOAuth = useCallback(
     async (provider: string, loginHint?: string) => {
-      if (pending) {
+      if (formPending) {
         return;
       }
-      setPending(true);
-      try {
-        await onRecoverWithOAuth?.(provider, loginHint);
-      } finally {
-        setPending(false);
-      }
+      setOauthPending(true);
+      await onRecoverWithOAuth?.(provider, loginHint);
     },
-    [pending, onRecoverWithOAuth],
+    [formPending, onRecoverWithOAuth],
   );
 
   const handleCodeKeyDown = useCallback(
@@ -284,208 +354,222 @@ export const Welcome = ({
   // Render
   //
 
+  // Shared by both layouts: the login form renders inside the tablist when sign-up is available and
+  // on its own when it isn't.
+  const loginTab = (
+    <LoginTab
+      identity={identity}
+      primary={loginPrimary}
+      setPrimary={setLoginPrimary}
+      emailValue={email}
+      setEmailValue={setEmail}
+      emailRef={emailRef}
+      error={error}
+      pending={formPending}
+      oauthPending={oauthPending}
+      onPasskey={onPasskey ? handlePasskey : undefined}
+      onSendSignInLink={onEmailLogin ? handleSendSignInLink : undefined}
+      onEmailKeyDown={handleEmailKeyDown}
+      onJoinIdentity={onJoinIdentity}
+      onRecoverIdentity={onRecoverIdentity}
+      onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
+    />
+  );
+
   return (
-    <div
+    <Layout.Grid
       ref={rootRef}
-      className={mx(
-        'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
+      cols={1}
+      classNames={[
+        'relative md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
-      )}
+        '[--dx-control-inset:0px] [--dx-control-size:var(--dx-block-size)]',
+      ]}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
     >
-      <div className='z-10 flex flex-col gap-8 p-8 md:px-16'>
-        <ComposerLogoMark classNames='text-[80px]' />
+      <Layout.Flex column gap='2xl' classNames='z-10 p-8 md:px-16'>
+        <ComposerLogoMark classNames='text-[80px] leading-[1.5]' />
 
-        {state === WelcomeState.INIT && (
+        {state === WelcomeState.INIT && !signupEnabled && loginTab}
+
+        {state === WelcomeState.INIT && signupEnabled && (
           <Tabs.Root
-            asChild
             orientation='horizontal'
-            defaultActivePart='panel'
-            suppressRegionFocus
+            classNames='flex flex-col gap-6'
             value={tab}
             onValueChange={(value) => {
               const next = value as Tab;
               setTab(next);
               if (next === 'signup') {
                 setSignupStep('collect');
-                setSignupMode('code');
+                setSignupMode(defaultSignupMode);
               }
             }}
           >
-            <Tabs.Viewport classNames='flex flex-col gap-6'>
-              <Tabs.Tablist classNames='p-0 gap-1 border-b border-neutral-700'>
-                <Tabs.Button value='login' classNames={tabClassNames}>
-                  {t('login-tab.label')}
-                </Tabs.Button>
-                <Tabs.Button value='signup' classNames={tabClassNames}>
-                  {t('signup-tab.label')}
-                </Tabs.Button>
-              </Tabs.Tablist>
+            <Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
+              <Tabs.Trigger value='login' classNames={tabClassNames}>
+                {t('login-tab.label')}
+              </Tabs.Trigger>
+              <Tabs.Trigger value='signup' classNames={tabClassNames}>
+                {t('signup-tab.label')}
+              </Tabs.Trigger>
+            </Tabs.List>
 
-              <Tabs.Panel value='login'>
-                <LoginTab
-                  identity={identity}
-                  primary={loginPrimary}
-                  setPrimary={setLoginPrimary}
-                  emailValue={email}
-                  setEmailValue={setEmail}
-                  emailRef={emailRef}
-                  error={error}
-                  pending={pending}
-                  onPasskey={onPasskey ? handlePasskey : undefined}
-                  onSendSignInLink={handleSendSignInLink}
-                  onEmailKeyDown={handleEmailKeyDown}
-                  onJoinIdentity={onJoinIdentity}
-                  onRecoverIdentity={onRecoverIdentity}
-                  onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
-                />
-              </Tabs.Panel>
+            <Tabs.Content value='login'>{loginTab}</Tabs.Content>
 
-              <Tabs.Panel value='signup'>
-                {signupStep === 'collect' && signupMode === 'code' && (
-                  <div className='flex flex-col gap-6'>
-                    <div className='flex flex-col gap-2'>
-                      <h2 className='text-2xl'>{t('signup-code.title')}</h2>
-                      <p className='text-description'>{t('signup-code.description')}</p>
-                    </div>
-                    <InlineForm
-                      inputProps={{
-                        ref: codeRef,
-                        classNames: 'font-mono uppercase tracking-widest',
-                        placeholder: 'XXXX-XXXX',
-                        value: code,
-                        onChange: (ev) => setCode(ev.target.value.trim()),
-                        onKeyDown: handleCodeKeyDown,
-                      }}
-                      submitLabel={t('continue-button.label')}
-                      submitDisabled={!validInvitationCode(code) || pending}
-                      onSubmit={handleValidateCode}
-                      validation={codeError}
-                    />
+            <Tabs.Content value='signup'>
+              {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
+                <Layout.Flex column gap='xl'>
+                  <Layout.Container gap='md' gutter='none'>
+                    <h2 className='text-2xl'>{t('signup-code.title')}</h2>
+                    <p className='text-fg-muted'>{t('signup-code.description')}</p>
+                  </Layout.Container>
+                  <InlineForm
+                    inputProps={{
+                      ref: codeRef,
+                      classNames: 'font-mono uppercase tracking-widest',
+                      placeholder: 'XXXX-XXXX',
+                      value: code,
+                      onChange: (ev) => setCode(ev.target.value.trim()),
+                      onKeyDown: handleCodeKeyDown,
+                    }}
+                    submitLabel={t('continue-button.label')}
+                    submitDisabled={!Account.isValidAccessCodeFormat(code) || formPending}
+                    onSubmit={handleValidateCode}
+                    validation={codeError}
+                  />
+                  {waitlistEnabled && (
                     <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
-                  </div>
-                )}
+                  )}
+                </Layout.Flex>
+              )}
 
-                {signupStep === 'collect' && signupMode === 'waitlist' && (
-                  <div className='flex flex-col gap-6'>
-                    <div className='flex flex-col gap-2'>
-                      <h2 className='text-2xl'>{t('waitlist.title')}</h2>
-                      <p className='text-description'>{t('waitlist.description')}</p>
-                    </div>
-                    <InlineForm
-                      inputProps={{
-                        ref: waitlistEmailRef,
-                        placeholder: t('email-input.placeholder'),
-                        value: waitlistEmail,
-                        onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
-                        onKeyDown: handleWaitlistEmailKeyDown,
-                      }}
-                      submitLabel={t('waitlist-submit-button.label')}
-                      submitDisabled={!validEmail(waitlistEmail) || pending}
-                      onSubmit={handleJoinWaitlist}
-                    />
+              {signupStep === 'collect' && signupMode === 'waitlist' && waitlistEnabled && (
+                <Layout.Flex column gap='xl'>
+                  <Layout.Container gap='md' gutter='none'>
+                    <h2 className='text-2xl'>{t('waitlist.title')}</h2>
+                    <p className='text-fg-muted'>{t('waitlist.description')}</p>
+                  </Layout.Container>
+                  <InlineForm
+                    inputProps={{
+                      ref: waitlistEmailRef,
+                      placeholder: t('email-input.placeholder'),
+                      value: waitlistEmail,
+                      onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
+                      onKeyDown: handleWaitlistEmailKeyDown,
+                    }}
+                    submitLabel={t('waitlist-submit-button.label')}
+                    submitDisabled={!validEmail(waitlistEmail) || formPending}
+                    onSubmit={handleJoinWaitlist}
+                  />
+                  {codeSignupEnabled && (
                     <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
-                  </div>
-                )}
+                  )}
+                </Layout.Flex>
+              )}
 
-                {signupStep === 'auth' && (
-                  <div className='flex flex-col gap-6'>
-                    <div className='flex flex-col gap-2'>
-                      <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
-                      <p className='text-description'>{t('signup-auth.description')}</p>
-                    </div>
-                    <InlineForm
-                      inputProps={{
-                        ref: emailRef,
-                        placeholder: t('email-input.placeholder'),
-                        value: email,
-                        onChange: (ev) => setEmail(ev.target.value.trim()),
-                        onKeyDown: handleAuthEmailKeyDown,
-                      }}
-                      submitLabel={t('continue-button.label')}
-                      submitDisabled={!validEmail(email) || pending}
-                      onSubmit={handleCreateAccount}
-                      validation={signupEmailError}
-                    />
-                    {error === 'account-exists' && (
-                      <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
-                    )}
-                    {onCreateAccountWithOAuth && (
-                      <>
-                        <OrDivider>{t('or-divider.label')}</OrDivider>
-                        <div className='flex flex-col gap-2'>
-                          <p className='text-description'>{t('atmosphere-account-button.label')}</p>
-                          <InlineForm
-                            inputProps={{
-                              placeholder: t('atmosphere-handle-input.placeholder'),
-                              value: atmosphereHandle,
-                              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
-                              onKeyDown: (ev) => {
-                                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
-                                  void handleCreateAccountWithOAuth({
-                                    code,
-                                    provider: ATMOSPHERE_PROVIDER,
-                                    loginHint: atmosphereHandle,
-                                  });
-                                }
-                              },
-                            }}
-                            submitLabel={t('continue-button.label')}
-                            submitDisabled={!atmosphereHandle || pending}
-                            onSubmit={() =>
-                              handleCreateAccountWithOAuth({
-                                code,
-                                provider: ATMOSPHERE_PROVIDER,
-                                loginHint: atmosphereHandle,
-                              })
-                            }
-                            validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
-                          />
-                        </div>
-                      </>
-                    )}
-                    <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
-                  </div>
-                )}
-              </Tabs.Panel>
-            </Tabs.Viewport>
+              {signupStep === 'auth' && (
+                <Layout.Flex column gap='xl'>
+                  <Layout.Container gap='md' gutter='none'>
+                    <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
+                    <p className='text-fg-muted'>{t('signup-auth.description')}</p>
+                  </Layout.Container>
+                  {onCreateAccount && (
+                    <>
+                      <InlineForm
+                        inputProps={{
+                          ref: emailRef,
+                          placeholder: t('email-input.placeholder'),
+                          value: email,
+                          onChange: (ev) => setEmail(ev.target.value.trim()),
+                          onKeyDown: handleAuthEmailKeyDown,
+                        }}
+                        submitLabel={t('continue-button.label')}
+                        submitDisabled={!validEmail(email) || formPending}
+                        onSubmit={handleCreateAccount}
+                        validation={signupEmailError}
+                      />
+                      {error === 'account-exists' && (
+                        <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
+                      )}
+                    </>
+                  )}
+                  {onCreateAccountWithOAuth && (
+                    <>
+                      {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
+                      <Layout.Container gap='md' gutter='none'>
+                        <p className='text-fg-muted'>{t('atmosphere-account-button.label')}</p>
+                        <InlineForm
+                          inputProps={{
+                            placeholder: t('atmosphere-handle-input.placeholder'),
+                            value: atmosphereHandle,
+                            onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+                            onKeyDown: (ev) => {
+                              if (ev.key === 'Enter' && atmosphereHandle && !formPending) {
+                                void handleCreateAccountWithOAuth({
+                                  code,
+                                  provider: ATMOSPHERE_PROVIDER,
+                                  loginHint: atmosphereHandle,
+                                });
+                              }
+                            },
+                          }}
+                          submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
+                          submitDisabled={!atmosphereHandle || pending}
+                          pending={oauthPending}
+                          onSubmit={() =>
+                            handleCreateAccountWithOAuth({
+                              code,
+                              provider: ATMOSPHERE_PROVIDER,
+                              loginHint: atmosphereHandle,
+                            })
+                          }
+                          validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
+                        />
+                      </Layout.Container>
+                    </>
+                  )}
+                  <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
+                </Layout.Flex>
+              )}
+            </Tabs.Content>
           </Tabs.Root>
         )}
 
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
-          <div className='flex flex-col gap-8'>
-            <div className='flex flex-col gap-2'>
+          <Layout.Flex column gap='2xl'>
+            <Layout.Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('check-email.title')}</h1>
-              <p className='text-description'>
+              <p className='text-fg-muted'>
                 {state === WelcomeState.EMAIL_SENT
                   ? t('request-access-email.description')
                   : t('check-email.description')}
               </p>
-            </div>
-          </div>
+            </Layout.Container>
+          </Layout.Flex>
         )}
 
         {state === WelcomeState.WAITLIST_SUBMITTED && (
-          <div className='flex flex-col gap-8'>
-            <div className='flex flex-col gap-2'>
+          <Layout.Flex column gap='2xl'>
+            <Layout.Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('waitlist-submitted.title')}</h1>
-              <p className='text-description'>{t('waitlist-submitted.description')}</p>
-            </div>
-          </div>
+              <p className='text-fg-muted'>{t('waitlist-submitted.description')}</p>
+            </Layout.Container>
+          </Layout.Flex>
         )}
 
-        <div className='z-[11] mt-auto flex flex-col'>
+        <Layout.Flex column classNames='z-[11] mt-auto'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
-            <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
-              <span className='text-description'>Powered by</span>
+            <Layout.Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
+              <span className='text-fg-muted'>Powered by</span>
               <DXOSHorizontalType className='fill-white w-[80px]' />
-            </div>
+            </Layout.Flex>
           </a>
-        </div>
-      </div>
-    </div>
+        </Layout.Flex>
+      </Layout.Flex>
+    </Layout.Grid>
   );
 };
 
@@ -502,7 +586,7 @@ const SwapLink = ({ onClick, children }: PropsWithChildren<{ onClick: () => void
   <button
     type='button'
     onClick={onClick}
-    className='self-center text-xs text-description hover:text-white underline underline-offset-4'
+    className='self-center text-xs text-fg-muted hover:text-white underline underline-offset-4'
   >
     {children}
   </button>
@@ -517,8 +601,10 @@ type LoginTabProps = {
   emailRef: React.Ref<HTMLInputElement>;
   error?: WelcomeError | null;
   pending: boolean;
+  /** An OAuth flow is waiting on the provider page, which the user completes outside this window. */
+  oauthPending: boolean;
   onPasskey?: () => unknown;
-  onSendSignInLink: () => void;
+  onSendSignInLink?: () => void;
   onEmailKeyDown: (ev: KeyboardEvent<HTMLInputElement>) => void;
   onJoinIdentity?: () => unknown;
   onRecoverIdentity?: () => unknown;
@@ -532,6 +618,9 @@ type LoginTabProps = {
  * - Picking the *other* primary method (passkey ↔ email ↔ atmosphere) swaps it to primary.
  * - Picking `From another device` or `Recovery code` invokes their handler
  *   directly (those open dedicated dialogs and don't need a primary form).
+ *
+ * A method is offered only when its handler is supplied, so a caller can narrow the tab to a single
+ * method (the iOS app permits passkeys alone).
  */
 const LoginTab = ({
   identity,
@@ -542,6 +631,7 @@ const LoginTab = ({
   emailRef,
   error,
   pending,
+  oauthPending,
   onPasskey,
   onSendSignInLink,
   onEmailKeyDown,
@@ -549,7 +639,7 @@ const LoginTab = ({
   onRecoverIdentity,
   onRecoverWithOAuth,
 }: LoginTabProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const atmosphereRef = useRef<HTMLInputElement>(null);
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const pendingPrimaryFocus = useRef<LoginMethod | null>(null);
@@ -576,6 +666,13 @@ const LoginTab = ({
     }, 0);
   }, [focusAtmosphereRef, focusEmailRef]);
 
+  // Which methods this caller permits; also decides whether the primary form can render at all.
+  const methodAvailable: Record<LoginMethod, boolean> = {
+    passkey: supportsPasskeys && !!onPasskey,
+    email: !!onSendSignInLink,
+    atproto: !!onRecoverWithOAuth,
+  };
+
   type MoreOption = {
     key: string;
     icon: string;
@@ -586,7 +683,7 @@ const LoginTab = ({
   };
   const moreOptions: MoreOption[] = [];
   // Passkey as menu item only if it's not currently primary AND it's supported.
-  if (primary !== 'passkey' && supportsPasskeys && onPasskey) {
+  if (primary !== 'passkey' && methodAvailable.passkey && onPasskey) {
     moreOptions.push({
       key: 'passkey',
       icon: 'ph--key--regular',
@@ -596,8 +693,8 @@ const LoginTab = ({
       onClick: () => setPrimary('passkey'),
     });
   }
-  // Email as menu item only if it's not currently primary.
-  if (primary !== 'email') {
+  // Email as menu item only if it's not currently primary AND it's permitted.
+  if (primary !== 'email' && methodAvailable.email) {
     moreOptions.push({
       key: 'email',
       icon: 'ph--envelope-simple--regular',
@@ -652,30 +749,30 @@ const LoginTab = ({
   }
 
   return (
-    <div className='flex flex-col gap-6'>
+    <Layout.Flex column gap='xl'>
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
       {/* Primary method */}
-      {primary === 'passkey' && supportsPasskeys && onPasskey && (
-        <div className='flex flex-col gap-2'>
-          <Button
+      {primary === 'passkey' && methodAvailable.passkey && onPasskey && (
+        <Layout.Container gap='md' gutter='none'>
+          <Button.Root
             variant='primary'
             classNames='w-full justify-center gap-2 disabled:bg-neutral-800'
             disabled={pending}
             onClick={onPasskey}
           >
-            <Icon icon='ph--key--regular' size={5} />
+            <Icon.Icon icon='ph--key--regular' size='lg' />
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
-          </Button>
+          </Button.Root>
           {error?.startsWith('passkey-') && (
-            <Input.Root>
-              <ValidationMessage>{t(errorMessageKeys[error])}</ValidationMessage>
-            </Input.Root>
+            <Field.Root invalid>
+              <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
+            </Field.Root>
           )}
-        </div>
+        </Layout.Container>
       )}
-      {primary === 'email' && (
-        <div className='flex flex-col gap-2'>
-          <p className='text-sm text-description'>{t('login-email.description')}</p>
+      {primary === 'email' && onSendSignInLink && (
+        <Layout.Container gap='md' gutter='none'>
+          <p className='text-sm text-fg-muted'>{t('login-email.description')}</p>
           <InlineForm
             inputProps={{
               ref: emailRef,
@@ -689,11 +786,11 @@ const LoginTab = ({
             onSubmit={onSendSignInLink}
             validation={error === 'email' ? t(errorMessageKeys.email) : null}
           />
-        </div>
+        </Layout.Container>
       )}
       {primary === 'atproto' && onRecoverWithOAuth && (
-        <div className='flex flex-col gap-2'>
-          <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
+        <Layout.Container gap='md' gutter='none'>
+          <p className='text-sm text-fg-muted'>{t('login-atmosphere.description')}</p>
           <InlineForm
             inputProps={{
               ref: atmosphereRef,
@@ -706,50 +803,52 @@ const LoginTab = ({
                 }
               },
             }}
-            submitLabel={t('continue-button.label')}
+            submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
             submitDisabled={!atmosphereHandle || pending}
+            pending={oauthPending}
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
             validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
           />
-        </div>
+        </Layout.Container>
+      )}
+      {!methodAvailable[primary] && moreOptions.length === 0 && (
+        <Field.Root invalid>
+          <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
+        </Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
+        <Menu.Root
+          positioning={{ placement: 'bottom', gutter: 8, overflowPadding: 16 }}
+          onOpenChange={({ open }) => !open && handleMoreMenuCloseAutoFocus()}
+        >
+          <Menu.Trigger asChild>
             <button
               type='button'
-              className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
+              className='flex items-center justify-center gap-1 text-sm text-fg-muted hover:text-white underline underline-offset-4 outline-none'
             >
               <span>{t('more-ways-to-sign-in.label')}</span>
-              <Icon icon='ph--caret-down--regular' size={4} />
+              <Icon.Icon icon='ph--caret-down--regular' size='md' />
             </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
-                onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-            <DropdownMenu.Content
-              side='bottom'
-              sideOffset={8}
-              collisionPadding={16}
-              classNames='!w-80 !z-50'
-              onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
-            >
-              <DropdownMenu.Viewport>
-                {moreOptions.map((opt) => (
-                  <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                    <Icon icon={opt.icon} size={6} classNames={mx('shrink-0', opt.classNames)} />
-                    <div className='flex flex-col gap-0.5'>
-                      <span>{opt.label}</span>
-                      <span className='text-xs text-description font-normal'>{opt.description}</span>
-                    </div>
-                  </DropdownMenu.Item>
-                ))}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+          </Menu.Trigger>
+          <Menu.Content classNames='!w-80'>
+            {moreOptions.map((opt) => (
+              <Menu.Item
+                key={opt.key}
+                item={{ value: opt.key, label: opt.label, icon: opt.icon }}
+                onSelect={opt.onClick}
+                classNames='gap-3 h-auto'
+              >
+                <Menu.ItemIcon size='xl' classNames={mx(opt.classNames)} />
+                <Layout.Container gap='sm' gutter='none'>
+                  <Menu.ItemText />
+                  <span className='text-xs text-fg-muted font-normal'>{opt.description}</span>
+                </Layout.Container>
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Root>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -765,59 +864,61 @@ const InlineForm = ({
   inputProps,
   submitLabel,
   submitDisabled,
+  pending,
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Input.TextInput>, 'classNames'> & {
+  inputProps: Omit<ComponentProps<typeof Input.Root>, 'classNames' | 'ref'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
   submitLabel: string;
   submitDisabled?: boolean;
+  /** Waiting on a step the user takes elsewhere; the field is locked so its value still describes it. */
+  pending?: boolean;
   validation?: ReactNode;
   onSubmit: () => void;
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Input.Root>
+    <Field.Root invalid={!!validation}>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Input.TextInput
+        <Input.Root
           {...rest}
+          disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
           ref={ref}
         />
-        <Button
+        <Button.Root
           variant='primary'
           classNames='disabled:bg-neutral-800 sm:rounded-l-none'
           disabled={submitDisabled}
           onClick={onSubmit}
         >
           {submitLabel}
-        </Button>
+        </Button.Root>
       </div>
       {validation && <ValidationMessage>{validation}</ValidationMessage>}
-    </Input.Root>
+    </Field.Root>
   );
 };
 
 /**
  * Error text under a login control. Shared with {@link InlineForm} so a failure reads the same
  * whether it came from a field (email, invitation code) or a button (passkey). Callers outside
- * `InlineForm` must supply their own `Input.Root` — it is context only and renders no markup.
+ * `InlineForm` must supply their own `Field.Root` — it is context only and renders no markup.
  */
 const ValidationMessage = ({ children }: PropsWithChildren) => (
-  <Input.DescriptionAndValidation>
-    <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{children}</Input.Validation>
-  </Input.DescriptionAndValidation>
+  <Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Field.ErrorText>
 );
 
 /** Horizontal "or" separator between alternative auth methods. */
 const OrDivider = ({ children }: PropsWithChildren) => (
-  <div className='flex items-center gap-3 text-xs text-description'>
+  <Layout.Flex gap='md' align='center' classNames='text-xs text-fg-muted'>
     <div className='flex-1 border-t border-neutral-700' />
     <span className='uppercase tracking-widest'>{children}</span>
     <div className='flex-1 border-t border-neutral-700' />
-  </div>
+  </Layout.Flex>
 );
 
 export default Welcome;

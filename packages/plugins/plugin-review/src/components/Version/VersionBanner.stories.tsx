@@ -8,8 +8,9 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { VersionBanner } from './VersionBanner';
+import { translations } from '#translations';
+
+import { VersionBanner } from './VersionBanner.tsx';
 
 const meta = {
   title: 'plugins/plugin-review/components/VersionBanner',

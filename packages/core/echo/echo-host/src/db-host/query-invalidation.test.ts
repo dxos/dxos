@@ -2,14 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/sql/SqlClient';
+import { beforeAll, describe, test } from 'vitest';
 
 import { Aggregate, Filter, Query } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { IndexEngine } from '@dxos/index-core';
+import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { QueryExecutor } from '../query/query-executor';
-import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
+import { AutomergeHost } from '../automerge/index.ts';
+import { QueryExecutor } from '../query/query-executor.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { SpaceStateManager } from './space-state-manager.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -38,19 +48,42 @@ const QUEUE_DXN = EID.make({ spaceId: QUEUE_SPACE_ID, entityId: QUEUE_ID });
 
 const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
+/** Never run, so a `never`-typed placeholder satisfies every dependency's `RuntimeProvider<R>`. */
+const testRuntime = Effect.never;
+
 /**
- * Creates a QueryExecutor with no real dependencies — only the query is used
- * to build the plan and cached scopes via extractScopes().
+ * Real but never-opened QueryExecutor dependencies, shared across the fixtures below. The index
+ * engine holds a client, and resolving one is asynchronous, so the fixture is built in `beforeAll`
+ * — no query in this file reaches the engine.
  */
-const makeExecutor = (query: { ast: any }): QueryExecutor =>
+let testDeps: {
+  indexEngine: IndexEngine;
+  runtime: typeof testRuntime;
+  automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
+  sql: SqlClient.SqlClient;
+};
+
+beforeAll(async () => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+  testDeps = {
+    indexEngine: new IndexEngine(sql),
+    runtime: testRuntime,
+    automergeHost: new AutomergeHost({ runtime: testRuntime }),
+    spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
+    sql,
+  };
+  return () => dispose();
+});
+
+/** Creates a QueryExecutor whose plan and cached scopes come only from `query`, via extractScopes(). */
+const makeExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>
   new QueryExecutor({
-    indexEngine: {} as any,
-    runtime: {} as any,
-    automergeHost: {} as any,
-    spaceStateManager: {} as any,
+    ...testDeps,
     queryId: 'test',
     query: query.ast,
-    reactivity: 'reactive' as any,
+    reactivity: QueryReactivity.REACTIVE,
   });
 
 // ---------------------------------------------------------------------------
@@ -62,6 +95,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 0,
       done: true,
+      drained: true,
       spaces: new Set(),
       queues: new Set(),
       documents: new Set(),
@@ -77,20 +111,21 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 1,
       done: true,
+      drained: true,
       spaces: new Set([spaceId]),
       queues: new Set(),
       documents: new Set(['doc-1']),
       types: new Set([PERSON_DXN]),
       objects: new Set([objectId]),
     });
-    expect(result).toBeDefined();
-    expect(result!.spaceIds?.has(spaceId)).toBe(true);
+    invariant(result);
+    expect(result.spaceIds?.has(spaceId)).toBe(true);
     // Versioned object type is canonicalized to the bare typename.
-    expect(result!.typenames?.has(PERSON_TYPENAME)).toBe(true);
-    expect(result!.typenames?.has(PERSON_DXN)).toBe(false);
-    expect(result!.objectIds?.has(objectId)).toBe(true);
+    expect(result.typenames?.has(PERSON_TYPENAME)).toBe(true);
+    expect(result.typenames?.has(PERSON_DXN)).toBe(false);
+    expect(result.objectIds?.has(objectId)).toBe(true);
     // Empty queues → undefined (no queue constraint)
-    expect(result!.queueIds).toBeUndefined();
+    expect(result.queueIds).toBeUndefined();
   });
 
   // Regression for DX-966: stored object types arrive versioned; the hint must reduce them to the
@@ -99,13 +134,15 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 2,
       done: true,
+      drained: true,
       spaces: new Set([SpaceId.random()]),
       queues: new Set(),
       documents: new Set(),
       types: new Set([PERSON_DXN, ORG_DXN]),
       objects: new Set(),
     });
-    expect(result!.typenames).toEqual(new Set([PERSON_TYPENAME, ORG_TYPENAME]));
+    invariant(result);
+    expect(result.typenames).toEqual(new Set([PERSON_TYPENAME, ORG_TYPENAME]));
   });
 });
 
@@ -304,16 +341,13 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
 
   test('Union query (Query.all) always matches (UnionStep → isSimple=false)', ({ expect }) => {
     const executor = new QueryExecutor({
-      indexEngine: {} as any,
-      runtime: {} as any,
-      automergeHost: {} as any,
-      spaceStateManager: {} as any,
+      ...testDeps,
       queryId: 'test',
       query: Query.all(
         withSpace(Query.select(Filter.type(TestSchema.Person))),
         withSpace(Query.select(Filter.type(TestSchema.Organization))),
       ).ast,
-      reactivity: 'reactive' as any,
+      reactivity: QueryReactivity.REACTIVE,
     });
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
@@ -361,13 +395,13 @@ describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — id-rooted relation traversal (companion chat history)
+// QueryExecutor.matchesHint — id-rooted relation traversal
 //
-// The companion chat-history toolbar queries:
-//   Query.select(Filter.id(primary.id)).targetOf(CompanionTo).source()
-// i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new chat +
-// CompanionTo relation are persisted, the primary object is NOT re-indexed, so the indexing hint
-// mentions only the new relation/chat (their ids + the relation typename) — not the primary's id.
+// The shape:
+//   Query.select(Filter.id(primary.id)).targetOf(SomeRelation).source()
+// i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new source +
+// relation are persisted, the primary object is NOT re-indexed, so the indexing hint mentions
+// only the new relation/source (their ids + the relation typename) — not the primary's id.
 // The user's hypothesis: such a query is skipped by hint matching because its only constrained
 // dimension (objectIds = {primary.id}) does not overlap the hint.
 // ---------------------------------------------------------------------------
@@ -419,13 +453,10 @@ describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
 describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
   test('queue-only scope derives spaceId and matches space-scoped hint', ({ expect }) => {
     const executor = new QueryExecutor({
-      indexEngine: {} as any,
-      runtime: {} as any,
-      automergeHost: {} as any,
-      spaceStateManager: {} as any,
+      ...testDeps,
       queryId: 'test',
       query: Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]).ast,
-      reactivity: 'reactive' as any,
+      reactivity: QueryReactivity.REACTIVE,
     });
     // Hint carries the space derived from the queue DXN → should match.
     const matchingHint = makeHint({ spaceIds: makeSpaceSet(QUEUE_SPACE_ID) });
@@ -438,13 +469,10 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
 
   test('queue-only scope matches queue-scoped hint with the right queueId', ({ expect }) => {
     const executor = new QueryExecutor({
-      indexEngine: {} as any,
-      runtime: {} as any,
-      automergeHost: {} as any,
-      spaceStateManager: {} as any,
+      ...testDeps,
       queryId: 'test',
       query: Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]).ast,
-      reactivity: 'reactive' as any,
+      reactivity: QueryReactivity.REACTIVE,
     });
     // Hint constrained to the exact queue → match.
     const matchingHint = makeHint({ queueIds: makeObjectSet(QUEUE_ID) });
@@ -453,5 +481,40 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
     // Hint with a different queue → no match.
     const nonMatchingHint = makeHint({ queueIds: makeObjectSet(EntityId.random()) });
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — compiled (sql) plan
+// ---------------------------------------------------------------------------
+
+// The compiled path folds the plan into one `SqlStep`; scope analysis must still see the steps it
+// absorbed, or every compiled query matches every hint and re-runs on every write.
+describe('QueryExecutor.matchesHint — compiled (sql) plan', () => {
+  const makeSqlExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>
+    new QueryExecutor({
+      ...testDeps,
+      queryId: 'test',
+      query: query.ast,
+      reactivity: QueryReactivity.REACTIVE,
+      executor: 'sql',
+    });
+
+  test('space query does NOT match when hint typenames are disjoint', ({ expect }) => {
+    const executor = makeSqlExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
+    expect(executor.compiled).toBe(true);
+    const disjoint = makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(ORG_TYPENAME) });
+    expect(executor.matchesHint(disjoint)).toBe(false);
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
+  });
+
+  test('feed query does NOT match a space write of an unrelated type', ({ expect }) => {
+    const executor = makeSqlExecutor(
+      Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]),
+    );
+    expect(executor.compiled).toBe(true);
+    const spaceWrite = makeHint({ spaceIds: makeSpaceSet(QUEUE_SPACE_ID), typenames: makeTypeSet(ORG_TYPENAME) });
+    expect(executor.matchesHint(spaceWrite)).toBe(false);
+    expect(executor.matchesHint(makeHint({ queueIds: makeObjectSet(QUEUE_ID) }))).toBe(true);
   });
 });

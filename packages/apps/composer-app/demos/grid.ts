@@ -8,7 +8,7 @@ import robot from 'robotjs'; // TODO(burdon): Abandoned.
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { Grid, Launcher } from './util';
+import { Grid, Launcher } from './util/index.ts';
 
 /**
  * Environment variables.

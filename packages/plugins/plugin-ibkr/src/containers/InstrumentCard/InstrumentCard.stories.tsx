@@ -6,14 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ibkr } from '#types';
 
-import { TRADINGVIEW_SOURCE } from '../../constants';
-import * as Ibkr from '../../types/Ibkr';
-import { InstrumentCard } from './InstrumentCard';
+import { TRADINGVIEW_SOURCE } from '../../constants.ts';
+import { InstrumentCard } from './InstrumentCard.tsx';
 
 // Fictional instrument only — this is a public repo (never real holdings).
 const DefaultStory = () => {

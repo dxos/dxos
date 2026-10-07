@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-video",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Video plugin for DXOS Composer",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -40,14 +48,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/VideoPlugin.tsx",
-      "types": "./dist/types/src/VideoPlugin.d.ts",
-      "default": "./dist/lib/VideoPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -57,26 +70,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./Video": {
-      "source": "./src/types/Video.ts",
-      "types": "./dist/types/src/types/Video.d.ts",
-      "import": "./dist/lib/Video.mjs"
-    },
+    "./package.json": "./package.json",
     "./VideoEvents": {
       "source": "./src/types/VideoEvents.ts",
       "types": "./dist/types/src/types/VideoEvents.d.ts",
@@ -87,14 +86,15 @@
       "types": "./dist/types/src/types/VideoOperation.d.ts",
       "import": "./dist/lib/VideoOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./VideoPlugin": {
+      "source": "./src/VideoPlugin.ts",
+      "types": "./dist/types/src/VideoPlugin.d.ts",
+      "import": "./dist/lib/VideoPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Video": [
-        "dist/types/src/types/Video.d.ts"
-      ],
       "VideoEvents": [
         "dist/types/src/types/VideoEvents.d.ts"
       ],
@@ -114,6 +114,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -121,21 +122,20 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-compose-refs": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

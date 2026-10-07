@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import * as VideoOperation from '../types/VideoOperation';
-import { fetchPage, parseYouTubeDescription } from '../util';
+import { VideoOperation } from '#types';
+
+import { fetchPage, parseYouTubeDescription } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof VideoOperation.FetchDescription> = VideoOperation.FetchDescription.pipe(
   Operation.withHandler(

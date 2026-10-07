@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-graph",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#hooks": {
@@ -24,9 +24,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/GraphPlugin.ts",
-      "types": "./dist/types/src/GraphPlugin.d.ts",
-      "default": "./dist/lib/GraphPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {
@@ -35,15 +35,20 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+    "./GraphAction": {
+      "source": "./src/GraphAction.ts",
+      "types": "./dist/types/src/GraphAction.d.ts",
+      "import": "./dist/lib/ns/GraphAction.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./GraphPlugin": {
+      "source": "./src/GraphPlugin.ts",
+      "types": "./dist/types/src/GraphPlugin.d.ts",
+      "import": "./dist/lib/GraphPlugin.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
@@ -63,11 +68,13 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -76,8 +83,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

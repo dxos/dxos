@@ -1,6 +1,7 @@
 // Base tsconfig for all projects.
 // Don't rename it tsconfig.json. This is specifically non-standard name so TSC doesn't pick it up.
 {
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
   "compilerOptions": {
     "allowJs": false,
     "composite": true,
@@ -45,7 +46,12 @@
         // the language service will "follow" the re-export and import directly
         // from the original file where the symbol is defined,
         // instead of importing from the barrel.
-        "topLevelNamedReexports": "follow"
+        "topLevelNamedReexports": "follow",
+
+        // Style suggestions stay in the editor and out of build logs: 1529 of them
+        // across the repo would bury everything else.
+        "includeSuggestionsInTsc": false,
+        "diagnosticSeverity": {}
       }
     ]
   },

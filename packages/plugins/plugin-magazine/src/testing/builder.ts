@@ -7,8 +7,7 @@ import { subDays } from 'date-fns';
 import { Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
 
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
+import { Magazine, Subscription } from '#types';
 
 /** Generates an array of random posts. */
 export const generatePosts = (count: number): Subscription.Post[] => {

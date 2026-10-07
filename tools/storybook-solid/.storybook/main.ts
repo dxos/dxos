@@ -37,6 +37,15 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
   stories: baseStories ?? stories,
   addons: ['@storybook/addon-docs', '@storybook/addon-links', '@storybook/addon-themes'],
   staticDirs: [staticDir],
+  // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
+  // "Get started" onboarding checklist (sidebar widget and menu guide page).
+  core: {
+    disableWhatsNewNotifications: true,
+  },
+  features: {
+    sidebarOnboardingChecklist: false,
+    menuOnboardingChecklist: false,
+  },
   ...baseConfig,
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
@@ -47,12 +56,18 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     const { default: Inspect } = await import('vite-plugin-inspect');
     const { default: solidPlugin } = await import('vite-plugin-solid');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
+    const { default: importSource } = await import('@dxos/vite-plugin-import-source');
 
     return mergeConfig(config, {
       plugins: [
         isTrue(process.env.DX_INSPECT) && Inspect(),
 
         DxosLogPlugin(),
+
+        // `@dxos/**` and package-internal `#*` imports resolve to the `source` condition, as the react
+        // storybook does: a story then shows an edit to another package on save, rather than whatever
+        // that package's dist held when it was last built.
+        importSource({ include: ['@dxos/**', '#*'] }),
 
         solidPlugin(),
 

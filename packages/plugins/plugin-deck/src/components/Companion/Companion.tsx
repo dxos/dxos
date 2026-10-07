@@ -4,16 +4,19 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
-import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Attention } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
+import * as Theme from '@dxos/react-ui/Theme';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { Pane, type PaneTab } from '../Pane';
+import { Pane, type PaneTab } from '../Pane/index.ts';
 
 //
 // Companion
@@ -24,8 +27,9 @@ import { Pane, type PaneTab } from '../Pane';
 // primary plank via `attendableId`. Controls (e.g. close) are supplied by the container.
 //
 
-export type CompanionProps = ThemedClassName<{
-  companions: Node.Node[];
+export type CompanionProps = Util.ThemedClassName<{
+  /** The plank's companions, or undefined until they have been read — an empty array is a plank with none. */
+  companions?: AppGraphNode.Node[];
   /** Selected companion id. */
   value?: string;
   onValueChange?: (id: string) => void;
@@ -35,18 +39,24 @@ export type CompanionProps = ThemedClassName<{
   companionTo?: unknown;
   /** Toolbar controls rendered after the tabs (e.g. close). */
   controls?: ReactNode;
+  /** Omit the toolbar (e.g. fullscreen). */
+  headless?: boolean;
 }>;
 
 export const Companion = ({
   classNames,
-  companions,
+  companions: companionsProp,
   value,
   onValueChange,
   attendableId,
   companionTo,
   controls,
+  headless,
 }: CompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const companions = companionsProp ?? [];
+  // A focus area of the shell after the plank it accompanies.
+  const landmark = Main.useMainLandmark(1.5);
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
   const selected = value ?? companions[0]?.id;
@@ -55,7 +65,8 @@ export const Companion = ({
       companions.map((node) => ({
         id: node.id,
         icon: node.properties?.icon ?? 'ph--circle-dashed--regular',
-        label: toLocalizedString(node.properties?.label ?? '', t),
+        label: Theme.toLocalizedString(node.properties?.label ?? '', t),
+        testId: `deck.companion.tab.${Attention.getLinkedVariant(node.id)}`,
       })),
     [companions, t],
   );
@@ -66,6 +77,9 @@ export const Companion = ({
     () =>
       companions.map((node) => ({
         attendableId,
+        // Its own node, where its contributed actions are filed; `attendableId` above is the host
+        // plank's, which is deliberately shared and is not this surface's identity.
+        nodeId: node.id,
         subject: node.data,
         companionTo,
         variant: Attention.getLinkedVariant(node.id),
@@ -75,14 +89,23 @@ export const Companion = ({
   );
 
   return (
-    <Pane.Root classNames={classNames}>
-      <Pane.Toolbar>
-        <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
-        {controls}
-      </Pane.Toolbar>
-      {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state. */}
+    <Pane.Root {...landmark} classNames={classNames} data-testid='deck.companion'>
+      {!headless && (
+        <Pane.Toolbar>
+          <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
+          {controls}
+        </Pane.Toolbar>
+      )}
+      {companionsProp?.length === 0 && (
+        <Pane.Content classNames='grid place-items-center'>
+          <p className='text-sm text-fg-muted'>{t('no-companions.message')}</p>
+        </Pane.Content>
+      )}
+      {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state.
+          Keyed by variant rather than node id, so a companion that is the same surface beside every plank
+          (support, assistant) keeps its state when the plank it is beside changes. */}
       {companions.map((node, index) => (
-        <Pane.Content key={node.id} classNames={mx(node.id !== selected && 'hidden')}>
+        <Pane.Content key={Attention.getLinkedVariant(node.id)} classNames={mx(node.id !== selected && 'hidden')}>
           <Surface.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
         </Pane.Content>
       ))}

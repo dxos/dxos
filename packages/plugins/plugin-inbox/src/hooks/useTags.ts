@@ -8,8 +8,7 @@ import { Obj, type Tag } from '@dxos/echo';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { type InboxStackTag } from '#components';
-
-import * as Mailbox from '../types/Mailbox';
+import { Mailbox } from '#types';
 
 /**
  * Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.

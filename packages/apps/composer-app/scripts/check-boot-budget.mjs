@@ -12,9 +12,8 @@
  *
  * - BYTES catches leaks. A boot-reachable module importing a barrel instead of a subpath pulls
  *   its package in wholesale; the classes we have actually hit are 200-550 KB each (the
- *   HyperFormula engine at 548 KB, config yaml at 210 KB). The margin was originally sized under
- *   the smallest of them so a single leak would trip this; after the 2026-08-04 re-baseline it no
- *   longer is — see the NOTE on MAX_PRELOAD_BYTES for what that gave up and what wins it back.
+ *   HyperFormula engine at 548 KB, config yaml at 210 KB). The ceiling keeps about 200 KB of
+ *   headroom, under the smallest of them, so a single leak trips this.
  *
  * - COUNT catches the chunk partition collapsing. Boot chunks are built by a cycle-safe
  *   topological partition (see `bootChunkingPlugin` in vite.config.ts) that took preload
@@ -28,34 +27,32 @@
  * emits no `useFocusRing`), so presence there is not evidence that code ships. Attributing
  * bytes through the sourcemap mappings is the way to do that, and it needs real tooling.
  *
- * Raise a budget only for growth you have looked at and accepted — that is the review point
- * this check exists to create.
+ * A failure here is the review point this check exists to create; see MAX_PRELOAD_BYTES before
+ * touching either budget.
  */
 
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-/** Entry + modulepreload links. ~20 today; sized to survive a partition reshuffle, not to track it. */
-const MAX_PRELOAD_ENTRIES = 30;
+/** Entry + modulepreload links. 19 today; sized to survive a partition reshuffle, not to track it. */
+const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. ~5.30 MB today.
+ * Total on-disk size of those chunks.
  *
- * Re-baselined 2026-08-04 (was 4.75 MB) after the eager graph was audited: the `services/index.ts`
- * re-export that put hypercore, wa-sqlite, network-manager and teleport back in the closure was
- * evicted (-810 KB), and what remains is real client-side weight rather than a leak — echo-client
- * reaches automerge-repo's `fullfat` entrypoint through `doc-handle-proxy`, and the query planner
- * (`filterMatchDoc` / `QueryPlanner`) lives in echo-host but evaluates client-side. Both are value
- * imports through narrow subpaths, so there is no re-export to delete; slimming them means moving
- * code or picking a different automerge entrypoint, and that was consciously deferred.
+ * Do not raise this to get a build passing. Every user pays for these bytes before the app starts,
+ * so moving the ceiling is a team decision, not a fix. An agent that hits this limit must stop and
+ * hand it to the developer; the developer should raise it with the team before editing this line,
+ * which is code-owned for that reason.
  *
- * NOTE: at this ceiling the margin (~700 KB) is WIDER than the 200-550 KB leak classes described
- * above, so a single leak no longer necessarily trips this. Tighten it back toward the measured
- * number if either of the two remaining consumers is slimmed.
+ * Growth is not forbidden, but it has to earn its place: show that the new code runs before the
+ * app is ready, and that it cannot load lazily, be reached through a subpath instead of a
+ * barrel, or go on the boot partition's `exclude` list in vite.config.ts.
  */
-const MAX_PRELOAD_BYTES = 6 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4 * 1024 * 1024;
 
-const outDir = path.join(process.cwd(), 'out/composer');
+const buildDir = path.join(process.cwd(), 'out');
+const outDir = path.join(buildDir, 'composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
 
 const hrefs = [
@@ -81,6 +78,20 @@ console.log(
     `(budget: ${MAX_PRELOAD_ENTRIES} entries, ${asMb(MAX_PRELOAD_BYTES)} MB)`,
 );
 
+writeFileSync(
+  path.join(buildDir, 'boot-budget.json'),
+  JSON.stringify(
+    {
+      count: entries.length,
+      bytes,
+      budget: { count: MAX_PRELOAD_ENTRIES, bytes: MAX_PRELOAD_BYTES },
+      entries: entries.map((entry) => ({ name: path.basename(entry.href), bytes: entry.bytes })),
+    },
+    null,
+    2,
+  ),
+);
+
 const overCount = entries.length > MAX_PRELOAD_ENTRIES;
 const overBytes = bytes > MAX_PRELOAD_BYTES;
 if (!overCount && !overBytes) {
@@ -102,8 +113,11 @@ if (overBytes) {
   console.error(
     `\nERROR: ${asMb(bytes)} MB of eager boot graph exceeds ${asMb(MAX_PRELOAD_BYTES)} MB.\n` +
       'Something boot-reachable statically imports code that should be lazy. Usual causes: a new\n' +
-      'import reaching a package barrel instead of a light subpath (see the dxos-subpath-imports\n' +
-      'lint), or a plugin stub pulling its implementation instead of staying a `Plugin.lazy` stub.',
+      'import reaching a package barrel instead of a subpath (see the dxos-subpath-imports\n' +
+      'lint), a plugin stub pulling its implementation instead of staying a `Plugin.lazy` stub, or\n' +
+      "code boot never runs that belongs on the boot partition's `exclude` list in vite.config.ts.\n" +
+      'Do not raise MAX_PRELOAD_BYTES to make this pass: stop and take it to the developer, who\n' +
+      'should discuss it with the team first.',
   );
 }
 process.exit(1);

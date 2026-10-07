@@ -3,14 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { GraphBuilder } from '@dxos/app-graph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { DXN, Type } from '@dxos/echo';
 
-import * as GraphPath from '../app/GraphPath';
-import * as TypeSection from './TypeSection';
+import * as GraphPath from '../app/GraphPath.ts';
+import * as TypeSection from './TypeSection.ts';
 
 class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.testbook', '0.1.0'))(
   Schema.Struct({ title: Schema.String.pipe(Schema.optional) }),
@@ -21,6 +22,7 @@ const WORKSPACE_BASE = 'root/SPACE1';
 
 /** The section node's qualified id, as the graph nests it under the content group. */
 const SECTION_NODE_ID = `${WORKSPACE_BASE}/${GraphPath.GroupSegments.content}/${TYPENAME}`;
+const LIBRARY_NODE_ID = `${WORKSPACE_BASE}/${GraphPath.GroupSegments.content}/library`;
 
 const build = (sectionUrlKey?: string) =>
   Effect.runSync(
@@ -35,7 +37,7 @@ const build = (sectionUrlKey?: string) =>
 const bindingsByKey = (sectionUrlKey?: string) =>
   Object.fromEntries(
     build(sectionUrlKey)
-      .map((extension) => extension.url)
+      .map((extension) => extension.meta)
       .filter((url): url is NonNullable<typeof url> => url !== undefined)
       .map((url) => [url.key, url]),
   );
@@ -53,35 +55,27 @@ describe('createTypeSectionExtension', () => {
 
     test('leaves the section node itself unaddressable', ({ expect }) => {
       // The section sits AT the binding's path, so it has no id of its own under that key.
-      expect(GraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindingsByKey().book)).toBeUndefined();
+      expect(AppGraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindingsByKey().book)).toBeUndefined();
     });
   });
 
   describe('with sectionUrlKey', () => {
-    test('registers the section as a singleton alongside the object key', ({ expect }) => {
+    test('names the section by its key and registers it as a singleton alongside the object key', ({ expect }) => {
       const bindings = bindingsByKey('library');
       expect(Object.keys(bindings).sort()).toEqual(['book', 'library']);
-      expect(bindings.library.kind).toBe('singleton');
-      expect(bindings.book).toMatchObject({
-        kind: 'item',
-        path: [GraphPath.GroupSegments.content, TYPENAME],
-      });
+      expect(bindings.library).toMatchObject({ kind: 'singleton', path: [GraphPath.GroupSegments.content] });
+      expect(bindings.book).toMatchObject({ kind: 'item', path: [GraphPath.GroupSegments.content, 'library'] });
     });
 
-    test('resolves /library forward to the section node via static segments', ({ expect }) => {
-      const { path } = bindingsByKey('library').library;
-      expect(path).toEqual([GraphPath.GroupSegments.content, TYPENAME]);
+    test('resolves /library forward to the section node', ({ expect }) => {
+      const { library } = bindingsByKey('library');
+      expect(Option.getOrUndefined(AppGraphBuilder.urlCandidate(library, 'SPACE1', undefined))).toBe(LIBRARY_NODE_ID);
     });
 
     test('stamps /library on the section node and /book/<id> on its objects', ({ expect }) => {
       const bindings = bindingsByKey('library');
-      expect(GraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindings.library)).toBe('/library');
-      expect(GraphBuilder.nodeUrlSegment(`${SECTION_NODE_ID}/book1`, bindings.book)).toBe('/book/book1');
-    });
-
-    test('keeps object paths identical to the unsplit form', ({ expect }) => {
-      // Objects stay at root/<space>/content/<typename>/<id>, so existing links keep resolving.
-      expect(bindingsByKey('library').book).toEqual(bindingsByKey().book);
+      expect(AppGraphBuilder.nodeUrlSegment(LIBRARY_NODE_ID, bindings.library)).toBe('/library');
+      expect(AppGraphBuilder.nodeUrlSegment(`${LIBRARY_NODE_ID}/book1`, bindings.book)).toBe('/book/book1');
     });
   });
 });

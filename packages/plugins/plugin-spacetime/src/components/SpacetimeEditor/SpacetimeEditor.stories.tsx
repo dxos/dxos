@@ -7,14 +7,13 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Model, Scene } from '#types';
 
-import * as Model from '../../types/Model';
-import * as Scene from '../../types/Scene';
-import { type SpacetimeController, SpacetimeEditor } from './SpacetimeEditor';
+import { type SpacetimeController, SpacetimeEditor } from './SpacetimeEditor.tsx';
 
 const DefaultStory = () => {
   const controller = useRef<SpacetimeController>(null);
@@ -34,12 +33,12 @@ const DefaultStory = () => {
   return (
     <SpacetimeEditor.Root ref={controller} scene={scene}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar alwaysActive />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SpacetimeEditor.Root>
   );

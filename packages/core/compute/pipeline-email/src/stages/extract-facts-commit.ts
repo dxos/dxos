@@ -8,7 +8,7 @@ import { Stage } from '@dxos/pipeline';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import { messageSource } from './facts';
+import { messageSource } from './facts.ts';
 
 // Extract one message's facts WITHOUT persisting them. Distinct from `FactIndexer`, whose closure
 // also writes to the store: here persistence is the sink's responsibility, so a page of facts can
@@ -41,7 +41,7 @@ export const extractFactsUnitStage = (
     (message) =>
       Effect.tryPromise(() => extract(message)).pipe(
         Effect.tapError((error) => Effect.logWarning('extract-facts-unit failed; degrading to no facts', error)),
-        Effect.orElse(() => Effect.succeed<RDF.Fact[]>([])),
+        Effect.catch(() => Effect.succeed<RDF.Fact[]>([])),
         Effect.map((facts): FactUnit => ({ facts, foreignId: messageSource(message), key: keyOf(message) })),
       ),
     { concurrency },

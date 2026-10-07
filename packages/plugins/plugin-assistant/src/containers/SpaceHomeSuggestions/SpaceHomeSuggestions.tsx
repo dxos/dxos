@@ -4,10 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as HomeSection from '@dxos/app-toolkit/HomeSection';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
@@ -23,8 +27,8 @@ type SpaceScopedProps = {
  * quick entry points regardless of whether recent objects exist.
  */
 export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const suggestions = useHomeSuggestions(space);
 
   const handleRunPrompt = useCallback(
@@ -44,39 +48,29 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
-      <div className='flex flex-col gap-3'>
+      <Layout.Container gap='lg' gutter='none'>
         {suggestions.map((prompt, index) => (
-          <div
+          // A real button, not a `role='button'` div: WKWebView only reliably synthesizes a tap into
+          // a click for natively interactive elements, and the iOS walkthrough could not launch a
+          // chat from these cards at all. It also rules the nested `IconButton` out — interactive
+          // content inside a button is invalid — so the sparkle is a plain icon.
+          <button
             key={`${index}:${prompt}`}
-            role='button'
-            tabIndex={0}
-            className='cursor-pointer w-full'
+            type='button'
+            className='cursor-pointer w-full text-start'
             onClick={() => handleRunPrompt(prompt)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleRunPrompt(prompt);
-              }
-            }}
           >
-            <Card.Root fullWidth>
+            <Card.Root>
               <Card.Header>
-                <Card.Block>
-                  <IconButton
-                    variant='ghost'
-                    label={prompt}
-                    icon='ph--sparkle--regular'
-                    iconOnly
-                    tabIndex={-1}
-                    aria-hidden
-                  />
-                </Card.Block>
+                <Layout.Block>
+                  <Icon.Icon icon='ph--sparkle--regular' />
+                </Layout.Block>
                 <Card.Title>{prompt}</Card.Title>
               </Card.Header>
             </Card.Root>
-          </div>
+          </button>
         ))}
-      </div>
+      </Layout.Container>
     </HomeSection.Root>
   );
 };

@@ -6,7 +6,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = SpaceOperation.OpenSettings.pipe(
   Operation.withHandler(
@@ -17,6 +17,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = Space
         subject: [GraphPath.getSpacePath(input.space.id, 'settings', 'settings')],
         workspace: GraphPath.getSpacePath(input.space.id),
       });
+      // As with the app settings, a companion carried over from the space's objects would only narrow the settings.
+      yield* LayoutOperation.closeCompanion();
     }),
   ),
 );

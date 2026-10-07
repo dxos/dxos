@@ -25,6 +25,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -35,6 +38,9 @@
     },
     {
       "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -49,10 +55,10 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-toolkit"
+      "path": "../../sdk/app-graph"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -88,6 +94,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -98,6 +107,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-projects"
     },
     {
       "path": "../plugin-space"

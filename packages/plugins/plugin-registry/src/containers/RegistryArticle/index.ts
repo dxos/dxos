@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export { RegistryArticle, RegistryArticle as default } from './RegistryArticle';
+export { RegistryArticle, RegistryArticle as default } from './RegistryArticle.tsx';

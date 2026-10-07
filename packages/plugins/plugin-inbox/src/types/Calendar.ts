@@ -4,33 +4,40 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { connectorIdsForTarget } from '@dxos/plugin-connector';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
+
+/**
+ * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
+ * context id (which holds the `single` event selection) so the two selection modes don't collide.
+ * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
+ */
+export const getRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
 
 /** Calendar object schema. */
 export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.calendar', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
     // items, so their tag associations live in this child `TagIndex` rather than in object meta.
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
     // Providers are resolved from the registry — see `Mailbox`.
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
-      connectorIds: connectorIdsForTarget,
+      connectorIds: ConnectorSpec.idsForTarget,
       bindTarget: true,
     }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -38,7 +45,7 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
 export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);
 
 export const CreateCalendarSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'tags'>;
@@ -47,13 +54,10 @@ type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'tags'>;
 export const make = (props: CalendarProps = {}) => {
   const feed = Feed.make();
   const tags = TagIndex.make();
-  const calendar = Obj.make(Calendar, {
+  // The feed and tag index are children (`SetParent`): both cascade-delete with the calendar.
+  return Obj.make(Calendar, {
     feed: Ref.make(feed),
     tags: Ref.make(tags),
     ...props,
   });
-  // TODO(wittjosiah): Parent should be declarative in the schema.
-  Obj.setParent(feed, calendar);
-  Obj.setParent(tags, calendar);
-  return calendar;
 };

@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ChatStatusIndicator';
+export * from './ChatStatusIndicator.tsx';

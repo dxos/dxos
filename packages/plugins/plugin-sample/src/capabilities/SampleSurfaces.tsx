@@ -8,13 +8,13 @@
 
 import React from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 
 import { SampleStatusIndicator } from '#components';
 import { SampleDeckCompanion } from '#containers';
-
-import * as SampleCapabilities from '../types/SampleCapabilities';
+import { SampleCapabilities } from '#types';
 
 /**
  * `useAtomCapability` subscribes to the settings atom reactively so the indicator hides/shows when
@@ -22,14 +22,14 @@ import * as SampleCapabilities from '../types/SampleCapabilities';
  * triggers re-renders.
  */
 export const SampleStatusSurface = () => {
-  const settings = useAtomCapability(SampleCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(SampleCapabilities.Settings);
 
   return settings.showStatusIndicator !== false ? <SampleStatusIndicator /> : null;
 };
 
 /** The workspace-wide companion panel is scoped to the active space rather than to a subject. */
 export const SampleDeckCompanionSurface = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }

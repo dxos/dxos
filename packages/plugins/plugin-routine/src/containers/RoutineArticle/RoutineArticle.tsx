@@ -2,22 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
-
-import * as RoutineOperation from '../../types/RoutineOperation';
+import { RoutineOperation } from '#types';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 
@@ -30,10 +29,7 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  * achieve it — reintroduce a run-state-based lock instead.
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  // The form's pickers list registry-synced skills, so pull the assistant-start-gated skill
-  // modules; operation definitions are complete at boot (handler sets register eagerly).
-  useActivationSignal(AppActivationEvents.AssistantStart);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);
@@ -73,18 +69,14 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   }
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document'>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <RoutineForm db={db} routine={subject} />
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId} classNames='dx-document' />
+      </Panel.Header>
+      <Panel.Body asChild>
+        <RoutineForm db={db} routine={subject} />
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

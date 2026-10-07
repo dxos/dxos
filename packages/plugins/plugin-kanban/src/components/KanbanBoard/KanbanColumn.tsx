@@ -8,10 +8,9 @@ import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { useKanbanItemEventHandler } from '#hooks';
+import { KanbanConstants, KanbanLayout } from '#types';
 
-import * as KanbanConstants from '../../types/KanbanConstants';
-import * as KanbanLayout from '../../types/KanbanLayout';
-import { type KanbanColumnProps, useKanbanBoard } from './context';
+import { type KanbanColumnProps, useKanbanBoard } from './context.ts';
 
 export { type KanbanColumnProps };
 
@@ -46,13 +45,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         dragHandle={dragHandle}
         ref={forwardedRef}
       >
-        {uncategorized ? (
-          <div className='border-b border-separator p-2' data-testid='board-column-header'>
-            <span className='font-medium'>{title}</span>
-          </div>
-        ) : (
-          <Board.Column.Header label={title} dragHandleRef={setDragHandle} />
-        )}
+        <Board.Column.Header label={title} dragHandleRef={uncategorized ? undefined : setDragHandle} />
         <Board.Column.Body
           data={column}
           eventHandler={eventHandler}

@@ -4,8 +4,8 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type TypeMeta } from '../Annotation';
-import { type AnyEntity } from '../common/types';
+import { type TypeMeta } from '../Annotation/index.ts';
+import { type AnyEntity } from '../common/types/index.ts';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -16,7 +16,7 @@ import { type AnyEntity } from '../common/types';
  *
  * @deprecated Use `Type.AnyObj` from `@dxos/echo` instead.
  */
-export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Schema<A, I> {}
+export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Codec<A, I> {}
 
 /**
  * Typed object that could be used as a prototype in class definitions.

@@ -18,7 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import * as VideoOperation from '../types/VideoOperation';
+import { VideoOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof VideoOperation.Summarize> = VideoOperation.Summarize.pipe(
   Operation.withHandler(
@@ -62,7 +62,7 @@ const handler: Operation.WithHandler<typeof VideoOperation.Summarize> = VideoOpe
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

@@ -23,6 +23,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -36,6 +39,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -57,9 +63,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

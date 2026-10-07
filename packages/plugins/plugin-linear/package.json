@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-linear",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS plugin that integrates Linear as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -30,14 +38,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/LinearPlugin.ts",
-      "types": "./dist/types/src/LinearPlugin.d.ts",
-      "default": "./dist/lib/LinearPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -47,16 +60,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./LinearEvents": {
       "source": "./src/types/LinearEvents.ts",
       "types": "./dist/types/src/types/LinearEvents.d.ts",
@@ -67,7 +76,11 @@
       "types": "./dist/types/src/types/LinearOperation.d.ts",
       "import": "./dist/lib/LinearOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./LinearPlugin": {
+      "source": "./src/LinearPlugin.ts",
+      "types": "./dist/types/src/LinearPlugin.d.ts",
+      "import": "./dist/lib/LinearPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -99,7 +112,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

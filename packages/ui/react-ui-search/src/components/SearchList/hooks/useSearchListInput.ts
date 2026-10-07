@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSearchListInputContext } from '../context';
+import { useSearchListInputContext } from '../context.ts';
 
 /**
  * Hook to access the search context for custom input implementations.

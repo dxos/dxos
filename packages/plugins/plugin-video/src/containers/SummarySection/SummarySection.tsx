@@ -4,16 +4,15 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import { Video } from '@dxos/types';
 
 import { Pending, Summary } from '#components';
 import { meta } from '#meta';
-
-import * as Video from '../../types/Video';
-import * as VideoOperation from '../../types/VideoOperation';
+import { VideoOperation } from '#types';
 
 // TODO(burdon): Use AppSurface.Section.
 export type SummarySectionProps = {
@@ -30,8 +29,8 @@ export type SummarySectionProps = {
  * alongside the cross-origin player iframe.
  */
 export const SummarySection = ({ subject }: SummarySectionProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
   // Resolve the summary's target so we know whether to show the editor or the pending state.

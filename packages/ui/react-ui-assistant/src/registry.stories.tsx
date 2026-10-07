@@ -1,0 +1,604 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+
+import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ContentBlock } from '@dxos/types';
+import { trim } from '@dxos/util';
+
+import { assistantRegistry } from './registry.tsx';
+import { BACKGROUND_TOOL } from './renderer.ts';
+import { translations } from './translations.ts';
+
+// Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
+// the item unmounting as the reader scrolls past it.
+const store = createWidgetStateStore();
+
+/**
+ * Every tag {@link assistantRegistry} registers, rendered through the shipping path: the document
+ * the renderer emits, in the feed's own `MarkdownBlock` — the container a thread mounts per
+ * message. One story per tag, so a widget can be worked on in isolation without driving a whole
+ * conversation.
+ */
+type StoryArgs = {
+  content: string;
+};
+
+// Stands in for the query container a thread gets from `Column.Center`, so `cqi` is not the viewport.
+const DefaultStory = ({ content }: StoryArgs) => (
+  <WidgetStateProvider store={store}>
+    <div className='dx-container-type-inline-size p-4'>
+      <MarkdownBlock text={content} registry={assistantRegistry} />
+    </div>
+  </WidgetStateProvider>
+);
+
+const meta = {
+  title: 'ui/react-ui-assistant/widgets/Registry',
+  component: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/** Every widget in one column, in registry order, so their rows, carets and buttons can be compared. */
+// Resolved at render: the stories it collects are declared below it.
+const allWidgets = () =>
+  [
+    Prompt,
+    SyntheticVariants,
+    Reasoning,
+    Status,
+    Reference,
+    Suggestion,
+    Select,
+    Stats,
+    Toolkit,
+    ToolkitFailed,
+    ToolkitNarrated,
+    ToolkitStatus,
+    ToolkitBackgroundResult,
+    ToolkitBackgroundError,
+    Summary,
+    Request,
+    RequestAnswered,
+    Surface,
+    Json,
+  ]
+    .map((story) => story.args?.content ?? '')
+    .join('\n\n');
+
+export const AllWidgets: Story = {
+  args: { content: '' },
+  render: () => (
+    <ScrollArea.Root classNames='h-full'>
+      <ScrollArea.Viewport>
+        <DefaultStory content={allWidgets()} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  ),
+};
+
+/** Capped by the container query: a long suggestion truncates rather than widening the editor into a horizontal scroll. */
+export const TestAllWidgetsFit: Story = {
+  ...AllWidgets,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('[data-action="submit"]')).not.toBeNull());
+    const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller');
+    await expect(scroller && scroller.scrollWidth - scroller.clientWidth).toBeLessThanOrEqual(1);
+    const label = canvasElement.querySelector<HTMLElement>('[data-action="submit"] span');
+    await expect(label && label.scrollWidth > label.clientWidth).toBe(true);
+  },
+};
+
+//
+// DOM widgets
+//
+
+/**
+ * The shape {@link createRenderer} actually emits for a synthetic-only turn (an alarm wake-up, a
+ * continuation nudge): the tags hug the content and the prose keeps its own line breaks.
+ */
+export const SyntheticTurn: Story = {
+  args: {
+    content:
+      '<synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+  },
+};
+
+export const Prompt: Story = {
+  args: {
+    content: '<prompt>Hello world!</prompt>',
+  },
+};
+
+export const LinkPreview: Story = {
+  args: {
+    content: 'See [Meeting notes](dxn:echo:@:01J8Z1QK0000000000000000) for the decisions.',
+  },
+};
+
+export const Synthetic: Story = {
+  args: {
+    content: trim`
+      <synthetic>
+      Completed the checklist:
+      <checklist>
+      1. [x] Review new messages.
+      2. [x] Respond to new messages.
+      3. [x] Archive old messages.
+      </checklist>
+      </synthetic>`,
+  },
+};
+
+/**
+ * Synthetic turns beside a tool run: both are one line of prose with the disclosure caret at its
+ * end — a one-liner, a multi-line wake-up, and a long nudge with a checklist.
+ */
+const SYNTHETIC_VARIANTS = trim`
+  <synthetic>Continue.</synthetic>
+
+  <synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).
+  Poll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>
+
+  <synthetic>
+  Completed the checklist:
+  <checklist>
+  1. [x] Review new messages.
+  2. [x] Respond to new messages.
+  3. [x] Archive old messages.
+  </checklist>
+  </synthetic>
+`;
+
+export const SyntheticVariants: Story = {
+  args: {
+    content: SYNTHETIC_VARIANTS,
+  },
+};
+
+/** Collapsed to its first line with the caret trailing it; the caret opens onto the whole prompt. */
+export const TestSynthetic: Story = {
+  args: {
+    content: SYNTHETIC_VARIANTS,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('assistant.synthetic')).toHaveLength(3));
+    const trigger = canvas.getAllByTestId('assistant.synthetic')[1];
+    await expect(trigger).toHaveTextContent('Scheduled alarm fired');
+    await expect(trigger).not.toHaveTextContent('Poll the agent session');
+
+    // The caret is the trigger's last child, at the row's end.
+    const caret = trigger.lastElementChild;
+    await expect(caret?.querySelector('svg')).not.toBeNull();
+    await expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(trigger);
+    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
+    const body = canvasElement.querySelectorAll<HTMLElement>('[data-synthetic-text]')[1];
+    await waitFor(() => expect(body.getBoundingClientRect().height).toBeGreaterThan(0));
+    await expect(body).toHaveTextContent('Poll the agent session');
+  },
+};
+
+export const Reasoning: Story = {
+  args: {
+    content: trim`
+      <reasoning>
+      The user is asking about nested flex layouts and overflow. 
+      I should mention min-height 0 and grid track sizing.
+      </reasoning>
+    `,
+  },
+};
+
+export const Status: Story = {
+  args: {
+    content: '<status>Searching the workspace…</status>',
+  },
+};
+
+export const Reference: Story = {
+  args: {
+    content: 'Filed under <reference ref="dxn:echo:@:01J8Z1QK0000000000000000">Design notes</reference>.',
+  },
+};
+
+export const Suggestion: Story = {
+  args: {
+    // TODO(burdon): Consider addition container for suggestions (like select).
+    content: [
+      '<suggestion>Show me the layout rules (this is a very very long suggestion that should truncate)</suggestion>',
+      '<suggestion>Suggestion 2</suggestion>',
+      '<suggestion>Suggestion 3</suggestion>',
+    ].join(''),
+  },
+};
+
+export const Select: Story = {
+  args: {
+    content: trim`
+      <select>
+        <option>Select red</option>
+        <option>Select green</option>
+        <option>Select blue</option>
+        <option>Select yellow</option>
+        <option>Select purple</option>
+        <option>Select orange</option>
+        <option>Select pink</option>
+      </select>
+    `,
+  },
+};
+
+export const Stats: Story = {
+  args: {
+    content: '<stats>1,204 tokens · 2.4s</stats>',
+  },
+};
+
+//
+// React widgets (portaled outside the editor)
+//
+
+const call = (id: string, name: string, input: unknown = { query: 'status', limit: 10 }): ContentBlock.ToolCall => ({
+  _tag: 'toolCall',
+  toolCallId: id,
+  name,
+  input: JSON.stringify(input),
+  providerExecuted: false,
+});
+
+const result = (id: string, name: string, value: unknown): ContentBlock.ToolResult => ({
+  _tag: 'toolResult',
+  toolCallId: id,
+  name,
+  result: JSON.stringify(value),
+  providerExecuted: false,
+});
+
+const failure = (id: string, name: string, error: string): ContentBlock.ToolResult => ({
+  _tag: 'toolResult',
+  toolCallId: id,
+  name,
+  error,
+  providerExecuted: false,
+});
+
+const operationCall = (
+  id: string,
+  name: string,
+  operationName: string,
+  operationIcon: string,
+  input: unknown = { query: 'status', limit: 10 },
+): ContentBlock.ToolCall => ({
+  ...call(id, name, input),
+  operationKey: `dxos.org/operation/${name}`,
+  operationName,
+  operationIcon,
+});
+
+const status = (text: string): ContentBlock.Status => ({ _tag: 'status', statusText: text });
+
+const reasoning = (text: string): ContentBlock.Reasoning => ({ _tag: 'reasoning', reasoningText: text });
+
+/** One tag per run, which is what the thread's projection produces after folding a turn's messages. */
+const toolkit = (blocks: ContentBlock.Any[]): string => `<toolkit>${JSON.stringify(blocks)}</toolkit>`;
+
+const toolchain: [ContentBlock.ToolCall, ContentBlock.ToolResult][] = [
+  [
+    {
+      _tag: 'toolCall',
+      toolCallId: 'tc-1',
+      name: 'example_tool',
+      input: JSON.stringify({ query: 'status', limit: 10 }),
+      providerExecuted: false,
+    },
+    {
+      _tag: 'toolResult',
+      toolCallId: 'tc-1',
+      name: 'example_tool',
+      result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+      providerExecuted: false,
+    },
+  ],
+  [
+    {
+      _tag: 'toolCall',
+      toolCallId: 'tc-2',
+      name: 'example_tool',
+      input: JSON.stringify({ query: 'status', limit: 10 }),
+      providerExecuted: false,
+    },
+    {
+      _tag: 'toolResult',
+      toolCallId: 'tc-2',
+      name: 'example_tool',
+      result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }, { id: 3 }] }),
+      providerExecuted: false,
+    },
+  ],
+];
+
+/** A finished run: the summary counts, and every call is one row a click from its payload. */
+export const Toolkit: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+      call('tc-2', 'search_index'),
+      result('tc-2', 'search_index', { ok: true, hits: 12 }),
+      call('tc-3', 'write_document'),
+      result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+/** A lone call whose payload is far taller than the panel: collapsed, it must not scroll. */
+export const ToolkitSingleLarge: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'markdown-update', {
+        doc: 'echo://SPACE/01ABC',
+        edits: Array.from({ length: 12 }, (_, i) => ({ oldString: `old ${i}`, newString: `new ${i}` })),
+      }),
+      result('tc-1', 'markdown-update', { newContent: 'x'.repeat(400) }),
+    ]),
+  },
+};
+
+/** A single call still in flight: the summary names it rather than counting. */
+export const ToolkitRunning: Story = {
+  args: {
+    content: toolkit([call('tc-1', 'read_document')]),
+  },
+};
+
+/** A later call in flight: the summary names the active one and carries the run's count. */
+export const ToolkitRunningRun: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true }),
+      call('tc-2', 'search_index'),
+      result('tc-2', 'search_index', { ok: true }),
+      call('tc-3', 'write_document'),
+    ]),
+  },
+};
+
+/** A failed call, which the summary reports without the reader opening anything. */
+export const ToolkitFailed: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true }),
+      call('tc-2', 'search_index'),
+      failure('tc-2', 'search_index', 'ENOENT: no such file or directory'),
+      call('tc-3', 'write_document'),
+      result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+const evalCode = (code: string) => ({ code: trim`${code}` });
+
+/** Code mode's `eval`: printed output comes back as plain text, and a throw fails the call with it. */
+export const ToolkitCodeMode: Story = {
+  args: {
+    content: toolkit([
+      call(
+        'tc-1',
+        'eval',
+        evalCode(`
+          const tasks = await query({ typename: 'com.example.type.task' });
+          print('count', tasks.length);
+          print('titles', tasks.map((task) => task.title));
+        `),
+      ),
+      result('tc-1', 'eval', 'count 2\ntitles [\n  "Write the docs",\n  "Fix the build"\n]'),
+      call(
+        'tc-2',
+        'eval',
+        evalCode(`
+          print('updating', 2, 'tasks');
+          await ops['dxn:com.example.operation.score']({ title: 42 });
+        `),
+      ),
+      failure('tc-2', 'eval', 'updating 2 tasks\nError: Expected string, actual 42\n  at ["title"]'),
+    ]),
+  },
+};
+
+/** The pre-fold shape, kept so a regression to one panel per message is visible. */
+export const ToolkitUnmerged: Story = {
+  args: {
+    content: toolchain.map(([toolCall, toolResult]) => toolkit([toolCall, toolResult])).join('\n\n'),
+  },
+};
+
+/** Operation-backed calls: the row shows the operation's name and icon, not the raw tool name. */
+export const ToolkitOperations: Story = {
+  args: {
+    content: toolkit([
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+      result('tc-2', 'space-query', { hits: 12 }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call: named after the operation its code invokes, not after the `eval` tool. */
+export const ToolkitCodeModeNamed: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', { code: "await ops.createTask({ title: 'Ship the release notes' })" }),
+        displayName: 'Create task',
+        displayIcon: 'ph--check-square--regular',
+      },
+      result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call spanning several operations: listed by name, in the order the code calls them. */
+export const ToolkitCodeModeNamedMultiple: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', {
+          code: "const [task] = await query('com.example.type.task');\nawait ops.updateTask({ task, status: 'done' });\nawait ops.createTask({ title: 'Follow up' });",
+        }),
+        displayName: 'Update task, Create task',
+      },
+      result('tc-1', 'eval', { output: 'ok', ok: true }),
+    ]),
+  },
+};
+
+/** Status and reasoning narrate the run from inside its panel; settled, the summary counts. */
+export const ToolkitNarrated: Story = {
+  args: {
+    content: toolkit([
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      status('Indexing the space'),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+      result('tc-2', 'space-query', { hits: 12 }),
+    ]),
+  },
+};
+
+/** The same run mid-flight: the summary leads with the narration, since the step is still open. */
+export const ToolkitNarratedRunning: Story = {
+  args: {
+    content: toolkit([
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      status('Indexing the space'),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+    ]),
+  },
+};
+
+/** A run that never reached a call: the panel is the model saying what it is doing, nothing more. */
+export const ToolkitNarrationOnly: Story = {
+  args: {
+    content: toolkit([
+      status('Reading the space'),
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+    ]),
+  },
+};
+
+/** A lone status, which is what a run looks like mid-stream: a plain row, with nothing to open. */
+export const ToolkitStatus: Story = {
+  args: {
+    content: toolkit([status('Reading the space')]),
+  },
+};
+
+/** A background tool's result, recovered on a later turn without the call it answers. */
+export const ToolkitBackgroundResult: Story = {
+  args: {
+    content: toolkit([
+      result('9b14bf5b-4723-46f8-976e-1cacad08d854', BACKGROUND_TOOL, {
+        stdout: '0\n',
+        stderr: '',
+        exitCode: 0,
+        success: true,
+      }),
+    ]),
+  },
+};
+
+/** The same background run reported twice shows once, with the latest report. */
+export const TestToolkitBackgroundDuplicate: Story = {
+  args: {
+    content: toolkit([
+      result('pid-1', BACKGROUND_TOOL, { exitCode: 1 }),
+      result('pid-1', BACKGROUND_TOOL, { exitCode: 0 }),
+    ]),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = await canvas.findByTestId('assistant.tool-call');
+    await expect(row).toHaveTextContent('Background result');
+    await userEvent.click(row);
+    await waitFor(() => expect(canvasElement.textContent).toContain('"exitCode": 0'));
+    await expect(canvasElement.textContent).not.toContain('"exitCode": 1');
+  },
+};
+
+export const ToolkitBackgroundError: Story = {
+  args: {
+    content: toolkit([
+      {
+        _tag: 'toolResult',
+        toolCallId: '7',
+        name: BACKGROUND_TOOL,
+        error: 'Timed out after 30s',
+        providerExecuted: false,
+      },
+    ]),
+  },
+};
+
+export const Summary: Story = {
+  args: {
+    content: '<summary>The thread settled on min-h-0 for every flex ancestor of the scroll viewport.</summary>',
+  },
+};
+
+const permission = {
+  _tag: 'request',
+  requestId: 'tool-2',
+  title: 'Run pnpm test',
+  options: [
+    { id: 'allow', label: 'Yes', kind: 'allow_once' },
+    { id: 'allow-always', label: 'Yes, and allow similar commands', kind: 'allow_always' },
+    { id: 'reject', label: 'No', kind: 'reject_once' },
+  ],
+};
+
+export const Request: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify(permission)}</request>`,
+  },
+};
+
+export const RequestAnswered: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify({ ...permission, resolution: { outcome: 'selected', optionId: 'allow' } })}</request>`,
+  },
+};
+
+// Rendered by the fallback here; the host overrides it with a widget that can dispatch the surface.
+export const Surface: Story = {
+  args: {
+    content: `<surface role="card">${JSON.stringify({ id: 'obj-1' })}</surface>`,
+  },
+};
+
+export const Json: Story = {
+  args: {
+    content: `<json>${JSON.stringify({ _tag: 'unknown', payload: { value: 42 } })}</json>`,
+  },
+};

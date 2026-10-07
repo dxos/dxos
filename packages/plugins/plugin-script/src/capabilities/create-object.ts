@@ -8,11 +8,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Notebook from '../types/Notebook';
-import * as ScriptOperation from '../types/ScriptOperation';
+import { Notebook, ScriptOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -24,11 +23,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -37,11 +39,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Notebook.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

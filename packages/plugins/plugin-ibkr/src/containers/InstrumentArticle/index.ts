@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { InstrumentArticle as default } from './InstrumentArticle';
+export { InstrumentArticle as default } from './InstrumentArticle.tsx';

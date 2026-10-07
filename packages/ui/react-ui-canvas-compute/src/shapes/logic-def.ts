@@ -3,13 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-import { IfComponent, IfElseComponent } from './Logic';
+import { createFunctionAnchors, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { IfComponent, IfElseComponent } from './Logic.tsx';
 
 // Kept out of `Logic.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -18,18 +19,16 @@ import { IfComponent, IfElseComponent } from './Logic';
 // Data
 //
 
-export const IfShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const IfShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('if'),
   }),
 );
 
 export type IfShape = Schema.Schema.Type<typeof IfShape>;
 
-export const IfElseShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const IfElseShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('if-else'),
   }),
 );

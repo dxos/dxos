@@ -3,9 +3,9 @@
 //
 
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
@@ -35,7 +35,9 @@ const localModelResolver = Capability.makeModule(() =>
         Layer.provide(FetchHttpClient.layer),
       ),
       OllamaResolver.make({
-        transformClient: HttpClient.withTracerPropagation(false),
+        transformClient: HttpClient.transformResponse(
+          Effect.provideService(HttpClient.TracerPropagationEnabled, false),
+        ),
       }).pipe(Layer.provide(FetchHttpClient.layer)),
     ]),
   ),

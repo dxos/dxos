@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { addResources, changeLanguage, i18n, onLanguageChanged, t } from './index';
+import { addResources, changeLanguage, i18n, onLanguageChanged, t } from './index.ts';
 
 describe('i18n', () => {
   test('instance is initialized synchronously', ({ expect }) => {

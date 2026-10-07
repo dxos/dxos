@@ -6,7 +6,7 @@ import React from 'react';
 
 import { FactViewer } from '@dxos/react-ui-rdf';
 
-import { useFactsStory } from './context';
+import { useFactsStory } from './context.ts';
 
 /** CENTER: the fact graph, scoped by the selected entity. Reads the shared display state. */
 export const FactsModule = () => {

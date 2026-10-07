@@ -7,15 +7,22 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { TasksUtil } from '#types';
 
-import { type JournalEntry as JournalEntryObject, type Journal as JournalObject, makeEntry } from '../../types/Journal';
-import * as TasksUtil from '../../types/TasksUtil';
-import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
+import {
+  type JournalEntry as JournalEntryObject,
+  type Journal as JournalObject,
+  makeEntry,
+} from '../../types/Journal.ts';
+import { Outline, type OutlineController, type OutlineRootProps } from '../Outline/index.ts';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
@@ -24,62 +31,68 @@ export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
 };
 
 // TODO(burdon): Virtualize.
-export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
-  const date = new Date();
+export const Journal = Util.composable<HTMLDivElement, JournalProps>(
+  ({ journal, onSelect, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const date = new Date();
 
-  // Subscribe to the journal object reactively so we pick up new entries.
-  const [journalSnapshot] = useObject(journal);
-  // TODO(burdon): CRDT issue (merge entries with same date?)
-  const entryRefs = useMemo(
-    () =>
-      Object.entries(journalSnapshot?.entries ?? {})
-        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-        .map(([dateKey, ref]) => ({ dateKey, ref })),
-    [journalSnapshot],
-  );
+    // Subscribe to the journal object reactively so we pick up new entries.
+    const [journalSnapshot] = useObject(journal);
+    // TODO(burdon): CRDT issue (merge entries with same date?)
+    const entryRefs = useMemo(
+      () =>
+        Object.entries(journalSnapshot?.entries ?? {})
+          .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([dateKey, ref]) => ({ dateKey, ref })),
+      [journalSnapshot],
+    );
 
-  const hasTodayEntry = useMemo(
-    () => entryRefs.some(({ dateKey }) => dateKey === TasksUtil.getDateString()),
-    [entryRefs],
-  );
+    const hasTodayEntry = useMemo(
+      () => entryRefs.some(({ dateKey }) => dateKey === TasksUtil.getDateString()),
+      [entryRefs],
+    );
 
-  const handleCreateEntry = useCallback(() => {
-    if (!journal) {
-      return;
-    }
+    const handleCreateEntry = useCallback(() => {
+      if (!journal) {
+        return;
+      }
 
-    const entry = makeEntry();
-    Obj.update(journal, (journal) => {
-      journal.entries[TasksUtil.getDateString(date)] = Ref.make(entry);
-    });
-  }, [journal, date]);
+      const entry = makeEntry();
+      Obj.update(journal, (journal) => {
+        journal.entries[TasksUtil.getDateString(date)] = Ref.make(entry);
+      });
+    }, [journal, date]);
 
-  return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-      <ScrollArea.Viewport>
-        {entryRefs.map(({ dateKey, ref }, i) => (
-          <JournalEntry
-            key={dateKey}
-            entryRef={ref}
-            classNames='p-2'
-            onSelect={onSelect}
-            autoFocus={i === entryRefs.length - 1}
-          />
-        ))}
-        {!hasTodayEntry && (
-          <div className='p-2'>
-            <IconButton label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
-          </div>
-        )}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-});
+    return (
+      <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
+          {entryRefs.map(({ dateKey, ref }, i) => (
+            <JournalEntry
+              key={dateKey}
+              entryRef={ref}
+              classNames='p-2'
+              onSelect={onSelect}
+              autoFocus={i === entryRefs.length - 1}
+            />
+          ))}
+          {!hasTodayEntry && (
+            <div className='p-2'>
+              <Button.Root
+                label={t('start-today.label')}
+                icon='ph--calendar-plus--regular'
+                onClick={handleCreateEntry}
+              />
+            </div>
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
 
 Journal.displayName = 'Journal';
 
-type JournalEntryProps = ThemedClassName<
+type JournalEntryProps = Util.ThemedClassName<
   {
     entryRef: Ref.Ref<JournalEntryObject>;
     onSelect?: (event: { date: Date }) => void;
@@ -87,7 +100,7 @@ type JournalEntryProps = ThemedClassName<
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [entry] = useObject(entryRef);
   // Subscribe to the content ref to trigger a re-render when the Text object loads.
   useObject(entry?.content);
@@ -117,15 +130,15 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
       // TODO(burdon): Experiment with `peer-focus-within` Tailwind selector.
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
-      <div className='flex items-center gap-2 bg-transparent'>
-        <IconButton
+      <Layout.Flex align='center' gap='sm' classNames='bg-transparent'>
+        <Button.Root
           label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />
-        {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
+        {isRecent && date && <div className='text-sm text-fg-subtle'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today.label')}</div>}
-      </div>
+      </Layout.Flex>
       <Outline.Root
         ref={outlinerRef}
         id={entry.id}

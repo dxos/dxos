@@ -5,18 +5,19 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Input } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 import { safeParseJson } from '@dxos/util';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, TypeSelect } from './common';
-import { type ConstantShape } from './constant-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box, TypeSelect } from './common/index.ts';
+import { type ConstantShape } from './constant-def.tsx';
 
 //
 // Component
@@ -25,7 +26,7 @@ import { type ConstantShape } from './constant-def';
 export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
-const inferType = (value: any): string | undefined => {
+const inferType = (value: any): ComputeValueType | undefined => {
   if (typeof value === 'string') {
     return 'string';
   } else if (typeof value === 'number') {
@@ -74,14 +75,14 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
       )}
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
-          <Input.Root>
+          <Field.Root>
             <Input.Switch
               checked={node.value}
-              onCheckedChange={(value) => {
+              onCheckedChange={({ checked: value }) => {
                 node.value = value;
               }}
             />
-          </Input.Root>
+          </Field.Root>
         </div>
       )}
     </Box>

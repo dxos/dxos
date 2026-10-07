@@ -9,10 +9,10 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
@@ -24,7 +24,7 @@ import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { PipelineProperties } from './PipelineProperties';
+import { PipelineProperties } from './PipelineProperties.tsx';
 
 random.seed(0);
 
@@ -51,8 +51,8 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [
             Tag.Tag,
             Feed.Feed,
@@ -129,7 +129,7 @@ const meta = {
             }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SearchStack';
+export * from './SearchStack.tsx';

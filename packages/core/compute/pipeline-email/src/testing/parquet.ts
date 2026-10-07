@@ -43,7 +43,7 @@ const rowGroupRanges = (metadata: Awaited<ReturnType<typeof parquetMetadataAsync
 // start, closed on completion/interruption via acquireRelease + unwrapScoped); the AsyncBuffer
 // slices byte ranges on demand so only the bytes a row group needs are read.
 const fileRows = (file: string): Stream.Stream<ParquetRow, ParquetReadError> =>
-  Stream.unwrapScoped(
+  Stream.unwrap(
     Effect.gen(function* () {
       const handle = yield* Effect.acquireRelease(
         Effect.tryPromise({ try: () => open(file, 'r'), catch: (cause) => new ParquetReadError({ file, cause }) }),
@@ -76,7 +76,7 @@ const fileRows = (file: string): Stream.Stream<ParquetRow, ParquetReadError> =>
             catch: (cause) => new ParquetReadError({ file, cause }),
           }),
         ),
-        Stream.flattenIterables,
+        Stream.flattenIterable,
       );
     }),
   );

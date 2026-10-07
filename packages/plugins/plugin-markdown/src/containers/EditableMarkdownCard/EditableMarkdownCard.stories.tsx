@@ -6,24 +6,25 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { Markdown } from '#types';
 
-import * as Markdown from '../../types/Markdown';
-import { EditableMarkdownCard, type EditableMarkdownCardProps } from './EditableMarkdownCard';
+import { EditableMarkdownCard, type EditableMarkdownCardProps } from './EditableMarkdownCard.tsx';
 
 random.seed(1234);
 
@@ -38,9 +39,8 @@ const EditableMarkdownCardStory = ({ ...args }: Omit<EditableMarkdownCardProps, 
     <CardContainer icon='ph--text-aa--regular'>
       <Card.Root border={false}>
         <Card.Header>
-          <Card.DragHandle />
+          <DragHandle.DragHandle />
           <Card.Title>{Obj.getLabel(doc)}</Card.Title>
-          <Card.Menu />
         </Card.Header>
         <EditableMarkdownCard subject={doc} {...args} />
       </Card.Root>
@@ -55,9 +55,9 @@ const meta: Meta<typeof EditableMarkdownCardStory> = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ProcessManagerPlugin(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ProcessManagerPlugin.make(),
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

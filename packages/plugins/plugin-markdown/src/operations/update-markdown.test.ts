@@ -20,8 +20,7 @@ import { HasSubject } from '@dxos/types';
 
 import { MarkdownOperationHandlerSet } from '#operations';
 import { OperationTestLayer } from '#testing';
-
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { MarkdownOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -35,7 +34,7 @@ class TestOutline extends Type.makeObject<TestOutline>(DXN.make('com.example.typ
 
 /** `OperationTestLayer` plus the outline-shaped type. */
 const OutlineTestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [
     SpaceProperties,
     Collection.Collection,
@@ -138,12 +137,14 @@ describe('Update', () => {
         });
         yield* Database.add(outline);
 
-        const { newContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+        const { applied, length } = yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(outline),
           edits: [{ newString: '\n- [ ] Added from the operation' }],
         });
 
-        expect(newContent).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation');
+        // A receipt rather than the document; the text itself is read back below.
+        expect(applied).toBe(1);
+        expect(length).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation'.length);
         const text = yield* Database.load(outline.content);
         expect(text.content).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation');
       },

@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Script from '@dxos/compute/Script';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -15,7 +16,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
 import { translations } from '#translations';
 
-import { ScriptToolbar } from './ScriptToolbar';
+import { ScriptToolbar } from './ScriptToolbar.tsx';
 
 // Create a mock store for stories.
 const createMockStore = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {
@@ -53,7 +54,7 @@ const meta = {
     withTheme(),
     withLayout({ classNames: 'w-document-max-width' }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

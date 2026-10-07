@@ -64,7 +64,7 @@ _different_ one. The registry mechanics are in place; the cross-container drop
 
 **Invariants the shared registry relies on:**
 
-- **One live Root.** Each layout shell (`DeckLayout`, `SimpleLayout`, the testing
+- **One live Root.** Each layout shell (`DeckLayout`, `MobileDeckLayout`, the testing
   layout) mounts a `Mosaic.Root`, and exactly one layout is mounted at runtime. No
   other component mounts its own Root — a nested Root would fork the registry and
   isolate its subtree from cross-container drags.

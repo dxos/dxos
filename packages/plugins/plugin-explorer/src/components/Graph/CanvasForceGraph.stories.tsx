@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type, View } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -19,9 +19,9 @@ import { type ValueGenerator, createObjectFactory, createRelationFactory } from 
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
+import { Graph } from '#types';
 
-import * as Graph from '../../types/Graph';
-import { CanvasForceGraph } from './CanvasForceGraph';
+import { CanvasForceGraph } from './CanvasForceGraph.tsx';
 
 const generator = random as any as ValueGenerator;
 
@@ -46,8 +46,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             View.View,

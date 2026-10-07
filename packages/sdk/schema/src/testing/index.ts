@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './data';
-export * from './deprecated';
-export * from './generator';
+export * from './data.ts';
+export * from './deprecated.ts';
+export * from './generator.ts';

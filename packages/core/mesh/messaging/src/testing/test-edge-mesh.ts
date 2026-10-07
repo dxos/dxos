@@ -166,6 +166,9 @@ export class TestEdgeConnection implements EdgeConnection {
 
   setIdentity(): void {}
 
+  /** No-op: the in-memory mesh has no dial step, so there is nothing to defer. */
+  startNetworking(): void {}
+
   async send(_ctx: Context, message: Message): Promise<void> {
     this._mesh.receive(this._peerKey, message);
   }

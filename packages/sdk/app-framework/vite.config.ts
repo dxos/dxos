@@ -6,8 +6,27 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/Surface': 'src/Surface.ts',
+    'ns/SharedPackages': 'src/SharedPackages.ts',
+    'ns/PluginManagerProvider': 'src/PluginManagerProvider.ts',
+    'ns/Hooks': 'src/Hooks.ts',
+    'ns/Cli': 'src/Cli.ts',
+    'ns/App': 'src/App.ts',
+    'ns/Devtools': 'src/Devtools.ts',
+    'ns/Translations': 'src/Translations.ts',
+    'App': 'src/ui/components/App/index.ts',
+    'Hooks': 'src/ui/hooks/index.ts',
+    'PluginManagerProvider': 'src/ui/components/PluginManager/index.ts',
+    'Surface': 'src/ui/components/Surface/index.ts',
     'vite-plugin': 'src/vite-plugin/index.ts',
+    // Split out of `vite-plugin` so a runtime host can read the shared-package list without
+    // pulling in Vite itself — the CLI registers the same set in bun's module registry.
+    'vite-plugin/packages': 'src/vite-plugin/packages.ts',
     'index': 'src/index.ts',
+    // The `dx-plugin` bin — the plugin-authoring CLI shipped with the package so out-of-repo
+    // plugin authors run the same toolchain; in-repo, the composer-plugin tag's `prebuild`
+    // depends on it.
+    'plugin-cli': 'src/plugin-cli/main.ts',
     'core/activation-event': 'src/core/activation-event.ts',
     'common/activation-events': 'src/common/activation-events.ts',
     'common/capabilities': 'src/common/capabilities.ts',
@@ -19,7 +38,15 @@ export default defineConfig({
     'cli': 'src/cli/index.ts',
     'testing': 'src/testing/index.ts',
     'testing/react': 'src/testing/react.tsx',
-    'ui': 'src/ui/index.ts',
+    'core/capability-manager': 'src/core/capability-manager.ts',
+    'plugin-process-manager/ProcessManagerPlugin': 'src/plugin-process-manager/ProcessManagerPlugin.ts',
+    'plugin-process-manager/history/history-tracker': 'src/plugin-process-manager/history/history-tracker.ts',
+    'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
+    'core/plugin-manifest': 'src/core/plugin-manifest.ts',
+    'core/registry': 'src/core/registry.ts',
+    'common/Role': 'src/common/Role.ts',
+    'plugin-process-manager/history/undo-mapping': 'src/plugin-process-manager/history/undo-mapping.ts',
+    'plugin-process-manager/history/undo-registry': 'src/plugin-process-manager/history/undo-registry.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'jsdom' }, storybook: true },

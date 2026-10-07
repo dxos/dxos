@@ -18,16 +18,13 @@
       "path": "../lit-grid"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {
       "path": "../react-ui-editor"
-    },
-    {
-      "path": "../react-ui-list"
-    },
-    {
-      "path": "../react-ui-search"
     },
     {
       "path": "../ui-editor"

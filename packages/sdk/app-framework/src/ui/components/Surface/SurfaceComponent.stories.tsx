@@ -6,18 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
-import { Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
-import { withPluginManager } from '../../../testing';
-import { usePluginManager } from '../PluginManager';
-import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
-import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
-import { create, makeFilter } from './types';
+import { Capabilities } from '../../../common/index.ts';
+import * as Role from '../../../common/Role.ts';
+import { withPluginManager } from '../../../testing/index.ts';
+import { usePluginManager } from '../PluginManager/index.ts';
+import { SurfaceComponent, useSurfaces } from './SurfaceComponent.tsx';
+import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug.tsx';
+import { create, makeFilter } from './types.ts';
 
 const ItemRole = Role.make<{ id: string }>('org.dxos.test.role.item');
 
@@ -29,7 +33,7 @@ type TestComponentProps = {
 const TestComponent = ({ styles, id }: TestComponentProps) => {
   return (
     <div className={mx('flex justify-center items-center border rounded-sm', styles.bg, styles.border)}>
-      <span className={mx('dx-tag font-mono text-lg', styles.fg)}>{id}</span>
+      <span className={mx('dx-tag dx-tag-inline font-mono text-lg', styles.fg)}>{id}</span>
     </div>
   );
 };
@@ -60,11 +64,11 @@ const ErrorComponent = () => {
   );
 };
 
-type StoryProps = {
+type StoryArgs = {
   debug?: boolean;
 };
 
-const DefaultStory = ({ debug: debugProp }: StoryProps) => {
+const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
   const manager = usePluginManager();
   const surfaces = useSurfaces();
   const [selected, setSelected] = useState<string | undefined>();
@@ -118,19 +122,19 @@ const DefaultStory = ({ debug: debugProp }: StoryProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
-          <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
-          <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
+          <Button.Root onClick={handleAdd}>Add</Button.Root>
+          <Button.Root onClick={handleSelect}>Pick</Button.Root>
+          <Button.Root onClick={handleError}>Error</Button.Root>
           <Toolbar.Separator />
-          <Input.Root>
-            <Input.Label classNames='pr-1'>Debug</Input.Label>
-            <Input.Switch checked={debug} onCheckedChange={handleToggleDebug} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Label classNames='pr-1'>Debug</Field.Label>
+            <Input.Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
+          </Field.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
         <SurfaceComponent
           key={debug ? 'debug' : 'prod'}
           type={ItemRole}
@@ -138,17 +142,17 @@ const DefaultStory = ({ debug: debugProp }: StoryProps) => {
           limit={1}
         />
         <div className='overflow-y-auto h-full'>
-          <Listbox.Root>
+          <Listbox.Root items={surfaces.map((surface) => ({ value: surface.id, label: surface.id }))}>
             <Listbox.Content aria-label='Surfaces'>
               {surfaces.map((surface) => (
                 <Listbox.Item key={surface.id} id={surface.id}>
-                  <Listbox.ItemLabel classNames='flex items-center'>{surface.id}</Listbox.ItemLabel>
+                  <Listbox.ItemText classNames='flex items-center'>{surface.id}</Listbox.ItemText>
                 </Listbox.Item>
               ))}
             </Listbox.Content>
           </Listbox.Root>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

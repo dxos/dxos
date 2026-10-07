@@ -2,19 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
 
-import * as CallsCapabilities from '../../types/CallsCapabilities';
-import { Toolbar, type ToolbarProps } from '../Call';
-import { VideoObject } from '../Media';
-import { ResponsivePanel } from '../ResponsiveGrid';
+import { Toolbar, type ToolbarProps } from '../Call/index.ts';
+import { VideoObject } from '../Media/index.ts';
+import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
 
 // TODO(wittjosiah): Repurpose lobby for preview.
 
@@ -24,11 +26,15 @@ const SWARM_PEEK_INTERVAL = 1_000;
 // Root
 //
 
-type LobbyRootProps = PropsWithChildren<ThemedClassName>;
+type LobbyRootProps = PropsWithChildren<Util.ThemedClassName>;
 
 // TODO(burdon): Make headless?
 const LobbyRoot = ({ children }: LobbyRootProps) => {
-  return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
+  return (
+    <Layout.Flex column classNames='relative grow overflow-hidden group'>
+      {children}
+    </Layout.Flex>
+  );
 };
 
 LobbyRoot.displayName = 'LobbyRoot';
@@ -40,8 +46,8 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const call = useCapability(CallsCapabilities.Manager);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const videoStream = useAtomValue(call.localVideoStreamAtom);
   const [classNames, setClassNames] = useState('');
@@ -60,7 +66,7 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
   }, [videoEnabled]);
 
   return (
-    <div className='grid grow p-4'>
+    <Layout.Grid classNames='grow p-4'>
       <ResponsivePanel>
         {(videoEnabled && (
           <VideoObject
@@ -74,7 +80,7 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
           />
         )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
       </ResponsivePanel>
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -84,14 +90,14 @@ LobbyPreview.displayName = 'LobbyPreview';
 // Toolbar
 //
 
-type LobbyToolbarProps = ThemedClassName<
+type LobbyToolbarProps = Util.ThemedClassName<
   {
     roomId: string;
-  } & Pick<ToolbarProps, 'onJoin'>
+  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled'>
 >;
 
 const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const [count, setCount] = useState<number>(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
@@ -105,9 +111,9 @@ const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
   }, [call, roomId]);
 
   return (
-    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+    <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
       <Toolbar participants={count} isInRoom={false} {...props} />
-    </div>
+    </Layout.Flex>
   );
 };
 

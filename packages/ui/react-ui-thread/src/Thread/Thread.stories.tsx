@@ -11,8 +11,8 @@ import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { createMessages, getStoryMetadata } from '../testing';
-import { Thread } from './Thread';
+import { createMessages, getStoryMetadata } from '../testing.ts';
+import { Thread } from './Thread.tsx';
 
 const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
 
@@ -26,7 +26,7 @@ const DefaultStory = () => {
 
   return (
     <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable onMessageDelete={() => {}}>
-      <Thread.Content classNames='grow min-h-0'>
+      <Thread.Content classNames='dx-grow'>
         <Thread.Messages messages={messages} />
         <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
         <Thread.Status />
@@ -59,7 +59,7 @@ const MixedSendersStory = () => {
 
   return (
     <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable={false}>
-      <Thread.Content classNames='grow min-h-0'>
+      <Thread.Content classNames='dx-grow'>
         <Thread.Messages messages={messages} />
       </Thread.Content>
     </Thread.Root>
@@ -96,7 +96,7 @@ const GroupedStory = () => {
 
   return (
     <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable={false}>
-      <Thread.Content classNames='grow min-h-0'>
+      <Thread.Content classNames='dx-grow'>
         <Thread.Messages messages={messages} />
       </Thread.Content>
     </Thread.Root>

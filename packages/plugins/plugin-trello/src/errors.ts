@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { BaseError } from '@dxos/errors';
 
 const INVALID_TRELLO_ACCESS_TOKEN_MESSAGE =
@@ -23,15 +23,15 @@ export const formatTrelloSyncFailure = (error: unknown): string => {
   if (InvalidTrelloAccessTokenError.is(error)) {
     return INVALID_TRELLO_ACCESS_TOKEN_MESSAGE;
   }
-  if (SyncDatabaseMissingError.is(error)) {
+  if (ConnectorSync.DatabaseMissingError.is(error)) {
     return error.message;
   }
   if (error instanceof BaseError) {
     const keys = Object.keys(error.context);
     return keys.length > 0 ? `${error.name}: ${JSON.stringify(error.context)}` : error.name;
   }
-  if (Predicate.isRecord(error) && typeof error._tag === 'string') {
-    if (error._tag === 'ResponseError' && Predicate.isRecord(error.response) && 'status' in error.response) {
+  if (Predicate.isObject(error) && typeof error._tag === 'string') {
+    if (error._tag === 'ResponseError' && Predicate.isObject(error.response) && 'status' in error.response) {
       return `HTTP ${error.response.status}`;
     }
     return error._tag;

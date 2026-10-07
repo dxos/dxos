@@ -16,9 +16,13 @@ allowedDeprecatedVersions:
 
 catalog:
   3d-force-graph: ^1.76.1
+  '@agentclientprotocol/sdk': ^1.6.0
   '@ai-sdk/react': ^3.0.99
+  '@anthropic-ai/claude-agent-sdk': ^0.3.233
+  '@anthropic-ai/sdk': ^0.117.1
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
+  '@ark-ui/react': ^5.39.1
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
   '@astrojs/rss': ^4.0.18
@@ -29,12 +33,12 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
   '@atproto/lexicon': ^0.7.7
-  '@automerge/automerge': 3.3.0-fragments.2
-  '@automerge/automerge-repo': 2.6.0-subduction.40
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.40
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.40
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.40
-  '@automerge/automerge-subduction': 0.16.0
+  '@automerge/automerge': 3.5.0
+  '@automerge/automerge-repo': 2.6.0-subduction.48
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.48
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.48
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.48
+  '@automerge/automerge-subduction': 0.19.0
   '@aws-sdk/client-s3': ^3.995.0
   '@babel/core': ^7.18.13
   '@babel/parser': ^7.29.0
@@ -47,72 +51,66 @@ catalog:
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
+  '@carderne/sandbox-runtime': ^0.0.72
   '@ch-ui/colors': 1.2.1
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
-  '@changesets/changelog-git': ^0.2.1
-  '@changesets/cli': ^2.31.0
+  '@changesets/changelog-git': ^1.0.0
+  '@changesets/cli': ^3.0.0
+  '@changesets/parse': ^1.0.0
   '@cloudflare/ai-chat': ^0.0.6
   '@cloudflare/vitest-pool-workers': ^0.18.6
   '@cloudflare/workers-types': ^5.20260717.1
   '@codemirror/autocomplete': ^6.20.3
-  '@codemirror/commands': ^6.10.4
-  '@codemirror/lang-html': ^6.4.11
+  '@codemirror/commands': ^6.11.1
+  '@codemirror/lang-html': ^6.4.12
   '@codemirror/lang-javascript': ^6.2.5
   '@codemirror/lang-json': ^6.0.2
-  '@codemirror/lang-markdown': 6.5.1
+  '@codemirror/lang-markdown': 6.5.2
   '@codemirror/lang-xml': ^6.1.0
   '@codemirror/lang-yaml': ^6.1.3
   '@codemirror/language': ^6.12.4
   '@codemirror/language-data': ^6.5.2
   '@codemirror/lint': 6.9.7
   '@codemirror/merge': ^6.12.2
-  '@codemirror/search': ^6.7.1
-  '@codemirror/state': ^6.7.1
+  '@codemirror/search': ^6.7.2
+  '@codemirror/state': ^6.7.6
   '@codemirror/theme-one-dark': ^6.1.3
-  '@codemirror/view': ^6.43.6
+  '@codemirror/view': ^6.43.13
   '@comunica/query-sparql-rdfjs': 5.2.3
   '@crxjs/vite-plugin': ^2.4.0
+  '@dagrejs/dagre': ^3.1.1
   '@dnd-kit/core': ^6.0.5
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
+  '@dxos/link': ^0.11.1
   '@dxos/log': ^0.10.0
+  '@dxos/pipeline-email': ^0.11.1
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect-atom/atom': ^0.5.3
-  '@effect-atom/atom-react': ^0.5.0
   '@effect-rx/rx-react': ^0.42.4
-  '@effect/ai': 0.36.0
-  '@effect/ai-anthropic': 0.26.0
-  '@effect/ai-openai': 0.40.1
-  '@effect/cli': 0.75.2
-  '@effect/cluster': 0.59.0
-  '@effect/experimental': 0.60.0
-  '@effect/language-service': ^0.86.4
-  '@effect/opentelemetry': ^0.63.0
-  '@effect/platform': 0.96.2
-  '@effect/platform-browser': 0.76.0
-  '@effect/platform-bun': 0.90.0
-  '@effect/platform-node': 0.107.0
-  '@effect/printer': 0.49.0
-  '@effect/printer-ansi': 0.49.0
-  '@effect/rpc': 0.75.1
-  '@effect/sql': 0.51.1
-  '@effect/sql-sqlite-bun': 0.52.0
-  '@effect/sql-sqlite-node': 0.52.0
-  '@effect/sql-sqlite-wasm': 0.52.0
-  '@effect/typeclass': 0.40.0
-  '@effect/vitest': 0.29.0
+  '@effect/ai-anthropic': 4.0.0
+  '@effect/ai-openai': 4.0.0
+  '@effect/atom-react': 4.0.0
+  '@effect/language-service': ^0.87.3
+  '@effect/opentelemetry': 4.0.0
+  '@effect/platform-browser': 4.0.0
+  '@effect/platform-bun': 4.0.0
+  '@effect/platform-node': 4.0.0
+  '@effect/sql-sqlite-bun': 4.0.0
+  '@effect/sql-sqlite-node': 4.0.0
+  '@effect/sql-sqlite-wasm': 4.0.0
+  '@effect/tsgo': ^0.36.5
+  '@effect/vitest': 4.0.0
   '@effect/wa-sqlite': ^0.1.2
-  '@effect/workflow': ^0.18.2
+  '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
-  '@fluentui/react-tabster': 9.26.11
   '@fontsource-variable/inter': 5.2.8
   '@fontsource-variable/jetbrains-mono': 5.0.21
   '@fontsource-variable/nunito': 5.2.7
@@ -120,7 +118,7 @@ catalog:
   '@fontsource/poiret-one': ^5.0.20
   '@hazae41/symbol-dispose-polyfill': ^1.0.2
   '@huggingface/transformers': ^3.8.1
-  '@internationalized/date': ^3.12.1
+  '@internationalized/date': ^3.12.3
   '@ipld/car': ^5.3.3
   '@jitl/quickjs-wasmfile-release-sync': ^0.31.0
   '@lezer/common': ^1.5.2
@@ -132,28 +130,28 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.4.5
+  '@moonrepo/cli': 2.5.2
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
   '@octokit/core': ^7.0.6
   '@octokit/rest': ^22.0.1
   '@opentelemetry/api': ^1.9.1
-  '@opentelemetry/api-logs': ^0.221.0
-  '@opentelemetry/auto-instrumentations-node': ^0.79.0
-  '@opentelemetry/auto-instrumentations-web': ^0.66.0
-  '@opentelemetry/core': ^2.10.0
-  '@opentelemetry/exporter-logs-otlp-http': ^0.221.0
-  '@opentelemetry/exporter-metrics-otlp-http': ^0.221.0
-  '@opentelemetry/exporter-trace-otlp-http': ^0.221.0
-  '@opentelemetry/instrumentation': ^0.221.0
-  '@opentelemetry/resources': ^2.10.0
-  '@opentelemetry/sdk-logs': ^0.221.0
-  '@opentelemetry/sdk-metrics': ^2.10.0
-  '@opentelemetry/sdk-node': ^0.221.0
-  '@opentelemetry/sdk-trace-base': ^2.10.0
-  '@opentelemetry/sdk-trace-node': ^2.10.0
-  '@opentelemetry/sdk-trace-web': ^2.10.0
+  '@opentelemetry/api-logs': ^0.222.0
+  '@opentelemetry/auto-instrumentations-node': ^0.80.0
+  '@opentelemetry/auto-instrumentations-web': ^0.67.0
+  '@opentelemetry/core': ^2.11.0
+  '@opentelemetry/exporter-logs-otlp-http': ^0.222.0
+  '@opentelemetry/exporter-metrics-otlp-http': ^0.222.0
+  '@opentelemetry/exporter-trace-otlp-http': ^0.222.0
+  '@opentelemetry/instrumentation': ^0.222.0
+  '@opentelemetry/resources': ^2.11.0
+  '@opentelemetry/sdk-logs': ^0.222.0
+  '@opentelemetry/sdk-metrics': ^2.11.0
+  '@opentelemetry/sdk-node': ^0.222.0
+  '@opentelemetry/sdk-trace-base': ^2.11.0
+  '@opentelemetry/sdk-trace-node': ^2.11.0
+  '@opentelemetry/sdk-trace-web': ^2.11.0
   '@opentelemetry/semantic-conventions': ^1.43.0
   '@opentui/core': 0.1.61
   '@opentui/core-darwin-arm64': 0.1.61
@@ -168,44 +166,9 @@ catalog:
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
-  '@playwright/test': 1.57.0
-  '@posthog/cli': ^0.5.29
-  '@radix-ui/primitive': 1.1.1
-  '@radix-ui/react-accordion': 1.2.3
-  '@radix-ui/react-alert-dialog': 1.1.6
-  '@radix-ui/react-avatar': 1.1.3
-  '@radix-ui/react-checkbox': 1.1.4
-  '@radix-ui/react-collapsible': 1.1.3
-  '@radix-ui/react-compose-refs': 1.1.1
-  '@radix-ui/react-context': 1.1.1
-  '@radix-ui/react-context-menu': 2.2.6
-  '@radix-ui/react-dialog': 1.1.6
-  '@radix-ui/react-dismissable-layer': 1.1.5
-  '@radix-ui/react-dropdown-menu': ^2.1.16
-  '@radix-ui/react-focus-guards': 1.1.1
-  '@radix-ui/react-focus-scope': 1.1.2
-  '@radix-ui/react-id': 1.1.0
-  '@radix-ui/react-menu': 2.1.6
-  '@radix-ui/react-popover': ^1.1.15
-  '@radix-ui/react-popper': 1.2.2
-  '@radix-ui/react-portal': 1.1.4
-  '@radix-ui/react-presence': 1.1.2
-  '@radix-ui/react-primitive': 2.0.2
-  '@radix-ui/react-radio-group': 1.2.3
-  '@radix-ui/react-scroll-area': 1.2.10
-  '@radix-ui/react-select': 2.1.6
-  '@radix-ui/react-separator': 1.1.2
-  '@radix-ui/react-slider': 1.4.7
-  '@radix-ui/react-slot': 1.1.2
-  '@radix-ui/react-switch': 1.1.3
-  '@radix-ui/react-tabs': 1.1.3
-  '@radix-ui/react-toast': 1.2.6
-  '@radix-ui/react-toggle': 1.1.2
-  '@radix-ui/react-toggle-group': 1.1.2
-  '@radix-ui/react-toolbar': 1.1.2
-  '@radix-ui/react-tooltip': 1.1.8
-  '@radix-ui/react-use-controllable-state': 1.1.0
-  '@radix-ui/react-visually-hidden': 1.1.2
+  '@playwright/test': 1.63.0
+  '@posthog/mcp': ^0.12.0
+  '@rdfjs/types': ^2.0.1
   '@react-three/drei': ^10.7.7
   '@react-three/fiber': ^9.5.0
   '@replit/codemirror-vim': ^6.3.0
@@ -216,35 +179,37 @@ catalog:
   '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.4.2
-  '@storybook/addon-links': ^10.4.2
-  '@storybook/addon-themes': ^10.4.2
-  '@storybook/addon-vitest': ^10.4.2
-  '@storybook/builder-vite': ^10.4.2
-  '@storybook/html-vite': ^10.4.2
-  '@storybook/icons': ^2.0.2
+  '@storybook/addon-docs': ^10.6.0
+  '@storybook/addon-links': ^10.6.0
+  '@storybook/addon-themes': ^10.6.0
+  '@storybook/addon-vitest': ^10.6.0
+  '@storybook/builder-vite': ^10.6.0
+  '@storybook/html-vite': ^10.6.0
+  '@storybook/icons': ^2.1.0
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.4.2
-  '@storybook/web-components-vite': ^10.4.2
+  '@storybook/react-vite': ^10.6.0
+  '@storybook/web-components-vite': ^10.6.0
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.15.46
-  '@swc/types': ^0.1.27
+  '@swc/core': 1.16.13
+  '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
-  '@tailwindcss/postcss': ^4.3.0
-  '@tailwindcss/vite': ^4.3.0
-  '@tanstack/react-virtual': ^3.13.18
+  '@tailwindcss/postcss': ^4.3.3
+  '@tailwindcss/vite': ^4.3.3
+  '@tanstack/react-virtual': ^3.14.9
+  '@tanstack/virtual-core': ^3.17.7
   '@tauri-apps/api': ^2.11.1
   '@tauri-apps/cli': ^2.11.4
-  '@tauri-apps/plugin-deep-link': ^2.4.9
-  '@tauri-apps/plugin-dialog': ^2.7.2
-  '@tauri-apps/plugin-fs': ^2.5.1
-  '@tauri-apps/plugin-haptics': ^2.3.2
-  '@tauri-apps/plugin-opener': ^2.5.4
+  '@tauri-apps/plugin-deep-link': ^2.4.10
+  '@tauri-apps/plugin-dialog': ^2.7.3
+  '@tauri-apps/plugin-fs': ^2.5.2
+  '@tauri-apps/plugin-haptics': ^2.3.3
+  '@tauri-apps/plugin-http': ^2.6.0
+  '@tauri-apps/plugin-opener': ^2.5.5
   '@tauri-apps/plugin-os': ^2.3.2
   '@tauri-apps/plugin-process': ^2.3.1
-  '@tauri-apps/plugin-shell': ^2.3.5
-  '@tauri-apps/plugin-updater': ^2.10.1
+  '@tauri-apps/plugin-shell': ^2.3.6
+  '@tauri-apps/plugin-updater': ^2.11.0
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.2
@@ -258,6 +223,7 @@ catalog:
   '@tldraw/tlschema': ^3.0.0
   '@tldraw/utils': ^3.0.0
   '@trpc/server': ^10.45.3
+  '@ts-morph/common': ~0.17.0
   '@types/argparse': ^2.0.0
   '@types/bytes': ^3.1.1
   '@types/chai': ^4.2.15
@@ -266,13 +232,13 @@ catalog:
   '@types/color-hash': ^1.0.1
   '@types/columnify': ^1.5.1
   '@types/d3': ^7.4.3
+  '@types/d3-force': ^3.0.10
   '@types/d3-hierarchy': ^3.1.6
   '@types/debug': ^4.1.10
   '@types/deep-equal': ^1.0.4
   '@types/dom-speech-recognition': ^0.0.6
   '@types/flubber': ^0.4.0
   '@types/geojson': ^7946.0.14
-  '@types/globrex': ^0.1.4
   '@types/js-yaml': ^4.0.5
   '@types/jsdom': ^28.0.3
   '@types/json-stringify-safe': 5.0.0
@@ -319,17 +285,19 @@ catalog:
   '@types/vscode': ^1.74.0
   '@types/webextension-polyfill': ^0.12.3
   '@types/wicg-file-system-access': ^2020.9.6
+  '@types/ws': ^8.18.1
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
-  '@typescript-eslint/parser': ^8.66.0
-  '@typescript/native-preview': 7.0.0-dev.20260421.2
+  '@typescript-eslint/parser': ^8.71.0
+  '@typescript/typescript6': ^6.0.2
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  '@vitejs/plugin-react': ^6.0.3
-  '@vitejs/plugin-react-swc': ^4.3.1
+  # Exact: each minor pins its own `oxc-transform-react` range, and the React Compiler output was verified on this pair.
+  '@vitejs/plugin-react': 6.1.1
+  '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': 4.1.10
   '@vitest/browser-playwright': ^4.1.10
   '@vitest/coverage-v8': ^4.1.10
@@ -348,13 +316,17 @@ catalog:
   '@xterm/addon-fit': ^0.10.0
   '@xterm/xterm': ^5.5.0
   '@xyflow/react': ^12.8.1
+  '@zag-js/core': ^1.43.3
+  '@zag-js/hotkeys': ^1.43.3
+  '@zag-js/react': ^1.43.3
+  '@zag-js/splitter': ^1.43.3
+  '@zag-js/vanilla': ^1.43.3
   JSONStream: ^1.3.5
   agents: ^0.3.10
   ai: ^6.0.97
   ajv: ^8.18.0
   alea: ^1.0.1
   argparse: ^2.0.1
-  aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
   astro: ^6.4.6
@@ -415,16 +387,17 @@ catalog:
   defuddle: ^0.18.1
   del: ^5.1.0
   depcheck: ^1.4.7
-  dfx: ^0.127.0
+  dfx: ^1.0.15
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 3.21.4
+  effect: 4.0.0
+  elkjs: ^0.12.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
-  esbuild: 0.28.1
+  esbuild: 0.28.2
   esbuild-plugin-glsl: ^1.4.2
   esbuild-plugin-inline-image: ^0.0.9
   esbuild-plugin-raw: 0.4.2
@@ -456,7 +429,6 @@ catalog:
   get-port-please: ^3.1.1
   glob: ^13.0.3
   globby: 14.1.0
-  globrex: ^0.1.2
   glsl-curl-noise2: ^0.0.4
   glsl-noise: ^0.0.0
   glslify: ^7.1.1
@@ -482,7 +454,7 @@ catalog:
   ink-table: ^3.1.0
   ink-text-input: ^6.0.0
   interface-blockstore: ^5.2.10
-  ioredis: ^5.3.2
+  ioredis: ^5.9.0
   iso-did: ^1.6.0
   isomorphic-fetch: ^3.0.0
   isomorphic-ws: ^5.0.0
@@ -495,14 +467,15 @@ catalog:
   json-stringify-safe: ^5.0.1
   json5: ^2.2.3
   jsonata: ^2.1.0
+  jsonld-streaming-parser: ^5.0.1
   jsonpath-plus: ^10.3.0
   jsonpointer: ^5.0.1
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
   kbn-handlebars: ^1.0.0
-  keyborg: ^2.5.0
   knip: ^5.64.3
   koffi: ^2.8.0
+  ldkit: ^2.7.2
   leaflet: ^1.9.4
   leva: ^0.10.1
   lib0: ^0.2.65
@@ -534,7 +507,7 @@ catalog:
   miniflare: ^4.20260714.0
   minimatch: ^10.2.3
   mocha: ^10.6.0
-  motion: ^12.0.6
+  motion: ^12.11.0
   multiformats: ^13.2.2
   n3: 2.1.0
   nan: 2.23.0
@@ -549,23 +522,28 @@ catalog:
   ollama: ^0.5.11
   once: ^1.4.0
   openapi-types: ^12.1.3
+  oxc-parser: ^0.148.0
   oxc-resolver: ^11.9.0
+  oxc-transform-react: ~0.145.0
+  oxlint-tsgolint: ^7.0.2001
   papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
   partykit: ^0.0.103
   partysocket: ^1.0.1
   path-browserify: ^1.0.1
+  pdfjs-dist: ^6.2.108
   picomatch: ^2.3.0
   pify: ~5.0.0
   pkg-up: ^3.1.0
   platform: ^1.3.6
-  playwright: 1.57.0
+  playwright: 1.63.0
   plotly.js-dist-min: ^2.25.1
   postcss: ^8.5.12
   postcss-import: ^16.1.0
   postcss-nesting: ^13.0.1
-  posthog-js: ^1.353.0
+  posthog-js: ^1.422.5
+  posthog-node: ^5.51.4
   preact: ^10.26.10
   prettier: ^3.6.2
   prosemirror-commands: ^1.7.1
@@ -573,7 +551,6 @@ catalog:
   prosemirror-model: ^1.25.1
   prosemirror-state: ^1.4.3
   prosemirror-view: ^1.40.0
-  protobufjs: ^8.0.0
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
   race-as-promised: ^0.0.3
@@ -592,16 +569,11 @@ catalog:
   react-drag-drop-files: ^2.3.8
   react-dropzone: ^14.2.3
   react-error-boundary: ^4.0.13
-  react-floater: 0.7.9
-  react-hotkeys-hook: ^4.6.1
   react-i18next: ^11.18.6
   react-is: ~19.2.7
-  react-joyride: ^2.7.2
   react-json-tree: ^0.18.0
   react-leaflet: ^5.0.0
   react-markdown: ^10.1.0
-  react-qr-rounded: ^1.0.0
-  react-remove-scroll: ^2.6.0
   react-resize-detector: ^11.0.1
   react-router-dom: ^6.30.3
   react-syntax-highlighter: ^15.6.1
@@ -620,7 +592,7 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rolldown: 1.1.5
+  rolldown: ~1.2.4
   rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
@@ -640,16 +612,14 @@ catalog:
   sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.24.0
-  storybook: ^10.4.2
-  storybook-solidjs-vite: ^10.0.13
+  storybook: ^10.6.0
+  storybook-solidjs-vite: ^10.7.1
   streamx: ^2.12.5
-  style-mod: ^4.1.0
-  tabster: ^8.5.5
+  style-mod: ^4.1.4
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
   tailwind-variants: ^3.2.2
   tailwindcss: ^4.3.0
-  tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
   todomvc-app-css: ^2.4.2
@@ -659,15 +629,15 @@ catalog:
   topojson-simplify: ^3.0.3
   transformation-matrix: ^2.16.1
   ts-morph: ^16.0.0
-  tsdown: ^0.16.7
+  tsdown: ^0.22.14
   tslib: ^2.8.1
+  tstyche: ^7.2.3
   tsx: ^4.21.0
   tty-browserify: ~0.0.1
   turndown: ^7.2.1
-  type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
-  typescript: ^6.0.3
+  typescript: ^7.0.2
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
@@ -685,13 +655,13 @@ catalog:
   varint: 6.0.0
   versor: ^0.2.0
   viem: ^2.21.26
-  vite: ^8.1.4
+  vite: ^8.2.2
   vite-node: ^6.0.0
-  vite-plugin-devtools-json: ^1.0.0
+  vite-plugin-devtools-json: ^1.1.0
   vite-plugin-glslify: ^2.3.0
   vite-plugin-inspect: ^12.0.2
   vite-plugin-pwa: ^1.2.0
-  vite-plugin-solid: ^2.11.12
+  vite-plugin-solid: ^2.11.14
   vite-plugin-top-level-await: ^1.6.0
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
@@ -699,6 +669,7 @@ catalog:
   vitest: 4.1.10
   wait-on: ^8.0.3
   wavefile: ^11.0.0
+  web-ext: ^10.5.0
   web-tree-sitter: ^0.25.10
   webdriverio: ^8.32.4
   webext-bridge: ^6.0.1
@@ -743,7 +714,6 @@ onlyBuiltDependencies:
   - node-datachannel
   - onnxruntime-node
   - oxc-resolver
-  - protobufjs
   - sharp
   - sodium-native
   - styled-components
@@ -795,21 +765,22 @@ overrides:
   qs: '>=6.14.1'
   react: 'catalog:'
   react-dom: 'catalog:'
+  style-mod: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
-  typescript: 'catalog:'
   undici: '>=7.18.2'
-  vite: '>=8.1.4'
+  vite: '>=8.2.1'
   web-ext: ^10.5.0
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.40': patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
-  '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
-  '@changesets/assemble-release-plan@6.0.10': patches/@changesets__assemble-release-plan@6.0.10.patch
-  '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
+  '@automerge/automerge-repo@2.6.0-subduction.48': patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
+  '@automerge/automerge-subduction@0.19.0': patches/@automerge__automerge-subduction@0.19.0.patch
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
+  '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
+  dfx@1.0.15: patches/dfx@1.0.15.patch
+  effect@4.0.0: patches/effect@4.0.0.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
@@ -818,11 +789,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
-    '@effect-atom/atom>@effect/experimental': 0.60.0
-    '@effect-atom/atom>@effect/platform': 0.96.2
-    '@effect-atom/atom>@effect/rpc': 0.75.1
     '@effect/vitest>vitest': '>=3.2.0'
-    dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
     partyserver>@cloudflare/workers-types: '>=5.0.0'
     vite-plugin-pwa>vite: '>=7.0.0'
@@ -833,6 +800,7 @@ peerDependencyRules:
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
+    - redis
     - stage-js
     - webpack
     - workerize-loader
@@ -845,10 +813,10 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  - '@swc/core@1.15.46'
   - semver
   - semver@6.3.1
   - semver@5.7.2
   - ua-parser-js@1.0.41
   - graphql@15.10.2
   - langium@3.3.1
+  - cytoscape@3.34.1

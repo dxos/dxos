@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -18,11 +18,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
 
-import { getChatPath } from '../paths';
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { getChatPath } from '../paths.ts';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
   RoutineOperation.RunPromptInNewChat.pipe(
@@ -30,14 +31,15 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
       Effect.fnUntraced(
         function* ({ db, instructions, objects, skills, background }) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
-          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
+          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId });
+          yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
 
           if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
             const feedTarget = yield* Database.load(chat.feed);
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');
-            const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+            const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
               binder.use(async (b: AiContext.Binder) => {
@@ -75,7 +77,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
                 : instructions;
             yield* Database.flush();
             yield* Operation.invoke(
-              RunInstructions,
+              AgentOperation.RunInstructions,
               {
                 instructions: instructionsRef,
                 input: {},
@@ -83,7 +85,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
               },
               { spaceId: db.spaceId },
             ).pipe(
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 log.catch(error);
                 return Effect.void;
               }),

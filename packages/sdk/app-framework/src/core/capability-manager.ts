@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
-import type * as Capability from './capability';
-import { ContributionTypeId } from './capability';
-import { CapabilityNotFoundError } from './errors';
+import type * as Capability from './capability.ts';
+import { ContributionTypeId } from './capability.ts';
+import { CapabilityNotFoundError } from './errors.ts';
 
 type CapabilityEntry<T> = {
   moduleId: string;
@@ -53,12 +54,10 @@ export const expandContributions = (
 ): Capability.Any[] =>
   items.flatMap((item) =>
     isContribution(item)
-      ? item.values.map(
-          (value): Capability.Any => ({
-            interface: item.capability,
-            implementation: value,
-          }),
-        )
+      ? item.values.map((value): Capability.Any => ({
+          interface: item.capability,
+          implementation: value,
+        }))
       : [item],
   );
 
@@ -67,7 +66,7 @@ export const expandContributions = (
  * @internal
  */
 export type CapabilityManagerOptions = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
 };
 
 /**
@@ -136,7 +135,7 @@ export interface CapabilityManager {
  * Internal implementation of CapabilityManager.
  */
 class CapabilityManagerImpl implements CapabilityManager {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
 
   private readonly _registeredIdentifiers = new Set<string>();
 
@@ -254,7 +253,7 @@ class CapabilityManagerImpl implements CapabilityManager {
   }
 
   waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const [capability] = this.getAll(interfaceDef);
       if (capability) {
         return capability;

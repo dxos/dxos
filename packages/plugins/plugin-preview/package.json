@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-preview",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Preview plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,13 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -24,20 +32,19 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/PreviewPlugin.workerd.ts",
-        "node": "./src/PreviewPlugin.node.ts",
-        "default": "./src/PreviewPlugin.tsx"
-      },
-      "types": "./dist/types/src/PreviewPlugin.d.ts",
-      "workerd": "./dist/lib/PreviewPlugin.workerd.mjs",
-      "node": "./dist/lib/PreviewPlugin.node.mjs",
-      "default": "./dist/lib/PreviewPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -46,10 +53,20 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./PreviewCapabilities": {
+      "source": "./src/types/PreviewCapabilities.ts",
+      "types": "./dist/types/src/types/PreviewCapabilities.d.ts",
+      "import": "./dist/lib/PreviewCapabilities.mjs"
+    },
+    "./PreviewEvents": {
+      "source": "./src/PreviewEvents.ts",
+      "types": "./dist/types/src/PreviewEvents.d.ts",
+      "import": "./dist/lib/ns/PreviewEvents.mjs"
+    },
+    "./PreviewPlugin": {
+      "source": "./src/PreviewPlugin.ts",
+      "types": "./dist/types/src/PreviewPlugin.d.ts",
+      "import": "./dist/lib/PreviewPlugin.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
@@ -63,6 +80,13 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "PreviewCapabilities": [
+        "dist/types/src/types/PreviewCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -72,7 +96,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -81,6 +104,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",

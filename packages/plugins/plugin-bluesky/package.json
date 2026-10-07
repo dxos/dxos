@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-bluesky",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS plugin that integrates Bluesky / atproto as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -30,9 +38,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/BlueskyPlugin.ts",
-      "types": "./dist/types/src/BlueskyPlugin.d.ts",
-      "default": "./dist/lib/BlueskyPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -52,10 +60,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./BlueskyEvents": {
+      "source": "./src/BlueskyEvents.ts",
+      "types": "./dist/types/src/BlueskyEvents.d.ts",
+      "import": "./dist/lib/ns/BlueskyEvents.mjs"
+    },
+    "./BlueskyPlugin": {
+      "source": "./src/BlueskyPlugin.ts",
+      "types": "./dist/types/src/BlueskyPlugin.d.ts",
+      "import": "./dist/lib/BlueskyPlugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -73,8 +86,8 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -87,7 +100,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

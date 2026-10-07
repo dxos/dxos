@@ -49,9 +49,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
@@ -62,6 +59,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-card"
     },
     {
       "path": "../../ui/react-ui-form"

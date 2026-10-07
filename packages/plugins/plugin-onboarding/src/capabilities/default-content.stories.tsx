@@ -7,28 +7,30 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
-import { promptRunExtension } from '@dxos/plugin-assistant/extensions';
+import * as Extensions from '@dxos/plugin-assistant/Extensions';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import README_CONTENT from '../content/readme.md?raw';
-import { README_DOCUMENT_NAME } from './default-content';
+import README_CONTENT from '../content/README.md?raw';
+import { README_DOCUMENT_NAME } from './default-content.ts';
 
 /**
  * Contributes the assistant's prompt-run extension so the ```prompt blocks in the README (e.g. the
@@ -47,7 +49,7 @@ const PromptExtensionPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-          () => promptRunExtension({ onRun: (promptText) => console.log('[run prompt]', promptText) }),
+          () => Extensions.promptRunExtension({ onRun: (promptText) => console.log('[run prompt]', promptText) }),
         ]),
       ]),
   }),
@@ -55,12 +57,12 @@ const PromptExtensionPlugin = Plugin.define(
 );
 
 const DefaultStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = doc && Obj.getURI(doc);
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (space) {
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }
@@ -80,10 +82,10 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
         PromptExtensionPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -92,7 +94,7 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

@@ -8,16 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
+import { Blog, BloggerCapabilities, Publisher } from '#types';
 
-import * as Blog from '../types/Blog';
-import * as BloggerCapabilities from '../types/BloggerCapabilities';
-import * as Publisher from '../types/Publisher';
-import { SyncPosts } from './definitions';
-import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support';
+import { SyncPosts } from './definitions.ts';
+import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support.ts';
 
 /** Reports sync progress; `total` is an upper bound (posts to reconcile + remote drafts). */
 export type SyncProgress = (current: number, total: number) => void;
@@ -33,7 +31,7 @@ export const runSyncPosts = (
   publication: Blog.Publication,
   connection: Ref.Ref<Connection.Connection>,
   onProgress?: SyncProgress,
-): Effect.Effect<Blog.Publication, Publisher.PublisherError> =>
+): Effect.Effect<Blog.Publication, Publisher.Failure> =>
   Effect.gen(function* () {
     const source = service.source;
     const posts = (publication.posts ?? []).map((ref) => ref.target).filter(isNonNullable);
@@ -88,7 +86,8 @@ export const runSyncPosts = (
       // `publication` is already attached (only ever created via AddPublication), so pushing
       // `Ref.make(post)` onto `posts` attaches `post` too — no separate `Database.add` needed.
       Obj.update(publication, (publication) => {
-        publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+        publication.posts ??= [];
+        publication.posts.push(Ref.make(post));
       });
       onProgress?.(++done, total);
     }
@@ -107,13 +106,13 @@ const handler: Operation.WithHandler<typeof SyncPosts> = SyncPosts.pipe(
       // failures — dangling refs (e.g. a removed post, or pre-redesign posts with no `content`) must
       // not abort the whole sync; `runSyncPosts` reads `ref.target` and skips whatever is unresolved.
       const posts = yield* Effect.forEach(publication.posts ?? [], (ref) =>
-        Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(undefined))),
+        Database.load(ref).pipe(Effect.catch(() => Effect.succeed(undefined))),
       );
       yield* Effect.forEach(posts.filter(isNonNullable), (post) =>
         post.content
           ? Database.load(post.content).pipe(
               Effect.flatMap((doc) => (doc?.content ? Database.load(doc.content) : Effect.void)),
-              Effect.catchAll(() => Effect.void),
+              Effect.catch(() => Effect.void),
             )
           : Effect.void,
       );

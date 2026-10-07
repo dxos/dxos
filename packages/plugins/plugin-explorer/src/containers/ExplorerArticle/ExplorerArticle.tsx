@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Filter, Obj, type View } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/echo-react';
-import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type TreeNode } from '@dxos/react-ui-graph';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { DxAnchorActivate } from '@dxos/ui-types';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';
@@ -27,12 +29,9 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   const db = view && Obj.getDatabase(view);
   const model = useGraphModel(db, filter);
 
-  const builder = useMemo(() => new QueryBuilder(), []);
-  const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
-    (value) => {
-      setFilter(builder.build(value).filter);
-    },
-    [builder],
+  const handleFilterChange = useCallback<NonNullable<QueryEditorProps['onFilterChange']>>(
+    ({ filter }) => setFilter(filter),
+    [],
   );
 
   const [selected, setSelected] = useState<ExplorerArticleVariant>(isVariant(variant) ? variant : 'force');
@@ -48,11 +47,11 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     }
   }, []);
 
-  // Dismiss the preview popover. The dxn/label/trigger fields are placeholders ignored on
+  // Dismiss the preview popover. The eid/label/trigger fields are placeholders ignored on
   // `state: false`.
   const handleDismiss = useCallback(() => {
     document.defaultView?.dispatchEvent(
-      new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
+      new DxAnchorActivate({ eid: '', label: '', trigger: document.body, state: false }),
     );
   }, []);
 
@@ -66,18 +65,18 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     if (!obj || !Obj.isObject(obj)) {
       return;
     }
-    const dxn = Obj.getURI(obj);
-    if (!dxn) {
+    const eid = Obj.getURI(obj);
+    if (!eid) {
       return;
     }
 
     const target = event.target as HTMLElement;
     target.dispatchEvent(
       new DxAnchorActivate({
-        dxn,
+        eid,
         kind: 'card',
         trigger: target,
-        label: Obj.getLabel(obj) ?? dxn,
+        label: Obj.getLabel(obj) ?? eid,
       }),
     );
   }, []);
@@ -91,20 +90,18 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   return (
     <Panel.Root role={role}>
       {showToolbar && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <QueryEditor db={db} onChange={handleChange} />
+            <QueryEditor db={db} onFilterChange={handleFilterChange} />
             <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
-                <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
-                  <Icon icon={icon} size={4} />
-                </Toolbar.ToggleGroupItem>
+                <ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={label} />
               ))}
             </Toolbar.ToggleGroup>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           variant={selected}
@@ -113,7 +110,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

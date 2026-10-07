@@ -10,26 +10,26 @@
 
 import React, { useCallback } from 'react';
 
-import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type Node } from '@dxos/plugin-graph';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   graphActions,
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
-
-import type * as SampleItem from '../types/SampleItem';
+import { SampleItem } from '#types';
 
 export type SampleArticleProps = AppSurface.ObjectArticleProps<SampleItem.SampleItem>;
 
@@ -64,21 +64,17 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Header>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
+      </Panel.Header>
+      <Panel.Body>
         <SampleItemView
           name={snapshot.name}
           description={snapshot.description}
           status={snapshot.status}
           onValuesChanged={handleValuesChanged}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -92,14 +88,14 @@ export default SampleArticle;
 /**
  * Builds toolbar menu actions from the app graph for the given node, via `graphActions` (actions
  * opted into the toolbar with `disposition: 'toolbar'`) spliced into a `MenuBuilder`.
- * `useMenuActions` converts the atom into props for `Menu.Root`.
+ * `useMenuActions` converts the atom into props for `ActionToolbar`.
  * `useActionRunner` executes graph actions when triggered.
  */
 const useMenuActions = (
   attendableId: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = Hooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps =>
@@ -111,7 +107,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action as Node.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

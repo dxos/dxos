@@ -19,6 +19,15 @@ export type ChatEvent =
       type: 'submit';
       text: string;
     }
+  /**
+   * System-generated turn content — an inline flow (a connector authorized, a plugin enabled)
+   * reporting itself. Submitted as a synthetic block, so it reads as a system note rather than as
+   * words the user typed.
+   */
+  | {
+      type: 'report';
+      text: string;
+    }
   | {
       type: 'retry';
     }
@@ -33,6 +42,18 @@ export type ChatEvent =
   | {
       type: 'rewind';
       id: string;
+    }
+  /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
+  | {
+      type: 'remove-prompt';
+      id: string;
+    }
+  /** A person answered a request an agent raised (allow or refuse a tool call). */
+  | {
+      type: 'respond';
+      messageId: string;
+      requestId: string;
+      optionId: string;
     }
   | {
       type: 'add';
@@ -66,4 +87,8 @@ export type ChatEvent =
     }
   | {
       type: 'thread-close';
+    }
+  /** Show or hide the checklist beside the prompt. */
+  | {
+      type: 'toggle-tasks';
     };

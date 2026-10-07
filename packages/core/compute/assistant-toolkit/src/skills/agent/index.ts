@@ -1,6 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export { default as AgentSkill } from './skill';
-export { AgentSkillHandlers, AgentSkillOperations } from './operations';
+export * as AgentSkill from './AgentSkill.ts';

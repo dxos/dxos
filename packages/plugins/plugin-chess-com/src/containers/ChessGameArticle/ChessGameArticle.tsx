@@ -4,25 +4,30 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionMenu, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
-
-import * as ChessComAccount from '../../types/ChessComAccount';
-import * as ChessComOperation from '../../types/ChessComOperation';
+import { ChessComAccount, ChessComOperation } from '#types';
 
 export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccount.Account>;
 
 export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [account] = useObject(subject);
   const [gamesFeed] = useObject(account?.games);
   const db = Obj.getDatabase(subject);
@@ -50,79 +55,85 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
     );
   }, [subject, db?.spaceId, invokePromise]);
 
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'sync',
+          {
+            label: ['sync-games.button', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
+            iconOnly: false,
+          },
+          handleSync,
+        )
+        .build(),
+    [handleSync],
+  );
+
   const empty = sortedGames.length === 0;
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.IconButton
-              icon='ph--arrows-clockwise--regular'
-              label={t('sync-games.button')}
-              onClick={handleSync}
-            />
-            {account?.username && (
-              <span className='text-subdued text-sm px-2'>
-                {account.username}
-                {account.league ? ` · ${account.league}` : ''}
-              </span>
-            )}
-            <div className='grow' />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-      </Menu.Root>
-      <Panel.Content>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
+          {account?.username && (
+            <span className='text-fg-subtle text-sm px-2'>
+              {account.username}
+              {account.league ? ` · ${account.league}` : ''}
+            </span>
+          )}
+          <div className='grow' />
+        </ActionToolbar>
+      </Panel.Header>
+      <Panel.Body>
         {empty ? (
-          <div className='h-full flex items-center justify-center text-subdued text-sm'>{t('empty-games.message')}</div>
+          <Layout.Flex center classNames='h-full text-fg-subtle text-sm'>
+            {t('empty-games.message')}
+          </Layout.Flex>
         ) : (
+          // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
-            <Masonry.Content thin centered padding>
+            <Masonry.Content padding>
               <Masonry.Viewport classNames='py-2' items={sortedGames} getId={(game) => game.id} />
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const GameTile = ({ data: game }: { data: Game.Game }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const objectMenuItems = useObjectMenuItems(game, pivotId);
-  const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
-
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
+  const objectMenuItems = ToolkitHooks.useObjectMenuItems(game, pivotId);
   return (
-    <Menu.Root>
-      <Card.Root ref={cardRef} fullWidth>
-        <Card.Header>
-          <Card.Block>
-            <Icon icon={icon} />
-          </Card.Block>
-          <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
-          <Card.Block end>
-            <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-              <IconButton
+    <ObjectCard.Root ref={cardRef}>
+      <ObjectCard.Header
+        subject={game}
+        menu={
+          <Layout.Block rail='end'>
+            <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
                 label={t('game-actions.label')}
               />
-            </Menu.Trigger>
-            <Menu.Content items={objectMenuItems} />
-          </Card.Block>
-        </Card.Header>
-        <Card.Body>
-          <Surface.Surface
-            type={AppSurface.CardContent}
-            limit={1}
-            data={{ subject: game } satisfies AppSurface.ObjectCardData}
-          />
-        </Card.Body>
-      </Card.Root>
-    </Menu.Root>
+            </ActionMenu>
+          </Layout.Block>
+        }
+      />
+      <Card.Body>
+        <Surface.Surface
+          type={AppSurface.CardContent}
+          limit={1}
+          data={{ subject: game } satisfies AppSurface.ObjectCardData}
+        />
+      </Card.Body>
+    </ObjectCard.Root>
   );
 };
 

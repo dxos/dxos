@@ -6,10 +6,10 @@ import { curveCatmullRom, line, scaleLinear } from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { ThemedClassName } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useAudioStream } from '../../hooks';
+import { useAudioStream } from '../../hooks/index.ts';
 
 export type Point = { x: number; y: number };
 
@@ -22,7 +22,7 @@ const curveGenerator = line<Point>()
   .x((d) => d.x)
   .y((d) => d.y);
 
-type GraphProps = ThemedClassName<{
+type GraphProps = Util.ThemedClassName<{
   range?: [number, number];
   data?: number[];
   bins?: number;
@@ -30,7 +30,7 @@ type GraphProps = ThemedClassName<{
   trail?: number;
 }>;
 
-// TODO(burdon): Radix style to separate Grid from Graph.
+// TODO(burdon): Split Grid from Graph as composable parts (composite-components pattern).
 const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange, grid, trail = 4 }: GraphProps) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
   const scaleX = useMemo(() => scaleLinear([0, bins - 1], [-width / 2, width / 2]), [width, bins]);
@@ -79,7 +79,7 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
   return (
     <div
       ref={containerRef}
-      className={mx('dx-container border rounded-md border-green-800 stroke-green-800', classNames)}
+      className={mx('dx-expand overflow-hidden border rounded-md border-green-800 stroke-green-800', classNames)}
     >
       <svg className='overflow-visible' style={{ transform: `translate(${width / 2}px, ${height / 2}px)` }}>
         {grid && (
@@ -127,7 +127,7 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
 
 export type OscilloscopeMode = 'frequency' | 'waveform';
 
-export type OscilloscopeProps = ThemedClassName<{
+export type OscilloscopeProps = Util.ThemedClassName<{
   active?: boolean;
   mode?: OscilloscopeMode;
   /** X-axis window as [startIndex, endIndex] into the data array. Shows all bins if omitted. */

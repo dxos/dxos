@@ -7,16 +7,17 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    TerraPlugin: 'src/TerraPlugin.tsx',
+    TerraPlugin: 'src/TerraPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     Terra: 'src/types/Terra.ts',
     TerraCapabilities: 'src/types/TerraCapabilities.ts',
     TerraObject: 'src/types/TerraObject.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   // The Objects story generates a full planet + object sim (~30s under CI load, observed at

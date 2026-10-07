@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as OpfsPool from '../OpfsPool';
+import * as OpfsPool from '../OpfsPool.ts';
 import {
   createSerializedDatabase,
   runInWorkerTestCase,
@@ -12,7 +12,7 @@ import {
   spawnInWorkerTestRunner,
   terminateInWorkerTestRunner,
   waitForInWorkerTestRunner,
-} from './opfs-test-helpers';
+} from './opfs-test-helpers.ts';
 
 describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequential: true }, () => {
   test('runs CRUD inside dedicated worker via SqliteClient.layerOpfs', async () => {

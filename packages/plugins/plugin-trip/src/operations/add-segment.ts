@@ -8,10 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { type Place } from '../types/Place';
-import * as Segment from '../types/Segment';
-import * as Trip from '../types/Trip';
-import * as TripOperation from '../types/TripOperation';
+import { Segment, Trip, TripOperation } from '#types';
+
+import { type Place } from '../types/Place.ts';
 
 type DetailsInput = {
   kind: Segment.Kind;

@@ -7,6 +7,12 @@
   ],
   "references": [
     {
+      "path": "../effect"
+    },
+    {
+      "path": "../errors"
+    },
+    {
       "path": "../log"
     },
     {

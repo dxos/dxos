@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './meta';
-
-export * from '@dxos/app-graph';
-
-export * from './action';
+export * as GraphAction from './GraphAction.ts';
+export * as GraphPlugin from './GraphPlugin.ts';
+export * as Hooks from './Hooks.ts';

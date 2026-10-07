@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Fact, type Term } from '../types';
+import { type Fact, type Term } from '../types/index.ts';
 
 /**
  * Read abstraction the graph builder traverses: facts in which an entity appears as **subject or
@@ -39,9 +39,9 @@ export type BuildFactGraphOptions = {
   readonly depth?: number;
 };
 
-const termKey = (term: Term): string => ('entity' in term ? term.entity : `literal:${term.literal}`);
+const termKey = (term: Term): string => (term.kind === 'entity' ? term.entity : `literal:${term.literal}`);
 const termNode = (term: Term): FactGraphNode =>
-  'entity' in term
+  term.kind === 'entity'
     ? { id: term.entity, label: term.label ?? term.entity }
     : { id: `literal:${term.literal}`, label: term.literal };
 
@@ -79,7 +79,7 @@ export const buildFactGraph = (
         [subject, subjectKey],
         [object, objectKey],
       ] as const) {
-        if ('entity' in term && !distance.has(key)) {
+        if (term.kind === 'entity' && !distance.has(key)) {
           distance.set(key, hops + 1);
           queue.push(key);
         }
@@ -94,7 +94,7 @@ export const buildFactGraph = (
 export const factSourceFromFacts = (facts: readonly Fact[]): FactSource => {
   const byEntity = new Map<string, Fact[]>();
   const add = (term: Term, fact: Fact) => {
-    if ('entity' in term) {
+    if (term.kind === 'entity') {
       const list = byEntity.get(term.entity) ?? [];
       list.push(fact);
       byEntity.set(term.entity, list);

@@ -4,15 +4,18 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
-import * as Settings from '../../types/Settings';
-import { pingExtension } from '../../util';
+import { pingExtension } from '../../util/index.ts';
 
 type TestState =
   | { kind: 'idle' }
@@ -27,8 +30,8 @@ export type CrxSettingsProps = AppSurface.SettingsData<{ readonly?: boolean }>;
  * round-trip connection test against the extension's content relay.
  */
 export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
 
   // Round-trip a ping to the extension and report its identity (or why it failed).
@@ -55,13 +58,17 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            description={t('settings.description')}
+            actions={readonly ? undefined : <SettingsScope.Root prefix={subject.prefix} />}
+          >
+            <Form.Fields />
+          </Form.FieldSet>
 
-          <Form.Section title={t('test.title')}>
-            <div className='flex gap-2'>
-              <IconButton
+          <Form.FieldSet label={t('test.title')}>
+            <Layout.Flex gap='sm'>
+              <Button.Root
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
                 label={t('test.button.label')}
@@ -69,24 +76,24 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
               />
 
               {/* role=status + aria-live so screen readers announce the async outcome. */}
-              <div className='flex items-center'>
+              <Layout.Flex align='center'>
                 <span
                   role='status'
                   aria-live='polite'
                   className={
                     test.kind === 'ok'
-                      ? 'text-sm text-success'
+                      ? 'text-sm text-success-text'
                       : test.kind === 'error'
-                        ? 'text-sm text-error'
-                        : 'text-sm text-description'
+                        ? 'text-sm text-error-text'
+                        : 'text-sm text-fg-muted'
                   }
                 >
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
                   {test.kind === 'pending' ? t('test.pending.message') : ''}
                 </span>
-              </div>
-            </div>
-          </Form.Section>
+              </Layout.Flex>
+            </Layout.Flex>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

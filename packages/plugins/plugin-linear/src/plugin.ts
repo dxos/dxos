@@ -4,6 +4,15 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { Connector, OperationHandler, PluginAsset, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const LinearPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const LinearPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
+
+export default LinearPlugin;

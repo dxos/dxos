@@ -63,7 +63,7 @@ export interface FollowupScheduler {
 //
 
 type FollowupState = {
-  fibers: HashSet.HashSet<Fiber.RuntimeFiber<unknown, unknown>>;
+  fibers: HashSet.HashSet<Fiber.Fiber<unknown, unknown>>;
 };
 
 //
@@ -80,11 +80,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
     this._state = Effect.runSync(Ref.make<FollowupState>({ fibers: HashSet.empty() }));
   }
 
-  private _addFiber(fiber: Fiber.RuntimeFiber<unknown, unknown>): Effect.Effect<void> {
+  private _addFiber(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
     return Ref.update(this._state, (s) => ({ fibers: HashSet.add(s.fibers, fiber) }));
   }
 
-  private _removeFiber(fiber: Fiber.RuntimeFiber<unknown, unknown>): Effect.Effect<void> {
+  private _removeFiber(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
     return Ref.update(this._state, (s) => ({ fibers: HashSet.remove(s.fibers, fiber) }));
   }
 
@@ -97,20 +97,20 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   ): Effect.Effect<void> => {
     const effect = this._invoke(op, args[0] as I, args[1] as Operation.InvokeOptions | undefined).pipe(
       Effect.tap(() => Effect.sync(() => log('followup completed', { key: op.meta.key }))),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.sync(() => {
           log.error('followup failed', { key: op.meta.key, error });
         }),
       ),
     );
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Fork as daemon so it survives parent fiber completion.
-      const fiber = yield* Effect.forkDaemon(effect);
+      const fiber = yield* Effect.forkDetach(effect);
       yield* this._addFiber(fiber);
 
       // When the fiber completes, remove it from tracking.
-      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
+      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
     });
   };
 
@@ -118,20 +118,20 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   scheduleEffect = <A, E>(effect: Effect.Effect<A, E, never>): Effect.Effect<void> => {
     const wrappedEffect = effect.pipe(
       Effect.tap(() => Effect.sync(() => log('followup effect completed'))),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.sync(() => {
           log.error('followup effect failed', { error });
         }),
       ),
     );
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Fork as daemon so it survives parent fiber completion.
-      const fiber = yield* Effect.forkDaemon(wrappedEffect);
+      const fiber = yield* Effect.forkDetach(wrappedEffect);
       yield* this._addFiber(fiber);
 
       // When the fiber completes, remove it from tracking.
-      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
+      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
     });
   };
 
@@ -140,9 +140,20 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   }
 
   get awaitAll(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
-      const { fibers } = yield* Ref.get(this._state);
-      yield* Effect.forEach(fibers, (fiber) => Fiber.await(fiber), { concurrency: 'unbounded' });
+    return Effect.gen({ self: this }, function* () {
+      // Untracks each fiber here rather than leaving it to the observer fork, so `pending` is
+      // settled the moment this returns; the observer's own removal is idempotent. Loops because a
+      // followup may schedule further followups while this is awaiting.
+      while (true) {
+        const { fibers } = yield* Ref.get(this._state);
+        if (HashSet.size(fibers) === 0) {
+          return;
+        }
+        yield* Effect.forEach(fibers, (fiber) => Fiber.await(fiber).pipe(Effect.andThen(this._removeFiber(fiber))), {
+          concurrency: 'unbounded',
+          discard: true,
+        });
+      }
     });
   }
 }

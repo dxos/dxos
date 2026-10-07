@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LatLngLiteral } from '@dxos/react-ui-geo';
+import { type LatLngLiteral } from '@dxos/react-ui-geo/types';
 
 // TODO(burdon): Minimal seed data. Replace with a comprehensive IATA dataset (airlines +
 //   airports) — likely a generated lookup or an airport-data service — as coverage grows.

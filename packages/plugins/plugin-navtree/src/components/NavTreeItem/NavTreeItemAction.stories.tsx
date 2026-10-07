@@ -5,13 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Node } from '@dxos/app-graph';
-import { corePlugins } from '@dxos/plugin-testing';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 
-import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
+import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction.tsx';
 
 const parent = {
   id: random.string.uuid(),
@@ -21,7 +21,7 @@ const parent = {
     label: random.lorem.words(2),
     icon: 'ph--circle--regular',
   },
-} satisfies Node.NodeArg<any>;
+} satisfies AppGraphNode.NodeArg<any>;
 
 // TODO(burdon): Factor out across tests.
 const menuActions = random.helpers.multiple(
@@ -37,7 +37,7 @@ const menuActions = random.helpers.multiple(
         label: random.lorem.words(2),
         icon: 'ph--circle--regular',
       },
-    }) satisfies Node.NodeArg<any>,
+    }) satisfies AppGraphNode.NodeArg<any>,
   { count: 20 },
 );
 
@@ -52,7 +52,7 @@ const meta = {
   } satisfies Partial<NavTreeItemActionMenuProps>,
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), ProcessManagerPlugin()],
+      plugins: [...CorePlugins.make(), ProcessManagerPlugin.make()],
     }),
   ],
   parameters: {

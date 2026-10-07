@@ -220,7 +220,7 @@ forge membership ops, or build plaintext indexes.
 | Service                 | Disposition under Keyhive                                                               |
 | ----------------------- | --------------------------------------------------------------------------------------- |
 | `SUBDUCTION_REPLICATOR` | Primary sync path; EDGE acts as a `pull`-level Subduction peer.                         |
-| `AUTOMERGE_REPLICATOR`  | Superseded by Subduction; retire with the migration.                                    |
+| `AUTOMERGE_REPLICATOR`  | Deleted — superseded by Subduction and retired ahead of this migration.                 |
 | `FEED_REPLICATOR`       | Deleted — already `TODO(mykola): Remove once we migrate to keyhive for access control`. |
 | `QUEUE_REPLICATOR`      | Retained (renamed per existing TODO); queue payloads become ciphertext under `pull`.    |
 | `SWARM` / `SIGNAL`      | Unchanged — pure transport; requires message auth but no group capability.              |

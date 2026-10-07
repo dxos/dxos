@@ -5,22 +5,23 @@
 import React from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
-import { Tooltip, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { useEdgeStatus } from '#hooks';
 import { meta } from '#meta';
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const qualifiedId = GraphPath.getSpacePath(space.id);
   const { hasAttention, isAncestor, isRelated } = useAttention(qualifiedId);
   const attended = hasAttention || isRelated;
   const containsAttended = isAncestor && !open;
-  const connectedToEdge = useEdgeStatus().state === EdgeStatus.ConnectionState.CONNECTED;
+  const connectedToEdge = useEdgeStatus().state === EdgeStatus_ConnectionState.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
   const syncState = useSpaceSyncState(space);

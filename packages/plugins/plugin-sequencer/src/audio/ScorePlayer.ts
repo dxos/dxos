@@ -4,11 +4,9 @@
 
 import * as Tone from 'tone';
 
-import type * as Note from '../types/Note';
-import type * as Patch from '../types/Patch';
-import type * as Score from '../types/Score';
-import type * as Track from '../types/Track';
-import { createDrum } from './sounds';
+import { Note, Patch, Score, Track } from '#types';
+
+import { createDrum } from './sounds.ts';
 
 /**
  * Builds and runs a Tone.js transport for a Score.

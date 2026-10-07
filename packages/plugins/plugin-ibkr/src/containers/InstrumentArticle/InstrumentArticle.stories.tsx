@@ -10,15 +10,15 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ibkr } from '#types';
 
-import { TRADINGVIEW_SOURCE } from '../../constants';
-import * as Ibkr from '../../types/Ibkr';
-import { InstrumentArticle } from './InstrumentArticle';
+import { TRADINGVIEW_SOURCE } from '../../constants.ts';
+import { InstrumentArticle } from './InstrumentArticle.tsx';
 
 // Fictional instrument only — this is a public repo (never real holdings). IbkrPlugin is intentionally
 // not loaded: the OperationInvoker (from ProcessManagerPlugin) resolves, so GetInstrumentFundamentals
@@ -40,8 +40,8 @@ const meta = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Ibkr.Instrument],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

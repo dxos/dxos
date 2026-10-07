@@ -1,0 +1,107 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { useEffect, useMemo } from 'react';
+
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
+
+import { Loading, MobileAppBar, MobileNavBar, NavigationStack, useExpandPath, useMobileLayout } from '#components';
+import { useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';
+
+const MAIN_NAME = 'MobileDeckLayout.Main';
+const MAIN_PANEL_NAME = 'MobileDeckLayout.MainPanel';
+
+type MainPanelProps = {
+  id: string;
+  popoverAnchorId?: string;
+};
+
+/**
+ * One panel of the navigation stack. Its own component because every panel resolves its own graph
+ * node, and the stack renders a variable number of them — hooks cannot run in a loop.
+ */
+const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
+  const { graph } = Hooks.useAppGraph();
+  const node = GraphHooks.useNode(graph, id);
+  const placeholder = useMemo(() => <Loading />, []);
+  const data = useMemo(() => {
+    return (
+      node && {
+        attendableId: id,
+        subject: node.data,
+        properties: node.properties,
+        popoverAnchorId,
+      }
+    );
+  }, [id, node, node?.data, node?.properties, popoverAnchorId]);
+
+  return (
+    <Surface.Surface
+      key={id}
+      type={AppSurface.Article}
+      data={data}
+      limit={1}
+      fallback={Status.Error}
+      placeholder={placeholder}
+    />
+  );
+};
+
+MainPanel.displayName = MAIN_PANEL_NAME;
+
+/**
+ * Mobile main content: the deck's active panels projected as a navigation stack.
+ */
+export const MobileMain = () => {
+  const { state } = DeckHooks.useDeckState();
+  const { graph } = Hooks.useAppGraph();
+  const { stack, topId, pop } = useMobileStack();
+  const attentionAttrs = useAttentionAttributes(topId);
+  const { keyboardOpen } = useMobileLayout(MAIN_NAME);
+  const { actions, onAction } = useMobileNavbarActions();
+  const appBarProps = useMobileAppBar();
+
+  useExpandPath(topId);
+  // The navbar's companion tabs come from the top panel's companions, which nothing else expands.
+  useEffect(() => {
+    AppGraph.expandSync(graph, topId, AppNode.companion);
+  }, [graph, topId]);
+
+  // The drawer occupies the bottom of the screen when open, so the navbar would collide with it.
+  const drawerClosed = !state.complementarySidebarPanel || state.complementarySidebarState === 'closed';
+  const showNavBar = !keyboardOpen && drawerClosed;
+
+  return (
+    <Panel.Root {...attentionAttrs} width='document'>
+      <Panel.Header>
+        <MobileAppBar {...appBarProps} />
+      </Panel.Header>
+      <Panel.Body role='article' classNames='dx-base-surface'>
+        <NavigationStack
+          classNames='size-full'
+          items={stack}
+          index={stack.length - 1}
+          onIndexChange={pop}
+          renderItem={(itemId) => <MainPanel id={itemId} popoverAnchorId={state.popoverAnchorId} />}
+        />
+      </Panel.Body>
+      {showNavBar && (
+        <Panel.Footer>
+          <MobileNavBar actions={actions} onAction={onAction} />
+        </Panel.Footer>
+      )}
+    </Panel.Root>
+  );
+};
+
+MobileMain.displayName = MAIN_NAME;

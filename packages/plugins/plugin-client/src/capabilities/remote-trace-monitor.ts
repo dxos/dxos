@@ -3,20 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
+import { toPublicKey } from '@dxos/protocols/buf';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
 
 /**
  * Contributes a swarm-backed {@link Capabilities.RemoteTraceMonitor} (DX-1125). Remote runtimes
  * (edge intrinsics / function-invoker) broadcast their ephemeral trace messages over the space swarm;
  * this monitor subscribes via the client's network service and decodes them so the aggregate
- * {@link Process.Monitor.subscribeToTraceMessages} surfaces remote progress.
+ * {@link Process.Manager.subscribeToTraceMessages} surfaces remote progress.
  *
  * The client is resolved lazily inside the subscribe closure (invoked only when a consumer
  * subscribes, well after `ClientReady`), so this module can be collected at `SetupProcessManager`
@@ -41,18 +42,21 @@ export default Capability.makeModule(
                 // the WebSocket connection, not this object; it only affects point-to-point filtering.
                 const peer = {
                   peerKey:
-                    client.halo.device?.deviceKey.toHex() ?? client.halo.identity.get()?.identityKey.toHex() ?? '',
+                    toPublicKey(client.halo.device?.deviceKey)?.toHex() ??
+                    toPublicKey(client.halo.identity.get()?.identityKey)?.toHex() ??
+                    '',
                 };
-                return client.services.rpc.NetworkService.subscribeMessages({ peer, tags }).pipe(
+                return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta
                   // (`trigger`), and decode restores it from the tags for cancel addressing.
+                  // v4's `filterMap` signals the drop through a `Result`, not an `Option`.
                   Stream.filterMap((message) =>
                     message.payload?.value
-                      ? Option.some({ payload: message.payload.value, tags: message.tags })
-                      : Option.none(),
+                      ? Result.succeed({ payload: message.payload.value, tags: message.tags })
+                      : Result.failVoid,
                   ),
                   // Never fail the aggregate monitor stream on a transient network error.
-                  Stream.catchAll(() => Stream.empty),
+                  Stream.catch(() => Stream.empty),
                 );
               }),
             ),

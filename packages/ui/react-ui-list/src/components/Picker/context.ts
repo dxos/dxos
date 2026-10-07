@@ -1,3 +1,4 @@
+import * as Hooks from '@dxos/react-ui/Hooks';
 //
 // Copyright 2026 DXOS.org
 //
@@ -9,8 +10,6 @@
 // Kept out of `Picker.tsx` (and not re-exported from it): react-refresh only fast-refreshes a module
 // whose exports are all components, so contexts and hooks exported beside them force a full page
 // reload on every edit.
-
-import { createContext } from '@radix-ui/react-context';
 
 /** Stable: items subscribe to selection, registry. Doesn't change on query. */
 export type PickerItemContextValue = {
@@ -41,7 +40,8 @@ export type PickerInputContextValue = {
   triggerSelect: () => void;
 };
 
-export const [PickerItemContextProvider, usePickerItemContext] = createContext<PickerItemContextValue>('PickerItem');
+export const [PickerItemContextProvider, usePickerItemContext] =
+  Hooks.createContext<PickerItemContextValue>('PickerItem');
 
 export const [PickerInputContextProvider, usePickerInputContext] =
-  createContext<PickerInputContextValue>('PickerInput');
+  Hooks.createContext<PickerInputContextValue>('PickerInput');

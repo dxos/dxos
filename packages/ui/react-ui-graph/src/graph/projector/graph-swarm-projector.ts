@@ -4,11 +4,11 @@
 
 import { type Timer, timer } from 'd3';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type GraphLayoutNode } from '../types.ts';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector.ts';
 
 // Boids swarming simulation rendered through the react-ui-graph SVG renderer.
 // Mirrors the canvas Swarm component's tick (alignment / cohesion / separation)
@@ -111,7 +111,7 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
     }
   }
 
-  protected override onUpdate(graph?: Graph.Any): void {
+  protected override onUpdate(graph?: GraphModel.AnyData): void {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
     this.initializeNodes();

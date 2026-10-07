@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SKIP, createReplacer, safeStringify } from './safe-stringify';
+import { SKIP, createReplacer, safeStringify } from './safe-stringify.ts';
 
 describe('safeStringify', () => {
   test('stringifies plain nested objects', ({ expect }) => {

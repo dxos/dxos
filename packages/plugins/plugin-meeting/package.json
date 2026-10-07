@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-meeting",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Meeting hub plugin for DXOS Composer",
   "homepage": "https://dxos.org",
@@ -11,12 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -39,14 +48,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/MeetingPlugin.ts",
-      "types": "./dist/types/src/MeetingPlugin.d.ts",
-      "default": "./dist/lib/MeetingPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -56,16 +70,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Meeting": {
       "source": "./src/types/Meeting.ts",
       "types": "./dist/types/src/types/Meeting.d.ts",
@@ -86,12 +96,16 @@
       "types": "./dist/types/src/types/MeetingOperation.d.ts",
       "import": "./dist/lib/MeetingOperation.mjs"
     },
+    "./MeetingPlugin": {
+      "source": "./src/MeetingPlugin.ts",
+      "types": "./dist/types/src/MeetingPlugin.d.ts",
+      "import": "./dist/lib/MeetingPlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -121,7 +135,9 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
@@ -131,11 +147,9 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -143,7 +157,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -153,6 +166,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
@@ -162,7 +176,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

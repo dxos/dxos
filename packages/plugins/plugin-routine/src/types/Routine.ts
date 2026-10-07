@@ -8,10 +8,10 @@ import { Database } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-export const TriggerTemplate = Schema.Union(
+export const TriggerTemplate = Schema.Union([
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
   Schema.Struct({ type: Schema.Literal('feed'), feed: Schema.Any }),
-);
+]);
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
@@ -23,7 +23,7 @@ export namespace AutomationAction {
         enabled: Schema.optional(Schema.Boolean),
         // TODO(wittjosiah): Improve how this lookup is done.
         scriptName: Schema.optional(Schema.String),
-        input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+        input: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
       }),
       output: Schema.Void,
     },

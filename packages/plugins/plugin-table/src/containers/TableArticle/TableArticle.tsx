@@ -2,20 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Match from 'effect/Match';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { Panel } from '@dxos/react-ui';
+import * as SearchHooks from '@dxos/plugin-search/Hooks';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
@@ -31,11 +32,12 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
+import * as Panel from '@dxos/react-ui/Panel';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
+import { downloadBlob } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as TableOperation from '../../types/TableOperation';
+import { TableOperation } from '#types';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 
@@ -43,20 +45,21 @@ export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
   ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
-    const [view] = useObject(object.view);
+    const [viewRef] = useObject(object, 'view');
+    const [view] = useObject(viewRef);
     const queryAst = view?.query?.ast;
     const typeUri = getTypeURIFromQuery(queryAst);
     const schema = useType(db, typeUri);
     // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
     const queriedObjects = useQueryWorkaround(db, queryAst, schema);
-    const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+    const filteredObjects = SearchHooks.useGlobalFilteredObjects(queriedObjects);
 
-    const { graph } = useAppGraph();
+    const { graph } = ToolkitHooks.useAppGraph();
     const customActions = useMemo(() => {
       return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
     }, [graph, attendableId]);
@@ -66,27 +69,28 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
-        void invokePromise(SpaceOperation.RemoveObjects, { objects });
+        void invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId: db?.spaceId });
       },
-      [invokePromise],
+      [invokePromise, db],
     );
 
     const handleDeleteColumn = useCallback(
       (fieldId: string) => {
-        const liveView = object.view.target;
-        invariant(liveView);
-        void invokePromise(SpaceOperation.DeleteField, { view: liveView, fieldId });
+        void invokePromise(SpaceOperation.DeleteField, { view: object.view, fieldId });
       },
       [invokePromise, object.view],
     );
 
+    // Keyed on the flag, not memoised once: the type loads after the first render, and a table built
+    // before it arrives would stay without its column editing.
+    const schemaEditable = schema != null && Type.getDatabase(schema) != null;
     const features: Partial<TableFeatures> = useMemo(
       () => ({
         selection: { enabled: true, mode: 'multiple' },
         dataEditable: true,
-        schemaEditable: schema != null && Type.getDatabase(schema) != null,
+        schemaEditable,
       }),
-      [],
+      [schemaEditable],
     );
 
     const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
@@ -174,12 +178,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             }
 
             const blob = new Blob([result.data.content], { type: result.data.mimeType });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = result.data.filename;
-            anchor.click();
-            URL.revokeObjectURL(url);
+            void downloadBlob(blob, result.data.filename);
           },
         );
       },
@@ -200,7 +199,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     return (
       <TableComponent.Root ref={tableRef}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
@@ -209,10 +208,10 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onExport={handleExport}
               onSave={handleSave}
             />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <TableComponent.Content
-              classNames='border-t border-subdued-separator'
+              classNames='border-t border-separator-subtle'
               key={attendableId}
               attendableId={attendableId}
               model={model}
@@ -221,7 +220,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </TableComponent.Root>
     );
@@ -237,7 +236,7 @@ const useQueryWorkaround = (
   ast: QueryAST.Query | undefined,
   schema: Type.AnyEntity | undefined,
 ) => {
-  const baseFilter = useSchemaFilter(schema);
+  const baseFilter = ToolkitHooks.useSchemaFilter(schema);
   // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
     let query = Query.select(baseFilter);

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type SpaceId } from '@dxos/keys';
 
-import * as SheetCapabilities from '../types/SheetCapabilities';
+import { SheetCapabilities } from '#types';
 
 /**
  * Builds the per-space compute graph registry by adapting the shared

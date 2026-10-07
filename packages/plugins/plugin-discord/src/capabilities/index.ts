@@ -7,12 +7,41 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+// Headless: EDGE posts through the same backend that the app starts the bot with.
+export const ChannelBackend = Capability.lazyModule(
+  'DiscordChannelBackend',
+  {
+    provides: [ThreadCapabilities.ChannelBackend],
+    activatesOn: ThreadEvents.Start,
+    environments: ['browser', 'node', 'tauri', 'workerd'],
+  },
+  () => import('./channel-backend.ts'),
+);
 export const Connector = Capability.lazyModule(
   'DiscordConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
+  roles: ['org.dxos.role.objectProperties'],
+});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Translations = AppCapability.translations(translations);

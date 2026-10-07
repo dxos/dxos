@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceSettings } from './SpaceSettings';
+import { SpaceSettings } from './SpaceSettings.tsx';
 
 const meta = {
   title: 'plugins/plugin-space/containers/SpaceSettings',

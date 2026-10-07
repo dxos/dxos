@@ -12,16 +12,17 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
+import { Board } from '#types';
 
-import * as Board from '../../types/Board';
-import { BoardArticle } from './BoardArticle';
+import { BoardArticle } from './BoardArticle.tsx';
 
 random.seed(0);
 
@@ -76,8 +77,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Organization.Organization, Person.Person, Board.Board],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -95,8 +96,8 @@ const meta = {
                   board.layout.cells[org.id] = {
                     x: Math.floor(Math.random() * 5) - 2,
                     y: Math.floor(Math.random() * 5) - 2,
-                    width: 1,
-                    height: 1,
+                    w: 1,
+                    h: 1,
                   };
                   return org;
                 });
@@ -104,8 +105,8 @@ const meta = {
             }),
         }),
 
-        StorybookPlugin({}),
-        PreviewPlugin(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
       ],
     }),
   ],

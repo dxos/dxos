@@ -8,16 +8,15 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Filter, Obj, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import { ContentBlock, Message } from '@dxos/types';
 
-import * as Booking from '../../types/Booking';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
-import { TripMessageExtractor } from './trip-extractor';
+import { Booking, Segment, Trip } from '#types';
+
+import { TripMessageExtractor } from './trip-extractor.ts';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});
@@ -130,7 +129,7 @@ describe('trip extraction over a message feed', () => {
     await db.appendToFeed(feed, messages);
 
     // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
-    // with NoMatchingExtractorError, which we tolerate via Effect.either.
+    // with NoMatchingExtractorError, which we tolerate via Effect.result.
     for (let index = 0; index < messages.length; index++) {
       const message = messages[index];
       const payload = payloads[index];
@@ -144,7 +143,7 @@ describe('trip extraction over a message feed', () => {
             ),
           ),
         )
-        .pipe(Effect.either)
+        .pipe(Effect.result)
         .pipe(EffectEx.runAndForwardErrors);
       await db.flush();
     }

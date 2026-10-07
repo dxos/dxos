@@ -12,21 +12,26 @@ import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Card, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useBoardContext } from './BoardContext';
-import { type GridConstraints, type GridPosition, applyConstraints } from './engine';
-import { cellRect } from './geometry';
+import { useBoardContext } from './BoardContext.ts';
+import { type GridConstraints, type GridPosition, applyConstraints } from './engine.ts';
+import { cellRect } from './geometry.ts';
 
 type DragState = 'idle' | 'dragging';
 
 const BOARD_CELL_NAME = 'Board.Cell';
 
-export type BoardCellProps<T extends Type.AnyObj = any> = ThemedClassName<
+export type BoardCellProps<T extends Type.AnyObj = any> = Util.ThemedClassName<
   PropsWithChildren<{
     item: T;
     /** This item's current position/size in grid cells (its entry in the board layout). */
@@ -54,7 +59,7 @@ export const BoardCell = ({
   draggable: isDraggable,
   constraints,
 }: BoardCellProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     cellSize,
     gap,
@@ -275,11 +280,11 @@ export const BoardCell = ({
         onClick={selectable ? (event) => toggleSelection(item.id, event.shiftKey) : undefined}
       >
         <Card.Header>
-          <Card.DragHandle ref={dragHandleRef} />
+          <DragHandle.DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
-            <Card.Block end>
-              <IconButton
+            <Layout.Block rail='end'>
+              <Button.Root
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
@@ -289,12 +294,12 @@ export const BoardCell = ({
                   onDelete(item.id);
                 }}
               />
-            </Card.Block>
+            </Layout.Block>
           )}
         </Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
             poster image — fills the full tile width, not just the first gutter track. */}
-        {children && <div className='relative col-[1/-1] min-h-0 overflow-hidden'>{children}</div>}
+        {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
       </Card.Root>
 
       {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
@@ -334,10 +339,10 @@ export const BoardCell = ({
             style={{ width: preview.width, height: preview.height, ...sizeOverride }}
           >
             <Card.Header>
-              <Card.DragHandle />
+              <DragHandle.DragHandle />
               {title}
             </Card.Header>
-            {children && <div className='relative col-[1/-1] min-h-0 overflow-hidden'>{children}</div>}
+            {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
           </Card.Root>,
           preview.container,
         )}

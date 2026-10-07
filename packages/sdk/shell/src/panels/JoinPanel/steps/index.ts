@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './AdditionMethodChooser';
-export * from './IdentityAdded';
-export * from './IdentityInput';
-export * from './InvitationAccepted';
-export * from './InvitationInput';
-export * from './InvitationRescuer';
-export * from './InvitationAuthenticator';
+export * from './AdditionMethodChooser.tsx';
+export * from './IdentityAdded.tsx';
+export * from './IdentityInput.tsx';
+export * from './InvitationAccepted.tsx';
+export * from './InvitationInput.tsx';
+export * from './InvitationRescuer.tsx';
+export * from './InvitationAuthenticator.tsx';

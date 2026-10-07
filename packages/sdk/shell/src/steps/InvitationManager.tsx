@@ -3,17 +3,28 @@
 //
 
 import React, { useMemo } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as QrCode from '@dxos/react-ui/QrCode';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
-import { translationKey } from '../translations';
-import { invitationStatusValue } from '../util';
-import { type StepProps } from './StepProps';
+import {
+  Action,
+  ActionBar,
+  AuthCode,
+  Centered,
+  Emoji,
+  Label,
+  Viewport,
+  type ViewportViewProps,
+} from '../components/index.ts';
+import { translationKey } from '../translations.ts';
+import { invitationStatusValue } from '../util/index.ts';
+import { type StepProps } from './StepProps.ts';
 
 export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
@@ -29,8 +40,8 @@ export const InvitationManager = ({
   authCode,
   id = '0',
 }: InvitationManagerProps) => {
-  const { t } = useTranslation(translationKey);
-  const qrLabel = useId('invitation-manager__qr-code');
+  const { t } = Hooks.useTranslation(translationKey);
+  const qrLabel = Hooks.useId('invitation-manager__qr-code');
   const statusValue = multiUse ? 0 : (invitationStatusValue.get(status!) ?? 0);
   const showAuthCode = statusValue === 3;
   const emoji = hexToEmoji(id);
@@ -57,18 +68,13 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
             </p>
-            <div className={mx('text-description', 'w-full max-w-[14rem] relative')}>
-              <QR
-                rounding={100}
-                backgroundColor='transparent'
-                color='currentColor'
-                className={mx('h-full w-full p-2', showAuthCode && 'invisible')}
+            <div className={mx('text-fg-muted', 'w-full max-w-[14rem] relative')}>
+              <QrCode.QrCode
+                classNames={['p-2', showAuthCode && 'invisible']}
                 aria-labelledby={qrLabel}
-                errorCorrectionLevel='Q'
-                cutout={true}
-              >
-                {invitationUrl ?? 'never'}
-              </QR>
+                errorCorrection='Q'
+                value={invitationUrl ?? 'never'}
+              />
               <Centered>
                 <Emoji text={emoji} />
               </Centered>
@@ -76,7 +82,7 @@ export const InvitationManager = ({
             <span id={qrLabel} className='sr-only'>
               {t('qr.label')}
             </span>
-            <Clipboard.Button variant='ghost' value={invitationUrl ?? 'never'} />
+            <SystemButton.Clipboard variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing-auth-code'>
             <Label>{t('auth-code.message')}</Label>
@@ -86,9 +92,9 @@ export const InvitationManager = ({
           </InvitationManagerView>
           <InvitationManagerView id='showing-final'>
             {statusValue > 0 ? (
-              <Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
+              <Icon.Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
             ) : (
-              <Icon icon='ph--x--regular' classNames={['m-1.5', getSize(6)]} />
+              <Icon.Icon icon='ph--x--regular' classNames={['m-1.5', getSize(6)]} />
             )}
           </InvitationManagerView>
         </Viewport.Views>

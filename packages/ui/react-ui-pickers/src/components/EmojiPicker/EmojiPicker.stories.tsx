@@ -6,10 +6,10 @@ import EmojiPicker from '@emoji-mart/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker';
+import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker.tsx';
 
 const meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',

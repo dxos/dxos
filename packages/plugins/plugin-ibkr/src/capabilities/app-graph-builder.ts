@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { GraphBuilder } from '@dxos/plugin-graph';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
-import { meta } from '../meta';
-import * as Ibkr from '../types/Ibkr';
+import { Ibkr } from '#types';
+
+import { meta } from '../meta.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -33,8 +34,9 @@ export default Capability.makeModule(
       }),
     );
 
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'portfolioReport',
+      relation: AppNode.companion,
       match: (node) =>
         Ibkr.isPortfolio(node.data) ? Option.some({ portfolio: node.data, nodeId: node.id }) : Option.none(),
       connector: ({ portfolio, nodeId }, get) => {

@@ -11,17 +11,17 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { Video } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { VideoPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { VideoPlugin } from '../../plugin';
-import * as Video from '../../types/Video';
-import { VideoArticle } from './VideoArticle';
+import { VideoArticle } from './VideoArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -56,8 +56,8 @@ const meta = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Video.Video, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -74,7 +74,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         VideoPlugin(),
       ],
     }),

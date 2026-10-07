@@ -3,12 +3,15 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
-import { IconButton, Input, Slider } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
-import * as Terra from '../../types/Terra';
+import { Terra } from '#types';
 
 export type TerraFormProps = {
   config: Terra.TerraConfig;
@@ -32,8 +35,8 @@ const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
   resolution: { min: 64, max: 512, step: 64, decimals: 0, label: 'Resolution' },
 };
 
-const FORM_SCHEMA = Terra.TerraConfig.pipe(
-  Schema.pick('seed', 'waterLevel', 'elevationScale', 'mountainScale', 'treeDensity', 'resolution'),
+const FORM_SCHEMA = Terra.TerraConfig.mapFields(
+  Struct.pick(['seed', 'waterLevel', 'elevationScale', 'mountainScale', 'treeDensity', 'resolution']),
 );
 
 type TerraFormValues = Schema.Schema.Type<typeof FORM_SCHEMA>;
@@ -50,36 +53,42 @@ const nextSeed = (seed: string): string => {
 
 /**
  * Renders a numeric field as a `Slider` with a live readout on the label line, in place of the
- * schema's default numeric input. Delegates the label/status/validation chrome to `Form.Row`'s
- * render-prop (field mode) — it, not this renderer, wraps the row in `Input.Root`, which
- * `Input.Label`/`Input.DescriptionAndValidation` require via context. Rendering those parts (or
- * anything relying on them) outside `Form.Row` throws.
+ * schema's default numeric input. The row is `Form.Field`, bound at the field's path, so the label,
+ * description and validation are the schema's; the slider is the control inside it.
  */
 const createSliderField = (key: SliderKey): FormFieldMap[string] => {
   const spec = SLIDER_SPECS[key];
-  const SliderField = ({ type, getValue, onValueChange, ...rowProps }: FormFieldRendererProps<number>) => {
+  const SliderField = ({
+    type,
+    label,
+    jsonPath,
+    readonly,
+    presentation,
+    getValue,
+    onValueChange,
+  }: FormFieldRendererProps<number>) => {
     const current = getValue() ?? spec.min;
     const handleValueChange = useCallback(([next]: number[]) => onValueChange(type, next), [type, onValueChange]);
     return (
-      <Form.Row<number>
-        {...rowProps}
-        getValue={getValue}
-        // A sibling of the label text (never a child) — keeps `Input.Label`'s `textContent` exactly
+      <Form.Field<number>
+        path={jsonPath}
+        label={label}
+        readonly={readonly}
+        presentation={presentation}
+        // A sibling of the label text (never a child) — keeps `Field.Label`'s `textContent` exactly
         // `label` and avoids re-deriving the input's accessible name on every drag frame.
-        labelEnd={<span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>}
+        labelEnd={<span className='text-sm text-fg-muted tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        {({ value }) => (
-          <Slider
-            value={[value ?? spec.min]}
-            min={spec.min}
-            max={spec.max}
-            step={spec.step}
-            onValueChange={handleValueChange}
-            thumbLabels={[spec.label]}
-          />
-        )}
-      </Form.Row>
+        <Input.Slider
+          value={[current]}
+          min={spec.min}
+          max={spec.max}
+          step={spec.step}
+          onValueChange={handleValueChange}
+          thumbLabels={[spec.label]}
+        />
+      </Form.Field>
     );
   };
   SliderField.displayName = `TerraForm.SliderField(${key})`;
@@ -115,7 +124,11 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
   return (
     // Semi-transparent floating surface (mirrors plugin-voxel's canvas-overlay HUD chrome) so
     // labels stay legible over the rendered planet regardless of terrain color underneath.
-    <div className='flex flex-col gap-4 p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'>
+    <Layout.Flex
+      column
+      gap='lg'
+      classNames='p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'
+    >
       <Form.Root<TerraFormValues>
         schema={FORM_SCHEMA}
         values={config}
@@ -124,20 +137,15 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
 
-      <IconButton icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
+      <Button.Root icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
-      <Input.Root>
-        <div className='flex items-center gap-2'>
-          <Input.Checkbox onCheckedChange={handleWaterSheenChange} />
-          <Input.Label>Water sheen</Input.Label>
-        </div>
-      </Input.Root>
-    </div>
+      <Input.Checkbox onCheckedChange={({ checked }) => handleWaterSheenChange(checked === true)} label='Water sheen' />
+    </Layout.Flex>
   );
 };
 

@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { overlayIdentityIndex } from '@dxos/extractor';
-import { buildContactFromActor, getIdentityIndex, identitySpecs } from '@dxos/extractor-lib';
+import { buildContactFromActor, getIdentityIndex, identitySpecs, senderSignals } from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ProcessMailbox> = CrmOperation.ProcessMailbox.pipe(
   Operation.withHandler(
@@ -112,13 +112,3 @@ const findOrCreateCursor = (mailbox: Mailbox.Mailbox) =>
       }),
     );
   });
-
-/** The sender signals the shared extraction gate reads, from the fields provider mappers record. */
-const senderSignals = (message: Message.Message) => {
-  const properties = message.properties ?? {};
-  return {
-    noReply: properties.noReply === true,
-    listUnsubscribe: typeof properties.listUnsubscribe === 'string' ? properties.listUnsubscribe : undefined,
-    bulk: properties.bulk === true,
-  };
-};

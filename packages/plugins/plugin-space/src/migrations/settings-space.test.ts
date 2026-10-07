@@ -11,9 +11,10 @@ import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
-import * as SpaceSchema from '../types/SpaceSchema';
-import { ensureSettingsSpace } from '../util/settings-space';
-import { migrateToSettingsSpace, readSpacesOrder } from './settings-space';
+import { SpaceSchema } from '#types';
+
+import { ensureSettingsSpace } from '../util/settings-space.ts';
+import { migrateToSettingsSpace, readSpacesOrder } from './settings-space.ts';
 
 describe('settings space migration', () => {
   it.effect('designates the legacy space and carries its ordering across', () =>

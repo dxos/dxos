@@ -9,8 +9,9 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
-import { JmapMail } from '../../apis';
-import { JMAP_DOMAIN } from '../../constants';
+import { JmapMail } from '#apis';
+
+import { JMAP_DOMAIN } from '../../constants.ts';
 
 /**
  * Result of mapping a JMAP email. `mailboxIds` (the folders the email is in) and `keywords` (the set

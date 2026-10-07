@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-editor",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Text editor components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/commands": "catalog:",
     "@codemirror/lang-json": "catalog:",
@@ -85,7 +86,6 @@
     "@automerge/automerge": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect/platform": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.sortby": "catalog:",
     "effect": "catalog:",
@@ -97,7 +97,6 @@
   },
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:^",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

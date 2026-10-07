@@ -11,38 +11,55 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
-import * as BrainCapabilities from '../types/BrainCapabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { BrainCapabilities } from '#types';
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-// No `export * from './fact-store'` here: that barrel re-export made the module a static import of
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+// No `export * from './fact-store.ts'` here: that barrel re-export made the module a static import of
 // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
 // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
 // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-export const FactStore = AppCapability.layerSpec(() => import('./fact-store'), {
+export const FactStore = AppCapability.layerSpec(() => import('./fact-store.ts'), {
   name: 'FactStore',
   provides: [BrainCapabilities.FactStoreRegistry],
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.plugin.brain.surface.facts'],
 });
-export const Settings = AppCapability.settings(() => import('./settings'), {
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [BrainCapabilities.Settings],
 });
-export const MailboxAction = Capability.lazyModule(
-  'MailboxAction',
+export const MailboxProcessor = Capability.lazyModule(
+  'MailboxProcessor',
   {
     requires: [Capabilities.AtomRegistry],
-    provides: [InboxCapabilities.MailboxAction],
+    provides: [InboxCapabilities.MailboxProcessor],
     activatesOn: InboxEvents.Start,
   },
-  () => import('./mailbox-action'),
+  () => import('./mailbox-processor.ts'),
+);
+export const ReplyGenerator = Capability.lazyModule(
+  'ReplyGenerator',
+  { provides: [InboxCapabilities.ReplyGenerator], activatesOn: InboxEvents.Start },
+  () => import('./reply-generator.ts'),
 );
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-  () => import('./project-templates'),
+  () => import('./project-templates.ts'),
 );
+export const Translations = AppCapability.translations(translations);

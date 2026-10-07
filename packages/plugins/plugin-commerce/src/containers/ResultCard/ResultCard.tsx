@@ -5,10 +5,15 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Card, SystemIconButton, composable, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '../../meta';
-import { type Result } from '../../types/Result';
+import { meta } from '#meta';
+
+import { type Result } from '../../types/Result.ts';
 
 export type ResultCardProps = {
   subject: Result;
@@ -27,9 +32,9 @@ export type ResultCardProps = {
  * `Card.Header` is a 3-slot subgrid (icon · content · action); the star toggle occupies the
  * leading icon slot and title + price occupy the centre `1fr` content slot.
  */
-export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
+export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, starred = false, onToggleStar, classNames, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     // Subscribe so the card re-renders when the result (or its image) loads.
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];
@@ -48,27 +53,21 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
     return (
       <Card.Root
         ref={forwardedRef}
-        fullWidth
         classNames={['dx-hover cursor-pointer', current && 'dx-current', classNames]}
         {...props}
       >
         {imageUrl && (
-          <Card.Poster
-            alt={result.title ?? t('product.label')}
-            image={imageUrl}
-            fit='cover'
-            classNames='rounded-t-xs'
-          />
+          <Card.Poster alt={result.title ?? t('product.label')} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.Block>
-            <SystemIconButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
-          </Card.Block>
-          <div className='flex flex-col gap-0.5 min-w-0 py-2'>
-            <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>
-            {price && <span className='text-sm text-description'>{price}</span>}
-          </div>
-          <Card.Block end />
+          <Layout.Block>
+            <SystemButton.Star variant='ghost' iconOnly pressed={starred} onClick={handleToggleStar} />
+          </Layout.Block>
+          <Layout.Flex column gap='xs' classNames='min-w-0 py-2'>
+            <Card.Title lines={2}>{result.title}</Card.Title>
+            {price && <span className='text-sm text-fg-muted'>{price}</span>}
+          </Layout.Flex>
+          <Layout.Block rail='end' />
         </Card.Header>
       </Card.Root>
     );

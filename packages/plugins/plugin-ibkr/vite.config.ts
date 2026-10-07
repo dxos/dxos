@@ -19,6 +19,7 @@ export default defineConfig({
     Ibkr: 'src/types/Ibkr.ts',
     IbkrEvents: 'src/types/IbkrEvents.ts',
     IbkrOperation: 'src/types/IbkrOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

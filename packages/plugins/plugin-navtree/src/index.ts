@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as NavTreeCapabilities from './types/NavTreeCapabilities';
-export * as NavTreeNode from './types/NavTreeNode';
-export * from './meta';
-export * from './util';
+export * as NavTreePlugin from './NavTreePlugin.ts';
+export * from '#types';
+export * as NavTreeSurface from './NavTreeSurface.ts';

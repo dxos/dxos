@@ -10,28 +10,44 @@ Important: Do not show or summarize the contents of the task list unless the use
 
 Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing,
 user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately),
-completed work (mark `done` and add follow-ups), and active work (mark as `in-progress`, limit one at a time).
+completed work (mark `done` and add follow-ups), and active work (mark as `started`, limit one at a time).
 
 Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps,
 informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
 
 ### TOOL SPECIFICATION
 
-`update-tasks` requires an array of task objects. The task list is a markdown checklist; the
-title is the key — reuse the exact title to update an existing item, use a new title to add one.
-Each task object contains:
+`update-tasks` takes `changes`, an array of edits applied together. Each change either names an
+existing task by its ref, or sets `create` to make a new one — never both.
 
-- title (string, required): specific, actionable task description; also the update key
-- status (string, required): `todo` | `in-progress` | `done`
+Every checklist line is followed by an indented note carrying the task's ref as a link, e.g.
+`(ref: [01ABC](echo://.../01ABC...); started)`. Pass the link's target back as a plain string —
+`task: "echo://.../01ABC..."` — not the label, not the whole link, and not a `{ "/": ... }` wrapper.
+Never copy the ordinal or the note into a title.
 
-Task status meanings: 'todo' means not yet started, `in-progress` means currently being worked on, `done` means completed successfully (rendered as a checked item).
+Each change contains:
+
+- task (ref, optional): the existing task to change. Required unless `create` is set.
+- create (boolean, optional): make a new task on this checklist, assigned to you. Requires `title`.
+- title (string, optional): the new task's title, or a rename of an existing task.
+- status (string, optional): `todo` | `started` | `done`. `started` also assigns the task to you.
+- assign (boolean, optional): put an existing task on this checklist and make you its assignee.
+- unassign (boolean, optional): take a task off this checklist and clear its assignee. It is never deleted.
+
+Status meanings: `todo` means not yet started, `started` means currently being worked on, `done` means completed successfully (rendered as a checked item).
+
+If any change is malformed or names something that is not a task, nothing is applied and the error
+lists what to fix; resend the whole batch.
 
 ### OPERATIONAL GUIDELINES
 
 Update tasks in realtime as work progresses. Mark tasks `done` immediately upon completion.
-Maintain only ONE task with `in-progress` status at a time. Complete current tasks before starting new ones.
+Maintain only ONE task with `started` status at a time. Complete current tasks before starting new ones.
 Use specific, actionable task titles. Break complex work into manageable logical pieces.
 Batch task updates with other actions when possible for efficiency.
+A task that already exists — on this checklist, in a project, or as a sub-task of one you were given — is
+changed through its ref. Only use `create` for work that has no task yet; recreating an existing task
+duplicates it.
 
 ### USAGE EXAMPLES
 
@@ -39,47 +55,42 @@ Batch task updates with other actions when possible for efficiency.
 <user_message>I need to research sustainable packaging options and write a report comparing costs and environmental impact.</user_message>
 <assistant_action>
 Creates tasks:
-1. {title: "Research sustainable packaging materials", status: "in-progress"}
-2. {title: "Compile cost comparison data", status: "todo"}
-3. {title: "Evaluate environmental impact metrics", status: "todo"}
-4. {title: "Write comparative analysis report", status: "todo"}
+1. {create: true, title: "Research sustainable packaging materials", status: "started"}
+2. {create: true, title: "Compile cost comparison data"}
+3. {create: true, title: "Evaluate environmental impact metrics"}
+4. {create: true, title: "Write comparative analysis report"}
 
 Begins research work immediately in same response.
 </assistant_action>
 <reasoning>Multi-phase project requiring systematic tracking across research, analysis, and writing stages.</reasoning>
 </example>
 
-<example type="event_planning">
-<user_message>Help me plan a team retreat - venue, agenda, catering, and send invitations.</user_message>
+<example type="progress_update">
+<user_message>(The checklist shows "1. [ ] Research sustainable packaging materials" with ref [01AAA](echo://.../01AAA) and "2. [ ] Compile cost comparison data" with ref [01BBB](echo://.../01BBB).)</user_message>
 <assistant_action>
-Creates tasks:
-1. {title: "Research and recommend venues", status: "in-progress"}
-2. {title: "Create retreat agenda", status: "todo"}
-3. {title: "Coordinate catering options", status: "todo"}
-4. {title: "Draft and send invitations", status: "todo"}
+Finishes the research and moves on:
+1. {task: "echo://.../01AAA", status: "done"}
+2. {task: "echo://.../01BBB", status: "started"}
 </assistant_action>
-<reasoning>Multiple distinct deliverables with dependencies requiring organized tracking.</reasoning>
+<reasoning>Existing tasks are addressed by ref; starting the next one assigns it.</reasoning>
 </example>
 
-<example type="document_analysis">
-<user_message>Review this 30-page contract for key terms, risks, and negotiation points.</user_message>
+<example type="delegated_task">
+<user_message>You have been assigned tasks to work on in this session. (The checklist holds a project task whose sub-tasks you read through the project; one of them has ref [01CCC](echo://.../01CCC).)</user_message>
 <assistant_action>
-Creates tasks:
-1. {title: "Identify key contractual terms", status: "in-progress"}
-2. {title: "Flag potential risks and liabilities", status: "todo"}
-3. {title: "Compile negotiation recommendations", status: "todo"}
-4. {title: "Prepare executive summary", status: "todo"}
+Starts the existing sub-task rather than creating a copy of it:
+1. {task: "echo://.../01CCC", status: "started"}
 </assistant_action>
-<reasoning>Substantial analysis work requiring methodical breakdown and systematic review.</reasoning>
+<reasoning>Starting an existing task puts it on this checklist and assigns it to you; `create` would duplicate it.</reasoning>
 </example>
 
 <example type="multiple_deliverables">
 <user_message>I need: 1) competitor analysis for three companies, 2) SWOT analysis, 3) market positioning recommendations.</user_message>
 <assistant_action>
 Creates tasks:
-1. {title: "Research three competitor companies", status: "in-progress"}
-2. {title: "Develop SWOT analysis", status: "todo"}
-3. {title: "Create market positioning recommendations", status: "todo"}
+1. {create: true, title: "Research three competitor companies", status: "started"}
+2. {create: true, title: "Develop SWOT analysis"}
+3. {create: true, title: "Create market positioning recommendations"}
 </assistant_action>
 <reasoning>User provided numbered list of distinct deliverables requiring separate effort.</reasoning>
 </example>
@@ -102,16 +113,10 @@ Creates tasks:
 <reasoning>Single simple action requiring no breakdown or progress tracking.</reasoning>
 </example>
 
-<example type="skip_single_action">
-<user_message>Check if my flight is on time.</user_message>
-<assistant_action>Performs lookup and reports status without task management.</assistant_action>
-<reasoning>One-step action with immediate completion, no organizational benefit from tasks.</reasoning>
-</example>
-
 ### BEST PRACTICES
 
-For task creation: use specific stable titles (they are the update key), start first task as `in-progress`, batch initial creation with beginning work.
-For progress tracking: update status immediately upon completion, keep only one `in-progress` task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
+For task creation: use specific titles, start the first task as `started`, batch initial creation with beginning work.
+For progress tracking: update status immediately upon completion, keep only one `started` task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
 
 When uncertain whether to use task management, err on the side of creating tasks.
 Proactive organization demonstrates thoroughness and ensures comprehensive work completion.

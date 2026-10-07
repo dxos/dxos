@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import type * as Capability from '@dxos/app-framework/Capability';
@@ -12,27 +12,28 @@ import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Trace from '@dxos/compute/Trace';
 import { Database, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
-import type * as Connection from '@dxos/plugin-connector/Connection';
-import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
+import { Connection } from '@dxos/link';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
-import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider';
-import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '../services';
+import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
+
+import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider.ts';
 
 /**
  * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API for
  * the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
  */
 export const runGoogleSync = (
-  options: RunMailSyncOptions,
+  options: MailSync.RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError,
+  MailSync.MailSyncError | EchoError.EntityNotFoundError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | GoogleMailApi | Resolver
 > =>
-  runMailSync(options).pipe(
+  MailSync.runMailSync(options).pipe(
     Effect.provide(googleMailSyncProvider({ userId: 'me', label: 'all' })),
     Effect.withSpan('google-sync'),
   );
@@ -56,7 +57,7 @@ export const googleSyncLiveServices = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<
   GoogleMailApi | Database.Service | Resolver | Capability.Service | Trace.TraceService | Operation.Service,
-  EntityNotFoundError
+  EchoError.EntityNotFoundError
 > => {
   // The fixture connection carries a real token on the object, so no credential resolves through EDGE.
   const credentials = credentialsLayerFromDatabase().pipe(

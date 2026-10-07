@@ -4,17 +4,18 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, omitId } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { BookingSearch } from '#containers';
 import { meta } from '#meta';
-
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
+import { Segment, Trip } from '#types';
 
 type ViewMode = 'form' | 'search';
 
@@ -27,7 +28,7 @@ type ViewMode = 'form' | 'search';
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;
 
 export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const type = Obj.getType(segment);
   const echoSchema = type && Type.getSchema(type);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
@@ -36,7 +37,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
       const paths = Object.keys(changed).filter((path) => changed[path]);
-      Obj.update(segment, () => {
+      Obj.update(segment, (segment) => {
         for (const path of paths) {
           const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
           const value = Obj.getValue(values as any, parts);
@@ -52,8 +53,8 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   }
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+    <Panel.Root role={role} width='document'>
+      <Panel.Header>
         <Toolbar.Root>
           <div className='grow' />
           <Toolbar.ToggleGroup
@@ -61,13 +62,13 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
             value={viewMode}
             onValueChange={(value) => value && setViewMode(value as ViewMode)}
           >
-            <Toolbar.ToggleGroupIconItem
+            <ToggleGroup.Item
               value='form'
               icon='ph--list-bullets--regular'
               iconOnly
               label={t('segment.view.form.label')}
             />
-            <Toolbar.ToggleGroupIconItem
+            <ToggleGroup.Item
               value='search'
               icon='ph--magnifying-glass--regular'
               iconOnly
@@ -75,8 +76,8 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
             />
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {viewMode === 'search' ? (
           // Key by segment id so switching/adding a segment resets the search form state.
           <BookingSearch key={segment.id} segment={segment} />
@@ -84,12 +85,12 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
           <Form.Root key={segment.id} schema={schema} defaultValues={segment} autoSave onSave={handleSave}>
             <Form.Viewport scroll>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

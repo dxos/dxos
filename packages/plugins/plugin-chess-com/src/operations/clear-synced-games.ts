@@ -9,7 +9,7 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as Game from '@dxos/plugin-game/Game';
 
-import * as ChessComOperation from '../types/ChessComOperation';
+import { ChessComOperation } from '#types';
 
 export default ChessComOperation.ClearSyncedGames.pipe(
   Operation.withHandler(
@@ -28,7 +28,6 @@ export default ChessComOperation.ClearSyncedGames.pipe(
       const states = yield* Feed.query(oldFeed, Filter.type(Chess.State)).run;
 
       const newFeed = yield* Database.add(Feed.make());
-      Obj.setParent(newFeed, account);
       Obj.update(account, (account) => {
         account.games = Ref.make(newFeed);
       });

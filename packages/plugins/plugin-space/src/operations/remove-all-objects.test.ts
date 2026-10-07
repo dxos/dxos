@@ -17,8 +17,9 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { SpaceOperation } from './definitions';
-import RemoveAllObjectsHandler from './remove-all-objects';
+import { SpaceOperation } from '#types';
+
+import RemoveAllObjectsHandler from './remove-all-objects.ts';
 
 class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({
@@ -26,8 +27,6 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
   }),
 ) {}
 
-// The full `SpaceOperationHandlerSet` is not registrable here: the test layer serializes every
-// definition and some (e.g. `ImportSpace`) carry non-JSON-serializable schemas.
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(RemoveAllObjectsHandler),
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Feed.Feed, TestObject],
@@ -57,6 +56,11 @@ describe('RemoveAllObjects', () => {
         const remaining = yield* Database.query(Query.select(Filter.everything())).run;
         expect(remaining.map((object) => object.id).sort()).toEqual([properties.id, rootCollection.id].sort());
         expect(rootCollection.objects).toHaveLength(0);
+
+        // Dropped, not soft-deleted: nothing is left behind to collect, and a `deleted:` query
+        // finds no tombstone to recover from.
+        const deleted = yield* Database.query(Query.select(Filter.everything()).options({ deleted: 'only' })).run;
+        expect(deleted).toHaveLength(0);
       },
       WithProperties,
       Effect.provide(TestLayer),

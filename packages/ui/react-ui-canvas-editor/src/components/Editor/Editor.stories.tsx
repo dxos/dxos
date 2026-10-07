@@ -3,32 +3,27 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter, Obj, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form, TupleField } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 
-import { doLayout } from '../../layout';
-import { Container, DragTest, useSelection } from '../../testing';
-import { type CanvasGraphModel, RectangleShape } from '../../types';
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
+import { doLayout } from '../../layout/index.ts';
+import { Container, DragTest, useSelection } from '../../testing/index.ts';
+import { type CanvasGraphModel, Polygon, isPolygon } from '../../types/index.ts';
+import { Editor, type EditorController, type EditorRootProps } from './Editor.tsx';
 
 const generator: ValueGenerator = random as any;
 
 const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
-
-// TODO(burdon): Ref expando breaks the form.
-const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -43,7 +38,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!space || !init) {
       return;
     }
@@ -64,7 +59,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
+    <div className='grid grid-cols-[1fr_360px] dx-fill'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -75,24 +70,21 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
       {/* TODO(burdon): Need to set schema based on what is selected. */}
       {sidebar && (
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
-          {sidebar === 'selected' && selected && (
-            <Form.Root
-              schema={RectangleShapeWithoutRef}
-              values={selected}
-              fieldMap={{
-                // TODO(burdon): Replace by type.
-                center: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                size: (props) => <TupleField {...props} binding={['width', 'height']} />,
-              }}
-            >
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet />
-                  <Form.Actions />
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          )}
+          {sidebar === 'selected' &&
+            selected &&
+            isPolygon(selected) && (
+              // `Polygon`, not `RectangleShape`: the selection is only ever narrowed that far, and the
+              // rectangle's `type: 'rectangle'` literal is not assignable from a `Shape`'s `string`.
+              // `center` and `size` render as nested field sets of their coordinates.
+              <Form.Root schema={Polygon} values={selected}>
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.Fields />
+                    <Form.Actions />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            )}
 
           {sidebar === 'json' && <JsonHighlighter data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>

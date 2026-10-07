@@ -4,11 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useState } from 'react';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import * as Chat from '@dxos/assistant/Chat';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ChessPlugin } from '@dxos/plugin-chess/testing';
@@ -16,15 +18,16 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map/testing';
 import { TablePlugin } from '@dxos/plugin-table/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
+import { type Assistant, AssistantCapabilities } from '#types';
 
-import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions';
+import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions.tsx';
 
 const presets = [
   {
@@ -75,8 +78,8 @@ const meta = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Chat.Chat, Feed.Feed, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -100,7 +103,11 @@ const meta = {
         MapPlugin(),
         TablePlugin(),
       ],
-      capabilities,
+      capabilities: [
+        ...capabilities,
+        // The Models tab's online switch reads the assistant settings; without them it would suspend forever.
+        Capability.contribute(AssistantCapabilities.Settings, Atom.make<Assistant.Settings>({}).pipe(Atom.keepAlive)),
+      ],
     }),
   ],
   parameters: {
@@ -129,7 +136,7 @@ export const _ObjectsPanel: Story = {
     }
 
     return (
-      <div className='grid w-[300px] h-[300px] border border-separator'>
+      <div className='border border-separator'>
         <ObjectsPanel db={space.db} context={binder} />
       </div>
     );

@@ -4,6 +4,17 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { ChannelBackend, Connector, OperationHandler, PluginAsset, Schema, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const SlackPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const SlackPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(ChannelBackend),
+  Plugin.addModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
+
+export default SlackPlugin;

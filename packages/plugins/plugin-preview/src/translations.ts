@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -17,7 +17,10 @@ export const translations = [
         'open-object.label': 'Open',
         'add-object-to-space.label': 'Add to space',
         'more-options.label': 'More options',
+        'unsupported-type.title': 'Nothing here can open this',
+        'unsupported-type.message':
+          'No enabled plugin supports {{typename}}, so there is nothing to show. The item itself is unchanged and still stored in the space.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

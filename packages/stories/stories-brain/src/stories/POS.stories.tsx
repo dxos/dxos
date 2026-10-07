@@ -10,8 +10,8 @@ import React, { useMemo } from 'react';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Parser, parseText } from '@dxos/nlp';
 import { stubParse } from '@dxos/nlp/testing';
-import { useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -41,7 +41,7 @@ const SAMPLE_CONTENT = trim`
 const llmParse: Parser = (text) =>
   parseText(text).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))), Effect.runPromise);
 
-type StoryProps = {
+type StoryArgs = {
   /** Tag with the LLM parser (edge AI, needs credentials); false uses the offline stub tagger. */
   ai?: boolean;
 };
@@ -51,8 +51,8 @@ type StoryProps = {
  * word is coloured by its Universal POS tag. `Mock` uses the offline stub tagger (no key needed);
  * `LLM` tags via the edge AI service. No plugin manager / ECHO space — just the editor + extension.
  */
-const DefaultStory = ({ ai }: StoryProps) => {
-  const { themeMode } = useThemeContext();
+const DefaultStory = ({ ai }: StoryArgs) => {
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),

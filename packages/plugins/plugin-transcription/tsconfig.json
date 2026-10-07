@@ -28,6 +28,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -70,16 +73,16 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -113,9 +116,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

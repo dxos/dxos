@@ -1,15 +1,33 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
+  check-module-structure:
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export ./TldrawPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
   prebuild:
     command: bash ./scripts/copy_assets.sh
     toolchains: node # enforce that deps are installed
@@ -19,3 +37,5 @@ tasks:
       - moon.yml
     outputs:
       - dist/assets
+    tags:
+      - prebuild

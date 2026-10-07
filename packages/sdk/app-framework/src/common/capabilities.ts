@@ -2,35 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, type Registry } from '@effect-atom/atom';
-import type * as Command$ from '@effect/cli/Command';
+import type * as Command$ from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
-import type * as Runtime$ from 'effect/Runtime';
+import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
   ProcessManager as ProcessManager$,
   RemoteTraceMonitor as RemoteTraceMonitor$,
 } from '@dxos/compute-runtime';
-import * as LayerSpec$ from '@dxos/compute/LayerSpec';
-import * as Operation$ from '@dxos/compute/Operation';
+import * as ComputeLayerSpec from '@dxos/compute/LayerSpec';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as Process$ from '@dxos/compute/Process';
-import * as ServiceResolver$ from '@dxos/compute/ServiceResolver';
-import * as Trace$ from '@dxos/compute/Trace';
+import * as Process from '@dxos/compute/Process';
+import * as ComputeServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
-import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core/index.ts';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
-} from '../plugin-process-manager';
-import type { Surface } from '../ui';
+} from '../plugin-process-manager/index.ts';
+import type { Surface } from '../ui/index.ts';
 
 /**
  * @category Capability
@@ -42,7 +43,7 @@ export const PluginManager = Capability$.makeSingleton<PluginManager$.PluginMana
 /**
  * @category Capability
  */
-export const AtomRegistry = Capability$.makeSingleton<Registry.Registry>()(
+export const AtomRegistry = Capability$.makeSingleton<Registry.AtomRegistry>()(
   'org.dxos.app-framework.capability.atomRegistry',
 );
 
@@ -75,10 +76,10 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 export const ReactSurface = Capability$.make<ReactSurface>()('org.dxos.app-framework.capability.reactSurface');
 
 // The requirement channel stays open: a command's services are supplied partly by the contributing
-// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided by
-// its root command — so no single side can discharge them all. `CommandServices` in @dxos/cli-util
-// names what a host owes; hosts should type their layer with it.
-export type AnyCommand = Command$.Command<any, any, any, any>;
+// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided as
+// an ambient layer by the host binary — so no single side can discharge them all. `CommandServices`
+// in @dxos/cli-util names what a host owes; hosts should type their layer with it.
+export type AnyCommand = Command$.Command<any, any, any, any, any>;
 
 /**
  * @category Capability
@@ -101,7 +102,7 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, never>>()('org.dxos
  *
  * @category Capability
  */
-export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>()('org.dxos.app-framework.capability.layerSpec');
+export const LayerSpec = Capability$.make<ComputeLayerSpec.LayerSpec>()('org.dxos.app-framework.capability.layerSpec');
 
 /**
  * Context passed to {@link TraceSinkFactory} implementations when the
@@ -113,7 +114,7 @@ export interface TraceSinkFactoryContext {
    * to resolve per-space (or per-process) services like `FeedTraceSink` when
    * building a routing sink.
    */
-  readonly resolver: ServiceResolver$.ServiceResolver;
+  readonly resolver: ComputeServiceResolver.ServiceResolver;
 }
 
 /**
@@ -122,7 +123,7 @@ export interface TraceSinkFactoryContext {
  * context (e.g. `() => myConsoleSink`); plugins that need per-space routing
  * can use {@link TraceSinkFactoryContext.resolver} to look up services.
  */
-export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
+export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace.Sink;
 
 /**
  * Trace sink contribution.
@@ -141,7 +142,7 @@ export const TraceSink = Capability$.make<TraceSinkFactory>()('org.dxos.app-fram
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).
  * Contributed by a client-aware plugin; the process-manager capability wires the first contribution
- * (or a no-op) into the aggregate {@link ProcessMonitor} so its `subscribeToTraceMessages` surfaces
+ * (or a no-op) into the aggregate {@link ProcessManager} so its `subscribeToTraceMessages` surfaces
  * remote progress alongside local.
  *
  * @category Capability
@@ -171,19 +172,19 @@ export const RemoteTraceMonitor = Capability$.make<RemoteTraceMonitor$.Monitor>(
  *
  * @category Capability
  */
-export const ServiceResolver = Capability$.makeSingleton<ServiceResolver$.ServiceResolver>()(
+export const ServiceResolver = Capability$.makeSingleton<ComputeServiceResolver.ServiceResolver>()(
   'org.dxos.app-framework.capability.serviceResolver',
 );
 
 /**
- * Process monitor backing the shared {@link ProcessManagerRuntime}. Exposes the
+ * Process manager backing the shared {@link ProcessManagerRuntime}. Exposes the
  * live process tree (including inactive/terminated entries) via
- * {@link Process$.Monitor#processTreeAtom}.
+ * {@link Process.Manager#processTreeAtom}.
  *
  * @category Capability
  */
-export const ProcessMonitor = Capability$.makeSingleton<Process$.Monitor>()(
-  'org.dxos.app-framework.capability.processMonitor',
+export const ProcessManager = Capability$.makeSingleton<Process.Manager>()(
+  'org.dxos.app-framework.capability.processManager',
 );
 
 /**
@@ -193,9 +194,9 @@ export type ProcessManagerRuntimeServices =
   | Capability$.Service
   | Plugin$.Service
   | ProcessManager$.ProcessManagerService
-  | Operation$.Service
+  | Operation.Service
   | ProcessManager$.ProcessOperationInvoker.Service
-  | ServiceResolver$.ServiceResolver;
+  | ComputeServiceResolver.ServiceResolver;
 
 /**
  * Runtime that runs effects requiring a fixed set of capability-manager and
@@ -215,8 +216,8 @@ export interface ProcessManagerRuntime {
   ): Promise<Exit$.Exit<A, E>>;
   runFork<A, E>(
     effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
-    options?: Runtime$.RunForkOptions,
-  ): Fiber$.RuntimeFiber<A, E>;
+    options?: Effect.RunOptions,
+  ): Fiber$.Fiber<A, E>;
   runSync<A, E>(effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>): A;
 }
 
@@ -242,6 +243,15 @@ export const ManagedRuntime = Capability$.makeSingleton<ManagedRuntime>()(
 
 export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>()(
   'org.dxos.app-framework.capability.operationHandler',
+);
+
+/**
+ * Merged, contribution-ordered view over all {@link OperationHandler} contributions — the same
+ * set the operation invoker resolves against. Provided by ProcessManagerPlugin.
+ * @category Capability
+ */
+export const OperationHandlers = Capability$.makeSingleton<OperationHandlerSet.OperationHandlerSet>()(
+  'org.dxos.app-framework.capability.operationHandlers',
 );
 
 export type UndoMapping = UndoMapping$.UndoMapping;
@@ -299,6 +309,25 @@ export const getAtomValue = <T>(
     const registry = yield* Capability$.get(AtomRegistry);
     const atom = yield* Capability$.get(atomCapability);
     return registry.get(atom);
+  });
+
+/**
+ * Get the current value of an atom capability, or `Option.none()` when either the registry or the
+ * atom itself is uncontributed.
+ *
+ * For operations that run on both the app and a headless host (the edge operation-service, `dx mcp
+ * serve`): those hosts have a capability manager but activate no UI plugins, so {@link getAtomValue}
+ * fails on capabilities like `Layout` that only the app contributes.
+ *
+ * @example const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
+ */
+export const getAtomValueOption = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+): Effect.Effect<Option.Option<T>, never, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.getOption(AtomRegistry);
+    const atom = yield* Capability$.getOption(atomCapability);
+    return Option.map(Option.all([registry, atom]), ([registry, atom]) => registry.get(atom));
   });
 
 /**

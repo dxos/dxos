@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
+/** The navigation sidebar's persisted state. */
 export type SidebarState = DeckSchema.StoredDeckState['sidebarState'];
 
 /**

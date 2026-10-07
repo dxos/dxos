@@ -3,11 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as Bookmark from './types/Bookmark';
+import { Bookmark } from '#types';
 
 export const translations = [
   {
@@ -30,4 +29,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as Atom from '@effect-atom/atom/Atom';
-export * as Registry from '@effect-atom/atom/Registry';
-export * as Result from '@effect-atom/atom/Result';
-export * as AtomRef from '@effect-atom/atom/AtomRef';
-export * as AtomHttpApi from '@effect-atom/atom/AtomHttpApi';
-export * as AtomRpc from '@effect-atom/atom/AtomRpc';
+export * as Atom from 'effect/reactivity/Atom';
+export * as Registry from 'effect/reactivity/AtomRegistry';
+export * as Result from 'effect/reactivity/AsyncResult';
+export * as AtomRef from 'effect/reactivity/AtomRef';
+export * as AtomHttpApi from 'effect/reactivity/AtomHttpApi';
+export * as AtomRpc from 'effect/reactivity/AtomRpc';
 
-export * from './hooks';
-export * from './registry';
+export * from './hooks/index.ts';
+export * from './registry.ts';

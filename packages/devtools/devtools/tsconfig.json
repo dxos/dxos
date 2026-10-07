@@ -40,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/timeframe"
     },
     {
@@ -53,6 +50,9 @@
     },
     {
       "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
@@ -91,6 +91,12 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -109,9 +115,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-debug"
     },
     {
@@ -127,10 +130,13 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     }
   ]
 }

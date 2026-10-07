@@ -7,8 +7,16 @@ import React, { type Dispatch, type FC, type SetStateAction, useCallback, useSta
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -19,9 +27,9 @@ import {
   type InvitationListProps,
   SpaceMemberList,
   type SpaceMemberListProps,
-} from '../../components';
-import { translationKey } from '../../translations';
-import { type SpacePanelStepProps } from './SpacePanelProps';
+} from '../../components/index.ts';
+import { translationKey } from '../../translations.ts';
+import { type SpacePanelStepProps } from './SpacePanelProps.ts';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   target?: string;
@@ -36,7 +44,7 @@ const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 
 const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservable.Subscription) => {
   const invitationCode = InvitationEncoder.encode(invitation);
-  if (invitation.state === Invitation.State.CONNECTING) {
+  if (invitation.state === Invitation_State.CONNECTING) {
     log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     subscription.unsubscribe();
   }
@@ -46,7 +54,7 @@ export type SpaceManagerProps = SpaceManagerImplProps & {};
 
 export const SpaceManager = (props: SpaceManagerProps) => {
   const { space, target } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const config = useConfig();
 
   const invitations = useSpaceInvitations(space?.key);
@@ -59,8 +67,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       testId: 'spaces-panel.invite-one',
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.INTERACTIVE,
-          authMethod: Invitation.AuthMethod.SHARED_SECRET,
+          type: Invitation_Type.INTERACTIVE,
+          authMethod: Invitation_AuthMethod.SHARED_SECRET,
           multiUse: false,
           target,
         });
@@ -78,8 +86,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       testId: 'spaces-panel.invite-many',
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.DELEGATED,
-          authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+          type: Invitation_Type.DELEGATED,
+          authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
           multiUse: true,
           target,
         });
@@ -109,7 +117,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
     InvitationList: InvitationListComponent = InvitationList,
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const inviteActions =
     propsInviteActions ??
@@ -131,15 +139,15 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   const visibleInvitations = showInactiveInvitations
     ? invitations
-    : invitations?.filter((invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state));
+    : invitations?.filter((invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state));
 
   return (
     <>
-      <ScrollArea.Root thin orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
+      <ScrollArea.Root orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
         <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>
-              <h3 className={mx(headingFragment, 'text-description')}>{t('invitation-list.heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-fg-muted')}>{t('invitation-list.heading')}</h3>
               <InvitationListComponent
                 className='mb-2'
                 send={send}
@@ -147,7 +155,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
                 onClickRemove={(invitation) => invitation.cancel()}
                 createInvitationUrl={createInvitationUrl}
               />
-              <h3 className={mx(headingFragment, 'text-description', 'mt-2')}>{t('space-member-list.heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-fg-muted', 'mt-2')}>{t('space-member-list.heading')}</h3>
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />

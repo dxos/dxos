@@ -3,11 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as Drawing from './types/Drawing';
+import { Drawing } from '#types';
 
 export const translations = [
   {
@@ -25,10 +24,12 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Illustrator',
+        'scores.label': 'Scores',
+        'scores.empty.label': 'Nothing to score yet.',
         'create-panel.variant.label': 'Select renderer',
         'create-panel.variant.placeholder': 'Search renderers...',
         'unsupported-variant.label': 'Unsupported drawing variant',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

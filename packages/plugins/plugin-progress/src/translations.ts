@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -15,4 +16,5 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+  ...componentsTranslations,
+] as const satisfies Theme.Resource[];

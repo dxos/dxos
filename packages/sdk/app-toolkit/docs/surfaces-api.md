@@ -8,7 +8,7 @@ This decoupling means plugins don't need to know about each other's UI — they 
 
 ## How Surfaces Fit Together
 
-The layout plugins (deck, simple-layout) are one canonical consumer of surfaces — they render roles like `article`, `status-indicator`, and `deck-companion--{id}`. But surfaces are a general mechanism: any plugin component can render a `Surface.Surface` element with a role, and any other plugin can register a surface to fulfill it.
+The layout plugin (deck) is one canonical consumer of surfaces — it renders roles like `article`, `status-indicator`, and `deck-companion--{id}`. But surfaces are a general mechanism: any plugin component can render a `Surface.Surface` element with a role, and any other plugin can register a surface to fulfill it.
 
 1. A component renders a surface slot with a role and data.
 2. The framework queries registered surfaces for that role.
@@ -23,8 +23,8 @@ Registers a React component for a specific role and data shape. Prefer the typed
 form: pass an `AppSurface` filter and the role is derived from its bindings.
 
 ```typescript
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 // Typed form — role carried by the filter.
 Surface.create({
@@ -56,19 +56,19 @@ Surface.create({
 
 ## App-Toolkit Filters: `AppSurface`
 
-`AppSurface` from `@dxos/app-toolkit/ui` provides typed role tokens and filter
+`AppSurface` from `@dxos/app-toolkit/AppSurface` provides typed role tokens and filter
 builders. A filter is a `Surface.Filter<TData>` carrying both the role(s) it
 applies to and a runtime guard that narrows the data type.
 
 ### Role tokens
 
 ```typescript
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 // Built-in tokens: Article, Section, Card, Slide, Tabpanel, Related, Dialog,
 // Popover, Navigation, MenuFooter, NavbarEnd, DocumentTitle.
 // Mint your own:
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 const MyRole = Surface.makeType<{ subject: MyShape }>('my-plugin/my-role');
 ```
 

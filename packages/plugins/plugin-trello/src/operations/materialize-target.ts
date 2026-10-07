@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import * as TrelloOperation from '../types/TrelloOperation';
-import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync';
+import { TrelloOperation } from '#types';
+
+import { TrelloSyncError } from './errors.ts';
+import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync.ts';
 
 /**
  * Eagerly materializes an empty local Kanban for a remote Trello board so an
@@ -24,7 +26,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.MaterializeTrelloTar
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         if (!remoteTarget) {
           // Trello is a multi-target connector; a board selection is always present.
-          return yield* Effect.fail(new Error('Trello materializeTarget requires a remote board selection.'));
+          return yield* Effect.fail(
+            new TrelloSyncError({ message: 'Trello materializeTarget requires a remote board selection.' }),
+          );
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired
@@ -32,7 +36,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.MaterializeTrelloTar
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
         if (!db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {

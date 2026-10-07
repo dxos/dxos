@@ -10,9 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Support } from '#types';
 
-import * as Support from '../../types/Support';
-import { SupportArticle } from './SupportArticle';
+import { SupportArticle } from './SupportArticle.tsx';
 
 type StoryArgs = {
   title?: string;

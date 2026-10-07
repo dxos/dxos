@@ -7,10 +7,10 @@ import { lazy } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
-import * as Sidekick from '../types/Sidekick';
+import { Sidekick } from '#types';
 
 const SidekickArticle = lazy(() => import('#containers'));
 

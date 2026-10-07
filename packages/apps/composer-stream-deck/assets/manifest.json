@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "Name": "Composer",
+  "Version": "0.0.0.0",
+  "Author": "DXOS",
+  "UUID": "org.dxos.composer",
+  "Description": "Shows a Composer space on your Stream Deck: favorites on the keys, running tasks and space stats on the dials.",
+  "Category": "Composer",
+  "CategoryIcon": "imgs/plugin/composer",
+  "Icon": "imgs/plugin/composer",
+  "CodePath": "bin/plugin.mjs",
+  "SDKVersion": 3,
+  "Software": {
+    "MinimumVersion": "7.1"
+  },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Nodejs": {
+    "Version": "24"
+  },
+  "Actions": [
+    {
+      "UUID": "org.dxos.composer.favorite",
+      "Name": "Favorite",
+      "Tooltip": "Shows one of the space's favorites; press to open it in Composer.",
+      "Icon": "imgs/actions/favorite/icon",
+      "Controllers": ["Keypad"],
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/actions/favorite/key"
+        }
+      ]
+    },
+    {
+      "UUID": "org.dxos.composer.monitor",
+      "Name": "Monitor",
+      "Tooltip": "Shows a running task, or a space statistic when nothing is running.",
+      "Icon": "imgs/actions/monitor/icon",
+      "Controllers": ["Encoder"],
+      "UserTitleEnabled": false,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "",
+          "Push": "",
+          "Touch": ""
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/monitor/key"
+        }
+      ]
+    }
+  ]
+}

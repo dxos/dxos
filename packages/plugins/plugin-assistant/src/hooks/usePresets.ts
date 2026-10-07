@@ -2,33 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import { Model, Provider } from '@dxos/ai';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as Chat from '@dxos/assistant/Chat';
+import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { DXN } from '@dxos/keys';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { type AiServicePreset, defaultsKeyForProvider, presetsForProvider, resolveProvider } from '../processor';
-import type * as Assistant from '../types/Assistant';
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantPreset from '../types/AssistantPreset';
-import * as Ollama from '../types/Ollama';
+import { meta } from '#meta';
+import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
+
+import {
+  type AiServicePreset,
+  defaultsKeyForProvider,
+  pickPreset,
+  presetsForProvider,
+  providerForModel,
+  resolveProvider,
+} from '../processor/index.ts';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
 } & Pick<AssistantPreset.ChatPresetProps, 'presets' | 'onPresetChange'>;
 
 /**
- * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}),
- * defaulting the selection to the configured per-provider model.
+ * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}).
+ * The selection is the chat's own (`Chat.session.model`), written back to it when the user picks; a chat that
+ * has not selected one shows the configured per-provider model.
  */
-export const usePresets = (settings: Assistant.Settings): UsePresets => {
-  const [preset, setPreset] = useState<AiServicePreset>();
+export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  // Subscribed rather than read: the picker has to follow a selection made on another mount of the
+  // same chat, and the stamp the processor writes before the first request.
+  const [session] = useObject(chat, 'session');
+  const chatModel = session?.model;
 
   // The Ollama manager is the bundled sidecar (desktop only); its presence signals that the
   // `built-in` provider (rather than an external Ollama server) is available.
-  const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
 
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
   const defaultModel = settings.modelDefaults?.[defaultsKeyForProvider(provider)];
@@ -65,25 +81,50 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
     return base;
   }, [provider, ollamaManager, lmStudioReachable, localModels]);
 
-  const presetOptions = useMemo(
-    () => presets.map(({ id, model, label }) => ({ id, label: label ?? model })),
-    [presets],
+  // The chat's selection when the active provider serves it, else the provider's configured model.
+  // A selection the provider does not serve (the chat picked Claude, then the user went offline) is
+  // still what the process will run, so it is shown as an unavailable entry rather than silently
+  // displayed as the fallback — the picker and the request must agree.
+  const unavailable = useMemo<AiServicePreset | undefined>(() => {
+    if (!chatModel || presets.length === 0 || presets.some((preset) => preset.model === chatModel)) {
+      return undefined;
+    }
+    // Carries the provider that actually serves the model rather than the active one, which by
+    // definition does not — a resolver chain that still reaches it then can.
+    const catalog = Model.byId(chatModel)[0];
+    return {
+      id: chatModel,
+      provider: providerForModel(chatModel, provider) ?? provider,
+      model: chatModel,
+      backend: catalog?.backend ?? '',
+      label: t('model-unavailable.label', { label: catalog?.label ?? DXN.getName(chatModel) }),
+    };
+  }, [chatModel, presets, provider, t]);
+
+  const preset = useMemo(
+    () => presets.find((preset) => preset.model === chatModel) ?? unavailable ?? pickPreset(presets, defaultModel),
+    [presets, chatModel, unavailable, defaultModel],
   );
 
-  // Default to the provider's configured model, else the first available preset.
-  useEffect(() => {
-    const configured = defaultModel ? presets.find((preset) => preset.model === defaultModel) : undefined;
-    setPreset(configured ?? presets[0]);
-  }, [presets, defaultModel]);
+  const presetOptions = useMemo(
+    () =>
+      [...presets, ...(unavailable ? [unavailable] : [])].map(({ id, model, label }) => ({
+        id,
+        label: label ?? model,
+      })),
+    [presets, unavailable],
+  );
 
   const handlePresetChange = useCallback<NonNullable<AssistantPreset.ChatPresetProps['onPresetChange']>>(
     (id) => {
       const preset = presets.find((preset) => preset.id === id);
-      if (preset) {
-        setPreset(preset);
+      if (preset && chat) {
+        Obj.update(chat, (chat) => {
+          chat.session = { ...chat.session, model: preset.model };
+        });
       }
     },
-    [presets],
+    [presets, chat],
   );
 
   return {

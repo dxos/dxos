@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 /**
@@ -22,7 +23,7 @@ const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 const RENDER_READY_DATASET_KEY = 'composerProxy';
 const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 
-export class FetchError extends Error {}
+export class FetchError extends BaseError.extend('VideoFetchError', 'Fetch failed.') {}
 
 type RenderRequest = {
   version: 1;
@@ -69,7 +70,7 @@ export const fetchPage = (url: string): Effect.Effect<string, FetchError> => {
     return fetchResource(url);
   }
   return renderViaCrx(url).pipe(
-    Effect.catchAll((error) => {
+    Effect.catch((error) => {
       log.info('render-proxy failed; falling back to edge proxy', { url, error: error.message });
       return fetchResource(url);
     }),
@@ -86,11 +87,11 @@ export const fetchResource = (url: string): Effect.Effect<string, FetchError> =>
     try: async () => {
       const response = await proxyFetchLegacy(new URL(url), { method: 'GET' });
       if (!response.ok) {
-        throw new FetchError(`HTTP ${response.status} for ${url}`);
+        throw new FetchError({ message: `HTTP ${response.status} for ${url}` });
       }
       return response.text();
     },
-    catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
+    catch: FetchError.wrap({ ifTypeDiffers: true }),
   });
 
 // YouTube's InnerTube `player` endpoint, queried as the ANDROID app client. Unlike the web client,
@@ -138,17 +139,17 @@ export const fetchYouTubePlayer = (videoId: string): Effect.Effect<unknown, Fetc
         }),
       });
       if (!response.ok) {
-        throw new FetchError(`YouTube player API returned HTTP ${response.status}`);
+        throw new FetchError({ message: `YouTube player API returned HTTP ${response.status}` });
       }
       return response.json();
     },
-    catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
+    catch: FetchError.wrap({ ifTypeDiffers: true }),
   });
 
 const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
-  Effect.async<string, FetchError>((resume) => {
+  Effect.callback<string, FetchError>((resume) => {
     if (typeof window === 'undefined' || !isCrxRenderAvailable()) {
-      resume(Effect.fail(new FetchError('Composer render-proxy extension is not available')));
+      resume(Effect.fail(new FetchError({ message: 'Composer render-proxy extension is not available' })));
       return;
     }
 
@@ -172,7 +173,7 @@ const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
       if (ack.ok) {
         resume(Effect.succeed(ack.html));
       } else {
-        resume(Effect.fail(new FetchError(`render-proxy failed: ${ack.error}`)));
+        resume(Effect.fail(new FetchError({ message: `render-proxy failed: ${ack.error}` })));
       }
     };
 
@@ -182,7 +183,7 @@ const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
       }
       settled = true;
       cleanup();
-      resume(Effect.fail(new FetchError(`render-proxy timed out after ${timeoutMs}ms for ${url}`)));
+      resume(Effect.fail(new FetchError({ message: `render-proxy timed out after ${timeoutMs}ms for ${url}` })));
     }, timeoutMs + 1_000);
 
     window.addEventListener(RENDER_ACK_EVENT, onAck);

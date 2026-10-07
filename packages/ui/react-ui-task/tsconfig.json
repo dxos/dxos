@@ -12,6 +12,12 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -25,6 +31,15 @@
     },
     {
       "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-markdown"
+    },
+    {
+      "path": "../react-ui-menu"
+    },
+    {
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

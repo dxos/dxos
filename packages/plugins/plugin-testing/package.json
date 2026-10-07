@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-testing",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,13 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -34,9 +42,14 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/StorybookPlugin.ts",
-      "types": "./dist/types/src/StorybookPlugin.d.ts",
-      "default": "./dist/lib/StorybookPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -45,22 +58,32 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./harness": {
-      "source": "./src/harness.ts",
-      "types": "./dist/types/src/harness.d.ts",
+    "./CorePlugins": {
+      "source": "./src/CorePlugins.ts",
+      "types": "./dist/types/src/CorePlugins.d.ts",
+      "import": "./dist/lib/ns/CorePlugins.mjs"
+    },
+    "./Corpus": {
+      "source": "./src/Corpus.ts",
+      "types": "./dist/types/src/Corpus.d.ts",
+      "import": "./dist/lib/ns/Corpus.mjs"
+    },
+    "./Harness": {
+      "source": "./src/Harness.ts",
+      "types": "./dist/types/src/Harness.d.ts",
       "import": "./dist/lib/harness.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./StorybookCapabilities": {
       "source": "./src/types/StorybookCapabilities.ts",
       "types": "./dist/types/src/types/StorybookCapabilities.d.ts",
       "import": "./dist/lib/StorybookCapabilities.mjs"
     },
-    "./package.json": "./package.json"
+    "./StorybookPlugin": {
+      "source": "./src/StorybookPlugin.ts",
+      "types": "./dist/types/src/StorybookPlugin.d.ts",
+      "import": "./dist/lib/StorybookPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -86,8 +109,7 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

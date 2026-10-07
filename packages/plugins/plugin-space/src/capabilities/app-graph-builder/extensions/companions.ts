@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { Obj, Type } from '@dxos/echo';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 
@@ -20,13 +21,14 @@ import { meta } from '#meta';
 
 /** Creates companion panel extensions: object settings, related, and selected-objects. */
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/plugin-graph types (TS2883).
-export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(
+export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(
   function* () {
     return yield* Effect.all([
       // Object settings plank companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'settings',
-        match: NodeMatcher.whenEchoObjectMatches,
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -40,9 +42,10 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
       }),
 
       // Related objects plank companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'related',
-        match: NodeMatcher.whenEchoObjectMatches,
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -56,8 +59,9 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
       }),
 
       // View selected objects companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'selectedObjects',
+        relation: AppNode.companion,
         match: (node) => {
           // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
           // companion directly, no view lookup needed.

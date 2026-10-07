@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { GoogleMailApi } from '../services';
-import { generateGmailDataset } from './gmail-fixtures';
+import { GoogleMailApi } from '#services';
+
+import { generateGmailDataset } from './gmail-fixtures.ts';
 
 describe('generateGmailDataset + GoogleMailApi.mock', () => {
   test('generates a coherent, ascending-by-date dataset', ({ expect }) => {

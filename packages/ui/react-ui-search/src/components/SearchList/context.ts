@@ -1,8 +1,7 @@
+import * as Hooks from '@dxos/react-ui/Hooks';
 //
 // Copyright 2025 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 /** Context for items - stable, doesn't change when query changes */
 export type SearchListItemContextValue = {
@@ -38,6 +37,6 @@ export type SearchListInputContextValue = {
 };
 
 export const [SearchListItemContextProvider, useSearchListItemContext] =
-  createContext<SearchListItemContextValue>('SearchListItem');
+  Hooks.createContext<SearchListItemContextValue>('SearchListItem');
 export const [SearchListInputContextProvider, useSearchListInputContext] =
-  createContext<SearchListInputContextValue>('SearchListInput');
+  Hooks.createContext<SearchListInputContextValue>('SearchListInput');

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 
 import { meta } from '#meta';
 

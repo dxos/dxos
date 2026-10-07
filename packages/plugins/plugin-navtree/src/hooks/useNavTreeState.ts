@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import type * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
-import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
+import { NavTreeCapabilities } from '#types';
 
 export type UseNavTreeStateResult = {
   getItem: (path: string[]) => NavTreeCapabilities.NavTreeItemState;
@@ -20,7 +21,7 @@ export type UseNavTreeStateResult = {
  * For reactive subscriptions, use `useNavTreeItemState` or `useAtomValue(getItemAtom(path))`.
  */
 export const useNavTreeState = (): UseNavTreeStateResult => {
-  return useCapability(NavTreeCapabilities.State);
+  return Hooks.useCapability(NavTreeCapabilities.State);
 };
 
 /**
@@ -28,7 +29,7 @@ export const useNavTreeState = (): UseNavTreeStateResult => {
  * Use this for fine-grained reactivity.
  */
 export const useNavTreeItemState = (path: string[]): NavTreeCapabilities.NavTreeItemState => {
-  const { getItemAtom } = useCapability(NavTreeCapabilities.State);
+  const { getItemAtom } = Hooks.useCapability(NavTreeCapabilities.State);
   const pathKey = useMemo(() => path.join('~'), [path]);
   const atom = useMemo(() => getItemAtom(path), [getItemAtom, pathKey]);
   return useAtomValue(atom);

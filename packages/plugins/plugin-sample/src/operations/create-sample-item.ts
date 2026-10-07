@@ -4,15 +4,14 @@
 
 // Operation handler implementation.
 // Each handler file exports a default value so it can be lazy-loaded via
-// `OperationHandlerSet.lazy([SampleOperation.CreateSampleItem.pipe(Operation.lazyHandler(() => import('./create-sample-item')))])`.
+// `OperationHandlerSet.lazy([SampleOperation.CreateSampleItem.pipe(Operation.lazyHandler(() => import('./create-sample-item.ts')))])`.
 // The handler receives the validated input and returns an Effect.
 
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import * as SampleItem from '../types/SampleItem';
-import * as SampleOperation from '../types/SampleOperation';
+import { SampleItem, SampleOperation } from '#types';
 
 // `Operation.withHandler` wraps the operation definition with an implementation.
 // The callback receives the validated input fields and must return an Effect

@@ -2,22 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useEffect, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
+  type ActionToolbarProps,
   type MenuAction,
-  MenuRootProps,
   createGapSeparator,
   createMenuAction,
   createMenuItemGroup,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
@@ -109,7 +110,7 @@ const createTableToolbarActions = ({
     };
   });
 
-export type TableToolbarProps = Pick<MenuRootProps, 'attendableId'> &
+export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId'> &
   TableToolbarState & {
     onAdd?: () => void;
     onSave?: () => void;
@@ -117,7 +118,7 @@ export type TableToolbarProps = Pick<MenuRootProps, 'attendableId'> &
     customActions?: Atom.Atom<ActionGraphProps>;
   };
 
-export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
+export const TableToolbar = Util.composable<HTMLDivElement, TableToolbarProps>(
   ({ attendableId, viewDirty, onAdd, onSave, onExport, customActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
@@ -134,11 +135,7 @@ export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
     const menuActions = useMenuActions(actionsCreator);
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
     );
   },
 );

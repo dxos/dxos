@@ -2,39 +2,44 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import { type Graph } from '@dxos/app-graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
-import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { Avatar, Row } from '@dxos/react-ui-card';
-import { Html, emailDialect } from '@dxos/react-ui-components';
-import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { createContext } from '@dxos/react-hooks';
+import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
+import { Html, emailDialect } from '@dxos/react-ui-html';
+import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
-import type * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as Mailbox from '../../types/Mailbox';
-import * as SystemTags from '../../types/SystemTags';
-import { createDraftMessage, getMessageProps } from '../../util';
-import { EditMessage } from '../EditMessage';
-import { MarkdownViewer } from '../MarkdownViewer';
-import { type ViewMode, viewModeGroup } from '../ViewMode';
-import { keyOf } from './key-of';
-import { ExtractorMenuItem } from './useExtractorActions';
-import { useMessageExtractedObjects } from './useMessageExtractedObjects';
-import { useMessageActions } from './useToolbar';
+import { parseAddressList } from '../../operations/correspondents/correspondence.ts';
+import { createDraftMessage, formatAge, getMessageProps } from '../../util/index.ts';
+import { EditMessage } from '../EditMessage/index.ts';
+import { MarkdownViewer } from '../MarkdownViewer/index.ts';
+import { type ViewMode, viewModeGroup } from '../ViewMode/index.ts';
+import { keyOf } from './key-of.ts';
+import { ExtractorMenuItem } from './useExtractorActions.tsx';
+import { useMessageExtractedObjects } from './useMessageExtractedObjects.ts';
+import { useMessageActions } from './useToolbar.tsx';
 
 //
 // Types
@@ -79,6 +84,16 @@ type ConversationMessageActions = {
   onAiReply?: (message: MessageType.Message) => void;
   onDelete?: (message: MessageType.Message) => void;
   onOpen?: (message: MessageType.Message) => void;
+  /** Creates a tracking Project from the message (container-invoked; the component holds no invoker). */
+  onCreateProject?: (message: MessageType.Message) => void;
+  /** Opens one of the message's attachments (by index) in its own plank. */
+  onOpenAttachment?: (message: Mailbox.MessageLike, index: number) => void;
+  /**
+   * Fired after a message is archived (never on restore). The tag toggle itself is tile-local so
+   * archiving works in every consumer; this is the container's hook for the layout consequence —
+   * a dedicated message view has nothing left to show once its message leaves the inbox.
+   */
+  onArchived?: (message: MessageType.Message) => void;
 };
 
 //
@@ -93,6 +108,8 @@ const CONVERSATION_STACK_NAME = 'ConversationStack';
 type ConversationStackContextValue = {
   /** Single attendable id shared by every tile so the whole conversation is attended together. */
   attendableId?: string;
+  /** The graph node the conversation renders, whose actions the tiles show; defaults to `attendableId`. */
+  nodeId?: string;
   mailbox?: Mailbox.Mailbox;
   /** Messages/refs in chronological order; drafts interleaved by the connector. */
   items: MessageOrRef[];
@@ -103,13 +120,19 @@ type ConversationStackContextValue = {
   /** Ids of the expanded messages; every other message renders as a collapsed summary. */
   expanded: ReadonlySet<string>;
   /** App graph for contributed (`disposition: 'toolbar'`) actions (container-resolved). */
-  graph?: Graph.ReadableGraph;
+  graph?: AppGraph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
   /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
   sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Builds the sender-scoped menu items for a message (container-resolved from `SenderAction`). */
+  getSenderActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
+  summaries?: ReadonlyMap<string, string>;
+  /** Summary of the conversation as a whole, rendered as the last tile in the stack. */
+  conversationSummary?: Mailbox.ConversationSummary;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
@@ -131,6 +154,7 @@ export type ConversationStackRootProps = PropsWithChildren<
   Pick<
     ConversationStackContextValue,
     | 'attendableId'
+    | 'nodeId'
     | 'mailbox'
     | 'items'
     | 'companion'
@@ -140,6 +164,9 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'runtime'
     | 'sendOperations'
     | 'getExtractActions'
+    | 'getSenderActions'
+    | 'summaries'
+    | 'conversationSummary'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -147,6 +174,9 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'onAiReply'
     | 'onDelete'
     | 'onOpen'
+    | 'onArchived'
+    | 'onCreateProject'
+    | 'onOpenAttachment'
   >
 >;
 
@@ -158,6 +188,7 @@ export type ConversationStackRootProps = PropsWithChildren<
 const ConversationStackRoot = ({
   children,
   attendableId,
+  nodeId,
   items,
   companion,
   expanded,
@@ -167,6 +198,9 @@ const ConversationStackRoot = ({
   runtime,
   sendOperations,
   getExtractActions,
+  getSenderActions,
+  summaries,
+  conversationSummary,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -174,9 +208,13 @@ const ConversationStackRoot = ({
   onAiReply,
   onDelete,
   onOpen,
+  onArchived,
+  onCreateProject,
+  onOpenAttachment,
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}
+    nodeId={nodeId}
     items={items}
     mailbox={mailbox}
     options={options}
@@ -188,9 +226,15 @@ const ConversationStackRoot = ({
     onAiReply={onAiReply}
     onDelete={onDelete}
     onOpen={onOpen}
+    onArchived={onArchived}
+    onCreateProject={onCreateProject}
+    onOpenAttachment={onOpenAttachment}
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
+    getSenderActions={getSenderActions}
+    summaries={summaries}
+    conversationSummary={conversationSummary}
     runtime={runtime}
     sendOperations={sendOperations}
   >
@@ -206,7 +250,7 @@ ConversationStackRoot.displayName = CONVERSATION_STACK_ROOT_NAME;
 
 const CONVERSATION_STACK_CONTENT_NAME = 'ConversationStack.Content';
 
-export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>;
+export type ConversationStackContentProps = Util.ThemedClassName<{ testId?: string }>;
 
 /**
  * Renders the opened conversation (email thread) as a vertical Mosaic stack: one tile per message, each
@@ -214,9 +258,9 @@ export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>
  * (conversation order is chronological); view controls apply to the whole thread from the
  * {@link ConversationStackToolbar}. This is the thread-detail counterpart to the mailbox list `InboxStack`.
  */
-const ConversationStackContent = composable<HTMLDivElement, ConversationStackContentProps>(
+const ConversationStackContent = Util.composable<HTMLDivElement, ConversationStackContentProps>(
   ({ testId, ...props }, forwardedRef) => {
-    const { items } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
+    const { items, conversationSummary } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
 
     const tileItems = useMemo<ConversationTileData[]>(
@@ -245,12 +289,12 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
-      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // Focus the reply's body editor (`.dx-expand` distinguishes it from the recipient editors,
       // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
       // editor appears, bounded by the same settle window as the scroll re-pinning below;
       // `preventScroll` keeps the focus from cutting the smooth scroll short.
       const focusBody = () => {
-        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        const content = tile.querySelector<HTMLElement>('.dx-expand .cm-content');
         if (content) {
           content.focus({ preventScroll: true });
           focusObserver.disconnect();
@@ -275,22 +319,22 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
     return (
       <Mosaic.Container asChild orientation='vertical'>
         <ScrollArea.Root
-          {...composableProps(props)}
+          {...Util.composableProps(props)}
           orientation='vertical'
-          centered
-          padding
-          thin
           data-testid={testId}
           ref={forwardedRef}
         >
           <ScrollArea.Viewport ref={viewportRef}>
             <Mosaic.Stack
               Tile={ConversationMessageTile}
-              classNames='dx-document gap-2 pbs-2'
+              classNames='dx-document gap-2 py-2'
               items={tileItems}
               getId={getId}
               draggable={false}
             />
+            {/* Outside the stack: the summary describes the conversation, not a message, so it must not
+                be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
+            {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -304,28 +348,30 @@ ConversationStackContent.displayName = CONVERSATION_STACK_CONTENT_NAME;
 // Message Tile
 //
 
+/** Sits inside the card's one-block start rail, as the detail rows' icons do; a block-wide avatar would touch the name. */
+const MESSAGE_AVATAR_SIZE = 6;
+
 const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
-/** Mosaic tile chrome; dispatches to the draft composer or the read-message body. */
+/**
+ * Mosaic tile chrome; dispatches to the draft composer or the read-message body. A `grid` card, so the
+ * tile is a rail Container: every row in it — the summary, the recipients, the tags — subgrids onto the
+ * same rails, its leading avatar or icon in the start rail and its text at the content edge.
+ */
 const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<ConversationTileData>) => {
   const { id, message } = data;
   return (
-    <Mosaic.Tile
-      {...tileProps}
-      data={data}
-      classNames={[
-        'dx-attention-surface border border-subdued-separator rounded overflow-hidden',
-        MESSAGE_TILE_COLUMNS,
-      ]}
-    >
-      {DraftMessage.instanceOf(message) ? (
-        // The composer isn't column-aligned; span the whole tile.
-        <div className='col-span-full'>
-          <DraftTile id={id} message={message} />
-        </div>
-      ) : (
-        <MessageTile id={id} message={message} />
-      )}
+    <Mosaic.Tile {...tileProps} data={data} asChild>
+      <Card.Root grid classNames='dx-attention-surface overflow-hidden'>
+        {DraftMessage.instanceOf(message) ? (
+          // The composer isn't rail-aligned; it spans the whole tile.
+          <div className='col-span-full'>
+            <DraftTile id={id} message={message} />
+          </div>
+        ) : (
+          <MessageTile id={id} message={message} />
+        )}
+      </Card.Root>
     </Mosaic.Tile>
   );
 };
@@ -333,18 +379,66 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
 ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 
 //
+// Summary tile
+//
+
+const CONVERSATION_SUMMARY_TILE_NAME = 'ConversationStack.SummaryTile';
+
+type ConversationSummaryTileProps = {
+  summary: Mailbox.ConversationSummary;
+};
+
+/**
+ * Display form of a model id: `com.anthropic.model.claude-haiku-4-5.default` reads as
+ * `claude-haiku-4-5`. The full id is the reproducible one, so it stays as the title attribute.
+ */
+const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').replace(/\.default$/, '');
+
+/**
+ * The conversation's derived summary, as the last tile under the messages. Rendered as markdown: the
+ * summarization pipeline writes `text/markdown` blocks.
+ *
+ * The header carries the summary's provenance (model + when it was derived), which is what tells a
+ * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
+ */
+const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  // Recomputed per render rather than ticked: the tile re-renders whenever the annotation feed does,
+  // and an age this coarse does not warrant a timer.
+  const age = formatAge(new Date(summary.created), new Date());
+  return (
+    // The same rail card as a message tile, so the heading and text line up with the senders and bodies above.
+    <Card.Root
+      grid
+      role='complementary'
+      aria-label={t('conversation-summary.title')}
+      classNames='dx-document dx-attention-surface overflow-hidden mt-2'
+      data-testid='conversation.summary'
+    >
+      <Card.Row icon='ph--text-align-left--regular'>
+        <Layout.Flex align='baseline' gap='sm' classNames='text-sm text-fg-muted'>
+          <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
+          <span className='text-fg-subtle truncate' title={summary.model} data-testid='conversation.summary.provenance'>
+            {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
+          </span>
+        </Layout.Flex>
+      </Card.Row>
+      <Card.Section classNames='pb-2'>
+        <MarkdownViewer content={summary.summary} />
+      </Card.Section>
+    </Card.Root>
+  );
+};
+
+ConversationSummaryTile.displayName = CONVERSATION_SUMMARY_TILE_NAME;
+
+//
 // Message (read tile)
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
-// `ConversationMessageTile` establishes the shared column template — avatar | title | date | menu — on the
-// tile itself; `MessageTile` spans it with `grid-cols-subgrid` so its summary row and its expanded
-// detail/body row share the exact same columns (avatar in column 1, date/menu pinned right).
+// `ConversationMessageTile` is a grid card; `MessageTile`'s summary row and expanded section are a row and a
+// section of it, so the sender's avatar and every detail row's icon share the start rail.
 //
-
-const MESSAGE_TILE_COLUMNS_NAME = 'ConversationStack.MessageTile.Columns';
-
-/** Column template established by the tile; message parts subgrid into it. */
-const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
 
 type MessageTileProps = {
   id: string;
@@ -358,15 +452,20 @@ type MessageTileProps = {
 const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   const {
     attendableId,
+    nodeId,
     mailbox,
     options,
     expanded,
     companion,
     graph,
     getExtractActions,
+    getSenderActions,
+    summaries,
     onAiReply,
     onDelete,
     onOpen,
+    onArchived,
+    onCreateProject,
     onExpandedChange,
     onContactCreate,
   } = useConversationStackContext(MESSAGE_TILE_NAME);
@@ -382,82 +481,126 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     () => (target ? (getExtractActions?.(target) ?? []) : []),
     [getExtractActions, target],
   );
-  const menuActions = useMessageActions({ graph, extractActions, nodeId: attendableId, ...handlers });
+  const senderActions = useMemo(() => (target ? (getSenderActions?.(target) ?? []) : []), [getSenderActions, target]);
+  const db = mailbox && Obj.getDatabase(mailbox);
+
+  // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
+  // both directions and membership picks the menu label.
+  const [inInbox, toggleInbox] = useSystemTag(target, mailbox, 'inbox');
+  const handleArchive = useCallback(() => {
+    toggleInbox();
+    // Only archiving is a layout event; restoring leaves the message right where the user is looking.
+    if (inInbox && target) {
+      onArchived?.(target);
+    }
+  }, [toggleInbox, inInbox, target, onArchived]);
+  const handleCreateProject = useCallback(() => {
+    if (target) {
+      onCreateProject?.(target);
+    }
+  }, [onCreateProject, target]);
+
+  const menuActions = useMessageActions({
+    graph,
+    extractActions,
+    nodeId: nodeId ?? attendableId,
+    inInbox,
+    // Without a db the toggle is a no-op, so offering an enabled action would be a dead affordance.
+    onArchive: db && target ? handleArchive : undefined,
+    onCreateProject: onCreateProject && target ? handleCreateProject : undefined,
+    senderActions,
+    ...handlers,
+  });
 
   const isExpanded = expanded.has(id);
   if (!message || !target) {
     return null;
   }
 
-  const { from, to, date, snippet, subject } = getMessageProps(target);
+  const { from, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
+  // Derived by the summarization pipeline; absent for most messages, which is the normal case —
+  // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
+  const summary = summaries?.get(target.id);
 
-  // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
+  // A card section spanning the tile's rails, so the summary row and the detail/body section share them.
+  // `Collapsible.Root` takes over that element rather than adding one, which would break the subgrid chain.
+  // A conversation of one passes no `onExpandedChange`, which disables the machine: the heading keeps its
+  // box but stops being a control, so there is no dead tab stop and nothing to fold.
   return (
-    <div className='contents'>
-      <div className='col-span-full grid grid-cols-subgrid items-start'>
-        {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
-        <div className='p-2'>
-          <Avatar actor={target.sender} name={sender} size={9} />
-        </div>
-
-        <div className='col-start-2 flex flex-col py-1'>
-          <h2
-            className={mx('text-lg line-clamp-2 min-w-0', onExpandedChange && 'cursor-pointer')}
-            data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
-            // Focusable and key-activated only when it actually toggles, so a single-message
-            // conversation doesn't put a dead tab stop in the reading order.
-            role={onExpandedChange && 'button'}
-            tabIndex={onExpandedChange && 0}
-            aria-expanded={onExpandedChange && isExpanded}
-            onClick={onExpandedChange && (() => onExpandedChange(id, !isExpanded))}
-            onKeyDown={
-              onExpandedChange &&
-              ((event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onExpandedChange(id, !isExpanded);
-                }
-              })
-            }
-          >
-            {sender}
+    <Collapsible.Root
+      asChild
+      open={isExpanded}
+      onOpenChange={({ open }) => onExpandedChange?.(id, open)}
+      disabled={!onExpandedChange}
+      lazyMount
+      unmountOnExit
+    >
+      <Card.Section>
+        {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is affordable
+            here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
+        <Card.Row
+          align='start'
+          classNames='py-1'
+          leading={
+            <ContactAvatar
+              actor={target.sender}
+              role='from'
+              db={db}
+              size={MESSAGE_AVATAR_SIZE}
+              onContactCreate={onContactCreate}
+            />
+          }
+          // The trailing cell is a flex row of its own.
+          trailing={
+            <>
+              <span className='px-2 whitespace-nowrap text-sm text-fg-muted'>{date}</span>
+              {isExpanded && mailbox && <MessageStar message={target} mailbox={mailbox} />}
+              {isExpanded && <MessageMenu attendableId={attendableId} actions={menuActions} />}
+            </>
+          }
+        >
+          {/* The accordion heading: a real heading wrapping the control that folds its section, so the
+            thread reads as a list of sections rather than a list of clickable text. The clamp sits on
+            the label inside the trigger: on the trigger itself it replaces the flex row that keeps the
+            caret beside the name, and on the heading it would see one atomic box and clamp nothing. */}
+          <h2 className='text-lg min-w-0'>
+            {/* Caret after the name, as the chat's disclosures, so the name lines up with the line below. */}
+            <Collapsible.Trigger
+              classNames='text-lg flex-row-reverse justify-end'
+              data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
+            >
+              <span className='line-clamp-2'>{sender}</span>
+            </Collapsible.Trigger>
           </h2>
-          {isExpanded ? (
-            <>
-              {subject && <div className='font-medium line-clamp-2'>{subject}</div>}
-              {to && <div className='text-sm text-description'>{to}</div>}
-            </>
-          ) : (
-            <div className='text-sm text-description line-clamp-1'>{snippet}</div>
-          )}
-        </div>
-
-        <div className='col-start-3 flex items-center'>
-          <span className=' p-2 whitespace-nowrap text-sm text-description'>{date}</span>
-          {isExpanded && (
-            <>
-              {mailbox && (
-                <div className='p-1'>
-                  <MessageStar message={target} mailbox={mailbox} />
-                </div>
-              )}
-              <MessageMenu attendableId={attendableId} actions={menuActions} />
-            </>
-          )}
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className='col-span-full grid grid-cols-subgrid items-start'>
-          {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
-          <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
-          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
-            <MessageBody message={message} mailbox={mailbox} options={options} />
+          {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
+              tiles at once, and a summary line shorter than a subject line makes the two read as
+              different row heights. Pinned rather than merely clamped, so a message with no subject
+              still holds the line. */}
+          <div
+            // `leading-6` last: `text-sm` carries a line height of its own, and the two states only
+            // share a baseline if the line box is 24px in both.
+            className={mx(isExpanded ? 'font-medium' : 'text-sm text-fg-muted', 'h-6 leading-6 line-clamp-1')}
+            data-testid={!isExpanded && summary ? 'message.summary' : undefined}
+          >
+            {isExpanded ? subject : (summary ?? snippet)}
           </div>
-        </div>
-      )}
-    </div>
+        </Card.Row>
+
+        {/* `unmountOnExit` keeps a folded message's body out of the tree entirely, as the previous
+          conditional did — a thread holds many messages and each body is a rendered document. */}
+        <Collapsible.Content asChild>
+          <Card.Section>
+            <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
+            {/* The summary is not repeated here: an expanded message shows its body, and the
+              conversation's summary is the last tile in the stack. */}
+            <Layout.Flex column gap='xs' classNames='min-w-0 pb-1'>
+              <MessageBody message={message} mailbox={mailbox} options={options} />
+            </Layout.Flex>
+          </Card.Section>
+        </Collapsible.Content>
+      </Card.Section>
+    </Collapsible.Root>
   );
 };
 
@@ -469,8 +612,36 @@ MessageTile.displayName = MESSAGE_TILE_NAME;
 
 const MESSAGE_STAR_NAME = 'ConversationStack.MessageStar';
 
-// Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
-const NOT_STARRED = Atom.make(false);
+// Stable fallback so `useAtomValue` always receives an atom when the message isn't taggable.
+const NOT_TAGGED = Atom.make(false);
+
+/**
+ * One message's membership of a canonical system tag, plus its toggle. Membership lives in the
+ * mailbox's `TagIndex` rather than the message (feed messages are immutable and have no `meta.tags`),
+ * so the atom scopes re-renders to this message's membership instead of the whole index.
+ */
+const useSystemTag = (
+  message: MessageType.Message | undefined,
+  mailbox: Mailbox.Mailbox | undefined,
+  tagId: SystemTags.SystemTagId,
+): [boolean, () => void] => {
+  const db = mailbox && Obj.getDatabase(mailbox);
+  const tag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(tagId)]))[0];
+  const tagUri = tag && Obj.getURI(tag).toString();
+  const tagIndex = useResolveRef(mailbox?.tags);
+  const taggedAtom = useMemo(
+    () => (tagIndex && tagUri && message ? TagIndex.atom(tagIndex, message.id, tagUri) : NOT_TAGGED),
+    [tagIndex, message, tagUri],
+  );
+  const tagged = useAtomValue(taggedAtom);
+  const handleToggle = useCallback(() => {
+    if (db && message && mailbox) {
+      void Effect.runFork(SystemTags.toggleTag(mailbox, message, tagId).pipe(Effect.provide(Database.layer(db))));
+    }
+  }, [mailbox, message, tagId, db]);
+
+  return [tagged, handleToggle];
+};
 
 type MessageStarProps = {
   message: MessageType.Message;
@@ -479,20 +650,7 @@ type MessageStarProps = {
 
 /** Star toggle backed by the mailbox tag index (membership-scoped reactivity). */
 const MessageStar = ({ message, mailbox }: MessageStarProps) => {
-  const db = Obj.getDatabase(mailbox);
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
-  const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = mailbox.tags?.target;
-  const starredAtom = useMemo(
-    () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, message.id, starredUri) : NOT_STARRED),
-    [tagIndex, message.id, starredUri],
-  );
-  const starred = useAtomValue(starredAtom);
-  const handleToggleStar = useCallback(() => {
-    if (db) {
-      void Effect.runFork(SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))));
-    }
-  }, [mailbox, message, db]);
+  const [starred, handleToggleStar] = useSystemTag(message, mailbox, 'starred');
 
   return <Row.Star starred={starred} onToggle={handleToggleStar} />;
 };
@@ -534,26 +692,47 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   // Extracted objects — trips, people, etc.
   const objects = useMessageExtractedObjects(db, mailbox, message);
 
-  // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
-  // content aligns with the sender/subject/body, rather than the card defining its own gutters.
+  const recipients = useMemo(
+    () => parseAddressList(message.properties?.to).map(({ email }) => email),
+    [message.properties?.to],
+  );
+
+  const { onOpenAttachment } = useConversationStackContext(MESSAGE_DETAILS_NAME);
+  const handleOpenAttachment = useCallback(
+    (index: number) => onOpenAttachment?.(message, index),
+    [onOpenAttachment, message],
+  );
+
+  // A section of the tile's card, not a card of its own: its rows subgrid onto the tile's rails, so their
+  // icons sit in the start rail under the sender's avatar and their text at the tile's content edge.
   return (
-    <Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
-      <Card.Body>
-        {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
-        {/* <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} /> */}
+    <Card.Section data-testid='message-header'>
+      {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
+      {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
+          tile's own heading, so `"NAME" <addr>` would just repeat it. One recipient reads as a person, so it
+          gets an avatar like every other person row; several are a group, which an avatar would misrepresent. */}
+      {recipients.length > 0 && (
+        <Card.Row
+          leading={recipients.length === 1 ? <Avatar actor={{ email: recipients[0] }} size={5} /> : undefined}
+          icon={recipients.length === 1 ? undefined : 'ph--users--regular'}
+        >
+          <Card.Text classNames='text-sm' variant='muted'>
+            {recipients.join(', ')}
+          </Card.Text>
+        </Card.Row>
+      )}
 
-        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-        {objects.map((object) => (
-          <Row.Ref key={Obj.getURI(object).toString()} object={object} />
-        ))}
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <Row.Ref key={Obj.getURI(object).toString()} object={object} />
+      ))}
 
-        {/* Attachments row. */}
-        <Row.Attachments attachments={message.attachments} />
+      {/* Attachments row. */}
+      <Row.Attachments attachments={message.attachments} onAttachmentClick={onOpenAttachment && handleOpenAttachment} />
 
-        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-        <Row.Tags tags={messageTags} />
-      </Card.Body>
-    </Card.Root>
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      <Row.Tags tags={messageTags} />
+    </Card.Section>
   );
 };
 
@@ -616,11 +795,7 @@ type MessageMenuProps = {
 
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
-  <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent'>
-      <Menu.Items />
-    </Menu.Toolbar>
-  </Menu.Root>
+  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='bg-transparent' />
 );
 
 MessageMenu.displayName = MESSAGE_MENU_NAME;
@@ -696,7 +871,7 @@ type DraftTileProps = {
  * always defined) so they stay unconditional while the live object resolves.
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
@@ -821,22 +996,26 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
 
 const CONVERSATION_STACK_TOOLBAR_NAME = 'ConversationStack.Toolbar';
 
-export type ConversationStackToolbarProps = ThemedClassName;
+export type ConversationStackToolbarProps = Util.ThemedClassName;
 
-const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToolbarProps>((props, forwardedRef) => {
-  const { attendableId, options, onCollapseAll, onExpandAll } = useConversationStackContext(
-    CONVERSATION_STACK_TOOLBAR_NAME,
-  );
-  const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
+const ConversationStackToolbar = Util.composable<HTMLDivElement, ConversationStackToolbarProps>(
+  (props, forwardedRef) => {
+    const { attendableId, options, onCollapseAll, onExpandAll } = useConversationStackContext(
+      CONVERSATION_STACK_TOOLBAR_NAME,
+    );
+    const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
 
-  return (
-    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
-});
+    return (
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive
+        {...Util.composableProps(props)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 ConversationStackToolbar.displayName = CONVERSATION_STACK_TOOLBAR_NAME;
 

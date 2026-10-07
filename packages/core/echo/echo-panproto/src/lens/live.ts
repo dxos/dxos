@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { ChangeId, SchemaId, TypeEntityId, TypeId } from '@dxos/echo/internal';
 
-import { getOverlay } from './overlay';
-import { type AnyLens, type Lens } from './types';
-import { applyWrites } from './write';
+import { getOverlay } from './overlay.ts';
+import { type AnyLens, type Lens } from './types.ts';
+import { applyWrites } from './write.ts';
 
 //
 // The live handle. There is only ever ONE object in the database: this is a view of it, not a copy.
@@ -138,7 +138,7 @@ export const of = <S, T extends Record<string, any>>(obj: Obj.Unknown, lens: Len
 };
 
 /** The schema of the lensed shape, for a form or table rendering the target. */
-export const targetSchema = (lens: AnyLens): Schema.Schema.Any => {
+export const targetSchema = (lens: AnyLens): Schema.Top => {
   const target = lens.target as Type.AnyEntity;
-  return Type.isType(target) ? (Type.getSchema(target) as Schema.Schema.Any) : (lens.target as Schema.Schema.Any);
+  return Type.isType(target) ? (Type.getSchema(target) as Schema.Top) : (lens.target as Schema.Top);
 };

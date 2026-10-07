@@ -3,11 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as Meeting from './types/Meeting';
+import { Meeting } from '#types';
 
 export const translations = [
   {
@@ -53,4 +52,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

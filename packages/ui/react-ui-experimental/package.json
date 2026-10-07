@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-experimental",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Experimental components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -34,8 +35,8 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@react-three/drei": "catalog:",
     "@react-three/fiber": "catalog:",
     "d3": "catalog:",
@@ -50,7 +51,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "@types/flubber": "catalog:",

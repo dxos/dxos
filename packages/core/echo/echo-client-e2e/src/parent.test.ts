@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import * as Schema from 'effect/Schema';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Filter, Obj } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Aggregate, Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 
 describe('Parent Hierarchy', () => {
   let builder: EchoTestBuilder;
@@ -166,5 +167,169 @@ describe('Parent Hierarchy', () => {
       const queryResult = await db.query(Filter.id(childId)).run();
       expect(queryResult.length).to.eq(0);
     }
+  });
+
+  /**
+   * One removed parent and one kept parent, three children each, reloaded so nothing is served from
+   * the write-side cache. Returns `[removedId, keptId]`.
+   */
+  const seedTwoParentsAndReload = async (peer: EchoTestPeer, spaceKey: PublicKey): Promise<string[]> => {
+    let parentIds: string[];
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      const removed = db.add(Obj.make(TestSchema.Person, { name: 'removed' }));
+      const kept = db.add(Obj.make(TestSchema.Person, { name: 'kept' }));
+      for (let index = 0; index < 3; index++) {
+        db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: removed, name: `removed child ${index}` }));
+        db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: kept, name: `kept child ${index}` }));
+      }
+      parentIds = [removed.id, kept.id];
+      db.remove(removed);
+      await db.flush();
+    }
+    await peer.reload();
+    return parentIds;
+  };
+
+  const SURVIVORS = ['kept', 'kept child 0', 'kept child 1', 'kept child 2'];
+
+  test('siblings follow their own parent’s deletion', { timeout: 30_000 }, async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    await seedTwoParentsAndReload(peer, spaceKey);
+
+    await using db = await peer.openLastDatabase();
+    const names = (await db.query(Filter.type(TestSchema.Person)).run()).map((person) => person.name).sort();
+    expect(names).to.deep.eq(SURVIVORS);
+
+    await db.updateIndexes();
+    const rows = await db
+      .query(Query.select(Filter.everything()).aggregate({ type: Aggregate.type(), count: Aggregate.count() }))
+      .run();
+    expect(rows.find((row) => String(row.type).includes(Type.getTypename(TestSchema.Person)))?.count).to.eq(4);
+  });
+
+  // Pinned to the memory executor because the assertion counts `indexEngine.queryObjectIds` calls:
+  // batching those is how that executor avoids one lookup per child. The compiled executor resolves
+  // the same deletion state inside a recursive CTE and issues no such lookup, so the count is
+  // vacuously zero there and would assert nothing.
+  test('the memory executor looks each parent up once', { timeout: 30_000 }, async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Person], queryExecutor: 'memory' });
+    const parentIds = await seedTwoParentsAndReload(peer, spaceKey);
+
+    await using db = await peer.openLastDatabase();
+    // A count reads index rows, so the host checks each child's parent against the index.
+    await db.updateIndexes();
+    const lookups = vi.spyOn(peer.host.indexEngine, 'queryObjectIds');
+    await db
+      .query(Query.select(Filter.everything()).aggregate({ type: Aggregate.type(), count: Aggregate.count() }))
+      .run();
+    const lookupsOf = (id: string) =>
+      lookups.mock.calls.filter(([{ objectIds }]) => objectIds?.some((objectId) => objectId === id)).length;
+    expect(parentIds.map(lookupsOf)).to.deep.eq([1, 1]);
+  });
+});
+
+describe('Annotation.SetParent', () => {
+  class Body extends Type.makeObject<Body>(DXN.make('com.example.type.body', '0.1.0'))(
+    Schema.Struct({ text: Schema.String }),
+  ) {}
+
+  class Container extends Type.makeObject<Container>(DXN.make('com.example.type.container', '0.1.0'))(
+    Schema.Struct({
+      /** Owned. */
+      body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set())),
+      /** Owned, ordered. */
+      sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set()),
+      /** Owned, nested inside a plain struct. */
+      backend: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set()) })),
+      /** NOT owned — a plain reference. */
+      linked: Schema.optional(Ref.Ref(Body)),
+    }),
+  ) {}
+
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('parent is set on creation', async () => {
+    const body = Obj.make(Body, { text: 'body' });
+    const section = Obj.make(Body, { text: 'section' });
+    const config = Obj.make(Body, { text: 'config' });
+    const linked = Obj.make(Body, { text: 'linked' });
+    const container = Obj.make(Container, {
+      body: Ref.make(body),
+      sections: [Ref.make(section)],
+      backend: { config: Ref.make(config) },
+      linked: Ref.make(linked),
+    });
+
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+    expect(Obj.getParent(section)?.id).toBe(container.id);
+    expect(Obj.getParent(config)?.id).toBe(container.id);
+    expect(Obj.getParent(linked)).toBeUndefined();
+  });
+
+  test('parent is set on write', async () => {
+    const container = Obj.make(Container, { sections: [] });
+    const body = Obj.make(Body, { text: 'body' });
+    const section = Obj.make(Body, { text: 'section' });
+    expect(Obj.getParent(body)).toBeUndefined();
+
+    Obj.update(container, (container) => {
+      container.body = Ref.make(body);
+      container.sections = [Ref.make(section)];
+    });
+
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+    expect(Obj.getParent(section)?.id).toBe(container.id);
+  });
+
+  test('parent is set on write to a database object', async () => {
+    await using peer = await builder.createPeer({ types: [Body, Container] });
+    await using db = await peer.createDatabase();
+
+    const container = db.add(Obj.make(Container, { sections: [] }));
+    const body = db.add(Obj.make(Body, { text: 'body' }));
+    Obj.update(container, (container) => {
+      container.body = Ref.make(body);
+    });
+
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+  });
+
+  test('re-parents when the ref is replaced', async () => {
+    const container = Obj.make(Container, { sections: [] });
+    const other = Obj.make(Container, { sections: [] });
+    const body = Obj.make(Body, { text: 'body' });
+
+    Obj.update(container, (container) => {
+      container.body = Ref.make(body);
+    });
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+
+    Obj.update(other, (other) => {
+      other.body = Ref.make(body);
+    });
+    expect(Obj.getParent(body)?.id).toBe(other.id);
+  });
+
+  test('owned child cascade-deletes with its holder', { timeout: 30_000 }, async () => {
+    await using peer = await builder.createPeer({ types: [Body, Container] });
+    await using db = await peer.createDatabase();
+
+    const body = db.add(Obj.make(Body, { text: 'body' }));
+    const container = db.add(Obj.make(Container, { sections: [], body: Ref.make(body) }));
+    await db.flush();
+
+    db.remove(container);
+    expect(Obj.isDeleted(body)).to.be.true;
   });
 });

@@ -17,10 +17,16 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -53,7 +59,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -87,9 +99,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-testing"

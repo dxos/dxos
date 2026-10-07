@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { FreeqConnectionError } from '../errors';
-import { FreeqRestApi } from './index';
+import { FreeqConnectionError } from '../errors.ts';
+import { FreeqRestApi } from './index.ts';
 
 const stubHttpClient = (body: unknown) =>
   Layer.succeed(

@@ -15,17 +15,18 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
+import { ReviewPlugin } from '#plugin';
 import { translations } from '#translations';
+import { ReviewCapabilities } from '#types';
 
-import { ReviewPlugin } from '../../plugin';
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
-import { ObjectHistory } from './ObjectHistory';
+import { ObjectHistory } from './ObjectHistory.tsx';
 
 /**
  * Minimal versioned host: any object holding a root Text and a history qualifies — the panel is
@@ -79,9 +80,9 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [TestDoc, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -98,7 +99,7 @@ const meta = {
                 root.content = 'alpha\nbravo\n';
               });
               Version.create(doc, { name: 'Second draft', target: root });
-              Obj.update(doc, () => {
+              Obj.update(doc, (doc) => {
                 History.ensure(doc).branches.push(
                   Branch.make({ name: 'draft', key: BRANCH_KEY, parent: Ref.make(root), anchor: [] }),
                 );

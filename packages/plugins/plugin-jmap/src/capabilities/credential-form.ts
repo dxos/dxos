@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { Jmap } from '../apis';
-import { JMAP_DEFAULT_HOST } from '../constants';
-import { JmapApiError } from '../errors';
-import { JmapCredentials } from '../services';
+import { Jmap } from '#apis';
+import { JmapCredentials } from '#services';
+
+import { JMAP_DEFAULT_HOST } from '../constants.ts';
+import { JmapApiError, JmapCredentialInvalidError } from '../errors.ts';
 
 /**
  * Manual-credential form for the JMAP connector. JMAP auth is a server-issued Bearer API token
@@ -23,15 +23,15 @@ import { JmapCredentials } from '../services';
  * email, and token are collected directly.
  */
 const JmapCredentialFormSchema = Schema.Struct({
-  host: Schema.String.annotations({
+  host: Schema.String.annotate({
     title: 'Server',
     description: 'JMAP server host. The session is discovered at https://<host>/.well-known/jmap.',
   }),
-  email: Schema.String.annotations({
+  email: Schema.String.annotate({
     title: 'Email',
     description: 'Your email address / username on the JMAP server.',
   }),
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API token',
     description: 'A JMAP API token, sent as a Bearer credential.',
   }),
@@ -49,10 +49,10 @@ export const jmapCredentialForm: ConnectorSpec.CredentialForm<JmapCredentialForm
       const host = values.host.trim();
       const token = values.token.trim();
       if (host.length === 0) {
-        return yield* Effect.fail(new Error('Server host is required.'));
+        return yield* Effect.fail(new JmapCredentialInvalidError({ message: 'Server host is required.' }));
       }
       if (token.length === 0) {
-        return yield* Effect.fail(new Error('API token is required.'));
+        return yield* Effect.fail(new JmapCredentialInvalidError({ message: 'API token is required.' }));
       }
       yield* fetchSession(host, token);
     }),
@@ -105,9 +105,11 @@ const fetchSession = (host: string, token: string) =>
     Effect.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromValues({ host, token }))),
     Effect.mapError((error) =>
       error instanceof JmapApiError && error.status === 401
-        ? new Error('The JMAP server rejected the token (401). Check the host and API token and try again.')
+        ? new JmapCredentialInvalidError({
+            message: 'The JMAP server rejected the token (401). Check the host and API token and try again.',
+          })
         : error instanceof Error
           ? error
-          : new Error(String(error)),
+          : new JmapCredentialInvalidError({ message: String(error) }),
     ),
   );

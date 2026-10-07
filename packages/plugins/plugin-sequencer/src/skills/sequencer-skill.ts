@@ -6,8 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as Score from '../types/Score';
-import * as ScoreOperation from '../types/ScoreOperation';
+import { Score, ScoreOperation } from '#types';
 
 const make = () =>
   Skill.make({

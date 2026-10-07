@@ -1,0 +1,207 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Theme from '@dxos/react-ui/Theme';
+import { mx } from '@dxos/ui-theme';
+
+import { meta } from '#meta';
+
+import { useExpandPath } from '../hooks.ts';
+
+export type NavBranchProps = {
+  id: string;
+};
+
+/** Reported while a branch's groups are still unexpanded: nothing is yet known to be empty. */
+const NO_EMPTY_GROUPS: ReadonlySet<string> = new Set();
+
+/**
+ * Ids of the given nodes that are section groups with nothing under them.
+ *
+ * A group node (Communications, Content, Assistant, System, …) is a label over the children other
+ * plugins hang off it, not a destination of its own — desktop's navtree drops an empty one outright
+ * (`TreeItem`), and mobile has to do the same or the row opens a permanently blank panel. Whether a
+ * group is empty is a property of the running plugin set (no inbox plugin leaves Communications with
+ * no contributor at all) and of the space's contents (the Assistant sections appear with the first
+ * chat), so it is read reactively rather than decided once.
+ */
+const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.Node[]): ReadonlySet<string> => {
+  const groupIds = useMemo(
+    () => nodes.filter((node) => node.properties.disposition === 'group').map((node) => node.id),
+    [nodes],
+  );
+  // Identity-stable key: `groupIds` is a fresh array whenever the graph re-emits this branch's
+  // children, and rebuilding the atom on every emission would drop its subscriptions each time.
+  const groupKey = groupIds.join('\n');
+  const [expandedKey, setExpandedKey] = useState<string>();
+
+  // Groups sit one level below this branch, so `useExpandPath` does not reach their children; without
+  // expanding them their connectors never run and every group would read as empty. This has to be a
+  // layout effect: `expandSync` runs every matching builder extension before it returns, so expanding
+  // here and flipping the gate below lands the settled row set in the re-render React flushes before
+  // the browser paints, instead of a frame later.
+  useLayoutEffect(() => {
+    for (const groupId of groupKey.split('\n').filter(Boolean)) {
+      AppGraph.expandSync(graph, groupId, 'child');
+    }
+    setExpandedKey(groupKey);
+  }, [graph, groupKey]);
+
+  const emptyIdsAtom = useMemo(
+    () =>
+      Atom.make(
+        (get) =>
+          new Set(
+            groupKey
+              .split('\n')
+              .filter(Boolean)
+              .filter((groupId) => get(graph.connections(groupId, 'child')).length === 0),
+          ),
+      ),
+    [graph, groupKey],
+  );
+
+  const emptyIds = useAtomValue(emptyIdsAtom);
+
+  // An unexpanded group reads as childless whether or not it has children, so filtering on that first
+  // read would drop a populated row and pop it back in once the expansion landed. Unknown counts as
+  // visible until this branch's own groups have been expanded, which keeps the guarantee independent
+  // of whether a connector happens to resolve synchronously.
+  return expandedKey === groupKey ? emptyIds : NO_EMPTY_GROUPS;
+};
+
+/**
+ * Renders the children of a graph branch node as a searchable mosaic list.
+ * Used for any node with `role: 'branch'` or a workspace disposition, including
+ * spaces, collection sections, type sections, and schema nodes.
+ */
+export const NavBranch = ({ id }: NavBranchProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
+
+  useExpandPath(id);
+
+  const children = GraphHooks.useConnections(graph, id, 'child');
+  const emptyGroupIds = useEmptyGroupIds(graph, children);
+
+  const visibleChildren = useMemo(
+    () => children.filter((node) => node.properties.disposition !== 'hidden' && !emptyGroupIds.has(node.id)),
+    [children, emptyGroupIds],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: visibleChildren,
+    extract: (child) => Theme.toLocalizedString(child.properties.label, t),
+  });
+
+  return (
+    <SearchPanel onSearch={handleSearch}>
+      <Mosaic.Container asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport>
+            {results.length === 0 ? (
+              // A branch with no openable children is a legitimate state (an unpopulated section, or a
+              // search that matched nothing); rendering nothing at all reads as a broken screen.
+              <Status.Empty>
+                {t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}
+              </Status.Empty>
+            ) : (
+              <Mosaic.Stack
+                classNames='py-2 gap-1'
+                draggable={false}
+                items={results}
+                getId={(item) => item.id}
+                Tile={NavBranchTile}
+              />
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    </SearchPanel>
+  );
+};
+
+const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
+  const data = props.data;
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const ref = useRef<HTMLDivElement>(null);
+  const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
+  const isSelected = selectedValue === data.id;
+
+  const name = Theme.toLocalizedString(data.properties.label, t);
+  const titleId = UiHooks.useId('mobile-tile');
+
+  const handleSelect = useCallback(
+    () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
+    [invokePromise, data.id],
+  );
+
+  // Register this item with the search context.
+  useEffect(() => {
+    if (ref.current) {
+      registerItem(data.id, ref.current, handleSelect);
+    }
+
+    return () => unregisterItem(data.id);
+  }, [data.id, handleSelect, registerItem, unregisterItem]);
+
+  // Scroll into view when selected.
+  useEffect(() => {
+    if (isSelected && ref.current) {
+      ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [isSelected]);
+
+  return (
+    <Card.Root
+      ref={ref}
+      role='button'
+      tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
+      data-selected={isSelected}
+      // The search list auto-selects the first row for keyboard nav; a coarse (touch) pointer has no
+      // keyboard focus to reflect, so the highlight would just read as an unexplained random row.
+      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface pointer-coarse:bg-transparent')}
+      onClick={handleSelect}
+    >
+      <Card.Header>
+        {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+            `Card.Title` are what keep the icon, label, and caret on one row. */}
+        <Layout.Block>
+          <Avatar.Root
+            icon={data.properties.icon}
+            hue={Avatar.toAvatarHue(data.properties.hue)}
+            hueVariant='transparent'
+            variant='square'
+            fallback={name}
+            aria-labelledby={titleId}
+          />
+        </Layout.Block>
+        <Card.Title id={titleId}>{name}</Card.Title>
+        <Layout.Block rail='end'>
+          <Icon.Icon icon='ph--caret-right--regular' />
+        </Layout.Block>
+      </Card.Header>
+    </Card.Root>
+  );
+};

@@ -1,0 +1,157 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import { Tabs as TabsPrimitive, useTabsContext } from '@ark-ui/react/tabs';
+import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { composable, composableProps } from '../../../util/slots.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { Button } from '../Button/Button.tsx';
+
+type TabsOrientation = 'horizontal' | 'vertical';
+
+/** How the selected trigger is filled: the input surface, or the accent (e.g. while the host has attention). */
+type TabsSelectedVariant = 'default' | 'primary';
+
+//
+// Root
+//
+
+type TabsRootProps = ThemedClassName<
+  Omit<TabsPrimitive.RootProps, 'value' | 'defaultValue' | 'onValueChange' | 'lazyMount' | 'unmountOnExit'>
+> & {
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  size?: Size;
+  selectedVariant?: TabsSelectedVariant;
+  /** Keep inactive panels mounted (hidden); by default they unmount, so their content re-runs its effects on show. */
+  keepMounted?: boolean;
+};
+
+/**
+ * Ark's tabs: a list of triggers over (horizontal) or beside (vertical) the selected content. A trigger activates on
+ * click or Enter (`activationMode='manual'`); arrow keys move focus along the list. Composable, so a host's `asChild`
+ * (e.g. `Panel.Root`) merges its className and ref onto the tabs element.
+ */
+const TabsRoot = composable<HTMLDivElement, Omit<TabsRootProps, 'classNames'>>(
+  (
+    {
+      value,
+      defaultValue,
+      onValueChange,
+      orientation = 'horizontal',
+      activationMode = 'manual',
+      size,
+      selectedVariant = 'default',
+      keepMounted = false,
+      ...props
+    },
+    forwardedRef,
+  ) => (
+    <TabsPrimitive.Root
+      {...composableProps(props, { classNames: recipes.tabs() })}
+      {...(value !== undefined && { value })}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange && (({ value }) => onValueChange(value))}
+      orientation={orientation}
+      activationMode={activationMode}
+      lazyMount={!keepMounted}
+      unmountOnExit={!keepMounted}
+      data-size={size}
+      data-selected-variant={selectedVariant}
+      ref={forwardedRef}
+    />
+  ),
+);
+
+TabsRoot.displayName = 'Tabs.Root';
+
+//
+// List
+//
+
+type TabsListProps = ThemedClassName<TabsPrimitive.ListProps>;
+
+/** The tablist: a row (or column) of triggers that scrolls along its axis when they overflow. */
+const TabsList = forwardRef<HTMLDivElement, TabsListProps>(({ classNames, ...props }, forwardedRef) => (
+  <TabsPrimitive.List {...props} className={mx(recipes.tabsList(), classNames)} ref={forwardedRef} />
+));
+
+TabsList.displayName = 'Tabs.List';
+
+//
+// Trigger
+//
+
+type TabsTriggerProps =
+  | (ComponentPropsWithoutRef<typeof Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
+  | (Omit<TabsPrimitive.TriggerProps, 'asChild'> & { asChild: true });
+
+/**
+ * A ghost Button that fills when selected; takes Button's content props (`icon`, `label`, `iconOnly`). With `asChild`
+ * the child element is the tab as it is (e.g. a rail of avatars), taking only the tab's state and behaviour.
+ */
+const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((props, forwardedRef) => {
+  if (props.asChild) {
+    return <TabsPrimitive.Trigger {...props} ref={forwardedRef} />;
+  }
+
+  const { value, disabled, classNames, variant = 'ghost', asChild: _asChild, ...buttonProps } = props;
+  return (
+    <TabsPrimitive.Trigger value={value} disabled={disabled} asChild>
+      <Button {...buttonProps} variant={variant} classNames={[recipes.tabsTrigger(), classNames]} ref={forwardedRef} />
+    </TabsPrimitive.Trigger>
+  );
+});
+
+TabsTrigger.displayName = 'Tabs.Trigger';
+
+//
+// Content
+//
+
+type TabsContentProps = ThemedClassName<TabsPrimitive.ContentProps>;
+
+const TabsContent = forwardRef<HTMLDivElement, TabsContentProps>(({ classNames, ...props }, forwardedRef) => (
+  <TabsPrimitive.Content {...props} className={mx(recipes.tabsContent(), classNames)} ref={forwardedRef} />
+));
+
+TabsContent.displayName = 'Tabs.Content';
+
+//
+// Indicator
+//
+
+type TabsIndicatorProps = ThemedClassName<TabsPrimitive.IndicatorProps>;
+
+/** An underline that slides to the selected trigger (Ark measures it into `--left`/`--width`). */
+const TabsIndicator = forwardRef<HTMLDivElement, TabsIndicatorProps>(({ classNames, ...props }, forwardedRef) => (
+  <TabsPrimitive.Indicator {...props} className={mx(recipes.tabsIndicator(), classNames)} ref={forwardedRef} />
+));
+
+TabsIndicator.displayName = 'Tabs.Indicator';
+export type {
+  TabsContentProps as ContentProps,
+  TabsIndicatorProps as IndicatorProps,
+  TabsListProps as ListProps,
+  TabsRootProps as RootProps,
+  TabsTriggerProps as TriggerProps,
+};
+
+export {
+  TabsContent as Content,
+  TabsIndicator as Indicator,
+  TabsList as List,
+  TabsRoot as Root,
+  TabsTrigger as Trigger,
+  useTabsContext as useContext,
+};
+export type { TabsOrientation as Orientation, TabsSelectedVariant as SelectedVariant };

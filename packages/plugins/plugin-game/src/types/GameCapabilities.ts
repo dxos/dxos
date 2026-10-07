@@ -11,7 +11,7 @@ import type { Database, Obj, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import * as Game from './Game';
+import * as Game from './Game.ts';
 
 /**
  * A game variant contribution. Each variant plugin (chess, tic-tac-toe, ...)
@@ -39,7 +39,7 @@ export type GameVariant = {
    * Optional Effect Schema rendered as a form after the user picks the variant.
    * To use a `Type.Type` entity, extract its schema first via `Type.getSchema(...)`.
    */
-  inputSchema?: Schema.Schema.AnyNoContext;
+  inputSchema?: Schema.Codec<any, any>;
   /** Roles a player may take in this variant (e.g. ['white', 'black']). */
   roles: readonly string[];
   /**

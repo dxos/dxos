@@ -11,7 +11,7 @@ import * as NodeCrypto from 'node:crypto';
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { type DatabaseImpl } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -44,7 +44,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
   never,
   never
 > =>
-  Layer.scopedContext(
+  Layer.effectContext(
     Effect.gen(function* () {
       types ??= [];
       types.push(...DEFAULT_TYPES);

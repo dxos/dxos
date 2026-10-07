@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
+import type * as Tool from 'effect/ai/Tool';
 import * as Context from 'effect/Context';
 import type * as Schema from 'effect/Schema';
 
@@ -14,10 +14,9 @@ export interface FormattingOptions<Tool extends Tool.Any> {
 /**
  * Formats the tool call or result into a string.
  */
-export class ToolFormatter extends Context.Tag('@dxos/ai/ToolFormatter')<
-  ToolFormatter,
-  FormattingOptions<Tool.Any>
->() {}
+export class ToolFormatter extends Context.Service<ToolFormatter, FormattingOptions<Tool.Any>>()(
+  '@dxos/ai/ToolFormatter',
+) {}
 
 export const assign =
   <Tool extends AnyTool>(options: FormattingOptions<Tool>) =>
@@ -27,9 +26,9 @@ export const assign =
 type AnyTool = Tool.Tool<
   string,
   {
-    readonly parameters: Tool.AnyStructSchema;
-    readonly success: Schema.Schema.Any;
-    readonly failure: Schema.Schema.All;
+    readonly parameters: Schema.Top;
+    readonly success: Schema.Top;
+    readonly failure: Schema.Top;
     readonly failureMode: Tool.FailureMode;
   },
   any

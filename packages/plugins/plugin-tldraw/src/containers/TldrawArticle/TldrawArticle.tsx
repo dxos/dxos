@@ -4,27 +4,37 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useActions } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex, Panel } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Util from '@dxos/react-ui/Util';
 import { isTauri } from '@dxos/util';
 
 import { CanvasComponent } from '#components';
-
-import * as TldrawCapabilities from '../../types/TldrawCapabilities';
+import { TldrawCapabilities } from '#types';
 
 export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
-export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }: TldrawArticleProps) => {
+export const TldrawArticle = ({
+  role,
+  attendableId,
+  drawing,
+  canvas,
+  extrinsic,
+  selection,
+  onSelectionChange,
+  onActivate,
+}: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
-  const settings = useAtomCapability(TldrawCapabilities.Settings);
+  const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
   const section = role === AppSurface.Section.role;
@@ -35,8 +45,8 @@ export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }
   };
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
-  const { graph } = useAppGraph();
-  const actions = useActions(graph, id);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const actions = GraphHooks.useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
   const content = (
@@ -46,11 +56,15 @@ export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }
       classNames='dx-attention-surface'
       canvas={canvas}
       settings={settings}
+      onSettingsChange={updateSettings}
       // Section embeds render read-only (no controls/grid) until focused, on every platform; the
       // isTauri allowance (always-on UI) applies only to the full article/slide roles.
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
       hideUi={section ? !hasAttention : !hasAttention && !isTauri()}
       onThreadCreate={handleThreadCreate}
+      selection={selection}
+      onSelectionChange={onSelectionChange}
+      onActivate={onActivate}
       {...props}
     />
   );
@@ -60,20 +74,20 @@ export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }
   return section ? <Container fill={extrinsic}>{content}</Container> : <Article>{content}</Article>;
 };
 
-const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
-    <Panel.Content>{props.children}</Panel.Content>
+const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
+  <Panel.Root {...Util.composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
+    <Panel.Body>{props.children}</Panel.Body>
   </Panel.Root>
 ));
 
-const Container = composable<HTMLDivElement, PropsWithChildren<{ fill?: boolean }>>(
+const Container = Util.composable<HTMLDivElement, PropsWithChildren<{ fill?: boolean }>>(
   ({ fill, ...props }, forwardedRef) => (
-    <Flex
-      {...composableProps(props, { classNames: [fill ? 'h-full w-full' : 'aspect-square', 'overflow-hidden'] })}
+    <Layout.Flex
+      {...Util.composableProps(props, { classNames: [fill ? 'dx-fill' : 'aspect-square', 'overflow-hidden'] })}
       ref={forwardedRef}
     >
       {props.children}
-    </Flex>
+    </Layout.Flex>
   ),
 );
 

@@ -2,6 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './events';
-export * from './meta';
-export { HeyGenPlugin } from './plugin';
+export * as HeyGenEvents from './HeyGenEvents.ts';
+export * as HeyGenPlugin from './HeyGenPlugin.ts';

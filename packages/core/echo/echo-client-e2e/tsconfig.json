@@ -27,10 +27,16 @@
       "path": "../../../common/random"
     },
     {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
       "path": "../../../common/test-utils"
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../e2e/perf-harness"
     },
     {
       "path": "../../../sdk/types"
@@ -58,6 +64,9 @@
     },
     {
       "path": "../echo-protocol"
+    },
+    {
+      "path": "../index-core"
     }
   ]
 }

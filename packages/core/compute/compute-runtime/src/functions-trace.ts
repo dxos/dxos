@@ -132,7 +132,7 @@ export class InvocationTraceEndEvent extends Type.makeObject<InvocationTraceEndE
     // TODO(burdon): Remove ms suffix.
     timestamp: Schema.Number,
 
-    outcome: Schema.Enums(InvocationOutcome),
+    outcome: Schema.Enum(InvocationOutcome),
 
     error: Schema.optional(SerializedError),
   }),
@@ -144,7 +144,7 @@ export const TraceEventLog = Schema.Struct({
   timestamp: Schema.Number,
   level: Schema.String,
   message: Schema.String,
-  context: Schema.optional(Schema.Object),
+  context: Schema.optional(Schema.ObjectKeyword),
 });
 
 export class TraceEvent extends Type.makeObject<TraceEvent>(DXN.make('org.dxos.type.traceEvent', '0.1.0'))(

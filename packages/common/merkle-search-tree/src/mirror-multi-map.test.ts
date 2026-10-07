@@ -7,9 +7,9 @@ import { test } from 'vitest';
 
 import { range } from '@dxos/util';
 
-import type { ActorID } from './common';
-import { MirrorMultiMap } from './mirror-multi-map';
-import { randomKey } from './testing';
+import type { ActorID } from './common.ts';
+import { MirrorMultiMap } from './mirror-multi-map.ts';
+import { randomKey } from './testing.ts';
 
 test('insert and diff', async ({ expect }) => {
   const map: MirrorMultiMap<string> = await MirrorMultiMap.new({ actor: 'peer1' as ActorID });

@@ -6,15 +6,18 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as Segment from '../../types/Segment';
+import { Segment } from '#types';
 
 /**
  * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile
@@ -61,7 +64,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
   const { segment, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(segment.id);
@@ -90,19 +93,19 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-subdued-separator'
+      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-separator-subtle'
       id={segment.id}
       data={data}
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef}>
+        <Card.Root border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Block>
-              <Icon icon={icon} classNames={iconStyles?.text} />
-            </Card.Block>
+            <Layout.Block>
+              <Icon.Icon icon={icon} classNames={iconStyles?.text} />
+            </Layout.Block>
             <Card.Title>{title}</Card.Title>
-            <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+            <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
           {flightDetails ? (
             <Card.Body>
@@ -119,15 +122,15 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
               <Card.Body>
                 {route && (
                   <Card.Row>
-                    <Card.Text variant='description'>{route}</Card.Text>
+                    <Card.Text variant='muted'>{route}</Card.Text>
                   </Card.Row>
                 )}
                 {date && (
                   <Card.Row>
-                    <Card.Block>
-                      <Icon icon='ph--calendar--regular' />
-                    </Card.Block>
-                    <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                    <Layout.Block>
+                      <Icon.Icon icon='ph--calendar--regular' />
+                    </Layout.Block>
+                    <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}
               </Card.Body>

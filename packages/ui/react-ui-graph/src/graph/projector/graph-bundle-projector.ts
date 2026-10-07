@@ -4,11 +4,11 @@
 
 import { type HierarchyNode, curveBundle, cluster as d3Cluster, hierarchy, lineRadial } from 'd3';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector.ts';
 
 export type GraphBundleProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the bundle (screen pixels). */
@@ -70,7 +70,7 @@ export class GraphBundleProjector<
     .radius((d) => d.radius)
     .angle((d) => d.angle);
 
-  protected override onUpdate(graph?: Graph.Any) {
+  protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
     this.doBundleLayout();

@@ -13,14 +13,21 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Input, Message, Panel, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
-export type ToolResultsProps = ThemedClassName<{
+export type ToolResultsProps = Util.ThemedClassName<{
   /**
    * Result data to render. Already-parsed values land in the table /
    * `Syntax.Root` as-is. For convenience, an MCP tool envelope shape
@@ -38,22 +45,20 @@ export type ToolResultsProps = ThemedClassName<{
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
-export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
+export const ToolResults = Util.composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, debug, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
-        {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
+      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
+        {state === 'loading' && <p className='p-3 text-sm text-fg-muted'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
-          <Message.Root valence='error'>
-            <Message.Content classNames='m-form-padding'>
-              {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
-              <Message.Body>{error instanceof Error ? error.message : String(error)}</Message.Body>
-            </Message.Content>
-          </Message.Root>
+          <Banner.Root valence='error'>
+            {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
+            <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
+          </Banner.Root>
         )}
-        {state === 'empty' && <Empty label={t('no-result.message')} />}
+        {state === 'empty' && <Status.Empty>{t('no-result.message')}</Status.Empty>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -83,7 +88,7 @@ ToolResults.displayName = 'ToolResults';
 const SKIP_KEYS = new Set(['location', 'metaLocation']);
 
 const ResultTable = ({ data }: { data: unknown }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   // Each row carries a synthetic id derived from its position in the source array. Stable
   // across filter changes (filter narrows the view, never re-orders), so `Listbox.Item`
   // bindings can't drift to the wrong logical row.
@@ -110,44 +115,42 @@ const ResultTable = ({ data }: { data: unknown }) => {
   // both columns and uses `grid-cols-subgrid` to inherit them, so a
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
-    <Listbox.Root>
+    <Listbox.Root items={filtered.map((item) => ({ value: item.id, label: item.id }))}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>{t('filter-results.placeholder')}</Input.Label>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
+              <Input.Root
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Empty label={t('no-matching-rows.message')} />
+                <Status.Empty>{t('no-matching-rows.message')}</Status.Empty>
               ) : (
-                <Listbox.Viewport>
-                  <Listbox.Content
-                    aria-label={t('tool-result.label')}
-                    classNames='grid grid-cols-[max-content_1fr] gap-x-3'
-                  >
-                    {filtered.map((item) => (
-                      <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
-                        <KeyValueTable record={item.value} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
+                <Listbox.Content
+                  aria-label={t('tool-result.label')}
+                  classNames='grid grid-cols-[max-content_1fr] gap-x-3'
+                >
+                  {filtered.map((item) => (
+                    <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
+                      <KeyValueTable record={item.value} />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Listbox.Root>
   );
@@ -175,21 +178,21 @@ const itemMatchesFilter = (item: unknown, needle: string): boolean => {
 // imply term-and-definition semantics these arbitrary record fields don't
 // have, so divs are the honest tag here.
 const KeyValueTable = ({ record }: { record: unknown }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   if (record === null || typeof record !== 'object') {
     return <div className='col-span-2 font-mono text-xs'>{formatValue(record)}</div>;
   }
 
   const entries = Object.entries(record as Record<string, unknown>).filter(([key]) => !SKIP_KEYS.has(key));
   if (entries.length === 0) {
-    return <div className='col-span-2 text-sm italic text-description'>{t('no-displayable-fields.message')}</div>;
+    return <div className='col-span-2 text-sm italic text-fg-muted'>{t('no-displayable-fields.message')}</div>;
   }
 
   return (
     <>
       {entries.map(([key, value]) => (
         <Fragment key={key}>
-          <div className='flex items-center justify-end font-mono text-xs text-description'>{key}</div>
+          <div className='flex items-center justify-end font-mono text-xs text-fg-muted'>{key}</div>
           <div className='text-sm truncate'>{formatValue(value)}</div>
         </Fragment>
       ))}

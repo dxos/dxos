@@ -4,9 +4,10 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { Input as NaturalInput, type TextInputProps as NaturalTextInputProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 
-export type TextInputProps = NaturalTextInputProps & {
+export type InputProps = Input.RootProps & {
   validationMessage?: string;
   label?: ReactNode;
   disabled?: boolean;
@@ -17,14 +18,12 @@ export type TextInputProps = NaturalTextInputProps & {
 /**
  * @deprecated use react-ui directly.
  */
-export const TextInput = ({ validationMessage, label, ...props }: TextInputProps) => {
+export const TextInput = ({ validationMessage, label, ...props }: InputProps) => {
   return (
-    <NaturalInput.Root>
-      <NaturalInput.Label>{label}</NaturalInput.Label>
-      <NaturalInput.TextInput {...props} classNames='py-2 mt-2 text-center' />
-      <NaturalInput.DescriptionAndValidation>
-        {validationMessage && <NaturalInput.Validation>{validationMessage}</NaturalInput.Validation>}
-      </NaturalInput.DescriptionAndValidation>
-    </NaturalInput.Root>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
+      <Input.Root {...props} classNames='py-2 mt-2 text-center' />
+      {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+    </Field.Root>
   );
 };

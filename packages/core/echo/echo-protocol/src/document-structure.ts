@@ -6,11 +6,11 @@ import { invariant } from '@dxos/invariant';
 import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
-import { type RawString } from './automerge';
-import type { ForeignKey } from './foreign-key';
-import { type EncodedReference, isEncodedReference } from './reference';
-import { type SpaceDocVersion } from './space-doc-version';
-import { createIdFromSpaceKey } from './space-id';
+import { type RawString } from './automerge.ts';
+import type { ForeignKey } from './foreign-key.ts';
+import { type EncodedReference, isEncodedReference } from './reference.ts';
+import { type SpaceDocVersion } from './space-doc-version.ts';
+import { createIdFromSpaceKey } from './space-id.ts';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -229,6 +229,18 @@ export const EntityStructure = Object.freeze({
     return object.system?.deleted ?? false;
   },
 
+  getConvergenceKey: (object: EntityStructure): string | undefined => {
+    return object.meta?.convergenceKey;
+  },
+
+  getMergedInto: (object: EntityStructure): EntityId | undefined => {
+    return object.system?.mergedInto;
+  },
+
+  getMergedFrom: (object: EntityStructure): EntityId[] => {
+    return object.system?.mergedFrom ?? [];
+  },
+
   getRelationSource: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.source;
   },
@@ -346,7 +358,7 @@ export type EntityMeta = {
   tags?: (EncodedReference | string)[];
 
   /**
-   * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
+   * Fully-qualified registry key for the object (FQN format, e.g. `com.example.type.foo`).
    * Identifies the canonical registry entry the object instance was created from.
    */
   key?: string;
@@ -356,6 +368,17 @@ export type EntityMeta = {
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version?: string;
+
+  /**
+   * Caller-supplied domain identity, unique within a space: two entities carrying the same
+   * convergence key are the same entity and are merged into one.
+   *
+   * Opaque to the storage engine — callers that need generations encode them in the string
+   * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
+   * Distinct from {@link key}/{@link version}, which record the registry entry an instance was
+   * created from (provenance, not identity).
+   */
+  convergenceKey?: string;
 
   /**
    * Dictionary of annotations to this entity.
@@ -383,7 +406,7 @@ export type EntitySystem = {
    * entity instantiates.
    *
    * - For `kind === 'object'` / `'relation'` instances, this is the URI of the
-   *   user-defined schema the entity was created from (e.g. `dxn:org.example.Person:1.0.0`).
+   *   user-defined schema the entity was created from (e.g. `dxn:com.example.Person:1.0.0`).
    * - For `kind === 'type'` entities (persisted Type.Type meta-instances) this
    *   is always the URI of the `TypeSchema` meta-schema itself
    *   (`dxn:org.dxos.type.schema:0.1.0`). The kind that the meta-instance
@@ -418,6 +441,37 @@ export type EntitySystem = {
    * Survives compaction / migrations (unlike automerge change timestamps).
    */
   createdAt?: number;
+
+  /**
+   * Id of the entity this one was merged into, set on the loser of a convergence-key merge.
+   *
+   * The loser is tombstoned but keeps replicating, so late peers can run the same merge and
+   * follow the redirect. Every edge points at a smaller id, so chains are finite and acyclic
+   * and terminate at the global minimum.
+   */
+  mergedInto?: EntityId;
+
+  /**
+   * The loser's automerge heads at the moment it was merged away.
+   *
+   * A later pass diffs the loser from these heads to fold in edits made by a peer that was
+   * offline during the merge, instead of re-running the field-wise merge (which prefers the
+   * smallest-id candidate and would discard those edits).
+   */
+  mergedAtHeads?: string[];
+
+  /**
+   * Ids of the entities merged into this one, set on the winner of a convergence-key merge.
+   *
+   * The reverse edge of {@link mergedInto}, stored rather than derived: finding it the other way
+   * means scanning for entities whose `mergedInto` points here, which no index supports. Holding
+   * it forward also lets a loaded winner reach its absorbed entities directly — what the
+   * straggler fold needs when the merge is driven lazily.
+   *
+   * Transitively closed: when a chain collapses, the surviving entity absorbs the losers' own
+   * lists too, so this always names every entity that folded into this one.
+   */
+  mergedFrom?: EntityId[];
 };
 
 /**

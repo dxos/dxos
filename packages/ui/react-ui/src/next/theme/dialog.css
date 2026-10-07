@@ -1,0 +1,106 @@
+/*
+ * Dialog: a portalled `raised` surface over a scrim. Header, Body and Footer share one gutter, so the title, the
+ * body's content track and the actions start on the same edge; the Body alone scrolls.
+ */
+
+@layer dx-components {
+  .dx-dialog-backdrop {
+    z-index: var(--dx-layer-dialog);
+    position: fixed;
+    inset: 0;
+    background: var(--color-scrim-surface);
+    /* The current dialog's frosted scrim: the page recedes rather than only darkening. */
+    backdrop-filter: blur(var(--blur-xs, 4px));
+  }
+
+  .dx-dialog-positioner {
+    z-index: var(--dx-layer-dialog);
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dx-dialog-positioner[data-placement='end'] {
+    align-items: flex-end;
+    padding-block-end: 1rem;
+  }
+  .dx-dialog-positioner[data-placement='start'] {
+    align-items: flex-start;
+    padding-block-start: calc(env(safe-area-inset-top) + 1.2rem);
+  }
+  /* Without a scrim the page stays usable: only the dialog takes pointer events. */
+  .dx-dialog-positioner[data-scrim='none'] {
+    pointer-events: none;
+  }
+  .dx-dialog-positioner[data-scrim='none'] > * {
+    pointer-events: auto;
+  }
+
+  .dx-dialog {
+    --dx-dialog-width: min(32rem, 100% - 2rem);
+    --dx-dialog-gutter: var(--dx-gutter-md);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: var(--dx-dialog-width);
+    max-height: calc(100dvh - 2rem);
+    padding-block-start: var(--dx-gap-size);
+    overflow: hidden;
+    border-radius: var(--radius-md, 0.375rem);
+    /* Set off from the page it covers: a hairline edge and a deep shadow, as the current dialog. */
+    border: 1px solid var(--color-separator);
+    box-shadow: var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.5));
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    /* The dialog is the pane (decision 5): its header, body and footer collapse at the same width. */
+    container-type: inline-size;
+  }
+  .dx-dialog:focus {
+    outline: none;
+  }
+
+  .dx-dialog-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
+    padding-inline: var(--dx-dialog-gutter);
+  }
+
+  /* The dialog's heading, at the current dialog's text-xl; its line stays within the header's block at every size. */
+  .dx-dialog-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--text-xl);
+    line-height: min(var(--text-xl--line-height), var(--dx-block-size));
+    font-weight: 500;
+  }
+
+  .dx-dialog-description {
+    margin: 0;
+    color: var(--color-fg-muted);
+  }
+  /* Outside the Body it has no content track, so it takes the shared gutter itself. */
+  .dx-dialog > .dx-dialog-description {
+    padding-inline: var(--dx-dialog-gutter);
+  }
+
+  .dx-dialog-body {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* The actions sit as far from the bottom edge as from the sides. */
+  .dx-dialog-footer {
+    flex-shrink: 0;
+    padding-inline: var(--dx-dialog-gutter);
+    padding-block-end: var(--dx-dialog-gutter);
+  }
+  /* A footer a step fills only sometimes (actions portalled in) takes no space while empty. */
+  .dx-dialog-footer:empty {
+    display: none;
+  }
+}

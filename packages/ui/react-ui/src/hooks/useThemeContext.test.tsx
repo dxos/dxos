@@ -6,9 +6,9 @@ import { renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { ThemeProvider } from '../primitives';
-import { defaultTx } from '../theme';
-import { useThemeContext } from './useThemeContext';
+import * as Theme from '../providers/ThemeProvider/Theme.tsx';
+import { defaultTx } from '../theme/defaultTheme.ts';
+import { useThemeContext } from './useThemeContext.ts';
 
 describe('useThemeContext', () => {
   // Error-reporting surfaces (e.g. the fatal dialog) must be able to render even
@@ -22,9 +22,9 @@ describe('useThemeContext', () => {
 
   test('returns the provider value when present', () => {
     const wrapper = ({ children }: PropsWithChildren) => (
-      <ThemeProvider tx={defaultTx} themeMode='light'>
+      <Theme.Provider tx={defaultTx} themeMode='light'>
         {children}
-      </ThemeProvider>
+      </Theme.Provider>
     );
     const { result } = renderHook(() => useThemeContext(), { wrapper });
     expect(result.current.tx).toBe(defaultTx);

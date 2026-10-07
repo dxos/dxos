@@ -1,0 +1,12 @@
+{
+  "name": "@fixture/subpath-nested",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "source": "./src/index.ts" },
+    "./Alpha": { "source": "./src/types/Alpha.ts" },
+    "./Beta": { "source": "./src/types/Beta.ts" },
+    "./Gamma": { "source": "./src/types/Gamma.ts" }
+  }
+}

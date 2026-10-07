@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
-import * as Person from './Person';
+import * as Person from './Person.ts';
 
 export class HasRelationship extends Type.makeRelation<HasRelationship>(
   DXN.make('org.dxos.relation.hasRelationship', '0.1.0'),
@@ -18,11 +18,11 @@ export class HasRelationship extends Type.makeRelation<HasRelationship>(
 })(
   Schema.Struct({
     id: Obj.ID,
-    kind: Schema.String.annotations({
+    kind: Schema.String.annotate({
       description: 'The kind of relationship.',
       examples: ['friend', 'colleague', 'family', 'parent', 'spouse'],
     }),
-  }).annotations({
+  }).annotate({
     description: 'A relationship between two people.',
   }),
 ) {}

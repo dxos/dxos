@@ -7,12 +7,14 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants';
+import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants.ts';
 
 export type DiscordChannel = {
   name: string;
@@ -125,7 +127,7 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
@@ -138,7 +140,7 @@ const Header = () => {
         <DXOSHorizontalType className='h-10 w-auto fill-current' />
       </a>
 
-      <div className='text-xs text-description'>
+      <div className='text-xs text-fg-muted'>
         {unavailable
           ? t('discord-unavailable.message')
           : data
@@ -156,7 +158,7 @@ const Channels = () => {
   }
 
   return (
-    <nav className='border-b border-subdued-separator'>
+    <nav className='border-b border-separator-subtle'>
       <ul className='flex flex-col p-1'>
         {channels.map((channel) => (
           <li key={channel.id}>
@@ -166,7 +168,7 @@ const Channels = () => {
               rel='noopener noreferrer'
               className='flex items-center gap-1 px-2 py-1 rounded-sm text-sm hover:bg-hover-surface'
             >
-              <span className='text-description'>#</span>
+              <span className='text-fg-muted'>#</span>
               <span className='truncate'>{channel.name}</span>
             </a>
           </li>
@@ -177,9 +179,9 @@ const Channels = () => {
 };
 
 const STATUS_RING: Record<WidgetMember['status'], string> = {
-  online: 'bg-emerald-500',
-  idle: 'bg-amber-400',
-  dnd: 'bg-rose-500',
+  online: 'bg-success-bg',
+  idle: 'bg-warning-bg',
+  dnd: 'bg-error-bg',
 };
 
 const MemberRow = ({ member }: { member: WidgetMember }) => (
@@ -189,7 +191,7 @@ const MemberRow = ({ member }: { member: WidgetMember }) => (
       <span
         className={mx(
           'absolute -bottom-0.5 -end-0.5 size-2 rounded-full ring-2 ring-base-surface',
-          STATUS_RING[member.status] ?? 'bg-neutral-400',
+          STATUS_RING[member.status] ?? 'bg-neutral-surface',
         )}
       />
     </div>
@@ -225,9 +227,7 @@ const Content = () => {
           {teamMembers.map((member) => (
             <MemberRow key={`${member.id}-${member.username}`} member={member} />
           ))}
-          {hasSeparator && (
-            <li role='separator' aria-hidden='true' className='my-1 border-t border-subdued-separator' />
-          )}
+          {hasSeparator && <li role='separator' aria-hidden='true' className='my-1 border-t border-separator-subtle' />}
           {otherMembers.map((member) => (
             <MemberRow key={`${member.id}-${member.username}`} member={member} />
           ))}
@@ -238,14 +238,14 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { data } = useWidgetContext();
   if (!data?.instant_invite) {
     return null;
   }
 
   return (
-    <IconButton
+    <Button.Root
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

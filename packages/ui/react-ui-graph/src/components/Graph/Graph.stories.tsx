@@ -4,20 +4,23 @@
 
 import '../../../styles/graph.css';
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Graph, type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
-import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import type * as GraphModel from '@dxos/graph/GraphModel';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Popover from '@dxos/react-ui/Popover';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
-import { Pulsar } from '../../fx';
+import { Pulsar } from '../../fx/index.ts';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
@@ -30,11 +33,18 @@ import {
   type GraphRadialProjectorOptions,
   GraphRelationalProjector,
   type GraphRelationalProjectorOptions,
-} from '../../graph';
-import { type SVGContext } from '../../hooks';
-import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
-import { SVG, type SVGGridProps } from '../SVG';
-import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
+} from '../../graph/index.ts';
+import { type SVGContext } from '../../hooks/index.ts';
+import {
+  TestGraphModel,
+  type TestNode,
+  convertTreeToGraph,
+  createGraph,
+  createNode,
+  createTree,
+} from '../../testing/index.ts';
+import { SVG, type SVGGridProps } from '../SVG/index.ts';
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph.tsx';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 
@@ -53,8 +63,8 @@ type StoryArgs = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
-  graph: () => Graph.Any;
-  selectionMode?: SelectionMode;
+  graph: () => GraphModel.AnyData;
+  selectionMode?: SelectionModel.SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -78,10 +88,10 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
 
   // Models.
-  const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
-  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
+  const selection = useMemo(() => new SelectionModel.SelectionModel({ mode: selectionMode }), [selectionMode]);
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
     const graph = _graph?.();
-    return graph ? new TestGraphModel(registry, graph) : undefined;
+    return graph ? new TestGraphModel({ registry, graph }) : undefined;
   });
 
   // Projector.
@@ -160,7 +170,7 @@ const DefaultStory = ({
 
   const handleRegenerate = useCallback(() => {
     const graph = _graph?.();
-    setModel(graph ? new TestGraphModel(registry, graph) : undefined);
+    setModel(graph ? new TestGraphModel({ registry, graph }) : undefined);
   }, [_graph, registry]);
 
   const handleClear = useCallback(() => {
@@ -183,7 +193,7 @@ const DefaultStory = ({
     });
   }, []);
 
-  const active = useMemo(() => new SelectionModel(), []);
+  const active = useMemo(() => new SelectionModel.SelectionModel(), []);
   const handlePing = useCallback(() => {
     for (const id of active.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
@@ -204,8 +214,13 @@ const DefaultStory = ({
   }, [selection, active]);
 
   return (
-    <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('h-full w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+    <Popover.Root
+      open={!!popover}
+      onOpenChange={({ open: state }) => !state && setPopover(undefined)}
+      positioning={VirtualAnchor.virtualAnchor(popoverAnchorRef)}
+      autoFocus={false}
+    >
+      <div className={mx('dx-fill grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -256,14 +271,12 @@ const DefaultStory = ({
         )}
       </div>
 
-      <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>
+      <Popover.Content>
+        <Popover.Body>
           <Card.Root>
             <JsonHighlighter data={popover} classNames='text-xs my-form-padding px-form-padding bg-transparent' />
           </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
+        </Popover.Body>
       </Popover.Content>
     </Popover.Root>
   );
@@ -282,8 +295,8 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel.ReactiveGraphModel;
-  selection: SelectionModel;
+  model?: GraphModel.GraphModel;
+  selection: SelectionModel.SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
   onRefresh: () => void;
@@ -306,14 +319,14 @@ const Debug = ({
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root>
-        <IconButton onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
-        <IconButton onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <IconButton onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <IconButton onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <IconButton onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
-        <IconButton onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
-        <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
-        <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+        <Button.Root onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <Button.Root onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <Button.Root onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <Button.Root onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <Button.Root onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <Button.Root onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <Button.Root onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <Button.Root onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>

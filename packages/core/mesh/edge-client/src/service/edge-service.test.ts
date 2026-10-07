@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { EdgeServiceClient, EdgeServiceError } from './edge-service';
-import * as Image from './Image';
+import { EdgeServiceClient, EdgeServiceError } from './edge-service.ts';
+import * as Image from './Image.ts';
 
 const Echo = Schema.Struct({ value: Schema.String });
 
@@ -126,26 +126,29 @@ describe('EdgeServiceClient', () => {
   });
 });
 
+// Any absolute URL works: the fetch is stubbed.
+const IMAGE_SERVICE_URL = 'https://image.example.com';
+
 describe('Image', () => {
   test('upload posts file field to /upload and returns the hosted URL', async ({ expect }) => {
     const { fetch, calls } = stubFetch(() => json({ id: 'abc', url: 'https://cdn.test/abc/public' }));
-    const client = new EdgeServiceClient({ baseUrl: Image.DEFAULT_IMAGE_SERVICE_URL, fetch });
+    const client = new EdgeServiceClient({ baseUrl: IMAGE_SERVICE_URL, fetch });
     const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' });
 
     const result = await EffectEx.runPromise(Image.upload(client, blob, { filename: 'pic.png' }));
     expect(result).toEqual({ id: 'abc', url: 'https://cdn.test/abc/public' });
-    expect(calls[0].url).toBe(`${Image.DEFAULT_IMAGE_SERVICE_URL}/upload`);
+    expect(calls[0].url).toBe(`${IMAGE_SERVICE_URL}/upload`);
     const form = calls[0].init.body as FormData;
     expect(form.get('file')).toBeInstanceOf(Blob);
   });
 
   test('thumbnail posts to /thumbnail', async ({ expect }) => {
     const { fetch, calls } = stubFetch(() => json({ url: 'https://cdn.test/x/public' }));
-    const client = new EdgeServiceClient({ baseUrl: Image.DEFAULT_IMAGE_SERVICE_URL, fetch });
+    const client = new EdgeServiceClient({ baseUrl: IMAGE_SERVICE_URL, fetch });
     const blob = new Blob([new Uint8Array([1])], { type: 'image/png' });
 
     const result = await EffectEx.runPromise(Image.thumbnail(client, blob));
     expect(result.url).toBe('https://cdn.test/x/public');
-    expect(calls[0].url).toBe(`${Image.DEFAULT_IMAGE_SERVICE_URL}/thumbnail`);
+    expect(calls[0].url).toBe(`${IMAGE_SERVICE_URL}/thumbnail`);
   });
 });

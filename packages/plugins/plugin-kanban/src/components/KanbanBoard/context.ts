@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type ComponentType } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ProjectionModel } from '@dxos/schema';
 
-import * as KanbanConstants from '../../types/KanbanConstants';
-import * as KanbanLayout from '../../types/KanbanLayout';
+import { KanbanConstants, KanbanLayout } from '#types';
 
 const KANBAN_BOARD_NAME = 'KanbanBoard.Context';
 
@@ -46,7 +45,7 @@ export type KanbanBoardContextValue = {
   onCardRemove?: (card: Obj.Unknown) => void;
 };
 
-export const [KanbanBoardContext, useKanbanBoard] = createContext<KanbanBoardContextValue>(KANBAN_BOARD_NAME, {
+export const [KanbanBoardContext, useKanbanBoard] = Hooks.createContext<KanbanBoardContextValue>(KANBAN_BOARD_NAME, {
   kanbanId: 'never',
   projection: undefined,
   columnFieldPath: undefined,

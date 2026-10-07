@@ -6,26 +6,26 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SupportSurface from '@dxos/plugin-support/SupportSurface';
 
-import { AboutDialog, NativeRedirectDialog } from '../components';
-import { ABOUT_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants';
-import { ExemplarSettings, WelcomeContainer } from '../containers';
-import { meta } from '../meta';
+import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components/index.ts';
+import { AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
+import { WelcomeContainer } from '../containers/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: ExemplarSettings,
-      }),
-      Surface.create({
         id: 'welcome',
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
         component: WelcomeContainer,
+      }),
+      Surface.create({
+        id: 'authorizingDevice',
+        filter: AppSurface.component(AppSurface.Dialog, AUTHORIZING_DEVICE_DIALOG),
+        component: AuthorizingDeviceDialog,
       }),
       Surface.create({
         id: 'nativeRedirect',
@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'aboutDialog',
-        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
+        filter: AppSurface.component(AppSurface.Dialog, SupportSurface.ABOUT_DIALOG),
         component: AboutDialog,
       }),
     ]),

@@ -3,11 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as Terra from './types/Terra';
+import { Terra, TerraObject } from '#types';
 
 export const translations = [
   {
@@ -23,6 +22,17 @@ export const translations = [
         'delete-object.label': 'Delete Terra world',
         'object-deleted.label': 'Terra world deleted',
       },
+      [Type.getTypename(TerraObject.TerraObject)]: {
+        'typename.label': 'Terra Object',
+        'typename.label_zero': 'Terra Objects',
+        'typename.label_one': 'Terra Object',
+        'typename.label_other': 'Terra Objects',
+        'object-name.placeholder': 'New Terra object',
+        'add-object.label': 'Add Terra object',
+        'rename-object.label': 'Rename Terra object',
+        'delete-object.label': 'Delete Terra object',
+        'object-deleted.label': 'Terra object deleted',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Terra',
         'play.label': 'Play',
@@ -37,4 +47,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

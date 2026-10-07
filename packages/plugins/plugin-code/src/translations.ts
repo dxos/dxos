@@ -3,13 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as CodeProject from './types/CodeProject';
-import * as SourceFile from './types/SourceFile';
-import * as Spec from './types/Spec';
+import { CodeProject, SourceFile, Spec } from '#types';
 
 export const translations = [
   {
@@ -72,7 +69,13 @@ export const translations = [
         'build.failed.label': 'Build failed',
         'build.clean.label': 'Build clean',
         'run.failed.label': 'Runtime error',
+        'project-folder.label': 'Code folder on this device',
+        'project-folder.description':
+          'Repository that coding agents such as Claude Code work in. Each delegated task gets its own git worktree of it.',
+        'project-folder.empty.label': 'Not set',
+        'project-folder.choose.label': 'Choose folder…',
+        'project-folder.clear.label': 'Clear',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

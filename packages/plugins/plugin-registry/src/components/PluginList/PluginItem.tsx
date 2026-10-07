@@ -6,25 +6,20 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import {
-  Button,
-  type ChromaticPalette,
-  Icon,
-  IconButton,
-  Input,
-  Link,
-  type NeutralPalette,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
-import { mx } from '@dxos/ui-theme';
-import { getStyles } from '@dxos/ui-theme';
+import type * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
+import { ACCENT_HUES } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
@@ -38,7 +33,9 @@ export type PluginItemProps = {
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
-  onClick?: (id: string) => void;
+  /** Whether this device's answer for this plugin differs from the account's. */
+  deviceOnly?: boolean;
+  onClick?: (id: string, activation: ToolkitHooks.DetailActivation) => void;
   onChange?: (id: string, enabled: boolean) => void;
   /**
    * Install handler. When provided and the plugin is not installed, an Install button
@@ -61,6 +58,7 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
+  readOnly?: boolean;
 };
 
 export const PluginItem = ({
@@ -69,6 +67,7 @@ export const PluginItem = ({
   installing,
   enabled = [],
   extraTags,
+  deviceOnly,
   onClick,
   onChange,
   onInstall,
@@ -78,11 +77,13 @@ export const PluginItem = ({
   hasSettings: hasSettingsProp,
   onSettings,
   failure,
+  readOnly,
 }: PluginItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
-  const iconHue = rawIcon?.hue ?? 'neutral';
+  // The manifest's hue is a free string; only a palette hue reaches the icon.
+  const hue = ACCENT_HUES.find((candidate) => candidate === rawIcon?.hue);
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];
@@ -99,125 +100,85 @@ export const PluginItem = ({
   const isUpdating = updating?.includes(id) ?? false;
   const showInstallButton = !!onInstall && !isInstalled;
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
-  const inputId = `${id}-input`;
-  const descriptionId = `${id}-description`;
-  const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
-
-  const handleChange = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onChange?.(id, !isEnabled);
-    },
-    [id, isEnabled, onChange],
-  );
-
-  const handleInstall = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onInstall?.(id);
-    },
-    [id, onInstall],
-  );
-
-  const handleUpdate = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onUpdate?.(id);
-    },
-    [id, onUpdate],
-  );
-
   const hasSettings = hasSettingsProp?.(id) ?? false;
+  const titleId = `${id}-title`;
+  const handleClick = useCallback(
+    (event: MouseEvent) => onClick?.(id, { modified: event.metaKey || event.ctrlKey }),
+    [id, onClick],
+  );
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
-  const styles = getStyles(iconHue);
-  const gridCols = 'grid grid-cols-[5rem_1fr]';
-  const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
+  const handleInstall = useCallback(() => onInstall?.(id), [id, onInstall]);
+  const handleUpdate = useCallback(() => onUpdate?.(id), [id, onUpdate]);
 
   return (
-    <Listbox.Item
-      id={id}
-      data-testid={`pluginList.${id}`}
-      aria-describedby={descriptionId}
-      classNames={mx(
-        gridCols,
-        // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
-        // bespoke card grid stretches both columns to full height and controls its own padding.
-        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-modal-surface rounded-md overflow-hidden',
-      )}
-    >
-      <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
-        <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
-          <Icon classNames={styles.fg} icon={icon} size={14} />
-        </div>
-      </div>
-
-      <div className={mx(gridRows, 'min-w-0')}>
-        <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
-          <span className='text-lg truncate'>{name ?? id}</span>
+    <Card.Root role='listitem' aria-labelledby={titleId} data-testid={`pluginList.${id}`}>
+      <Card.Tile icon={icon} hue={hue} aria-label={t('details.label')} onClick={handleClick} />
+      <Card.Body>
+        <Card.Header>
+          <Card.Title id={titleId} truncate>
+            {name ?? id}
+          </Card.Title>
           {failure && <PluginFailureBadge failure={failure} />}
-        </div>
-
-        <div>
-          <p className='text-description line-clamp-4 min-w-0'>{description}</p>
-        </div>
-
-        <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
-          {displayTags.map((tag: string) => (
-            <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
-              {tag}
-            </Tag>
-          ))}
-        </div>
-
-        <div className='flex gap-2 items-center text-sm'>
-          <IconButton
-            aria-describedby={descriptionId}
-            classNames='cursor-pointer'
-            icon='ph--gear--regular'
-            label={t('plugin-settings.label')}
-            iconOnly
-            size={4}
-            onClick={handleSettings}
-            disabled={!hasSettings}
-          />
-
-          <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
-            {t('details.label')}
-          </Link>
-
-          <div className='grow' />
-          <div className='pe-1'>
-            {isUpdating ? (
-              <Button aria-describedby={descriptionId} density='md' variant='primary' disabled>
-                {t('updating.label')}
-              </Button>
-            ) : showUpdateButton ? (
-              <Button aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
-                {t('update.label')}
-              </Button>
-            ) : showInstallButton ? (
-              <Button
-                aria-describedby={descriptionId}
-                density='md'
-                variant='primary'
-                disabled={isInstalling}
-                onClick={handleInstall}
-              >
-                {isInstalling ? t('installing.label') : t('install.label')}
-              </Button>
-            ) : (
-              <Input.Root id={inputId}>
-                <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-              </Input.Root>
-            )}
-          </div>
-        </div>
-      </div>
-    </Listbox.Item>
+          {deviceOnly && (
+            <Icon.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='muted' />
+          )}
+        </Card.Header>
+        {description && (
+          <Typography.Text tone='muted' lines={4}>
+            {description}
+          </Typography.Text>
+        )}
+        {displayTags.length > 0 && (
+          <Button.Group>
+            {displayTags.map((tag) => (
+              <Tag.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+                {tag.toUpperCase()}
+              </Tag.Tag>
+            ))}
+          </Button.Group>
+        )}
+        <Card.Footer justify='between'>
+          <Button.Group>
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('plugin-settings.label')}
+              disabled={!hasSettings}
+              onClick={handleSettings}
+            />
+            <Typography.Link asChild variant='neutral'>
+              <button type='button' onClick={handleClick}>
+                {t('details.label')}
+              </button>
+            </Typography.Link>
+          </Button.Group>
+          {isUpdating ? (
+            <Button.Root variant='primary' disabled label={t('updating.label')} />
+          ) : showUpdateButton ? (
+            <Button.Root variant='primary' label={t('update.label')} onClick={handleUpdate} />
+          ) : showInstallButton ? (
+            <Button.Root
+              variant='primary'
+              disabled={isInstalling}
+              label={isInstalling ? t('installing.label') : t('install.label')}
+              onClick={handleInstall}
+            />
+          ) : (
+            <Input.Switch
+              aria-label={name ?? id}
+              checked={isEnabled}
+              disabled={readOnly}
+              onCheckedChange={({ checked }) => onChange?.(id, checked)}
+            />
+          )}
+        </Card.Footer>
+      </Card.Body>
+    </Card.Root>
   );
 };
 
-const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
+const tagColors: Record<RegistryTagType, Tag.TagHue> = {
   new: 'rose',
   // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
   beta: 'green',

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/effect-atom-solid",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Solid.js bindings for Effect Atom",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -24,15 +24,16 @@
     "dist",
     "src"
   ],
+  "dependencies": {
+    "@dxos/effect": "workspace:*"
+  },
   "devDependencies": {
-    "@effect-atom/atom": "catalog:",
     "@solidjs/testing-library": "catalog:",
     "effect": "catalog:",
     "solid-js": "catalog:",
     "vite-plugin-solid": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:",
     "solid-js": "catalog:"
   },

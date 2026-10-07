@@ -1,0 +1,39 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-components"
+    },
+    {
+      "path": "../react-ui-virtual"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}

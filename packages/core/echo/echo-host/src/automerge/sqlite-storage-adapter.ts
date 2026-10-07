@@ -3,19 +3,15 @@
 //
 
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
-import { RuntimeProvider } from '@dxos/effect';
-import { SqlTransaction } from '@dxos/sql-sqlite';
-import { type MaybePromise } from '@dxos/util';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type MaybePromise, countWork } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';
 
 export interface StorageAdapterDataMonitor {
   recordBytesStored(count: number): void;
@@ -25,7 +21,7 @@ export interface StorageAdapterDataMonitor {
 }
 
 export type SqliteStorageAdapterProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   callbacks?: SqliteStorageCallbacks;
   monitor?: StorageAdapterDataMonitor;
 };
@@ -34,14 +30,35 @@ export type SqliteStorageCallbacks = {
   afterSave?(path: StorageKey): MaybePromise<void>;
 };
 
+/** automerge-repo's chunk kinds (the second key segment), mapped to counter names. */
+const SAVE_COUNTERS: Record<string, string> = {
+  'snapshot': 'automerge.snapshotSaves',
+  'incremental': 'automerge.incrementalSaves',
+  'sync-state': 'automerge.syncStateSaves',
+};
+
+/**
+ * Counts one stored chunk by kind: a snapshot is a whole compacted document, an incremental one
+ * change batch, a sync state one peer's progress through a document.
+ */
+const countSave = (key: StorageKey, bytes: number): void => {
+  countWork(SAVE_COUNTERS[key[1] ?? ''] ?? 'automerge.otherSaves');
+  countWork('automerge.saveBytes', bytes);
+};
+
 /**
  * SQLite-backed automerge StorageAdapterInterface.
  * Stores automerge document chunks in the `automerge_chunks` table.
  */
 export class SqliteStorageAdapter implements StorageAdapterInterface {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #callbacks?: SqliteStorageCallbacks;
   readonly #monitor?: StorageAdapterDataMonitor;
+
+  /** Chunk writes waiting for the next group commit. */
+  #pendingWrites: PendingWrite[] = [];
+  /** The running group-commit loop, while there is one. */
+  #draining: Promise<void> | undefined;
 
   #open = false;
 
@@ -55,6 +72,11 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     return this.#open;
   }
 
+  /** The SQL runtime the chunks live in, for the data migrations that run beside them. */
+  get runtime(): RuntimeProvider.RuntimeProvider<SqlClient.SqlClient> {
+    return this.#runtime;
+  }
+
   async open(): Promise<void> {
     this.#open = true;
   }
@@ -64,14 +86,12 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -95,6 +115,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }
     // SQLite returns BLOB columns as Buffer in Node.js; coerce to plain Uint8Array.
     const chunk = toUint8Array(rows[0].data);
+    countWork('automerge.chunkLoads');
+    countWork('automerge.loadBytes', chunk.byteLength);
     this.#monitor?.recordBytesLoaded(chunk.byteLength);
     this.#monitor?.recordLoadDuration(Date.now() - startMs);
     return chunk;
@@ -105,14 +127,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    const encoded = encodeKey(keyArray);
-    // TODO(dmaretskyi): If another transaction is running concurently, this write will be associated with the wrong transaction.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${encoded}, ${binary})`;
-      }),
-    );
+    await this.enqueue(upsertChunks([[encodeKey(keyArray), binary]]));
+    countSave(keyArray, binary.byteLength);
     this.#monitor?.recordBytesStored(binary.byteLength);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
     await this.#callbacks?.afterSave?.(keyArray);
@@ -123,28 +139,55 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    const encoded = entries.map(([key, data]) => [encodeKey(key), data] as const);
-    // TODO(dmaretskyi): replace with one batched write.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        const tx = yield* SqlTransaction.SqlTransaction;
-        yield* tx.withTransaction(
-          Effect.gen(function* () {
-            for (const [key, data] of encoded) {
-              yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
-            }
-          }),
-        );
-      }),
-    );
+    await this.enqueue(upsertChunks(entries.map(([key, data]) => [encodeKey(key), data] as const)));
     let bytesStored = 0;
     for (const [keyArray, binary] of entries) {
       bytesStored += binary.byteLength;
+      countSave(keyArray, binary.byteLength);
       await this.#callbacks?.afterSave?.(keyArray);
     }
     this.#monitor?.recordBytesStored(bytesStored);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
+  }
+
+  /**
+   * Queues a write for the next group commit and resolves once it is committed.
+   *
+   * A repo flush saves every dirty document at once, and one transaction per chunk made each a
+   * separate WAL commit: thousands of them, long enough to time out the flush RPC. Writes that
+   * arrive together share one transaction and run in the order they were issued, so a removal
+   * never overtakes an earlier save. Any other write to these chunks must go through here for the
+   * same reason.
+   */
+  enqueue(write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.#pendingWrites.push({ write, resolve, reject });
+      this.#draining ??= this.#drain();
+    });
+  }
+
+  async #drain(): Promise<void> {
+    // Yields first so the writes a flush issues in the same tick join one group.
+    await Promise.resolve();
+    while (this.#pendingWrites.length > 0) {
+      const group = this.#pendingWrites.splice(0);
+      try {
+        await RuntimeProvider.runPromise(this.#runtime)(
+          Effect.gen(function* () {
+            const sql = yield* SqlClient.SqlClient;
+            yield* sql.withTransaction(Effect.forEach(group, ({ write }) => write, { discard: true }));
+          }),
+        );
+        for (const { resolve } of group) {
+          resolve();
+        }
+      } catch (error) {
+        for (const { reject } of group) {
+          reject(error);
+        }
+      }
+    }
+    this.#draining = undefined;
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
@@ -152,7 +195,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const encoded = encodeKey(keyArray);
-    await RuntimeProvider.runPromise(this.#runtime)(
+    countWork('automerge.chunkRemoves');
+    await this.enqueue(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DELETE FROM automerge_chunks WHERE key = ${encoded}`;
@@ -166,24 +210,34 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }
     const startMs = Date.now();
     const prefix = encodeKey(keyPrefix);
-    const glob = prefix + '-*';
+    const { lower, upper } = descendantRange(prefix);
+    // Two index seeks unioned, rather than `key = ? OR key GLOB ?`: the OR plans as MULTI-INDEX OR
+    // and discards index ordering, so an SQL `ORDER BY` there materializes a temp B-tree. Sorting in
+    // JS instead is free at the sizes this returns (usually one or two rows) and keeps both branches
+    // plain range seeks. Equivalence with the previous predicate is covered by tests.
     const rows = await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         return yield* sql<{ key: string; data: Uint8Array }>`
-          SELECT key, data FROM automerge_chunks
-          WHERE key = ${prefix} OR key GLOB ${glob}
-          ORDER BY key ASC
+          SELECT key, data FROM automerge_chunks WHERE key = ${prefix}
+          UNION ALL
+          SELECT key, data FROM automerge_chunks WHERE key >= ${lower} AND key < ${upper}
         `;
       }),
     );
+    // SQLite compares TEXT with BINARY collation (byte order). Encoded keys are ASCII for every
+    // segment shape in use, where JS string order agrees with it.
+    const sorted = [...rows].sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
     let bytesLoaded = 0;
-    const chunks: Chunk[] = rows.map((row) => {
+    const chunks: Chunk[] = sorted.map((row) => {
       // SQLite returns BLOB columns as Buffer in Node.js; coerce to plain Uint8Array.
       const data = toUint8Array(row.data);
       bytesLoaded += data.byteLength;
       return { key: decodeKey(row.key), data };
     });
+    countWork('automerge.rangeLoads');
+    countWork('automerge.chunkLoads', chunks.length);
+    countWork('automerge.loadBytes', bytesLoaded);
     this.#monitor?.recordBytesLoaded(bytesLoaded);
     this.#monitor?.recordLoadDuration(Date.now() - startMs);
     return chunks;
@@ -193,16 +247,55 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
+    await this.enqueue(this.removeRangeEffect(keyPrefix));
+  }
+
+  /**
+   * {@link removeRange} as an effect, so a caller deleting the several ranges a document spans can
+   * pass them to {@link enqueue} as one write.
+   */
+  removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
-    const glob = prefix + '-*';
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
-      }),
-    );
+    const { lower, upper } = descendantRange(prefix);
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR (key >= ${lower} AND key < ${upper})`;
+    }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
+
+type PendingWrite = {
+  write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+  resolve: () => void;
+  reject: (error: unknown) => void;
+};
+
+const upsertChunks = (
+  entries: ReadonlyArray<readonly [string, Uint8Array]>,
+): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    for (const [key, data] of entries) {
+      yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
+    }
+  });
+
+/**
+ * Key space `SubductionStorageBridge` writes into this same table, as
+ * `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]`. Disjoint from a document's classical
+ * `<documentId>-*` keys, so collection has to sweep it explicitly — on the subduction transport it
+ * holds most of the document's bytes.
+ */
+export const SUBDUCTION_PREFIX = 'subduction';
+
+export const SUBDUCTION_KEY_FAMILIES = [
+  'ids',
+  'commits',
+  'blobs',
+  'fragments',
+  'fragment-blobs',
+  'remote-heads',
+] as const;
 
 /** Coerces a value to a plain Uint8Array (Buffer is a subclass in Node.js but not identical). */
 const toUint8Array = (value: Uint8Array): Uint8Array =>
@@ -210,15 +303,42 @@ const toUint8Array = (value: Uint8Array): Uint8Array =>
     ? value
     : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
 
+/** Segment separator. Occurrences inside a segment are escaped to `%2D` (its percent-encoding). */
+const SEPARATOR = '-';
+
 /**
  * Encodes a StorageKey array to a single TEXT key for SQLite storage.
  * Uses '-' as separator; '%' and '-' in values are percent-encoded for safe round-tripping.
  */
 export const encodeKey = (key: StorageKey): string =>
-  key.map((k) => k.replaceAll('%', '%25').replaceAll('-', '%2D')).join('-');
+  key.map((k) => k.replaceAll('%', '%25').replaceAll(SEPARATOR, '%2D')).join(SEPARATOR);
 
 /**
  * Decodes a TEXT key back to a StorageKey array.
  */
 export const decodeKey = (encoded: string): StorageKey =>
-  encoded.split('-').map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%'));
+  encoded.split(SEPARATOR).map((k) => k.replaceAll('%2D', SEPARATOR).replaceAll('%25', '%'));
+
+/** One past `SEPARATOR` in byte order, so `[prefix + SEPARATOR, prefix + SEPARATOR_UPPER_BOUND)` is a half-open range. */
+const SEPARATOR_UPPER_BOUND = String.fromCharCode(SEPARATOR.charCodeAt(0) + 1);
+
+/**
+ * Half-open bounds selecting exactly the descendants of `prefix` — keys continuing with the
+ * separator, not merely with the same text. Anchoring on `prefix + SEPARATOR` rather than on
+ * `prefix` is what makes this a segment-boundary match: the bounds then differ at the character
+ * immediately after the prefix, so only the separator falls between them. A range anchored on
+ * `prefix` itself would compare nothing past the prefix and so would also return a sibling whose
+ * segment merely starts with the same text (prefix `…-doc1` matching key `…-doc1X-…`) — a different
+ * document's chunks. Since the key layout is protocol, that must not depend on segment charset.
+ *
+ * Exact regardless of what segments contain: a key is in range iff the byte after `prefix` is `>=`
+ * separator and `<` its successor, i.e. is the separator. UTF-8 cannot smuggle those bytes into a
+ * multi-byte sequence (continuation and lead bytes are all `>= 0x80`).
+ *
+ * Excludes `prefix` itself, which callers select separately — {@link loadRange} must still return a
+ * key stored at exactly the queried prefix (the `subduction-ids-<sid>` shape does this).
+ */
+export const descendantRange = (prefix: string): { lower: string; upper: string } => ({
+  lower: prefix + SEPARATOR,
+  upper: prefix + SEPARATOR_UPPER_BOUND,
+});

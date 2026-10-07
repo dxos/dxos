@@ -8,7 +8,17 @@ import { type AiContext } from '@dxos/assistant';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { log } from '@dxos/log';
 import { distinctBy } from '@dxos/util';
+
+/**
+ * Stable identity for a skill in the picker.
+ *
+ * A registry skill is identified by its key, but a skill the user authored in a space has no
+ * registry entry and so no key; falling back to its URI keeps such skills distinct from each other
+ * (a shared `undefined` key collapses them into one row) and addressable by the toggle handler.
+ */
+export const getSkillId = (skill: Skill.Skill): string => Obj.getMeta(skill).key ?? Obj.getURI(skill) ?? skill.id;
 
 export const useSkills = ({ registry, db }: { registry?: Registry.Registry; db?: Database.Database }) => {
   const [registrySkills, setRegistrySkills] = useState<Skill.Skill[]>(
@@ -28,14 +38,16 @@ export const useSkills = ({ registry, db }: { registry?: Registry.Registry; db?:
 
   const spaceSkills = useQuery(db, Filter.type(Skill.Skill));
   return useMemo(() => {
-    const skills = distinctBy([...registrySkills, ...spaceSkills], (b) => Obj.getMeta(b).key);
+    // Space copies first, so a fork shadows the registry entry it was cloned from rather than the
+    // other way round — it carries the user's edits (same precedence as `Skill.resolveAnnotatedSkills`).
+    const skills = distinctBy([...spaceSkills, ...registrySkills], getSkillId);
     skills.sort(({ name: a }, { name: b }) => a.localeCompare(b));
     return skills;
   }, [registrySkills, spaceSkills]);
 };
 
 /**
- * Create reactive map of active skills (by key).
+ * Create reactive map of active skills (by skill id).
  */
 export const useActiveSkills = ({ context }: { context?: AiContext.Binder }) => {
   const [active, setActive] = useState<Map<string, Skill.Skill>>(new Map());
@@ -47,14 +59,7 @@ export const useActiveSkills = ({ context }: { context?: AiContext.Binder }) => 
     }
 
     const updateActive = () => {
-      const skills = context.getSkills();
-      setActive(
-        new Map(
-          skills
-            .map((skill) => [Obj.getMeta(skill).key, skill] as const)
-            .filter((entry): entry is readonly [string, Skill.Skill] => entry[0] !== undefined),
-        ),
-      );
+      setActive(new Map(context.getSkills().map((skill) => [getSkillId(skill), skill] as const)));
     };
 
     // Set initial value.
@@ -68,57 +73,31 @@ export const useActiveSkills = ({ context }: { context?: AiContext.Binder }) => 
 };
 
 // TODO(burdon): Move logic into binder.
-export const useSkillHandlers = ({
-  db,
-  context,
-  registry,
-}: {
-  db: Database.Database;
-  context?: AiContext.Binder;
-  registry?: Registry.Registry;
-}) => {
+export const useSkillHandlers = ({ context }: { context?: AiContext.Binder }) => {
   const onUpdateSkill = useCallback(
-    async (key: string, checked: boolean) => {
+    async (skill: Skill.Skill, checked: boolean) => {
       if (!context) {
         return;
       }
 
-      if (checked) {
-        // Check if the skill is in the registry — if so, bind via its key URI directly
-        // (no DB clone needed). Fall back to an existing DB copy for user-forked skills.
-        const registrySkill = registry
-          ?.query(Filter.type(Skill.Skill))
-          .runSync()
-          .find((b) => Obj.getMeta(b).key === key);
+      // A registry skill binds by its key URI, which resolves through the hypergraph registry — no
+      // DB clone needed. Anything else is a space object (including a fork of a registry skill) and
+      // binds by its own ref, so the user's edits are what the conversation sees.
+      const key = Obj.getMeta(skill).key;
+      const registryRef = key !== undefined ? Ref.fromURI(Skill.registryURI(key)) : undefined;
+      const ref = Obj.getDatabase(skill) === undefined && registryRef ? registryRef : Ref.make(skill);
 
-        if (registrySkill) {
-          await context.bind({ skills: [Ref.fromURI(Skill.registryURI(key))] });
-        } else {
-          // User-forked skill (in DB but not in registry): bind via DB ref.
-          const objects = await db.query(Filter.type(Skill.Skill)).run();
-          const storedSkill = objects.find((skill) => Obj.getMeta(skill).key === key);
-          if (storedSkill) {
-            await context.bind({ skills: [Ref.make(storedSkill)] });
-          }
-        }
+      log('update skill', { skill: getSkillId(skill), uri: ref.uri, checked });
+      if (checked) {
+        await context.bind({ skills: [ref] });
       } else {
-        // Unbind: try registry ref first, then DB ref.
-        const registrySkill = registry
-          ?.query(Filter.type(Skill.Skill))
-          .runSync()
-          .find((b) => Obj.getMeta(b).key === key);
-        if (registrySkill) {
-          await context.unbind({ skills: [Ref.fromURI(Skill.registryURI(key))] });
-        } else {
-          const objects = await db.query(Filter.type(Skill.Skill)).run();
-          const storedSkill = objects.find((skill) => Obj.getMeta(skill).key === key);
-          if (storedSkill) {
-            await context.unbind({ skills: [Ref.make(storedSkill)] });
-          }
-        }
+        // Both forms: a fork and the registry entry it shadows share one row, and the toggle has to
+        // clear the conversation whichever of the two was bound (e.g. by the chat's own context).
+        const refs = registryRef && registryRef.uri !== ref.uri ? [ref, registryRef] : [ref];
+        await context.unbind({ skills: refs });
       }
     },
-    [db, context, registry],
+    [context],
   );
 
   return { onUpdateSkill };

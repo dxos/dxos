@@ -2,6 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './events';
-export * from './meta';
-export { IdeogramPlugin } from './plugin';
+export * as IdeogramEvents from './IdeogramEvents.ts';
+export * as IdeogramPlugin from './IdeogramPlugin.ts';

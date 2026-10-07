@@ -11,18 +11,15 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { findBindingForTarget } from '@dxos/plugin-connector';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
-
-import type * as InboxCapabilities from '../types/InboxCapabilities';
-import * as Mailbox from '../types/Mailbox';
-import * as SystemTags from '../types/SystemTags';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider
@@ -66,7 +63,7 @@ export const useSendEmail = (
       // invocation's `notify` option surfaces send success/failure as toasts.
       const sent = await runtime.runPromise(
         Effect.gen(function* () {
-          const binding = yield* findBindingForTarget(mailbox);
+          const binding = yield* Binding.queryCursor(mailbox);
           if (!binding) {
             return undefined;
           }

@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+
+const { isGroupKeyAggregate } = QueryAST;
 
 /**
  * A (possibly composite) group key: one coerced scalar component per grouped property.
@@ -22,7 +24,30 @@ export type GroupAggregates = Record<string, AggregateValue>;
  * client `WorkingSetQueryExecutor`. The clause itself is declared in `QueryPlan.AggregateStep`; this
  * module holds the runtime grouping/pagination algorithms that the executors apply.
  */
+const HOUR_MS = 3_600_000;
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Code-unit order, the collation SQLite's `BINARY` applies. Both executors order strings through
+ * this so a compiled plan and an in-memory one return the same rows — under `limit` the collation
+ * decides which rows are cut, not just their order.
+ */
+export const compareCodeUnits = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 export const GroupBy = Object.freeze({
+  /**
+   * The start of the UTC hour or day a unix-ms `value` falls in, or `null` when it is not a finite
+   * number: the key of a `timestamp` or `time` aggregate.
+   */
+  truncateTime: (value: unknown, unit: 'hour' | 'day'): number | null => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return null;
+    }
+    const size = unit === 'hour' ? HOUR_MS : DAY_MS;
+    return Math.floor(value / size) * size;
+  },
+
   /**
    * Coerces a raw property value into a group-key component.
    * `typeof value` must be `string`, `number`, or `boolean`; anything else (missing,
@@ -30,6 +55,24 @@ export const GroupBy = Object.freeze({
    */
   coerceKeyComponent: (value: unknown): string | number | boolean | null =>
     typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null,
+
+  /**
+   * Resolves one `group` entry's key component from its fallback chain: the first property with a
+   * scalar value wins (`a ?? b`), `null` when none do. Shared by both executors and the aggregate
+   * stamping below so a group's key and its result field can never disagree.
+   */
+  resolveKeyComponent: (
+    properties: readonly string[],
+    getValue: (property: string) => unknown,
+  ): string | number | boolean | null => {
+    for (const property of properties) {
+      const value = GroupBy.coerceKeyComponent(getValue(property));
+      if (value !== null) {
+        return value;
+      }
+    }
+    return null;
+  },
 
   /**
    * Stable serialization of a composite group key (component order matters).
@@ -119,7 +162,7 @@ export const GroupBy = Object.freeze({
       return -1;
     }
     if (typeof a === 'string' && typeof b === 'string') {
-      return a.localeCompare(b);
+      return compareCodeUnits(a, b);
     }
     if (typeof a === 'number' && typeof b === 'number') {
       return a - b;
@@ -127,8 +170,19 @@ export const GroupBy = Object.freeze({
     if (typeof a === 'boolean' && typeof b === 'boolean') {
       return a === b ? 0 : a ? 1 : -1;
     }
-    return String(a).localeCompare(String(b));
+    return compareCodeUnits(String(a), String(b));
   },
+
+  /** Members a group stands for: an item carrying a `weight` (an index bucket) counts that many times. */
+  countMembers: (members: readonly { weight?: number }[]): number =>
+    members.reduce((total, member) => total + (member.weight ?? 1), 0),
+
+  /** Adds the numeric values of a `sum` aggregate; anything else counts as 0. */
+  sum: (values: readonly unknown[]): number =>
+    values.reduce<number>(
+      (total, value) => (typeof value === 'number' && Number.isFinite(value) ? total + value : total),
+      0,
+    ),
 
   /**
    * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing
@@ -169,7 +223,7 @@ export const GroupBy = Object.freeze({
    * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
    * rather than silently honoring only one of them.
    */
-  withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
+  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates; weight?: number }>(
     items: readonly T[],
     getKey: (item: T) => string,
     aggregates: readonly QueryAST.GroupAggregate[],
@@ -221,18 +275,43 @@ export const GroupBy = Object.freeze({
         }
         computed[aggregate.name] =
           aggregate.kind === 'count'
-            ? members.length
-            : aggregate.kind === 'group'
-              ? // All members of a group share the key, so read the group value off any member.
-                GroupBy.coerceKeyComponent(getProperty(members[0], aggregate.property))
-              : GroupBy.reduceAggregate(
-                  members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
-                  aggregate.kind,
-                );
+            ? GroupBy.countMembers(members)
+            : aggregate.kind === 'sum'
+              ? GroupBy.sum(members.map((member) => getProperty(member, aggregate.property)))
+              : isGroupKeyAggregate(aggregate)
+                ? // All members of a group share the key, so read the component off any member.
+                  (members[0].groupKey?.[aggregate.name] ?? null)
+                : GroupBy.reduceAggregate(
+                    members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
+                    aggregate.kind,
+                  );
       }
       for (const member of members) {
         result.push({ ...member, aggregates: computed });
       }
+      index = end;
+    }
+    return result;
+  },
+
+  /**
+   * Keeps one member per group as its stand-in, recording the group size. Used when the query asks
+   * for no members, so nothing downstream has to carry or ship the objects.
+   * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
+   */
+  collapseGroups: <T extends { collapsed?: { size: number }; weight?: number }>(
+    items: readonly T[],
+    getKey: (item: T) => string,
+  ): T[] => {
+    const result: T[] = [];
+    let index = 0;
+    while (index < items.length) {
+      const key = getKey(items[index]);
+      let end = index;
+      while (end < items.length && getKey(items[end]) === key) {
+        end += 1;
+      }
+      result.push({ ...items[index], collapsed: { size: GroupBy.countMembers(items.slice(index, end)) } });
       index = end;
     }
     return result;

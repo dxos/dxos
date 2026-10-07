@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -13,15 +12,15 @@ import { type ContentBlock, Message } from '@dxos/types';
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Type.makeObject(DXN.make('org.dxos.type.test', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       title: 'Title',
       description: 'Product title',
     }),
-    description: Schema.String.annotations({
+    description: Schema.String.annotate({
       title: 'Description',
       description: 'Product description',
     }),
-  }),
+  }).pipe(Annotation.UserType.set()),
 );
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
@@ -43,7 +42,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 
-  constructor(private readonly _space?: Space) {
+  constructor(private readonly _db?: Database.Database) {
     super();
   }
 
@@ -57,9 +56,9 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   createBlock(): ContentBlock.Transcript {
     let text = random.lorem.paragraph();
-    if (this._space) {
+    if (this._db) {
       const label = random.commerce.productName();
-      const obj = this._space.db.add(
+      const obj = this._db.add(
         Obj.make(TestItem, {
           title: label,
           description: random.lorem.paragraph(),

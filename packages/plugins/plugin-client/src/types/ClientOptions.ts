@@ -2,12 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Client, type ClientOptions } from '@dxos/client';
 
 export type ClientPluginOptions = ClientOptions & {
+  /**
+   * A client to adopt instead of constructing one, so a host can start `initialize()` at entry
+   * rather than when activation reaches this lazily-imported module. `@synchronized`, so the
+   * plugin's own call joins it; lifecycle stays with the plugin, which destroys it on teardown.
+   */
+  client?: Client;
+
   /**
    * Whether the navigation handler consumes invitation codes from URL query params.
    * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
@@ -19,6 +28,15 @@ export type ClientPluginOptions = ClientOptions & {
    * Base origin for the invitation link.
    */
   shareableLinkOrigin?: string;
+
+  /**
+   * Surface the identity-swapping actions kept for testing: join another identity by device
+   * invitation, or restore one from a recovery code. Both wipe local storage before they run, so
+   * an app whose onboarding gate offers the same flows on a clean profile should pass the inverse
+   * of that gate's condition rather than expose them to real users.
+   * @default false
+   */
+  identityTestActions?: boolean;
 
   /**
    * Path for the invitation link.
@@ -70,11 +88,5 @@ export type ClientPluginOptions = ClientOptions & {
    * Called when spaces are ready.
    * Plugin context is provided so capabilities are accessible.
    */
-  onSpacesReady?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
-
-  /**
-   * Called when the client is reset.
-   * Plugin context is provided so capabilities are accessible.
-   */
-  onReset?: (params: { target?: string }) => Effect.Effect<void, Error | never, Capability.Service | never>;
+  onSpacesAvailable?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 };

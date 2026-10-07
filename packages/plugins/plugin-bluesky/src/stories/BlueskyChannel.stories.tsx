@@ -7,26 +7,27 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { BlueskyPlugin } from '../BlueskyPlugin';
-import { ATPROTO_BACKEND_KIND } from '../constants';
-import { translations } from '../translations';
-import { BlueskyChannel, makeBlueskyChannel } from '../types';
+import { BlueskyPlugin } from '#plugin';
+import { translations } from '#translations';
+import { BlueskyChannel, makeBlueskyChannel } from '#types';
+
+import { ATPROTO_BACKEND_KIND } from '../constants.ts';
 
 /** Public Bluesky handle whose author feed is displayed by the demo channel. */
 const DEMO_HANDLE = 'bsky.app';
@@ -52,18 +53,18 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types,
           config: new Config({
             runtime: {
               services: {
                 edge: {
-                  url: 'https://edge.dxos.workers.dev/',
+                  url: 'https://dev.dxos.network/',
                 },
                 iceProviders: [
                   {
-                    urls: 'https://edge.dxos.workers.dev/ice',
+                    urls: 'https://dxos.network/ice',
                   },
                 ],
               },
@@ -85,7 +86,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ThreadPlugin(),
+        ThreadPlugin.make(),
         BlueskyPlugin(),
       ],
     }),

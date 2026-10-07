@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { TablePlugin } from '@dxos/plugin-table/plugin';
+import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Work';
 
@@ -19,7 +19,7 @@ const meta: Meta<typeof ModuleContainer> = {
   decorators: createDecorators({
     mailboxName: MAILBOX_NAME,
     // Owns `org.dxos.skill.table`, which the template binds and the ledger routine writes through.
-    plugins: [TablePlugin()],
+    plugins: [TablePlugin.make()],
   }),
   args: {
     layout: [
@@ -74,12 +74,13 @@ export const Test: Story = {
       timeout: 30_000,
     });
 
-    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded).
-    await waitFor(async () => expect(canvas.getByDisplayValue('Table')).toBeInTheDocument(), { timeout: 10_000 });
-    await expect(canvas.getByDisplayValue('Inbox')).toBeInTheDocument();
+    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded); references show as
+    // chips and the picker's text rather than input values.
+    await waitFor(async () => expect(canvas.getAllByText('Table')[0]).toBeInTheDocument(), { timeout: 10_000 });
+    await expect(canvas.getAllByText('Inbox')[0]).toBeInTheDocument();
 
     // Standing context (the mailbox) and the starter routine.
-    await expect(canvas.getByDisplayValue(MAILBOX_NAME)).toBeInTheDocument();
+    await expect(canvas.getAllByText(MAILBOX_NAME)[0]).toBeInTheDocument();
     await expect(canvas.getByText('Context')).toBeInTheDocument();
     await expect(canvas.getByText('Artifacts')).toBeInTheDocument();
   },

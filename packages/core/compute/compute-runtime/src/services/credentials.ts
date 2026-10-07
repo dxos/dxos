@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import type * as Config from 'effect/Config';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
@@ -15,7 +15,7 @@ import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { isManagedAccessToken } from '@dxos/protocols';
 
-export class ConfiguredCredentialsService implements Context.Tag.Service<Credential.CredentialsService> {
+export class ConfiguredCredentialsService implements Context.Service.Shape<typeof Credential.CredentialsService> {
   constructor(private readonly credentials: Credential.ServiceCredential[] = []) {}
 
   addCredentials(credentials: Credential.ServiceCredential[]): ConfiguredCredentialsService {

@@ -4,15 +4,15 @@
 
 import React, { useMemo } from 'react';
 
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import type { SpaceMember } from '@dxos/react-client/echo';
-import { useMembers } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { IdentityListItem } from './IdentityListItem';
+import { translationKey } from '../../translations.ts';
+import { IdentityListItem } from './IdentityListItem.tsx';
 
 // TODO(burdon): Consolidate into single component?
 
@@ -26,28 +26,36 @@ export interface SpaceMemberListProps extends Partial<SpaceMemberListImplProps> 
   includeSelf?: boolean;
 }
 
+/** A member whose identity is present, which proto3 optionality does not guarantee. */
+type IdentifiedMember = SpaceMember & { identity: NonNullable<SpaceMember['identity']> };
+
+const isIdentified = (member: SpaceMember): member is IdentifiedMember => !!member.identity;
+
 export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMemberListProps) => {
   const client = useClient();
   const allUnsortedMembers = useMembers(spaceKey);
-  const members = useMemo(
-    () =>
-      includeSelf
-        ? allUnsortedMembers.sort((member) =>
-            member.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
-          )
-        : allUnsortedMembers.filter(
-            (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey),
-          ),
-    [allUnsortedMembers],
-  );
+  const members = useMemo(() => {
+    const self = toPublicKey(client.halo.identity.get()?.identityKey);
+    const isSelf = (member: SpaceMember) => {
+      const identityKey = toPublicKey(member.identity?.identityKey);
+      return !!self && !!identityKey && identityKey.equals(self);
+    };
+    return includeSelf
+      ? allUnsortedMembers.sort((member) => (isSelf(member) ? -1 : 1))
+      : allUnsortedMembers.filter((member) => !isSelf(member));
+  }, [allUnsortedMembers, includeSelf, client]);
   return <SpaceMemberListImpl members={members} onSelect={onSelect} />;
 };
 
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
-  const { t } = useTranslation(translationKey);
-  const visibleMembers = members.filter((member) => member.identity);
+  const { t } = Hooks.useTranslation(translationKey);
+  const visibleMembers = members.filter(isIdentified);
+  const items = visibleMembers.map((member) => {
+    const value = requirePublicKey(member.identity.identityKey).toHex();
+    return { value, label: member.identity.profile?.displayName ?? value };
+  });
   return visibleMembers.length > 0 ? (
-    <Listbox.Root>
+    <Listbox.Root items={items}>
       <Listbox.Content
         classNames='flex flex-col gap-2'
         aria-label={t('space-member-list.heading')}
@@ -56,7 +64,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
         {visibleMembers.map((member) => {
           return (
             <IdentityListItem
-              key={member.identity.identityKey.toHex()}
+              key={toPublicKey(member.identity.identityKey)?.toHex()}
               identity={member.identity}
               presence={member.presence}
               onClick={onSelect && (() => onSelect(member))}
@@ -67,7 +75,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
     </Listbox.Root>
   ) : (
     <div className='grow flex items-center p-2'>
-      <p className={mx('text-description', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>
+      <p className={mx('text-fg-muted', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>
     </div>
   );
 };

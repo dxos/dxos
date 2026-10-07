@@ -10,18 +10,17 @@ import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import * as Err from './Err';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import * as Error from './Error.ts';
+import * as Obj from './Obj.ts';
+import * as Type from './Type.ts';
 
 /**
  * Inline blob data: bytes stored directly on the ECHO object.
  */
 export const InlineData = Schema.TaggedStruct('inline', {
-  bytes: Schema.Uint8ArrayFromSelf.annotations({ jsonSchema: { type: 'string', contentEncoding: 'base64' } }),
+  bytes: Schema.Uint8Array.annotate({ jsonSchema: { type: 'string', contentEncoding: 'base64' } }),
 });
 
 /**
@@ -39,7 +38,7 @@ export const ExternalData = Schema.TaggedStruct('external', {
   uri: Schema.String,
 });
 
-export const BlobData = Schema.Union(InlineData, ExternalData);
+export const BlobData = Schema.Union([InlineData, ExternalData]);
 export type BlobData = Schema.Schema.Type<typeof BlobData>;
 
 /**
@@ -59,10 +58,7 @@ export class Blob extends Type.makeObject<Blob>(DXN.make('org.dxos.type.blob', '
     type: Schema.optional(Schema.String),
     size: Schema.Number,
     data: BlobData,
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' })),
 ) {}
 
 //
@@ -84,7 +80,7 @@ export const Storage = { inline: 'inline', edge: 'edge' } as const;
 export type Storage = (typeof Storage)[keyof typeof Storage];
 
 /**
- * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/echo-protocol`).
+ * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/blob`).
  *
  * `ni` marks an {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} Named Information URI whose
  * authority is empty and whose path carries a registered hash-algorithm name plus a base64url-encoded
@@ -107,17 +103,23 @@ export const MAX_INLINE_SIZE = 4 * 1024 * 1024;
 
 /**
  * Creates a new blob object. Does not add it to the database — see {@link fromBytes}.
+ *
+ * @performance O(1); allocates an in-memory blob object.
  */
 export const make = (props: Obj.MakeProps<typeof Blob>): Blob => Obj.make(Blob, props);
 
 /**
  * Creates an inline {@link BlobData} variant that embeds raw bytes on the ECHO object.
+ *
+ * @performance O(1); wraps the bytes without copying.
  */
 export const inlineData = (bytes: Uint8Array): BlobData => ({ _tag: 'inline', bytes });
 
 /**
  * Creates an external {@link BlobData} variant that references bytes held by a registered backend.
  * @param uri - Backend-scoped URI, e.g. as returned by a `BlobBackend.put` call.
+ *
+ * @performance O(1).
  */
 export const externalData = (uri: string): BlobData => ({ _tag: 'external', uri });
 
@@ -144,22 +146,57 @@ export interface FromBytesOptions {
  * const blob = yield* Blob.fromBytes(bytes, { type: 'image/png' });
  * yield* Database.add(blob);
  * ```
+ *
+ * @performance Async; O(size) to hash, plus the backend upload (a no-op for inline storage).
  */
 export const fromBytes = (
   bytes: Uint8Array,
   options?: FromBytesOptions,
-): Effect.Effect<Blob, Err.BlobTooLargeError | Err.BlobWriteError, Database.Service> =>
+): Effect.Effect<Blob, Error.BlobTooLargeError | Error.BlobWriteError, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
       Effect.tryPromise({
         try: () => db.createBlob(bytes, options),
         catch: (error) =>
-          error instanceof Err.BlobTooLargeError || error instanceof Err.BlobWriteError
+          error instanceof Error.BlobTooLargeError || error instanceof Error.BlobWriteError
             ? error
-            : new Err.BlobWriteError({ backend: options?.storage ?? 'unknown' }, { cause: error }),
+            : new Error.BlobWriteError({ backend: options?.storage ?? 'unknown' }, { cause: error }),
       }),
     ),
   ).pipe(Effect.withSpan('Blob.fromBytes'));
+
+/**
+ * Adopts bytes already staged by a direct upload, returning an un-added Blob object. The caller is
+ * responsible for adding it to the database.
+ *
+ * The counterpart to {@link fromBytes} for content this process never holds: an agent uploaded the
+ * file straight to the store over a signed URL, because passing it through a tool call would mean
+ * a model emitting it byte by byte. Size and type are reported by the store, which is the only
+ * party that saw what arrived.
+ *
+ * @example
+ * ```ts
+ * const blob = yield* Blob.fromUpload(uploadId);
+ * yield* Database.add(blob);
+ * ```
+ *
+ * @performance Async; one backend round trip, and the bytes never pass through this process.
+ */
+export const fromUpload = (
+  uploadId: string,
+  options?: { storage?: Storage | (string & {}) },
+): Effect.Effect<Blob, Error.BlobNotAvailableError | Error.BlobWriteError, Database.Service> =>
+  Database.Service.pipe(
+    Effect.flatMap(({ db }) =>
+      Effect.tryPromise({
+        try: () => db.createBlobFromUpload(uploadId, options),
+        catch: (error) =>
+          error instanceof Error.BlobNotAvailableError || error instanceof Error.BlobWriteError
+            ? error
+            : new Error.BlobWriteError({ backend: options?.storage ?? 'unknown' }, { cause: error }),
+      }),
+    ),
+  ).pipe(Effect.withSpan('Blob.fromUpload'));
 
 /**
  * Loads a blob's bytes. Inline: read directly off the object. External: dispatched to the
@@ -169,16 +206,18 @@ export const fromBytes = (
  * ```ts
  * const bytes = yield* Blob.read(blob);
  * ```
+ *
+ * @performance Async; O(size), read inline or fetched from the backend.
  */
-export const read = (blob: Blob): Effect.Effect<Uint8Array, Err.BlobNotAvailableError, Database.Service> =>
+export const read = (blob: Blob): Effect.Effect<Uint8Array, Error.BlobNotAvailableError, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
       Effect.tryPromise({
         try: () => db.readBlob(blob),
         catch: (error) =>
-          error instanceof Err.BlobNotAvailableError
+          error instanceof Error.BlobNotAvailableError
             ? error
-            : new Err.BlobNotAvailableError(
+            : new Error.BlobNotAvailableError(
                 { backend: 'unknown', key: blob.id, reason: 'not-found' },
                 { cause: error },
               ),
@@ -188,6 +227,8 @@ export const read = (blob: Blob): Effect.Effect<Uint8Array, Err.BlobNotAvailable
 
 /**
  * Checks whether a blob's bytes are currently available.
+ *
+ * @performance Async; one backend check, with no byte transfer.
  */
 export const exists = (blob: Blob): Effect.Effect<boolean, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.blobExists(blob)))).pipe(
@@ -197,9 +238,12 @@ export const exists = (blob: Blob): Effect.Effect<boolean, never, Database.Servi
 /**
  * Returns a renderable URL for the blob: inline blobs resolve to a `data:` URL; external blobs
  * are resolved by the registered backend's `getUrl`, if it implements one.
+ *
+ * @performance Async; an inline blob encodes all of its bytes into a `data:` URL (O(size)), an external one asks the
+ * backend.
  */
 export const url = (blob: Blob): Effect.Effect<Option.Option<string>, never, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) => Effect.promise(() => db.getBlobUrl(blob))),
-    Effect.map(Option.fromNullable),
+    Effect.map(Option.fromNullishOr),
   ).pipe(Effect.withSpan('Blob.url'));

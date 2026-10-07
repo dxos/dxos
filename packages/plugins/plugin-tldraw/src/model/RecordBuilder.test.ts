@@ -5,7 +5,7 @@
 import { createTLSchema } from '@tldraw/tlschema';
 import { describe, test } from 'vitest';
 
-import { RecordBuilder } from './RecordBuilder';
+import { RecordBuilder } from './RecordBuilder.ts';
 
 describe('RecordBuilder', () => {
   test('builds an empty canvas with document and page', ({ expect }) => {

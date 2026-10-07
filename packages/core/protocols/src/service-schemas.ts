@@ -3,34 +3,32 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { PublicKey } from '@dxos/keys';
 
 /**
  * Effect schema for `dxos.keys.PublicKey`, encoded as raw key bytes on the wire.
  */
-export const publicKey: Schema.Schema<PublicKey, Uint8Array> = Schema.transform(
-  Schema.Uint8ArrayFromSelf,
-  Schema.instanceOf(PublicKey),
-  {
-    strict: true,
-    decode: (bytes) => PublicKey.from(bytes),
-    encode: (key) => key.asUint8Array(),
-  },
+export const publicKey: Schema.Codec<PublicKey, Uint8Array> = Schema.Uint8Array.pipe(
+  Schema.decodeTo(
+    Schema.instanceOf(PublicKey),
+    SchemaTransformation.transform({
+      decode: (bytes) => PublicKey.from(bytes),
+      encode: (key) => key.asUint8Array(),
+    }),
+  ),
 );
 
 /**
  * Effect schema for `google.protobuf.Struct`, matching the proto codec substitution shape.
  */
-export const protoStruct: Schema.Schema<Record<string, unknown>> = Schema.Record({
-  key: Schema.String,
-  value: Schema.Unknown,
-});
+export const protoStruct: Schema.Codec<Record<string, unknown>> = Schema.Record(Schema.String, Schema.Unknown);
 
 /**
  * Effect schema for `google.protobuf.Timestamp`, matching the proto codec substitution shape.
  */
-export const protoTimestamp: Schema.Schema<Date, Date> = Schema.DateFromSelf;
+export const protoTimestamp: Schema.Codec<Date, Date> = Schema.Date;
 
 /**
  * Mutable array schema for `repeated` proto fields.
@@ -41,4 +39,4 @@ export const protoTimestamp: Schema.Schema<Date, Date> = Schema.DateFromSelf;
  * use mutable arrays to stay structurally compatible at the RPC boundary. The wire
  * encoding is identical — only the TypeScript element mutability differs.
  */
-export const mutableArray = <Value extends Schema.Schema.Any>(value: Value) => Schema.mutable(Schema.Array(value));
+export const mutableArray = <Value extends Schema.Top>(value: Value) => Schema.mutable(Schema.Array(value));

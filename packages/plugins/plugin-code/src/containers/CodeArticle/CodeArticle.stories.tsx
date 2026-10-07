@@ -10,19 +10,17 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { CodePlugin } from '#plugin';
 import { translations } from '#translations';
+import { CodeProject, SourceFile, Spec } from '#types';
 
-import { CodePlugin } from '../../CodePlugin';
-import * as CodeProject from '../../types/CodeProject';
-import * as SourceFile from '../../types/SourceFile';
-import * as Spec from '../../types/Spec';
-import { CodeArticle } from './CodeArticle';
+import { CodeArticle } from './CodeArticle.tsx';
 
 const HELLO_WORLD = {
   path: 'src/hello.ts',
@@ -113,8 +111,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { seed, name } }) => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

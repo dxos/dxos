@@ -9,7 +9,7 @@ import type * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
-import { makeRoutine } from '@dxos/plugin-routine';
+import * as Wire from '@dxos/plugin-routine/Wire';
 
 export type ScheduledRoutineOptions = {
   name: string;
@@ -23,7 +23,8 @@ export type ScheduledRoutineOptions = {
  * flow (the companion's Save button) persists it; nothing is added to the database here, so the function is
  * always safe to call without DB access.
  *
- * The trigger starts disabled so the user can review the schedule and instructions before activating.
+ * The trigger starts enabled: the create-routine dialog shows the schedule and instructions for review
+ * before anything is persisted, so a saved routine is one the user has already approved.
  */
 export const makeScheduledRoutine = ({
   name,
@@ -33,10 +34,10 @@ export const makeScheduledRoutine = ({
 }: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, never, never> => {
   const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
   return Effect.succeed(
-    makeRoutine({
+    Wire.makeRoutine({
       name,
       instructions: Instructions.make({ name, text, skills }),
-      trigger: Trigger.make({ spec: Trigger.specTimer(cron), enabled: false }),
+      trigger: Trigger.make({ spec: Trigger.specTimer(cron), enabled: true }),
     }),
   );
 };

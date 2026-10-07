@@ -15,7 +15,7 @@ export const ReferencedQuotes = Schema.Struct({
     }),
   )
     .pipe(Schema.mutable)
-    .annotations({
+    .annotate({
       // TODO(burdon): Does this description make sense?
       description: `
       The references to the context objects that are mentioned in the transcript. 

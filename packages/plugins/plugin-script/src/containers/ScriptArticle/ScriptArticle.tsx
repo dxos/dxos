@@ -4,19 +4,19 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useResolveRef } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';
-
-import type * as Settings from '../../types/Settings';
+import { Settings } from '#types';
 
 export type ScriptEditorProps = AppSurface.ObjectArticleProps<
   Script.Script,
@@ -36,22 +36,23 @@ export const ScriptArticle = ({
   const space = getSpace(script);
   const state = useToolbarState();
   useDeployState({ script, state });
+  const source = useResolveRef(script.source);
 
   const extensions = useMemo(() => {
-    if (!script.source.target) {
+    if (!source) {
       return [];
     }
 
     return [
       createDataExtensions({
         id: script.id,
-        text: Doc.createAccessor(script.source.target, ['content']),
+        text: Doc.createAccessor(source, ['content']),
         messenger: space,
         identity,
       }),
       listener({
         onChange: ({ text }) => {
-          if (script.source.target?.content !== text) {
+          if (source?.content !== text) {
             Obj.update(script, (script) => {
               script.changed = true;
             });
@@ -59,7 +60,7 @@ export const ScriptArticle = ({
         },
       }),
     ];
-  }, [identity, space, script, script.source.target]);
+  }, [identity, space, script, source]);
 
   if (!extensions.length) {
     return null;
@@ -67,20 +68,20 @@ export const ScriptArticle = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ScriptToolbar script={script} attendableId={attendableId} state={state} role={role} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <TypescriptEditor
           classNames={editorClassNames(role)}
           id={script.id}
           env={env}
-          initialValue={script.source?.target?.content}
+          initialValue={source?.content}
           extensions={extensions}
           inputMode={settings.editorInputMode}
           toolbar
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

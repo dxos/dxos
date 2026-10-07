@@ -8,9 +8,9 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { CodeCapabilities } from '#types';
 
-import type * as CodeCapabilities from '../../types/CodeCapabilities';
-import { BuildOutput } from './BuildOutput';
+import { BuildOutput } from './BuildOutput.tsx';
 
 type ProjectBuildState = CodeCapabilities.ProjectBuildState;
 

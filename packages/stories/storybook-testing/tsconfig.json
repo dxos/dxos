@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -21,10 +24,19 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -51,6 +63,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -69,16 +84,22 @@
       "path": "../../ui/react-ui-chat"
     },
     {
-      "path": "../../ui/react-ui-components"
+      "path": "../../ui/react-ui-debug"
     },
     {
-      "path": "../../ui/react-ui-debug"
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-masonry"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-theme"

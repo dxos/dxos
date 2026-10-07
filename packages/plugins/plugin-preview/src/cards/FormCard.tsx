@@ -5,13 +5,14 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { Card, useTranslation } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -29,7 +30,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the
   // `compact` form layout. Callers can override either via the explicit `layout` prop.
@@ -52,7 +53,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     }
   }, [staticType, subject]);
   const runtimeType = useType(db, fallbackTypeUri);
-  const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
+  const schema = useMemo((): Schema.Codec<any, any> | undefined => {
     const resolvedType = runtimeType ?? staticType;
     return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;
   }, [runtimeType, staticType]);
@@ -83,7 +84,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
   const handleSave = useCallback(
     (values: AnyProperties, { changed }: FormUpdateMeta<AnyProperties>) => {
       const paths = (Object.keys(changed) as SchemaEx.JsonPath[]).filter((path) => changed[path]);
-      Obj.update(subject, () => {
+      Obj.update(subject, (subject) => {
         for (const path of paths) {
           const parts = SchemaEx.splitJsonPath(path);
           const value = Obj.getValue(values as any, parts);
@@ -98,7 +99,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     return (
       <Card.Body>
         <Card.Row>
-          <Card.Text variant='description'>{t('unable-to-create-preview.message')}</Card.Text>
+          <Card.Text variant='muted'>{t('unable-to-create-preview.message')}</Card.Text>
         </Card.Row>
       </Card.Body>
     );
@@ -119,7 +120,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

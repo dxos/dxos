@@ -9,8 +9,9 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 
-import * as Markdown from '../types/Markdown';
-import { getMarkdownAnchorText, getSelectionRanges } from './selection';
+import { Markdown } from '#types';
+
+import { getMarkdownAnchorText, getSelectionRanges } from './selection.ts';
 
 describe('selection', () => {
   let builder: EchoTestBuilder;

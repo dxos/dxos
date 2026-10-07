@@ -14,7 +14,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { ValueBag } from './compute';
+import { ValueBag } from './compute.ts';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(
@@ -31,7 +31,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('ValueBag', () => {
-  it.scoped(
+  it.effect(
     'ValueBag.unwrap',
     Effect.fnUntraced(
       function* ({ expect }) {

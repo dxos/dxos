@@ -20,16 +20,17 @@ export {
   getDiscriminatingProps,
   getLiteralValues,
   getProperties,
+  isArrays,
   isArrayType,
   isDiscriminatedUnion,
   isLiteralUnion,
   isNestedType,
   isOption,
-  isTupleType,
   mapAst,
+  retainContext,
   unwrapOptional,
   visit,
-} from './internal/ast';
+} from './internal/ast.ts';
 
 export {
   JsonPath,
@@ -41,6 +42,6 @@ export {
   isJsonPath,
   setValue,
   splitJsonPath,
-} from './internal/json-path';
+} from './internal/json-path.ts';
 
-export { ParamKeyAnnotation, UrlParser, getParamKeyAnnotation } from './internal/url';
+export { ParamKeyAnnotation, UrlParser, getParamKeyAnnotation } from './internal/url.ts';

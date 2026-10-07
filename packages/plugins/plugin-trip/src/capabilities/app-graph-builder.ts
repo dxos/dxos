@@ -2,29 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { GraphBuilder } from '@dxos/plugin-graph';
-import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import { Selection, ViewState } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
+import { Segment, Trip, TripOperation } from '#types';
 
-import { getPlanningWindowDays } from '../operations/extractor/config';
-import * as Segment from '../types/Segment';
-import * as Trip from '../types/Trip';
-import * as TripOperation from '../types/TripOperation';
+import { getPlanningWindowDays } from '../operations/extractor/config.ts';
 
 /**
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed
@@ -33,7 +30,7 @@ import * as TripOperation from '../types/TripOperation';
 const resolvePlanningWindow = (viewState: ViewState.Manager, nodeId: string): { from: Date; to: Date } => {
   // Read without asserting the mode (the dedicated range context may be empty or, defensively, hold
   // another mode), falling back to the default window otherwise.
-  const selection = viewState.get(Selection.aspect, getCalendarRangeSelectionId(nodeId));
+  const selection = viewState.get(Selection.aspect, Calendar.getRangeSelectionId(nodeId));
   const range =
     selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }
@@ -54,8 +51,9 @@ export default Capability.makeModule(
       }),
     );
 
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'tripSegment',
+      relation: AppNode.companion,
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
         const trip = matched.trip;
@@ -82,7 +80,7 @@ export default Capability.makeModule(
     });
 
     // Context-menu action on a Trip: merge it into the nearest other trip (by date) and delete it.
-    const mergeExtension = yield* GraphBuilder.createExtension({
+    const mergeExtension = yield* AppGraphBuilder.createExtension({
       id: 'tripMerge',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
       actions: (trip) =>
@@ -102,7 +100,7 @@ export default Capability.makeModule(
     // Context-menu action written into the calendar's menu: create a trip + itinerary from the events
     // in the calendar's currently-selected date range (or the next N days from today when nothing is
     // selected). The Trip is created and opened immediately while the planning skill runs.
-    const planTripExtension = yield* GraphBuilder.createExtension({
+    const planTripExtension = yield* AppGraphBuilder.createExtension({
       id: 'calendarPlanTrip',
       match: (node) =>
         Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),

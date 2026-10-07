@@ -4,13 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { invariant } from '@dxos/invariant';
+import { Identity } from '@dxos/halo';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
-import { RevokeRecoveryCredential } from './definitions';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
 /**
  * Revoke one recovery credential.
@@ -19,16 +16,13 @@ import { RevokeRecoveryCredential } from './definitions';
  * identity key is the authorization and no identity can be passed in from the UI. Client services
  * refuse the last un-revoked credential.
  */
-const handler: Operation.WithHandler<typeof RevokeRecoveryCredential> = RevokeRecoveryCredential.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* ({ lookupKey }) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identityService = client.services.services.IdentityService;
-      invariant(identityService, 'IdentityService not available');
-
-      yield* Effect.promise(() => identityService.revokeRecoveryCredential({ lookupKey: PublicKey.from(lookupKey) }));
-    }),
-  ),
-);
+const handler: Operation.WithHandler<typeof ClientOperation.RevokeRecoveryCredential> =
+  ClientOperation.RevokeRecoveryCredential.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ lookupKey }) {
+        yield* Identity.revokeRecoveryCredential(lookupKey);
+      }),
+    ),
+  );
 
 export default handler;

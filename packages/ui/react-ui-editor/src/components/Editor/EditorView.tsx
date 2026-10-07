@@ -6,14 +6,14 @@ import { Transaction } from '@codemirror/state';
 import { EditorView as NaturalEditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { initialSync } from '@dxos/ui-editor';
+import type * as Util from '@dxos/react-ui/Util';
+import { computeDocChanges, initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type UseTextEditorProps, useTextEditor } from '../../hooks';
-import { type EditorController, createEditorController } from './controller';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks/index.ts';
+import { type EditorController, createEditorController } from './controller.ts';
 
-export type EditorViewProps = ThemedClassName<
+export type EditorViewProps = Util.ThemedClassName<
   {
     focusable?: boolean;
     value?: string;
@@ -75,12 +75,20 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
         return;
       }
       requestAnimationFrame(() => {
-        if (view.state.doc.toString() === next) {
+        const current = view.state.doc.toString();
+        if (current === next) {
           return;
         }
+        // Only what moved: replacing the whole document would drop the reader's folds, selection
+        // and scroll position on every update of a value they are mostly already looking at.
+        const changes = computeDocChanges(current, next);
+        if (changes.length === 0) {
+          return;
+        }
+
         view.dispatch({
           annotations: initialSync,
-          changes: [{ from: 0, to: view.state.doc.length, insert: next }],
+          changes,
           selection: selectionEnd ? { anchor: next.length } : undefined,
         });
 
@@ -90,7 +98,7 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       });
     }, [view, value, selectionEnd]);
 
-    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input`).
+    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input-box`).
     return (
       <div
         className={mx('w-full outline-hidden', classNames)}

@@ -7,12 +7,16 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
 import { DevtoolsApp } from '@dxos/devtools';
-import { meta as devtoolsMeta } from '@dxos/plugin-devtools';
+import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
+
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 
 const main = async () => {
   const enter =
-    localStorage.getItem(`${devtoolsMeta.profile.key}.devtools`) === 'true' ||
+    localStorage.getItem(`${DevtoolsPlugin.meta.profile.key}.devtools`) === 'true' ||
     window.confirm('Continue to DXOS developer tools?');
   if (!enter) {
     window.location.pathname = '/';
@@ -20,6 +24,10 @@ const main = async () => {
   }
 
   const { Remote, Config, Defaults } = await import('@dxos/react-client');
+
+  // The devtools client runs echo on this page; automerge is slim-resolved and must be
+  // initialized before it (see util/automerge-wasm.ts).
+  await initEchoHostWasm();
 
   const searchProps = new URLSearchParams(window.location.search);
   const target = searchProps.get('target');

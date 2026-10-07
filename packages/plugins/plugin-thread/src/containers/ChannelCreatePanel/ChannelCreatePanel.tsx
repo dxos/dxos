@@ -4,13 +4,12 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
 
-import * as ChannelBackend from '../../types/ChannelBackend';
-import * as ThreadCapabilities from '../../types/ThreadCapabilities';
+import { ChannelBackend, ThreadCapabilities } from '#types';
 
 /**
  * Provider-driven create panel for channels. Reads the registered
@@ -19,8 +18,12 @@ import * as ThreadCapabilities from '../../types/ThreadCapabilities';
  * selected provider's create fields (just a name field when there is a single
  * field-less provider).
  */
-export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities.CreateObjectCustomPanelProps) => {
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+export const ChannelCreatePanel = ({
+  target,
+  onCreateObject,
+  onCancel,
+}: SpaceCapabilities.CreateObjectCustomPanelProps) => {
+  const providers = Hooks.useCapabilities(ThreadCapabilities.ChannelBackend);
   const schema = useMemo(() => ChannelBackend.buildChannelFormSchema(providers), [providers]);
 
   const handleSave = useCallback(
@@ -39,12 +42,13 @@ export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities
       schema={schema}
       defaultValues={{}}
       onSave={handleSave}
+      onCancel={onCancel}
       testId='create-channel-form'
     >
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
-          <Form.Submit />
+          <Form.Fields />
+          <Form.Actions />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

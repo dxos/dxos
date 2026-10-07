@@ -34,16 +34,28 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/ui-editor"
@@ -53,9 +65,6 @@
     },
     {
       "path": "../plugin-deck"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

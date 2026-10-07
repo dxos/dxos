@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> = AssistantOperation.UpdateChatName.pipe(
   Operation.withHandler(
@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
             system,
             cacheControl: 'ephemeral',
           });
-          namePrompt = Prompt.merge(historyPrompt, 'Suggest a name for this chat');
+          namePrompt = Prompt.concat(historyPrompt, 'Suggest a name for this chat');
         }
 
         const response = yield* LanguageModel.generateText({ prompt: namePrompt });
@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
         });
         log.info('chat name updated', { chat, newName: chat.name });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-haiku-4-5.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default')),
     ),
   ),
 );

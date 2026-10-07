@@ -4,21 +4,20 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { useClient } from '@dxos/react-client';
-import {
-  Button,
-  Icon,
-  Message,
-  Panel,
-  ScrollArea,
-  Status,
-  Tag,
-  type TFunction,
-  Toolbar,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import {
   type DiagnosticIssue,
@@ -28,8 +27,7 @@ import {
   runDiagnostics,
 } from '#diagnostics';
 import { meta } from '#meta';
-
-import * as DoctorCapabilities from '../../types/DoctorCapabilities';
+import { DoctorCapabilities } from '#types';
 
 type RunState =
   | { readonly status: 'idle' }
@@ -49,10 +47,11 @@ const SEVERITY_PALETTE: Record<DiagnosticSeverity, 'neutral' | 'amber' | 'rose'>
 };
 
 export const DiagnosticsPanel = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const client = useClient();
-  const manager = usePluginManager();
-  const providers = useCapabilities(DoctorCapabilities.DiagnosticProvider);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const spaces = Hooks.useCapability(ClientCapabilities.SpaceService);
+  const graph = Hooks.useCapability(ClientCapabilities.Hypergraph);
+  const manager = PluginManagerProvider.usePluginManager();
+  const providers = Hooks.useCapabilities(DoctorCapabilities.DiagnosticProvider);
   const [runState, setRunState] = useState<RunState>({ status: 'idle' });
   const abortRef = useRef<AbortController | undefined>(undefined);
 
@@ -71,7 +70,8 @@ export const DiagnosticsPanel = () => {
     setRunState({ status: 'running', current: 0, total: sortedProviders.length });
     try {
       const results = await runDiagnostics({
-        client,
+        spaces,
+        graph,
         capabilities: manager.capabilities,
         providers: sortedProviders,
         signal: controller.signal,
@@ -83,7 +83,7 @@ export const DiagnosticsPanel = () => {
             status: 'running',
             current: index,
             total,
-            providerLabel: toLocalizedString(provider.label, t),
+            providerLabel: Theme.toLocalizedString(provider.label, t),
           });
         },
         onProviderComplete: (_, index, total) => {
@@ -101,7 +101,7 @@ export const DiagnosticsPanel = () => {
         abortRef.current = undefined;
       }
     }
-  }, [client, manager, sortedProviders, t]);
+  }, [spaces, graph, manager, sortedProviders, t]);
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort();
@@ -111,32 +111,30 @@ export const DiagnosticsPanel = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
-            <Icon icon='ph--play--regular' size={4} />
+          <Button.Root variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
+            <Icon.Icon icon='ph--play--regular' size='md' />
             <span className='ps-1'>{t('run-diagnostics.label')}</span>
-          </Button>
+          </Button.Root>
           {isRunning && (
-            <Button variant='ghost' onClick={handleCancel}>
+            <Button.Root variant='ghost' onClick={handleCancel}>
               {t('cancel-diagnostics.label')}
-            </Button>
+            </Button.Root>
           )}
           <span className='grow' />
-          <span className='text-xs text-description'>
-            {t('providers-count.label', { count: sortedProviders.length })}
-          </span>
+          <span className='text-xs text-fg-muted'>{t('providers-count.label', { count: sortedProviders.length })}</span>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport>
-            {runState.status === 'idle' && <p className='p-2 text-sm text-description'>{t('idle.description')}</p>}
+            {runState.status === 'idle' && <p className='p-2 text-sm text-fg-muted'>{t('idle.description')}</p>}
             {runState.status === 'running' && <RunProgress state={runState} t={t} />}
             {runState.status === 'done' && <RunSummary results={runState.results} t={t} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -146,63 +144,63 @@ const RunProgress = ({
   t,
 }: {
   state: { readonly current: number; readonly total: number; readonly providerLabel?: string };
-  t: TFunction;
+  t: Theme.TFunction;
 }) => {
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
-    <div className='flex flex-col gap-2 p-2'>
-      <Status progress={progress} classNames='block' />
-      <span className='text-xs text-description'>
+    <Layout.Flex column gap='sm' classNames='p-2'>
+      <Status.Progress value={progress} classNames='block' />
+      <span className='text-xs text-fg-muted'>
         {t('progress.label', {
           current: state.current,
           total: state.total,
           label: state.providerLabel ?? '',
         })}
       </span>
-    </div>
+    </Layout.Flex>
   );
 };
 
-const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: TFunction }) => {
+const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: Theme.TFunction }) => {
   const totalIssues = results.reduce((sum, result) => sum + result.issues.length, 0);
   const failedProviders = results.filter((result) => result.error != null).length;
   return (
-    <div className='flex flex-col gap-2 p-2'>
+    <Layout.Flex column gap='sm' classNames='p-2'>
       <p className='text-sm font-medium'>{t('summary.label', { count: totalIssues })}</p>
       {failedProviders > 0 && (
-        <p className='text-xs text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</p>
+        <p className='text-xs text-error-text'>{t('summary.failed.label', { count: failedProviders })}</p>
       )}
       {results.map((result) => (
         <ProviderResult key={result.providerId} result={result} t={t} />
       ))}
-    </div>
+    </Layout.Flex>
   );
 };
 
-const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFunction }) => {
+const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: Theme.TFunction }) => {
   const status = result.error ? 'error' : result.issues.length === 0 ? 'pass' : 'issues';
-  const label = toLocalizedString(result.label, t);
+  const label = Theme.toLocalizedString(result.label, t);
   return (
     <section className='rounded border border-separator dx-base-surface'>
       <header className='flex items-center justify-between gap-2 p-2'>
         <span className='text-sm font-medium truncate'>{label}</span>
         {status === 'pass' && (
-          <Tag hue='emerald'>
-            <Icon icon='ph--check--regular' size={3} />
-          </Tag>
+          <Tag.Tag hue='emerald'>
+            <Icon.Icon icon='ph--check--regular' size='xs' />
+          </Tag.Tag>
         )}
-        {status === 'issues' && <Tag hue='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag>}
-        {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
+        {status === 'issues' && (
+          <Tag.Tag hue='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag.Tag>
+        )}
+        {status === 'error' && <Tag.Tag hue='rose'>{t('result.error.label')}</Tag.Tag>}
       </header>
       {result.error && (
-        <Message.Root valence='error'>
-          <Message.Content classNames='m-2'>
-            <Message.Body>{result.error}</Message.Body>
-          </Message.Content>
-        </Message.Root>
+        <Banner.Root valence='error'>
+          <Banner.Body>{result.error}</Banner.Body>
+        </Banner.Root>
       )}
       {result.issues.length > 0 && (
-        <ul className='border-t border-separator divide-y divide-subdued-separator'>
+        <ul className='border-t border-separator divide-y divide-separator-subtle'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}
@@ -213,33 +211,29 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
 };
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
-  <li className='flex items-start gap-2 p-2'>
-    <Icon
-      icon={SEVERITY_ICON[issue.severity]}
-      size={4}
-      classNames={`${paletteToText(issue.severity)} shrink-0 mt-0.5`}
-    />
-    <div className='flex flex-col gap-0.5 text-xs min-w-0 flex-1'>
-      <span className='break-words break-all'>{issue.message}</span>
+  <li className='flex items-center gap-2 p-2'>
+    <Icon.Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={paletteToText(issue.severity)} />
+    <Layout.Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
+      <span className='wrap-break-word break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
-        <span className='text-description font-mono break-all'>
+        <span className='text-fg-muted font-mono break-all'>
           {issue.subjectLabel ?? ''}
           {issue.subjectLabel && issue.spaceId ? ' · ' : ''}
           {issue.spaceId ?? ''}
         </span>
       )}
-    </div>
+    </Layout.Flex>
   </li>
 );
 
 const paletteToText = (severity: DiagnosticSeverity): string => {
   switch (SEVERITY_PALETTE[severity]) {
     case 'rose':
-      return 'text-rose-600';
+      return 'text-rose-text';
     case 'amber':
-      return 'text-amber-600';
+      return 'text-amber-text';
     default:
-      return 'text-description';
+      return 'text-fg-muted';
   }
 };
 

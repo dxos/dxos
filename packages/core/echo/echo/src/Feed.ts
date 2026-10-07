@@ -8,23 +8,22 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import type * as Entity from './Entity';
-import type * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import * as Scope from './Scope';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import type * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import * as Scope from './Scope.ts';
+import * as Type from './Type.ts';
 
 /**
  * Runtime schema for a Feed object.
@@ -48,7 +47,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `data`: Data feed (default).
      * - `trace`: Trace feed.
      */
-    namespace: Schema.optional(Schema.Literal('data', 'trace')),
+    namespace: Schema.optional(Schema.Literals(['data', 'trace'])),
 
     /**
      * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
@@ -63,10 +62,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * order relative to the blocks.
      */
     rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' })),
 ) {}
 
 //
@@ -74,12 +70,37 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
 //
 
 /**
- * Opaque cursor for iterating over feed items.
+ * Opaque position of a feed item — the insertion id the position authority assigned its block,
+ * as read from an item with {@link getCursor}. Ordering is the feed's append order; a reader
+ * resumes by passing the last cursor it processed to {@link query}.
  */
-// TODO(dmaretskyi): T needs to be referenced in the type structure for typescript to respect it during inference and type-checking.
-export interface Cursor<T = Obj.Snapshot> {
-  readonly _tag: 'Cursor';
-}
+export const Cursor = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/Cursor'));
+export type Cursor = Schema.Schema.Type<typeof Cursor>;
+
+/**
+ * Annotation holding a reader's position in a feed — the cursor it has consumed up to.
+ *
+ * An annotation rather than a `@meta` foreign key: a key identifies the same entity in another
+ * system, which a checkpoint is not.
+ *
+ * @example
+ * ```ts
+ * const cursor = Annotation.get(reader, Feed.CursorAnnotation).pipe(Option.getOrElse(() => Feed.START));
+ * Obj.update(reader, (reader) => Annotation.set(reader, Feed.CursorAnnotation, Feed.getCursor(item)!));
+ * ```
+ */
+export const CursorAnnotation: Annotation.Annotation<Cursor> = Annotation.make({
+  id: 'org.dxos.annotation.feed-cursor',
+  schema: Cursor,
+});
+
+/**
+ * Sentinel cursor preceding every item — "read from the beginning".
+ *
+ * A sentinel rather than `undefined` so a stored checkpoint is always a `Cursor`: a reader that has
+ * processed nothing yet holds this, and the same code path resumes it as resumes a live cursor.
+ */
+export const START: Cursor = Cursor.make('');
 
 /**
  * Retention options for a feed.
@@ -160,14 +181,19 @@ export interface SyncState {
  * Used to provide a specific feed to operations that operate on it without threading
  * the feed as an explicit parameter through every call site.
  */
-export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
+export class ContextFeedService extends Context.Service<
   ContextFeedService,
   {
     readonly feed: Feed;
   }
->() {
-  static layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
-}
+>()('@dxos/echo/Feed/ContextFeedService') {}
+
+/**
+ * Provides {@link ContextFeedService} so callers can scope operations to `feed`.
+ *
+ * @performance O(1).
+ */
+export const layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
 
 //
 // Factory
@@ -180,6 +206,8 @@ export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeed
  * ```ts
  * const feed = Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
+ *
+ * @performance O(1); allocates an in-memory feed object.
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
@@ -190,6 +218,8 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  * Private-ish and on track to be removed — prefer resolving feed scopes via higher-level APIs
  * (e.g. `Feed.query`) rather than threading the raw queue URI. Used internally by the feed service
  * layer.
+ *
+ * @performance O(1) URI parse.
  */
 // TODO(dmaretskyi): Remove — private-ish, prefer higher-level feed-scope APIs.
 export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
@@ -212,6 +242,8 @@ export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.
  * // Continue from an earlier item, leaving what followed it unreachable.
  * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Take two' })], { parent: earlier });
  * ```
+ *
+ * @performance Async; O(n) in items encoded and appended in one batch.
  */
 export const append = (
   feed: Feed,
@@ -220,14 +252,16 @@ export const append = (
 ): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
-      Effect.promise(() => {
-        if (options?.parent !== undefined && items.length > 0) {
-          setParent(items[0], options.parent);
-        }
-        return db.appendToFeed(feed, items);
-      }),
+      Effect.flatMap(Database.Origin, (origin) =>
+        Effect.promise(() => {
+          if (options?.parent !== undefined && items.length > 0) {
+            setParent(items[0], options.parent);
+          }
+          return db.appendToFeed(feed, items, { origin });
+        }),
+      ),
     ),
-  ).pipe(Effect.withSpan('Feed.append'));
+  ).pipe(Effect.withSpan('Feed.append'), Database.withSpaceId);
 
 /**
  * Removes items from a feed.
@@ -236,6 +270,8 @@ export const append = (
  * ```ts
  * yield* Feed.remove(feed, [item]);
  * ```
+ *
+ * @performance Async; O(n) in items, deleted by id in one batch.
  */
 // TODO(dmaretskyi): Should we allow snapshots here? - what does it mean to remove a snapshot?
 export const remove = (
@@ -251,7 +287,7 @@ export const remove = (
         ),
       ),
     ),
-  ).pipe(Effect.withSpan('Feed.remove'));
+  ).pipe(Effect.withSpan('Feed.remove'), Database.withSpaceId);
 
 //
 // Lineage (soft fork)
@@ -297,6 +333,8 @@ export const POSITION_KEY = KEY_QUEUE_POSITION;
  * const inAppendOrder = Array.sort(messages, Order.mapInput(Order.number, Feed.getPosition));
  * const { items } = Feed.history(inAppendOrder);
  * ```
+ *
+ * @performance O(k) in the item foreign-key count.
  */
 export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
   const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
@@ -305,17 +343,32 @@ export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
 };
 
 /**
+ * The item's {@link Cursor}, or `undefined` when it has none — a block written locally and not yet
+ * acknowledged by the position authority. Pass it to {@link query} to resume after this item.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getCursor = (item: Entity.Unknown | Entity.Snapshot): Cursor | undefined => {
+  const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
+  return key !== undefined ? Cursor.make(key) : undefined;
+};
+
+/**
  * Returns an item's explicit lineage parent, or `undefined` when it continues from the item that
  * precedes it in append order (the default for every feed).
  *
  * Also `undefined` for a malformed stored id; {@link history} tells the two apart and reports
  * a malformed parent as truncation.
+ *
+ * @performance O(k) in the item foreign-key count.
  */
 export const getParent = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined => readParent(item).id;
 
 /**
  * Sets (or, with `undefined`, clears) an item's explicit lineage parent.
  * Call before appending the item; {@link append}'s `parent` option does this for you.
+ *
+ * @performance O(k) in the item foreign-key count, applied in one change.
  */
 export const setParent = (
   item: Entity.Unknown,
@@ -348,6 +401,8 @@ export const setParent = (
  * const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
  * const { items, shallow } = Feed.history(messages);
  * ```
+ *
+ * @performance O(n) in items; one pass to index ids and one backwards walk.
  */
 export const history = <T extends Entity.Unknown | Entity.Snapshot>(
   items: readonly T[],
@@ -416,7 +471,12 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
  *
  * // Data-last (curried) form composes with `pipe`:
  * const objects = yield* pipe(feed, Feed.query(Filter.type(Person))).run;
+ *
+ * // Resume after a cursor, reading a bounded page of what is new:
+ * const objects = yield* Feed.query(feed, Query.select(Filter.feedCursor(cursor)).limit(10)).run;
  * ```
+ *
+ * @performance O(1) to build; the result is lazy, so nothing executes until read.
  */
 export const query: {
   <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
@@ -442,10 +502,13 @@ export const query: {
  * yield* Feed.sync(feed);
  * yield* Feed.sync(feed, { shouldPush: false });
  * ```
+ *
+ * @performance Async; network-bound, proportional to the replication backlog.
  */
 export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.syncFeed(feed, options)))).pipe(
     Effect.withSpan('Feed.sync'),
+    Database.withSpaceId,
   );
 
 /**
@@ -455,40 +518,14 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
  * ```ts
  * const { blocksToPull, blocksToPush } = yield* Feed.getSyncState(feed);
  * ```
+ *
+ * @performance Async; one service round trip.
  */
 export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed)))).pipe(
     Effect.withSpan('Feed.getSyncState'),
+    Database.withSpaceId,
   );
-
-/**
- * Creates a cursor for iterating over feed items.
- * Currently stubbed — cursor operations are not yet implemented.
- *
- * @example
- * ```ts
- * const cursor = yield* Feed.cursor<Person>(feed);
- * const item = yield* Feed.next(cursor);
- * ```
- */
-// TODO(wittjosiah): Implement cursor operations. Use Effect streams?
-export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, Database.Service> =>
-  Effect.succeed({ _tag: 'Cursor' } as Cursor<T>);
-
-/**
- * Returns the next item from a feed cursor.
- * Currently stubbed — cursor operations are not yet implemented.
- */
-export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, Database.Service> =>
-  Effect.die('Feed.next is not yet implemented');
-
-/**
- * Returns the next item from a feed cursor as an Option.
- * Currently stubbed — cursor operations are not yet implemented.
- */
-export const nextOption = <T = Obj.Snapshot>(
-  _cursor: Cursor<T>,
-): Effect.Effect<Option.Option<T>, never, Database.Service> => Effect.die('Feed.nextOption is not yet implemented');
 
 /**
  * Sets the local retention policy for a feed.
@@ -498,6 +535,8 @@ export const nextOption = <T = Obj.Snapshot>(
  * ```ts
  * yield* Feed.setRetention(feed, { count: 1000 });
  * ```
+ *
+ * @performance O(1); currently a no-op.
  */
 // TODO(dmaretskyi): Implement when feed retention is supported.
 export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, Database.Service> =>

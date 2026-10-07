@@ -4,11 +4,12 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
+import * as Util from '@dxos/react-ui/Util';
 
-import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
-import * as Sequence from '../../types/Sequence';
+import { Sequence } from '#types';
+
+import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator/index.ts';
 
 export type SoundProps = {
   sequence: Sequence.Sequence;
@@ -16,29 +17,33 @@ export type SoundProps = {
 };
 
 /** Form editor for a single sequence layer. */
-export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
+export const Sound = Util.composable<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
   const schema = useMemo(() => omitId(Sequence.Sequence), []);
 
   // Custom field map to render the source.type discriminator as a select.
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
       'source.type': (fieldProps) => (
-        <SelectField
-          {...fieldProps}
-          options={[
-            { label: 'Sample', value: 'sample' },
-            { label: 'Generator', value: 'generator' },
-          ]}
-        />
+        <Form.Field path={fieldProps.jsonPath}>
+          <SelectField
+            {...fieldProps}
+            options={[
+              { label: 'Sample', value: 'sample' },
+              { label: 'Generator', value: 'generator' },
+            ]}
+          />
+        </Form.Field>
       ),
       'source.sample': (fieldProps) => (
-        <SelectField
-          {...fieldProps}
-          options={Object.keys(SAMPLE_URLS).map((key) => ({
-            label: key,
-            value: key,
-          }))}
-        />
+        <Form.Field path={fieldProps.jsonPath}>
+          <SelectField
+            {...fieldProps}
+            options={Object.keys(SAMPLE_URLS).map((key) => ({
+              label: key,
+              value: key,
+            }))}
+          />
+        </Form.Field>
       ),
     }),
     [],
@@ -74,7 +79,7 @@ export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdat
   );
 
   return (
-    <div {...composableProps(props)} ref={forwardedRef}>
+    <div {...Util.composableProps(props)} ref={forwardedRef}>
       <Form.Root<Omit<Sequence.Sequence, 'id'>>
         key={`${sequence.id}-${sequence.source.type}-${sequence.source.type === 'generator' ? sequence.source.preset : sequence.source.sample}`}
         schema={schema}
@@ -84,7 +89,7 @@ export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdat
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

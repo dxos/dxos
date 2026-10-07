@@ -8,11 +8,11 @@ import { type AiService } from '@dxos/ai';
 import { type Stage } from '@dxos/pipeline';
 import { FactPipeline, type FactStore } from '@dxos/pipeline-rdf';
 
-import { AgentRegistry, identifiersForUser, labelForUser } from '../AgentRegistry';
-import { type StateError } from '../errors';
-import { tapStage } from '../Stage';
-import { type StateStore } from '../StateStore';
-import type * as Type from '../types';
+import * as AgentRegistry from '../AgentRegistry.ts';
+import { type StateError } from '../errors.ts';
+import { tapStage } from '../Stage.ts';
+import type * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 export type ExtractFactsOptions = {
   /** Source namespace used to build each message's fact `source` DXN (default 'discord'). */
@@ -29,17 +29,21 @@ export type ExtractFactsOptions = {
  */
 export const extractFactsStage = (
   options?: ExtractFactsOptions,
-): Stage.Stage<Type.Event, Type.Event, StateError, AgentRegistry | FactStore | AiService.AiService | StateStore> => {
+): Stage.Stage<
+  Type.Event,
+  Type.Event,
+  StateError,
+  AgentRegistry.AgentRegistry | FactStore | AiService.AiService | StateStore.StateStore
+> => {
   const namespace = options?.sourceNamespace ?? 'discord';
   const extractOptions = options?.rules ? { rules: options.rules } : undefined;
   return tapStage('extract-facts', ['Message'], (event) =>
     event._tag !== 'Message' || event.message.text.trim().length === 0
       ? Effect.void
       : Effect.gen(function* () {
-          const registry = yield* AgentRegistry;
-          const agent = yield* registry.resolve(
-            identifiersForUser(event.message.author),
-            labelForUser(event.message.author),
+          const agent = yield* AgentRegistry.resolve(
+            AgentRegistry.identifiersForUser(event.message.author),
+            AgentRegistry.labelForUser(event.message.author),
           );
           yield* FactPipeline.run(
             [

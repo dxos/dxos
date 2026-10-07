@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Obj, type Ref, Type } from '@dxos/echo';
 
-import * as Game from '../types/Game';
+import { Game } from '#types';
 
 export class GameVariantMismatchError extends Error {
   readonly _tag = 'GameVariantMismatchError';

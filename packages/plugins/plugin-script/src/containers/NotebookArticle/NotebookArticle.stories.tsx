@@ -8,8 +8,8 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -20,16 +20,16 @@ import { ExplorerPlugin } from '@dxos/plugin-explorer/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config, useClient } from '@dxos/react-client';
 import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '#testing';
 import { translations } from '#translations';
+import { Notebook } from '#types';
 
-import * as Notebook from '../../types/Notebook';
-import { NotebookArticle } from './NotebookArticle';
+import { NotebookArticle } from './NotebookArticle.tsx';
 
 const meta: Meta<typeof NotebookArticle> = {
   title: 'plugins/plugin-script/containers/NotebookArticle',
@@ -44,8 +44,8 @@ const meta: Meta<typeof NotebookArticle> = {
     withLayout({ layout: 'column', classNames: 'w-document-max-width' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
             runtime: {
@@ -59,13 +59,13 @@ const meta: Meta<typeof NotebookArticle> = {
 
               defaultSpace.db.add(createNotebook());
               defaultSpace.db.add(Markdown.make({ content: '# Hello World' }));
-              defaultSpace.db.add(Operation.serialize(RunInstructions));
+              defaultSpace.db.add(Operation.serialize(AgentOperation.RunInstructions));
             }),
         }),
         AssistantPlugin(),
         RoutinePlugin(),
-        ExplorerPlugin(),
-        MarkdownPlugin(),
+        ExplorerPlugin.make(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

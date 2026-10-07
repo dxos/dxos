@@ -2,15 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './atom-kvs';
-export * as DynamicRuntime from './dynamic-runtime';
-export * as EffectEx from './EffectEx';
-export { type Configuration as OtelConfiguration, layerOtel } from './otel';
-export * as Performance from './Performance';
-export * as RuntimeProvider from './RuntimeProvider';
-export * as SchemaEx from './SchemaEx';
-
-// Re-export core types at the top level so TypeScript can name them in declaration files.
-// These are the branded string types that appear in public APIs (View fields, JSON schemas).
-// The associated schema values live under SchemaEx.JsonPath / SchemaEx.JsonProp.
-export type { JsonPath, JsonProp } from './internal/json-path';
+export * as AtomEx from './AtomEx.ts';
+export * as DynamicRuntime from './dynamic-runtime.ts';
+export * as EffectEx from './EffectEx.ts';
+export * from './internal/index.ts';
+export * as Hook from './Hook.ts';
+export * as KvsStore from './KvsStore.ts';
+export * as OtelTracer from './OtelTracer.ts';
+export * as Performance from './Performance.ts';
+export * as RuntimeProvider from './RuntimeProvider.ts';
+export * as SchemaEx from './SchemaEx.ts';
+export * as SpanAttributes from './SpanAttributes.ts';
+export * as Yield from './Yield.ts';

@@ -18,10 +18,10 @@ import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { URI } from '@dxos/keys';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { TestRuntime } from '../testing';
-import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types';
-import { StreamSchema } from '../util';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
+import { TestRuntime } from '../testing/index.ts';
+import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types/index.ts';
+import { StreamSchema } from '../util/index.ts';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(
@@ -40,7 +40,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('Streaming pipelines', () => {
-  it.scoped(
+  it.effect(
     'synchronous stream sum pipeline',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -59,7 +59,7 @@ describe('Streaming pipelines', () => {
     ),
   );
 
-  it.scopedLive(
+  it.live(
     'asynchronous stream sum pipeline',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -93,7 +93,12 @@ const sumAggregator = defineComputeNode({
   output: Schema.Struct({ result: Schema.Number }),
   exec: synchronizedComputeFunction(({ stream }) =>
     Effect.gen(function* () {
-      const result = yield* stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
+      const result = yield* stream.pipe(
+        Stream.runFold(
+          () => 0,
+          (acc: number, x: number) => acc + x,
+        ),
+      );
       return { result };
     }),
   ),
@@ -106,15 +111,17 @@ const sumAggregator = defineComputeNode({
  */
 const streamSum = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'stream-sum-INPUT', type: NODE_INPUT })
-    .createNode({ id: 'stream-sum-AGGREGATOR', type: URI.make('dxn:test:sum-aggregator') })
-    .createNode({ id: 'stream-sum-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'stream-sum-INPUT', property: 'stream' }, { node: 'stream-sum-AGGREGATOR', property: 'stream' })
-    .createEdge(
-      { node: 'stream-sum-AGGREGATOR', property: 'result' },
-      { node: 'stream-sum-OUTPUT', property: 'result' },
-    );
+  model.createNode({ id: 'stream-sum-INPUT', type: NODE_INPUT });
+  model.createNode({ id: 'stream-sum-AGGREGATOR', type: URI.make('dxn:test:sum-aggregator') });
+  model.createNode({ id: 'stream-sum-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge(
+    { node: 'stream-sum-INPUT', property: 'stream' },
+    { node: 'stream-sum-AGGREGATOR', property: 'stream' },
+  );
+  model.createEdge(
+    { node: 'stream-sum-AGGREGATOR', property: 'result' },
+    { node: 'stream-sum-OUTPUT', property: 'result' },
+  );
 
   return model;
 };

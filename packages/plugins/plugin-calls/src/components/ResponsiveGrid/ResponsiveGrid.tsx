@@ -6,11 +6,12 @@ import React, { type ComponentType, type FC, useCallback, useEffect, useLayoutEf
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
-import { ResponsivePanel } from './ResponsivePanel';
+import { type ResponsiveGridItemProps } from './ResponsiveGridItem.tsx';
+import { ResponsivePanel } from './ResponsivePanel.tsx';
 
 const ASPECT_RATIO = 16 / 9;
 const MIN_GALLERY_HEIGHT = 250;
@@ -22,7 +23,7 @@ const maxImageSize = 'w-[2560px] h-[1440px]';
 /**
  * Props for the ResponsiveGrid component.
  */
-export type ResponsiveGridProps<T extends object = any> = ThemedClassName<{
+export type ResponsiveGridProps<T extends object = any> = Util.ThemedClassName<{
   /** Cell component. */
   Cell: ComponentType<ResponsiveGridItemProps<T>>;
 
@@ -135,30 +136,32 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className={mx('dx-expander relative', classNames)}>
+    <div ref={containerRef} className={mx('dx-expand relative', classNames)}>
       {/* Placeholder elements to calculate layout. */}
-      <div className='absolute inset-0 flex flex-col grow gap-2'>
+      <Layout.Flex column gap='sm' classNames='dx-cover grow'>
         {/* Pinned item. */}
         {pinnedItem && (
-          <div
-            className={mx('flex grow-[2] shrink overflow-hidden justify-center items-center', hideGallery && 'h-full')}
+          <Layout.Flex
+            center
+            classNames={['grow-[2] shrink overflow-hidden', hideGallery && 'h-full']}
             style={hideGallery ? {} : { height: dividerHeight }}
           >
             <SoloItem id={getId(pinnedItem)} debug={debug} />
-          </div>
+          </Layout.Flex>
         )}
 
         {/* Gallery. */}
         {!hideGallery && (
-          <div
+          <Layout.Flex
             ref={gridContainerRef}
-            className='flex grow-[1] overflow-hidden justify-center items-center'
+            center
+            classNames='grow-[1] overflow-hidden'
             style={hideGallery ? {} : { minHeight: MIN_GALLERY_HEIGHT }}
           >
             {mainItems.length === 1 && (
-              <div style={{ width: cellWidth }} className='flex h-full'>
+              <Layout.Flex style={{ width: cellWidth }} classNames='h-full'>
                 <SoloItem id={getId(mainItems[0])} debug={debug} />
-              </div>
+              </Layout.Flex>
             )}
 
             {mainItems.length > 1 && columns > 0 && (
@@ -182,9 +185,9 @@ export const ResponsiveGrid = <T extends object = any>({
                 ))}
               </div>
             )}
-          </div>
+          </Layout.Flex>
         )}
-      </div>
+      </Layout.Flex>
 
       {/* Absolutely positioned items. */}
       <div className={mx(debug && 'opacity-10')}>

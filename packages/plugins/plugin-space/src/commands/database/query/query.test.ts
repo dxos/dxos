@@ -10,10 +10,10 @@ import { spaceLayer } from '@dxos/cli-util';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Task } from '@dxos/types';
 
-import { handler } from './query';
+import { handler } from './query.ts';
 
 describe('spaces query', () => {
   it('should query empty space', () =>

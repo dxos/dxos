@@ -4,8 +4,9 @@
 
 /* eslint-disable react/no-unknown-property */
 
-import * as Voxel from '../../types/Voxel';
-import { type VoxelBounds } from './VoxelEditor';
+import { Voxel } from '#types';
+
+import { type VoxelBounds } from './VoxelEditor.tsx';
 
 // Kept out of `VoxelEditor.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

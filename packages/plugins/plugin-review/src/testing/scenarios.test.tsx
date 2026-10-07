@@ -7,8 +7,8 @@ import * as Context from 'effect/Context';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import { PluginManagerProvider } from '@dxos/app-framework/ui';
 import { fromHost } from '@dxos/client/local';
 import { Space as HaloSpace, Identity } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
@@ -20,8 +20,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
-import { runScenarioHeadless } from './scenario-executor';
-import { reviewScenarios } from './scenarios';
+import { runScenarioHeadless } from './scenario-executor.tsx';
+import { reviewScenarios } from './scenarios.ts';
 
 /**
  * Runs every {@link reviewScenarios} definition through the headless executor. The SAME definitions
@@ -53,7 +53,7 @@ describe('review scenarios (headless)', () => {
   // scenarios run against the default policy.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <PluginManagerProvider value={pluginManager}>
+    <PluginManagerProvider.Root value={pluginManager}>
       <ClientProvider client={client}>
         <HaloProvider
           services={Context.empty().pipe(
@@ -64,7 +64,7 @@ describe('review scenarios (headless)', () => {
           <ViewStateProvider>{children}</ViewStateProvider>
         </HaloProvider>
       </ClientProvider>
-    </PluginManagerProvider>
+    </PluginManagerProvider.Root>
   );
 
   for (const scenario of reviewScenarios) {

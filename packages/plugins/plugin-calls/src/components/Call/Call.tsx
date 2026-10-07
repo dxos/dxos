@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useDebugMode } from '#hooks';
+import { CallsCapabilities } from '#types';
 
-import { type CallManager } from '../../calls';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
-import { AudioStream } from '../Media';
-import { ParticipantGrid } from '../Participant';
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { type CallManager } from '../../calls/index.ts';
+import { AudioStream } from '../Media/index.ts';
+import { ParticipantGrid } from '../Participant/index.ts';
+import { Toolbar, type ToolbarProps } from './Toolbar.tsx';
 
 //
 // Root
@@ -45,7 +46,7 @@ type CallRootProps = PropsWithChildren<{ fullscreen?: boolean }>;
  * flags) with the composable parts below; renders no DOM of its own.
  */
 const CallRoot = ({ children, fullscreen }: CallRootProps) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const debug = useDebugMode();
   return <CallContext.Provider value={{ call, debug, fullscreen }}>{children}</CallContext.Provider>;
 };
@@ -59,10 +60,10 @@ CallRoot.displayName = CALL_ROOT_NAME;
 const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
-const CallViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: 'relative dx-container flex flex-col' })} ref={forwardedRef}>
+const CallViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
+  <Layout.Flex column {...Util.composableProps(props, { classNames: 'relative dx-expand' })} ref={forwardedRef}>
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 CallViewport.displayName = CALL_VIEWPORT_NAME;
@@ -76,7 +77,7 @@ CallViewport.displayName = CALL_VIEWPORT_NAME;
 // event and this root mounts eagerly, so read it optionally and render nothing until it exists
 // (an empty audio sink is correct while there is no call).
 const CallAudio = () => {
-  const call = useOptionalCapability(CallsCapabilities.Manager);
+  const call = Hooks.useOptionalCapability(CallsCapabilities.Manager);
   return call ? <CallAudioStream call={call} /> : null;
 };
 
@@ -97,9 +98,9 @@ const CallGrid = () => {
   const users = useAtomValue(call.usersAtom);
 
   return (
-    <div className='grid grow p-4 dark:bg-neutral-900'>
+    <Layout.Grid classNames='grow p-4 dark:bg-neutral-900'>
       <ParticipantGrid self={self} users={users} debug={debug} fullscreen={fullscreen} />
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -112,9 +113,9 @@ CallGrid.displayName = 'Call.Grid';
 type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onJoin' | 'onLeave'>;
 
 const CallToolbar = (props: CallToolbarProps) => (
-  <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+  <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
     <Toolbar isInRoom {...props} />
-  </div>
+  </Layout.Flex>
 );
 
 CallToolbar.displayName = 'Call.Toolbar';

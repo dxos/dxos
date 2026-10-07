@@ -4,8 +4,10 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useResolveRef } from '@dxos/echo-react';
+import * as Card from '@dxos/react-ui/Card';
+import * as Show from '@dxos/react-ui/Show';
 import { type Outline as OutlineType } from '@dxos/types';
 
 import { Outline } from '#components';
@@ -13,16 +15,21 @@ import { Outline } from '#components';
 export type OutlineCardProps = AppSurface.ObjectCardProps<OutlineType.Outline>;
 
 export const OutlineCard = ({ subject }: OutlineCardProps) => {
-  if (!subject.content.target) {
-    return null;
-  }
+  const content = useResolveRef(subject.content);
 
   return (
-    <Outline.Root id={subject.content.target.id} text={subject.content.target}>
-      <Card.Root id={subject.id} classNames='p-2'>
-        <Outline.Content />
-      </Card.Root>
-    </Outline.Root>
+    <Show.Show when={content}>
+      {(text) => (
+        // Read-only: a card is a preview, so no editing, no drag grips, and no floating menu.
+        <Outline.Root id={text.id} text={text} readonly>
+          <Card.Body>
+            <Card.Row>
+              <Outline.Content />
+            </Card.Row>
+          </Card.Body>
+        </Outline.Root>
+      )}
+    </Show.Show>
   );
 };
 

@@ -4,14 +4,15 @@
 
 import { useEffect } from 'react';
 
-import { Graph, type Node } from '@dxos/plugin-graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
-export const useNodeActionExpander = (node?: Node.Node) => {
+export const useNodeActionExpander = (node?: AppGraphNode.Node) => {
   useEffect(() => {
     if (node) {
       const frame = requestAnimationFrame(() => {
-        const graph = Graph.getGraph(node);
-        void Graph.expand(graph, node.id, 'action');
+        const graph = AppGraph.getGraph(node);
+        void AppGraph.expandSync(graph, node.id, 'action');
       });
       return () => cancelAnimationFrame(frame);
     }

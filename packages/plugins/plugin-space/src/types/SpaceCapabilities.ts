@@ -2,35 +2,39 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
-import { type ComplexMap, type Position } from '@dxos/util';
+import { type ComplexMap } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
 
+import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
-import * as Settings from './Settings';
-import * as SpaceSchema from './SpaceSchema';
+import * as Settings from './Settings.ts';
+import * as SpaceEvents from './SpaceEvents.ts';
+import * as SpaceSchema from './SpaceSchema.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
 /** Schema for persisted space plugin state. */
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    spaceNames: Schema.Record({ key: Schema.String, value: Schema.String }),
-    enabledEdgeReplication: Schema.Boolean,
-  }),
-);
+export const StateSchema = Schema.Struct({
+  spaceNames: Schema.Record(Schema.String, Schema.String),
+  enabledEdgeReplication: Schema.Boolean,
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 
@@ -51,7 +55,6 @@ export type MergePreview = {
 
 /** Ephemeral space plugin state (not persisted). */
 export type SpaceEphemeralState = {
-  awaiting: string | undefined;
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
   viewersByObject: Record<string, ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>>;
@@ -64,6 +67,17 @@ export type SpaceEphemeralState = {
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(
   `${meta.profile.key}.capability.ephemeralState`,
+);
+
+/**
+ * The active space projected for peripheral displays (Stream Deck, LaMetric).
+ *
+ * Contributed here rather than by each device plugin so that one set of queries serves every
+ * attached device, and so that `plugin-space` needs no knowledge of what is attached: it publishes
+ * facts, and slot counts, truncation and icon resolution stay with the hardware that has them.
+ */
+export const Dashboard = Capability.makeSingleton<Atom.Atom<SpaceDashboard>>()(
+  `${meta.profile.key}.capability.dashboard`,
 );
 
 /**
@@ -96,6 +110,22 @@ export type OnTypeAdded = (params: {
 }) => Effect.Effect<void, Error, Operation.Service>;
 export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${meta.profile.key}.capability.onTypeAdded`);
 
+/**
+ * Tells the plugins a type was added (plugin-table makes a table for it). Activation first, since it is
+ * what makes a lazy module contribute its `OnTypeAdded` callback.
+ */
+export const notifyTypeAdded = Effect.fnUntraced(function* (
+  managers: { plugins: PluginManager.PluginManager; capabilities: CapabilityManager.CapabilityManager },
+  params: Parameters<OnTypeAdded>[0],
+) {
+  yield* managers.plugins.activate(SpaceEvents.TypeAdded);
+  const callbacks = managers.capabilities.getAll(OnTypeAdded);
+  yield* Effect.all(
+    callbacks.map((callback) => callback(params)),
+    { concurrency: 'unbounded' },
+  );
+});
+
 // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
 export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
 export const Repair = Capability.makeSingleton<HandleRepair>()(`${meta.profile.key}.capability.repair`);
@@ -108,7 +138,7 @@ export type CreateObjectEntry = Readonly<{
    * Effect Schema describing the create form inputs. To use a `Type.Type`
    * entity as the form schema, extract its schema first via `Type.getSchema(...)`.
    */
-  inputSchema?: Schema.Schema.AnyNoContext;
+  inputSchema?: Schema.Codec<any, any>;
   /**
    * Optional custom React panel rendered in place of the default `inputSchema` form.
    * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).
@@ -129,7 +159,9 @@ export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySp
 
 /** Props passed to a `CreateObjectEntry.customPanel`. */
 export type CreateObjectCustomPanelProps = {
-  target: Database.Database | Collection.Collection;
+  target: Database.Database | Obj.Unknown;
   initialFormValues?: Record<string, any>;
   onCreateObject: (data: Record<string, any>) => void | Promise<void>;
+  /** Abandons the create (closes the dialog); panels render it as their Cancel action. */
+  onCancel?: () => void;
 };

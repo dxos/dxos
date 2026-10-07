@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './commands';
-export * from './dnd';
-export * from './outliner';
-export * from './tree';
+export * from './commands.ts';
+export * from './dnd.ts';
+export * from './ghost.ts';
+export * from './outliner.ts';
+export * from './tree.ts';

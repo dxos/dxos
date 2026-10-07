@@ -2,15 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node, type Node as NodeType } from '@dxos/plugin-graph';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import type * as Atom from 'effect/reactivity/Atom';
+import { useEffect } from 'react';
+
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type Label } from '@dxos/ui-types/translations';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
-export type DeckCompanion = NodeType.Node<
+export type DeckCompanion = AppGraphNode.Node<
   any,
   {
     label: Label;
@@ -20,12 +26,22 @@ export type DeckCompanion = NodeType.Node<
     fixed?: boolean;
     position?: Position.Position;
     joyride?: string;
+    mount?: AppNode.DeckCompanionMount;
+    /** Count shown on the rail tab while greater than zero. */
+    badge?: Atom.Atom<number | undefined>;
   }
 >;
 
+const isDeckCompanion = (node: AppGraphNode.Node): node is DeckCompanion =>
+  node.type === DeckSchema.DECK_COMPANION_TYPE;
+
 export const useDeckCompanions = (): DeckCompanion[] => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId, 'child');
-  const companions = connections.filter((node) => node.type === DeckSchema.DECK_COMPANION_TYPE) as DeckCompanion[];
-  return companions.toSorted((a, b) => Position.compare(a.properties, b.properties));
+  const { graph } = Hooks.useAppGraph();
+  useEffect(() => {
+    AppGraph.expandSync(graph, GraphNode.RootId, AppNode.companion);
+  }, [graph]);
+
+  return GraphHooks.useConnections(graph, GraphNode.RootId, AppNode.companion)
+    .filter(isDeckCompanion)
+    .toSorted((a, b) => Position.compare(a.properties, b.properties));
 };

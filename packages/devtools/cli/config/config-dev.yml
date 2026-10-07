@@ -12,8 +12,13 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
+    # Same EDGE host as `edge` below, so this is the hub that EDGE's `HUB_SERVICE` binding resolves
+    # to -- a hub from another environment mints magic links no redemption can resolve.
+    hub:
+      url: https://dev.dxos.network/hub/
+      authUrl: https://account.dev.composer.space
     edge:
-      url: wss://edge.dxos.workers.dev/
+      url: https://dev.dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice
     ipfs:

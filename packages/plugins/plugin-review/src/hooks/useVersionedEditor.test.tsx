@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import { PluginManagerProvider } from '@dxos/app-framework/ui';
 import { fromHost } from '@dxos/client/local';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { Identity } from '@dxos/halo';
@@ -21,8 +21,8 @@ import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { useVersionedEditor } from './useVersionedEditor';
-import { useVersioning } from './useVersioning';
+import { useVersionedEditor } from './useVersionedEditor.ts';
+import { useVersioning } from './useVersioning.ts';
 
 /**
  * Headless harness for the editor-binding lifecycle: drives the SAME hook pipeline the markdown
@@ -74,11 +74,11 @@ describe('editor binding lifecycle', () => {
   // harness drives the default policy.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <PluginManagerProvider value={pluginManager}>
+    <PluginManagerProvider.Root value={pluginManager}>
       <ClientProvider client={client}>
         <ViewStateProvider>{children}</ViewStateProvider>
       </ClientProvider>
-    </PluginManagerProvider>
+    </PluginManagerProvider.Root>
   );
 
   const setup = () =>
@@ -168,7 +168,7 @@ describe('editor binding lifecycle', () => {
     const root = doc.content.target;
     invariant(root, 'root not loaded');
     act(() => {
-      Obj.update(root, () => {
+      Obj.update(root, (root) => {
         EchoText.update(root, 'content', 'alpha\nbravo\nworld\n');
       });
     });
@@ -196,7 +196,7 @@ describe('editor binding lifecycle', () => {
     const branchText = result.current.editor.ownBranchText;
     invariant(branchText, 'own branch not bound');
     act(() => {
-      Obj.update(branchText, () => {
+      Obj.update(branchText, (branchText) => {
         EchoText.update(branchText, 'content', 'alpha\nbravo\nSuggest 1\n');
       });
     });
@@ -207,7 +207,7 @@ describe('editor binding lifecycle', () => {
     const root = doc.content.target;
     invariant(root, 'root not loaded');
     act(() => {
-      Obj.update(root, () => {
+      Obj.update(root, (root) => {
         EchoText.update(root, 'content', 'alpha\nbravo\nText 2\n');
       });
     });

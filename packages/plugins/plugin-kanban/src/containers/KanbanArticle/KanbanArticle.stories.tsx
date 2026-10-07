@@ -2,26 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/echo-react';
-import { type Mutable } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 // `/plugin` entrypoints used here for the same reason as `corePlugins()` —
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -32,10 +31,9 @@ import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { KanbanPlugin } from '#plugin';
 import { translations } from '#translations';
-
-import { KanbanPlugin } from '../../KanbanPlugin';
-import * as Kanban from '../../types/Kanban';
+import { Kanban } from '#types';
 
 random.seed(0);
 
@@ -63,8 +61,8 @@ type ClientSetupOptions = {
 const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): Decorator =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
-      ClientPlugin({
+      ...CorePlugins.make(),
+      ClientPlugin.make({
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -74,9 +72,9 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
             yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
           }),
       }),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       SpacePlugin({}),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       KanbanPlugin(),
     ],
   });
@@ -105,7 +103,7 @@ const DefaultComponent = () => {
       // NOTE: persisted Type.Type typename is immutable; only the view's
       // query is updated here.
       Obj.update(view, (view) => {
-        view.query.ast = newQuery as Mutable<QueryAST.Query>;
+        view.query.ast = newQuery as Obj.Mutable<QueryAST.Query>;
       });
     },
     [view, type],
@@ -125,7 +123,7 @@ const DefaultComponent = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor

@@ -1,0 +1,595 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type MouseEvent, useId, useMemo } from 'react';
+
+import { Diagnostics, Scene } from '@dxos/diagram';
+import type * as Util from '@dxos/react-ui/Util';
+import { mx } from '@dxos/ui-theme';
+
+const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
+const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
+
+const MARGIN = 40;
+
+type Rect = { x: number; y: number; w: number; h: number };
+type Point = Scene.Point;
+
+const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): Rect => {
+  const { x = 0, y = 0 } = object.origin ?? {};
+  const scale = object.scale ?? 1;
+  return { x: x + element.x * scale, y: y + element.y * scale, w: element.w * scale, h: element.h * scale };
+};
+
+const center = (rect: Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
+
+const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
+
+const CHAR_EM = Diagnostics.CHAR_EM;
+
+/** Greedy word wrap per input line; SVG text has no native wrapping. */
+const wrapLines = (text: string, maxChars: number): string[] =>
+  text.split('\n').flatMap((line) => {
+    if (line.length <= maxChars) {
+      return [line];
+    }
+    const lines: string[] = [];
+    let current = '';
+    for (const word of line.split(' ')) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length > maxChars && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    return [...lines, current];
+  });
+
+const RADIUS = 8;
+
+/** Rect path rounding only the top or bottom corners; the opposite edge stays square. */
+const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corners: 'top' | 'bottom'): string => {
+  // Clamp so small rects cannot produce self-overlapping path segments.
+  const radius = Math.min(cornerRadius, w / 2, h / 2);
+  return corners === 'top'
+    ? `M ${x} ${y + h} L ${x} ${y + radius} Q ${x} ${y} ${x + radius} ${y} L ${x + w - radius} ${y} ` +
+        `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
+    : `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h - radius} Q ${x + w} ${y + h} ${x + w - radius} ${y + h} ` +
+        `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
+};
+
+/** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
+/** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
+const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
+  'grey': 'text-neutral-400 dark:text-neutral-500',
+  'light-blue': 'text-sky-500',
+  'light-green': 'text-emerald-500',
+  'yellow': 'text-amber-500',
+  'light-violet': 'text-violet-500',
+  'orange': 'text-orange-500',
+  'light-red': 'text-rose-500',
+};
+
+const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
+
+const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
+
+/** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
+const TINT = { fill: 'color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))' };
+
+type Resolved = {
+  viewBox: string;
+  /** Absolute box rects keyed by `objectId/elementId`, for arrow binding. */
+  registry: Map<string, Rect>;
+  objects: readonly Scene.WorldObject[];
+};
+
+const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
+  const registry = Diagnostics.bindTargets(objects);
+  const points: Point[] = [...registry.values()].flatMap((rect) => [rect, { x: rect.x + rect.w, y: rect.y + rect.h }]);
+  for (const object of objects) {
+    const { x = 0, y = 0 } = object.origin ?? {};
+    const scale = object.scale ?? 1;
+    for (const element of object.elements) {
+      if (element.kind === 'line' || element.kind === 'curve') {
+        points.push(...element.points.map((point) => ({ x: x + point.x * scale, y: y + point.y * scale })));
+      } else if (element.kind === 'arrow') {
+        points.push(...(Diagnostics.arrowPoints(object, element, registry) ?? []));
+      }
+    }
+  }
+
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(0, ...xs) - MARGIN;
+  const minY = Math.min(0, ...ys) - MARGIN;
+  const maxX = Math.max(MARGIN, ...xs) + MARGIN;
+  const maxY = Math.max(MARGIN, ...ys) + MARGIN;
+
+  return {
+    objects,
+    registry,
+    viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}`,
+  };
+};
+
+type MultilineTextProps = {
+  cx: number;
+  cy: number;
+  text: string;
+  weight: Scene.Weight;
+  className?: string;
+};
+
+/** Free-standing centred text, one line per `\n`. */
+const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) => {
+  const lines = text.split('\n');
+  return (
+    <text
+      x={cx}
+      y={cy - ((lines.length - 1) * LINE_H(weight)) / 2}
+      textAnchor='middle'
+      dominantBaseline='central'
+      fontSize={FONT_SIZE(weight)}
+      className={mx('fill-current', className)}
+    >
+      {lines.map((line, index) => (
+        <tspan key={index} x={cx} dy={index === 0 ? 0 : LINE_H(weight)}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+};
+
+type BoxLabelProps = {
+  rect: Rect;
+  text: string;
+  weight: Scene.Weight;
+};
+
+/** A box's label, set by `Diagnostics.layoutLabel` so it stays inside the box and the label check agrees. */
+const BoxLabel = ({ rect, text, weight }: BoxLabelProps) => {
+  const { lines, size, lineH, overflow } = Diagnostics.layoutLabel(text, weight, rect);
+  const mid = center(rect);
+  return (
+    <text
+      x={mid.x}
+      y={mid.y - ((lines.length - 1) * lineH) / 2}
+      textAnchor='middle'
+      dominantBaseline='central'
+      fontSize={size}
+      className='fill-current stroke-none'
+    >
+      {overflow && <title>{text}</title>}
+      {lines.map((line, index) => (
+        <tspan key={index} x={mid.x} dy={index === 0 ? 0 : lineH}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+};
+
+/** Per-instance marker fragment ids (multiple SceneSvgs may share a page). */
+type MarkerIds = Record<Scene.Marker, string>;
+
+type ElementProps = {
+  object: Scene.WorldObject;
+  element: Scene.Element;
+  registry: Map<string, Rect>;
+  markers: MarkerIds;
+};
+
+const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
+  const { x = 0, y = 0 } = object.origin ?? {};
+  const scale = object.scale ?? 1;
+  const map = (point: Point): Point => ({ x: x + point.x * scale, y: y + point.y * scale });
+  const weight = element.weight ?? 'm';
+
+  switch (element.kind) {
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+    case 'triangle': {
+      const rect = rectOf(object, element);
+      const mid = center(rect);
+      const tinted = element.fill === 'tint';
+      const fill = tinted
+        ? undefined
+        : element.fill === 'solid'
+          ? 'fill-neutral-100 dark:fill-neutral-800'
+          : 'fill-transparent';
+      const style = tinted ? TINT : undefined;
+      const shape =
+        element.kind === 'ellipse' ? (
+          <ellipse cx={mid.x} cy={mid.y} rx={rect.w / 2} ry={rect.h / 2} className={fill} style={style} />
+        ) : element.kind === 'diamond' ? (
+          <polygon
+            points={`${mid.x},${rect.y} ${rect.x + rect.w},${mid.y} ${mid.x},${rect.y + rect.h} ${rect.x},${mid.y}`}
+            className={fill}
+            style={style}
+          />
+        ) : element.kind === 'triangle' ? (
+          <polygon
+            points={`${mid.x},${rect.y} ${rect.x + rect.w},${rect.y + rect.h} ${rect.x},${rect.y + rect.h}`}
+            className={fill}
+            style={style}
+          />
+        ) : element.corners === 'top' || element.corners === 'bottom' ? (
+          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} style={style} />
+        ) : (
+          <rect
+            x={rect.x}
+            y={rect.y}
+            width={rect.w}
+            height={rect.h}
+            rx={element.corners === 'none' ? 0 : RADIUS}
+            className={fill}
+            style={style}
+          />
+        );
+      return (
+        <g
+          className={mx('stroke-current', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
+        >
+          {shape}
+          {element.text && <BoxLabel rect={rect} text={element.text} weight={weight} />}
+        </g>
+      );
+    }
+    case 'circle': {
+      const mid = map({ x: element.cx, y: element.cy });
+      return (
+        <g className={mx('stroke-current fill-transparent', colorClass(element.color))} strokeWidth={1.5}>
+          <circle cx={mid.x} cy={mid.y} r={element.r * scale} />
+          {element.text && <MultilineText cx={mid.x} cy={mid.y} text={element.text} weight={weight} />}
+        </g>
+      );
+    }
+    case 'line':
+    case 'curve': {
+      const points = element.points.map(map);
+      // A routed connector is a `<id>-path` polyline ending where its `<id>` arrow starts; the
+      // arrow's source marker belongs at the polyline's first point, where the route begins.
+      const arrow = element.id.endsWith('-path')
+        ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
+        : undefined;
+      const derived = arrow?.kind === 'arrow' ? Scene.markersOf(arrow) : undefined;
+      const start = derived?.start;
+      // The route takes its arrow's relation dash unless the polyline sets its own stroke.
+      const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
+      return (
+        <polyline
+          points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+          className={mx('stroke-current fill-none', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={stroke ? strokeDash[stroke] : undefined}
+          markerStart={start ? `url(#${markers[start]})` : undefined}
+        />
+      );
+    }
+    case 'text': {
+      const anchor = map(element);
+      const textWeight = element.weight ?? 's';
+      const fontSize = FONT_SIZE(textWeight);
+      const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
+      const lines = wrapLines(element.text, maxChars);
+      return (
+        <text
+          x={anchor.x}
+          y={anchor.y + LINE_H(textWeight) / 2}
+          fontSize={fontSize}
+          // Muted text (group titles) is still text to read: grey strokes stay light, grey type meets 4.5:1.
+          fontWeight={element.color === 'grey' ? 500 : undefined}
+          className={mx('fill-current', element.color === 'grey' ? MUTED_TEXT : colorClass(element.color))}
+        >
+          {lines.map((line, index) => (
+            <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H(textWeight)}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      );
+    }
+    case 'portal': {
+      // A window onto another drawing; without nesting the frame stands in for its content.
+      const rect = rectOf(object, element);
+      return (
+        <g
+          className={mx('stroke-current fill-transparent', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={strokeDash[element.stroke ?? 'dashed']}
+        >
+          <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={RADIUS} />
+          {element.text && (
+            <MultilineText
+              cx={center(rect).x}
+              cy={rect.y + LINE_H('s')}
+              text={element.text}
+              weight='s'
+              className='stroke-none'
+            />
+          )}
+        </g>
+      );
+    }
+    case 'arrow': {
+      // Drawn along the geometry `Diagnostics` measures: bound ends clipped at the borders, ports dropped.
+      const points = Diagnostics.arrowPoints(object, element, registry);
+      if (!points) {
+        return null;
+      }
+      const [start, end] = [points[points.length - 2], points[points.length - 1]];
+      const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+      const { start: tail, end: head, dashed } = Scene.markersOf(element);
+      // On a routed connector the source marker is drawn by its `-path` polyline instead.
+      const routed = object.elements.some(
+        (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
+      );
+      const stroke = {
+        strokeWidth: 1.5,
+        strokeDasharray: element.stroke ? strokeDash[element.stroke] : dashed ? strokeDash.dashed : undefined,
+        markerEnd: head ? `url(#${markers[head]})` : undefined,
+        markerStart: tail && !routed ? `url(#${markers[tail]})` : undefined,
+      };
+      return (
+        <g className={mx('stroke-current', colorClass(element.color))}>
+          {points.length === 2 ? (
+            <line x1={start.x} y1={start.y} x2={end.x} y2={end.y} {...stroke} />
+          ) : (
+            <polyline
+              points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+              className='fill-none'
+              {...stroke}
+            />
+          )}
+          {element.text && (
+            <MultilineText
+              cx={mid.x}
+              cy={mid.y - LINE_H('s') / 2}
+              text={element.text}
+              weight='s'
+              className='stroke-none'
+            />
+          )}
+        </g>
+      );
+    }
+    default:
+      return null;
+  }
+};
+
+export type SceneSvgProps = Util.ThemedClassName<{
+  objects: readonly Scene.WorldObject[];
+  /** Draw the alignment grid at this spacing (scene px). */
+  grid?: number;
+  /** Selected object ids; rendering is controlled, the host owns the state. */
+  selection?: readonly string[];
+  /** Click selects one object (shift/meta toggles); clicking the background clears. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** Double-click. */
+  onActivate?: (objectId: string) => void;
+}>;
+
+/**
+ * SVG backend for the scene DSL: renders world objects directly (no canvas editor), resolving
+ * bound arrow refs against box borders and drawing the UML end markers. Selection is host-owned
+ * and optional — pass `selection` with `onSelectionChange` (click, shift-toggle, background clear,
+ * Space) and `onActivate` (double-click, Enter) to make objects interactive; persistence stays
+ * with the variant that holds the canvas.
+ */
+export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
+  const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
+  // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
+  const instanceId = useId();
+  const markers: MarkerIds = {
+    'arrow': `${instanceId}-arrow`,
+    'open': `${instanceId}-open`,
+    'triangle': `${instanceId}-triangle`,
+    'crowsfoot': `${instanceId}-crowsfoot`,
+    'one': `${instanceId}-one`,
+    'diamond': `${instanceId}-diamond`,
+    'diamond-filled': `${instanceId}-diamond-filled`,
+    'circle': `${instanceId}-circle`,
+  };
+  const gridId = `${instanceId}-grid`;
+  const selected = useMemo(() => new Set(selection), [selection]);
+  const interactive = Boolean(onSelectionChange || onActivate);
+
+  const handleSelect = (objectId: string, event: MouseEvent<SVGGElement>) => {
+    // Object clicks stop here so the background handler below does not immediately clear them.
+    event.stopPropagation();
+    if (!onSelectionChange) {
+      return;
+    }
+    const toggle = event.shiftKey || event.metaKey || event.ctrlKey;
+    onSelectionChange(
+      toggle
+        ? selected.has(objectId)
+          ? [...selected].filter((id) => id !== objectId)
+          : [...selected, objectId]
+        : [objectId],
+    );
+  };
+
+  return (
+    <svg
+      viewBox={viewBox}
+      className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}
+      onClick={onSelectionChange && selected.size > 0 ? () => onSelectionChange([]) : undefined}
+    >
+      <defs>
+        {/* UML end markers. `auto-start-reverse` lets the same shapes serve as head or tail. */}
+        <marker
+          id={markers.arrow}
+          viewBox='0 0 10 10'
+          refX='9'
+          refY='5'
+          markerWidth='8'
+          markerHeight='8'
+          orient='auto-start-reverse'
+        >
+          <path d='M 0 1 L 9 5 L 0 9 z' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
+        </marker>
+        <marker
+          id={markers.triangle}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          {/* Hollow: filled with the surface so the line does not show through the triangle. */}
+          <path
+            d='M 1 1 L 11 6 L 1 11 z'
+            fill='var(--surface-bg, transparent)'
+            className='stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.crowsfoot}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 0 6 L 11 1 M 0 6 L 11 6 M 0 6 L 11 11'
+            className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.open}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 1 1 L 11 6 L 1 11'
+            className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        {/* The one bar of ER notation: a stroke across the line just inside the end. */}
+        <marker
+          id={markers.one}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path d='M 7 1 L 7 11' className='fill-none stroke-neutral-800 dark:stroke-neutral-200' strokeWidth={1.2} />
+        </marker>
+        {/* Diamonds at the whole's end: hollow for aggregation, filled for composition. */}
+        <marker
+          id={markers.diamond}
+          viewBox='0 0 18 10'
+          refX='17'
+          refY='5'
+          markerWidth='18'
+          markerHeight='10'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 1 5 L 9 1 L 17 5 L 9 9 z'
+            fill='var(--surface-bg, transparent)'
+            className='stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers['diamond-filled']}
+          viewBox='0 0 18 10'
+          refX='17'
+          refY='5'
+          markerWidth='18'
+          markerHeight='10'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 1 5 L 9 1 L 17 5 L 9 9 z'
+            className='fill-neutral-800 dark:fill-neutral-200 stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.circle}
+          viewBox='0 0 10 10'
+          refX='2'
+          refY='5'
+          markerWidth='8'
+          markerHeight='8'
+          orient='auto'
+        >
+          <circle cx='5' cy='5' r='3' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
+        </marker>
+        {grid && (
+          <pattern id={gridId} width={grid} height={grid} patternUnits='userSpaceOnUse'>
+            <path d={`M ${grid} 0 L 0 0 0 ${grid}`} className='fill-none stroke-neutral-500/20' strokeWidth={1} />
+          </pattern>
+        )}
+      </defs>
+      {grid && <rect x='-10000' y='-10000' width='20000' height='20000' fill={`url(#${gridId})`} />}
+      {objects.map((object) => (
+        <g
+          key={object.id}
+          data-object={object.id}
+          data-selected={selected.has(object.id) || undefined}
+          // Keyboard: Tab focuses an object, Space selects it, Enter selects and activates it.
+          tabIndex={interactive ? 0 : undefined}
+          role={interactive ? 'button' : undefined}
+          aria-label={interactive ? object.id : undefined}
+          aria-pressed={interactive ? selected.has(object.id) : undefined}
+          className={mx(
+            interactive && 'cursor-pointer outline-none focus-visible:[&>*]:stroke-accent-text',
+            selected.has(object.id) && 'text-accent-text',
+          )}
+          onClick={interactive ? (event) => handleSelect(object.id, event) : undefined}
+          onDoubleClick={
+            onActivate
+              ? (event) => {
+                  event.stopPropagation();
+                  onActivate(object.id);
+                }
+              : undefined
+          }
+          onKeyDown={
+            interactive
+              ? (event) => {
+                  if (event.key === ' ' || event.key === 'Enter') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onSelectionChange?.(event.shiftKey ? [...selected, object.id] : [object.id]);
+                    if (event.key === 'Enter') {
+                      onActivate?.(object.id);
+                    }
+                  }
+                }
+              : undefined
+          }
+        >
+          {object.elements.map((element) => (
+            <SceneElement key={element.id} object={object} element={element} registry={registry} markers={markers} />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+};

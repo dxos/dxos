@@ -10,8 +10,9 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { normalizeText } from '@dxos/markdown';
 import { Event, Person } from '@dxos/types';
 
-import { GoogleCalendar } from '../../apis';
-import { GOOGLE_INTEGRATION_SOURCE } from '../../constants';
+import { GoogleCalendar } from '#apis';
+
+import { GOOGLE_INTEGRATION_SOURCE } from '../../constants.ts';
 
 /**
  * Maps Google Calendar event to ECHO event object.

@@ -42,12 +42,12 @@ export type ServiceCredential = {
  * functions over a space-bound service binding. Implementations cache; pass `refresh` to bypass that
  * cache after an authorization failure.
  */
-export class AccessTokenResolver extends Context.Tag('@dxos/functions/AccessTokenResolver')<
+export class AccessTokenResolver extends Context.Service<
   AccessTokenResolver,
   {
     resolve: (request: { spaceId: SpaceId; accessTokenId: string; refresh?: boolean }) => Promise<string>;
   }
->() {
+>()('@dxos/functions/AccessTokenResolver') {
   static resolve = (request: {
     spaceId: SpaceId;
     accessTokenId: string;
@@ -69,7 +69,7 @@ export class AccessTokenResolver extends Context.Tag('@dxos/functions/AccessToke
   });
 }
 
-export class CredentialsService extends Context.Tag('@dxos/functions/CredentialsService')<
+export class CredentialsService extends Context.Service<
   CredentialsService,
   {
     /**
@@ -83,7 +83,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
      */
     getCredential: (query: CredentialQuery) => Promise<ServiceCredential>;
   }
->() {
+>()('@dxos/functions/CredentialsService') {
   static getCredential = (query: CredentialQuery): Effect.Effect<ServiceCredential, never, CredentialsService> =>
     Effect.gen(function* () {
       const credentials = yield* CredentialsService;

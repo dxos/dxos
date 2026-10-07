@@ -3,13 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React from 'react';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { TextInputComponent } from './Chat';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { TextInputComponent } from './Chat.tsx';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
 
 // Kept out of `Chat.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -18,9 +19,8 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from
 // Data
 //
 
-export const ChatShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const ChatShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('chat'),
   }),
 );

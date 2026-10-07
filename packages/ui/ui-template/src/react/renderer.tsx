@@ -1,0 +1,451 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+//
+// SPIKE. The React renderer: one function per kind tag, mapped onto the simplest existing
+// `react-ui` / `react-ui-list` / `react-ui-form` components.
+//
+// Constructed by a factory rather than exported as a constant: `form` resolves its schema against
+// the registry, so the renderer closes over it. The model and the walk stay framework-free; this
+// file is where React begins.
+//
+
+import type * as Schema from 'effect/Schema';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
+
+import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as UiListbox from '@dxos/react-ui/Listbox';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import { mx } from '@dxos/ui-theme';
+
+import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model.ts';
+import { type CreateRendererOptions, type Renderer, type RenderOptions, present, render } from '../render.ts';
+import { useAttention } from './attention.tsx';
+import { Splitter } from './Splitter.tsx';
+
+const asText = (value: unknown): string => (value == null ? '' : String(value));
+
+const oneOf = <T extends string>(values: readonly T[], value: unknown): T | undefined =>
+  values.find((candidate) => candidate === value);
+
+const GAPS: readonly Layout.Gap[] = ['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', 'form', 'form-section'];
+const ALIGNS: readonly Layout.Align[] = ['start', 'center', 'end', 'baseline', 'stretch'];
+const JUSTIFIES: readonly Layout.Justify[] = ['start', 'center', 'end', 'between', 'around', 'evenly'];
+
+/**
+ * `gap`/`align`/`justify` come off the node's static props and are handed to `Flex` unchanged —
+ * the aspect vocabulary in the template is the same closed set the primitive already takes.
+ * `gap` defaults to the ramp's `sm`: a minimal template says nothing and gets sane spacing.
+ */
+const flexProps = (props: Readonly<Record<string, string | number | boolean>>) => ({
+  column: props.direction === 'column',
+  gap: oneOf(GAPS, props.gap) ?? 'sm',
+  align: oneOf(ALIGNS, props.align),
+  justify: oneOf(JUSTIFIES, props.justify),
+});
+
+/** A `columns`/`rows` aspect: whitespace-separated CSS tracks, bare numbers read as `<n>fr`. */
+const LENGTH = /^(\d+(\.\d+)?(rem|em|px|ch|%|vw|vh)|(var|calc|minmax)\(.*\))$/;
+
+const isLength = (token: string): token is Layout.GridLength => LENGTH.test(token);
+
+/** One CSS track as a Grid token: `Nfr` and a bare number are shares, `*-content` the content sizes; anything else is dropped. */
+const toTrack = (token: string): Layout.GridTrack | undefined => {
+  const share = /^(\d+(?:\.\d+)?)(fr)?$/.exec(token);
+  if (share) {
+    return Number(share[1]);
+  }
+  switch (token) {
+    case 'fill':
+    case 'min':
+    case 'max':
+    case 'auto':
+      return token;
+    case 'min-content':
+      return 'min';
+    case 'max-content':
+      return 'max';
+  }
+  return isLength(token) ? token : undefined;
+};
+
+const tracks = (value: string | number | boolean | undefined): Layout.GridTrack[] | undefined => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined;
+  }
+  const parsed = value
+    .trim()
+    .split(/\s+/)
+    .map(toTrack)
+    .filter((track) => track !== undefined);
+  return parsed.length > 0 ? parsed : undefined;
+};
+
+/** Resolve a per-item binding (`item-id`, `item-label`) declared on the collection node itself. */
+const itemField = (node: Node, scope: Scope, item: unknown, name: string): unknown => {
+  const binding: Binding | undefined = node.data?.[name];
+  return binding ? resolve(binding, { ...scope, item }) : undefined;
+};
+
+/** A collection's items as list options, from its `item-id` / `item-label` bindings. */
+const toOptions = (node: Node, scope: Scope, items: readonly unknown[]) =>
+  items.map((item, index) => {
+    const value = asText(itemField(node, scope, item, 'id') ?? index);
+    return { value, label: asText(itemField(node, scope, item, 'label') ?? value) };
+  });
+
+/** The connect surface a multi-select collection drives — senders only; reads come from state. */
+type MultiSelectDriver = {
+  select: (id: string, shift?: boolean) => void;
+  extendTo: (id: string) => void;
+};
+
+const isMultiSelectDriver = (value: unknown): value is MultiSelectDriver =>
+  typeof value === 'object' &&
+  value !== null &&
+  'select' in value &&
+  typeof value.select === 'function' &&
+  'extendTo' in value &&
+  typeof value.extendTo === 'function';
+
+/**
+ * The container kind with the attention aspect: focusing anywhere inside attends the container
+ * (sticky), and the attended container's ring goes primary. Hook use forces a real component —
+ * renderer entries are plain functions.
+ */
+const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: string; gap?: Layout.Gap }>) => {
+  const { attended, attend } = useAttention();
+  return (
+    // The slottable Flex exposes no event props; a display:contents trap adds no box (the same
+    // pattern the Esc key trap used) and hears every focus entering the container.
+    <div role='none' className='contents' onFocusCapture={id ? () => attend(id) : undefined}>
+      <Layout.Flex
+        column
+        gap={gap}
+        classNames={mx(
+          'dx-expand overflow-hidden ring-2 ring-separator rounded-sm',
+          id && attended === id && 'ring-[var(--color-focus-ring-subtle)]',
+        )}
+      >
+        {children}
+      </Layout.Flex>
+    </div>
+  );
+};
+
+/** Resolve a `capability="alias.name"` aspect to the mounted instance's api off the `use` ring. */
+const capabilityApi = (scope: Scope, ref: unknown): unknown => {
+  if (typeof ref !== 'string') {
+    return undefined;
+  }
+  const [alias, name] = ref.split('.');
+  return scope.aliases?.[alias]?.apis?.[name];
+};
+
+/** Create the React renderer: one function per kind tag, resolving `schema=` against the registry. */
+export const createReactRenderer = ({
+  schemas,
+}: CreateRendererOptions<Schema.Codec<unknown, unknown>>): Renderer<ReactNode> => ({
+  container: ({ path, props, children }) => (
+    <AttendableContainer
+      key={path}
+      id={typeof props.id === 'string' ? props.id : undefined}
+      gap={oneOf(GAPS, props.gap)}
+    >
+      {children}
+    </AttendableContainer>
+  ),
+
+  /**
+   * `columns`/`rows` turn the layout into a grid with explicit tracks — geometry lives in the
+   * template, not in renderer workarounds. Without them it is a flex row/column.
+   */
+  layout: ({ path, props, children }) => {
+    const cols = tracks(props.columns);
+    const rows = tracks(props.rows);
+    // `resizable` swaps the fixed tracks for a zag splitter — the divider between exactly two
+    // panes becomes draggable; more panes fall back to the grid, since the wrapper is two-pane.
+    if (props.resizable === true && children.length === 2) {
+      return <Splitter key={path} orientation={rows ? 'vertical' : 'horizontal'} panes={[children[0], children[1]]} />;
+    }
+    if (cols || rows) {
+      return (
+        <Layout.Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} classNames='dx-expand'>
+          {children}
+        </Layout.Grid>
+      );
+    } else {
+      return (
+        <Layout.Flex key={path} {...flexProps(props)} classNames='dx-expand'>
+          {children}
+        </Layout.Flex>
+      );
+    }
+  },
+
+  display: ({ path, props, data }) => (
+    <span key={path} className={mx(props.variant === 'title' ? 'text-lg font-medium' : 'text-fg-muted')}>
+      {asText(data.text ?? props.label)}
+    </span>
+  ),
+
+  control: ({ path, node, props, data, handlers }) => {
+    if (props.as === 'button') {
+      // `enabled` is an intrinsic binding with `show`'s presence semantics: the button is
+      // disabled while the bound value is undefined/null/false, so command availability is
+      // published state, never a component callback.
+      const disabled = node.data?.enabled ? !present(data.enabled) : undefined;
+      return (
+        <Button.Root key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
+          {asText(props.label)}
+        </Button.Root>
+      );
+    } else {
+      return (
+        <Field.Root key={path}>
+          <Layout.Container gutter='none'>
+            {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
+            <Input.Root
+              placeholder={asText(props.placeholder)}
+              value={asText(data.value)}
+              // MVU: the input is controlled from published state; each change dispatches.
+              onChange={(event) => handlers.input?.(event.target.value)}
+            />
+          </Layout.Container>
+        </Field.Root>
+      );
+    }
+  },
+
+  /**
+   * With a `select` event: a Listbox whose selection is published state (`data-selection` reads it
+   * back, clicking dispatches). Without one: a plain read-only list. Item identity and label come
+   * from the collection's own `item-id` / `item-label` bindings.
+   */
+  collection: ({ path, node, props, data, handlers, scope, renderChildren }) => {
+    const items = Array.isArray(data.items) ? data.items : [];
+    const options = toOptions(node, scope, items);
+
+    // With a plural `data-selections` binding: a multi-select list driven by the module's
+    // capability instance (`capability="alias.name"`). The rows only mark and send — selection
+    // state is read back from the published slot the machine's onChange snapshots into.
+    if (node.data?.selections) {
+      const api = capabilityApi(scope, props.capability);
+      if (!isMultiSelectDriver(api)) {
+        return (
+          <span key={path} className='text-error-text text-sm'>
+            unresolved capability '{asText(props.capability)}'
+          </span>
+        );
+      }
+      const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
+      return (
+        <UiListbox.Root key={path} items={options} selectionMode='multiple' value={selections}>
+          <UiListbox.Content>
+            {options.map((option) => (
+              <UiListbox.Item
+                key={option.value}
+                item={option}
+                // A shift-click must not start a text selection before the row's click handler runs.
+                onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+                onClick={(event) =>
+                  event.shiftKey && event.altKey ? api.extendTo(option.value) : api.select(option.value, event.shiftKey)
+                }
+              />
+            ))}
+          </UiListbox.Content>
+        </UiListbox.Root>
+      );
+    }
+
+    if (node.events?.select) {
+      return (
+        <Listbox.Root
+          key={path}
+          items={options}
+          value={asText(data.selection) || undefined}
+          onValueChange={(next) => handlers.select?.(next)}
+          // Esc on a focused option: deselect is the same operation with no payload. The Listbox
+          // fires this only when something was selected, so an empty selection dispatches nothing.
+          onDeselect={() => handlers.select?.(undefined)}
+        >
+          <Listbox.Content>
+            {options.map((option) => (
+              <Listbox.Item key={option.value} id={option.value}>
+                <Listbox.ItemText>{option.label}</Listbox.ItemText>
+                <Listbox.ItemIndicator />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Root>
+      );
+    }
+
+    return (
+      <Layout.Container key={path} gap='sm' role='list' gutter='none'>
+        {items.map((item, index) => (
+          <Layout.Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>
+            {node.children?.length
+              ? renderChildren({ ...scope, item }, `[${index}]`)
+              : asText(itemField(node, scope, item, 'label') ?? item)}
+          </Layout.Flex>
+        ))}
+      </Layout.Container>
+    );
+  },
+
+  /**
+   * Schema-driven editor over the bound object. The draft is the form's own private state — the
+   * system deliberately does not see keystrokes; `save` surfaces the whole edit as one operation
+   * (payload = validated values), `cancel` discards it. Keyed by the bound object's identity so a
+   * changed master selection remounts a fresh draft.
+   */
+  form: ({ path, props, node, data, handlers }) => {
+    const schemaKey = asText(props.schema);
+    const schema = schemas[schemaKey];
+    if (!schema) {
+      return (
+        <span key={path} className='text-error-text text-sm'>
+          unknown schema '{schemaKey}'
+        </span>
+      );
+    }
+
+    const values = data.values && typeof data.values === 'object' ? (data.values as Record<string, unknown>) : {};
+    const identity = asText(values.id ?? path);
+    return (
+      <Form.Root
+        key={`${path}:${identity}`}
+        // The registry holds heterogeneous schemas (structs and scalars) under one widened type;
+        // `Form.Root` only ever receives one resolved by `schema=`, which is always struct-shaped.
+        schema={schema as Schema.Codec<Record<string, unknown>, unknown>}
+        defaultValues={values}
+        onSave={(next) => handlers.save?.(next)}
+        onCancel={() => handlers.cancel?.()}
+      >
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Fields />
+            {(node.events?.save || node.events?.cancel) && <Form.Actions />}
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  },
+
+  /**
+   * Filtering combobox. The input text and committed value are both published state: typing
+   * dispatches `input`, choosing dispatches `select`, and the *caller* derives the filtered items
+   * from state — the component filters nothing, so MVU holds.
+   */
+  combobox: ({ path, node, props, data, handlers, scope }) => {
+    const items = Array.isArray(data.items) ? data.items : [];
+    return (
+      <Combobox.Root
+        key={path}
+        items={toOptions(node, scope, items)}
+        // The caller derives the filtered items from the published `filter`.
+        filter={null}
+        value={asText(data.value) ? [asText(data.value)] : []}
+        onValueChange={({ value: [next] }) => handlers.select?.(next)}
+        inputValue={asText(data.filter)}
+        onInputValueChange={({ inputValue }) => handlers.input?.(inputValue)}
+      >
+        <Combobox.Trigger placeholder={asText(props.placeholder) || undefined} />
+        <Combobox.Content>
+          <Combobox.Input placeholder={asText(props.placeholder) || undefined} />
+          <Combobox.List />
+        </Combobox.Content>
+      </Combobox.Root>
+    );
+  },
+
+  command: ({ path, children }) => (
+    <Layout.Flex key={path} align='center' role='toolbar'>
+      {children}
+    </Layout.Flex>
+  ),
+
+  /**
+   * Tab strip over published state: the current tab is the resolved `data-value`, choosing one
+   * dispatches `select`. The panels live in a sibling `switch` — tabs only set state.
+   */
+  tabs: ({ path, node, data, handlers }) => (
+    <Tabs.Root
+      key={path}
+      orientation='horizontal'
+      value={asText(data.value) || undefined}
+      onValueChange={(next) => handlers.select?.(next)}
+    >
+      <Tabs.List>
+        {(node.children ?? [])
+          .filter((child) => child.tag === 'tab')
+          .map((tab) => {
+            const value = asText(tab.props?.value);
+            return (
+              <Tabs.Trigger key={value} value={value}>
+                {asText(tab.props?.label ?? value)}
+              </Tabs.Trigger>
+            );
+          })}
+      </Tabs.List>
+    </Tabs.Root>
+  ),
+
+  // Rendered by `tabs` from its props; never on its own.
+  tab: () => null,
+
+  // The walker already narrowed `children` to the matched branch's subtree.
+  switch: ({ path, children }) => (
+    <Layout.Flex key={path} column grow>
+      {children}
+    </Layout.Flex>
+  ),
+
+  // display:contents — a `show` inside a grid row must not break track placement with a box.
+  show: ({ path, children }) => (
+    <div key={path} role='none' className='contents'>
+      {children}
+    </div>
+  ),
+
+  // Structural only — `switch`/`show` render the matched branch's children directly, and
+  // `let`/`var` exist to declare names, never to render.
+  match: () => null,
+  fallback: () => null,
+  let: () => null,
+  var: () => null,
+  use: () => null,
+});
+
+export type TemplateProps = {
+  node: Node;
+  /** Published UI state; `let` slot values are read at `<idPath>.<name>`. */
+  ui?: Readonly<Record<string, unknown>>;
+  /** Host-supplied values for the root's `var` signature (validate with `checkVars` at mount). */
+  vars?: Readonly<Record<string, unknown>>;
+  /** Materialized module views by module key (`viewModules`); `use` aliases resolve onto them. */
+  modules?: Readonly<Record<string, ModuleView>>;
+  renderer: Renderer<ReactNode>;
+  options?: RenderOptions<ReactNode>;
+};
+
+/** A binding that failed to resolve renders in place of its node, never as silence (R-8). */
+const renderBindingError = (error: Error, path: string): ReactNode => (
+  <span key={`error:${path}`} className='text-error-text text-sm'>
+    {error.message}
+  </span>
+);
+
+/** Render a parsed template against published state and its declared inputs. */
+export const Template = ({ node, ui, vars, modules, renderer, options }: TemplateProps) => {
+  const scope: Scope = { ui, vars, modules };
+  return <>{render(node, scope, renderer, { onError: renderBindingError, ...options })}</>;
+};

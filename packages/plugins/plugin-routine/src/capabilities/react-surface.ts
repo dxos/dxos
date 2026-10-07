@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 
 import { RoutineCard } from '#components';
-import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
+import { RoutineArticle, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
@@ -34,15 +34,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Routine.Routine),
         component: RoutineCard,
         props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: 'companion.automation',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'automation'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: RoutineCompanion,
-        props: ({ data: { attendableId, companionTo } }) => ({ attendableId, subject: companionTo }),
       }),
       Surface.create({
         id: 'routine.runs',

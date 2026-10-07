@@ -4,7 +4,6 @@
 
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
 import { computeDiffsWithCursors } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
@@ -12,7 +11,7 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import * as CommentOperation from '../types/CommentOperation';
+import { CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = CommentOperation.CreateProposals.pipe(
   Operation.withHandler(
@@ -21,9 +20,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
       const content = yield* Effect.promise(() => object.content.load());
       const accessor = Doc.createAccessor(content, ['content']);
 
-      yield* Function.pipe(
-        computeDiffsWithCursors(accessor, diffs),
+      // v4 dropped `Effect.allWith`; `Effect.all` takes its options directly.
+      yield* Effect.all(
         Array.map(
+          computeDiffsWithCursors(accessor, diffs),
           Effect.fnUntraced(function* ({ cursor, text }) {
             const proposal = Obj.make(Message.Message, {
               created: new Date().toISOString(),
@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
             yield* Database.add(relation);
           }),
         ),
-        Effect.allWith({ concurrency: 'unbounded' }),
+        { concurrency: 'unbounded' },
       );
     }),
   ),

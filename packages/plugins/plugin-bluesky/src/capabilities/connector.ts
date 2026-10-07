@@ -7,14 +7,15 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
-import { BlueskyOperation } from '../operations';
-import { BlueskyApi } from '../services';
-import { BlueskyTargetOptions } from '../types';
+import { BlueskyOperation } from '#operations';
+import { BlueskyTargetOptions } from '#types';
+
+import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
 
 /**
  * OAuth scopes for Bluesky.
@@ -45,7 +46,7 @@ const BSKY_OAUTH_SCOPES = ['transition:generic'] as const;
 
 /** Schema for the atproto pre-flight form (handle / DID). */
 const AtprotoPreflightForm = Schema.Struct({
-  handle: Schema.String.annotations({
+  handle: Schema.String.annotate({
     title: 'Handle',
     description: 'Your atproto handle or DID (e.g. user.bsky.social).',
     examples: ['user.bsky.social'],
@@ -70,18 +71,20 @@ const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof Atp
  */
 const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(
-    Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
+    Effect.provide(BlueskyApi.fromConnection(Ref.make(connection), client.config)),
     Effect.asVoid,
     Effect.mapError(
       () =>
-        new ConnectionTestError({ message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.' }),
+        new ConnectorError.ConnectionTestError({
+          message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 
 /**
  * Contributes the Bluesky connector entry. plugin-connector looks up by
- * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (one binding
- * per call), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
+ * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (account-level,
+ * all bindings), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
  * and `materializeTarget` creates the empty local Subscription.Feed bound to
  * each selected target.
  */

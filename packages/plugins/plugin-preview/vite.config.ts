@@ -6,13 +6,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/PreviewEvents': 'src/PreviewEvents.ts',
     'index': 'src/index.ts',
-    'PreviewPlugin': 'src/PreviewPlugin.tsx',
-    'PreviewPlugin.node': 'src/PreviewPlugin.node.ts',
-    'PreviewPlugin.workerd': 'src/PreviewPlugin.workerd.ts',
+    'PreviewPlugin': 'src/PreviewPlugin.ts',
+    'plugin': 'src/plugin.tsx',
     'capabilities': 'src/capabilities/index.ts',
     'meta': 'src/meta.ts',
-    'plugin': 'src/plugin.ts',
+    'PreviewCapabilities': 'src/types/PreviewCapabilities.ts',
+    'types': 'src/types/index.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
   },

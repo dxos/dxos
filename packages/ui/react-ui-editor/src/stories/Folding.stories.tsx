@@ -13,8 +13,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Panel, SystemIconButton, Toolbar, useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import {
   PROMPT_ELEMENT,
   createBasicExtensions,
@@ -30,7 +33,7 @@ import {
   xmlFormatting,
 } from '@dxos/ui-editor';
 
-import { useTextEditor } from '../hooks';
+import { useTextEditor } from '../hooks/index.ts';
 
 const source = createTurnSource(PROMPT_ELEMENT);
 
@@ -68,20 +71,20 @@ const buildSampleText = (): string => {
 
 const sampleText = buildSampleText();
 
-type StoryProps = { text: string };
+type StoryArgs = { text: string };
 
-const DefaultStory = ({ text }: StoryProps) => {
-  const { themeMode } = useThemeContext();
+const DefaultStory = ({ text }: StoryArgs) => {
+  const themeMode = Hooks.useThemeMode();
   const [collapsed, setCollapsed] = useState(false);
   const extensions = useMemo(() => chatExtensions(themeMode), [themeMode]);
   const { parentRef, view } = useTextEditor({ initialValue: text, extensions });
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
-          <SystemIconButton.Expander
-            active={!collapsed}
+          <SystemButton.Disclosure
+            expanded={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
               if (!view) {
@@ -97,10 +100,10 @@ const DefaultStory = ({ text }: StoryProps) => {
             }}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid overflow-hidden'>
-        <div ref={parentRef} className='dx-expander' />
-      </Panel.Content>
+      </Panel.Header>
+      <Panel.Body classNames='grid overflow-hidden'>
+        <div ref={parentRef} className='dx-expand' />
+      </Panel.Body>
     </Panel.Root>
   );
 };

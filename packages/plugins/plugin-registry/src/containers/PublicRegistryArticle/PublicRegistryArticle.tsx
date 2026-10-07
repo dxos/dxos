@@ -2,23 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { EffectEx } from '@dxos/effect';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks';
-import { BaseRegistryArticle } from '../BaseRegistryArticle';
+import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks/index.ts';
+import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
 
 const sortEntries = (a: Plugin.Meta, b: Plugin.Meta) =>
   (a.profile.name ?? a.profile.key).localeCompare(b.profile.name ?? b.profile.key);
@@ -49,18 +52,21 @@ const toDisplayPlugin = (plugin: Plugin.Meta): Plugin.Plugin =>
   }) as Plugin.Plugin;
 
 export type PublicRegistryArticleProps = {
-  id: string;
+  contextId: string;
 };
 
-export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryArticleProps>(
-  ({ id, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    const manager = usePluginManager();
-    const { invoke } = useOperationInvoker();
+export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegistryArticleProps>(
+  ({ contextId, ...props }, forwardedRef) => {
+    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const manager = PluginManagerProvider.usePluginManager();
+    const { invoke } = Hooks.useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();
+    // Reloaded on every visit, so a plugin published since boot (a private one in particular) shows up.
+    useEffect(() => manager.pluginRegistry.refresh(), [manager]);
     const plugins = useAtomValue(manager.plugins);
     const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.profile.key), [plugins]);
     const extraTagsById = useAutoTags(entries);
+    const deviceOnlyIds = ToolkitHooks.useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
 
     // Snapshot of installed plugin ids at mount time. Used to sort installed
     // plugins to the top without having newly-installed rows jump up mid-session.
@@ -171,17 +177,17 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
     );
 
     const empty = error ? (
-      <div className='p-4 text-description'>{t('registry.error.label', { message: error.message })}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.error.label', { message: error.message })}</div>
     ) : loading ? (
-      <div className='p-4 text-description'>{t('registry.loading.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.loading.label')}</div>
     ) : (
-      <div className='p-4 text-description'>{t('registry.empty.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.empty.label')}</div>
     );
 
     return (
       <BaseRegistryArticle
         {...props}
-        id={id}
+        contextId={contextId}
         source='registry'
         plugins={items}
         installed={installedIds}
@@ -189,6 +195,7 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
         updating={updatingIds}
         updateAvailableIds={updateAvailableIds}
         extraTagsById={extraTagsById}
+        deviceOnlyIds={deviceOnlyIds}
         onInstall={handleInstall}
         onUpdate={handleUpdate}
         empty={empty}

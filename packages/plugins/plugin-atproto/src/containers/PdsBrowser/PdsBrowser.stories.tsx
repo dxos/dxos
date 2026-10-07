@@ -13,22 +13,21 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/link';
+import * as Annotation from '@dxos/echo/Annotation';
+import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as Connection from '@dxos/plugin-connector/Connection';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
-import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
-import * as AtprotoPublication from '../../types/AtprotoPublication';
-import { PdsBrowser } from './PdsBrowser';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
+import { PdsBrowser } from './PdsBrowser.tsx';
 
 // Default the input to a real handle so the story opens on a live repo; `alice.test` still resolves to the
 // in-memory mock (deterministic, with a mapped collection to preview/import) when typed.
@@ -43,7 +42,7 @@ const demoLens: Panproto.Lens = { adapters: [{ kind: 'scalar', wire: 'text', ech
 // A mapped type (its collection is "mapped" in the browser); registered per-story.
 class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atproto.pdsDemoNote', '0.1.0'))(
   Schema.Struct({ title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')) }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', lens: demoLens }),
   ),
 ) {}
@@ -76,13 +75,14 @@ const Story = () => {
   if (!space) {
     return <Loading />;
   }
-  return <PdsBrowser space={space} role='article' />;
+  return <PdsBrowser db={space.db} role='article' />;
 };
 
 const meta = {
   title: 'plugins/plugin-atproto/PdsBrowser',
   render: Story,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
@@ -95,10 +95,10 @@ const meta = {
         ),
       ],
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
           onClientInitialized: seed,
         }),

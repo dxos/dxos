@@ -8,13 +8,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Outline } from '@dxos/types';
 
-import { InvalidOperationInput } from '../errors';
-import * as OutlineOperation from '../types/OutlineOperation';
+import { OutlineOperation } from '#types';
 
-/**
- * Item-wise upsert is the default so an agent can flip one checkbox without rewriting the
- * document — the markdown is a human surface too, and prose between items must survive.
- */
+import { InvalidOperationInput } from '../errors.ts';
+
 const handler: Operation.WithHandler<typeof OutlineOperation.UpdateOutline> = OutlineOperation.UpdateOutline.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ outline: outlineRef, items, content }) {

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Terminal from '@effect/platform/Terminal';
 import * as Option from 'effect/Option';
+import type * as Terminal from 'effect/Terminal';
 
 type KeyOptions = {
   input?: string;
@@ -16,7 +16,7 @@ const makeInput = (
   name: string,
   { input, ctrl = false, meta = false, shift = false }: KeyOptions = {},
 ): Terminal.UserInput => ({
-  input: Option.fromNullable(input),
+  input: Option.fromNullishOr(input),
   key: { name, ctrl, meta, shift },
 });
 
@@ -91,7 +91,7 @@ const unrecognizedEscapeLength = (data: string, index: number): number => {
 };
 
 /**
- * Decodes a chunk of xterm `onData` output into the keypress events that `@effect/platform`
+ * Decodes a chunk of xterm `onData` output into the keypress events that Effect's `Terminal`
  * consumers (notably `@effect/cli` prompts) expect, using the same key names as Node's readline.
  *
  * Decoding the raw data stream rather than `onKey` DOM events is what makes paste work: a pasted

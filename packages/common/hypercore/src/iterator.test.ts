@@ -9,14 +9,14 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { createAsyncIterator, createReadable } from './iterator';
+import { RawHypercoreFactory } from './hypercore-factory.ts';
+import { createAsyncIterator, createReadable } from './iterator.ts';
 
 describe('AsyncIterator', () => {
   test('iterates a feed until stopped', async () => {
-    const factory = new HypercoreFactory();
+    const factory = new RawHypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
-    const core = factory.createFeed(publicKey, { secretKey });
+    const core = factory.createHypercore(publicKey, { secretKey });
 
     const numBlocks = 10;
 

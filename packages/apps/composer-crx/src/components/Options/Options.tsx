@@ -6,8 +6,11 @@ import React, { type ChangeEvent, useEffect, useState } from 'react';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
-import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import {
   DEFAULT_COMPOSER_URLS,
@@ -16,13 +19,13 @@ import {
   SpaceMode,
   getComposerUrls,
   setComposerUrls,
-} from '../../core';
-import { translationKey } from '../../translations';
+} from '../../core/index.ts';
+import { translationKey } from '../../translations.ts';
 
 export type OptionsProps = {};
 
-export const Options = composable<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
   const [spaceId, setSpaceId] = useState<string | null>(null);
@@ -85,7 +88,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
   };
 
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+    <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
         <div className='grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden'>
           <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
@@ -96,12 +99,12 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
           </div>
           <div className='flex flex-col justify-start items-end'>
             <div className='flex items-center gap-2 mt-4'>
-              <span className='text-subdued'>Powered by</span>
+              <span className='text-fg-subtle'>Powered by</span>
               <a
                 target='_blank'
                 rel='noreferrer'
                 href='https://dxos.org'
-                className='text-base text-subdued! hover:opacity-50'
+                className='text-base text-fg-subtle! hover:opacity-50'
               >
                 <DXOSHorizontalType className='h-10 dark:fill-neutral-50' />
               </a>
@@ -112,37 +115,40 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
         <div className='grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden'>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Input.Root>
-              <Input.Label>{t('settings.dev-mode.label')}</Input.Label>
+            <Field.Root>
+              <Field.Label>{t('settings.dev-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
+                <Input.Switch
+                  checked={developerMode}
+                  onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)}
+                />
               </div>
-            </Input.Root>
+            </Field.Root>
           </div>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Input.Root>
-              <Input.Label>{t('settings.space-mode.label')}</Input.Label>
+            <Field.Root>
+              <Field.Label>{t('settings.space-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Input.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
+                <Input.Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
               </div>
-            </Input.Root>
+            </Field.Root>
           </div>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Input.Root>
-              <Input.Label>{t('settings.space-id.label')}</Input.Label>
+            <Field.Root>
+              <Field.Label>{t('settings.space-id.label')}</Field.Label>
               <div className='text-end'>
-                <Input.TextInput value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+                <Input.Root value={spaceId ?? ''} onChange={handleSpaceIdChange} />
               </div>
-            </Input.Root>
+            </Field.Root>
           </div>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Input.Root>
-              <Input.Label classNames='self-start'>{t('settings.composer-urls.label')}</Input.Label>
+            <Field.Root>
+              <Field.Label classNames='self-start'>{t('settings.composer-urls.label')}</Field.Label>
               <div className='text-end'>
-                <Input.TextArea
+                <Input.Textarea
                   rows={4}
                   placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
                   value={composerUrls}
@@ -150,7 +156,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
                   classNames='font-mono text-sm'
                 />
               </div>
-            </Input.Root>
+            </Field.Root>
           </div>
         </div>
       </ScrollArea.Viewport>

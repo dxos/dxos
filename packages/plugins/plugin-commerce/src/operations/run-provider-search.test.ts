@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { make } from '../types/Provider';
-import { buildResults } from './run-provider-search';
+import { make } from '../types/Provider.ts';
+import { buildResults } from './run-provider-search.ts';
 
 const HTML = '<div class="c"><h2>Item A</h2><a href="/a">x</a></div>';
 

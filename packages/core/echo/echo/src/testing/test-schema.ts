@@ -2,13 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../Obj';
-import * as Ref from '../Ref';
-import * as Type from '../Type';
+import * as Annotation from '../Annotation.ts';
+import * as Obj from '../Obj.ts';
+import * as Ref from '../Ref.ts';
+import * as Type from '../Type.ts';
 
 export namespace TestSchema {
   //
@@ -20,7 +23,9 @@ export namespace TestSchema {
    * This is the test variant with example.com namespace.
    */
   export class Expando extends Type.makeObject<Expando>(DXN.make('com.example.type.expando', '0.1.0'))(
-    Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
+    Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]).pipe(
+      Annotation.UserType.set(),
+    ),
   ) {}
 
   //
@@ -49,18 +54,20 @@ export namespace TestSchema {
     twoDimNumberArray: Schema.Array(Schema.Array(Schema.Number)),
     nested: Nested,
     nestedArray: Schema.Array(Nested),
-    nestedNullableArray: Schema.Array(Schema.Union(Nested, Schema.Null)),
+    nestedNullableArray: Schema.Array(Schema.Union([Nested, Schema.Null])),
     reference: Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example)),
     referenceArray: Schema.Array(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))),
     classInstance: Schema.instanceOf(TestClass),
     other: Schema.Any,
-  }).pipe(Schema.partial);
+  }).mapFields(Struct.map(Schema.optional));
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(ExampleSchema) {}
+  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(
+    ExampleSchema.pipe(Annotation.UserType.set()),
+  ) {}
 
   //
   // Message
@@ -70,13 +77,12 @@ export namespace TestSchema {
   export const MessageStruct = Schema.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
     // TODO(burdon): Support defaults (update create and create).
-    timestamp: Schema.String.pipe(
-      Schema.propertySignature,
-      Schema.withConstructorDefault(() => new Date().toISOString()),
-    ),
+    timestamp: Schema.String.pipe(Schema.withConstructorDefault(Effect.sync(() => new Date().toISOString()))),
   });
 
-  export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(MessageStruct) {}
+  export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(
+    MessageStruct.pipe(Annotation.UserType.set()),
+  ) {}
 
   //
   // Organization
@@ -85,13 +91,8 @@ export namespace TestSchema {
   export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
     Schema.Struct({
       name: Schema.String,
-      properties: Schema.optional(
-        Schema.Record({
-          key: Schema.String,
-          value: Schema.String,
-        }),
-      ),
-    }),
+      properties: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -119,7 +120,9 @@ export namespace TestSchema {
         label: Schema.String,
         value: Schema.String,
       }).pipe(Schema.Array, Schema.optional),
-    }).pipe(Schema.partial),
+    })
+      .mapFields(Struct.map(Schema.optional))
+      .pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -135,7 +138,9 @@ export namespace TestSchema {
       previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
       subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
       description: Schema.optional(Schema.String),
-    }).pipe(Schema.partial),
+    })
+      .mapFields(Struct.map(Schema.optional))
+      .pipe(Annotation.UserType.set()),
   ) {}
 
   //
@@ -175,15 +180,15 @@ export namespace TestSchema {
     Schema.Struct({
       objects: Schema.Array(Ref.Ref(Obj.Unknown)),
       records: Schema.Array(
-        Schema.partial(
-          Schema.Struct({
-            title: Schema.String,
-            description: Schema.String,
-            contacts: Schema.Array(Ref.Ref(Person)),
-            type: Schema.Enums(RecordType),
-          }),
-        ),
+        Schema.Struct({
+          title: Schema.String,
+          description: Schema.String,
+          contacts: Schema.Array(Ref.Ref(Person)),
+          type: Schema.Enum(RecordType),
+        }).mapFields(Struct.map(Schema.optional)),
       ),
-    }).pipe(Schema.partial),
+    })
+      .mapFields(Struct.map(Schema.optional))
+      .pipe(Annotation.UserType.set()),
   ) {}
 }

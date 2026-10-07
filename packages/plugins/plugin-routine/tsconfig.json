@@ -13,10 +13,19 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/context"
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -52,9 +61,6 @@
       "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -70,6 +76,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -80,6 +89,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -119,9 +131,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

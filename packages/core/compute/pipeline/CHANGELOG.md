@@ -1,5 +1,26 @@
 # @dxos/pipeline
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/log@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/progress@0.13.0
+
+## 0.12.0
+
+### Minor Changes
+
+- dfce73e: Move `Progress.layer` from a static member of the `Progress` service class to a module-level export, so it reads as `Progress.layer` rather than `Progress.Progress.layer`. Breaking for anyone constructing the layer off the class.
+
+### Patch Changes
+
+- Updated dependencies [4aa6a33]
+  - @dxos/log@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/progress@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

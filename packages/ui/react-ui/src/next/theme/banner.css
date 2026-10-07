@@ -1,0 +1,79 @@
+/*
+ * Banner: a message on its valence's surface; `--dx-valence-*` is what a `valence` Button inside it reads.
+ */
+
+@layer dx-components {
+  .dx-banner {
+    /* A neutral banner is a note in the flow of its host, so it takes the host's surface; valences paint their own. */
+    --dx-banner-surface: transparent;
+    /* The neutral foreground is paired with the neutral surface; on the host's surface it takes the host's text. */
+    --dx-banner-fg: var(--color-fg);
+    --dx-valence-bg: var(--color-neutral-bg);
+    --dx-valence-bg-hover: var(--color-neutral-bg-hover);
+    --dx-valence-text: var(--color-neutral-text);
+    border-radius: var(--radius-sm, 0.25rem);
+    background: var(--dx-banner-surface);
+    color: var(--dx-banner-fg);
+  }
+  /* With no surface of its own, a neutral banner is framed by a border so it still reads as one block. */
+  .dx-banner[data-valence='neutral'] {
+    border: 1px solid var(--color-separator);
+  }
+  /* The title carries the note; its body reads a step quieter, as a description does. */
+  .dx-banner[data-valence='neutral'] .dx-banner-body {
+    color: var(--color-fg-muted);
+  }
+  .dx-banner[data-inset] {
+    margin: var(--dx-gutter-sm, 0.5rem);
+  }
+  .dx-banner[data-valence='success'] {
+    --dx-banner-surface: var(--color-success-surface);
+    --dx-banner-fg: var(--color-success-fg);
+    --dx-valence-bg: var(--color-success-bg);
+    --dx-valence-bg-hover: var(--color-success-bg-hover);
+    --dx-valence-text: var(--color-success-text);
+  }
+  .dx-banner[data-valence='info'] {
+    --dx-banner-surface: var(--color-info-surface);
+    --dx-banner-fg: var(--color-info-fg);
+    --dx-valence-bg: var(--color-info-bg);
+    --dx-valence-bg-hover: var(--color-info-bg-hover);
+    --dx-valence-text: var(--color-info-text);
+  }
+  .dx-banner[data-valence='warning'] {
+    --dx-banner-surface: var(--color-warning-surface);
+    --dx-banner-fg: var(--color-warning-fg);
+    --dx-valence-bg: var(--color-warning-bg);
+    --dx-valence-bg-hover: var(--color-warning-bg-hover);
+    --dx-valence-text: var(--color-warning-text);
+  }
+  .dx-banner[data-valence='error'] {
+    --dx-banner-surface: var(--color-error-surface);
+    --dx-banner-fg: var(--color-error-fg);
+    --dx-valence-bg: var(--color-error-bg);
+    --dx-valence-bg-hover: var(--color-error-bg-hover);
+    --dx-valence-text: var(--color-error-text);
+  }
+
+  .dx-banner-title > h2 {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  /* The title's icon takes the banner's text colour, so it reads as part of the title. */
+  .dx-banner-title .dx-icon {
+    color: var(--dx-banner-fg);
+  }
+  /* The body's last line keeps a gap's distance from the banner's edge, as the title row's block gives its first. */
+  .dx-banner-body {
+    margin: 0;
+    padding-block-start: 0;
+    padding-block-end: var(--dx-gap-size);
+  }
+  .dx-banner-body:first-child {
+    padding-block-start: var(--dx-gap-size);
+  }
+}

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -17,6 +17,17 @@ export const translations = [
         'home-page.label': 'Website',
         'source.label': 'Source',
         'resources.label': 'Resources',
+        'plugin-scope.section.title': 'Availability',
+        'plugin-scope.shared.label': 'On all your devices',
+        'plugin-scope.device-only.label': 'Only on this device',
+        'plugin-scope.label': 'Use a different plugin set on this device',
+        'plugin-scope.description':
+          'Your plugins follow your account. Turn this on to change which plugins are enabled here without affecting your other devices.',
+        'plugin-scope.rejoin-dialog.title': 'Use the shared plugin set again?',
+        'plugin-scope.rejoin-dialog.description':
+          "This device's plugin choices will be replaced by the ones shared across your devices.",
+        'plugin-scope.rejoin-dialog.cancel.label': 'Cancel',
+        'plugin-scope.rejoin-dialog.confirm.label': 'Replace',
         'plugin-registry.label': 'Plugins',
         'plugin-settings.label': 'Plugin Settings',
         'bundled-plugins.label': 'Bundled',
@@ -76,4 +87,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

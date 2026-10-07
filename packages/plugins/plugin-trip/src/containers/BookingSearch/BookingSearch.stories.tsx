@@ -13,17 +13,15 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { TripPlugin } from '../../testing';
-import * as Booking from '../../types/Booking';
-import type * as BookingSearch from '../../types/BookingSearch';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
-import * as TripCapabilities from '../../types/TripCapabilities';
-import { BookingSearch as BookingSearchComponent } from './BookingSearch';
+import { Booking, BookingSearch, Segment, Trip, TripCapabilities } from '#types';
+
+import { TripPlugin } from '../../testing.ts';
+import { BookingSearch as BookingSearchComponent } from './BookingSearch.tsx';
 
 const STUB_OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight' as const,
@@ -78,8 +76,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Trip.Trip, Segment.Segment, Booking.Booking],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -88,7 +86,7 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         TripPlugin(),
         StubBookingPlugin(),
       ],

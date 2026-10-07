@@ -6,14 +6,14 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Factor out and reconcile with https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-token-manager/src/defs/presets.ts#L7
 
 const ApiAuthorizationKey = Schema.Struct({
   type: Schema.Literal('api-key'),
   key: Schema.String,
-  placement: Schema.Union(
+  placement: Schema.Union([
     Schema.Struct({
       type: Schema.Literal('authorization-header'),
     }),
@@ -21,7 +21,7 @@ const ApiAuthorizationKey = Schema.Struct({
       type: Schema.Literal('query'),
       name: Schema.String,
     }),
-  ),
+  ]),
 });
 
 const ApiAuthorizationOauth = Schema.Struct({
@@ -32,7 +32,7 @@ const ApiAuthorizationOauth = Schema.Struct({
   grantType: Schema.String,
 });
 
-export const ApiAuthorization = Schema.Union(ApiAuthorizationKey, ApiAuthorizationOauth);
+export const ApiAuthorization = Schema.Union([ApiAuthorizationKey, ApiAuthorizationOauth]);
 export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({
@@ -64,12 +64,12 @@ const ServiceInterfaceApi = Schema.Struct({
   authorization: Schema.optional(ApiAuthorization),
 });
 
-const ServiceInterface = Schema.Union(
+const ServiceInterface = Schema.Union([
   // Service types.
   ServiceInterfaceFunction,
   ServiceInterfaceWorkflow,
   ServiceInterfaceApi,
-) as any;
+]);
 
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 
@@ -85,7 +85,7 @@ export class ServiceType extends Type.makeObject<ServiceType>(DXN.make('org.dxos
      * Entries exposed: functions, workflows, and APIs.
      */
     interfaces: Schema.optional(Schema.Array(ServiceInterface)),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
 
 //

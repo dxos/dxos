@@ -11,10 +11,10 @@ import * as StudioEvents from '@dxos/plugin-studio/StudioEvents';
 export const Connector = Capability.lazyModule(
   'Connector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 export const GenerationService = Capability.lazyModule(
   'GenerationService',
   { provides: [StudioCapabilities.GenerationService], activatesOn: StudioEvents.Start },
-  () => import('./generation-service'),
+  () => import('./generation-service.ts'),
 );

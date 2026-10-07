@@ -7,10 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
@@ -18,7 +16,7 @@ import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex }
 // Consider making it extensible (e.g. a string schema with a well-known-values registry) so plugins can
 // register feed types without modifying core.
 /** Subscription protocol type. */
-export const FeedType = Schema.Literal('standard-site', 'rss', 'bluesky');
+export const FeedType = Schema.Literals(['standard-site', 'rss', 'bluesky']);
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
@@ -61,8 +59,11 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     type: FeedType.pipe(Schema.optional),
     /** Description of the feed. */
     description: Schema.String.pipe(Schema.optional),
-    /** URL of the feed's associated website. */
-    link: Schema.String.pipe(Schema.optional),
+    /**
+     * URL of the feed's own website — the RSS channel-level `<link>` / Atom `rel="alternate"`.
+     * Written by sync from the parsed channel, so it is not a form input.
+     */
+    link: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     /** URL of the feed's icon/image. */
     iconUrl: Schema.String.pipe(Schema.optional),
     /**
@@ -71,16 +72,16 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
      * Defaults to {@link DEFAULT_KEEP} when unset.
      */
     keep: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         title: 'Keep',
         description: 'Number of synced items.',
       }),
       Schema.optional,
     ),
     /** Opaque sync cursor — protocol-specific. */
-    cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    cursor: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     /** Backing ECHO feed (queue) for Posts: immutable feed entries appended by sync. */
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
      * Backing ECHO feed (queue) for fetched article bodies — one
      * {@link PostContent} entry per Post whose content has been loaded.
@@ -94,25 +95,30 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
      * that pre-date this feed; new subscriptions always have one via
      * {@link makeSubscription}.
      */
-    contentFeed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
+    contentFeed: Ref.Ref(Feed.Feed).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
     /**
      * Per-Post mutable state keyed by Post id, shared across every Magazine that references the Post.
      * Posts live immutably in the `feed` queue; their `readAt` marker lives here. (`snippet`/`imageUrl`
      * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
      * are tags — see `tags`.)
      */
-    postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
+    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
      * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
      * {@link SYSTEM_TAGS}) are modelled as {@link Tag} objects so they
      * participate in the space-wide tag system. Stored as a child {@link TagIndex} object.
      */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name', 'url']),
+    Annotation.LabelAnnotation.set(['name', 'url']),
     Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -127,19 +133,15 @@ export const makeSubscription = (
   const contentFeed = Feed.make();
   const postState = StateMap.make();
   const tags = TagIndex.make();
-  const subscription = Obj.make(Subscription, {
+  // Feeds, per-Post state and the tag index are children (`SetParent`): all cascade-delete with
+  // the subscription.
+  return Obj.make(Subscription, {
     feed: Ref.make(postFeed),
     contentFeed: Ref.make(contentFeed),
     postState: Ref.make(postState),
     tags: Ref.make(tags),
     ...props,
   });
-  Obj.setParent(postFeed, subscription);
-  Obj.setParent(contentFeed, subscription);
-  // Per-Post state and tag index are children: cascade-deleted with the subscription.
-  Obj.setParent(postState, subscription);
-  Obj.setParent(tags, subscription);
-  return subscription;
 };
 
 /**
@@ -154,7 +156,7 @@ export const makeSubscription = (
 export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.subscription.post', '0.1.0'))(
   Schema.Struct({
     /** Source subscription feed; populated by `SyncSubscription` so curated posts can show provenance. */
-    source: Ref.Ref(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
+    source: Ref.Ref(Subscription).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     /** Post title. */
     title: Schema.String.pipe(Schema.optional),
     /** URL link to the original article. */
@@ -170,8 +172,9 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.subscrip
     /** Unique identifier (guid) from the feed. */
     guid: Schema.String.pipe(Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -193,7 +196,7 @@ export class PostContent extends Type.makeObject<PostContent>(
 )(
   Schema.Struct({
     /** Source Post (in the Subscription's `feed` queue). */
-    post: Ref.Ref(Post).pipe(FormInputAnnotation.set(false)),
+    post: Ref.Ref(Post).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Extracted article body, in Markdown. */
     text: Schema.String,
     /** Refined snippet derived from the full article (preferred over the description-derived one). */
@@ -202,7 +205,7 @@ export class PostContent extends Type.makeObject<PostContent>(
     imageUrl: Schema.optional(Schema.String),
     /** ISO 8601 timestamp when the content was fetched. */
     fetchedAt: Schema.String,
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 //
@@ -335,7 +338,6 @@ const ensureContentFeed = (subscription: Subscription): Feed.Feed => {
     const mutable = subscription as Obj.Mutable<typeof subscription>;
     mutable.contentFeed = Ref.make(created);
   });
-  Obj.setParent(created, subscription);
   return created;
 };
 
@@ -344,7 +346,7 @@ const ensureContentFeed = (subscription: Subscription): Feed.Feed => {
  * `contentFeed`, lazily creating the feed on first use.
  */
 export const appendPostContent = async (
-  space: Pick<Space, 'db'>,
+  db: Database.Database,
   subscription: Subscription,
   entry: {
     post: Post | Obj.Snapshot<Post>;
@@ -362,5 +364,5 @@ export const appendPostContent = async (
     ...(entry.imageUrl ? { imageUrl: entry.imageUrl } : {}),
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
-  await Feed.append(echoFeed, [content]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
+  await Feed.append(echoFeed, [content]).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 };

@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { MeetingsList as default } from './MeetingsList';
+export { MeetingsList as default } from './MeetingsList.tsx';

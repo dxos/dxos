@@ -7,8 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Format } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 
-import { Place } from './Place';
+import { Place } from './Place.ts';
 
 /**
  * Transient routing types shared by plugin-trip and routing-service implementations
@@ -24,7 +25,7 @@ export type RouteProfile = Schema.Schema.Type<typeof RouteProfile>;
  * A stop on a route: either a resolved `Place` (which may already carry `geo`) or a free-text
  * place name that the routing service geocodes internally.
  */
-export const Waypoint = Schema.Union(Place, Schema.String);
+export const Waypoint = Schema.Union([Place, Schema.String]);
 export type Waypoint = Schema.Schema.Type<typeof Waypoint>;
 
 /** Returns a human label for a waypoint (place name / city / code, or the raw string). */
@@ -52,8 +53,8 @@ export interface RouteStep extends Schema.Schema.Type<typeof RouteStep> {}
 
 /** A leg between two consecutive route waypoints. `geometry` is the decoded `[lon, lat]` polyline. */
 export const RouteLeg = Schema.Struct({
-  distance: Schema.Number.annotations({ description: 'Distance in meters.' }),
-  duration: Schema.Number.annotations({ description: 'Duration in seconds.' }),
+  distance: Schema.Number.annotate({ description: 'Distance in meters.' }),
+  duration: Schema.Number.annotate({ description: 'Duration in seconds.' }),
   summary: Schema.optional(Schema.String),
   // Hidden from schema-driven forms — geometry is computed/plotted, not user-editable.
   geometry: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false)),
@@ -63,8 +64,8 @@ export interface RouteLeg extends Schema.Schema.Type<typeof RouteLeg> {}
 
 /** A computed route. Its geometry is derived from the legs (see {@link routeGeometry}), not stored. */
 export const Route = Schema.Struct({
-  distance: Schema.Number.annotations({ description: 'Total distance in meters.' }),
-  duration: Schema.Number.annotations({ description: 'Total duration in seconds.' }),
+  distance: Schema.Number.annotate({ description: 'Total distance in meters.' }),
+  duration: Schema.Number.annotate({ description: 'Total duration in seconds.' }),
   legs: Schema.Array(RouteLeg),
 });
 export interface Route extends Schema.Schema.Type<typeof Route> {}
@@ -100,25 +101,32 @@ export interface RoutingService {
 }
 
 /** Thrown by a `RoutingService` when its credentials are not configured. */
-export class MissingApiKeyError extends Error {
+export class MissingApiKeyError extends BaseError.extend('RoutingMissingApiKeyError') {
   constructor(public readonly serviceId: string) {
-    super(`Missing API key for routing service: ${serviceId}`);
-    this.name = 'MissingApiKeyError';
+    super({ message: `Missing API key for routing service: ${serviceId}` });
   }
 }
 
 /** Thrown when a waypoint name cannot be resolved to coordinates. */
-export class GeocodeError extends Error {
+export class GeocodeError extends BaseError.extend('GeocodeError') {
   constructor(public readonly location: string) {
-    super(`Could not find location: ${location}`);
-    this.name = 'GeocodeError';
+    super({ message: `Could not find location: ${location}` });
   }
 }
 
 /** Thrown when route computation fails. */
-export class RouteError extends Error {
+export class RouteError extends BaseError.extend('RouteError') {
   constructor(message: string) {
-    super(message);
-    this.name = 'RouteError';
+    super({ message });
   }
 }
+
+/** Any failure a `RoutingService` raises. */
+export type Failure = MissingApiKeyError | GeocodeError | RouteError;
+
+/**
+ * Every routing failure, for a boundary that passes them through. Matched by name rather than
+ * `instanceof`, for the reason given at {@link BookingSearch.isFailure}.
+ */
+export const isFailure = (error: unknown): error is Failure =>
+  MissingApiKeyError.is(error) || GeocodeError.is(error) || RouteError.is(error);

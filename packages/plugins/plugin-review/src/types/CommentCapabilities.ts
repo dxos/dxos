@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -14,9 +14,9 @@ import { type Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as ReviewCapabilities from './ReviewCapabilities';
+import * as ReviewCapabilities from './ReviewCapabilities.ts';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

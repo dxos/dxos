@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { EntityId, URI } from '@dxos/keys';
+import type { EID, EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -36,7 +36,23 @@ export namespace QueryPlan {
     | OrderStep
     | LimitStep
     | SkipStep
-    | AggregateStep;
+    | AggregateStep
+    | SqlStep;
+
+  /**
+   * A contiguous run of steps compiled into a single SQLite statement over the index tables.
+   * Emitted by `SqlPlanCompiler` in place of the steps it stands for, so the compiled path runs a
+   * plan like any other rather than a separate execution mode.
+   */
+  export type SqlStep = {
+    _tag: 'SqlStep';
+    /** Statement text with placeholders. */
+    sql: string;
+    /** Values bound to the statement's placeholders, in order. */
+    params: readonly unknown[];
+    /** The steps the statement stands for, kept so traces and scope analysis still see them. */
+    steps: readonly Step[];
+  };
 
   /**
    * Clear the current working set.
@@ -68,13 +84,70 @@ export namespace QueryPlan {
      * When set, the index scan can be optimized to stop early.
      */
     limit?: number;
+
+    /**
+     * Cursor range from a `feed-cursor` filter, both bounds exclusive. The scan returns only blocks
+     * positioned inside it, in position order, so resuming a feed costs what is new rather than the
+     * whole feed. Present (possibly with no bounds set) whenever the filter was, since a cursor read
+     * covers positioned blocks only.
+     */
+    feedCursorRange?: { begin?: string; end?: string };
+
+    /**
+     * Set when the planner has proved the step's {@link limit} can be applied by the feed scan
+     * itself — see `feedScanForLimit`. Absent means the limit must be applied downstream, after the
+     * steps that would otherwise slice candidates out of an already-capped page.
+     */
+    feedScan?: FeedScan;
+
+    /**
+     * Build bare items from index rows, carrying no document. Set by the planner only when no later
+     * step reads anything but index fields: type, timestamps, deletion, parent and relation endpoints.
+     */
+    bare?: boolean;
+  };
+
+  /**
+   * How a feed scan must run for a `limit` pushed into it to keep the same rows the unpushed plan
+   * would have returned.
+   */
+  export type FeedScan = {
+    /** Natural order the scan produces, matching the plan's `OrderStep`. */
+    direction: 'asc' | 'desc';
+
+    /** Deleted state the scan filters to, folding in the plan's `FilterDeletedStep`. */
+    deleted?: boolean;
   };
 
   /**
    * Specifier to scan the database for objects.
    * Optimized to utilize database indexes.
    */
-  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector | TimestampSelector;
+  export type Selector =
+    | WildcardSelector
+    | IdSelector
+    | TypeSelector
+    | TextSelector
+    | TimestampSelector
+    | IncomingReferenceSelector
+    | ChangesSelector;
+
+  /**
+   * Select Automerge changes (`Filter.changes`) rather than objects. The working set holds change
+   * records, so only ordering, paging and aggregation may follow.
+   */
+  export type ChangesSelector = {
+    _tag: 'ChangesSelector';
+
+    /** Entities whose documents to read; every document in scope when absent. */
+    targets?: readonly EID.EID[];
+
+    /**
+     * `index` reads hourly buckets from the activity index, valid only for the aggregates it can
+     * answer; `replay` lists each target document's change history.
+     */
+    source: 'index' | 'replay';
+  };
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';
@@ -98,6 +171,23 @@ export namespace QueryPlan {
      * If true, select objects that do not match the typename.
      */
     inverted: boolean;
+  };
+
+  /**
+   * Select the objects holding a reference to `targetDXN`, straight off the reverse-reference index.
+   *
+   * Unlike an incoming {@link ReferenceTraversal} this needs no anchor in the working set, so it can
+   * name an entity that is absent from the graph — a named entity, or one a migration has renamed away.
+   */
+  export type IncomingReferenceSelector = {
+    _tag: 'IncomingReferenceSelector';
+
+    targetDXN: URI.URI;
+
+    /**
+     * Property path where the reference is located; null matches any property.
+     */
+    property: EscapedPropPath | null;
   };
 
   /**

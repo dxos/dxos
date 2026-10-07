@@ -2,25 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleCalendar } from '../../../apis';
-import { GoogleCredentials } from '../../../services/google-credentials';
-import { toGoogleEvent } from '../mapper';
+import { GoogleCalendar } from '#apis';
+import { GoogleOperation } from '#types';
 
-const handler = InboxOperation.CreateGoogleCalendarEvent.pipe(
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
+import { toGoogleEvent } from '../mapper.ts';
+
+const handler = GoogleOperation.CreateGoogleCalendarEvent.pipe(
   Operation.withHandler(({ event, googleCalendarId, connection: connectionRef }) =>
     Effect.gen(function* () {
       log('creating calendar event', { googleCalendarId, connection: connectionRef.uri });
       const response = yield* GoogleCalendar.createEvent(googleCalendarId, toGoogleEvent(event));
       log('calendar event created', { id: response.id });
       return { id: response.id };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, GoogleCredentials.fromConnection(connectionRef)))),
   ),
   Operation.opaqueHandler,
 );

@@ -61,7 +61,7 @@ composer.manager                // PluginManager: getPlugins/getEnabled/getActiv
 `operations()` enumerates via each handler set's `definitions()`, which resolves keys **without**
 importing any lazily-loaded handler module — `getHandlers()` would import all of them as a side
 effect of asking what exists. Plugin attribution comes from the contributing module id, not the
-operation key, because the two disagree: `dxn:org.dxos.plugin.layout.operation.select` is
+operation key, because the two disagree: `dxn:org.dxos.operation.layout.select` is
 contributed by `plugin-attention`.
 
 ## Everything else

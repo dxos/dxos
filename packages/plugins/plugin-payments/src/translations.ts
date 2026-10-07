@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   ...formTranslations,
@@ -18,6 +18,7 @@ export const translations = [
         'buy-premium.label': 'Buy premium (x402)',
         'buy-credits.label': 'Buy 100 credits (Stripe)',
         'no-payments-url.message': 'Set the payments service URL in settings first.',
+        'no-identity.message': 'Sign in before purchasing.',
         'no-wallet.message': 'No injected EVM wallet (window.ethereum) detected.',
         'pending.label': 'Working…',
         'result.label': 'Result',
@@ -25,4 +26,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

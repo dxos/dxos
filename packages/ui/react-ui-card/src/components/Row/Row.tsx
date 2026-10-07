@@ -3,26 +3,24 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useRef } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import {
-  Card,
-  DxAnchorActivate,
-  Icon,
-  IconButton,
-  type IconButtonProps,
-  SystemIconButton,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Message } from '@dxos/types';
-import { toHue } from '@dxos/ui-theme';
+import { mx, toHue } from '@dxos/ui-theme';
+import { DxAnchorActivate } from '@dxos/ui-types';
 
-import { useActorContact } from '../../hooks';
-import { translationKey } from '../../translations';
-import { Avatar, avatarName } from '../Avatar';
+import { translationKey } from '#translations';
+
+import { useActorContact } from '../../hooks/index.ts';
+import { Avatar, type AvatarProps, avatarName } from '../Avatar/index.ts';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
@@ -30,6 +28,73 @@ import { Avatar, avatarName } from '../Avatar';
  * cards (`EventCard`/`MessageCard`), and the article headers — so a row of each kind is defined exactly
  * once and every surface composes from it.
  */
+
+//
+// Card activation — internal helpers, not exported on Row.
+//
+
+/**
+ * Opens an ECHO object's preview card, anchored on `trigger`. The card surface listens for
+ * `DxAnchorActivate` (see `EditorMenuProvider`), so this is the same path a `dx-anchor` link takes.
+ */
+const activateCard = ({
+  trigger,
+  eid,
+  label,
+  title,
+}: {
+  trigger: HTMLElement | null;
+  eid: URI.URI;
+  label: string;
+  title?: string;
+}) => {
+  trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: eid.toString(), label, kind: 'card', title }));
+};
+
+/**
+ * Delay before a hover opens a card. Long enough that crossing the avatar on the way somewhere else
+ * does not fire it, short enough to feel like a hover rather than a wait.
+ */
+const HOVER_CARD_DELAY = 400;
+
+/**
+ * Hover intent for a card-opening trigger: `start` opens after {@link HOVER_CARD_DELAY}, `cancel`
+ * aborts a pending open. Returned as bare callbacks rather than DOM props so a caller can compose
+ * them with its own pointer handlers.
+ */
+/**
+ * Arms a delayed `open` on hover, cancelling on unmount AND whenever the target changes.
+ *
+ * Exported for its regression test: the cancellation-on-target-change is a dependency-array property,
+ * not extractable logic, so it can only be pinned by rendering the hook.
+ */
+export const useCardHover = (open: () => void, enabled: boolean) => {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const cancel = useCallback(() => {
+    if (timeoutRef.current !== undefined) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
+    }
+  }, []);
+
+  const start = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
+    cancel();
+    timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = undefined;
+      open();
+    }, HOVER_CARD_DELAY);
+  }, [enabled, cancel, open]);
+
+  // Cancels on unmount AND whenever the target changes: `cancel` is stable, so depending on it alone
+  // let a timer armed for the previous contact fire the stale `open` after the row was recycled or
+  // re-pointed at another actor.
+  useEffect(() => cancel, [cancel, open, enabled]);
+
+  return { start, cancel };
+};
 
 //
 // AnchorIconButton — internal helper, not exported on Row.
@@ -43,7 +108,8 @@ type AnchorIconButtonProps = {
   fallbackLabel?: string;
   title?: string;
   value?: URI.URI;
-  size?: 4 | 5 | 6;
+  /** Also open the card on hover (never the `onClick` fallback — hovering must not create anything). */
+  hover?: boolean;
   onClick?: () => void;
 };
 
@@ -59,35 +125,35 @@ const AnchorIconButton = ({
   fallbackLabel,
   title,
   value,
-  size = 4,
+  hover,
   onClick,
 }: AnchorIconButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  const openCard = useCallback(() => {
+    if (value) {
+      activateCard({ trigger: buttonRef.current, eid: value, label, title });
+    }
+  }, [value, label, title]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!hover && !!value);
+
   const handleClick = useCallback(() => {
     if (value) {
-      buttonRef.current?.dispatchEvent(
-        new DxAnchorActivate({
-          trigger: buttonRef.current,
-          dxn: value.toString(),
-          label,
-          kind: 'card',
-          title,
-        }),
-      );
+      openCard();
     } else {
       onClick?.();
     }
-  }, [value, label, title, onClick]);
+  }, [value, openCard, onClick]);
 
   return (
-    <IconButton
+    <Button.Root
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
       variant='ghost'
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
       iconOnly
-      size={size}
       label={value ? label : (fallbackLabel ?? label)}
       onClick={handleClick}
       ref={buttonRef}
@@ -115,13 +181,10 @@ const RowDate = ({ start, end }: RowDateProps) => {
   const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Icon icon='ph--calendar--regular' />
-      </Card.Block>
+    <Card.Row icon='ph--calendar--regular'>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-        <div className='truncate text-description'>{format(start, 'PPp')}</div>
-        {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
+        <div className='truncate text-fg-muted'>{format(start, 'PPp')}</div>
+        {duration.length > 0 && <div className='text-fg-muted text-xs'>({duration})</div>}
       </div>
     </Card.Row>
   );
@@ -145,10 +208,7 @@ const RowRef = ({ object }: RowRefProps) => {
 
   // TODO(burdon): Nav?
   return (
-    <Card.Row>
-      <Card.Block>
-        <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Card.Block>
+    <Card.Row leading={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
@@ -167,81 +227,181 @@ export type PersonRole = 'from' | 'to' | 'cc' | 'bcc' | 'attendee';
 
 type RowPersonProps = {
   actor: Actor.Actor;
-  /** Recipient/participant kind (icon + aria only; no visible prefix). */
+  /** Recipient/participant kind (aria only; no visible prefix). */
   role?: PersonRole;
   /**
-   * Render a static `DxAvatar` in the gutter (hook-free) instead of the interactive contact anchor.
-   * Used by list tiles where resolving a contact per row (a hook) would be too costly.
+   * Resolving the actor's contact costs a query hook, so passing `db` is what opts a row into the
+   * interactive avatar (hover card / create contact). Omit it in virtualized list tiles, which get the
+   * hook-free static avatar instead — or give them {@link RowPersonProps.getContact}.
    */
-  avatar?: boolean;
   db?: Database.Database;
+  /**
+   * Pre-resolved contact lookup, for a LIST that resolves every row's contact from one query of its
+   * own: passing this makes the row interactive without the per-row hook `db` implies. Returning
+   * `undefined` means "no contact" (the create affordance), not "unknown yet".
+   */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  /** Avatar size: 6 for a dense list row (the default), 9 for a message tile's own header. */
+  size?: AvatarProps['size'];
   onContactCreate?: (actor: Actor.Actor) => void;
   /** Render a trailing remove button (e.g. attendee rows in the editable event header). */
   onRemove?: () => void;
-  /** Click handler for the avatar (e.g. select the message); avatar variant only. */
+  /** Click handler for the avatar (e.g. select the message). */
   onClick?: (event: MouseEvent) => void;
 };
 
 /**
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
  */
-const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onClick'>) => (
-  <Card.Row>
-    <Card.Block>
-      <Avatar actor={actor} onClick={onClick} />
-    </Card.Block>
+const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
+  <Card.Row leading={<Avatar actor={actor} size={size} onClick={onClick} />}>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
 );
 
 /**
- * Interactive variant — resolves the contact to a card-preview anchor, with a create-contact fallback.
+ * Interactive variant: the gutter always shows the actor's AVATAR, and resolving their contact decides
+ * what hovering it does — a Person opens that contact's card, no Person swaps the avatar for a
+ * create-contact button (a click, never the hover, since hovering must not write to the space).
+ *
+ * Uniform across every surface that shows people, so a sender, a recipient and an attendee all read
+ * the same. Separate from {@link PersonAvatarRow} only because resolving a contact costs a query hook
+ * per row: a virtualized list keeps the static variant.
  */
-const PersonAnchorRow = ({
+export type ContactAvatarProps = Pick<
+  RowPersonProps,
+  'actor' | 'role' | 'db' | 'getContact' | 'size' | 'onContactCreate'
+> & {
+  onClick?: (event: MouseEvent) => void;
+};
+
+/**
+ * The actor's avatar, wired to their contact: hovering opens that Person's card, and when the space
+ * has no Person for the address the avatar gives way to a create-contact button (a click, never the
+ * hover, since hovering must not write to the space).
+ *
+ * Exported because the same treatment belongs to every surface showing a person — `Row.Person`'s
+ * gutter, but also list tiles that lay their rows out themselves.
+ */
+export const ContactAvatar = ({
   actor,
   role,
   db,
+  getContact,
+  size = 5,
   onContactCreate,
-  onRemove,
-}: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
-  const { t } = useTranslation(translationKey);
-  const contactDXN = useActorContact(db, actor);
+  onClick,
+}: ContactAvatarProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  // Unconditional hook, but a `getContact` caller passes no `db`, so it runs no query.
+  const resolved = useActorContact(getContact ? undefined : db, actor);
+  const contactDXN = getContact ? getContact(actor) : resolved;
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const openCard = useCallback(() => {
+    if (contactDXN) {
+      activateCard({
+        trigger: anchorRef.current,
+        eid: contactDXN,
+        label: t('show-contact.label'),
+        title: role ? `${role}: ${actor.name ?? actor.email}` : (actor.name ?? actor.email),
+      });
+    }
+  }, [contactDXN, t, role, actor.name, actor.email]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!contactDXN);
 
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
-  // TODO(burdon): Reconcile with Avatar if space member.
+  // Both are always mounted when a contact can be created: swapping them on hover dropped focus the
+  // instant a keyboard user reached the button, and mounting it only on hover kept it out of the tab
+  // order entirely. The avatar fades out instead, so the gutter width never changes.
+  const canCreate = !contactDXN && !!onContactCreate;
+
   return (
-    <Card.Row>
-      <Card.Block>
-        <AnchorIconButton
-          icon='ph--user--regular'
-          fallbackIcon='ph--user-plus--regular'
-          label={t('show-contact.label')}
-          fallbackLabel={t('create-contact.label')}
-          title={role ? `${role}: ${actor.name}` : actor.name}
-          value={contactDXN}
-          onClick={onContactCreate ? handleContactCreate : undefined}
+    <div
+      ref={anchorRef}
+      // Pointer only when hovering does something: a resolved contact opens its card.
+      className={mx('relative grid place-items-center group/contact', contactDXN && 'cursor-pointer')}
+      data-testid='row.contact-avatar'
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
+    >
+      {/* Faded (not unmounted) while the create button covers it, so the gutter never resizes. */}
+      {/* `grid`, not the default block: `dx-avatar` is `display: contents` and the frame inside it is
+          `inline-flex`, so in a block box it sits on the text baseline and the line box adds descender
+          space beneath it — making this wrapper taller than the avatar and pinning the face to its top.
+          Every caller that centres this against a line of text then reads as misaligned. */}
+      <div className={mx('grid', canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
+        <Avatar actor={actor} size={size} onClick={onClick} />
+      </div>
+      {canCreate && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--user-circle-plus--regular'
+          // One step below the avatar it replaces, so the button reads as an affordance rather than
+          // as a heavier stand-in for the face.
+          iconSize={Number(size) >= 8 ? 'lg' : 'md'}
+          label={t('create-contact.label')}
+          classNames='dx-cover opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
+          onClick={handleContactCreate}
         />
-      </Card.Block>
-      <Card.Text>{actor.name || actor.email}</Card.Text>
-      {onRemove && (
-        <Card.Block end>
-          <IconButton
+      )}
+    </div>
+  );
+};
+
+ContactAvatar.displayName = 'ContactAvatar';
+
+const PersonContactRow = ({
+  actor,
+  role,
+  db,
+  getContact,
+  size,
+  onContactCreate,
+  onRemove,
+  onClick,
+}: RowPersonProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+
+  return (
+    <Card.Row
+      leading={
+        <ContactAvatar
+          actor={actor}
+          role={role}
+          db={db}
+          getContact={getContact}
+          size={size}
+          onContactCreate={onContactCreate}
+          onClick={onClick}
+        />
+      }
+      trailing={
+        onRemove && (
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Card.Block>
-      )}
+        )
+      }
+    >
+      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
     </Card.Row>
   );
 };
 
 /** A Card.Row rendering a person (sender, recipient, attendee). */
-const RowPerson = ({ avatar, onClick, ...props }: RowPersonProps) =>
-  avatar ? <PersonAvatarRow actor={props.actor} onClick={onClick} /> : <PersonAnchorRow {...props} />;
+const RowPerson = ({ onClick, ...props }: RowPersonProps) =>
+  props.db || props.getContact ? (
+    <PersonContactRow {...props} onClick={onClick} />
+  ) : (
+    <PersonAvatarRow actor={props.actor} size={props.size} onClick={onClick} />
+  );
 
 RowPerson.displayName = 'Row.Person';
 
@@ -265,13 +425,10 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
   }
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Icon icon='ph--tag--regular' />
-      </Card.Block>
-      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
+    <Card.Row icon='ph--tag--regular'>
+      <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
-          <Tag
+          <Tag.Tag
             key={tag.id}
             hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
@@ -285,7 +442,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
             }
           >
             {tag.label ?? tag.id}
-          </Tag>
+          </Tag.Tag>
         ))}
       </div>
     </Card.Row>
@@ -293,43 +450,6 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 };
 
 RowTags.displayName = 'Row.Tags';
-
-//
-// Attachments
-//
-
-type RowAttachmentsProps = {
-  /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
-  attachments?: readonly Message.Attachment[];
-};
-
-/**
- * A Card.Row listing a message's attachments by name with a generic file icon. Not yet clickable —
- * resolving the attachment's ref to open/preview it is a follow-up.
- */
-const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
-  if (!attachments?.length) {
-    return null;
-  }
-
-  return (
-    <Card.Row>
-      <Card.Block>
-        <Icon icon='ph--paperclip--regular' />
-      </Card.Block>
-      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
-        {attachments.map((attachment) => (
-          <Tag key={attachment.ref.uri} hue='neutral' classNames='inline-flex items-center gap-1'>
-            <Icon icon='ph--file--regular' size={3} />
-            {attachment.name ?? attachment.ref.uri}
-          </Tag>
-        ))}
-      </div>
-    </Card.Row>
-  );
-};
-
-RowAttachments.displayName = 'Row.Attachments';
 
 //
 // Star
@@ -346,7 +466,7 @@ type RowStarProps = {
  * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
  */
 const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+  const handleClick = useCallback<NonNullable<Button.RootProps['onClick']>>(
     (event) => {
       event.stopPropagation();
       onToggle?.();
@@ -358,10 +478,69 @@ const RowStar = ({ starred, onToggle }: RowStarProps) => {
     return null;
   }
 
-  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+  return <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={handleClick} />;
 };
 
 RowStar.displayName = 'Row.Star';
+
+//
+// Attachments
+//
+
+type RowAttachmentsProps = {
+  /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
+  attachments?: readonly Message.Attachment[];
+  /**
+   * Opens an attachment, by its index in `attachments`. The index rather than the attachment itself
+   * because an attachment has no identity of its own — it is an entry on the message.
+   */
+  onAttachmentClick?: (index: number) => void;
+};
+
+/** A Card.Row listing a message's attachments by name; each chip opens its attachment when clickable. */
+const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps) => {
+  if (!attachments?.length) {
+    return null;
+  }
+
+  return (
+    <Card.Row icon='ph--paperclip--regular'>
+      <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
+        {attachments.map((attachment, index) => (
+          <Tag.Tag
+            key={attachment.ref.uri}
+            hue='neutral'
+            classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
+            // `Tag` renders a span, so a bare `onClick` would be mouse-only. `role`/`tabIndex` plus the
+            // key handler give it the button semantics it needs to be reachable from the keyboard.
+            {...(onAttachmentClick && {
+              role: 'button',
+              tabIndex: 0,
+              onClick: (event: MouseEvent) => {
+                // The row sits inside a tile that also handles clicks; opening an attachment must not
+                // also select the message behind it.
+                event.stopPropagation();
+                onAttachmentClick(index);
+              },
+              onKeyDown: (event: KeyboardEvent) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onAttachmentClick(index);
+                }
+              },
+            })}
+          >
+            <Icon.Icon icon='ph--file--regular' size='xs' />
+            {attachment.name ?? attachment.ref.uri}
+          </Tag.Tag>
+        ))}
+      </div>
+    </Card.Row>
+  );
+};
+
+RowAttachments.displayName = 'Row.Attachments';
 
 //
 // Row
@@ -372,8 +551,8 @@ export const Row = {
   Ref: RowRef,
   Person: RowPerson,
   Tags: RowTags,
-  Attachments: RowAttachments,
   Star: RowStar,
+  Attachments: RowAttachments,
 };
 
 export type { RowAttachmentsProps, RowDateProps, RowPersonProps, RowRefProps, RowStarProps, RowTagsProps };

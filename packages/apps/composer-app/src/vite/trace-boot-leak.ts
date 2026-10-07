@@ -31,7 +31,11 @@ const TARGETS: Array<[string, RegExp]> = [
   // fast-check (and pure-rand with it), which is a whole boot chunk of test-only machinery.
   ['fast-check', /node_modules\/\.pnpm\/fast-check@/],
   ['effect/Arbitrary', /node_modules\/effect\/dist\/esm\/Arbitrary\.js$/],
-  ['react-aria', /node_modules\/\.pnpm\/@react-aria\+/],
+  ['react-aria', /node_modules\/\.pnpm\/(@react-aria\+|react-aria@)/],
+  // The graph packages are import-map shared, so a stray boot edge ships them whole.
+  ['app-graph', /packages\/sdk\/app-graph\//],
+  ['dxos-graph', /packages\/common\/graph\//],
+  ['effect/Graph', /node_modules\/effect\/dist\/Graph\.js$/],
 ];
 
 export const traceBootLeak = (entry: string): PluginOption =>

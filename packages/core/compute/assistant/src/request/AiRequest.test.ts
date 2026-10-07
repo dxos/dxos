@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, expect, it } from '@effect/vitest';
+import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Tracer from 'effect/Tracer';
 
 import { OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -15,19 +17,20 @@ import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { ContentBlock, type Message } from '@dxos/types';
 
-import * as AiRequest from './AiRequest';
+import * as AiRequest from './AiRequest.ts';
 
-const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
+const { text, toolCall, layer } = ScriptedLanguageModel;
 
 // Real handler, so a scripted tool call drives a genuine tool-call → result → continue cycle.
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',
-    parameters: {
-      value: Schema.String.annotations({ description: 'The value to echo.' }),
-    },
+    parameters: Schema.Struct({
+      value: Schema.String.annotate({ description: 'The value to echo.' }),
+    }),
     success: Schema.Struct({ value: Schema.String }),
     failure: Schema.Never,
   }),
@@ -43,7 +46,7 @@ const toolkit = OpaqueToolkit.make(
 // `RunRequirements` types several services `run()` never yields on this path, hence the noops below.
 const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
   Layer.mergeAll(
-    scriptedLanguageModelLayer(turns),
+    layer(turns),
     ToolExecutionService.layerEmpty,
     ToolResolverService.layerEmpty,
     TestDatabaseLayer(),
@@ -108,3 +111,49 @@ const textOf = (messages: readonly Message.Message[]): string =>
 
 const toolResultsOf = (messages: readonly Message.Message[]) =>
   messages.flatMap((message) => message.blocks).filter(ContentBlock.is('toolResult'));
+
+describe('AiRequest.Request.run (telemetry)', () => {
+  it.effect('reports the tool call as a tool span, named after the tool', () =>
+    Effect.gen(function* () {
+      const exporter = new InMemorySpanExporter();
+      const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+
+      const request = new AiRequest.Request();
+      yield* request
+        .run({ toolkit, prompt: 'Echo hello.', history: [] })
+        .pipe(Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      const toolSpan = exporter.getFinishedSpans().find(({ name }) => name === 'callTool');
+      expect(toolSpan?.attributes['dxos.ai.kind']).toEqual('tool');
+      expect(toolSpan?.attributes['dxos.ai.name']).toEqual('Echo');
+      expect(JSON.parse(String(toolSpan?.attributes['dxos.ai.input']))).toEqual({ value: 'hello' });
+      expect(JSON.parse(String(toolSpan?.attributes['dxos.ai.output']))).toEqual({ value: 'hello' });
+    }).pipe(
+      Effect.provide(
+        testLayer([{ parts: [toolCall('Echo', { value: 'hello' })] }, { parts: [text('Echoed the value.')] }]),
+      ),
+    ),
+  );
+
+  it.effect('reports every model call of a turn', () =>
+    Effect.gen(function* () {
+      const exporter = new InMemorySpanExporter();
+      const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+
+      const request = new AiRequest.Request();
+      yield* request
+        .run({ toolkit, prompt: 'Echo hello.', history: [] })
+        .pipe(Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      const modelSpans = exporter.getFinishedSpans().filter(({ name }) => name.startsWith('LanguageModel.'));
+      expect(modelSpans).toHaveLength(2);
+      expect(modelSpans.every((span) => span.attributes['gen_ai.system'] !== undefined)).toEqual(true);
+    }).pipe(
+      Effect.provide(
+        testLayer([{ parts: [toolCall('Echo', { value: 'hello' })] }, { parts: [text('Echoed the value.')] }]),
+      ),
+    ),
+  );
+});

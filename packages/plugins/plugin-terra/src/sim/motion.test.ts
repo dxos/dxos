@@ -4,11 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { dot, makeSampler, radiusAt, scale, seaRadius, sub } from '../engine';
-import * as Terra from '../types/Terra';
-import * as TerraObject from '../types/TerraObject';
-import { toUnit } from './geo';
-import { type ObjectState, evaluate, initialState } from './motion';
+import { Terra, TerraObject } from '#types';
+
+import { dot, makeSampler, radiusAt, scale, seaRadius, sub } from '../engine/index.ts';
+import { toUnit } from './geo.ts';
+import { type ObjectState, evaluate, initialState } from './motion.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'motion-1' } }));
 

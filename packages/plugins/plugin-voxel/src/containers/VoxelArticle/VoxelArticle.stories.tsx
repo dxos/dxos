@@ -8,9 +8,9 @@ import React, { useMemo } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Voxel } from '#types';
 
-import * as Voxel from '../../types/Voxel';
-import { VoxelArticle } from './VoxelArticle';
+import { VoxelArticle } from './VoxelArticle.tsx';
 
 type StoryArgs = {
   voxels?: Voxel.VoxelData[];

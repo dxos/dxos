@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { numericalValues, range } from '@dxos/util';
 
-import { type DigestHex, Forest, type TreeMut } from './forest';
-import { createValue, randomKey, randomSample } from './testing';
+import { type DigestHex, Forest, type TreeMut } from './forest.ts';
+import { createValue, randomKey, randomSample } from './testing.ts';
 
 test('empty', async ({ expect }) => {
   const forest = new Forest();

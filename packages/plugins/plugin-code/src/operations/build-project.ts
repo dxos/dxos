@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { type LoadedFile, compileEntry } from '../compiler';
-import * as CodeOperation from '../types/CodeOperation';
+import { CodeOperation } from '#types';
+
+import { type LoadedFile, compileEntry } from '../compiler/index.ts';
 
 /**
  * F-12a: single-file TypeScript transpile via the @typescript/vfs language

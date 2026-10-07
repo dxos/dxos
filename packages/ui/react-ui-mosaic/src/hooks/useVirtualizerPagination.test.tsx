@@ -6,7 +6,7 @@ import { type Virtualizer } from '@tanstack/react-virtual';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { type VirtualizerPaginationController, useVirtualizerPagination } from './useVirtualizerPagination';
+import { type VirtualizerPaginationController, useVirtualizerPagination } from './useVirtualizerPagination.ts';
 
 type Item = { id: string };
 
@@ -28,6 +28,20 @@ const makeVirtualizer = (itemCount: number, lastVisibleIndex: number): Virtualiz
       end: i * ROW_HEIGHT + (ROW_HEIGHT - 4),
     })),
     scrollOffset: lastVisibleIndex * ROW_HEIGHT,
+    scrollElement: { clientHeight: VIEWPORT_HEIGHT },
+    getTotalSize: () => itemCount * ROW_HEIGHT,
+    scrollToOffset: vi.fn(),
+  }) as unknown as Virtualizer<any, any>;
+
+/** A window shorter than the viewport, sitting unscrolled at the top (offset 0, all rows rendered). */
+const makeUnscrolledVirtualizer = (itemCount: number): Virtualizer<any, any> =>
+  ({
+    getVirtualItems: () => Array.from({ length: itemCount }, (_, index) => ({ index })),
+    measurementsCache: Array.from({ length: itemCount }, (_, index) => ({
+      start: index * ROW_HEIGHT,
+      end: index * ROW_HEIGHT + (ROW_HEIGHT - 4),
+    })),
+    scrollOffset: 0,
     scrollElement: { clientHeight: VIEWPORT_HEIGHT },
     getTotalSize: () => itemCount * ROW_HEIGHT,
     scrollToOffset: vi.fn(),
@@ -76,6 +90,32 @@ describe('useVirtualizerPagination', () => {
     expect(getNext).toHaveBeenCalledTimes(2);
   });
 
+  test('extends an underfilled window that cannot be scrolled', async () => {
+    // The mailbox regression: a first page whose rows happen to fit the viewport exactly is not
+    // scrollable, so the user can never produce the scroll offset the edge triggers waited for and
+    // the list showed one page forever. An underfilled window must extend on its own.
+    let items = makeItems([0, 1, 2]);
+    const getNext = vi.fn(() => {
+      items = makeItems([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    });
+    const pagination: VirtualizerPaginationController = { getNext, atHead: true };
+
+    const { result } = renderHook(
+      (props: { items: Item[] }) => useVirtualizerPagination({ items: props.items, getId, pagination }),
+      { initialProps: { items } },
+    );
+
+    // Three rows at the top of an unscrolled viewport: nothing to scroll (3 * 60 < 340), offset 0.
+    act(() => {
+      result.current.onChange(makeUnscrolledVirtualizer(3));
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(getNext).toHaveBeenCalledTimes(1);
+  });
+
   test('does not misclassify a mid-list item reordered to the head as an eviction', () => {
     // Regression test: a conversation-grouped mailbox bumps an existing (already-loaded) thread to
     // the head when a new reply lands during sync. A bare `findIndex` match on the new head's id
@@ -100,6 +140,51 @@ describe('useVirtualizerPagination', () => {
     const reordered = [items[5], ...items.slice(0, 5), ...items.slice(6)];
     rerender({ items: reordered });
 
+    expect(result.current.leadingSpace).toBe(0);
+  });
+
+  test('does not read a filter that keeps a contiguous run of rows as an eviction', () => {
+    // Filtering a mailbox by a tag can leave rows that were already contiguous in the old list
+    // (e.g. rows 2 and 3 of 8). Positionally that is indistinguishable from a window that slid past
+    // its first two rows -- but a window anchored at the live head has evicted nothing, so reading
+    // it as a slide grew the spacer by the dropped rows' height and left blank space above the list.
+    const items = makeItems([0, 1, 2, 3, 4, 5, 6, 7]);
+    const pagination: VirtualizerPaginationController = { atHead: true };
+
+    const { result, rerender } = renderHook(
+      (props: { items: Item[] }) => useVirtualizerPagination({ items: props.items, getId, pagination }),
+      { initialProps: { items } },
+    );
+
+    act(() => {
+      result.current.onChange(makeUnscrolledVirtualizer(8));
+    });
+    rerender({ items: items.slice(2, 4) });
+
+    expect(result.current.leadingSpace).toBe(0);
+  });
+
+  test('stays at the top when rows arrive above an unscrolled window at the head', () => {
+    // Clearing a filter restores rows above the ones already shown. The reader was at the top of the
+    // live head, so the restored rows belong in view -- scrolling to keep the old first row in place
+    // would hide them above the viewport.
+    const items = makeItems([0, 1, 2, 3, 4, 5, 6, 7]);
+    const pagination: VirtualizerPaginationController = { atHead: true };
+
+    const { result, rerender } = renderHook(
+      (props: { items: Item[] }) => useVirtualizerPagination({ items: props.items, getId, pagination }),
+      { initialProps: { items: items.slice(2, 4) } },
+    );
+
+    const virtualizer = makeUnscrolledVirtualizer(2);
+    act(() => {
+      result.current.onChange(virtualizer);
+    });
+    // The incoming render measures all eight rows, uniform height, before the layout effect runs.
+    virtualizer.measurementsCache = makeUnscrolledVirtualizer(8).measurementsCache;
+    rerender({ items });
+
+    expect(virtualizer.scrollToOffset).not.toHaveBeenCalled();
     expect(result.current.leadingSpace).toBe(0);
   });
 });

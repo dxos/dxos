@@ -6,7 +6,7 @@ import { type ReactNode } from 'react';
 
 import { type Label } from '#translations';
 
-import { type ClassNameValue } from './theme';
+import { type ClassNameValue } from './theme.ts';
 
 /** Shared presentation fields for menu actions and group triggers. */
 export type MenuItemChrome = {
@@ -18,6 +18,8 @@ export type MenuItemChrome = {
   disabled?: boolean;
   hidden?: boolean;
   testId?: string;
+  /** Shown beside the label; a record is keyed by host platform (`macos`, `windows`, …). */
+  keyBinding?: string | Partial<Record<string, string>>;
   /** Applied to the button element rendered for this action. */
   classNames?: ClassNameValue;
   /** Applied to the inner `<Icon>` element when the action renders as an icon button. */
@@ -54,12 +56,8 @@ export type PlainMenuItemGroupProperties = MenuItemChrome & {
   variant?: undefined;
 };
 
-/** Dropdown trigger opening a menu of child actions. */
-export type DropdownMenuItemGroupProperties = MenuItemChrome & {
+type DropdownMenuItemGroupChrome = MenuItemChrome & {
   variant: 'dropdownMenu';
-  /** Used with `applyActive` to track the selected child. */
-  selectCardinality?: 'single';
-  value?: string;
   icon: string;
   /**
    * Whether the dropdown trigger shows a trailing caret. Defaults to `true`.
@@ -69,6 +67,28 @@ export type DropdownMenuItemGroupProperties = MenuItemChrome & {
   /** When true, the trigger icon/label reflects the active child action. */
   applyActive?: boolean;
 };
+
+export type DropdownSingleSelectMenuItemGroupProperties = DropdownMenuItemGroupChrome & {
+  selectCardinality?: 'single';
+  /** Used with `applyActive` to track the selected child. */
+  value?: string;
+};
+
+export type DropdownMultipleSelectMenuItemGroupProperties = DropdownMenuItemGroupChrome & {
+  selectCardinality: 'multiple';
+  /** Used with `applyActive` to track the selected children. */
+  value?: string[];
+};
+
+/**
+ * Dropdown trigger opening a menu of child actions.
+ *
+ * Split by cardinality because a `'multiple'` group suppresses close-on-select, so a mismatched
+ * pair would close the menu after the first toggle.
+ */
+export type DropdownMenuItemGroupProperties =
+  | DropdownSingleSelectMenuItemGroupProperties
+  | DropdownMultipleSelectMenuItemGroupProperties;
 
 export type ToggleGroupSingleSelectMenuItemGroupProperties = MenuItemChrome & {
   variant: 'toggleGroup';

@@ -5,8 +5,9 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { IMPORT_SPACE_DIALOG } from '../constants';
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
+
+import { IMPORT_SPACE_DIALOG } from '../constants.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenImportSpace> = SpaceOperation.OpenImportSpace.pipe(
   Operation.withHandler(

@@ -1,5 +1,167 @@
 # @dxos/plugin-graph
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [cb1e218]
+- Updated dependencies [68dc875]
+- Updated dependencies [69a4a85]
+- Updated dependencies [e99ee70]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [596728d]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+  - @dxos/compute@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/ui-theme@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- 0a27bde: Add `space.resolveUrl` to the database skill, so an MCP agent can turn a pasted Composer URL into
+  `echo://` refs for the objects it names and read them with `getObjects`, no `spaceId` needed.
+  `UrlPath.readReferences` parses a pathname without the app graph, and `UrlPath.TAIL_SEPARATOR` is
+  now the separator the graph builder is configured with.
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [6a457ac]
+- Updated dependencies [4ececc6]
+- Updated dependencies [3c7b013]
+- Updated dependencies [fd873d2]
+- Updated dependencies [1a8043c]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [28b7621]
+- Updated dependencies [9714c75]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [b8762ef]
+- Updated dependencies [2d4107f]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [864cd0d]
+- Updated dependencies [5305365]
+- Updated dependencies [9a36b1e]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [b63506b]
+- Updated dependencies [dd17e57]
+- Updated dependencies [6d28380]
+- Updated dependencies [6af89f4]
+- Updated dependencies [329faa0]
+- Updated dependencies [318d610]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [2643a00]
+- Updated dependencies [362fd0f]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [497caab]
+- Updated dependencies [b02fe16]
+- Updated dependencies [f0d3620]
+- Updated dependencies [472ca95]
+- Updated dependencies [548e82c]
+- Updated dependencies [cafa240]
+- Updated dependencies [26e31c1]
+- Updated dependencies [8c20ee2]
+- Updated dependencies [251f586]
+- Updated dependencies [3c85350]
+- Updated dependencies [967b130]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [882ac2a]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [4e4c25d]
+- Updated dependencies [9c86066]
+- Updated dependencies [608a172]
+- Updated dependencies [5180720]
+- Updated dependencies [3294b3d]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [818a096]
+- Updated dependencies [9d2466a]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [08cddf6]
+- Updated dependencies [c0e5651]
+- Updated dependencies [efdcf61]
+- Updated dependencies [3214dcf]
+- Updated dependencies [8efc4f1]
+- Updated dependencies [a04ab6e]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [b72c1a2]
+- Updated dependencies [7c426d4]
+- Updated dependencies [b1bb838]
+- Updated dependencies [d308bf8]
+- Updated dependencies [07514c2]
+- Updated dependencies [987f7e1]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [8f372ce]
+- Updated dependencies [d005fd9]
+- Updated dependencies [dea5df9]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [7263241]
+- Updated dependencies [0a27bde]
+- Updated dependencies [886453b]
+- Updated dependencies [582fc22]
+- Updated dependencies [892b718]
+- Updated dependencies [63629c5]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [0c92b44]
+- Updated dependencies [5dedae9]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [d205e96]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [78523d2]
+- Updated dependencies [a20d4d9]
+- Updated dependencies [f112c37]
+- Updated dependencies [520c34f]
+- Updated dependencies [4ae2005]
+- Updated dependencies [605455c]
+- Updated dependencies [ff93962]
+- Updated dependencies [9d8fcbd]
+- Updated dependencies [a1d42c4]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [11de244]
+- Updated dependencies [6dadb41]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

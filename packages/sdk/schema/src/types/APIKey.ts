@@ -15,9 +15,9 @@ import { Format } from '@dxos/echo';
  * user-credential token that may expire or be refreshed.
  */
 export const APIKey = Schema.Struct({
-  name: Schema.String.annotations({ title: 'Name' }),
-  domain: Schema.String.annotations({ title: 'Domain' }),
-  apiKey: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({ title: 'API key' }),
-}).annotations({ title: 'API key' });
+  name: Schema.String.annotate({ title: 'Name' }),
+  domain: Schema.String.annotate({ title: 'Domain' }),
+  apiKey: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({ title: 'API key' }),
+}).annotate({ title: 'API key' });
 
 export interface APIKey extends Schema.Schema.Type<typeof APIKey> {}

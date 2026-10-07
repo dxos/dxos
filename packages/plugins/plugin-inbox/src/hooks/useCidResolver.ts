@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { Blob, Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { type HtmlSrcResolver } from '@dxos/react-ui-components';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { type HtmlSrcResolver } from '@dxos/react-ui-html';
 import { type Message } from '@dxos/types';
 
 /**
@@ -68,7 +68,7 @@ export const useCidResolver = (
           return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.catchAll(() => Effect.succeed(undefined)),
+          Effect.catch(() => Effect.succeed(undefined)),
         ),
       );
     };

@@ -4,7 +4,7 @@
 
 import * as Context from 'effect/Context';
 
-import { type ObjectVersion } from '@dxos/echo-client';
+import { type Obj } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 
 /**
@@ -16,23 +16,22 @@ import { type EntityId } from '@dxos/keys';
  * Can be optionally provided to the session run call.
  */
 // TODO(dmaretskyi): Convert to Context.Reference
-export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
-  ArtifactDiffResolver,
-  ArtifactDiffResolver.Service
->() {}
+export class ArtifactDiffResolver extends Context.Service<ArtifactDiffResolver, ArtifactDiffResolver.Service>()(
+  '@dxos/assistant/ArtifactDiffResolver',
+) {}
 
 export namespace ArtifactDiffResolver {
   export type Service = {
     resolve: (
       artifacts: {
         id: EntityId;
-        lastVersion: ObjectVersion;
+        lastVersion: Obj.Version;
       }[],
     ) => Promise<
       Map<
         EntityId,
         {
-          version: ObjectVersion;
+          version: Obj.Version;
           diff?: string;
         }
       >

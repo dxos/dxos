@@ -6,6 +6,9 @@
   ],
   "references": [
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -25,9 +28,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-navtree"

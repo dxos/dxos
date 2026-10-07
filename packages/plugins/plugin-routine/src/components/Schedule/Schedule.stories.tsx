@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Schedule, type ScheduleValue } from './Schedule';
+import { Schedule, type ScheduleValue } from './Schedule.tsx';
 
 const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInterval?: number }) => {
   const [value, setValue] = useState<ScheduleValue>(initial);
@@ -28,7 +28,7 @@ const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInt
         <Schedule.Body />
       </Schedule.Root>
       <div className='flex flex-col gap-1'>
-        <p className='text-xs text-subdued'>Value</p>
+        <p className='text-xs text-fg-subtle'>Value</p>
         <pre className='font-mono text-sm bg-base-surface rounded p-2 whitespace-pre-wrap'>
           {JSON.stringify(value, null, 2)}
         </pre>

@@ -18,9 +18,9 @@ const NAVIGATION_PLUGIN = 'org.dxos.plugin.navigation';
  * stays out of the wire format (it also holds `Position.last`, an Infinity that would not survive JSON).
  */
 const TargetSchema = Schema.Struct({
-  path: Schema.String.annotations({ description: 'Navigation path to use with the Open operation.' }),
-  label: Schema.String.annotations({ description: 'Human-readable label.' }),
-  type: Schema.String.annotations({ description: 'Object type.' }),
+  path: Schema.String.annotate({ description: 'Navigation path to use with the Open operation.' }),
+  label: Schema.String.annotate({ description: 'Human-readable label.' }),
+  type: Schema.String.annotate({ description: 'Object type.' }),
 });
 
 /**
@@ -40,7 +40,7 @@ const TargetSchema = Schema.Struct({
  */
 export const ResolveNavigationTargets = Operation.make({
   meta: {
-    key: DXN.make(`${NAVIGATION_PLUGIN}.operation.resolveNavigationTargets`),
+    key: DXN.make('org.dxos.operation.appToolkit.resolveNavigationTargets'),
     name: 'Resolve navigation targets',
     description:
       "Resolve a navigation path for the Open operation. Pass an object's URI (its DXN, e.g. a context object's <dxn>) as the query uri to resolve that object to its navigation target, or omit the query to list pages that can be navigated to. Targets are ordered best-first; pass the first target's path to Open.",
@@ -56,7 +56,7 @@ export const ResolveNavigationTargets = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    targets: Schema.Array(TargetSchema).annotations({
+    targets: Schema.Array(TargetSchema).annotate({
       description:
         'Resolved targets, best-first: a resolver that knows where the object actually lives precedes the generic database-path answer, so the first target is the one to open.',
     }),

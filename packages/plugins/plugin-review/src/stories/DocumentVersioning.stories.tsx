@@ -34,18 +34,21 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { ReviewPlugin } from '../plugin';
+import { ReviewPlugin } from '#plugin';
+import { translations } from '#translations';
+
 import {
   type ReviewScenario,
   ReviewStoryLayout,
@@ -59,11 +62,8 @@ import {
   suggestingScenario,
   tableCellEditScenario,
   tableSuggestScenario,
-} from '../testing';
-import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
-import { translations } from '../translations';
-
-const concat = (...lines: string[]) => lines.join('\n');
+} from '../testing/index.ts';
+import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook.ts';
 
 /** The phrase the story's seeded comment thread is anchored to; must appear in the story document. */
 const COMMENT_ANCHOR = 'Reviewers can work through the changes';
@@ -113,7 +113,7 @@ const AmbientReviewPlugin = Plugin.define(
   Plugin.make,
 );
 
-const PROSE = concat(
+const PROSE = [
   '# Release notes',
   '',
   'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against',
@@ -128,9 +128,9 @@ const PROSE = concat(
   '',
   'The last paragraph exists so there is something to delete at the end of the document.',
   '',
-);
+].join('\n');
 
-const PROSE_SUGGESTION_BOB = concat(
+const PROSE_SUGGESTION_BOB = [
   '# Release notes',
   '',
   'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against',
@@ -148,9 +148,9 @@ const PROSE_SUGGESTION_BOB = concat(
   '',
   'Bob also proposes this closing line, so a suggestion sits at the very end of the document.',
   '',
-);
+].join('\n');
 
-const PROSE_SUGGESTION_ALICE = concat(
+const PROSE_SUGGESTION_ALICE = [
   '# Release notes',
   '',
   'The editor now tracks suggestions from every collaborator at once, which is the point of the whole',
@@ -166,7 +166,7 @@ const PROSE_SUGGESTION_ALICE = concat(
   '',
   'The last paragraph exists so there is something to delete at the end of the document.',
   '',
-);
+].join('\n');
 
 // Play functions drive document edits through the data layer (exercising the editor's live
 // automerge binding) and all versioning actions through the UI. Captured per story run.
@@ -182,7 +182,7 @@ const getDoc = (): Markdown.Document => {
 const setRootContent = (content: string) => {
   const root = getDoc().content.target;
   invariant(root, 'root text not loaded');
-  Obj.update(root, () => {
+  Obj.update(root, (root) => {
     EchoText.update(root, 'content', content);
   });
 };
@@ -192,8 +192,8 @@ const setBranchContent = async (branchName: string, content: string) => {
   const branch = doc.history?.branches.find((branch) => branch.name === branchName);
   invariant(branch, 'branch not found');
   const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
+  Obj.update(binding.object, (object) => {
+    EchoText.update(object, 'content', content);
   });
   binding.dispose();
 };
@@ -216,8 +216,8 @@ const seedSuggestion = async (creator: string, content: string) => {
   invariant(parent, 'root text not loaded');
   const branch = await Branch.suggestion(doc, parent, creator);
   const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
+  Obj.update(binding.object, (object) => {
+    EchoText.update(object, 'content', content);
   });
   binding.dispose();
 };
@@ -276,12 +276,12 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>((context) => ({
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
         // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
         ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -305,7 +305,7 @@ const meta = {
         }),
         SpacePlugin({}),
         ReviewPlugin(),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     })),
   ],
@@ -410,7 +410,7 @@ export const EditingTyping: Story = {
  */
 export const TimeTravel: Story = {
   args: {
-    content: concat('1'),
+    content: '1',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -504,14 +504,16 @@ export const BranchRevisions: Story = {
     // first commit of the highlighted lane on every selection change).
     await selectTimelineNode(canvasElement, 'draft-r2');
     await canvas.findByTestId('version-banner-checkpoint');
-    // The label also appears in the checkpoint banner, so pick the timeline row (an aria-current ancestor).
-    const currentRow = (label: string) =>
+    // The label also appears in the checkpoint banner, so pick the timeline row.
+    const timelineRow = (label: string) =>
       canvas
         .getAllByText(label)
-        .map((element) => element.closest('[aria-current]'))
+        .map((element) => element.closest('[role="listitem"]'))
         .find((element): element is Element => element !== null);
-    await waitFor(() => expect(currentRow('draft-r2')?.getAttribute('aria-current')).toBe('true'));
-    await expect(currentRow('fork: draft')?.getAttribute('aria-current')).toBe('false');
+    await waitFor(() => expect(timelineRow('draft-r2')?.getAttribute('aria-current')).toBe('true'));
+    // Only the current row carries `aria-current`; the others leave it off, as the attribute expects.
+    await expect(timelineRow('fork: draft')).toBeTruthy();
+    await expect(timelineRow('fork: draft')?.getAttribute('aria-current')).toBeNull();
   },
 };
 
@@ -911,8 +913,8 @@ export const SuggestingTest: Story = {
  */
 export const ReviewChromeTest: Story = {
   args: {
-    content: concat('# Hello World', ''),
-    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+    content: ['# Hello World', ''].join('\n'),
+    suggestions: [{ creator: 'did:bob', content: ['# Hello World', '', 'Bob: add an example.', ''].join('\n') }],
   },
   parameters: {
     ambientReview: true,

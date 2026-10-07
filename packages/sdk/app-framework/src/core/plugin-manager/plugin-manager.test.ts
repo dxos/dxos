@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, Registry } from '@effect-atom/atom';
+// The four directives below mark fixtures that hand the manager an untagged `Error` the way
+// misbehaving third-party plugin code would; surviving that is what they test, so tagging them
+// would remove the subject.
+
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
@@ -10,22 +13,30 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Latch from 'effect/Latch';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
-import { ActivationEvents } from '../../common';
-import * as ActivationEvent from '../activation-event';
-import * as Capability from '../capability';
-import { DependencyCycleError, DuplicateProviderError, MissingProviderError, ProvidesMismatchError } from '../errors';
-import * as Plugin from '../plugin';
-import * as PluginManager from './plugin-manager';
+import { ActivationEvents } from '../../common/index.ts';
+import * as ActivationEvent from '../activation-event.ts';
+import * as Capability from '../capability.ts';
+import {
+  DependencyCycleError,
+  DuplicateProviderError,
+  MissingProviderError,
+  ProvidesMismatchError,
+} from '../errors.ts';
+import * as Plugin from '../plugin.ts';
+import { PluginManagerError } from './errors.ts';
+import * as PluginManager from './plugin-manager.ts';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
@@ -41,7 +52,7 @@ const FailEvent = ActivationEvent.make('org.dxos.test.fail');
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 
 // TODO(wittjosiah): Factor out?
-const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
+const atomCounter = (registry: Registry.AtomRegistry, atom: Atom.Atom<any>) => {
   let count = 0;
   let initial = true;
   const dispose = registry.subscribe(
@@ -62,6 +73,19 @@ const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
     [Symbol.dispose]: dispose,
   };
 };
+
+/**
+ * Advances the test clock in slices, yielding to other fibers between them.
+ *
+ * v4 does not run a forked fiber before its parent's next step, and a forked activation takes
+ * several steps to reach its sleep — a single `adjust` would pass a sleep nobody is waiting on yet.
+ */
+const advance = (duration: Duration.Duration, slices = 8): Effect.Effect<void> =>
+  Effect.forEach(
+    Array.from({ length: slices }),
+    () => Effect.andThen(Effect.yieldNow, TestClock.adjust(Duration.millis(Duration.toMillis(duration) / slices))),
+    { discard: true },
+  );
 
 describe('PluginManager', () => {
   let plugins: Plugin.Plugin[] = [];
@@ -102,7 +126,7 @@ describe('PluginManager', () => {
         if (locator === urlLocator) {
           return { plugin: testPlugin };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: urlLoader });
@@ -112,6 +136,39 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEnabled(), []);
       yield* manager.enable(added.meta.profile.key);
       assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+    }),
+  );
+
+  it.effect('activates a plugin added after startup whose id was already enabled', () =>
+    Effect.gen(function* () {
+      const testPlugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          provides: [String],
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+        }),
+        Plugin.make,
+      )();
+      const urlLocator = 'https://example.com/manifest.json';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return { plugin: testPlugin };
+        }
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
+      });
+
+      // The persisted enabled set outlives the plugin itself, as it does across sessions.
+      const manager = PluginManager.make({ pluginLoader: urlLoader, enabled: [testMeta.profile.key] });
+      yield* manager.start();
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+
+      yield* manager.add(urlLocator);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['hello'],
+      );
     }),
   );
 
@@ -145,7 +202,7 @@ describe('PluginManager', () => {
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: loader });
@@ -197,7 +254,7 @@ describe('PluginManager', () => {
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: loader });
@@ -293,7 +350,10 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEventsFired(), []);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id]);
+      // Idle too: this host has no `requestIdleCallback` (jsdom does not implement it), so the
+      // manager runs the idle wave inline rather than forking it — a forked wave would leave
+      // `start()` returning before the modules gated on it were active.
+      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id, ActivationEvents.Idle.id]);
     }),
   );
 
@@ -328,7 +388,7 @@ describe('PluginManager', () => {
             provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
-            activate: () => Effect.fail(new Error('test')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'test' })),
           }),
           Plugin.make,
         )(),
@@ -416,6 +476,7 @@ describe('PluginManager', () => {
             activate: (): Effect.Effect<void> => {
               // This throws immediately before even returning an Effect.
               // This is the most severe type of defect.
+              // @effect-diagnostics-next-line globalErrorInEffectFailure:off
               throw new Error('immediate throw before Effect');
             },
           }),
@@ -464,20 +525,20 @@ describe('PluginManager', () => {
             provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
-            activate: () => Effect.fail(new Error('test')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'test' })),
           }),
           Plugin.make,
         )(),
       ];
 
       const manager = PluginManager.make({ pluginLoader });
-      const activating = yield* Effect.makeLatch(false);
-      const activated = yield* Effect.makeLatch(false);
-      const error = yield* Effect.makeLatch(false);
+      const activating = yield* Latch.make(false);
+      const activated = yield* Latch.make(false);
+      const error = yield* Latch.make(false);
 
       const activationFiber = PubSub.subscribe(manager.activation).pipe(
         Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+          PubSub.take(queue).pipe(
             Effect.flatMap(({ state }) =>
               Match.value(state).pipe(
                 Match.when('activating', () => activating.open),
@@ -499,10 +560,10 @@ describe('PluginManager', () => {
       yield* activating.await;
       yield* activated.await;
 
-      const activating2 = yield* Effect.makeLatch(false);
+      const activating2 = yield* Latch.make(false);
       const activationFiber2 = PubSub.subscribe(manager.activation).pipe(
         Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+          PubSub.take(queue).pipe(
             Effect.flatMap(({ state }) =>
               Match.value(state).pipe(
                 Match.when('activating', () => activating2.open),
@@ -516,7 +577,7 @@ describe('PluginManager', () => {
         Effect.runFork,
       );
 
-      yield* manager.activate(FailEvent).pipe(Effect.catchAll(() => Effect.succeed(false)));
+      yield* manager.activate(FailEvent).pipe(Effect.catch(() => Effect.succeed(false)));
       yield* activating2.await;
       yield* error.await;
       yield* Fiber.interrupt(activationFiber);
@@ -956,10 +1017,10 @@ describe('PluginManager', () => {
       yield* manager.enable(SlowPlugin.meta.profile.key);
 
       // Fork the activation so we can control time with TestClock.
-      const activationFiber = yield* Effect.fork(manager.activate(SlowEvent));
+      const activationFiber = yield* Effect.forkChild(manager.activate(SlowEvent));
 
       // Advance time past the 10 second warning threshold.
-      yield* TestClock.adjust(Duration.seconds(11));
+      yield* advance(Duration.seconds(11));
 
       // Check that the warning was logged.
       assert.isTrue(
@@ -1013,11 +1074,11 @@ describe('PluginManager', () => {
       // Fork two concurrent activations with DIFFERENT events.
       // Both events trigger the same module, so both will try to call _loadModule.
       // Without the semaphore, both would start loading the same module.
-      const fiber1 = yield* Effect.fork(manager.activate(EventA));
-      const fiber2 = yield* Effect.fork(manager.activate(EventB));
+      const fiber1 = yield* Effect.forkChild(manager.activate(EventA));
+      const fiber2 = yield* Effect.forkChild(manager.activate(EventB));
 
       // Advance time to let both activations complete.
-      yield* TestClock.adjust(Duration.seconds(6));
+      yield* advance(Duration.seconds(6));
 
       yield* Fiber.join(fiber1);
       yield* Fiber.join(fiber2);
@@ -1227,8 +1288,8 @@ describe('PluginManager', () => {
 
   it.effect('should interrupt in-flight activation during shutdown', () =>
     Effect.gen(function* () {
-      const activationStarted = yield* Effect.makeLatch(false);
-      const allowActivationToComplete = yield* Effect.makeLatch(false);
+      const activationStarted = yield* Latch.make(false);
+      const allowActivationToComplete = yield* Latch.make(false);
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           provides: [String],
@@ -1250,10 +1311,10 @@ describe('PluginManager', () => {
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
 
-      const activationFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+      const activationFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
       yield* activationStarted.await;
 
-      const shutdownFiber = yield* Effect.fork(manager.shutdown());
+      const shutdownFiber = yield* Effect.forkChild(manager.shutdown());
       yield* allowActivationToComplete.open;
 
       const shutdownResult = yield* Fiber.join(shutdownFiber);
@@ -1262,7 +1323,7 @@ describe('PluginManager', () => {
       assert.isTrue(shutdownResult);
       assert.isTrue(Exit.isFailure(activationExit));
       if (Exit.isFailure(activationExit)) {
-        assert.isTrue(Cause.isInterruptedOnly(activationExit.cause));
+        assert.isTrue(Cause.hasInterruptsOnly(activationExit.cause));
       }
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
       assert.deepStrictEqual(manager.getActive(), []);
@@ -1427,12 +1488,12 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key, slowMeta.profile.key],
         });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         // Streaming: the fast plugin's module activates while the slow definition still loads.
         yield* settle(() => manager.capabilities.getAll(String).length > 0);
         assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'fast' }]);
         // The ready signal still waits for the complete registry.
-        assert.strictEqual((yield* Fiber.poll(startupFiber))._tag, 'None');
+        assert.strictEqual(startupFiber.pollUnsafe(), undefined);
         assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
 
         releaseLoader();
@@ -1479,7 +1540,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key, slowMeta.profile.key],
         });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         // Give the streaming pass real turns: the consumer must wait (provider's definition
         // has not registered), not be recorded as a structural MissingProvider failure.
         yield* settle(() => manager.getFailed().length > 0, 30);
@@ -1546,7 +1607,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key, slowMeta.profile.key],
         });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         // Real turns for the streaming pass: the same-plugin provider lands early, and the
         // snapshotter must NOT ride along with it.
         yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
@@ -1678,6 +1739,7 @@ describe('PluginManager', () => {
     it.effect('wraps loader rejections in a descriptive error', () =>
       Effect.gen(function* () {
         const LazyTest = Plugin.lazy(lazyMeta, () =>
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
         );
         const lazyStub = LazyTest();
@@ -1689,7 +1751,7 @@ describe('PluginManager', () => {
         const exit = yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         assert.isTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
-          const failure = Cause.failureOption(exit.cause);
+          const failure = Cause.findErrorOption(exit.cause);
           assert.isTrue(failure._tag === 'Some');
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
@@ -1703,6 +1765,7 @@ describe('PluginManager', () => {
     it.effect('publishes a lazy:<id> error message when resolution fails', () =>
       Effect.gen(function* () {
         const LazyTest = Plugin.lazy(lazyMeta, () =>
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
         );
         const lazyStub = LazyTest();
@@ -1713,7 +1776,7 @@ describe('PluginManager', () => {
         const queue = yield* PubSub.subscribe(manager.activation);
         yield* manager.add(lazyMeta.profile.key);
         yield* Effect.exit(manager.enable(lazyMeta.profile.key));
-        const messages = yield* Queue.takeAll(queue);
+        const messages = yield* PubSub.takeAll(queue);
 
         const errorMessage = [...messages].find(
           (m) => m.module === `lazy:${lazyMeta.profile.key}` && m.state === 'error',
@@ -1771,7 +1834,7 @@ describe('PluginManager', () => {
         const exit = yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         assert.isTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
-          const failure = Cause.failureOption(exit.cause);
+          const failure = Cause.findErrorOption(exit.cause);
           assert.isTrue(failure._tag === 'Some');
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
@@ -1785,11 +1848,11 @@ describe('PluginManager', () => {
   describe('timeouts and failure tracking', () => {
     // Atom subscriptions fire synchronously when the registry's `_set` runs,
     // even from a forked fiber on the default runtime. Wrapping in
-    // `Effect.async` lets a TestClock-driven test wait for state produced by
+    // `Effect.callback` lets a TestClock-driven test wait for state produced by
     // a background `_runForkedFiber` (e.g. the auto-disable triggered when a
     // module activation times out) without relying on real-time `sleep`.
-    const waitFor = <T>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
-      Effect.async<void>((resume) => {
+    const waitFor = <T>(registry: Registry.AtomRegistry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
+      Effect.callback<void>((resume) => {
         if (predicate(registry.get(atom))) {
           resume(Effect.void);
           return;
@@ -1840,10 +1903,10 @@ describe('PluginManager', () => {
         yield* manager.add(SlowPlugin.meta.profile.key);
         yield* manager.enable(SlowPlugin.meta.profile.key);
 
-        const fiber = yield* Effect.fork(manager.activate(SlowEvent));
+        const fiber = yield* Effect.forkChild(manager.activate(SlowEvent));
         // Push past the 2s activation timeout. The forked module fiber is on
         // TestClock too, so the timeout fires deterministically.
-        yield* TestClock.adjust(Duration.seconds(3));
+        yield* advance(Duration.seconds(3));
         const exit = yield* Fiber.await(fiber);
         // The timeout is isolated to the owning plugin — recorded via `getFailed`, not thrown
         // from `activate(event)`.
@@ -1878,14 +1941,14 @@ describe('PluginManager', () => {
         });
         yield* manager.add(lazyMeta.profile.key);
 
-        const enableFiber = yield* Effect.fork(manager.enable(lazyMeta.profile.key));
-        yield* TestClock.adjust(Duration.seconds(2));
+        const enableFiber = yield* Effect.forkChild(manager.enable(lazyMeta.profile.key));
+        yield* advance(Duration.seconds(2));
         const exit = yield* Fiber.await(enableFiber);
         assert.isTrue(Exit.isFailure(exit));
 
         // The wrapped `LazyPluginError` carries the timeout error as its cause.
         if (Exit.isFailure(exit)) {
-          const failure = Cause.failureOption(exit.cause);
+          const failure = Cause.findErrorOption(exit.cause);
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
             const lazyError = failure.value as Plugin.LazyPluginError;
@@ -1909,13 +1972,13 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
         const FailingPlugin = Plugin.define(
-          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+          Plugin.makeMeta({ key: DXN.make('com.example.operation.test.failing'), name: 'Failing' }),
         ).pipe(
           Plugin.addModule({
             provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
-            activate: () => Effect.fail(new Error('boom')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'boom' })),
           }),
           Plugin.make,
         );
@@ -1950,7 +2013,7 @@ describe('PluginManager', () => {
             provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
-            activate: () => Effect.fail(new Error('boom')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'boom' })),
           }),
           Plugin.make,
         );
@@ -1984,7 +2047,7 @@ describe('PluginManager', () => {
             activatesOn: Event,
             activate: () =>
               shouldFail
-                ? Effect.fail(new Error('first try'))
+                ? Effect.fail(new PluginManagerError({ message: 'first try' }))
                 : Effect.succeed([Capability.contribute(String, { string: 'ok' })]),
           }),
           Plugin.make,
@@ -2184,6 +2247,7 @@ describe('PluginManager', () => {
           if (id === 'remote') {
             return { plugin: remote };
           }
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           throw new Error(`Unknown id: ${id}`);
         });
 
@@ -2217,7 +2281,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const dependent = makePlugin('dependent', ['remote-broken']);
         const failingLoader = Effect.fn(function* (_id: string) {
-          return yield* Effect.fail(new Error('fetch failed'));
+          return yield* Effect.fail(new PluginManagerError({ message: 'fetch failed' }));
         });
 
         const registry = Registry.make();
@@ -2627,15 +2691,15 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const startFiber = yield* Effect.fork(manager.start());
+        const startFiber = yield* Effect.forkChild(manager.start());
         yield* Deferred.await(providerStarted);
 
         // Fire the event mid-startup: the pull round runs concurrently with the held-open
         // startup round.
-        const eventFiber = yield* Effect.fork(manager.activate(EventX));
+        const eventFiber = yield* Effect.forkChild(manager.activate(EventX));
         // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
         // the provider is released — otherwise the race can accidentally resolve correctly.
-        yield* Effect.yieldNow().pipe(Effect.repeatN(50));
+        yield* Effect.yieldNow.pipe(Effect.repeat({ times: 50 }));
         yield* Deferred.succeed(providerGate, undefined);
         yield* Fiber.join(eventFiber);
         yield* Fiber.join(startFiber);
@@ -3004,13 +3068,11 @@ describe('PluginManager', () => {
         const manager = makeManagerWith(Test);
         const subscription = yield* PubSub.subscribe(manager.activation);
         yield* startAndSettle(manager);
-        while (true) {
-          const message = yield* Queue.poll(subscription);
-          if (message._tag === 'None') {
-            break;
-          }
-          if (message.value.state === 'activated') {
-            messages.push({ event: message.value.event, module: message.value.module });
+        // v4 has no effectful poll on a subscription; drain whatever is buffered.
+        const buffered = yield* PubSub.takeUpTo(subscription, globalThis.Number.MAX_SAFE_INTEGER);
+        for (const message of buffered) {
+          if (message.state === 'activated') {
+            messages.push({ event: message.event, module: message.module });
           }
         }
 
@@ -3055,17 +3117,17 @@ describe('PluginManager', () => {
         yield* manager.activate(ActivationEvents.Startup);
 
         // Wave A claims the module and blocks in its activate body.
-        const fiberA = yield* Effect.fork(manager.activate(SlowEvent));
+        const fiberA = yield* Effect.forkChild(manager.activate(SlowEvent));
         yield* Deferred.await(started);
 
         // Wave B matches the same module mid-load. The round filters it (`isLoading`), so
         // without the post-pass await B would resolve here — before the handlers exist —
         // breaking the demand-pull contract (a lookup retry then misses and hard-fails).
-        const fiberB = yield* Effect.fork(manager.activate(OtherEvent));
+        const fiberB = yield* Effect.forkChild(manager.activate(OtherEvent));
         for (let i = 0; i < 10; i++) {
-          yield* Effect.yieldNow();
+          yield* Effect.yieldNow;
         }
-        assert.strictEqual((yield* Fiber.poll(fiberB))._tag, 'None');
+        assert.strictEqual(fiberB.pollUnsafe(), undefined);
 
         yield* Deferred.succeed(gate, undefined);
         yield* Fiber.join(fiberB);
@@ -3136,11 +3198,11 @@ describe('PluginManager', () => {
             }
           });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         yield* settle(() => manager.capabilities.getAll(String).length > 0);
         assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'b' }]);
 
-        const eventFiber = yield* Effect.fork(manager.activate(Event));
+        const eventFiber = yield* Effect.forkChild(manager.activate(Event));
         yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
         // The contract under test: the pull activates only the event module's own transitive
         // providers (pulledProvider); an unscoped follow-up round would pick up the runnable
@@ -3227,6 +3289,9 @@ describe('PluginManager', () => {
         const manager = PluginManager.make({ pluginLoader, plugins });
 
         yield* manager.activate(ActivationEvents.Startup);
+        // Un-annotated modules are idle-gated and `start()` only forks the idle wave, so settle it
+        // here: otherwise whether `eager` is eligible at enable time depends on the daemon's timing.
+        yield* manager.activate(ActivationEvents.Idle);
         yield* manager.activate(DemandEvent);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
 
@@ -3264,5 +3329,136 @@ describe('PluginManager', () => {
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'started' }]);
       }),
     );
+  });
+  describe('startup independence', () => {
+    it.effect('ready does not wait for a wave a startup module fired from a forked fiber', () =>
+      Effect.gen(function* () {
+        // The client's shape: `activate` returns immediately and forks work that dispatches a
+        // follow-on event mid-startup, while the rest of the wave is still loading.
+        const slowGate = yield* Latch.make(false);
+        const triggerGate = yield* Latch.make(false);
+        const followerGate = yield* Latch.make(false);
+
+        const Follower = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.follower'), name: 'Follower' }),
+        ).pipe(
+          Plugin.addModule({
+            activatesOn: CountEvent,
+            id: 'Follower',
+            provides: [MultiNumber],
+            activate: () =>
+              Effect.gen(function* () {
+                yield* followerGate.await;
+                return [Capability.contribute(MultiNumber, { number: 1 })];
+              }),
+          }),
+          Plugin.make,
+        );
+
+        const Test = Plugin.define(testMeta).pipe(
+          // Keeps the startup wave in flight while the forked fiber below fires its event.
+          Plugin.addModule({
+            activatesOn: ActivationEvents.Startup,
+            id: 'Slow',
+            provides: [Number],
+            activate: () =>
+              Effect.gen(function* () {
+                yield* slowGate.await;
+                return [Capability.contribute(Number, { number: 0 })];
+              }),
+          }),
+          Plugin.addModule({
+            activatesOn: ActivationEvents.Startup,
+            id: 'Trigger',
+            provides: [String],
+            activate: () =>
+              Effect.gen(function* () {
+                yield* Effect.forkDetach(
+                  Effect.gen(function* () {
+                    yield* triggerGate.await;
+                    yield* Plugin.activate(CountEvent);
+                  }),
+                );
+                return [Capability.contribute(String, { string: 'ready' })];
+              }),
+          }),
+          Plugin.make,
+        );
+
+        plugins = [Test(), Follower()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, 'org.dxos.test.follower'],
+        });
+
+        const startFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
+        yield* advance(Duration.millis(100));
+
+        // Fire the follow-on wave while startup is still waiting on its own slow module.
+        yield* triggerGate.open;
+        yield* advance(Duration.millis(100));
+
+        // Startup's own modules are now all done; only the follow-on wave is outstanding.
+        yield* slowGate.open;
+        yield* advance(Duration.millis(100));
+
+        assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 0);
+        assert.isTrue(manager.getEventsFired().includes(ActivationEvent.eventKey(ActivationEvents.Startup)));
+        assert.deepStrictEqual(manager.capabilities.get(String), { string: 'ready' });
+
+        yield* followerGate.open;
+        yield* Fiber.join(startFiber);
+        yield* advance(Duration.millis(100));
+        assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 1);
+      }),
+    );
+  });
+
+  describe('host-supplied core set', () => {
+    it.effect('defaults to the plugins tagged `system`', () =>
+      Effect.gen(function* () {
+        const tagged = makePlugin('org.dxos.test.tagged', ['system']);
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({ plugins: [tagged, plain], pluginLoader });
+
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.tagged']);
+      }),
+    );
+
+    it.effect('an explicit set replaces the tag, in both directions', () =>
+      Effect.gen(function* () {
+        const tagged = makePlugin('org.dxos.test.tagged', ['system']);
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({
+          plugins: [tagged, plain],
+          // The host both drops a `system`-tagged plugin from core and promotes an untagged one:
+          // the tag is declared once per plugin for every host, so neither direction can be
+          // expressed without this option.
+          core: ['org.dxos.test.plain'],
+          pluginLoader,
+        });
+
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
+        assert.isTrue(manager.getEnabled().includes('org.dxos.test.plain'));
+      }),
+    );
+
+    it.effect('ignores ids that name no registered plugin', () =>
+      Effect.gen(function* () {
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({
+          plugins: [plain],
+          core: ['org.dxos.test.plain', 'org.dxos.test.absent'],
+          pluginLoader,
+        });
+
+        // A phantom core id would be permanently un-removable and un-enableable.
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
+      }),
+    );
+
+    const makePlugin = (id: string, tags?: string[]) =>
+      Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
   });
 });

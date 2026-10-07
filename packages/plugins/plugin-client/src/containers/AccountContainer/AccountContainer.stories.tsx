@@ -6,18 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { HubHttpClient } from '@dxos/edge-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
+import { ClientCapabilities } from '#types';
 
-import { ClientPlugin } from '../../ClientPlugin';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
-import { AccountContainer } from './AccountContainer';
+import { AccountContainer } from './AccountContainer.tsx';
 
 /**
  * A `HubHttpClient` whose account lookup is answered locally. Constructed for real and overridden
@@ -47,7 +47,7 @@ const decorators = (hub?: HubHttpClient) => [
             yield* initializeIdentity(client);
           }),
       }),
-      ProcessManagerPlugin(),
+      ProcessManagerPlugin.make(),
     ],
     capabilities: hub ? [Capability.contribute(ClientCapabilities.HubHttpClient, hub)] : [],
   }),

@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * as GitHubEvents from './types/GitHubEvents';
-export * as GitHubOperation from './types/GitHubOperation';
+export * as GitHubPlugin from './GitHubPlugin.ts';
+export * from '#types';
+export * as Extensions from './Extensions.ts';

@@ -4,13 +4,16 @@
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { ScrollArea, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
-import * as Segment from '../../types/Segment';
-import { type SegmentCardActionHandler, SegmentTile } from '../SegmentCard';
+import { Segment } from '#types';
 
-export type SegmentStackProps = ThemedClassName<{
+import { type SegmentCardActionHandler, SegmentTile } from '../SegmentCard/index.ts';
+
+export type SegmentStackProps = Util.ThemedClassName<{
   id: string;
   segments?: Segment.Segment[];
   currentId?: string;
@@ -20,7 +23,7 @@ export type SegmentStackProps = ThemedClassName<{
 
 const ROW_ESTIMATE = 120;
 
-export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
+export const SegmentStack = Util.composable<HTMLDivElement, SegmentStackProps>(
   ({ segments = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     // Render in the caller-supplied order (the canonical `Trip.getSegments` sort) so the displayed
@@ -52,7 +55,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -61,7 +64,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SegmentTile}

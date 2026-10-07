@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-import { translations as shellTranslations } from '@dxos/shell/react';
+import type * as Theme from '@dxos/react-ui/Theme';
+import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
 
@@ -24,9 +24,18 @@ const pluginTranslations = [
         'create-device-invitation.label': 'Create code',
         'qr-code.description':
           'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
+        'contacts.label': 'Contacts',
+        'contacts.description': 'People you share at least one space with.',
+        'contacts-search.placeholder': 'Search contacts…',
+        'contact-picker-add.label': 'Add member',
+        'contact-picker-empty.message':
+          'You have no contacts yet — people appear here once you share a space with them.',
+        'role-editor.label': 'Editor',
+        'role-viewer.label': 'Viewer',
+        'role-admin.label': 'Admin',
         'security.label': 'Security',
         'account-panel.label': 'Account',
-        'invitations-panel.label': 'Invitations',
+        'invitations-panel.label': 'Account invitations',
         'usage-panel.label': 'Usage',
         'usage-section.title': 'Usage',
         'usage-section.description':
@@ -54,7 +63,7 @@ const pluginTranslations = [
         'account-section.title': 'Account',
         'account-section.description':
           'Your identity on this device is bound to a DXOS account that gates access to edge services like sync, agents, and AI.',
-        'invitations-section.title': 'Invitations',
+        'invitations-section.title': 'Account invitations',
         'invitations-section.description':
           'Share an invitation with someone you’d like to bring onto DXOS. Each code grants one-time access to create an account.',
         'no-edge-access.title': 'No edge access',
@@ -86,14 +95,14 @@ const pluginTranslations = [
         'generate-invitation.description_other': 'You have {{count}} invitations left to generate.',
         'available-invitations.title': 'Available invitations',
         'redeemed-invitations.title': 'Redeemed invitations',
-        'reset-device.description': 'Log out from this device, erasing all the data on this device.',
-        'join-new-identity.description':
-          'Log out from this device, erasing all the data currently on this device, and use a QR code or URL to log in.',
-        'recover-identity.description':
-          'Log out from this device, erasing all the data currently on this device, and use a passkey or recovery code to log in.',
-        'danger-zone.title': 'Log out',
-        'danger-zone.description':
-          'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using a passkey or complete a peer-to-peer device invitation above.',
+        'logout.description':
+          'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
+        'join-new-identity.description': 'Erase this device and join an existing identity with a QR code or URL.',
+        'recover-identity.description': 'Erase this device and log in with a passkey or recovery code.',
+        'logout-section.title': 'Danger Zone',
+        'identity-test-section.title': 'Testing',
+        'identity-test-section.description':
+          'Enabled for testing. These switch this device to a different identity, erasing all data on it first.',
         'display-name.label': 'Display name',
         'display-name.description': 'Your name as it appears in the app.',
         'display-name-input.placeholder': 'Enter a name',
@@ -131,6 +140,8 @@ const pluginTranslations = [
         //   Something like https://www.tomsguide.com/news/what-are-passkeys.
         'create-passkey.description':
           'A passkey is a secure and easy to use credential that can be used to recover your account.',
+        'create-passkey-failed.message':
+          'The passkey could not be created. Try again, or create a recovery code instead.',
         'create-recovery-code.label': 'Create Recovery Code',
         'create-recovery-code.description': 'A recovery code is 12 word phrase representing a private key.',
         'recovery-code-dialog.title': 'Recovery Code',
@@ -147,14 +158,26 @@ const pluginTranslations = [
         'join-new-identity.label': 'Join an existing identity',
         'qr.label': 'QR Code',
         'recover-identity.label': 'Use a recovery code',
-        'reset-device.label': 'Reset storage',
-        'reset-dialog.description': 'Reset storage',
-        'reset-dialog.title': 'Reset storage',
+        'logout.label': 'Log out',
+        'cli-login-dialog.title': 'Connect the dx CLI',
+        'cli-login-dialog.description':
+          'A dx command-line client on this computer is asking to join your identity as a new device, with full access to your spaces. Approve only if you just ran `dx account login` yourself.',
+        'cli-login-no-identity.message': 'Create or sign in to an identity first, then run the dx login command again.',
+        'cli-login-code.label': 'Approve only if your terminal shows this code:',
+        'cli-login-authorize.label': 'Authorize',
+        'cli-login-deny.label': 'Deny',
+        'cli-login-done.label': 'Done',
+        'cli-login-cancel.label': 'Cancel',
+        'cli-login-sending.message': 'Creating a device invitation…',
+        'cli-login-waiting.message': 'Invitation sent. Waiting for the CLI to join — keep this tab open.',
+        'cli-login-success.message': 'The CLI joined your identity. You can return to your terminal.',
+        'cli-login-cancelled.message': 'The invitation was cancelled.',
+        'cli-login-error.message': 'Could not connect the CLI: {{error}}',
         'navigation-failed-toast.title': 'Link could not be processed',
         'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];
 
-export const translations: Resource[] = [...pluginTranslations, ...shellTranslations];
+export const translations: Theme.Resource[] = [...pluginTranslations, ...shellTranslations];

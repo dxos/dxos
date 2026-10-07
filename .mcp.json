@@ -2,7 +2,7 @@
   "mcpServers": {
     "dxos-introspect": {
       "type": "http",
-      "url": "https://introspect.dxos.network/mcp"
+      "url": "https://dxos.network/introspect/mcp"
     },
     "trunk": {
       "type": "http",

@@ -4,13 +4,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { type IdentitySpec, planMerge } from '@dxos/extractor';
 import { type Space } from '@dxos/react-client/echo';
 
-import { SpaceOperation } from '../../operations/definitions';
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 export type UseDuplicatesProps = {
   space: Space;
@@ -42,8 +41,8 @@ export type UseDuplicatesResult = {
  * merged-away member disappears from the current group without a rescan.
  */
 export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesProps): UseDuplicatesResult => {
-  const { invokePromise } = useOperationInvoker();
-  const specs = useCapabilities(SpaceCapabilities.IdentitySpec);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const specs = Hooks.useCapabilities(SpaceCapabilities.IdentitySpec);
   const typename = Type.getTypename(type);
   const spec = useMemo(
     () => specs.find((candidate) => Type.getTypename(candidate.type) === typename),
@@ -56,7 +55,7 @@ export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesPr
   // Rescan is a button a user can hit repeatedly, and a merge triggers its own refresh, so responses
   // can land out of order; only the newest request is allowed to write.
   const request = useRef(0);
-  const { lastMergeAt } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { lastMergeAt } = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
 
   const refresh = useCallback(() => {
     if (!spec) {

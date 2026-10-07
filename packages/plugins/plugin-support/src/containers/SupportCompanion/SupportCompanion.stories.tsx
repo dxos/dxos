@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import { Support } from '#types';
 
-import * as Support from '../../types/Support';
-import { SupportCompanion } from './SupportCompanion';
+import { SupportCompanion } from './SupportCompanion.tsx';
 
 // Minimal plugin that registers Support.Ticket and carries a few screenshot URLs
 // in its meta so the resolver can map the ticket's typename back to a plugin
@@ -34,7 +34,7 @@ const TestPlugin = Plugin.define(TestPluginMeta).pipe(
 
 const DefaultStory = () => {
   const ticket = useMemo(() => Support.make({ title: 'Example ticket' }), []);
-  return <SupportCompanion companionTo={ticket} />;
+  return <SupportCompanion companionTo={ticket} attendableId='story' />;
 };
 
 const meta = {

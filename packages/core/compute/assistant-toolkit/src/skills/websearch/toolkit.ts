@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';

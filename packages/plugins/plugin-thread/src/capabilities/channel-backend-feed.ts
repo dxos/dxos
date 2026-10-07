@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Channel, Message } from '@dxos/types';
+import { Channel } from '@dxos/types';
 
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
+import { ChannelBackend, ThreadCapabilities } from '#types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages in a `Feed`
@@ -32,19 +31,15 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       return () => {};
     }
 
-    const result = db.query(Query.select(Filter.type(Message.Message)).from(feed));
-    return result.subscribe(() => onMessages(result.results), { fire: true });
+    return ChannelBackend.subscribeFeed(db, feed, onMessages);
   },
   send: (channel, message) =>
     Effect.gen(function* () {
       const db = Obj.getDatabase(channel);
       invariant(db, 'Database not found');
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.get(db.spaceId);
-      invariant(space, 'Space not found');
       const feed = Channel.getFeed(channel);
       invariant(feed, 'Channel is not feed-backed');
-      yield* Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)));
+      yield* Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)));
     }),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,
 };

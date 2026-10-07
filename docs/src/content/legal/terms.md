@@ -11,15 +11,9 @@ If you do not agree to all the terms and conditions, then you may not access the
 
 ## Purpose of Service
 
-This Service is provided solely as a technology preview, designed to demonstrate and test new technologies in a controlled environment. It is intended for experimental and evaluative purposes only.
+The Services include Composer, a collaborative workspace currently offered in beta, together with the DXOS technology platform, SDK, and hosted infrastructure. As a beta offering, the Services are under active development: features may change, and interruptions or downtime may occur without prior notice. Users are advised to keep independent backups of important data.
 
-The provider makes no guarantees regarding the confidentiality, integrity, or availability of the Service or any data stored or transmitted through it. Users should be aware that:
-
-- The Service is not intended for production use.
-- Data integrity and confidentiality are not assured. Data loss or corruption may occur without notice.
-- The Service may be subject to interruptions, downtime, or data loss at any time without prior notice.
-
-Users are strongly advised to avoid using the Service for critical or sensitive tasks and to ensure that any important data is backed up independently.
+Where the Services connect to third-party accounts you authorize (such as Google), our access to and use of that data is described in the [Privacy Policy](/privacy), including our adherence to the Google API Services User Data Policy's Limited Use requirements. You may disconnect these accounts at any time.
 
 ## Acceptable Use
 

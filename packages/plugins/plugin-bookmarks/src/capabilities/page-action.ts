@@ -9,8 +9,7 @@ import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import type * as PageAction from '@dxos/plugin-crx/PageAction';
 
 import { meta } from '#meta';
-
-import * as BookmarkOperation from '../types/BookmarkOperation';
+import { BookmarkOperation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

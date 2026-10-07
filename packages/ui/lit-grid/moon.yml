@@ -7,6 +7,11 @@ tags:
   - pack
 tasks:
   e2e:
+    # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
+    # taking the web server down with it.
+    deps:
+      - '#vendor:build'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-lit/.storybook/main.ts

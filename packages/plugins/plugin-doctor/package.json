@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-doctor",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Self-introspection skill: query the browser tab's own logs.",
   "homepage": "https://dxos.org",
@@ -11,18 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
@@ -45,14 +48,24 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/DoctorPlugin.tsx",
-      "types": "./dist/types/src/DoctorPlugin.d.ts",
-      "default": "./dist/lib/DoctorPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -62,21 +75,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./diagnostics": {
-      "source": "./src/diagnostics/index.ts",
-      "types": "./dist/types/src/diagnostics/index.d.ts",
-      "import": "./dist/lib/diagnostics.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./DoctorCapabilities": {
       "source": "./src/types/DoctorCapabilities.ts",
       "types": "./dist/types/src/types/DoctorCapabilities.d.ts",
@@ -92,7 +90,17 @@
       "types": "./dist/types/src/types/DoctorOperation.d.ts",
       "import": "./dist/lib/DoctorOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./DoctorPlugin": {
+      "source": "./src/DoctorPlugin.ts",
+      "types": "./dist/types/src/DoctorPlugin.d.ts",
+      "import": "./dist/lib/DoctorPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -117,15 +125,19 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/react-client": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

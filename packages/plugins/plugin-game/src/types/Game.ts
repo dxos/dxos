@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation } from '@dxos/schema';
 
 // @import-as-namespace
@@ -17,16 +16,16 @@ import { CardAnnotation } from '@dxos/schema';
  * `name` is an optional display label (useful for AI/guest players).
  */
 export const Player = Schema.Struct({
-  role: Schema.String.annotations({
+  role: Schema.String.annotate({
     description: 'Variant-defined player role (e.g. "white", "x").',
   }),
   identity: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'DID of the player; absent for AI or empty seats.',
     }),
   ),
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'Optional display name for the player.',
     }),
   ),
@@ -43,18 +42,19 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
   Schema.Struct({
     name: Schema.optional(Schema.String),
     players: Schema.mutable(Schema.Array(Player))
-      .annotations({ description: 'Players in the game.' })
-      .pipe(FormInputAnnotation.set(false), Schema.optional),
+      .annotate({ description: 'Players in the game.' })
+      .pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     variant: Ref.Ref(Obj.Unknown)
-      .annotations({ description: 'Reference to variant-specific state object.' })
-      .pipe(FormInputAnnotation.set(false)),
+      .annotate({ description: 'Reference to variant-specific state object.' })
+      .pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
     // the static `ph--sword--regular` above while the variant ref is still loading.
     Annotation.IconFromRefAnnotation.set('variant'),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -78,7 +78,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
 export type GameRef<_V> = Ref.Ref<Game>;
 
 export const GameRef = <S extends Type.AnyObj>(_variantType: S) =>
-  Ref.Ref(Game) as Schema.Schema<GameRef<Type.InstanceType<S>>, any, never>;
+  Ref.Ref(Game) as unknown as Schema.Codec<GameRef<Type.InstanceType<S>>, any>;
 
 /**
  * Build a base `Game` object referencing the given variant-state ECHO object.

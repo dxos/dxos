@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LogEntry, type LogEntryInit, LogLevel } from './index';
-import { serializeToJsonl } from './jsonl';
+import { LogEntry, type LogEntryInit, LogLevel } from './index.ts';
+import { serializeToJsonl } from './jsonl.ts';
 
 const createEntry = (overrides: Partial<LogEntryInit> = {}): LogEntry =>
   new LogEntry({
@@ -45,6 +45,27 @@ describe('serializeToJsonl', () => {
       const record = parseLine(serializeToJsonl(createEntry({ level, message: '' })));
       expect(record.l).toBe(letter);
     }
+  });
+
+  test('reports an Error passed only in the context once, in the error field', ({ expect }) => {
+    const error = new Error('worker init failed');
+    const record = parseLine(serializeToJsonl(createEntry({ context: { clientId: 'abc', error } })));
+    expect(record.e).toContain('worker init failed');
+    expect(JSON.parse(String(record.c))).toEqual({ clientId: 'abc' });
+  });
+
+  test('keeps a context error that is not the Error the error field reports', ({ expect }) => {
+    const entry = createEntry({ error: new Error('sync failed'), context: { err: { code: 'E_TIMEOUT' } } });
+    const record = parseLine(serializeToJsonl(entry));
+    expect(record.e).toContain('sync failed');
+    expect(JSON.parse(String(record.c))).toEqual({ err: '{"code":"E_TIMEOUT"}' });
+  });
+
+  test('drops a context error already carried as the entry error', ({ expect }) => {
+    const error = new Error('boom');
+    const record = parseLine(serializeToJsonl(createEntry({ context: { clientId: 'abc', error }, error })));
+    expect(record.e).toContain('boom');
+    expect(JSON.parse(record.c as string)).toEqual({ clientId: 'abc' });
   });
 
   test('omits optional fields when not present', ({ expect }) => {
@@ -103,6 +124,14 @@ describe('serializeToJsonl', () => {
       serializeToJsonl(createEntry({ message: 'm' }), { env: 'tab:http://localhost:5173:abc123' }),
     );
     expect(record.i).toBe('tab:http://localhost:5173:abc123');
+  });
+
+  test('carries the trace context the caller captured', ({ expect }) => {
+    const trace = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331' };
+    const record = parseLine(serializeToJsonl(createEntry(), { trace }));
+    expect(record.r).toBe(trace.traceId);
+    expect(record.s).toBe(trace.spanId);
+    expect(parseLine(serializeToJsonl(createEntry()))).not.toHaveProperty('r');
   });
 
   test('omits `i` when env is not provided', ({ expect }) => {

@@ -5,13 +5,13 @@
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { ServiceNotAvailableError } from '@dxos/compute';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 
-import { isAiServiceUnavailable } from './ai-gate';
+import { isAiServiceUnavailable } from './ai-gate.ts';
 
 describe('isAiServiceUnavailable', () => {
   test('true for a ServiceNotAvailableError naming the AiService tag (structured context)', ({ expect }) => {
-    const error = new ServiceNotAvailableError(AiService.AiService.key);
+    const error = new ServiceResolver.ServiceNotAvailableError(AiService.key);
     expect(isAiServiceUnavailable(error)).toBe(true);
   });
 
@@ -19,13 +19,13 @@ describe('isAiServiceUnavailable', () => {
     // The process-invocation boundary can flatten a structured error to a plain Error; the gate
     // must still recognise it from the formatted message the LayerStack produces.
     const error = new Error(
-      `ServiceNotAvailable: Service not available: ${AiService.AiService.key} (affinity=process) [space=<missing>]`,
+      `ServiceNotAvailable: Service not available: ${AiService.key} (affinity=process) [space=<missing>]`,
     );
     expect(isAiServiceUnavailable(error)).toBe(true);
   });
 
   test('false for a ServiceNotAvailableError for a different service', ({ expect }) => {
-    const error = new ServiceNotAvailableError('@dxos/echo/Database');
+    const error = new ServiceResolver.ServiceNotAvailableError('@dxos/echo/Database');
     expect(isAiServiceUnavailable(error)).toBe(false);
   });
 

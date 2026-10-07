@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -18,6 +18,7 @@ export const translations = [
         'close-complementary-sidebar.label': 'Close context sidebar',
         'sidebar.title': 'Navigation sidebar',
         'complementary-sidebar.title': 'Context sidebar',
+        'drawer.label': 'Drawer',
         'plugin-error.message': 'Content failed to render.',
         'content-fallback.message': 'Unsupported',
         'content-fallback.description':
@@ -31,7 +32,6 @@ export const translations = [
         'error-fallback.copy.label': 'Copy',
         'plank-heading-fallback.label': 'Untitled',
         'breadcrumbs.label': 'Navigation history',
-        'actions-menu.label': 'Options',
         'pending.heading': 'Loading…',
         'insert-plank.label': 'Open',
         'resize.label': 'Drag to resize',
@@ -52,6 +52,8 @@ export const translations = [
         'close-all.label': 'Close all planks',
         'close-navigation-sidebar.button': 'Close',
         'companion-plank-heading-fallback.label': 'Related',
+        'no-companions.message': 'Nothing related to this item.',
+        'detail-companion.label': 'Detail',
         'popover-no-preview.message': 'No preview available.',
         'plugin-failure.title': 'A plugin failed to activate',
         'plugin-failure.description': 'See Plugin Registry for details.',
@@ -60,4 +62,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

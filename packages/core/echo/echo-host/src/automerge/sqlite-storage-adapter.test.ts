@@ -7,19 +7,18 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { PublicKey } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
-import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter';
+import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter.ts';
 
 const makeTestLayer = () => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });
-  const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+  const txLayer = baseLayer;
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
-  return { runtime: rt.runtimeEffect, dispose: () => rt.dispose() };
+  return { runtime: rt.contextEffect, dispose: () => rt.dispose() };
 };
 
 describe('encodeKey / decodeKey', () => {
@@ -113,6 +112,24 @@ describe('SqliteStorageAdapter', () => {
     expect(await adapter.load(chunks[1].key)).toEqual(chunks[1].data);
   });
 
+  test('concurrent writes commit in the order they were issued', async () => {
+    const adapter = await setup();
+    await Promise.all([
+      adapter.save(chunks[0].key, chunks[0].data),
+      adapter.remove(chunks[0].key),
+      adapter.saveBatch([
+        [chunks[1].key, chunks[1].data],
+        [chunks[2].key, chunks[2].data],
+      ]),
+      adapter.removeRange(['a', 'b', 'd']),
+      adapter.save(chunks[3].key, chunks[3].data),
+    ]);
+    expect(await adapter.load(chunks[0].key)).toBeUndefined();
+    expect(await adapter.load(chunks[1].key)).toEqual(chunks[1].data);
+    expect(await adapter.load(chunks[2].key)).toBeUndefined();
+    expect(await adapter.load(chunks[3].key)).toEqual(chunks[3].data);
+  });
+
   test('loadRange returns keys in sorted order', async () => {
     const adapter = await setup();
     await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
@@ -124,6 +141,60 @@ describe('SqliteStorageAdapter', () => {
       ['test', '1'],
       ['test', '2'],
     ]);
+  });
+
+  // The range bounds are anchored on the separator, so a prefix selects whole segments only. A
+  // bounds anchored on the prefix itself would degrade to a raw string-prefix match and return these
+  // siblings — a different document's chunks. The key layout is protocol, so pin the boundary.
+  test('loadRange matches whole segments, not string prefixes', async () => {
+    const adapter = await setup();
+    const target = ['sub', 'doc1'];
+    const siblings = [
+      ['sub', 'doc1X'], // segment merely starts with the same text
+      ['sub', 'doc12'], // digit continuation, sorts above the separator
+      ['sub', 'doc1!'], // '!' (0x21) sorts below the separator
+      ['sub', 'doc2'], // unrelated segment
+    ];
+    await adapter.save([...target, 'chunk'], bufferToArray(Buffer.from('wanted')));
+    for (const sibling of siblings) {
+      await adapter.save([...sibling, 'chunk'], bufferToArray(Buffer.from(sibling.join('/'))));
+    }
+
+    const range = await adapter.loadRange(target);
+    expect(range.map((chunk) => chunk.key)).toEqual([[...target, 'chunk']]);
+  });
+
+  // `loadRange` must also return a key stored at exactly the queried prefix — the production
+  // `subduction-ids-<sid>` records are shaped that way, and dropping the equality branch in favour of
+  // a pure descendant range would silently stop finding them.
+  test('loadRange includes a key stored at exactly the prefix', async () => {
+    const adapter = await setup();
+    await adapter.save(['sub', 'ids'], bufferToArray(Buffer.from('exact')));
+    await adapter.save(['sub', 'ids', 'child'], bufferToArray(Buffer.from('child')));
+
+    const range = await adapter.loadRange(['sub', 'ids']);
+    expect(range.map((chunk) => chunk.key)).toEqual([
+      ['sub', 'ids'],
+      ['sub', 'ids', 'child'],
+    ]);
+    expect(range.map((chunk) => Buffer.from(chunk.data!).toString())).toEqual(['exact', 'child']);
+  });
+
+  test('loadRange handles an empty trailing segment', async () => {
+    const adapter = await setup();
+    await adapter.save(['sub', 'doc', ''], bufferToArray(Buffer.from('empty')));
+    expect((await adapter.loadRange(['sub', 'doc'])).map((chunk) => chunk.key)).toEqual([['sub', 'doc', '']]);
+  });
+
+  test('removeRange deletes whole segments only, including the exact prefix', async () => {
+    const adapter = await setup();
+    await adapter.save(['sub', 'doc1'], bufferToArray(Buffer.from('exact')));
+    await adapter.save(['sub', 'doc1', 'chunk'], bufferToArray(Buffer.from('child')));
+    await adapter.save(['sub', 'doc1X', 'chunk'], bufferToArray(Buffer.from('sibling')));
+
+    await adapter.removeRange(['sub', 'doc1']);
+    expect(await adapter.loadRange(['sub', 'doc1'])).toEqual([]);
+    expect((await adapter.loadRange(['sub', 'doc1X'])).length).toBe(1);
   });
 });
 

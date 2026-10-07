@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import React, {
@@ -19,25 +20,29 @@ import React, {
   useRef,
 } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
-import { useDefaultValue } from '@dxos/react-hooks';
+import { useStable } from '@dxos/react-hooks';
+import { shallowEqual } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import { ActivationEvents, Capabilities, Role } from '../../../common';
-import { type PluginManager } from '../../../core';
-import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
-import { SurfaceContext } from './context';
-import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
-import { type SurfaceManager } from './SurfaceManager';
-import { useSurfaceManager } from './SurfaceManagerContext';
-import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
-import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types';
+import { ActivationEvents, Capabilities, Role } from '../../../common/index.ts';
+import { type PluginManager } from '../../../core/index.ts';
+import { useOptionalPluginManager, usePluginManager } from '../PluginManager/index.ts';
+import { SurfaceContext } from './context.ts';
+import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug.tsx';
+import { type SurfaceManager } from './SurfaceManager.ts';
+import { useSurfaceManager } from './SurfaceManagerContext.ts';
+import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics.ts';
+import { useSurfaceProfilerCallback } from './SurfaceProfilerContext.tsx';
+import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types.ts';
 
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
+
+const EMPTY_DATA: Record<string, any> = Object.freeze({});
 
 /**
  * Fires the role's surface demand event so modules gated on it load (see the `roles` option of
@@ -182,7 +187,9 @@ const SurfaceContextProvider = memo(
 
     // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
     // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
-    if (isSurfaceWrapperEnabled()) {
+    // A profiler provider (the devtools plugin) needs the wrapper in production too: its Surfaces card
+    // and highlight overlay read the mount registry the wrapper populates.
+    if (isSurfaceWrapperEnabled() || onProfilerRender) {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>
@@ -213,20 +220,18 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
  * inside their contributed component.
  */
 export const SurfaceComponent = memo(
-  ({
-    id: _id,
-    type,
-    data: dataProp,
-    limit,
-    placeholder = DEFAULT_PLACEHOLDER,
-    ...rest
-  }: TypedProps<Role.Role<any>>) => {
-    const data = useDefaultValue(dataProp, () => ({}));
+  ({ id: _id, type, data, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }: TypedProps<Role.Role<any>>) => {
+    // Shallow is the right depth: an ECHO object is a singleton proxy whose identity survives
+    // mutation, and a surface subtree stays fresh through its own subscriptions.
+    const stableData = useStable(data ?? EMPTY_DATA, shallowEqual);
     const surfaceManager = useSurfaceManager();
     // Subscribe only to this role's contributions: contributing/removing a surface for a
     // different role keeps this bucket referentially stable, so the atom does not re-render us.
     const effectiveRole = type?.role ?? '';
     const roleCandidates = useAtomValue(surfaceManager.candidatesAtom(effectiveRole));
+    // True while a module gated on this role is still activating, so a surface specific to `data`
+    // may still be coming (see `holdFallbacks`).
+    const rolePending = useAtomValue(surfaceManager.pendingAtom(effectiveRole));
 
     // Rendering a surface for a role is the demand signal for role-gated modules: their
     // contributions land in the candidates atom and re-render this surface.
@@ -236,7 +241,8 @@ export const SurfaceComponent = memo(
     }, [surfaceManager, pluginManager, effectiveRole]);
 
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
-    const definitions = matchCandidates(roleCandidates, effectiveRole, data);
+    const matched = matchCandidates(roleCandidates, effectiveRole, stableData);
+    const definitions = holdFallbacks(matched, rolePending);
     // `limit != null` (not truthiness) so an explicit `limit={0}` renders nothing.
     const candidates = limit != null ? definitions.slice(0, limit) : definitions;
     const truncated = limit != null && definitions.length > limit;
@@ -266,8 +272,21 @@ export const SurfaceComponent = memo(
       return null;
     }
 
-    if (DEBUG && candidates.length === 0) {
-      log.warn('no candidates for surface', { role: effectiveRole, data });
+    // An explicit `limit={0}` means render nothing — including while a role is still activating,
+    // where the placeholder below would otherwise reintroduce output the caller opted out of.
+    if (limit === 0) {
+      return null;
+    }
+
+    if (candidates.length === 0) {
+      // A held fallback is not a miss: the role's own module is still loading, and rendering
+      // nothing here (rather than `null`) keeps the plank's placeholder up until it lands.
+      if (rolePending) {
+        return placeholder;
+      }
+      if (DEBUG) {
+        log.warn('no candidates for surface', { role: effectiveRole, data: stableData });
+      }
       return null;
     }
 
@@ -278,7 +297,7 @@ export const SurfaceComponent = memo(
             key={definition.id}
             id={definition.id}
             role={effectiveRole}
-            data={data}
+            data={stableData}
             limit={limit}
             definition={definition}
             {...rest}
@@ -302,6 +321,19 @@ const ErrorFallback = ({ error }: { error: Error }) => {
     </div>
   );
 };
+
+/**
+ * Withholds catch-all matches while the role's own modules are still activating.
+ *
+ * A module gated on a role's demand event is absent from the first render that requests it, so an
+ * eager `Position.last` catch-all (plugin-space's record article matches any ECHO object) claims the
+ * slot and is replaced a second later when the specific module's chunk lands — a flash of unrelated
+ * UI, not a slower load. Holding ONLY fallbacks is the conservative half of the fix: a surface that
+ * already has a specific match renders immediately, so this can never delay a plank that has real
+ * content to show.
+ */
+const holdFallbacks = (definitions: Definition[], pending: boolean): Definition[] =>
+  pending ? definitions.filter((definition) => definition.position !== Position.last) : definitions;
 
 /**
  * Filters the pre-indexed candidates for a role through their data guards.

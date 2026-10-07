@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import * as Atom from 'effect/reactivity/Atom';
 import type * as Schema from 'effect/Schema';
 
 // TODO(wittjosiah): This is currently provided for convenience but maybe should be removed.
@@ -27,7 +27,7 @@ const defaultRuntime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
  */
 export const createKvsStore = <T extends Record<string, any>>(options: {
   key: string;
-  schema: Schema.Schema<T>;
+  schema: Schema.Codec<T, any>;
   defaultValue: () => T;
   runtime?: ReturnType<typeof Atom.runtime>;
 }): Atom.Writable<T> => {

@@ -8,18 +8,20 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
-import { GraphExecutor } from '../compiler';
+import { GraphExecutor } from '../compiler/index.ts';
+import { ComputeNodeError } from '../errors.ts';
 import {
   type ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
+  type ComputeNodeContext,
   type ComputeRequirements,
   type ConductorError,
   type Executable,
   type ValueBag,
   type ValueRecord,
-} from '../types';
-import { WorkflowLoader } from '../workflow';
+  layerNoop as computeNodeContextLayerNoop,
+} from '../types/index.ts';
+import { WorkflowLoader } from '../workflow/index.ts';
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.
@@ -61,10 +63,10 @@ export class TestRuntime {
     graphUri: URI.URI,
     input: ValueBag<any>,
   ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(graphUri));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(computeNodeContextLayerNoop));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
@@ -74,13 +76,14 @@ export class TestRuntime {
     inputNodeId: string,
     input: ValueBag<any>,
   ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const workflow = yield* Effect.promise(() => this._workflowLoader.load(graphUri));
       const executor = new GraphExecutor({
         computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
       });
 
-      const graph = this._graphs.get(graphUri) ?? raise(new Error(`Graph not found: ${graphUri}`));
+      const graph =
+        this._graphs.get(graphUri) ?? raise(new ComputeNodeError({ message: `Graph not found: ${graphUri}` }));
       yield* Effect.promise(() => executor.load(graph));
 
       executor.setOutputs(inputNodeId, Effect.succeed(input));
@@ -91,6 +94,6 @@ export class TestRuntime {
       }
 
       return result;
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(computeNodeContextLayerNoop));
   }
 }

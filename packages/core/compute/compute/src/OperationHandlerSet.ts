@@ -4,18 +4,19 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { NoHandlerError } from './errors';
-import type * as Operation from './Operation';
+import { NoHandlerError } from './errors.ts';
+import type * as Operation from './Operation.ts';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;
 export type TypeId = typeof TypeId;
@@ -84,12 +85,17 @@ export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any
  * cheap but newly registered handlers are picked up.
  */
 export const reactive = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   atom: Atom.Atom<readonly OperationHandlerSet[]>,
 ): OperationHandlerSet => {
   let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
+  // Per-key promises are memoized so repeated `getHandlerFor` calls return the SAME promise until
+  // the contributions change — React `use` (useOperationHandler) relies on this thenable identity
+  // to resume a suspended render instead of re-suspending on a fresh promise every retry.
+  const perKey = new Map<string, Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>>();
   registry.subscribe(atom, () => {
     cached = null;
+    perKey.clear();
   });
   // `suspend` defers `registry.get(atom)` until each run, so re-evaluations
   // after cache invalidation see the current contributed sets.
@@ -100,7 +106,7 @@ export const reactive = (
       Effect.map((groups) => groups.flat()),
       // Reset cached on failure so a transient error doesn't permanently
       // poison subsequent calls.
-      Effect.tapErrorCause(() =>
+      Effect.tapCause(() =>
         Effect.sync(() => {
           cached = null;
         }),
@@ -115,7 +121,21 @@ export const reactive = (
     definitions: () => registry.get(atom).flatMap((set) => set.definitions()),
     // Per-operation resolution over the CURRENT contributed sets: only the matched operation's
     // module loads; the load-everything paths above stay for enumerators.
-    getHandlerFor: (key) => resolveFromSets(registry.get(atom), key),
+    getHandlerFor: (key) => {
+      const normalized = normalizeKey(key);
+      let promise = perKey.get(normalized);
+      if (!promise) {
+        const evictUnlessReplaced = (err: unknown) => {
+          if (perKey.get(normalized) === promise) {
+            perKey.delete(normalized);
+          }
+          throw err;
+        };
+        promise = resolveFromSets(registry.get(atom), normalized).then((handler) => handler, evictUnlessReplaced);
+        perKey.set(normalized, promise);
+      }
+      return promise;
+    },
   };
 };
 
@@ -175,7 +195,15 @@ export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandle
     const key = normalizeKey(definition.meta.key);
     let promise = loaded.get(key);
     if (!promise) {
-      promise = load().then(({ default: handler }) => handler);
+      // Evict on failure: a transient import failure (a stale chunk hash after a redeploy) would
+      // otherwise be memoized, so every later invocation rejects instantly without re-fetching.
+      promise = load().then(
+        ({ default: handler }) => handler,
+        (err) => {
+          loaded.delete(key);
+          throw err;
+        },
+      );
       loaded.set(key, promise);
     }
     return promise;
@@ -234,19 +262,28 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
   lookup(set, definition.meta.key) as Effect.Effect<Operation.WithHandler<Op>, NoHandlerError>;
 
 /**
+ * Promise counterpart of {@link getHandler}: definition-typed {@link OperationHandlerSet.getHandlerFor},
+ * resolving `undefined` on a miss instead of failing.
+ */
+export const findHandler = <const Op extends Operation.Definition.Any>(
+  set: OperationHandlerSet,
+  definition: Op,
+): Promise<Operation.WithHandler<Op> | undefined> =>
+  set.getHandlerFor(definition.meta.key) as Promise<Operation.WithHandler<Op> | undefined>;
+
+/**
  * Gets a handler for an operation by key.
- * Accepts either a plain NSID (`org.dxos.function.database.contextAdd`) or a
- * full DXN string (`dxn:org.dxos.function.database.contextAdd`).
+ * Accepts either a plain NSID (`org.dxos.operation.assistantToolkit.addContext`) or a
+ * full DXN string (`dxn:org.dxos.operation.assistantToolkit.addContext`).
  */
 export const getHandlerByKey = (
   set: OperationHandlerSet,
   key: string,
 ): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => lookup(set, key);
 
-export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
-  OperationHandlerProvider,
-  OperationHandlerSet
->() {}
+export class OperationHandlerProvider extends Context.Service<OperationHandlerProvider, OperationHandlerSet>()(
+  '@dxos/operation/OperationHandlerProvider',
+) {}
 
 export const provide = (handlers: OperationHandlerSet): Layer.Layer<OperationHandlerProvider, never, never> =>
   Layer.succeed(OperationHandlerProvider, handlers);

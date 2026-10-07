@@ -10,9 +10,9 @@ import React, { useCallback, useMemo } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
@@ -20,18 +20,17 @@ import { Expando } from '@dxos/schema';
 import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
 
-import * as Connection from '../../types/Connection';
-import { isCursorForConnection } from '../../util';
-import { ConnectionView } from './ConnectionView';
+import * as Binding from '../../Binding.ts';
+import { ConnectionView } from './ConnectionView.tsx';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
 const OptionsSchema = Schema.Struct({
-  includeArchived: Schema.Boolean.annotations({
+  includeArchived: Schema.Boolean.annotate({
     title: 'Include archived',
     description: 'Sync items that have been archived remotely.',
   }),
   label: Schema.optional(
-    Schema.String.annotations({ title: 'Label', description: 'Optional label applied to synced items.' }),
+    Schema.String.annotate({ title: 'Label', description: 'Optional label applied to synced items.' }),
   ),
 });
 
@@ -41,7 +40,7 @@ const DefaultStory = ({
   testError,
   canReauthenticate = true,
 }: {
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   testStatus?: TestConnectionStatus;
   testError?: string;
   canReauthenticate?: boolean;
@@ -52,7 +51,7 @@ const DefaultStory = ({
   const bindings = useMemo(
     () =>
       connection
-        ? allCursors.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection))
+        ? allCursors.filter((cursor): cursor is Cursor.ExternalCursor => Binding.isForConnection(cursor, connection))
         : [],
     [allCursors, connection],
   );
@@ -99,8 +98,8 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

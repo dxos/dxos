@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -37,9 +37,9 @@ export type SummaryProps = {
  * a cross-origin `SecurityError`. Rendering the summary through a generic Surface (the markdown
  * plugin's editor) reintroduces that prop and crashes the article; this local editor avoids it.
  */
-export const Summary = composable<HTMLDivElement, SummaryProps>(
+export const Summary = Util.composable<HTMLDivElement, SummaryProps>(
   ({ classNames, id, source, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Hooks.useThemeMode();
     // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
     // loads asynchronously and isn't reactive on its own.
     const [resolved] = useObject(source);
@@ -63,8 +63,8 @@ export const Summary = composable<HTMLDivElement, SummaryProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: ['dx-container', classNames] })}
-        ref={composeRefs(parentRef, forwardedRef)}
+        {...Util.composableProps(props, { classNames: ['dx-expand', classNames] })}
+        ref={Hooks.composeRefs(parentRef, forwardedRef)}
       />
     );
   },

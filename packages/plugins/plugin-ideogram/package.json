@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-ideogram",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Ideogram image-generation provider for Composer.",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -25,9 +25,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/IdeogramPlugin.tsx",
-      "types": "./dist/types/src/IdeogramPlugin.d.ts",
-      "default": "./dist/lib/IdeogramPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -41,10 +41,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./IdeogramEvents": {
+      "source": "./src/IdeogramEvents.ts",
+      "types": "./dist/types/src/IdeogramEvents.d.ts",
+      "import": "./dist/lib/ns/IdeogramEvents.mjs"
+    },
+    "./IdeogramPlugin": {
+      "source": "./src/IdeogramPlugin.ts",
+      "types": "./dist/types/src/IdeogramPlugin.d.ts",
+      "import": "./dist/lib/IdeogramPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

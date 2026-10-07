@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 /**
  * Body view modes, in menu order. The {@link ViewMode} type and the toolbar group's default both
  * derive from this so they stay aligned.
  *   - `html`:     the raw email HTML, rendered in a sandboxed iframe (the default for messages).
  *   - `markdown`: an authored markdown block if the message has one, else the body converted to
- *                 markdown in-memory; decorated via the markdown extensions (the "enriched" view).
+ *                 markdown in-memory; decorated via the markdown extensions.
  *   - `plain`:    the body as text, shown verbatim with no markdown parsing.
  */
 export const VIEW_MODES = ['html', 'markdown', 'plain'] as const;

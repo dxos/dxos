@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Node } from '@dxos/app-graph';
-import { DXN, Obj, Type } from '@dxos/echo';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -64,7 +64,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
           repo: Schema.String,
           status: Schema.String,
           priority: Schema.Number,
-        }),
+        }).pipe(Annotation.UserType.set()),
       ),
 
     createData: () => ({
@@ -172,7 +172,7 @@ export const createTree = () => {
                   },
                 },
               ],
-            } satisfies Node.NodeArg<any>;
+            } satisfies AppGraphNode.NodeArg<any>;
           }),
           {
             id: `${random.string.uuid()}__a1`,
@@ -193,9 +193,9 @@ export const createTree = () => {
             },
           },
         ],
-      } satisfies Node.NodeArg<any>;
+      } satisfies AppGraphNode.NodeArg<any>;
     }),
-  } satisfies Node.NodeArg<any>;
+  } satisfies AppGraphNode.NodeArg<any>;
 
   return initialContent;
 };

@@ -4,11 +4,11 @@
 
 import { cluster as d3Cluster, hierarchy, linkRadial } from 'd3';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector.ts';
 
 export type GraphClusterProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the cluster (screen pixels). */
@@ -126,7 +126,7 @@ export class GraphClusterProjector<
     return this.#collapsed.has(id);
   }
 
-  protected override onUpdate(graph?: Graph.Any) {
+  protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
     // Snapshot the full data-node set right after mergeData — before doClusterLayout

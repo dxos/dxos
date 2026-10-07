@@ -39,19 +39,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-query"
-    },
-    {
       "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-toolkit"
+      "path": "../../sdk/app-graph"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -63,13 +60,16 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-components"
+      "path": "../../ui/react-ui-graph"
     },
     {
-      "path": "../../ui/react-ui-graph"
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/ui-theme"
@@ -79,9 +79,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-preview"

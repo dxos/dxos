@@ -2,11 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Node } from '@dxos/app-graph';
-import { type Label } from '@dxos/react-ui';
-import { type MaybePromise, type Position } from '@dxos/util';
+import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
-export type NavTreeItemGraphNode = Node.Node<
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { type TreeData } from '@dxos/react-ui-list';
+import type * as Theme from '@dxos/react-ui/Theme';
+import { type MaybePromise } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
+
+export type NavTreeItemGraphNode = AppGraphNode.Node<
   any,
   Partial<
     NodeProperties & {
@@ -14,24 +18,32 @@ export type NavTreeItemGraphNode = Node.Node<
       persistenceKey: string;
       acceptPersistenceClass: Set<string>;
       acceptPersistenceKey: Set<string>;
+      /** Parents sharing a scope move items between them; a drop from outside it links instead. */
+      moveScope: string;
+      canDrop: (source: TreeData) => boolean;
+      blockInstruction: (source: TreeData, instruction: Instruction) => boolean;
+      /** Whether an item added here would only be listed, its parent elsewhere; `from` is the parent it moves out of. */
+      isLink: (activeNode: NavTreeItemGraphNode, from?: NavTreeItemGraphNode) => boolean;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
-      onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
-      onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
-      onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** An item is moving from here to `destinationParent`; called before the destination's `onMoveIn`. */
+      onMoveOut: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** An item is moving here from another parent; `index` is its position among this node's children. */
+      onMoveIn: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
+      onLink: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
     }
   >
 >;
 
 export type FlattenedActions = {
-  actions: Node.ActionLike[];
-  groupedActions: Record<string, Node.Action[]>;
+  actions: AppGraphNode.ActionLike[];
+  groupedActions: Record<string, AppGraphNode.Action[]>;
 };
 
 type SharedProperties = {
   testId?: string;
   disabled?: boolean;
   position?: Position.Position;
-  label: Label;
+  label: Theme.Label;
   className?: string;
   headingClassName?: string;
   icon?: string;

@@ -4,10 +4,10 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type ShimmerProps = ThemedClassName<
+export type ShimmerProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Animation duration in ms. */
     duration?: number;
@@ -25,7 +25,7 @@ export const Shimmer = ({ classNames, children, duration = 2_000 }: ShimmerProps
     <span
       role='status'
       style={{ animationDuration: `${duration}ms` }}
-      className={mx('inline-block max-w-full truncate shimmer-text', classNames)}
+      className={mx('items-center max-w-full truncate shimmer-text', classNames)}
     >
       {children}
     </span>

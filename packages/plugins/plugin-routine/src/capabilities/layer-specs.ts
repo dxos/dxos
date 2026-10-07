@@ -2,15 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientService } from '@dxos/client';
@@ -19,14 +21,17 @@ import {
   ProcessManager,
   RemoteOperationInvoker,
   RemoteProcessManager,
+  RemoteTraceMonitor,
   RemoteTriggerManager,
   TriggerDispatcher,
   TriggerMonitor,
   TriggerStateStore,
+  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
@@ -58,7 +63,7 @@ const OperationHandlerProviderSpec = LayerSpec.make(
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         // Live view (not a one-shot snapshot): handlers contributed after materialization — e.g. by
         // a plugin enabled later — still reach subsequent reads. The manager memoizes one atom per
@@ -78,7 +83,7 @@ const RegistrySpec = LayerSpec.make(
     provides: [Registry.Service],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* ClientService;
         return Layer.succeed(Registry.Service, client.graph.registry);
@@ -93,7 +98,7 @@ const OpaqueToolkitSpec = LayerSpec.make(
     provides: [OpaqueToolkit.OpaqueToolkitProvider],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
         const pluginManager = yield* Plugin.Service;
@@ -158,7 +163,18 @@ const OperationsToRegistrySpec = LayerSpec.make(
         const sources = yield* Effect.promise(() =>
           Promise.all(sets.map((set) => (set.definitions ? set.definitions() : set.getHandlers()))),
         );
-        registry.add(sources.flat().map(Operation.serialize));
+        const definitions = sources.flat();
+        // The only point every operation in the app is visible at once. Tool names derive from keys
+        // non-injectively (`Operation.toolName`), so two keys can claim one name — which the resolver
+        // would only surface once a model asked for it.
+        const collisions = Operation.findToolNameCollisions(definitions);
+        invariant(
+          collisions.size === 0,
+          `Operations collide on derived tool name: ${[...collisions]
+            .map(([name, keys]) => `${name} <- ${keys.join(', ')}`)
+            .join('; ')}`,
+        );
+        registry.add(definitions.map(Operation.serialize));
         return registry;
       }),
     ),
@@ -208,7 +224,7 @@ const RemoteOperationInvokerSpec = LayerSpec.make(
     provides: [RemoteOperationInvoker.Service],
   },
   (context) =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteOperationInvoker');
         const client = yield* ClientService;
@@ -231,7 +247,7 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
     provides: [RemoteTriggerManager.Service],
   },
   (context) =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteTriggerManager');
         const client = yield* ClientService;
@@ -242,25 +258,85 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
 );
 
 /**
- * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
- * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
- * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
- * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ * Application-scoped remote (EDGE) process manager: the progress meter's cancel control and the
+ * process-control surface an agent asked for with `location: 'edge'` is spawned on. Uses the EDGE
+ * implementation whenever an edge service is configured, otherwise a read-only no-op. One instance
+ * serves every space — both cancel and process control take the space they address — so this stays
+ * application-scoped even though processes are per-space.
  */
 const RemoteProcessManagerSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ClientService, AtomRegistry.AtomRegistry],
+    requires: [ClientService, AtomRegistry.AtomRegistry, RemoteTraceMonitor.Service],
     provides: [RemoteProcessManager.Service],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* ClientService;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-        return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+        if (!edgeUrl) {
+          return RemoteProcessManager.layerNoop;
+        }
+        // Commands are queued into the process registry's own store, so a spawn issued offline — or
+        // while EDGE is mid-deploy — survives the reload rather than being lost at the call.
+        const kvStore = yield* KeyValueStore.KeyValueStore;
+        return EdgeProcessManager.fromClient(client, { kvStore, onConnected: onNetworkOnline });
+      }),
+    ).pipe(Layer.provide(ProcessManagerPlugin.storageLayer)),
+);
+
+/**
+ * Subscribes to the browser's own back-online transition, which is the cheapest true signal that
+ * EDGE may be reachable again; elsewhere (Node, a worker with no `window`) the queue recovers on its
+ * backoff alone.
+ */
+const onNetworkOnline = (listener: () => void): (() => void) => {
+  if (typeof globalThis.addEventListener !== 'function') {
+    return () => {};
+  }
+  globalThis.addEventListener('online', listener);
+  return () => globalThis.removeEventListener('online', listener);
+};
+
+/**
+ * Application-scoped {@link RemoteTraceMonitor.Service}: the swarm-backed monitor contributed by
+ * plugin-client when a client is available, else {@link RemoteTraceMonitor.layerNoop}.
+ */
+const RemoteTraceMonitorSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [RemoteTraceMonitor.Service],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const capabilities = yield* Capability.Service;
+        const monitors = capabilities.getAll(Capabilities.RemoteTraceMonitor);
+        return monitors.length > 0
+          ? Layer.succeed(RemoteTraceMonitor.Service, monitors[0])
+          : RemoteTraceMonitor.layerNoop;
       }),
     ),
+);
+
+/**
+ * Application-scoped {@link Process.ManagerService}: one surface over the local process manager and the
+ * remote one, so a consumer such as `AgentService` names where a process runs instead of holding both.
+ */
+const ProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      ProcessManager.ProcessManagerService,
+      RemoteProcessManager.Service,
+      RemoteTraceMonitor.Service,
+      AtomRegistry.AtomRegistry,
+    ],
+    provides: [Process.ManagerService],
+  },
+  () => UnifiedProcessManager.layer,
 );
 
 const TriggerDispatcherSpec = LayerSpec.make(
@@ -299,7 +375,9 @@ export default Capability.makeModule(() =>
       RemoteTriggerManagerSpec,
       TriggerMonitorSpec,
       RemoteOperationInvokerSpec,
+      RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,
+      ProcessManagerSpec,
     ]),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),

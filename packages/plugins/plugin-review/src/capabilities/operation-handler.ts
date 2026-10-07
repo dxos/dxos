@@ -11,6 +11,6 @@ import { CommentOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, CommentOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, CommentOperationHandlerSet.handlers);
   }),
 );

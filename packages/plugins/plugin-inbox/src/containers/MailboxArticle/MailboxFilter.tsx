@@ -5,9 +5,10 @@
 import React, { type Ref } from 'react';
 
 import { type Database, Filter, Tag } from '@dxos/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { QueryEditor } from '@dxos/react-ui-query';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -18,8 +19,10 @@ export type MailboxFilterProps = {
   /** Parsed filter; save is enabled only when the text parses. */
   filter?: Filter.Any;
   onChange: (value: string) => void;
-  onSave: () => void;
+  /** The editor's own parse of the text, so the filter is not rebuilt again per keystroke here. */
+  onFilterChange: (filter: Filter.Any | undefined) => void;
   onClear: () => void;
+  onSave: () => void;
   editorRef: Ref<EditorController>;
   saveButtonRef: Ref<HTMLButtonElement>;
 };
@@ -31,12 +34,13 @@ export const MailboxFilter = ({
   value,
   filter,
   onChange,
-  onSave,
+  onFilterChange,
   onClear,
+  onSave,
   editorRef,
   saveButtonRef,
 }: MailboxFilterProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <>
       <QueryEditor
@@ -45,9 +49,10 @@ export const MailboxFilter = ({
         tags={tags}
         value={value}
         onChange={onChange}
+        onFilterChange={({ filter }) => onFilterChange(filter)}
         ref={editorRef}
       />
-      <IconButton
+      <Button.Root
         disabled={!filter}
         icon='ph--folder-plus--regular'
         iconOnly
@@ -55,7 +60,7 @@ export const MailboxFilter = ({
         onClick={onSave}
         ref={saveButtonRef}
       />
-      <IconButton icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
+      <Button.Root icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
     </>
   );
 };

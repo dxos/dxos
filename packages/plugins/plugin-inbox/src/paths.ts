@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-import * as Calendar from './types/Calendar';
+import { Calendar } from '#types';
 
 const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = GraphPath.createTypeSectionPaths(
   Calendar.Calendar,
@@ -14,6 +14,9 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Gra
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
+  inbox: 'inbox',
+  starred: 'starred',
+  important: 'important',
   allMail: 'all-mail',
   sent: 'sent',
   drafts: 'drafts',
@@ -30,6 +33,15 @@ export const getMailboxesPath = (spaceId: string): string =>
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxesPath(spaceId)}/${mailboxId}`;
+
+/** Canonical segment ID for the "Inbox" child node. */
+export const getInboxId = (): string => Segments.inbox;
+
+/** Canonical segment ID for the "Starred" child node. */
+export const getStarredId = (): string => Segments.starred;
+
+/** Canonical segment ID for the "Important" child node. */
+export const getImportantId = (): string => Segments.important;
 
 /** Canonical segment ID for the "All Mail" (unfiltered) child node. */
 export const getAllMailId = (): string => Segments.allMail;
@@ -51,6 +63,17 @@ export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string
  * ordinary hidden children of their mailbox/calendar, not linked companions). */
 export const getFeedObjectPath = (parentPath: string, childId: string): string => `${parentPath}/${childId}`;
 
+/**
+ * Canonical qualified path to one of a message's attachments. Keyed by INDEX because an attachment has
+ * no identity of its own — it is an entry in `message.attachments`, not an object.
+ */
+export const getMailboxAttachmentPath = (
+  spaceId: string,
+  mailboxId: string,
+  messageId: string,
+  index: number,
+): string => `${getMailboxMessagePath(spaceId, mailboxId, messageId)}/attachment-${index}`;
+
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>
   getFeedObjectPath(getMailboxPath(spaceId, mailboxId), messageId);
@@ -58,18 +81,5 @@ export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messag
 /** Canonical qualified path to an event within a calendar. */
 export const getCalendarEventPath = (spaceId: string, calendarId: string, eventId: string): string =>
   getFeedObjectPath(getCalendarPath(spaceId, calendarId), eventId);
-
-/**
- * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
- * context id (which holds the `single` event selection) so the two selection modes don't collide.
- * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
- */
-export const getCalendarRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
-
-/**
- * Builds the node ID for an event's companion node by appending the pre-computed linked segment
- * to the calendar's attendable ID. The segment must already be a linked segment (see EventArticle).
- */
-export const getEventNodeId = (attendableId: string, eventSegment: string): string => `${attendableId}/${eventSegment}`;
 
 export { getCalendarPath, getCalendarsPath };

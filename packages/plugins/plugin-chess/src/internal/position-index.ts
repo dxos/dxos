@@ -7,8 +7,7 @@ import { Chess as ChessJS } from 'chess.js';
 import { Obj, Ref } from '@dxos/echo';
 import type * as Game from '@dxos/plugin-game/Game';
 
-import * as ChessPositionIndex from '../types/ChessPositionIndex';
-import * as PlayerReview from '../types/PlayerReview';
+import { ChessPositionIndex, PlayerReview } from '#types';
 
 /** Normalizes a FEN to the position key (board, side, castling, en passant). */
 export const normalizeFen = (fen: string): string => fen.split(' ').slice(0, 4).join(' ');

@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { mx } from './mx';
-import { bridgeTv, tv } from './tv';
+import { mx } from './mx.ts';
+import { bridgeTv, tv } from './tv.ts';
 
 describe('tv', () => {
   test('resolves standard tailwind conflicts like mx', ({ expect }) => {
@@ -15,10 +15,10 @@ describe('tv', () => {
     expect(recipe({ big: true })).not.toContain('text-sm');
   });
 
-  test('keeps dxos custom color tokens (text-base-fg over text-description)', ({ expect }) => {
-    const recipe = tv({ base: 'text-description', variants: { strong: { true: 'text-base-fg' } } });
-    expect(recipe({ strong: true })).toBe(mx('text-description', 'text-base-fg'));
-    expect(recipe({ strong: true })).toContain('text-base-fg');
+  test('keeps dxos custom color tokens (text-fg over text-fg-muted)', ({ expect }) => {
+    const recipe = tv({ base: 'text-fg-muted', variants: { strong: { true: 'text-fg' } } });
+    expect(recipe({ strong: true })).toBe(mx('text-fg-muted', 'text-fg'));
+    expect(recipe({ strong: true })).toContain('text-fg');
   });
 });
 

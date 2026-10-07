@@ -5,11 +5,15 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, IconButton } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
 
-import { Focus, Mosaic, type MosaicStackTileComponent } from '../components';
+import { Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -25,7 +29,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   );
 
   return (
-    <Menu.Root>
+    <>
       {/*
        * `Mosaic.Tile` sets `aria-current` from `props.current`, which the
        * Slot composition propagates down to `Card.Root`'s div. That's what
@@ -34,16 +38,15 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
        */}
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
-          <Card.Root fullWidth classNames='dx-current dx-hover'>
+          <Card.Root classNames='dx-current dx-hover'>
             <Card.Header>
-              <Card.DragHandle ref={dragHandleRef} />
+              <DragHandle.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-              <Card.Block end>
-                <Menu.Trigger asChild disabled={!menuItems?.length}>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-                </Menu.Trigger>
-              </Card.Block>
-              <Menu.Content items={menuItems} />
+              <Layout.Block rail='end'>
+                <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
+                  <Button.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+                </ActionMenu>
+              </Layout.Block>
             </Card.Header>
             {open && (
               <Card.Row>
@@ -53,7 +56,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
           </Card.Root>
         </Focus.Item>
       </Mosaic.Tile>
-    </Menu.Root>
+    </>
   );
 };
 

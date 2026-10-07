@@ -7,11 +7,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    CrxPlugin: 'src/CrxPlugin.tsx',
+    CrxPlugin: 'src/CrxPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     util: 'src/util/index.ts',
     operations: 'src/operations/index.ts',
@@ -20,6 +20,7 @@ export default defineConfig({
     CrxOperation: 'src/types/CrxOperation.ts',
     PageAction: 'src/types/PageAction.ts',
     Settings: 'src/types/Settings.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

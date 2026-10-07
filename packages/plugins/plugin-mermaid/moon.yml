@@ -1,8 +1,9 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
-  - ts-test
+  - ts-test-browser
   - pack
   - storybook
   - ts-test-storybook

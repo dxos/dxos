@@ -6,14 +6,14 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useLayoutEffect, useRef } from 'react';
 
-import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
+import { useControllableState } from '@dxos/react-hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
-import { type Side, type Size } from '../types';
-import { RESIZE_SUBJECT } from './resize-attributes';
+import { type Side, type Size } from '../types.ts';
+import { RESIZE_SUBJECT } from './resize-attributes.ts';
 
 // Root font size in px, read lazily and guarded for non-DOM environments (e.g. node tests) so that
 // merely importing this module doesn't touch the DOM at load time.
@@ -55,7 +55,7 @@ const getNextSize = (
 
 const RESIZE_SUBJECT_DRAGGING = 'data-dx-resizing';
 
-export type ResizeHandleProps = ThemedClassName<{
+export type ResizeHandleProps = Util.ThemedClassName<{
   side: Side;
   iconPosition?: 'start' | 'center' | 'end';
   defaultSize?: Size;
@@ -85,7 +85,6 @@ export const ResizeHandle = ({
     onChange: onSizeChange,
   });
   const dragStartSize = useRef<Size>(size);
-  const elevation = useElevationContext();
 
   const orientation = side.startsWith('inline') ? 'horizontal' : 'vertical';
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
@@ -144,7 +143,7 @@ export const ResizeHandle = ({
       data-side={side}
       className={mx(
         'group absolute flex focus-visible:outline-hidden',
-        surfaceZIndex({ elevation, level: 'tooltip' }),
+        surfaceZIndex({ level: 'tooltip' }),
         // Both the grab button (w-4/h-4) and its hover line are centered on the underlying edge: the
         // button is offset by half its size (-2) so it straddles the edge, and the line is centered
         // within the button (start-1/2 / top-1/2) so it sits on the edge too.

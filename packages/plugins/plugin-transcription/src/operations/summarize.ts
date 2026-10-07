@@ -16,7 +16,7 @@ import { Database } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { trim } from '@dxos/util';
 
-import * as TranscriptOperation from '../types/TranscriptOperation';
+import { TranscriptOperation } from '#types';
 
 /**
  * Summarize a transcript of a meeting.
@@ -50,7 +50,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

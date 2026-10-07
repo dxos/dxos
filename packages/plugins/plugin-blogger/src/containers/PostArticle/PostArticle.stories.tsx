@@ -15,16 +15,17 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { BloggerOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
+import { Blog } from '#types';
 
-import * as Blog from '../../types/Blog';
-import { PostArticle } from './PostArticle';
+import { PostArticle } from './PostArticle.tsx';
 
 /** Builds a `Post` whose single body document is seeded with recognizable text for the assertion. */
 const makeStoryPost = (): Blog.Post => {
@@ -57,17 +58,17 @@ const meta = {
         Capability.contribute(Capabilities.OperationHandler, BloggerOperationHandlerSet),
       ],
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Blog.Publication, Blog.Post, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

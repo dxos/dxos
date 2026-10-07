@@ -2,19 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import type * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
-import { activateDemandGatedModules } from './demand-gated';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core/index.ts';
+import { activateDemandGatedModules } from './demand-gated.ts';
 
 export type TestAppOptions = {
   /**
@@ -37,6 +36,16 @@ export type TestAppOptions = {
    * Defaults to true.
    */
   registerFrameworkCapabilities?: boolean;
+  /**
+   * Completes when the host is idle, gating the Idle wave. Off-browser the real wait resolves
+   * immediately; pass `Effect.never` to keep idle-gated modules inactive, as on a browser cold boot.
+   */
+  whenIdle?: Effect.Effect<void>;
+  /**
+   * Resolves an id `manager.add` is given that names none of `plugins` — a URL, as a remote plugin
+   * is added. Without it such an id fails, as an unknown plugin does.
+   */
+  pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
 };
 
 /**
@@ -45,7 +54,7 @@ export type TestAppOptions = {
 export interface TestHarness {
   readonly manager: PluginManager.PluginManager;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
 
   /** Activate the given event. Equivalent to `manager.activate(event)`. */
   fire(event: ActivationEvent.ActivationEvent | string): Promise<boolean>;
@@ -115,16 +124,22 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
     setupEvents = [],
     autoStart = true,
     registerFrameworkCapabilities = true,
+    whenIdle,
+    pluginLoader: fallbackLoader,
   } = opts;
 
-  const pluginLoader = (id: string) =>
-    Effect.sync(() => {
-      const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
+  const pluginLoader = (id: string) => {
+    const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
+    if (!plugin && fallbackLoader) {
+      return fallbackLoader(id);
+    }
+    return Effect.sync(() => {
       invariant(plugin, `Plugin not found: ${id}`);
       return { plugin };
     });
+  };
 
-  const manager = PluginManager.make({ pluginLoader, plugins, enabled });
+  const manager = PluginManager.make({ pluginLoader, plugins, enabled, whenIdle });
 
   if (registerFrameworkCapabilities) {
     manager.capabilities.contribute({
@@ -167,7 +182,7 @@ class TestHarnessImpl implements TestHarness {
     return this.manager.capabilities;
   }
 
-  get registry(): Registry.Registry {
+  get registry(): Registry.AtomRegistry {
     return this.manager.registry;
   }
 
@@ -191,9 +206,9 @@ class TestHarnessImpl implements TestHarness {
     const timeout = opts?.timeout ?? DEFAULT_TIMEOUT_MS;
     return EffectEx.runAndForwardErrors(
       this.manager.capabilities.waitFor(iface).pipe(
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: Duration.millis(timeout),
-          onTimeout: () => timeoutError(iface.identifier),
+          orElse: () => Effect.fail(timeoutError(iface.identifier)),
         }),
       ),
     );
@@ -203,7 +218,7 @@ class TestHarnessImpl implements TestHarness {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
     const timeout = opts?.timeout ?? DEFAULT_TIMEOUT_MS;
 
-    const program = Effect.gen(this, function* () {
+    const program = Effect.gen({ self: this }, function* () {
       const queue = yield* PubSub.subscribe(this.manager.activation);
       // Re-check after subscribing to avoid a race where the event fires
       // between the caller invoking this and the subscription being installed.
@@ -211,16 +226,16 @@ class TestHarnessImpl implements TestHarness {
         return;
       }
       while (true) {
-        const message = yield* Queue.take(queue);
+        const message = yield* PubSub.take(queue);
         if (message.event === key && message.state === 'activated') {
           return;
         }
       }
     }).pipe(
       Effect.scoped,
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: Duration.millis(timeout),
-        onTimeout: () => timeoutError(key),
+        orElse: () => Effect.fail(timeoutError(key)),
       }),
     );
 

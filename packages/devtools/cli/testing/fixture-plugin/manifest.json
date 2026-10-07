@@ -1,0 +1,8 @@
+{
+  "key": "com.example.plugin.fixture",
+  "name": "Fixture Plugin",
+  "description": "A third-party plugin used by the CLI's install tests.",
+  "version": "1.2.3",
+  "tags": ["alpha"],
+  "assets": ["index.mjs"]
+}

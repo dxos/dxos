@@ -8,8 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Relation, Type } from '@dxos/echo';
 
-import * as Sheet from '../types/Sheet';
-import * as SheetUtil from '../types/SheetUtil';
+import { Sheet, SheetUtil } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -4,12 +4,12 @@
 import React, { type ComponentType } from 'react';
 
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { translationKey } from '../../translations';
-import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem';
-import { type SharedInvitationListProps } from './InvitationListProps';
+import { translationKey } from '../../translations.ts';
+import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem.tsx';
+import { type SharedInvitationListProps } from './InvitationListProps.ts';
 
 export interface InvitationListProps
   extends Omit<InvitationListItemProps, 'invitation' | 'value'>, Pick<SharedInvitationListProps, 'send'> {
@@ -19,10 +19,15 @@ export interface InvitationListProps
 }
 
 export const InvitationList = ({ invitations, send, ...invitationProps }: InvitationListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { className, InvitationListItem: Item = InvitationListItem } = invitationProps;
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={invitations.map((invitation) => {
+        const value = invitation.get().invitationId;
+        return { value, label: value };
+      })}
+    >
       <Listbox.Content classNames={['flex flex-col gap-2', className]} aria-label={t('invitation-list.heading')}>
         {invitations.map((invitation) => {
           const value = invitation.get().invitationId;

@@ -41,6 +41,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -62,10 +65,19 @@
       "path": "../../core/compute/edge-compute"
     },
     {
+      "path": "../../core/compute/mcp-server"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-adapter-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -84,6 +96,9 @@
     },
     {
       "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-file"
     },
     {
       "path": "../../plugins/plugin-game"
@@ -110,6 +125,9 @@
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -131,6 +149,9 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-tasks"
+    },
+    {
       "path": "../../plugins/plugin-transcription"
     },
     {
@@ -140,10 +161,16 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/schema"

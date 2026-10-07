@@ -4,7 +4,8 @@
 
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
+import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -21,24 +22,55 @@ export const translations = [
         'delete-object.label': 'Delete project',
         'object-deleted.label': 'Project deleted',
       },
+      [Type.getTypename(Repo.Repo)]: {
+        'typename.label': 'Repository',
+        'typename.label_zero': 'Repositories',
+        'typename.label_one': 'Repository',
+        'typename.label_other': 'Repositories',
+        'object-name.placeholder': 'owner/name',
+        'rename-object.label': 'Rename repository',
+        'delete-object.label': 'Delete repository',
+        'object-deleted.label': 'Repository deleted',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
+        'project-tour.label': 'Take the project tour',
         'project.label': 'Project',
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',
         'context.label': 'Context',
-        'goals.label': 'Goals',
+        'milestones.label': 'Milestones',
+        'views.label': 'Views',
+        'overview.label': 'Overview',
         'tasks.label': 'Tasks',
-        'routines.label': 'Routines',
+        'view.label': 'View',
+        'pipeline.label': 'Show pipeline',
+        'no-sessions.message': 'No agent sessions yet. Assign tasks to an agent to start one.',
+        'no-task-set.message': 'This project has no task set yet.',
         'artifacts.label': 'Artifacts',
+        'artifacts-empty.message': 'This project has no artifacts yet.',
+        'chats.label': 'Sessions',
+        'chats-empty.message': 'This project has no sessions yet.',
+        'outline.label': 'Notes',
+        'outline.description':
+          'Notes are a scratch surface for the project. Use the menu to promote items into assignable tasks.',
+        'create-artifact.label': 'Create artifact',
+        'remove-from-project.label': 'Remove from project',
+        'move-task-dialog.title': 'Move task to project',
+        'move-task.placeholder': 'Search projects…',
+        'move-task-empty.message': 'There are no other projects in this space.',
+        'move-task-error.title': 'The task could not be moved',
+        'untitled-project.label': 'Untitled project',
+        'create-chat.label': 'Create session',
+        'delegate-tasks.label': 'Assign selected tasks to agent',
         'create-panel.name.placeholder': 'Project name (optional)',
         'create-panel.template.placeholder': 'Filter templates…',
         'setup-project.label': 'Set up project',
-        'create-chat.label': 'New chat',
-        'create-routine.label': 'New routine',
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
+        'object-card.archived.label': 'Archived',
+        'object-card.menu.label': 'Object actions',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -2,23 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card, Icon, IconButton } from '@dxos/react-ui';
-import { Menu } from '@dxos/react-ui-menu';
-import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { useComposedRefs } from '@dxos/react-hooks';
+import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
+import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type ItemProps } from './PipelineComponent';
-import { usePipeline } from './PipelineContext';
+import { type ItemProps } from './PipelineComponent.tsx';
+import { usePipeline } from './PipelineContext.tsx';
 
 //
 // PipelineColumn
@@ -30,7 +35,7 @@ export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classN
 
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
@@ -48,12 +53,12 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     }
   }, [JSON.stringify(viewSnapshot?.query.ast)]);
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!query || !db) {
       return;
     }
 
-    const type = await resolveSchemaWithRegistry(db, query.ast);
+    const type = await ToolkitQuery.resolveSchemaWithRegistry(db, query.ast);
     setType(() => type);
   }, [db, query]);
 
@@ -86,16 +91,16 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         classNames={classNames}
         dragHandle={dragHandle}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Board.Column.Header
             classNames='_opacity-10'
             label={column.name || t('untitled-column.title')}
             dragHandleRef={setDragHandle}
           />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Column.Body data={column} Tile={PipelineTile} />
-        </Panel.Content>
+        </Panel.Body>
       </Board.Column.Root>
     </Panel.Root>
   );
@@ -119,32 +124,31 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
     const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
+    // The card's own menu has no items; the item contributes them.
+    const menu = useMenuActions();
 
     return (
-      <Menu.Root>
-        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-          <Focus.Item asChild>
-            <Card.Root classNames={classNames} ref={composedRef}>
-              <Card.Header>
-                <Card.Block>
-                  <Icon icon={icon} />
-                </Card.Block>
-                <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
-                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.Block end>
-                  <Menu.Trigger asChild>
-                    <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-                  </Menu.Trigger>
-                  <Menu.Content />
-                </Card.Block>
-              </Card.Header>
-              <Card.Body>
-                <Item {...itemProps} />
-              </Card.Body>
-            </Card.Root>
-          </Focus.Item>
-        </Mosaic.Tile>
-      </Menu.Root>
+      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+        <Focus.Item asChild>
+          <Card.Root classNames={classNames} ref={composedRef}>
+            <Card.Header>
+              <Layout.Block>
+                <Icon.Icon icon={icon} />
+              </Layout.Block>
+              <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
+              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+              <Layout.Block rail='end'>
+                <ActionMenu>
+                  <Button.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                </ActionMenu>
+              </Layout.Block>
+            </Card.Header>
+            <Card.Body>
+              <Item {...itemProps} menu={menu} />
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
     );
   },
 );

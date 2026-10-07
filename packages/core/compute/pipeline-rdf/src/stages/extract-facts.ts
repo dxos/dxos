@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import { type AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
 
-import { type SemanticIndexError } from '../errors';
-import { chunk } from '../internal/stages/chunk';
-import { DEFAULT_MODEL, extractChunk } from '../internal/stages/extract';
-import { hashText } from '../internal/stages/reconcile';
-import { type ExtractDocument, type ExtractOptions } from '../types';
-import { type Fact } from '../types';
+import { type SemanticIndexError } from '../errors.ts';
+import { chunk } from '../internal/stages/chunk.ts';
+import { DEFAULT_MODEL, extractChunk } from '../internal/stages/extract.ts';
+import { hashText } from '../internal/stages/reconcile.ts';
+import { type ExtractDocument, type ExtractOptions } from '../types/index.ts';
+import { type Fact } from '../types/index.ts';
 
 // PROVISIONAL v1 entity resolution: distinct surface forms that normalize identically will merge,
 // and there is no linking to real ECHO objects yet. Not the final identity scheme.
@@ -76,9 +76,9 @@ export const extractDocFacts = (
         const fact: Fact = {
           id: factId(doc.source, hash, index++),
           assertion: {
-            subject: { entity: normalizeEntityId(candidate.subject), label: candidate.subject.trim() },
+            subject: { kind: 'entity', entity: normalizeEntityId(candidate.subject), label: candidate.subject.trim() },
             predicate: candidate.predicate,
-            object: { entity: normalizeEntityId(candidate.object), label: candidate.object.trim() },
+            object: { kind: 'entity', entity: normalizeEntityId(candidate.object), label: candidate.object.trim() },
             ...(candidate.validFrom ? { validFrom: candidate.validFrom } : {}),
             ...(candidate.validTo ? { validTo: candidate.validTo } : {}),
             ...(candidate.quote ? { quote: candidate.quote } : {}),

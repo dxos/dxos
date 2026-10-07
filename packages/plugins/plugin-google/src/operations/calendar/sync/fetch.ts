@@ -3,13 +3,12 @@
 //
 
 import { addDays } from 'date-fns';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type GoogleCalendar } from '../../../apis';
-import { GoogleCalendarApi, type GoogleCalendarApiError, type GoogleCalendarApiService } from '../../../services';
+import { type GoogleCalendar } from '#apis';
+import { GoogleCalendarApi, type GoogleCalendarApiError, type GoogleCalendarApiService } from '#services';
 
 export type FetchEventsOptions = {
   syncBackDays: number;
@@ -42,18 +41,11 @@ export const fetchEvents = (
           opts.searchFilter,
         );
 
-  return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+  return Stream.paginate(undefined as string | undefined, (pageToken: string | undefined) =>
     Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-
       const api = yield* GoogleCalendarApi;
-      const { items = [], nextPageToken } = yield* fetchPage(api, Option.getOrUndefined(state.pageToken));
-      return Option.some([
-        Chunk.fromIterable(items),
-        { pageToken: Option.fromNullable(nextPageToken), done: !nextPageToken },
-      ] as const);
+      const { items = [], nextPageToken } = yield* fetchPage(api, pageToken);
+      return [items, Option.fromNullishOr(nextPageToken)] as const;
     }),
   );
 };

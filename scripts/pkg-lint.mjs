@@ -24,7 +24,7 @@ const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
 
 // `./plugin` is overloaded: every `@dxos/plugin-*` package exports its Composer plugin there, which
 // is browser code and needs `source`. Only a package that also declares a bundler plugin — the
-// `vite-plugin` moon tag composer-app's `serve-min` fans out to — means build tooling by it.
+// `vite-plugin` moon tag composer-app's `serve-prod` fans out to — means build tooling by it.
 const isBuildToolExport = (exportPath, moonYml) =>
   BUILD_TOOL_EXPORT.test(exportPath) ||
   (exportPath === './plugin' && (moonYml?.tags?.includes('vite-plugin') ?? false));
@@ -114,10 +114,23 @@ for (const { name, path: pkgPath } of packages) {
 
   // Check imports source paths.
   const pkgImports = pkgJson.imports ?? {};
+  // Prebuild-generated sources (e.g. `dx-plugin gen`'s src/**/gen/ barrels) are gitignored,
+  // so a fresh checkout legitimately lacks them — the moon task graph, not the checkout,
+  // guarantees their existence.
+  const isGeneratedSource = (value) => /\/gen\//.test(value);
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
     if (typeof importValue === 'string') {
+      // A single target answers every condition, so the emitted `.d.ts` and `.mjs` resolve the
+      // alias out of `src/`. Expand it with `pnpm toolbox --lint-package-exports`.
+      if (/\.tsx?$/.test(importValue)) {
+        addDiagnostic(
+          'error',
+          'import-source-only',
+          `import "${importPath}": source-only target "${importValue}" needs "source"/"types"/"default" conditions`,
+        );
+      }
       // Simple string import — skip dist paths (pre-built artifacts).
-      if (!importValue.startsWith('./dist/')) {
+      if (!importValue.startsWith('./dist/') && !isGeneratedSource(importValue)) {
         const srcPath = join(pkgPath, importValue);
         if (!existsSync(srcPath)) {
           addDiagnostic(
@@ -131,7 +144,7 @@ for (const { name, path: pkgPath } of packages) {
       }
     } else if (importValue && typeof importValue === 'object') {
       const { source } = importValue;
-      if (typeof source === 'string') {
+      if (typeof source === 'string' && !isGeneratedSource(source)) {
         const srcPath = join(pkgPath, source);
         if (!existsSync(srcPath)) {
           addDiagnostic(
@@ -145,7 +158,7 @@ for (const { name, path: pkgPath } of packages) {
       } else if (source && typeof source === 'object') {
         // Nested conditions (e.g., { workerd: "...", node: "...", default: "..." }).
         for (const [condition, condValue] of Object.entries(source)) {
-          if (typeof condValue === 'string') {
+          if (typeof condValue === 'string' && !isGeneratedSource(condValue)) {
             const srcPath = join(pkgPath, condValue);
             if (!existsSync(srcPath)) {
               addDiagnostic(
@@ -306,7 +319,7 @@ for (const { name, path: pkgPath } of packages) {
 
   // A package consumed from dist declares it by omitting the `source` export condition — which is
   // what keeps node/bun and vite resolving it the same way — and carries the `dist-runtime` moon
-  // tag, which fans its build out to tasks that otherwise skip `^:build` (composer-app:serve-min).
+  // tag, which fans its build out to tasks that otherwise skip `^:build` (composer-app:serve-prod).
   // The two must agree, or the tagged build is unused (or the missing one breaks the dev server).
   {
     const hasDistRuntimeTag = moonYml?.tags?.includes('dist-runtime') ?? false;

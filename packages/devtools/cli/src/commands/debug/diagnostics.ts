@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
@@ -18,8 +18,8 @@ export const handler = Effect.fn(function* (options: { humanize: boolean; trunca
 export const diagnostics = Command.make(
   'diagnostics',
   {
-    humanize: Options.boolean('humanize').pipe(Options.withDescription('Humanize keys.'), Options.withDefault(false)),
-    truncate: Options.boolean('truncate').pipe(Options.withDescription('Truncate keys.'), Options.withDefault(false)),
+    humanize: Options.Boolean('humanize').pipe(Options.withDescription('Humanize keys.'), Options.withDefault(false)),
+    truncate: Options.Boolean('truncate').pipe(Options.withDescription('Truncate keys.'), Options.withDefault(false)),
   },
   handler,
 ).pipe(Command.withDescription('Create diagnostics report.'));

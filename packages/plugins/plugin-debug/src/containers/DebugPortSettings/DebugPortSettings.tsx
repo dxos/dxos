@@ -5,9 +5,12 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -35,7 +38,7 @@ export type DebugPortSettingsProps = {
  * flipped, the session id is regenerated on every activation, and nothing survives a reload.
  */
 export const DebugPortSettings = ({ controller = getDebugPortController(), disabled }: DebugPortSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
@@ -47,65 +50,55 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
     [controller],
   );
 
-  const handleCopy = useCallback(() => {
-    if (status.session) {
-      void navigator.clipboard.writeText(status.session);
-    }
-  }, [status.session]);
-
   return (
-    <Form.Section
-      title={t('settings.debug-port.section.label')}
+    <Form.FieldSet
+      label={t('settings.debug-port.section.label')}
       description={t('settings.debug-port.section.description')}
     >
-      <Form.Row label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
-        <div className='flex items-center gap-3'>
+      <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
+        <Layout.Flex gap='md' align='center'>
           {status.running && (
-            <span className='text-sm text-description'>
+            <span className='text-sm text-fg-muted'>
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
             </span>
           )}
-          <Input.Root>
-            <Input.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
-          </Input.Root>
-        </div>
-      </Form.Row>
+          <Field.Root>
+            <Input.Switch
+              checked={status.running}
+              disabled={disabled}
+              onCheckedChange={({ checked }) => handleToggle(checked)}
+            />
+          </Field.Root>
+        </Layout.Flex>
+      </Form.Field>
 
       {status.running && (
         <>
-          <Form.Row
+          <Form.Field
             standalone
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <div className='flex items-center gap-2'>
-              <span className='grow truncate font-mono text-sm'>{status.session}</span>
-              <IconButton
-                icon='ph--copy--regular'
-                iconOnly
-                label={t('settings.debug-port.copy-session.label')}
-                onClick={handleCopy}
-              />
-            </div>
-          </Form.Row>
+            <Input.Root
+              value={status.session ?? ''}
+              disabled
+              variant='mono'
+              copyable
+              aria-label={t('settings.debug-port.session.label')}
+            />
+          </Form.Field>
 
-          {/* The settings variant puts the control in a right-hand column; log rows need the full
-              width, so this row collapses to a single column. */}
-          <Form.Row
-            standalone
-            label={t('settings.debug-port.log.label')}
-            classNames='md:grid-cols-1 md:[grid-template-areas:"header""description""control""validation"]'
-          >
-            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
+          <Form.Field standalone label={t('settings.debug-port.log.label')}>
+            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter, so nothing to check rows for. */}
             <Logger.Root rowFilter={isDebugPortRow}>
               <Logger.Content classNames='max-h-[16lh]'>
-                <Logger.List />
+                <Logger.List checkable={false} />
               </Logger.Content>
             </Logger.Root>
-          </Form.Row>
+          </Form.Field>
         </>
       )}
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

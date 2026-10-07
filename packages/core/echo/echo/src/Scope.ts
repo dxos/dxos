@@ -17,6 +17,8 @@ import { type QueryAST } from '@dxos/echo-protocol';
  * db.query(Filter.type(Person).from(Scope.space()));            // owning space
  * db.query(Filter.type(Person).from(Scope.space({ id: otherSpaceId }))); // a specific space
  * ```
+ *
+ * @performance O(1); builds a scope node.
  */
 export const space = (options?: { id?: string; includeAllFeeds?: boolean }): QueryAST.SpaceScope => ({
   _tag: 'space',
@@ -35,6 +37,8 @@ export const space = (options?: { id?: string; includeAllFeeds?: boolean }): Que
  * // Discover all types — persisted in the space and code-shipped in the registry.
  * db.query(Filter.type(Type.Type).from(Scope.space(), Scope.registry()));
  * ```
+ *
+ * @performance O(1); builds a scope node.
  */
 export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.RegistryScope => ({
   _tag: 'registry',
@@ -43,6 +47,16 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
 
 /**
  * Scope targeting a specific feed (by its underlying queue EID).
+ *
+ * To read only what follows a cursor, select with {@link Filter.feedCursor} — the bound is part of
+ * the query, not of the scope.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri)));
+ * ```
+ *
+ * @performance O(1); builds a scope node.
  */
 export const feed = (feedUri: string): QueryAST.FeedScope => ({
   _tag: 'feed',

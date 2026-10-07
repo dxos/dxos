@@ -16,13 +16,13 @@
       "path": "../../../common/effect"
     },
     {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/log"
     },
     {
       "path": "../../../common/tracing"
-    },
-    {
-      "path": "../../../sdk/config"
     },
     {
       "path": "../../../sdk/types"

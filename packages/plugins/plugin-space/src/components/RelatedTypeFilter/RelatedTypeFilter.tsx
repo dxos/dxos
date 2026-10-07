@@ -1,0 +1,60 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React from 'react';
+
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import { mx } from '@dxos/ui-theme';
+
+import { type RelatedType } from '#hooks';
+import { meta } from '#meta';
+
+export type RelatedTypeFilterProps = {
+  types: RelatedType[];
+  onToggle: (typename: string) => void;
+  classNames?: string;
+};
+
+/**
+ * Toggles which types a related-object view shows, one item per type present in the set.
+ *
+ * Uses the standalone `ToggleGroup` because the record's section header, one of its two hosts, has
+ * no toolbar to supply the roving-focus context `Toolbar.ToggleGroup` requires.
+ */
+export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFilterProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  // Filtering by the only type present cannot narrow anything.
+  if (types.length < 2) {
+    return null;
+  }
+
+  return (
+    <ToggleGroup.Root
+      type='multiple'
+      aria-label={t('type-filter.label')}
+      // Gapped, so each type reads as its own control rather than one segmented bar; grouped
+      // buttons drop their own rounding, which the gap makes visible again.
+      classNames={mx('gap-1 [&>button]:rounded-xs', classNames)}
+      value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
+    >
+      {types.map(({ typename, label, icon, count }) => (
+        <ToggleGroup.Item
+          key={typename}
+          iconOnly
+          value={typename}
+          icon={icon}
+          // Selection reads off the icon alone: the pressed fill is pinned to the resting one so
+          // the chip itself never changes, leaving `text-fg-subtle` to mark a type as hidden.
+          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-fg-subtle'
+          // Carries the count to the tooltip; the type's label is already localized.
+          label={`${label} (${count})`}
+          onClick={() => onToggle(typename)}
+        />
+      ))}
+    </ToggleGroup.Root>
+  );
+};
+
+RelatedTypeFilter.displayName = 'RelatedTypeFilter';

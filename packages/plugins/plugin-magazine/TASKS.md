@@ -1,5 +1,14 @@
 # Feed Plugin — Tasks
 
+## UI
+
+- [ ] **Master-detail view for `FeedArticle`** — selecting a post in the feed list opens it beside the
+      list rather than only setting `currentPostId`, which today drives nothing outside the component.
+      Coordinate with `plugin-deck`: `MagazineArticle` opens a post through `useShowItem` as a
+      companion, so the two surfaces should agree on whether a post is a companion of its container or
+      a plank of its own — the same question blocks offering the Translation companion beside a Post
+      (see `plugin-lingo/docs/TASKS.md`).
+
 ## Phase 3: Full AT Protocol Integration
 
 Phase 2.5 added public, unauthenticated Bluesky feed reading via the `app.bsky.feed.getAuthorFeed` XRPC endpoint.

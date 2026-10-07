@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - typetest
   - vite-plugin
   - pack
   - ts-vite-build
@@ -9,36 +10,22 @@ tags:
   - typedoc
   - storybook
 tasks:
-  build:
-    deps:
-      - compile-plugin
-  compile-plugin:
-    command: dx-compile
-    args:
-      - '--entryPoint=src/vite-plugin/index.ts'
-      - '--outputPath=dist/plugin'
-      - '--platform=node'
-    deps:
-      - ^:build
-      - dx-compile:build
-    outputs:
-      - dist/plugin
   check-module-structure:
-    # Verify headless entrypoints resolve under workerd conditions (post-build artifacts
-    # must exist — catches stale `./workerd` export paths like the removed browser bundle).
-    # Then fail when the root export pulls in React; React lives only behind `./ui`.
-    script: |
-      pnpm exec dx-trace-imports \
-        --export . \
-        --to "{react,react-dom}" \
-        --conditions workerd,worker,node \
-        --fail-on present
+    # Fail when any export pulls in `@dxos/react-ui`: the framework renders no UI of its own, so
+    # components built on react-ui belong in `@dxos/app-toolkit`.
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --all-exports
+      --to "@dxos/react-ui"
+      --conditions browser
+      --conditions node
+      --fail-on present
     deps:
       - dx-trace-imports:build
       - build
     inputs:
-      - tsconfig.json
       - package.json
+      - tsconfig.json
       - '@group(production)'
       - '^@group(production)'
       - /pnpm-lock.yaml

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Query } from '@dxos/echo';
 
-import { Memory } from '../../../types/Memory';
-import { QueryMemories } from './definitions';
+import * as Memory from '../../../types/Memory.ts';
+import { QueryMemories } from './definitions.ts';
 
 export default QueryMemories.pipe(
   Operation.withHandler(
@@ -18,9 +18,9 @@ export default QueryMemories.pipe(
         query = Query.all(
           // TODO(dmaretskyi): We should move this to the query executor layer.
           ...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))),
-        ).select(Filter.type(Memory));
+        ).select(Filter.type(Memory.Memory));
       } else {
-        query = Query.select(Filter.type(Memory));
+        query = Query.select(Filter.type(Memory.Memory));
       }
       query = query.limit(limit);
 

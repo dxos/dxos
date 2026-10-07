@@ -8,8 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Migration } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as Drawing from '../types/Drawing';
-import * as LegacySketch from '../types/LegacySketch';
+import { Drawing, LegacySketch } from '#types';
 
 // `org.dxos.type.sketch` -> `org.dxos.type.drawing`. The shape is unchanged (name + canvas ref)
 // and the canvas keeps its typename, so the transform is a field copy; the runtime swaps the

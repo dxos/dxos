@@ -9,25 +9,25 @@ import React from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
+import { ThreadPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ThreadPlugin } from '../../ThreadPlugin';
-import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
+import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle.tsx';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelArticleProps) => {
@@ -53,18 +53,18 @@ const meta = {
         Capability.contribute(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
       ],
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message],
           config: new Config({
             runtime: {
               services: {
                 edge: {
-                  url: 'https://edge.dxos.workers.dev/',
+                  url: 'https://dev.dxos.network/',
                 },
                 iceProviders: [
                   {
-                    urls: 'https://edge.dxos.workers.dev/ice',
+                    urls: 'https://dxos.network/ice',
                   },
                 ],
               },
@@ -89,7 +89,7 @@ const meta = {
         }),
         SpacePlugin({}),
         ThreadPlugin(),
-        CallsPlugin(),
+        CallsPlugin.make(),
       ],
     }),
   ],

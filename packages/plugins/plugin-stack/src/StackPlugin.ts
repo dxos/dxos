@@ -2,30 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ReactSurface } from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
+import { meta as pluginMeta } from '#meta';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-import * as Stack from './types/Stack';
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export const StackPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema([Stack.Stack])),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
-  Plugin.make,
-);
-
-export default StackPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

@@ -6,15 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
-import { Button, Icon, IconButton } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import ident from '../../../assets/sounds/ident-2.mp3';
-import { DXOS } from '../icons';
-import { brandColors } from './brand-colors';
-import { ComposerLogo as AltComposerLogo } from './ComposerLogo';
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
+import { DXOS } from '../icons/index.ts';
+import { brandColors } from './brand-colors.ts';
+import { ComposerLogo as AltComposerLogo } from './ComposerLogo.tsx';
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental.tsx';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
@@ -55,9 +56,9 @@ export const Default: Story = {
     };
 
     return (
-      <div className='absolute flex inset-0 items-center justify-center'>
+      <div className='dx-cover flex items-center justify-center'>
         <div className='absolute left-4 top-4'>
-          <Button onClick={handleSpin}>Spin</Button>
+          <Button.Root onClick={handleSpin}>Spin</Button.Root>
         </div>
 
         <div>
@@ -97,7 +98,7 @@ export const Colors: Story = {
     ];
 
     return (
-      <div className='absolute inset-0 flex justify-center items-center'>
+      <div className='dx-cover flex justify-center items-center'>
         <div className='grid grid-cols-3 gap-20 w-[800px]'>
           {colors.map((classNames, i) => (
             <div key={i} className='flex justify-center items-center'>
@@ -113,13 +114,13 @@ export const Colors: Story = {
 export const Pacman: Story = {
   render: () => {
     return (
-      <div className='absolute inset-0 flex flex-col justify-center'>
+      <div className='dx-cover flex flex-col justify-center'>
         <div className='flex flex-col'>
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
-              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
-              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
-              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
+              <Icon.Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
+              <Icon.Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
+              <Icon.Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
             </div>
 
             <div className='w-[180px]'>
@@ -129,7 +130,7 @@ export const Pacman: Story = {
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Icon icon='ph--circle--duotone' classNames='w-6 h-6 text-yellow-200' />
+                  <Icon.Icon icon='ph--circle--duotone' classNames='w-6 h-6 text-yellow-200' />
                 </div>
               ))}
             </div>
@@ -149,8 +150,8 @@ const SpinnerContainer = () => {
   return (
     <div className='flex flex-col gap-20'>
       <div className='absolute left-4 top-4'>
-        {(spinning && <Button onClick={() => setSpinning(false)}>Stop</Button>) || (
-          <Button onClick={() => setSpinning(true)}>Start</Button>
+        {(spinning && <Button.Root onClick={() => setSpinning(false)}>Stop</Button.Root>) || (
+          <Button.Root onClick={() => setSpinning(true)}>Start</Button.Root>
         )}
       </div>
       <div className='grid grid-cols-3 gap-20'>
@@ -185,7 +186,7 @@ const SpinnerContainer = () => {
 export const Spinner: Story = {
   render: () => {
     return (
-      <div className='absolute inset-0 flex items-center justify-center'>
+      <div className='dx-cover flex items-center justify-center'>
         <SpinnerContainer />
       </div>
     );
@@ -196,7 +197,7 @@ export const Spinner: Story = {
 export const Linear: Story = {
   render: () => {
     return (
-      <div className='absolute flex flex-col inset-0 bg-black'>
+      <div className='dx-cover flex flex-col bg-black'>
         <div
           className={'h-[1px] translateX(-100%) animate-progress-linear'}
           style={{
@@ -220,7 +221,7 @@ export const Radial: Story = {
     const endAngle = -(5 / 4) * Math.PI;
 
     return (
-      <div className='absolute inset-0 flex items-center justify-center'>
+      <div className='dx-cover flex items-center justify-center'>
         <svg width={size} height={size}>
           <g transform={`translate(${totalRadius}, ${totalRadius})`}>
             {brandColors.map((color, i) => {
@@ -251,15 +252,15 @@ export const Oblique: Story = {
     const size = 512;
 
     return (
-      <div className='absolute inset-0 grid place-items-center'>
+      <div className='dx-cover grid place-items-center'>
         <div className='absolute top-4 left-4'>
-          <IconButton icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
+          <Button.Root icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>
         <div className='absolute grid place-items-center'>
           <AltComposerLogo
             size={size}
             classNames={mx(
-              'opacity-0 scale-10 transition-all rotate-[540deg] __translate-x-[980px] duration-500 delay-0 ease-in',
+              'opacity-0 scale-10 transition-all rotate-[540deg] duration-700 delay-0 ease-in',
               visible && 'delay-200 opacity-10 scale-100 rotate-[180deg] translate-x-[8]',
             )}
           />
@@ -268,8 +269,8 @@ export const Oblique: Story = {
           <AltComposerLogo
             size={size}
             classNames={mx(
-              'opacity-0 blur-xs scale-10 rotate-360 __translate-y-[-100px]',
-              'transition-[opacity,filter,scale,rotate] duration-[500ms,500ms,500ms,750ms] ease-in-out',
+              'opacity-0 blur-xs scale-10 rotate-360',
+              'transition-[opacity,filter,scale,rotate] duration-700 ease-in-out',
               visible && 'opacity-100 blur-none scale-100 rotate-0 translate-y-0',
             )}
           />

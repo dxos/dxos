@@ -53,8 +53,8 @@ export const Email = Schema.Struct({
   blobId: Schema.optional(Schema.String),
   // Server-set and always present on a fetched Email (RFC 8621 §4.1.1); `EMAIL_PROPERTIES` requests it.
   threadId: Schema.String,
-  mailboxIds: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Boolean })),
-  keywords: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Boolean })),
+  mailboxIds: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
+  keywords: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
   from: Schema.optional(Schema.NullOr(Schema.Array(EmailAddress))),
   to: Schema.optional(Schema.NullOr(Schema.Array(EmailAddress))),
   cc: Schema.optional(Schema.NullOr(Schema.Array(EmailAddress))),
@@ -66,7 +66,7 @@ export const Email = Schema.Struct({
   messageId: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
   inReplyTo: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
   references: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
-  bodyValues: Schema.optional(Schema.Record({ key: Schema.String, value: BodyValue })),
+  bodyValues: Schema.optional(Schema.Record(Schema.String, BodyValue)),
   textBody: Schema.optional(Schema.Array(EmailBodyPart)),
   htmlBody: Schema.optional(Schema.Array(EmailBodyPart)),
   /** Non-body parts (RFC 8621 §4.1.4) — the attachments proper, distinct from `textBody`/`htmlBody`. */
@@ -138,41 +138,41 @@ export const EmailSetResult = Schema.Struct({
   newState: Schema.optional(Schema.String),
   created: Schema.optional(
     Schema.NullOr(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.Struct({
+      Schema.Record(
+        Schema.String,
+        Schema.Struct({
           id: Schema.String,
           blobId: Schema.optional(Schema.String),
           threadId: Schema.optional(Schema.String),
           size: Schema.optional(Schema.Number),
         }),
-      }),
+      ),
     ),
   ),
-  updated: Schema.optional(Schema.NullOr(Schema.Record({ key: Schema.String, value: Schema.Unknown }))),
+  updated: Schema.optional(Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown))),
   destroyed: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
   notCreated: Schema.optional(
     Schema.NullOr(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
-      }),
+      Schema.Record(
+        Schema.String,
+        Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
+      ),
     ),
   ),
   notUpdated: Schema.optional(
     Schema.NullOr(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
-      }),
+      Schema.Record(
+        Schema.String,
+        Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
+      ),
     ),
   ),
   notDestroyed: Schema.optional(
     Schema.NullOr(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
-      }),
+      Schema.Record(
+        Schema.String,
+        Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
+      ),
     ),
   ),
 });
@@ -181,15 +181,13 @@ export type EmailSetResult = Schema.Schema.Type<typeof EmailSetResult>;
 export const EmailSubmissionSetResult = Schema.Struct({
   accountId: Schema.optional(Schema.String),
   newState: Schema.optional(Schema.String),
-  created: Schema.optional(
-    Schema.NullOr(Schema.Record({ key: Schema.String, value: Schema.Struct({ id: Schema.String }) })),
-  ),
+  created: Schema.optional(Schema.NullOr(Schema.Record(Schema.String, Schema.Struct({ id: Schema.String })))),
   notCreated: Schema.optional(
     Schema.NullOr(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
-      }),
+      Schema.Record(
+        Schema.String,
+        Schema.Struct({ type: Schema.String, description: Schema.optional(Schema.NullOr(Schema.String)) }),
+      ),
     ),
   ),
 });

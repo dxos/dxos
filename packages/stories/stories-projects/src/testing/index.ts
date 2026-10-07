@@ -4,4 +4,5 @@
 
 export { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
-export * from './decorators';
+export * from './decorators.tsx';
+export * from './TaskDetail.tsx';

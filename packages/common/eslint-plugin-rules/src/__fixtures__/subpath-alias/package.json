@@ -1,0 +1,10 @@
+{
+  "name": "@fixture/subpath-alias",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "source": "./src/index.ts" },
+    "./Renamed": { "source": "./src/util/renamed-module.ts" }
+  }
+}

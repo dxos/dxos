@@ -4,20 +4,20 @@
 
 import { useEffect } from 'react';
 
-import { type Node } from '@dxos/app-graph';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph } from '@dxos/plugin-graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 
 /**
  * Expands a root node in the app graph.
  */
-export const useLoadDescendents = (root?: Node.Node) => {
-  const { graph } = useAppGraph();
+export const useLoadDescendents = (root?: AppGraphNode.Node) => {
+  const { graph } = Hooks.useAppGraph();
   useEffect(() => {
     if (!root) {
       return;
     }
 
-    Graph.expand(graph, root.id, 'child');
+    AppGraph.expandSync(graph, root.id, 'child');
   }, [graph, root]);
 };

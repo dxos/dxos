@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { EditorView } from '@codemirror/view';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
+import type * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -19,34 +20,57 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
+import type { ActionGraphProps } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { pendingText } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+import { AssistantPreset } from '#types';
 
-import { type AiChatProcessor } from '../../processor';
-import * as AssistantPreset from '../../types/AssistantPreset';
-import { type ChatEvent } from '../Chat';
-import { ChatActions, type ChatActionsProps } from './ChatActions';
-import { ChatMcpErrors } from './ChatMcpErrors';
-import { ChatOptions } from './ChatOptions';
-import { ChatReferences } from './ChatReferences';
-import { useChatVoiceInput } from './useChatVoiceInput';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import { type AiChatProcessor, getProcessorState } from '../../processor/index.ts';
+import { type ChatEvent } from '../Chat/index.ts';
+import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
+import { ChatMcpErrors } from './ChatMcpErrors.tsx';
+import { ChatOptions } from './ChatOptions.tsx';
+import { ChatReferences } from './ChatReferences.tsx';
+import { useChatVoiceInput } from './useChatVoiceInput.ts';
+
+/** Prompts that may wait behind a running turn, by default. */
+export const DEFAULT_MAX_QUEUE = 3;
 
 export type ChatPromptProps = Merge<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     outline?: boolean;
     settings?: boolean;
     expandable?: boolean;
     db?: Database.Database;
     chat?: Chat.Chat;
-    processor: AiChatProcessor;
+    /** Undefined while the processor is still opening: the prompt takes text but holds it until then. */
+    processor?: AiChatProcessor;
     event: Event<ChatEvent>;
-    /** Read-only indicator of whether the configured provider is the remote (online) service. */
-    online?: boolean;
+    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
+    tasksVisible?: boolean;
+    /** The prompt's graph node, which is what contributed actions are filed under. */
+    attendableId?: string;
+    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    customActions?: Atom.Atom<ActionGraphProps>;
+    /**
+     * The graph node those actions were filed on. Keys the dictation session, because the mic that
+     * opens it is one of them and carries the same id — anything else here is a session this prompt
+     * would never hear.
+     */
+    nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
+    autoFocus?: boolean;
+    /** How many prompts are waiting behind the running turn. */
+    queueSize?: number;
+    /** The most prompts that may wait behind a running turn; past it the prompt takes no more until one is taken up. */
+    maxQueue?: number;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -60,20 +84,25 @@ export const ChatPrompt = ({
   chat,
   processor,
   event,
-  online,
+  tasksVisible,
+  attendableId,
+  customActions,
+  nodeId,
   placeholder,
-  onPresetChange,
+  autoFocus = true,
+  queueSize = 0,
+  maxQueue = DEFAULT_MAX_QUEUE,
   settings = true,
   presets,
   preset,
   companionTo,
+  onPresetChange,
 }: ChatPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-  const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
-  const activeRef = useDynamicRef(active);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const processorState = getProcessorState(processor);
+  const error = useAtomValue(processorState.error).pipe(Option.getOrUndefined);
+  const streaming = useAtomValue(processorState.streaming);
+  const active = useAtomValue(processorState.active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -86,37 +115,80 @@ export const ChatPrompt = ({
   }, [event]);
 
   const fallbackDocId = useId();
-  const docId = chat?.id ?? fallbackDocId;
+  // The node the mic action was filed on, which is what it keys the recording session by. A chat
+  // rendered as a companion is a companion node, not the chat object's own, so the object id is only
+  // the fallback for a prompt rendered outside a plank.
+  const docId = nodeId ?? (chat ? Obj.getURI(chat) : fallbackDocId);
   useChatVoiceInput(docId, editorRef);
 
   const keymapExtensions = useChatKeymapExtensions({ event });
 
-  // Sentinel-command completion is sourced from the bound project's instructions, if any.
+  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands
+  // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
-  const commandsRef = useDynamicRef(instructions?.commands ?? []);
+  const commandsRef = Hooks.useDynamicRef(instructions?.commands ?? []);
   const commandsExtension = useMemo(
     () =>
       commands({
-        getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+        getCommands: () => [
+          ...commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+          ...TaskSlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
+        ],
       }),
     [commandsRef],
   );
 
-  const extensions = useMemo(
-    () => [keymapExtensions, pendingText(), commandsExtension],
-    [keymapExtensions, commandsExtension],
+  // The editor owns the prompt text; only its emptiness is mirrored into React so the send control
+  // can disable itself without re-rendering the prompt on every keystroke's content. Dictation is
+  // deliberately not counted: pending text lives in a StateField and reaches the document only when
+  // the user confirms it, which is the same point at which Enter would stop committing and start
+  // submitting.
+  const [hasText, setHasText] = useState(false);
+  const emptinessExtension = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          setHasText(update.state.doc.toString().trim().length > 0);
+        }
+      }),
+    [],
   );
 
+  // A full queue stops taking prompts: what is typed stays in the editor until the agent takes one up.
+  const queueFull = active && queueSize >= maxQueue;
+  const canSend = hasText && processor != null && !queueFull;
+
+  const extensions = useMemo(
+    () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
+    [keymapExtensions, commandsExtension, emptinessExtension],
+  );
+
+  // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
+  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the processor's
+  // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!activeRef.current) {
-        event.emit({ type: 'submit', text });
-        return true;
+      if (!processor || queueFull) {
+        return false;
       }
+      event.emit({ type: 'submit', text });
+      return true;
     },
-    [event],
+    [event, processor, queueFull],
   );
+
+  // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
+  // the reset and refocus mirror what the `submit()` extension does for Enter.
+  const handleSend = useCallback(() => {
+    const text = editorRef.current?.getText().trim();
+    if (!text?.length) {
+      return;
+    }
+    if (handleSubmit(text)) {
+      editorRef.current?.setText('', true);
+    }
+  }, [handleSubmit]);
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
     (ev) => {
@@ -126,22 +198,24 @@ export const ChatPrompt = ({
   );
 
   return (
-    <div
+    <Layout.Flex
+      column
+      data-testid='assistant.prompt'
       role='group'
-      className={mx(
-        'flex flex-col w-full dx-density-md',
+      classNames={[
+        'w-full dx-density-md',
         outline &&
-          'dx-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'dx-group-surface rounded-sm border border-separator-subtle transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
-      )}
+      ]}
     >
-      <ChatMcpErrors processor={processor} />
+      {processor && <ChatMcpErrors processor={processor} />}
 
-      <div className='flex p-2 gap-2'>
+      <Layout.Flex gap='sm' classNames='p-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
-          autoFocus
+          autoFocus={autoFocus}
           markdown
           lineWrapping
           classNames='col-span-2 pt-0.5'
@@ -149,42 +223,41 @@ export const ChatPrompt = ({
           extensions={extensions}
           onSubmit={handleSubmit}
         />
-      </div>
+      </Layout.Flex>
 
-      {db && settings && (
-        <div className='flex items-center overflow-hidden p-1.5'>
-          <ChatOptions
-            chat={chat}
-            db={db}
-            registry={processor.registry}
-            context={processor.context}
-            preset={preset}
-            presets={presets}
-            onPresetChange={onPresetChange}
-          />
-
-          <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
-            <ChatReferences db={db} context={processor.context} />
-          </div>
-
+      {db &&
+        settings && (
+          // One toolbar for the row: the options and context chips lead, the chips' track takes the slack, the actions end it.
           <ChatActions
-            classNames='col-span-2'
-            microphone={true}
-            docId={docId}
-            processing={streaming}
+            classNames='p-1.5'
+            attendableId={attendableId}
+            customActions={customActions}
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+            // and the reader still needs a way to stop it.
+            processing={active}
+            canSend={canSend}
+            tasksVisible={tasksVisible}
+            onSend={handleSend}
             onEvent={handleEvent}
-          >
-            {online !== undefined && (
-              <Input.Root>
-                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
-                <Input.Switch classNames='mx-1' checked={online} disabled />
-              </Input.Root>
-            )}
-          </ChatActions>
-        </div>
-      )}
-    </div>
+            leading={
+              <>
+                <ChatOptions
+                  db={db}
+                  chat={chat}
+                  registry={processor?.registry}
+                  context={processor?.context}
+                  preset={preset}
+                  presets={presets}
+                  onPresetChange={onPresetChange}
+                />
+                <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
+                  {processor && <ChatReferences db={db} context={processor.context} />}
+                </Layout.Flex>
+              </>
+            }
+          />
+        )}
+    </Layout.Flex>
   );
 };
 

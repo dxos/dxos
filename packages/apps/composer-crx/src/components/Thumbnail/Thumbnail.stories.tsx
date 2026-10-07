@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Thumbnail } from './Thumbnail';
+import { translations } from '../../translations.ts';
+import { Thumbnail } from './Thumbnail.tsx';
 
 const meta = {
   title: 'apps/composer-crx/Thumbnail',

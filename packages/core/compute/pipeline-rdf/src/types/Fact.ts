@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Assertion } from './Assertion';
-import { Attribution } from './Attribution';
-import { Factuality } from './Factuality';
-import { Illocution } from './Illocution';
+import { Assertion } from './Assertion.ts';
+import { Attribution } from './Attribution.ts';
+import { Factuality } from './Factuality.ts';
+import { Illocution } from './Illocution.ts';
 
 export const Fact = Schema.Struct({
   id: Schema.String,
@@ -21,5 +21,10 @@ export const Fact = Schema.Struct({
   extractor: Schema.Struct({ id: Schema.String, model: Schema.String, version: Schema.String }),
   /** For incremental divergence detection. */
   sourceHash: Schema.String,
+  /**
+   * Extraction pass id, grouping the facts one run produced so they can be replayed or retracted
+   * together. Top-level rather than in `extractor`, which names the program, not the run.
+   */
+  pass: Schema.optional(Schema.String),
 });
 export interface Fact extends Schema.Schema.Type<typeof Fact> {}

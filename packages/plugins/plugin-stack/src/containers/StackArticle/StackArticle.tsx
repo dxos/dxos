@@ -2,17 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Collection, Obj } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
 import { Stack, type StackSectionItem } from '#components';
@@ -21,8 +25,8 @@ import { meta } from '#meta';
 export type StackArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const StackArticle = ({ attendableId, subject: collection }: StackArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const collectionObjects = useAtomValue(createCollectionObjects(collection));
@@ -114,22 +118,26 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   const handleAdd = useCallback(
-    (id: string) =>
-      invokePromise(SpaceOperation.OpenCreateObject, {
+    async (id: string) => {
+      const { data } = await invokePromise(SpaceOperation.OpenObjectForm, {
         target: collection,
         navigable: false,
-        // The created object is appended; move it to immediately after the originating section.
-        onCreateObject: (object: Obj.Unknown) => {
-          const from = findIndex(Obj.getURI(object));
-          const anchor = findIndex(id);
-          if (from >= 0 && anchor >= 0) {
-            Obj.update(collection, (collection) => {
-              const [ref] = collection.objects.splice(from, 1);
-              collection.objects.splice(anchor < from ? anchor + 1 : anchor, 0, ref);
-            });
-          }
-        },
-      }),
+      });
+      const object = data?.target;
+      if (!object) {
+        return;
+      }
+
+      // The created object is appended; move it to immediately after the originating section.
+      const from = findIndex(Obj.getURI(object));
+      const anchor = findIndex(id);
+      if (from >= 0 && anchor >= 0) {
+        Obj.update(collection, (collection) => {
+          const [ref] = collection.objects.splice(from, 1);
+          collection.objects.splice(anchor < from ? anchor + 1 : anchor, 0, ref);
+        });
+      }
+    },
     [collection, invokePromise, findIndex],
   );
 
@@ -163,7 +171,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   const handleAddSection = useCallback(
     () =>
-      invokePromise(SpaceOperation.OpenCreateObject, {
+      invokePromise(SpaceOperation.OpenObjectForm, {
         target: collection,
         navigable: false,
       }),
@@ -172,10 +180,9 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   return (
     <Panel.Root>
-      <Panel.Toolbar classNames='dx-toolbar-surface'>
+      <Panel.Header classNames='dx-toolbar-surface'>
         <Toolbar.Root classNames='dx-document'>
-          <Toolbar.IconButton
-            square
+          <Button.Root
             icon='ph--plus--regular'
             iconOnly
             label={t('add-section.label')}
@@ -183,21 +190,17 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
             onClick={handleAddSection}
           />
           <Toolbar.Separator />
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <Toolbar.IconButton
-                square
-                icon='ph--dots-three-vertical--regular'
-                iconOnly
-                label={t('options.label')}
-                data-testid='stack.options'
-              />
-            </Menu.Trigger>
-            <Menu.Content items={optionsMenu} />
-          </Menu.Root>
+          <ActionMenu actions={optionsMenu}>
+            <Button.Root
+              icon='ph--dots-three-vertical--regular'
+              iconOnly
+              label={t('options.label')}
+              data-testid='stack.options'
+            />
+          </ActionMenu>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Stack.Root
           id={Obj.getURI(collection)}
           attendableId={attendableId}
@@ -209,13 +212,13 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
           onMoveDown={handleMoveDown}
           onDelete={handleDelete}
         >
-          <Stack.Content centered padding data-testid='main.stack'>
+          <Stack.Content data-testid='main.stack'>
             <Stack.Viewport>
               <Mosaic.Stack classNames='dx-document' items={items} getId={getId} Tile={Stack.Section} />
             </Stack.Viewport>
           </Stack.Content>
         </Stack.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

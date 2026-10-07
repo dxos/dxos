@@ -15,10 +15,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/graph"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/invariant"
     },
     {
       "path": "../../common/log"
@@ -27,13 +27,13 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../react-primitives/react-focus"
     },
     {
       "path": "../react-ui"

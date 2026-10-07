@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -21,7 +21,7 @@ import { OllamaAiServiceLayer } from '@dxos/ai/testing';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -30,18 +30,18 @@ import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/te
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest';
-import { commitmentLedger } from '../corpus/ledger';
-import { type Summarizer } from '../corpus/prompts';
-import { buildRollups } from '../corpus/rollups';
-import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics';
-import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index';
-import { buildThreads } from '../internal/threads';
-import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
-import { Thread } from '../types';
-import { emailToMessage } from './email-fixtures';
-import { parquetSource } from './parquet';
+import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest.ts';
+import { commitmentLedger } from '../corpus/ledger.ts';
+import { type Summarizer } from '../corpus/prompts.ts';
+import { buildRollups } from '../corpus/rollups.ts';
+import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics.ts';
+import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index.ts';
+import { buildThreads } from '../internal/threads.ts';
+import { type FactIndexer, extractFactsStage } from '../stages/extract-facts.ts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts.ts';
+import { Thread } from '../types/index.ts';
+import { emailToMessage } from './email-fixtures.ts';
+import { parquetSource } from './parquet.ts';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by
@@ -138,14 +138,14 @@ type Stats = {
 // `R = never` before `EffectEx.runPromise` — the same "provide at the edge" idiom used elsewhere in
 // this repo (e.g. `Database.layer`). The heavy bits (Ollama runtime, better-sqlite3-backed db) live
 // here in the test harness, which is why the whole suite is env-gated.
-class Ctx extends Context.Tag('EmailPipelineCtx')<
+class Ctx extends Context.Service<
   Ctx,
   {
     readonly summarize: (text: string) => Promise<Summary>;
     readonly db: Database.Database;
     readonly stats: Stats;
   }
->() {}
+>()('EmailPipelineCtx') {}
 
 // Stage 1: LLM summarization. Appends a second text block carrying the summary and records spam /
 // keyword metadata on `Message.properties` (ContentBlock.Text has no metadata field). Produces a new
@@ -158,7 +158,7 @@ const summarizeStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> 
     const { summarize } = yield* Ctx;
     const text = Message.extractText(message);
     const result = yield* Effect.tryPromise(() => summarize(text)).pipe(
-      Effect.orElse(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
+      Effect.catch(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
     );
     const summaryBlock: ContentBlock.Text = { _tag: 'text', text: result.summary };
     return Message.make({
@@ -237,9 +237,11 @@ const logStage = (label: string): Stage.Stage<Message.Message, Message.Message> 
 
 describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', () => {
   // Model layer built ONCE so it is not rebuilt per message.
-  // `AiService.model` provides the `LanguageModel`, resolved through the local Ollama provider;
+  // `AiService.languageModel` provides the `LanguageModel`, resolved through the local Ollama provider;
   // `OllamaAiServiceLayer` provides the `AiService` it requires.
-  const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
+  const modelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
+    Layer.provide(OllamaAiServiceLayer),
+  );
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves
@@ -286,7 +288,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt: [SUMMARIZE_PROMPT, text].join('\n\n') })).pipe(
             Effect.map((response) => parseSummary(response.text)),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               Effect.sync(() => {
                 log.warn('summarize failed; using empty summary', { model: MODEL, cause: Cause.pretty(cause) });
                 return { summary: '', isSpam: false, keywords: [] } satisfies Summary;
@@ -295,7 +297,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
           ),
         );
 
-      const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
+      const context: Context.Service.Shape<typeof Ctx> = { summarize, db, stats };
 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
       // pipeline-rdf resolves the Ollama model (its default is Anthropic); a failed extraction
@@ -408,7 +410,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt })).pipe(
             Effect.map((response) => response.text),
-            Effect.catchAllCause(() => Effect.succeed('')),
+            Effect.catchCause(() => Effect.succeed('')),
           ),
         );
       const drafts = await summarizeTopics(clusterThreads(threads), narrate);

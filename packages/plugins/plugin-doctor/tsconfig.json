@@ -23,6 +23,15 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -41,22 +50,25 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-client"
     }
   ]
 }

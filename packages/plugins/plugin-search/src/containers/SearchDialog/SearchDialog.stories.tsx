@@ -10,12 +10,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
@@ -23,7 +23,7 @@ import { Organization, Person } from '@dxos/types';
 import { SearchContextProvider } from '#hooks';
 import { translations } from '#translations';
 
-import { SearchDialog } from './SearchDialog';
+import { SearchDialog } from './SearchDialog.tsx';
 
 random.seed(0);
 
@@ -36,9 +36,7 @@ const DefaultStory = () => {
   return (
     <SearchContextProvider>
       <Dialog.Root defaultOpen>
-        <Dialog.Overlay>
-          <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
-        </Dialog.Overlay>
+        <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
       </Dialog.Root>
     </SearchContextProvider>
   );
@@ -52,9 +50,9 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -67,6 +65,8 @@ const meta = {
                   { type: Person.Person, count: 50 },
                 ]),
               );
+              // The story searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
       ],

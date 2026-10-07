@@ -8,9 +8,9 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type * as InboxCapabilities from '../types/InboxCapabilities';
-import type * as Mailbox from '../types/Mailbox';
-import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions';
+import { InboxCapabilities, Mailbox } from '#types';
+
+import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions.tsx';
 
 /**
  * Returns a menu item per injected {@link InboxCapabilities.MailboxAction}. Selecting one invokes the

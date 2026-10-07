@@ -2,21 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Agent } from '@dxos/assistant-toolkit';
+import type * as Agent from '@dxos/assistant/Agent';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { FeedAnnotation } from '@dxos/schema';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
 
-/** Mirrors the foreign keys stamped by the agent-wizard automation compiler (`sync-automation`). */
+/** Mirrors the foreign keys stamped by the agent skill's automation compiler (`sync-automation`). */
 const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
 const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
 
@@ -27,7 +28,7 @@ export type AgentPropertiesProps = {
 };
 
 export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
 
   // Build a filter matching objects of any schema annotated as a feed.
@@ -37,10 +38,7 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
     }
 
     const schemas = db.graph.registry.list().filter(Type.isType);
-    const feedSchemas = schemas.filter((type) => {
-      const annotation = FeedAnnotation.get(Type.getSchema(type));
-      return Option.isSome(annotation) && annotation.value === true;
-    });
+    const feedSchemas = schemas.filter(isFeedOwnerSchema);
 
     return feedSchemas.length === 0
       ? Filter.nothing()
@@ -87,24 +85,21 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
   }
 
   return (
-    <Form.Section>
-      <Input.Root>
-        <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
-      </Input.Root>
+    <Form.FieldSet>
+      <Field.Root>
+        <Field.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Field.Label>
+      </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Input.Root key={object.id}>
-          <div className='flex items-center gap-2'>
-            <Input.Checkbox
-              checked={subscribedUris.has(Obj.getURI(object))}
-              onCheckedChange={(checked) => {
-                handleSubscriptionChange(object, checked === true);
-              }}
-            />
-            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
-          </div>
-        </Input.Root>
+        <Input.Checkbox
+          key={object.id}
+          checked={subscribedUris.has(Obj.getURI(object))}
+          onCheckedChange={({ checked }) => {
+            handleSubscriptionChange(object, checked === true);
+          }}
+          label={Obj.getLabel(object) ?? object.id}
+        />
       ))}
-    </Form.Section>
+    </Form.FieldSet>
   );
 };

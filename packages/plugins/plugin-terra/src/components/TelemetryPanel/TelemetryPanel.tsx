@@ -4,9 +4,10 @@
 
 import React, { type KeyboardEvent } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
-import type * as TerraObject from '../../types/TerraObject';
+import { TerraObject } from '#types';
 
 /**
  * One object's telemetry at the panel's sampling instant. Plain data rather than `SimObject`, so
@@ -46,13 +47,16 @@ const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
  * every sim frame.
  */
 export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelProps) => (
-  <div className='flex flex-col w-fit max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'>
+  <Layout.Flex
+    column
+    classNames='w-fit max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'
+  >
     <div className='px-3 pt-3 pb-2 text-sm font-medium'>Telemetry</div>
     <ScrollArea.Root orientation='vertical' classNames='max-h-64'>
       <ScrollArea.Viewport>
         <table className='w-full text-xs tabular-nums'>
           <thead>
-            <tr className='text-left text-description'>
+            <tr className='text-left text-fg-muted'>
               <th className='px-3 pb-1 font-normal'>Object</th>
               <th className='px-3 pb-1 font-normal'>Type</th>
               <th className='px-2 pb-1 font-normal text-right'>Lat</th>
@@ -101,7 +105,7 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
         </table>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
-  </div>
+  </Layout.Flex>
 );
 
 TelemetryPanel.displayName = 'TelemetryPanel';

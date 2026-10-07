@@ -11,21 +11,13 @@ runtime:
       agents: true
 
   services:
+    # One address for every EDGE service: each is reached as `<edge>/<service>`, derived from this
+    # URL. `runtime.services.edgeServices` is left unset -- it is the per-service override, and an
+    # entry here would pin one service to a host that can drift from the environment above.
     edge:
-      url: wss://dxos.network/
+      url: https://dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice
-    sandbox:
-      url: https://sandbox-service.dxos.workers.dev
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
-    edgeServices:
-      - name: calls
-        endpoint: https://calls.dxos.network
-      - name: transcription
-        endpoint: https://calls.dxos.network
-      - name: image
-        endpoint: https://image.main.dxos.network
-      - name: discord
-        endpoint: https://discord.dxos.network

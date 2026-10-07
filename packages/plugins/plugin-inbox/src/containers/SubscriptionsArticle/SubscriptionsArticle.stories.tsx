@@ -11,14 +11,16 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as Mailbox from '../../types/Mailbox';
-import { SubscriptionsArticle } from './SubscriptionsArticle';
+import { InboxPlugin } from '#plugin';
+import { Mailbox } from '#types';
+
+import { SubscriptionsArticle } from './SubscriptionsArticle.tsx';
 
 /** Bulk-mail senders with a `List-Unsubscribe` affordance; counts drive the noisiest-first sort. */
 const SENDERS: { email: string; name: string; count: number }[] = [
@@ -45,10 +47,10 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Mailbox.Mailbox, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

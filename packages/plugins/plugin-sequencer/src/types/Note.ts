@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 /**
  * A single note in a Sequence. Time fields are in beats relative to the start of the
@@ -17,6 +18,6 @@ export const Note = Schema.Struct({
   duration: Schema.Number,
   /** Velocity 0.0..1.0; defaults to 0.8. */
   velocity: Schema.optional(Schema.Number),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Note extends Schema.Schema.Type<typeof Note> {}

@@ -5,11 +5,11 @@
 import React, { cloneElement, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';
@@ -32,7 +32,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
   const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent, succeededKeys } =
     props;
   const disabled = !active;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const [inputValue, setInputValue] = useState(unredeemedCode ?? '');
 

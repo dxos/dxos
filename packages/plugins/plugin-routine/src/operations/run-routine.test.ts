@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Routine from '@dxos/compute/Routine';
@@ -18,9 +19,10 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import * as RoutineOperation from '../types/RoutineOperation';
-import { makeRoutine } from '../util';
-import RunRoutineHandler from './run-routine';
+import { RoutineOperation } from '#types';
+
+import { makeRoutine } from '../util/index.ts';
+import RunRoutineHandler from './run-routine.ts';
 
 /** Captures the input each run receives so the test can assert on it after the invocation. */
 const received: unknown[] = [];
@@ -36,11 +38,11 @@ const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
 });
 
 /**
- * Stand-in for a connector's sync operation: like `InboxOperation.GoogleMailSync` it destructures a
+ * Stand-in for a connector's sync operation: like `GoogleOperation.GoogleMailSync` it destructures a
  * required input, so a run that supplies none throws before the handler body.
  */
 const TestRunnable = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.runnable'), name: 'Test Runnable' },
+  meta: { key: DXN.make('com.example.operation.test.runnable'), name: 'Test Runnable' },
   input: Schema.Struct({ label: Schema.Any }),
   output: Schema.Void,
 });

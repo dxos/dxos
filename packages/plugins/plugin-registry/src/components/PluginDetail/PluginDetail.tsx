@@ -2,33 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import {
-  Button,
-  Carousel,
-  Icon,
-  Input,
-  Link,
-  ScrollArea,
-  Select,
-  Tag,
-  ThemedClassName,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as Button from '@dxos/react-ui/Button';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
+import * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
+  /** Scope control for this one plugin, rendered under the enable switch. */
+  scope?: ReactNode;
   enabled?: boolean;
   /** True while an in-flight install is running. Disables the install button. */
   installing?: boolean;
@@ -104,10 +105,11 @@ export type PluginDetailProps = {
   onVersionChange?: (tag: string) => void;
 };
 
-export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
+export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
   (
     {
       plugin,
+      scope,
       enabled,
       installing,
       updating,
@@ -131,19 +133,32 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const themeMode = Hooks.useThemeMode();
+    const layout = ToolkitHooks.useLayout();
+    // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
+    // 4rem floor on both left it with less width for the center content than the gutters themselves.
+    const isMobile = layout.mode === 'mobile';
     const { key: slug, name, author, description, homePage, source, screenshots, icon: rawIcon } = plugin.meta.profile;
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
+
+    const versionItems = useMemo(
+      () =>
+        (versions ?? []).map(({ version }) => ({
+          value: version,
+          label: installedVersionTag === version ? `${version} (${t('installed.label')})` : version,
+        })),
+      [versions, installedVersionTag, t],
+    );
 
     const resolvedScreenshots = (screenshots ?? [])
       .map((entry) => (themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark)))
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
-      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
           {/*
            * 3-column grid: [icon/prev | content/viewport | next].
@@ -154,34 +169,56 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <div className='dx-document grid grid-cols-[4rem_minmax(0,1fr)_4rem] gap-x-4 p-4 items-start'>
-            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)} icon={iconKey} size={14} />
+          <Layout.Grid
+            cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
+            align='start'
+            classNames='dx-document gap-x-4 p-4'
+          >
+            <Icon.Icon
+              classNames={mx('row-start-1 p-1 rounded-md', isMobile ? 'size-8' : 'size-14', styles.bg, styles.fg)}
+              icon={iconKey}
+            />
 
-            <div className='row-start-1 col-start-2 col-span-2 grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
-              <div className='flex items-center gap-2'>
+            <Layout.Grid cols={['fill', 'min']} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'>
+              <Layout.Flex align='center' gap='sm'>
                 <h2 className='text-xl'>{name}</h2>
-                {failure && <PluginFailureBadge failure={failure} size={5} />}
-              </div>
+                {failure && <PluginFailureBadge failure={failure} size='lg' />}
+              </Layout.Flex>
               {onInstall ? (
-                <Button density='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button.Root size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
-                </Button>
+                </Button.Root>
               ) : (
-                <Input.Root>
-                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Input.Root>
+                <Field.Root>
+                  <Input.Switch
+                    classNames='self-center'
+                    checked={enabled}
+                    onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
+                  />
+                </Field.Root>
               )}
-              <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
+              <Layout.Flex align='center' gap='xs' classNames='pt-0.5 text-sm text-fg-muted'>
                 {slug}
-                {author && <span className='dx-tag dx-tag--info'>{author}</span>}
-              </div>
-            </div>
+                {author && (
+                  <span className='dx-tag dx-tag-inline' data-hue='info'>
+                    {author}
+                  </span>
+                )}
+              </Layout.Flex>
+            </Layout.Grid>
+
+            {scope && (
+              <Section.Root>
+                <Section.Heading title={t('plugin-scope.section.title')} />
+                <Section.Body>{scope}</Section.Body>
+              </Section.Root>
+            )}
 
             {description && (
               <Section.Root>
                 <Section.Heading title={t('description.label')} />
                 <Section.Body>
-                  <MarkdownView classNames='text-description' content={description} />
+                  <MarkdownView classNames='text-fg-muted' content={description} />
                 </Section.Body>
               </Section.Root>
             )}
@@ -191,14 +228,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
                   <Carousel.Root count={resolvedScreenshots.length}>
-                    <Carousel.Content classNames='contents'>
-                      <Carousel.Viewport>
-                        {resolvedScreenshots.map((src, index) => (
-                          <Carousel.Slide key={src} index={index} src={src} alt={name} />
-                        ))}
-                      </Carousel.Viewport>
-                      <Carousel.Indicators />
-                    </Carousel.Content>
+                    <Carousel.ItemGroup>
+                      {resolvedScreenshots.map((src, index) => (
+                        <Carousel.Item key={src} index={index} src={src} alt={name} />
+                      ))}
+                    </Carousel.ItemGroup>
+                    <Carousel.IndicatorGroup />
                   </Carousel.Root>
                 </Section.Body>
               </Section.Root>
@@ -207,23 +242,31 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             <Section.Root>
               <Section.Heading title={t('resources.label')} />
               <Section.Body>
-                <div className='flex gap-3 items-center'>
+                <Layout.Flex gap='md' align='center'>
                   {homePage && (
-                    <Link href={homePage} classNames='text-sm text-description'>
+                    <Typography.Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
-                    </Link>
+                      <Icon.Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
+                    </Typography.Link>
                   )}
 
                   {source && (
-                    <Link href={source} classNames='text-sm text-description'>
+                    <Typography.Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
-                    </Link>
+                      <Icon.Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
+                    </Typography.Link>
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
-                </div>
+                </Layout.Flex>
               </Section.Body>
             </Section.Root>
 
@@ -231,7 +274,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('dependencies.label')} />
                 <Section.Body>
-                  <div className='flex flex-wrap gap-1'>
+                  <Layout.Flex wrap gap='xs'>
                     {dependencies.map((depId) => (
                       <Chip
                         key={depId}
@@ -240,7 +283,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                         onClick={onNavigateToPlugin}
                       />
                     ))}
-                  </div>
+                  </Layout.Flex>
                 </Section.Body>
               </Section.Root>
             )}
@@ -249,7 +292,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('dependents.label')} />
                 <Section.Body>
-                  <div className='flex flex-wrap gap-1'>
+                  <Layout.Flex wrap gap='xs'>
                     {dependents.map((dependentId) => (
                       <Chip
                         key={dependentId}
@@ -258,7 +301,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                         onClick={onNavigateToPlugin}
                       />
                     ))}
-                  </div>
+                  </Layout.Flex>
                 </Section.Body>
               </Section.Root>
             )}
@@ -267,52 +310,49 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
-                  <div className='flex gap-2 items-center'>
-                    <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
-                      <Select.TriggerButton classNames='min-w-32' />
-                      <Select.Portal>
-                        <Select.Content>
-                          <Select.Viewport>
-                            {versions.map((versionEntry) => (
-                              <Select.Option key={versionEntry.version} value={versionEntry.version}>
-                                {versionEntry.version}
-                                {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
-                              </Select.Option>
-                            ))}
-                          </Select.Viewport>
-                        </Select.Content>
-                      </Select.Portal>
+                  <Layout.Flex gap='sm' align='center'>
+                    <Select.Root
+                      items={versionItems}
+                      value={selectedVersionTag ? [selectedVersionTag] : []}
+                      onValueChange={({ value: [value] }) => value && onVersionChange?.(value)}
+                    >
+                      <Select.Trigger classNames='min-w-32' />
+                      <Select.Content>
+                        {versionItems.map((item) => (
+                          <Select.Item key={item.value} item={item} />
+                        ))}
+                      </Select.Content>
                     </Select.Root>
                     {onInstallVersion && (
-                      <Button
-                        density='md'
+                      <Button.Root
+                        size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
                       >
                         {installing ? t('installing.label') : t('install-version.label')}
-                      </Button>
+                      </Button.Root>
                     )}
-                  </div>
+                  </Layout.Flex>
                 </Section.Body>
               </Section.Root>
             )}
 
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
-              <div className='col-start-2 col-span-2 flex gap-2'>
+              <Layout.Flex gap='sm' classNames='col-start-2 col-span-2'>
                 {updating ? (
-                  <Button variant='primary' disabled>
+                  <Button.Root variant='primary' disabled>
                     {t('updating.label')}
-                  </Button>
+                  </Button.Root>
                 ) : hasUpdate && onUpdate ? (
-                  <Button variant='primary' onClick={onUpdate}>
+                  <Button.Root variant='primary' onClick={onUpdate}>
                     {t('update.label')}
-                  </Button>
+                  </Button.Root>
                 ) : null}
-                {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
-              </div>
+                {onUninstall && <Button.Root onClick={onUninstall}>{t('uninstall.label')}</Button.Root>}
+              </Layout.Flex>
             )}
-          </div>
+          </Layout.Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );
@@ -324,11 +364,13 @@ PluginDetail.displayName = 'PluginDetail';
 const SectionRoot = ({ children }: PropsWithChildren<{}>) => <>{children}</>;
 
 const SectionHeading = ({ title }: { title: string }) => (
-  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-subdued'>{title}</h2>
+  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-fg-subtle'>{title}</h2>
 );
 
-const SectionBody = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('col-start-2 flex flex-col gap-2', classNames)}>{children}</div>
+const SectionBody = ({ classNames, children }: Util.ThemedClassName<PropsWithChildren>) => (
+  <Layout.Flex column gap='sm' classNames={['col-start-2', classNames]}>
+    {children}
+  </Layout.Flex>
 );
 
 const Section = {
@@ -338,7 +380,7 @@ const Section = {
 };
 
 const Chip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
-  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
+  <Tag.Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
     {name}
-  </Tag>
+  </Tag.Tag>
 );

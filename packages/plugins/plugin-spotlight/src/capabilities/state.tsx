@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Node } from '@dxos/plugin-graph';
-import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as NavTreeSurface from '@dxos/plugin-navtree/NavTreeSurface';
 
-import * as SpotlightCapabilities from '../types/SpotlightCapabilities';
+import { SpotlightCapabilities } from '#types';
 
 const defaultState: SpotlightCapabilities.SpotlightState = {
   dialogOpen: true,
-  dialogContent: { component: COMMANDS_DIALOG },
+  dialogContent: { component: NavTreeSurface.COMMANDS_DIALOG },
 };
 
 export default Capability.makeModule(() =>
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,
         complementarySidebarOpen: false,
-        workspace: Node.RootId,
+        workspace: GraphNode.RootId,
         active: [],
         inactive: [],
         scrollIntoView: undefined,

@@ -15,10 +15,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

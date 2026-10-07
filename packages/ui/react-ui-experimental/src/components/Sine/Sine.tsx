@@ -6,10 +6,10 @@ import { curveNatural, line, select } from 'd3';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type SineProps = ThemedClassName;
+export type SineProps = Util.ThemedClassName;
 
 const phaser = (min: number, max: number, period: number) => {
   if (min === max) {
@@ -85,7 +85,7 @@ export const Sine = ({ classNames }: SineProps) => {
 
   return (
     <div ref={ref} className={mx(classNames)}>
-      <svg ref={svgRef} className='h-full w-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
+      <svg ref={svgRef} className='dx-fill' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
     </div>
   );
 };

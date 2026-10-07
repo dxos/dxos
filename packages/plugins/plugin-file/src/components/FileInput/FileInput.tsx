@@ -2,37 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { SchemaEx } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import * as FileCapabilities from '../../types/FileCapabilities';
-
 export type FileInputProps = {
-  schema: Schema.Schema.AnyNoContext;
   onChange: (file: File) => void;
 };
 
-export const FileInput = ({ schema, onChange }: FileInputProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const accept = SchemaEx.findAnnotation<Record<string, string[]>>(
-    schema.ast,
-    FileCapabilities.FileAction.UploadAnnotationId,
-  );
+export const FileInput = ({ onChange }: FileInputProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);
 
-  // No client-side size cap here — the active backend determines the limit (inline is capped,
-  // edge/wnfs are not), and `op:Create` enforces it against the actual selected backend.
+  // No client-side size or type filter: the active backend determines the size limit (inline is
+  // capped, edge/wnfs are not) and `op:Create` enforces it; every type is accepted.
   const { acceptedFiles, getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } = useDropzone({
     multiple: false,
-    accept,
     onDropAccepted,
   });
 

@@ -3,12 +3,11 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as Map from './types/Map';
+import { Map } from '#types';
 
 export const translations = [
   {
@@ -32,4 +31,4 @@ export const translations = [
     },
   },
   ...geoTranslations,
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

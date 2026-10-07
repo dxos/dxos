@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { type Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -25,3 +25,5 @@ export const SpaceHomePinBottom: Role.Role<{ space: Space }> = Role.make('org.dx
 export const Prompts: Role.Role<{ subject: Obj.Any; attendableId: string }> = Role.make(
   'org.dxos.plugin.assistant.role.prompts',
 );
+
+export { RENAME_POPOVER } from '../constants.ts';

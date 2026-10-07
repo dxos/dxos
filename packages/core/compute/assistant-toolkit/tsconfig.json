@@ -60,12 +60,6 @@
       "path": "../../echo/echo"
     },
     {
-      "path": "../../echo/echo-client"
-    },
-    {
-      "path": "../../echo/echo-protocol"
-    },
-    {
       "path": "../../mesh/edge-client"
     },
     {

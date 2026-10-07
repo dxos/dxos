@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 3,
+    "trust": 3,
+    "reasons": {
+      "order": "Leads with the service declaration and then groups every call site by how it sources spaceId (db-in-scope, Obj.getDatabase, cleanup path, commerce's two actions), building consequences after the core change.",
+      "why": "Gives a specific reason per group, e.g. that the game/illustrator cleanup path reuses 'the same options it used to create the object' rather than just showing the diff.",
+      "load": "Runs through roughly a dozen near-identical 'add a third argument' diffs back to back under one heading, which asks a reviewer to keep re-verifying a pattern the document could have named once.",
+      "trust": "Labels the ConnectorCompanion.tsx diff as 'an Effect-based caller ... instead of a hook dependency array,' but the diff it shows for that file is a React useCallback whose dependency array literally grows to include db, contradicting the claim."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Same core-first shape as A: the service declaration, then the call-site consequence, narrowed to representative examples rather than every file.",
+      "why": "Ties the fix directly to the changeset's own language about edge operation-service having no client Space, though it restates that reasoning almost verbatim in both the intro and the first section.",
+      "load": "Shows only three representative diffs and summarizes the remaining call sites in one sentence, keeping the document to a single easy pass without repetitive near-duplicate blocks.",
+      "trust": "Claims are consistent with the diffs shown, though 'roughly a dozen call sites' undercounts the approximately seventeen individual call-site edits in the patch, a rounding that is defensible but loose."
+    }
+  }
+}

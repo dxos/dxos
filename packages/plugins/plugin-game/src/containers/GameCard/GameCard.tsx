@@ -4,18 +4,17 @@
 
 import React from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 
-import type * as Game from '../../types/Game';
-import * as GameCapabilities from '../../types/GameCapabilities';
+import { Game, GameCapabilities } from '#types';
 
 export type GameCardProps = AppSurface.ObjectCardProps<Game.Game>;
 
 export const GameCard = ({ role, subject: game }: GameCardProps) => {
-  const variants = useCapabilities(GameCapabilities.VariantProvider);
+  const variants = Hooks.useCapabilities(GameCapabilities.VariantProvider);
   // Resolved live rather than as a snapshot: variants mutate their state, and a snapshot is frozen.
   const variant = useResolveRef(game.variant);
 

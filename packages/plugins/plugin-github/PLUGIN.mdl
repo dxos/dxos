@@ -22,9 +22,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -159,12 +160,13 @@ Discovery operations — read-only, no local writes.
 
 ```mdl
 op GetGitHubRepositories
+  key: org.dxos.operation.github.getRepositories
   desc: |
     List GitHub repositories reachable from an integration token.
     Read-only: no local objects are created.  Orgs are NOT listed here;
     they are auto-pulled during SyncGitHubRepositories.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>   # renamed from `integration`; see plugin-connector's ConnectorSpec
   output: GetSyncTargetsOutput
   effects: [http]
   errors:
@@ -172,10 +174,24 @@ op GetGitHubRepositories
     NetworkError: transient HTTP failure after retries
 ```
 
+```mdl
+op MaterializeGitHubTarget
+  key: org.dxos.operation.github.materializeTarget
+  desc: |
+    Find-or-create the empty local root Project bound to a selected GitHub repo, keyed by the
+    repo's foreign id, so a Cursor can reference it as its `spec.target`.
+  input:
+    connection: Ref<Connection>
+    remoteTarget?: RemoteTarget
+  output: { target: Ref<Obj> }
+  effects: [echo:write]
+```
+
 Effectful sync operations — pull from GitHub, push diverged fields back.
 
 ```mdl
 op SyncGitHubRepositories
+  key: org.dxos.operation.github.syncRepositories
   desc: |
     Reconcile selected GitHub repositories plus their owning organizations,
     members, issues, PRs, and (future) comments with ECHO.
@@ -185,8 +201,8 @@ op SyncGitHubRepositories
     PR status is pull-only (push is intentionally disabled).
     Updates Integration.targets[i].lastSyncAt / lastError per target.
   input:
-    integration: Ref<Integration>
-    repository?: Ref<Project>   # optional: narrow to a single target repo
+    connection: Ref<Connection>   # renamed from `integration`; every binding of the connection is synced
+    priority?: string             # cursor id to sync first
   output: SyncResult
   effects: [echo:read, echo:write, http]
   errors:
@@ -198,6 +214,61 @@ op SyncGitHubRepositories
     issues per repo (ISSUE_CONCURRENCY).  Person upserts are serialized via
     a semaphore + login-keyed cache to prevent duplicates across fibers.
     Pagination: up to 10 pages per paginated endpoint (1 000 items max).
+```
+
+```mdl
+op ImportPullRequest
+  key: org.dxos.operation.github.importPullRequest
+  desc: |
+    Add one pull request to the space, named by a github.com URL or `owner/repo#number`,
+    so a reviewer with a link in hand need not sync the whole repository first.
+    Idempotent by owner/repo/number: a pull request the space already holds is returned
+    as it stands.  The object is filed via SpaceOperation.AddObject, not merely added.
+  input:
+    reference: string             # https://github.com/owner/repo/pull/123, or owner/repo#123
+  output: { pullRequest: Ref<PullRequest>, imported: boolean }
+  effects: [echo:read, echo:write, http]
+  errors:
+    GitHubPullRequestReferenceError: the text names no pull request
+    NetworkError: transient HTTP failure after retries
+
+```
+
+```mdl
+op ImportPullRequestFromSnapshot
+  key: org.dxos.operation.github.importPullRequestFromSnapshot
+  desc: |
+    The browser extension's page action: import the pull request the open page shows.
+    Nothing is extracted from the DOM — the snapshot's `source.url` names the pull request
+    and ImportPullRequest does the rest, so the anonymous-read fallback and the
+    already-held check are shared.  Answers with the object's id, which is the shape the
+    extension bridge acks and the Composer side opens.
+  input:
+    snapshot: PageAction.Snapshot   # the extension's generic page snapshot; only source.url is read
+    target: Database                # the active space's database
+  output: { id: string }
+  effects: [echo:read, echo:write, http]
+  errors:
+    GitHubPullRequestReferenceError: the page's URL names no pull request
+```
+
+```mdl
+op SubmitPullRequestApproval
+  key: org.dxos.operation.github.submitPullRequestApproval
+  desc: |
+    Approve a pull request as the space's GitHub connection.  Where GitHub refuses the
+    review -- 422 on the author's own pull request, 403 on a token without review
+    permission -- the approval is posted as a conversation comment carrying the
+    `<!-- dxos:approval state=approved -->` marker instead, so the verdict is recorded
+    and an agent polling the conversation can still read "good to land".  Any other
+    failure (401, network) surfaces rather than becoming a comment.
+  input:
+    pullRequest: Ref<PullRequest>
+    body?: string                 # review summary, kept above the marker in the comment
+  output: { reviewId?: number, commentId?: number, url?: string, commented: boolean }
+  effects: [echo:read, http]
+  errors:
+    Unauthorized: token missing or revoked
 ```
 
 ## Features
@@ -324,10 +395,62 @@ feat F-7: Error Handling and Resilience
     then: LayoutOperation.AddToast fires an error notification with a human-readable message
 ```
 
+```mdl
+feat F-8: Link Previews
+
+  req F-8.1:
+    when: a document contains a repository, pull-request or issue URL
+    then: githubLinks (contributed via MarkdownCapabilities.ExtensionProvider) renders it as an anchor chip
+
+  req F-8.2:
+    when: the chip is activated
+    then: the plugin's PreviewCapabilities.LinkResolver answers with an in-memory Repo, PullRequest or Issue (@dxos/types), never stored
+
+  req F-8.3: The object comes from a contributed GitHubCapabilities.LinkSource when a host provides one; otherwise it is fetched from the GitHub API with the space's connection token, or anonymously when the space has none.
+
+  req F-8.4: GitHubCard is the CardContent surface for Repo, Issue and PullRequest, so the popover shows reference, state, author, diff size (or default branch) and a link out.
+```
+
+```mdl
+feat F-9: Pull Request Review
+
+  req F-9.1:
+    when: the user runs the "Import pull request" command and names a pull request
+    then: ImportPullRequest files it in the active space and the deck opens it
+
+  req F-9.2: The article's subject is the PullRequest, not its walkthrough — so a pull request with no narration yet opens, showing its state, CI outcome and a "Generate walkthrough" action.
+
+  req F-9.3:
+    when: the space holds a walkthrough of the open pull request
+    then: the article's Walkthrough tab renders its prose and diff chunks, and the toolbar action regenerates rather than generates
+
+  req F-9.4: A Walkthrough opened by id resolves to the same article, through the pull request it narrates.
+
+  req F-9.5:
+    when: the user clicks "Open PR in Composer" in the browser extension on a github.com pull
+      request page
+    then: ImportPullRequestFromSnapshot files that pull request in the active space, and the
+      extension's auto-open setting opens it in the deck
+
+  req F-9.6: The article opens on an Overview tab showing the pull request's live description as markdown, with the harness's Claude Code footer and CI's Composer preview block taken out of the prose.
+
+  req F-9.7: A link into the agent-artifacts R2 bucket renders as a pill that previews its image or video in place, and each such artifact, the Composer preview and the Claude Code session are listed as related cards in a masonry grid.
+
+  req F-9.8: The Overview lists every check run on the head commit, failures first, with its outcome, duration and a link to the provider's logs.
+
+  req F-9.9: The Overview shows the pull request's reference, state, CI outcome and branches as a read-only form in a details card.
+
+  req F-9.10: A Files tab shows one changed file at a time as the walkthrough's own diff chunk, beside a tree of every changed file with its change counts; the toolbar steps to the previous or next file.
+
+  req F-9.11:
+    when: the reader checks a file off, in the tree or with the toolbar's Reviewed action
+    then: the file counts as reviewed in that browser until a push changes it, and the toolbar action moves on to the next file
+```
+
 ## Acceptance
 
 ```mdl
-test T-1: Token account populated on connect
+scenario T-1: Token account populated on connect
   given: user completes GitHub OAuth
   when: onTokenCreated fires
   then:
@@ -336,7 +459,7 @@ test T-1: Token account populated on connect
 ```
 
 ```mdl
-test T-2: Repository discovery is read-only
+scenario T-2: Repository discovery is read-only
   given: valid GitHub integration
   when: GetGitHubRepositories is invoked
   then:
@@ -345,7 +468,7 @@ test T-2: Repository discovery is read-only
 ```
 
 ```mdl
-test T-3: First sync — create Project and Tasks
+scenario T-3: First sync — create Project and Tasks
   given: integration with one selected repo (no prior local mirror)
   when: SyncGitHubRepositories runs
   then:
@@ -356,7 +479,7 @@ test T-3: First sync — create Project and Tasks
 ```
 
 ```mdl
-test T-4: Incremental pull — remote-wins merge
+scenario T-4: Incremental pull — remote-wins merge
   given: integration with a previously synced repo; remote title changed
   when: SyncGitHubRepositories runs
   then:
@@ -365,7 +488,7 @@ test T-4: Incremental pull — remote-wins merge
 ```
 
 ```mdl
-test T-5: Push issue edit
+scenario T-5: Push issue edit
   given: Task.description differs from TaskSnapshot.description; issue is not a PR
   when: SyncGitHubRepositories runs
   then:
@@ -374,7 +497,7 @@ test T-5: Push issue edit
 ```
 
 ```mdl
-test T-6: PR status not pushed
+scenario T-6: PR status not pushed
   given: Task (backed by a PR) status differs from snapshot
   when: SyncGitHubRepositories runs
   then:
@@ -383,7 +506,7 @@ test T-6: PR status not pushed
 ```
 
 ```mdl
-test T-7: Inaccessible repo error surfaced
+scenario T-7: Inaccessible repo error surfaced
   given: integration target whose repo id is not in fetchUserRepos response
   when: SyncGitHubRepositories runs
   then:
@@ -392,7 +515,7 @@ test T-7: Inaccessible repo error surfaced
 ```
 
 ```mdl
-test T-8: Org deduplication
+scenario T-8: Org deduplication
   given: two selected repos with the same owner org
   when: SyncGitHubRepositories runs
   then:
@@ -401,7 +524,7 @@ test T-8: Org deduplication
 ```
 
 ```mdl
-test T-9: Personal-account owner skips org pull
+scenario T-9: Personal-account owner skips org pull
   given: selected repo owned by a GitHub user (not an org)
   when: SyncGitHubRepositories runs
   then:
@@ -410,12 +533,184 @@ test T-9: Personal-account owner skips org pull
 ```
 
 ```mdl
-test T-10: maxDaysBack filters issue window
+scenario T-10: maxDaysBack filters issue window
   given: target with maxDaysBack = 7
   when: SyncGitHubRepositories runs
   then:
     - fetchRepoIssues called with since = (now − 7 days).toISOString()
     - issues older than the window are not fetched
+```
+
+---
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Connect, select a repository, and sync
+  desc: The core round-trip — authorize a GitHub connection, discover repos, materialize and sync one as a Project with its issues as Tasks.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-4.1, F-5.1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a GitHub account reachable for OAuth, owning at least one repo with at least one open issue
+    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Project this test did not create
+  steps:
+    - name: Connect a GitHub account
+      id: connect
+      do: Open the GitHub connector panel (Settings -> Connectors -> GitHub) and complete the OAuth authorization test.
+      capture: connection
+      expect: a Connection object exists with accessToken.account set to the authorized user's GitHub login
+      note: |
+        NO `invoke` — the OAuth redirect and callback are real browser navigation through GitHub's
+        consent screen; the debug port cannot drive it. This step is human-only for any account
+        that has not already authorized the app.
+    - name: Discover repositories
+      do: Open the target picker for the new connection.
+      invoke: [op:GetGitHubRepositories] { connection: $connection.connection }
+      capture: targets
+      expect: the picker lists repos visible to the token, sorted by full_name, and no Organization/Person/Project/Task objects are created yet
+      assert: return $result.targets.length > 0 && !$result.targets.some((t) => /^\d+$/.test(t.id) === false)
+    - name: Select the repository as a sync target
+      do: Pick the target repo from the list and confirm.
+      invoke: [op:MaterializeGitHubTarget] { connection: $connection.connection, remoteTarget: $targets.targets[0] }
+      capture: materialized
+      expect: an empty local root Project now exists, bound to the selected repo
+      assert: return !!$materialized.target
+    - name: Sync the connection
+      do: Click "Sync now" on the connection (or wait for the scheduled sync).
+      invoke: [op:SyncGitHubRepositories] { connection: $connection.connection }
+      capture: synced
+      expect: the Project's fields are populated from the repo, and one Task exists per open/closed issue and PR in that repo
+      assert: return $synced.pulled.projects >= 1 && $synced.pulled.tasks >= 1
+  after:
+    - name: Remove the synced Project and its Tasks
+      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it produced (or delete the containing collection).
+      invoke: org.dxos.operation.space.removeObjects { objects: [$materialized.target] }
+      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+    - name: Disconnect the GitHub account
+      do: In Settings -> Connectors -> GitHub, remove the connection.
+      expect: the Connection object and its stored access token are removed
+```
+
+```mdl
+test QA-2: Local edit pushes back to GitHub
+  desc: A push-direction check — editing a synced Task's title round-trips to the GitHub issue via PATCH.
+  actors: human
+  covers: [F-6.2, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a GitHub account reachable for OAuth, with write access to a repo owning at least one open
+      (non-PR) issue
+    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Project this test did not create
+    - connection: a fresh GitHub Connection, authorized against that account (same human-only
+      OAuth step as QA-1's "Connect a GitHub account")
+    - materialized: the target repo materialized and synced as a Project via
+      op:MaterializeGitHubTarget then op:SyncGitHubRepositories (same steps as QA-1), leaving at
+      least one open (non-PR) Task
+  steps:
+    - name: Edit the task title
+      do: Open the synced Task and change its title.
+      expect: the edit is saved locally
+      note: NO `invoke` — this is an ordinary field edit through the Task surface, not a github operation.
+    - name: Re-sync
+      do: Click "Sync now" on the connection again.
+      invoke: [op:SyncGitHubRepositories] { connection: $given.connection }
+      expect: GitHub shows the issue's title updated to match, and the local TaskSnapshot.title now matches the new value
+      note: |
+        Verify by opening the issue on github.com — SyncGitHubRepositories's snapshot-diff push has
+        no separate read-back operation in this document, so the effect is checked against GitHub
+        itself (Execution Rule 3).
+  after:
+    - name: Revert the title on GitHub
+      do: Edit the issue's title back to its original value directly on github.com, then re-sync.
+      invoke: [op:SyncGitHubRepositories] { connection: $given.connection }
+      expect: the local Task.title reflects the reverted value
+    - name: Remove the synced Project and its Tasks
+      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it
+        produced (or delete the containing collection).
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          refs: [$given.materialized.target,
+            ...(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run()).objects
+              .filter((task) => task.project?.target?.id === $given.materialized.target.target?.id)
+              .map((task) => window.__echo.Ref.make(task))]
+        }
+      note: |
+        `materialized.target` is a Ref, so it travels in `refs`, not `objects`; the synced Tasks
+        are resolved separately because removing the Project does not cascade to them.
+      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+    - name: Disconnect the GitHub account
+      do: In Settings -> Connectors -> GitHub, remove the connection.
+      expect: the Connection object and its stored access token are removed
+```
+
+```mdl
+test QA-3: Open a pull request from the browser extension
+  desc: |
+    The plugin-crx page action, end to end through the operation it names.  Uses a public pull
+    request so no GitHub connection is needed — the import falls back to an anonymous read.
+  actors: both
+  covers: [F-9.5, F-9.3]
+  status: unverified
+  automated:
+    - composer-e2e:crx.spec.ts#Extension page actions › contributes the pull request action to the extension registry
+    - composer-e2e:crx.spec.ts#Extension page actions › imports the pull request the page names
+    - composer-e2e:crx-extension.spec.ts#Extension › opens the pull request the toolbar action is clicked on
+  given:
+    - an identity exists
+    - space: a space is open
+    - no PullRequest with owner "dxos", repo "dxos", number 1 exists — ABORT rather than
+      deleting one this test did not create
+  steps:
+    - name: Open the pull request from the extension
+      do: |
+        On https://github.com/dxos/dxos/pull/1, open the Composer extension side panel and click
+        "Open PR in Composer".  The extension captures the page snapshot and invokes the operation
+        against the active space.
+      invoke: |
+        org.dxos.operation.github.importPullRequestFromSnapshot {
+          snapshot: { source: { url: "https://github.com/dxos/dxos/pull/1", title: "chore: release 1.0.0 by github-actions[bot] - Pull Request #1 - dxos/dxos", clippedAt: "2026-09-22T00:00:00Z" } },
+          target: $given.space.db
+        }
+      capture: imported
+      expect: a PullRequest titled "chore: release 1.0.0" now exists in the space
+      assert: return !!$imported.id
+      note: |
+        Only `source.url` is read — the page title above is ignored, which is the point of the
+        operation taking a snapshot rather than an extraction.
+    - name: Re-invoke on the same pull request
+      do: Click "Open PR in Composer" again on the same page.
+      invoke: |
+        org.dxos.operation.github.importPullRequestFromSnapshot {
+          snapshot: { source: { url: "https://github.com/dxos/dxos/pull/1", title: "chore: release 1.0.0", clippedAt: "2026-09-22T00:00:00Z" } },
+          target: $given.space.db
+        }
+      expect: the same object is returned and the space still holds exactly one copy
+      assert: return $result.id === $imported.id
+    - name: Generate its walkthrough
+      do: Open the imported pull request and click "Generate walkthrough" in the article toolbar.
+      invoke: |
+        org.dxos.operation.github.generateWalkthrough { pullRequest: { "/": "echo://$given.space.id/$imported.id" } }
+      expect: the article renders narrated prose with the change's diff chunks spliced in
+      assert: return !!$result.walkthrough
+      note: |
+        Needs an AI provider configured — the only step here that does. GitHub itself is still read
+        anonymously, so no GitHub connection is required.
+  after:
+    - name: Delete the imported pull request
+      do: Right-click the pull request in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects { objects: [{ "/": "echo://$given.space.id/$imported.id" }], target: $given.space.db }
+      expect: the pull request no longer appears in the space
 ```
 
 ---
@@ -427,7 +722,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -438,7 +733,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -447,8 +742,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]
@@ -473,11 +768,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap            # named input parameters
     output?: TypeExpr           # return type

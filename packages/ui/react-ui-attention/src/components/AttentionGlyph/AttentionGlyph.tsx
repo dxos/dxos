@@ -1,104 +1,82 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type Primitive } from '@radix-ui/react-primitive';
-import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
+import React, { type ComponentPropsWithoutRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-const attentionGlyphStyles = mx(
-  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
-  '[[data-contains-attended=true]_&]:bg-attention-contains',
-  '[[data-attention=true]_&]:bg-accent-bg',
-  '[[data-attention=true]_&]:text-accent-fg',
-  '[[aria-current][data-attention=true]_&]:bg-accent-bg',
-  '[[aria-current][data-attention=true]_&]:text-accent-fg',
-  '[[aria-selected="true"][data-attention=true]_&]:bg-accent-bg',
-  '[[aria-selected="true"][data-attention=true]_&]:text-accent-fg',
-);
+export type AttentionGlyphPresence = 'none' | 'one' | 'many';
 
-const presenceIconStyles = mx('w-3 h-3');
-
-const PresenceOne = () => {
-  return (
-    <svg
-      width='12'
-      height='12'
-      viewBox='0 0 12 12'
-      className={presenceIconStyles}
-      fill='none'
-      xmlns='http://www.w3.org/2000/svg'
-    >
-      <circle cx='6' cy='6' r='2.5' fill='currentColor' />
-    </svg>
-  );
-};
-
-const PresenceMany = () => {
-  return (
-    <svg
-      width='12'
-      height='12'
-      viewBox='0 0 12 12'
-      className={presenceIconStyles}
-      fill='none'
-      xmlns='http://www.w3.org/2000/svg'
-    >
-      <path
-        d='M6.75 8.27311C7.38815 7.72296 7.79212 6.90866 7.79212 6C7.79212 5.09134 7.38815 4.27704 6.75 3.72689C7.06722 3.58122 7.42019 3.5 7.79212 3.5C9.17283 3.5 10.2921 4.61929 10.2921 6C10.2921 7.38071 9.17283 8.5 7.79212 8.5C7.42019 8.5 7.06723 8.41878 6.75 8.27311Z'
-        fill='currentColor'
-      />
-      <circle cx='4.25' cy='6' r='2.5' fill='currentColor' />
-    </svg>
-  );
-};
-
-export const Syncing = () => {
-  const animationProps = useMemo<CSSProperties>(
-    () => ({
-      // Synchronize animations.
-      animationDelay: `-${Date.now() % 2_000}ms`,
-    }),
-    [],
-  );
-
-  return (
-    <div role='status' className='flex items-center'>
-      <Icon
-        icon='ph--circle-notch--bold'
-        size={3}
-        style={animationProps}
-        classNames='text-subdued animate-[spin_2s_linear_infinite]'
-      />
-    </div>
-  );
-};
-
-export type AttentionGlyphProps = {
+export type AttentionGlyphProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'span'>, 'children'>> & {
+  /** The item is the attended one: the glyph fills with the accent. */
   attended?: boolean;
+  /** The attended item is inside this one: the glyph takes the softer contains tint. */
   containsAttended?: boolean;
+  /** Shows a spinner in place of the presence mark. */
   syncing?: boolean;
-  presence?: 'none' | 'one' | 'many';
-} & ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'children'>>;
+  /** How many others are viewing the item. */
+  presence?: AttentionGlyphPresence;
+};
 
-export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
-  ({ presence, attended, syncing, containsAttended, classNames, ...props }, forwardedRef) => {
-    const icon = syncing ? (
-      <Syncing />
-    ) : presence === 'many' ? (
-      <PresenceMany />
-    ) : presence === 'one' ? (
-      <PresenceOne />
-    ) : null;
-
-    return (
-      <div className='flex group' data-attention={attended} data-contains-attended={containsAttended}>
-        <span {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
-          {icon}
-        </span>
-      </div>
-    );
-  },
+const PresenceOne = () => (
+  <svg
+    viewBox='0 0 12 12'
+    fill='none'
+    aria-hidden
+    data-scope='attention-glyph'
+    data-part='mark'
+    className={'dx-attention-glyph-mark'}
+  >
+    <circle cx='6' cy='6' r='2.5' fill='currentColor' />
+  </svg>
 );
+
+const PresenceMany = () => (
+  <svg
+    viewBox='0 0 12 12'
+    fill='none'
+    aria-hidden
+    data-scope='attention-glyph'
+    data-part='mark'
+    className={'dx-attention-glyph-mark'}
+  >
+    <path
+      d='M6.75 8.27311C7.38815 7.72296 7.79212 6.90866 7.79212 6C7.79212 5.09134 7.38815 4.27704 6.75 3.72689C7.06722 3.58122 7.42019 3.5 7.79212 3.5C9.17283 3.5 10.2921 4.61929 10.2921 6C10.2921 7.38071 9.17283 8.5 7.79212 8.5C7.42019 8.5 7.06723 8.41878 6.75 8.27311Z'
+      fill='currentColor'
+    />
+    <circle cx='4.25' cy='6' r='2.5' fill='currentColor' />
+  </svg>
+);
+
+/** Every spinner on the page shares one phase, so a list of syncing items turns together rather than flickering. */
+const Syncing = () => {
+  const style = useMemo<CSSProperties>(() => ({ animationDelay: `-${Date.now() % 2_000}ms` }), []);
+  return <Icon.Icon icon='ph--circle-notch--bold' data-spin='' style={style} />;
+};
+
+/**
+ * A small square marking an item's attention state (attended, or containing the attended item) and, inside it, who
+ * else is viewing it or whether it is syncing. The state is the glyph's own attributes, so it needs no host markup.
+ */
+export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
+  ({ classNames, attended, containsAttended, syncing, presence = 'none', ...props }, forwardedRef) => (
+    <span
+      {...props}
+      data-scope='attention-glyph'
+      data-part='root'
+      data-attended={attended ? '' : undefined}
+      data-contains-attended={containsAttended ? '' : undefined}
+      data-syncing={syncing ? '' : undefined}
+      data-presence={presence}
+      className={mx('dx-attention-glyph', classNames)}
+      ref={forwardedRef}
+    >
+      {syncing ? <Syncing /> : presence === 'many' ? <PresenceMany /> : presence === 'one' ? <PresenceOne /> : null}
+    </span>
+  ),
+);
+
+AttentionGlyph.displayName = 'AttentionGlyph';

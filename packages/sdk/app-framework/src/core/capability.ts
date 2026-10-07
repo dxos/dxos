@@ -2,21 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as FiberRef from 'effect/FiberRef';
-import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
 
-import type * as ActivationEvent from './activation-event';
-import type * as CapabilityManager from './capability-manager';
-import { CapabilityNotFoundError } from './errors';
-import type * as Plugin from './plugin';
+import type * as ActivationEvent from './activation-event.ts';
+import type * as CapabilityManager from './capability-manager.ts';
+import { CapabilityNotFoundError } from './errors.ts';
+import type * as Plugin from './plugin.ts';
 
 //
 // Capability Service Layer
@@ -26,19 +24,18 @@ import type * as Plugin from './plugin';
  * Effect Context.Tag for accessing CapabilityManager via the Effect layer system.
  * This allows capability modules to access the capability manager without having it passed as an argument.
  */
-export class Service extends Context.Tag('@dxos/app-framework/CapabilityManager')<
-  Service,
-  CapabilityManager.CapabilityManager
->() {}
+export class Service extends Context.Service<Service, CapabilityManager.CapabilityManager>()(
+  '@dxos/app-framework/CapabilityManager',
+) {}
 
 /**
  * Module id of the activation currently executing — set by the loader around each module's
  * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
  * timing) can attribute itself to the module without threading the id through every body.
  */
-export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValue.globalValue(
-  Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
-  () => FiberRef.unsafeMake<string | undefined>(undefined),
+export const CurrentModuleId: Context.Reference<string | undefined> = Context.Reference<string | undefined>(
+  '@dxos/app-framework/Capability/CurrentModuleId',
+  { defaultValue: () => undefined },
 );
 
 /**
@@ -47,9 +44,9 @@ export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValu
  * it is running inside. Such a wait only ends at the activation timeout, which the failure
  * supervisor reads as a broken plugin and disables.
  */
-export const ActivatingModuleIds: FiberRef.FiberRef<ReadonlySet<string>> = GlobalValue.globalValue(
-  Symbol.for('@dxos/app-framework/Capability/ActivatingModuleIds'),
-  () => FiberRef.unsafeMake<ReadonlySet<string>>(new Set<string>()),
+export const ActivatingModuleIds: Context.Reference<ReadonlySet<string>> = Context.Reference<ReadonlySet<string>>(
+  '@dxos/app-framework/Capability/ActivatingModuleIds',
+  { defaultValue: () => new Set<string>() },
 );
 
 /**
@@ -85,7 +82,7 @@ export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], nev
  * @returns The first capability implementation, or `Option.none()` if none is contributed.
  */
 export const getOption = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Option.Option<T>, never, Service> =>
-  Effect.map(getAll(interfaceDef), (all) => Option.fromNullable(all[0]));
+  Effect.map(getAll(interfaceDef), (all) => Option.fromNullishOr(all[0]));
 
 /**
  * Wait for a capability to be available.
@@ -126,7 +123,7 @@ export const atomByModule = <T>(
 /**
  * Constructs a layer that will request its interface implementation from the capability manager.
  */
-export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I, T>): Layer.Layer<I, never, Service> =>
+export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Key<I, T>): Layer.Layer<I, never, Service> =>
   Layer.effect(tag, get(interfaceDef).pipe(Effect.orDie));
 
 /**
@@ -145,7 +142,7 @@ export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I,
 export const layerWith = <T, A, E, R>(
   interfaceDef: InterfaceDef<T>,
   build: (value: T) => Layer.Layer<A, E, R>,
-): Layer.Layer<A, E, R | Service> => Layer.unwrapEffect(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
+): Layer.Layer<A, E, R | Service> => Layer.unwrap(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
@@ -226,7 +223,7 @@ export interface Contributions<T> {
 // must be assignable from every concrete `Tag<Example, "the.actual.nsid">`; defaulting to `string`
 // would reject all of them since neither is a subtype of the other under invariance.
 export interface Tag<T, S extends string = any>
-  extends Context.Tag<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
+  extends Context.Key<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
   readonly arity: 'single';
 }
 
@@ -234,11 +231,18 @@ export interface Tag<T, S extends string = any>
  * A multi (registry) capability: `yield* tag` yields the live {@link Contributions} view.
  */
 export interface MultiTag<T, S extends string = any>
-  extends Context.Tag<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
+  extends Context.Key<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
   readonly arity: 'multi';
 }
 
-export type AnyTag = Tag<any, any> | MultiTag<any, any>;
+/**
+ * Either arity of capability tag. One interface rather than a union of the two tag types: in a
+ * constraint position `missingEffectContext` reads the union as an Effect and reports one
+ * constituent's identifier as a missing service.
+ */
+export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, any>, InterfaceDef<any> {
+  readonly arity: Arity;
+}
 
 /**
  * Compile-time error surfaced when the service type is omitted from the curried factory form.
@@ -258,7 +262,7 @@ type NsidParam<S extends string> = [DXN.Name<S>] extends [never]
 // are type-only, so assembling the concrete tag object requires a controlled cast at this boundary
 // (as Effect's own tag constructors do internally). Isolated here so call sites stay cast-free.
 const buildTag = <T, S extends string, A extends Arity>(identifier: S, arity: A) =>
-  Object.assign(Context.GenericTag<CapabilityIdentifier<S, A>, T>(identifier), {
+  Object.assign(Context.Service<CapabilityIdentifier<S, A>, T>(identifier), {
     identifier,
     arity,
   }) as unknown as A extends 'multi' ? MultiTag<T, S> : Tag<T, S>;
@@ -349,7 +353,7 @@ export type ContributionTypeId = typeof ContributionTypeId;
  * Carries one value for a singleton capability, n values for a multi capability.
  */
 // `Id` is a capability identifier (`CapabilityIdentifier<S, A>`) — left unconstrained because
-// `Context.Tag.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
+// `Context.Service.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
 // an explicit bound; the default documents the intended shape.
 export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
   readonly [ContributionTypeId]: Id;
@@ -363,7 +367,7 @@ export type AnyContribution = Contribution;
 
 /**
  * The capability identifier (NSID + arity) of a tag. Extracted from our own {@link Tag}/
- * {@link MultiTag} `S` parameter rather than via Effect's `Context.Tag.Identifier`, which — for a
+ * {@link MultiTag} `S` parameter rather than via Effect's `Context.Service.Identifier`, which — for a
  * generic tag parameter — falls through to its `TagClassShape` branch and yields the raw tag
  * (leaking the service type again). Singleton checked first; a singleton never matches the multi
  * arm and vice versa (the arity brand differs).
@@ -464,7 +468,7 @@ export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [ProvidedI
  * The framework services ({@link Service}, Plugin.Service) and the module scope stay ambient.
  */
 export type Requirements<Requires extends readonly AnyTag[]> =
-  | Context.Tag.Identifier<Requires[number]>
+  | Context.Service.Identifier<Requires[number]>
   | Service
   | Plugin.Service
   | Scope.Scope;
@@ -490,7 +494,26 @@ export interface Module<Options = void> {
   readonly requires?: readonly AnyTag[];
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
+  readonly environments?: readonly Environment[];
 }
+
+/**
+ * A package.json export/import condition a module loads under, via {@link ModuleSpec}'s
+ * `environments` — `'browser'`, `'tauri'`, `'node'` and `'workerd'` in this repo.
+ *
+ * Deliberately an open string rather than a union: conditions are defined by whichever build tool
+ * resolves the package, so the framework has no business enumerating them (a consumer targeting
+ * `deno`, `electron`, or a private condition is equally valid).
+ *
+ * Every condition is treated alike: the list names each runtime the module loads under, so a browser
+ * module that should also reach the desktop app names `'tauri'` too. Omitting `environments` means
+ * the module loads under every condition the plugin names.
+ *
+ * The annotation must be a literal array at the authoring site: barrel generation reads it
+ * statically (variants are emitted per condition, since bundlers follow lazy loaders), so a
+ * computed value would be invisible to the generator.
+ */
+export type Environment = string;
 
 /**
  * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides
@@ -504,6 +527,8 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
   readonly activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   readonly props?: (options: Options) => Props;
+  /** Conditions this module loads under (literal array); omitted means every condition. */
+  readonly environments?: readonly Environment[];
 };
 
 /**
@@ -531,7 +556,7 @@ export const lazyModule = <
     Effect.gen(function* () {
       // Chunk import measured separately from the body: on deferral the import moves to the
       // interaction path wholesale, so its cost has its own axis in the startup profile.
-      const moduleId = (yield* FiberRef.get(CurrentModuleId)) ?? name;
+      const moduleId = (yield* CurrentModuleId) ?? name;
       performance.mark(`module-import:${moduleId}:start`);
       const { default: getModule } = yield* Effect.promise(() => loader());
       performance.mark(`module-import:${moduleId}:end`);
@@ -551,6 +576,7 @@ export const lazyModule = <
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
+    environments: spec.environments,
   });
 };
 
@@ -583,6 +609,7 @@ export const inlineModule = <
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
+    environments: spec.environments,
   });
 };
 
@@ -605,6 +632,8 @@ export type MakerOptions<
   activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   props?: (options: Options) => Props;
+  /** Conditions this module loads under (literal array); omitted means every condition. */
+  environments?: readonly Environment[];
 };
 
 /**
@@ -616,9 +645,18 @@ export type MakerOptions<
  * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
  * owner makes the well-behaved activation the default for every provider (e.g. operation
  * handlers park until an operation is invoked) — startup is not assumed.
+ *
+ * `defaults.environments` does the same for the runtime axis: a family declares the conditions its
+ * modules load under once here (every runtime for schema and operation handlers, `browser` and
+ * `tauri` for UI) rather than making each plugin repeat them. The call site's own `environments`
+ * still wins.
  */
 export const moduleMaker =
-  <C extends AnyTag>(defaultName: string, capability: C, defaults?: { activatesOn?: ActivationEvent.Events }) =>
+  <C extends AnyTag>(
+    defaultName: string,
+    capability: C,
+    defaults?: { activatesOn?: ActivationEvent.Events; environments?: readonly Environment[] },
+  ) =>
   <
     Props = void,
     Options = Props,
@@ -639,6 +677,7 @@ export const moduleMaker =
         provides: [capability, ...extra],
         activatesOn: options?.activatesOn ?? defaults?.activatesOn,
         props: options?.props,
+        environments: options?.environments ?? defaults?.environments,
       },
       loader,
     );
@@ -711,3 +750,5 @@ export const makeModule = <
 >(
   fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
 ): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;
+
+export { CapabilityNotFoundError as NotFoundError } from './errors.ts';

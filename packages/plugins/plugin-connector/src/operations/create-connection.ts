@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 
-import * as Connection from '../types/Connection';
-import * as ConnectorOperation from '../types/ConnectorOperation';
+import { ConnectorOperation } from '#types';
+
+import { ConnectorCommandError } from '../commands/errors.ts';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.CreateConnection> =
   ConnectorOperation.CreateConnection.pipe(
@@ -20,7 +22,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.CreateConnection>
         const accessTokenObj = accessToken.target;
         const db = accessTokenObj ? Obj.getDatabase(accessTokenObj) : undefined;
         if (!db) {
-          return yield* Effect.fail(new Error('No database for accessToken ref'));
+          return yield* Effect.fail(new ConnectorCommandError({ message: 'No database for accessToken ref' }));
         }
 
         return yield* Effect.gen(function* () {

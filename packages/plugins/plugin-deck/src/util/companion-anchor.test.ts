@@ -5,11 +5,14 @@
 import { describe, test } from 'vitest';
 
 import {
+  closeCompanionPlank,
   findAttendedPlank,
   getRenderedPlanks,
+  isCompanionOpen,
+  openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
-} from './companion-anchor';
+} from './companion-anchor.ts';
 
 describe('getRenderedPlanks', () => {
   test('lays out every active plank by default', ({ expect }) => {
@@ -100,5 +103,45 @@ describe('resolveCompanionPlank', () => {
 
   test('a bare variant has no target when the deck is empty', ({ expect }) => {
     expect(resolveCompanionPlank({ subject: '~comments', planks: [], attended: [] })).toBeUndefined();
+  });
+});
+
+describe('the companion flag', () => {
+  test('is per plank while the deck slides', ({ expect }) => {
+    expect(isCompanionOpen(['a'], false, 'a')).toBe(true);
+    expect(isCompanionOpen(['a'], false, 'b')).toBe(false);
+    expect(openCompanionPlank(['a'], false, 'b')).toEqual(['a', 'b']);
+    expect(openCompanionPlank(['a'], false, 'a')).toEqual(['a']);
+    expect(closeCompanionPlank(['a', 'b'], false, 'a')).toEqual(['b']);
+  });
+
+  test('is deck-wide under flatten, so it survives moving to another plank', ({ expect }) => {
+    // The entry names the plank the companion was opened on; flat mode renders one plank at a time, so
+    // navigating to another article must find it still open.
+    expect(isCompanionOpen(['a'], true, 'b')).toBe(true);
+    expect(isCompanionOpen([], true, 'b')).toBe(false);
+    expect(openCompanionPlank(['a'], true, 'b')).toEqual(['b']);
+    expect(closeCompanionPlank(['a'], true, 'b')).toEqual([]);
+  });
+
+  test('an uninitialized deck starts closed while stacked, so a companion never hangs off every plank', ({
+    expect,
+  }) => {
+    expect(isCompanionOpen(undefined, false, 'a')).toBe(false);
+    expect(isCompanionOpen(undefined, false, undefined)).toBe(false);
+  });
+
+  test('an uninitialized deck starts open while flat, matching the single pane it lays out', ({ expect }) => {
+    expect(isCompanionOpen(undefined, true, 'a')).toBe(true);
+  });
+
+  test('opening still works from an uninitialized deck, and only marks the plank asked for', ({ expect }) => {
+    expect(openCompanionPlank(undefined, false, 'a')).toEqual(['a']);
+    expect(isCompanionOpen(['a'], false, 'b')).toBe(false);
+  });
+
+  test('closing an uninitialized deck is a no-op rather than materializing every other plank as open', ({ expect }) => {
+    expect(closeCompanionPlank(undefined, false, 'a')).toEqual([]);
+    expect(closeCompanionPlank(undefined, true, 'a')).toEqual([]);
   });
 });

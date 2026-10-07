@@ -5,9 +5,17 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -24,14 +32,14 @@ type Message = {
   error?: Error;
 };
 
-export type TestPanelProps = ThemedClassName<{
+export type TestPanelProps = Util.ThemedClassName<{
   onInvoke?: (input: unknown) => Promise<unknown>;
 }>;
 
 // TODO(burdon): Need persistent history (currently lost when switching tabs).
-export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
+export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
   ({ classNames, onInvoke, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const [input, setInput] = useState('');
@@ -107,16 +115,17 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
     };
 
     return (
-      <div
-        {...composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
+      <Layout.Flex
+        column
+        {...Util.composableProps(props, { classNames: ['h-full overflow-hidden', classNames] })}
         ref={forwardedRef}
       >
         {/* TODO(burdon): Replace with Thread. */}
         <MessageThread ref={scrollerRef} state={state} history={history} />
         {/* TODO(burdon): Replace with Form based on the function's input schema. */}
         <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Input.Root
               ref={inputRef}
               autoFocus
               placeholder={t('function-request.placeholder')}
@@ -124,11 +133,11 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
-          </Input.Root>
-          <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-          <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
+          </Field.Root>
+          <Button.Root icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+          <Button.Root icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
         </Toolbar.Root>
-      </div>
+      </Layout.Flex>
     );
   },
 );
@@ -140,26 +149,28 @@ type MessageThreadProps = {
   history: Message[];
 };
 
+const MESSAGE_COLS = ['var(--dx-rail-item)', 'fill', 'var(--dx-rail-item)'] as const;
+
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history }: MessageThreadProps, forwardedRef) => {
     return (
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
-            <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
+            <Layout.Grid key={i} cols={MESSAGE_COLS}>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
               <div className='overflow-auto'>
                 <MessageItem message={message} />
               </div>
-            </div>
+            </Layout.Grid>
           ))}
 
           {state === 'pending' && (
-            <div className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
+            <Layout.Grid cols={MESSAGE_COLS}>
               <div className='p-1'>
-                <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
+                <Icon.Icon icon='ph--spinner--regular' size='xl' spin />
               </div>
-            </div>
+            </Layout.Grid>
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -167,26 +178,20 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   },
 );
 
-const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
+const MessageItem = ({ classNames, message }: Util.ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface overflow-auto';
+  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface';
   return (
-    <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
+    <Layout.Flex classNames={[type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames]}>
       {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}
 
       {text !== undefined && (
-        <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
-          {text || '\u00D8'}
-        </div>
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-bg')}>{text || '\u00D8'}</div>
       )}
 
       {data && <JsonHighlighter data={data} classNames={mx(wrapper, 'text-xs')} />}
-    </div>
+    </Layout.Flex>
   );
 };
 
-const RobotAvatar = () => (
-  <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
-  </Avatar.Root>
-);
+const RobotAvatar = () => <Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />;

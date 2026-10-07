@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as Routine from './types/Routine';
-export * as RoutineCapabilities from './types/RoutineCapabilities';
-export * as RoutineEvents from './types/RoutineEvents';
-export * as RoutineOperation from './types/RoutineOperation';
-export * from './meta';
-export * from './paths';
-export * from './util';
+export * as RoutinePlugin from './RoutinePlugin.ts';
+export * from '#types';
+export * as Hooks from './Hooks.ts';
+export * as InstructionsEditor from './InstructionsEditor.ts';
+export * as RoutinePath from './RoutinePath.ts';
+export * as TemplateEditor from './TemplateEditor.ts';
+export * as Wire from './Wire.ts';

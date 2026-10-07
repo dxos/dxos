@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-freeq",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS plugin integrating freeq (IRCv3-over-WebSocket, Bluesky/ATProto auth) as a live channel backend for plugin-thread.",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -25,9 +33,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/FreeqPlugin.ts",
-      "types": "./dist/types/src/FreeqPlugin.d.ts",
-      "default": "./dist/lib/FreeqPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -42,10 +50,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./FreeqEvents": {
+      "source": "./src/FreeqEvents.ts",
+      "types": "./dist/types/src/FreeqEvents.d.ts",
+      "import": "./dist/lib/ns/FreeqEvents.mjs"
+    },
+    "./FreeqPlugin": {
+      "source": "./src/FreeqPlugin.ts",
+      "types": "./dist/types/src/FreeqPlugin.d.ts",
+      "import": "./dist/lib/FreeqPlugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -69,8 +82,6 @@
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
@@ -81,7 +92,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

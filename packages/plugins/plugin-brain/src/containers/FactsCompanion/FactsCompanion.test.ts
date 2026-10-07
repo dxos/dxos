@@ -4,13 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { queryFacts } from './use-facts';
+import { queryFacts } from './use-facts.ts';
 
 const mk = (over: Partial<RDF.Fact> & Pick<RDF.Fact, 'id'>): RDF.Fact => ({
-  assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
+  assertion: {
+    subject: { kind: 'entity', entity: 'alice' },
+    predicate: 'travelsTo',
+    object: { kind: 'entity', entity: 'paris' },
+  },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
   attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',

@@ -9,14 +9,14 @@ import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
-import * as Kanban from '../types/Kanban';
-import * as KanbanConstants from '../types/KanbanConstants';
+import { Kanban, KanbanConstants } from '#types';
+
 import {
   computeColumnStructure,
   computeItemArrangement,
   getOrderByColumnFromArrangement,
   getOrderFromArrangement,
-} from './arrangement';
+} from './arrangement.ts';
 
 const selectOptions = [
   { id: KanbanConstants.UNCATEGORIZED_VALUE, title: 'Uncategorized', color: 'neutral' },

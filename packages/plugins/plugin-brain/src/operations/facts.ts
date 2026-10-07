@@ -4,10 +4,11 @@
 
 import { type RDF } from '@dxos/pipeline-rdf';
 
-import type * as BrainOperation from '../types/BrainOperation';
+import { BrainOperation } from '#types';
 
 /** Display form of a term: the preserved surface label, else the slug; literals render verbatim. */
-export const formatTerm = (term: RDF.Term): string => ('entity' in term ? (term.label ?? term.entity) : term.literal);
+export const formatTerm = (term: RDF.Term): string =>
+  term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 /** Projects a stored fact onto the LLM-facing {@link BrainOperation.CompactFact} shape. */
 export const toCompactFact = (fact: RDF.Fact): BrainOperation.CompactFact => ({

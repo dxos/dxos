@@ -2,80 +2,73 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+//
+// Assistant-domain story harness, layered on `createStoryDecorators` from `@dxos/storybook-testing`
+// (which owns the generic substrate: theme/layout, the plugin manager, client init/seeding/snapshot
+// import, and the runtime-layout atom). This wrapper adds what is assistant-specific: the assistant
+// plugin stack, chat/agent creation, skill binding, and the scripted (offline) model.
+//
+
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
-import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import {
-  Agent,
-  AgentHandlers,
-  AgentSkill,
-  DelegationHandlers,
-  DelegationSkill,
-  PlanningHandlers,
-  PlanningSkill,
-  makeDelegationStrategy,
-} from '@dxos/assistant-toolkit';
-import { type Space } from '@dxos/client/echo';
-import { persistentClientServices } from '@dxos/client/testing';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as DelegationStrategy from '@dxos/assistant-toolkit/DelegationStrategy';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Project from '@dxos/compute/Project';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
-import { log } from '@dxos/log';
-import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
-import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
+import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
-import { type Client, Config } from '@dxos/react-client';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
+import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
-import { type ModuleLayout, StoryLayout } from '@dxos/storybook-testing';
+import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storybook-testing';
 import { Outline, Task, TaskSet } from '@dxos/types';
-import { isNonNullable } from '@dxos/util';
+import { Merge, isNonNullable } from '@dxos/util';
 
-import { moduleSurfaces } from '../modules';
-import { initClientFromSpaceSnapshot } from './snapshot';
+import { moduleSurfaces } from '../modules/index.ts';
+import { CalculatorHandlers, CalculatorSkill } from './calculator.ts';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -105,225 +98,79 @@ export const config = {
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
-};
-
-type LazyPluginsResult = {
-  plugins: Plugin.Plugin[];
-  types?: any[];
-};
-
-type DecoratorsProps = {
-  plugins?: Plugin.Plugin[];
-  lazyPlugins?: () => Promise<LazyPluginsResult>;
-  accessTokens?: AccessToken.AccessToken[];
-  /** Import a `.dx.json` space archive instead of creating an empty space. */
-  importSnapshot?: () => Promise<unknown>;
-  onInit?: (props: { client: Client; space: Space }) => Promise<ModuleLayout | void>;
-  /** Skill-definition keys to clone into the space and bind into the latest chat's context. */
-  skills?: string[];
+  /** A local EDGE stack (`moon run edge:dev` in dxos/edge): every worker behind :8787, ai-service under `/ai`. */
+  edgeLocal: new Config({
+    runtime: {
+      // As `configPreset({ edge: 'local' })`: without these the client never replicates the space to EDGE.
+      client: {
+        edgeFeatures: {
+          signaling: true,
+          subductionReplicator: true,
+          feedReplicator: true,
+        },
+      },
+      services: {
+        edge: { url: 'http://localhost:8787' },
+        ai: { server: 'http://localhost:8787/ai' },
+      },
+    },
+  }),
   /**
-   * Replace the AI service with a scripted (offline, deterministic) model — see
-   * `ScriptedLanguageModel`. Makes the full-stack story runnable without a network AI service,
-   * e.g. from a `play` function in CI; routed scripts can drive cooperating sessions
-   * (supervisor + sub-agents).
+   * Persistent OPFS storage with no EDGE: the client gates every EDGE layer on an edge URL, so
+   * leaving it out keeps replication, signaling and agents off and a perf run measures only the
+   * local stack. Only for scripted stories, since the AI service it names is never reached.
    */
-  scripted?: ScriptedLanguageModel.Script;
-} & (Omit<ClientOptions.ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
-  Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
-
-/**
- * Builds the full plugin list for the plugin manager.
- */
-const buildPluginManagerOptions = ({
-  types = [],
-  plugins = [],
-  accessTokens = [],
-  importSnapshot,
-  onInit,
-  onChatCreated,
-  createAgent,
-  config,
-  scripted,
-  ...props
-}: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => {
-  // The `persistent` config preset (see `config.persistent` below) flags itself via
-  // `storage.persistent`; only then do we pay for DEDICATED_WORKER + a dedicated/coordinator
-  // worker pair — every other preset (`remote`/`local`) stays a plain ephemeral client.
-  const clientServices = config?.values.runtime?.client?.storage?.persistent
-    ? persistentClientServices(config)
-    : { config };
-
-  // Shared per-story: `onInit` fills the holder during client-init; the setup module (which holds
-  // the AtomRegistry) copies it into `layoutAtom`, contributed as `StoryLayout.Atom` for the generic
-  // `ModuleContainer` to read.
-  const layoutHolder: { current?: ModuleLayout } = {};
-  const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
-
-  return {
-    // SetupSchema registers ECHO schemas so plugin-scoped types are available in stories.
-    // SetupSettings causes plugins (e.g. AssistantPlugin) to contribute settings capabilities
-    // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
-    plugins: [
-      ...corePlugins(),
-      ClientPlugin({
-        types: [
-          AccessToken.AccessToken,
-          Assistant.Chat,
-          Collection.Collection,
-          Outline.Outline,
-          Task.Task,
-          TaskSet.TaskSet,
-          Text.Text,
-          Skill.Skill,
-          Operation.PersistentOperation,
-          Markdown.Document,
-          Instructions.Instructions,
-          Trigger.Trigger,
-          ...types,
-        ],
-        onClientInitialized: ({ client }) =>
-          Effect.gen(function* () {
-            log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
-            // Abort if already initialized.
-            if (client.halo.identity.get()) {
-              return;
-            }
-
-            if (importSnapshot) {
-              yield* initClientFromSpaceSnapshot(importSnapshot)({ client });
-              const space = client.spaces.get()[0];
-              invariant(space, 'No space available after snapshot import.');
-
-              for (const accessToken of accessTokens) {
-                space.db.add(Obj.clone(accessToken));
-              }
-
-              if (onInit) {
-                layoutHolder.current = (yield* Effect.promise(() => onInit({ client, space }))) || undefined;
-              }
-
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
-              return;
-            }
-
-            const { defaultSpace: space } = yield* initializeIdentity(client);
-
-            // Add tokens.
-            for (const accessToken of accessTokens) {
-              space.db.add(Obj.clone(accessToken));
-            }
-
-            yield* Effect.promise(() => space.db.flush({ indexes: true }));
-            if (onInit) {
-              layoutHolder.current = (yield* Effect.promise(() => onInit({ client, space }))) || undefined;
-            }
-            yield* Effect.promise(() => space.db.flush({ indexes: true }));
-          }),
-        ...clientServices,
-        ...props,
-      }),
-
-      // User plugins.
-      PreviewPlugin(),
-      RoutinePlugin(),
-      AssistantPlugin(
-        scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
-      ),
-      TranscriptionPlugin(),
-
-      // Test-specific.
-      StorybookPlugin({}),
-      StoryPlugin({ onChatCreated, createAgent, layoutAtom, layoutHolder }),
-      ...plugins,
-    ],
-  };
+  offlinePersistent: new Config({
+    runtime: {
+      client: {
+        storage: {
+          persistent: true,
+        },
+        edgeFeatures: {
+          feedReplicator: false,
+          subductionReplicator: false,
+          signaling: false,
+          agents: false,
+        },
+      },
+      services: {
+        ai: SERVICES_CONFIG.REMOTE.ai,
+      },
+    },
+  }),
 };
 
-/**
- * Inner component that creates the plugin manager and renders the app.
- * Separated to respect React hooks rules (hooks must be called unconditionally).
- */
-const PluginManagerHost = ({
-  options,
-  children,
-  contextId,
-}: {
-  options: WithPluginManagerOptions;
-  children: ReactNode;
-  contextId: string;
-}) => {
-  const manager = useMemo(() => {
-    const pluginManager = PluginManager.make({
-      pluginLoader: () => Effect.die(new Error('Not implemented')),
-      plugins: options.plugins ?? [],
-      enabled: (options.plugins ?? []).map(({ meta }) => meta.profile.key),
-    });
-
-    // `useApp` contributes these too, but from an effect registered AFTER this component's own —
-    // which kicks off activation — so the startup pass would reach a module requiring `AtomRegistry`
-    // with no provider registered and nothing to wait for. Contribute at construction instead.
-    pluginManager.capabilities.contribute({
-      interface: Capabilities.PluginManager,
-      implementation: pluginManager,
-      module: 'org.dxos.app-framework.plugin-manager',
-    });
-    pluginManager.capabilities.contribute({
-      interface: Capabilities.AtomRegistry,
-      implementation: pluginManager.registry,
-      module: 'org.dxos.app-framework.atom-registry',
-    });
-
-    return pluginManager;
-  }, [options]);
-
-  useEffect(() => {
-    const [capability] = CapabilityManager.expandContributions([
-      Capability.contribute(Capabilities.ReactRoot, {
-        id: contextId,
-        root: () => <>{children}</>,
-      }),
-    ]);
-
-    manager.capabilities.contribute({
-      interface: capability.interface,
-      implementation: capability.implementation,
-      module: 'org.dxos.app-framework.with-plugin-manager.lazy',
-    });
-
-    // A story mounts one surface, so no demand ever reaches the modules gated behind it. The
-    // `withPluginManager` path does this for us; this lazy path builds its own manager and so
-    // must do it too, or Idle-gated contributions (assistant settings) never land and the first
-    // strict `useAtomCapability` read throws.
-    EffectEx.runDetached(activateDemandGatedModules(manager));
-
-    return () => {
-      manager.capabilities.remove(capability.interface, capability.implementation);
-      void EffectEx.runAndForwardErrors(manager.shutdown());
-    };
-  }, [manager, contextId, children]);
-
-  // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
-  // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy
-  // `withPluginManager` path forwards them automatically).
-  const App = useApp({ pluginManager: manager, setupEvents: options.setupEvents });
-  return <App />;
-};
+type DecoratorsProps = Merge<
+  {
+    /** Skill-definition keys to clone into the space and bind into the latest chat's context. */
+    skills?: string[];
+    /**
+     * Replace the AI service with a scripted (offline, deterministic) model — see
+     * `ScriptedLanguageModel`. Makes the full-stack story runnable without a network AI service,
+     * e.g. from a `play` function in CI; routed scripts can drive cooperating sessions
+     * (supervisor + sub-agents).
+     */
+    scripted?: ScriptedLanguageModel.Script;
+  },
+  Omit<StoryDecoratorsProps, 'Wrapper' | 'setupEvents'>,
+  Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent' | 'onReady'>
+>;
 
 /**
- * Decorator body that binds story-declared skill keys into the latest chat's context. Lives as a
- * decorator (owned by {@link createDecorators}) rather than a container wrapper, so stories render
- * the generic `ModuleContainer` directly.
+ * Decorator body that binds story-declared skill keys into the latest chat's context. Rendered by
+ * the shared harness inside the plugin-manager context (via the `Wrapper` prop), so its capability
+ * hooks always resolve.
  */
 const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
-  // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
+  // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
+  const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!space) {
       return;
     }
@@ -332,121 +179,125 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
       return;
     }
 
-    const registry = makeRegistry({ initial: skillDefinitions.map((def) => def.make()) });
-    const skillObjects = skills
-      .map((key) => {
-        const skill = registry
-          .query(Filter.type(Skill.Skill))
-          .runSync()
-          .find((candidate) => Obj.getMeta(candidate).key === key);
-        return skill ? space.db.add(Obj.clone(skill)) : undefined;
-      })
-      .filter(isNonNullable);
-
     const feed = await chat.feed.load();
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed, runtime, registry: atomRegistry });
-    await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
+    await binder.use(async (binder) => {
+      // The effect re-runs whenever the chat query or the skill definitions change, and each run would
+      // otherwise clone (and bind) a fresh copy under a new URI — the duplicate skills ListSkills reported.
+      const bound = new Set(binder.getSkills().map((skill) => Obj.getMeta(skill).key));
+      const missing = skills.filter((key) => !bound.has(key));
+      if (missing.length === 0) {
+        return;
+      }
+
+      const registry = makeRegistry({ initial: skillDefinitions.map((def) => def.make()) });
+      const skillObjects = missing
+        .map((key) => {
+          const skill = registry
+            .query(Filter.type(Skill.Skill))
+            .runSync()
+            .find((candidate) => Obj.getMeta(candidate).key === key);
+          return skill ? space.db.add(Obj.clone(skill)) : undefined;
+        })
+        .filter(isNonNullable);
+      await binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) });
+    });
   }, [space, chats, skills, skillDefinitions]);
 
   return <>{children}</>;
 };
 
-/**
- * Create storybook decorators.
- * Supports lazy plugin loading via the `lazyPlugins` option.
- */
-export const createDecorators = ({ config: configProp = config.remote, lazyPlugins, ...props }: DecoratorsProps) => {
-  // Theme + fullscreen layout are common to every story group, so the factory owns them (outermost
-  // decorators) rather than each `meta` repeating a `storyDecorators` array. The plugin manager and
-  // the optional skill binder both render via `PluginManagerHost` (lazy or not) so the binder's
-  // capability hooks always resolve inside the manager context — a trailing decorator would sit
-  // outside it.
-  const host = ((Story: FC, context: { id: string }) => {
-    // Non-lazy stories start with options ready ({ plugins: [] } is truthy); lazy stories wait.
-    const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(lazyPlugins ? null : { plugins: [] });
-    useEffect(() => {
-      if (lazyPlugins) {
-        void lazyPlugins().then(setLazyResult);
-      }
-    }, []);
-
-    const options = useMemo(
-      () =>
-        lazyResult
-          ? buildPluginManagerOptions({
-              ...props,
-              config: configProp,
-              plugins: [...(props.plugins ?? []), ...(lazyResult.plugins ?? [])],
-              types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
-            })
-          : null,
-      // `props`/`lazyPlugins` are stable per createDecorators call; the captured config must
-      // still invalidate the memo if a recreated decorator carries a different one.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [lazyResult, configProp],
-    );
-
-    if (!options) {
-      return null;
-    }
-
-    return (
-      <PluginManagerHost options={options} contextId={context.id}>
-        {props.skills?.length ? (
-          <SkillBinder skills={props.skills}>
-            <Story />
-          </SkillBinder>
-        ) : (
-          <Story />
-        )}
-      </PluginManagerHost>
-    );
-  }) as any;
-
-  return [withTheme(), withLayout({ layout: 'fullscreen' }), host];
-};
+/** Maps the assistant-domain props onto the shared harness props. */
+const toStoryDecoratorsProps = ({
+  config: configProp = config.remote,
+  skills,
+  scripted,
+  createAgent,
+  types = [],
+  plugins = [],
+  onChatCreated,
+  onReady,
+  ...props
+}: DecoratorsProps): StoryDecoratorsProps => ({
+  ...props,
+  config: configProp,
+  types: [
+    AccessToken.AccessToken,
+    Chat.Chat,
+    Collection.Collection,
+    Outline.Outline,
+    Task.Task,
+    TaskSet.TaskSet,
+    Text.Text,
+    Skill.Skill,
+    Operation.PersistentOperation,
+    Project.Project,
+    Markdown.Document,
+    Instructions.Instructions,
+    Trigger.Trigger,
+    ...types,
+  ],
+  plugins: [
+    // Registers the document card surface. Without it a seeded `Markdown.Document` has no card of
+    // its own and falls through to `plugin-preview`'s JSON dump, which is the last-resort surface.
+    MarkdownPlugin.make(),
+    PreviewPlugin.make(),
+    RoutinePlugin.make(),
+    AssistantPlugin.make(
+      scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
+    ),
+    TranscriptionPlugin.make(),
+    StoryPlugin({ onChatCreated, createAgent, onReady }),
+    ...plugins,
+  ],
+  Wrapper: skills?.length ? ({ children }) => <SkillBinder skills={skills}>{children}</SkillBinder> : undefined,
+});
 
 /**
- * Creates access tokens from environment variables.
- * @param tokens - Record of token sources mapped to their VITE_ prefixed environment variable values
- * @returns Array of AccessToken objects for non-empty token values
- * @example
- * ```tsx
- * const tokens = accessTokensFromEnv({
- *   'exa.ai': process.env.VITE_EXA_API_KEY,
- *   'linear.app': process.env.VITE_LINEAR_API_KEY
- * });
- * ```
- * @note All environment variables should use the VITE_ prefix for proper Vite bundling
+ * Create storybook decorators for the assistant story groups: the shared harness plus the
+ * assistant plugin stack, chat/agent creation, and skill binding. The function form gives seeding
+ * code (e.g. `onInit`) access to the story's `args`.
  */
-
-export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
-  return Object.entries(tokens)
-    .filter(([, token]) => !!token)
-    .map(([source, token]) => Obj.make(AccessToken.AccessToken, { source, token: token! }));
-};
+export const createDecorators = <Args = any,>(
+  input: DecoratorsProps | ((context: { args: Args }) => DecoratorsProps),
+) =>
+  createStoryDecorators<Args>(
+    typeof input === 'function' ? (context) => toStoryDecoratorsProps(input(context)) : toStoryDecoratorsProps(input),
+  );
 
 type CreateAgentOptions = {
   name?: string;
   instructions?: string;
+
+  /**
+   * Name of a project to parent the agent to. Delegation files tasks into the project's task set —
+   * a conversation with no project above it has nowhere durable to promote to, so a story that
+   * delegates has to supply one.
+   */
+  project?: string;
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContext.Binder }) => Promise<void>;
-
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.
    * Accepts `true` for defaults, or an options object for name/instructions.
    */
   createAgent?: boolean | CreateAgentOptions;
 
-  /** Shared with `buildPluginManagerOptions` — see the comment where it is created. */
-  layoutAtom: Atom.Writable<ModuleLayout | undefined>;
-  layoutHolder: { current?: ModuleLayout };
+  onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
+
+  /**
+   * Runs once the space is available and operations can be invoked — for seeding that goes through
+   * plugin operations (creating an agent, its chats) rather than writing objects directly.
+   */
+  onReady?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
 };
+
+/** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
+const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.makeMeta({
@@ -459,11 +310,6 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     provides: [Capabilities.ReactSurface],
     activate: () => Effect.succeed([Capability.contribute(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
-  Plugin.addModule(({ layoutAtom }) => ({
-    id: 'com.example.plugin.testing.module.layout',
-    provides: [StoryLayout.Atom],
-    activate: () => Effect.succeed([Capability.contribute(StoryLayout.Atom, layoutAtom)]),
-  })),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
     // Startup, not the implicit Idle: `AgentServiceSpec` reads `AgentDelegationStrategy` through
@@ -478,27 +324,34 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contributeAll(AppCapabilities.SkillDefinition, [MarkdownSkill, PlanningSkill, DelegationSkill]),
+        Capability.contributeAll(AppCapabilities.SkillDefinition, [
+          MarkdownSkill,
+          PlanningSkill,
+          DelegationSkill,
+          CalculatorSkill,
+        ]),
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
-        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationStrategy.make()),
         Capability.contributeAll(Capabilities.OperationHandler, [
-          MarkdownOperationHandlerSet,
-          PlanningHandlers,
-          DelegationHandlers,
-          AgentHandlers,
+          MarkdownOperationHandlerSet.handlers,
+          PlanningSkill.Handlers,
+          DelegationSkill.Handlers,
+          AgentOperationHandlerSet.handlers,
           ExampleHandlers,
+          CalculatorHandlers,
         ]),
       ]),
   }),
-  Plugin.addModule(({ createAgent, onChatCreated, layoutAtom, layoutHolder }) => ({
+  Plugin.addModule(({ createAgent, onChatCreated, onReady }) => ({
     id: 'com.example.plugin.testing.module.setup',
     // Runtime event: the space isn't available until the client observes it.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
     requires: [Capabilities.OperationInvoker, ClientCapabilities.Client, Capabilities.AtomRegistry],
     activate: Effect.fnUntraced(function* () {
-      const { invoke } = yield* Capabilities.OperationInvoker;
+      const invoker = yield* Capabilities.OperationInvoker;
+      const { invoke } = invoker;
       const client = yield* ClientCapabilities.Client;
       const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
@@ -507,6 +360,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
       // activation context resolves a different AtomRegistry than the UI).
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
+
+      if (onReady) {
+        yield* Effect.tryPromise(() => onReady({ db: space.db, invoker }));
+        return;
+      }
 
       // Create agent.
       if (createAgent) {
@@ -524,6 +382,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
             ),
           ),
         );
+        if (agentOptions.project) {
+          const project = space.db.add(Project.make({ name: agentOptions.project }));
+          Obj.setParent(agent, project);
+        }
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
@@ -531,39 +393,48 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
           invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+          const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }
       } else {
+        // A returning profile reopens the chat this harness seeded it with; creating one per load would
+        // make every reload write a chat, its feed and its bindings. Matched by key rather than by any
+        // chat, since a seeded space can hold earlier chats of its own.
+        const [existing] = yield* Effect.promise(() =>
+          space.db.query(Filter.foreignKeys(Chat.Chat, [HARNESS_CHAT_KEY])).run(),
+        );
+        if (existing) {
+          return;
+        }
+
         // Create the initial chat via the canonical CreateChat operation (which binds the default
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
-        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        Obj.update(chat, (chat) => {
+          Obj.getMeta(chat).keys.push(HARNESS_CHAT_KEY);
+        });
+        // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
+        space.db.add(chat);
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+          const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }
-      }
-
-      // Publish the story layout (built by `onInit`) now that the space + objects exist.
-      if (layoutHolder.current) {
-        const registry = yield* Capabilities.AtomRegistry;
-        registry.set(layoutAtom, layoutHolder.current);
       }
     }),
   })),

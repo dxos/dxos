@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { toJsonSchema } from '../JsonSchema';
-import { Format } from './format';
-import { TypeEnum, TypeFormat, getTypeEnum } from './types';
+import { toJsonSchema } from '../JsonSchema/index.ts';
+import { Format } from './format.ts';
+import { TypeEnum, TypeFormat, getTypeEnum } from './types.ts';
 
 describe('formats', () => {
   test('annotations', ({ expect }) => {
@@ -31,7 +31,7 @@ describe('formats', () => {
       birthday: '1999-06-11',
     };
 
-    const validate = Schema.validateSync(TestSchema);
+    const validate = Schema.decodeSync(Schema.toType(TestSchema));
     validate(data);
 
     {

@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { Database } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -18,8 +18,8 @@ export const PDS_NODE_TYPE = `${meta.profile.key}.pds`;
  */
 export const PDS_URL_KEY = 'pds';
 
-/** Synthetic subject carried by the PDS node; its space scopes the atproto connections. */
-export type PdsSubject = { type: string; space: Space };
+/** Synthetic subject carried by the PDS node; its space's database scopes the atproto connections. */
+export type PdsSubject = { type: string; db: Database.Database };
 
 export const isPdsSubject = (data: unknown): data is PdsSubject =>
-  Predicate.isRecord(data) && data.type === PDS_NODE_TYPE && isSpace(data.space);
+  Predicate.isObject(data) && data.type === PDS_NODE_TYPE && Database.isDatabase(data.db);

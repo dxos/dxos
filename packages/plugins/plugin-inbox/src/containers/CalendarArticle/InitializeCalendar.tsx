@@ -4,21 +4,20 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
+import { Initialize } from '#components';
 import { meta } from '#meta';
-
-import { Initialize } from '../../components';
-import type * as Calendar from '../../types/Calendar';
+import { Calendar } from '#types';
 
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;
 };
 
-export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarProps>(
+export const InitializeCalendar = Util.composable<HTMLDivElement, InitializeCalendarProps>(
   ({ calendar, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     return (
       <Initialize
         {...props}

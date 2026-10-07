@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Trip from '../types/Trip';
+import { Trip } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -23,11 +23,14 @@ export default Capability.makeModule(
               ? (props as { name: string }).name
               : undefined;
           const object = Trip.make({ name });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

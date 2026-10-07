@@ -4,15 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import { usePostContentAtom } from '#atoms';
+import { Subscription } from '#types';
 
-import * as Subscription from '../../types/Subscription';
-import { formatDate, getImageUrl } from '../../util';
-import { contentHasImage, dedupeImagesInMarkdown } from './dedupe-images';
+import { formatDate, getImageUrl } from '../../util/index.ts';
+import { contentHasImage, dedupeImagesInMarkdown } from './dedupe-images.ts';
 
 export type PostContentProps = {
   /** Post to render. */
@@ -27,7 +27,7 @@ export type PostContentProps = {
  * entry for this Post id, falling back to `post.description`) → meta line
  * (author · …extra · published).
  */
-export const PostContent = composable<HTMLDivElement, PostContentProps>(
+export const PostContent = Util.composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {
     const meta = [post.author, ...metadata, formatDate(post.published)].filter(Boolean).join(' · ');
     const title = post.title;
@@ -56,12 +56,12 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
     );
 
     return (
-      <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+      <ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='flex flex-col gap-3 p-4'>
           {title && <h1 className='text-xl font-semibold'>{title}</h1>}
           {showHero && <img src={imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />}
           {content && <MarkdownView content={content} />}
-          {meta && <div className='text-xs text-subdued'>{meta}</div>}
+          {meta && <div className='text-xs text-fg-subtle'>{meta}</div>}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );

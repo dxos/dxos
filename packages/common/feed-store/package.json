@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -50,7 +50,6 @@
     "streamx": "catalog:"
   },
   "devDependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/random": "workspace:*",
@@ -65,10 +64,10 @@
   "beast": {
     "classDiagrams": [
       {
-        "root": "src/feed-store.ts"
+        "root": "src/hypercore-store.ts"
       },
       {
-        "root": "src/feed-iterator.ts"
+        "root": "src/hypercore-iterator.ts"
       }
     ]
   }

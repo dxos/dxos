@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type ReactVirtualizerOptions, type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type FC,
@@ -18,15 +17,17 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { type GetId } from '@dxos/react-ui-dnd';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+import { type Axis } from '@dxos/ui-types';
 
-import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks';
-import { useMosaicContainerContext } from './MosaicContainerContext';
-import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
-import { styles } from './styles';
-import { type MosaicTileProps } from './Tile';
+import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks/index.ts';
+import { useMosaicContainerContext } from './MosaicContainerContext.ts';
+import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder.tsx';
+import { styles } from './styles.ts';
+import { type MosaicTileProps } from './Tile.tsx';
 
 //
 // Mosaic Drag-and-drop
@@ -46,18 +47,22 @@ import { type MosaicTileProps } from './Tile';
 // - [Placeholder 3.5]
 //
 // Implementation Notes
-// - We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out composible aspects (e.g., Focus, Mosaic, etc.)
-// - NOTE: Use Slottable only if needed to disambiguate; otherwise a suspected Radix bug causes compositional problems.
+// - `asChild` composition (see the composite-components skill) factors out composable aspects (e.g., Focus, Mosaic, etc.)
 
 const MOSAIC_STACK_NAME = 'MosaicStack';
 
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type MosaicStackProps<TData = any> = ThemedClassName<
+type MosaicStackProps<TData = any> = Util.ThemedClassName<
   {
     role?: string;
     orientation?: Axis;
     getId: GetId<TData>;
+    /**
+     * The React key of an item's tile, when a tile should outlive the item it shows (a slot that shows
+     * whichever item is current keeps its DOM as the item changes). Defaults to `getId`.
+     */
+    getKey?: GetId<TData>;
     items?: readonly TData[];
     scrollIntoView?: boolean;
     Tile: MosaicStackTileComponent<TData>;
@@ -68,11 +73,12 @@ type MosaicStackProps<TData = any> = ThemedClassName<
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
-const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
+const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
   (
     {
       orientation: orientationProp = 'vertical',
       getId,
+      getKey = getId,
       items,
       scrollIntoView = true,
       Tile,
@@ -133,7 +139,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     const composedRef = useComposedRefs(rootRef, forwardedRef);
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           role: 'list',
           classNames: [
             'flex',
@@ -145,7 +151,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       >
         {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
         {visibleItems?.map((item, index) => (
-          <Fragment key={getId(item)}>
+          <Fragment key={getKey(item)}>
             <Tile
               id={getId(item)}
               data={item}
@@ -294,7 +300,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           role: 'list',
           classNames: [
             // shrink-0 is required: this div sets an explicit height via inline style (getTotalSize).

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { Blob, Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type File } from '@dxos/types';
 
 /**
@@ -46,7 +46,7 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
       return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.catchAll(() => Effect.succeed(undefined)),
+      Effect.catch(() => Effect.succeed(undefined)),
     );
 
     void EffectEx.runPromise(program).then((url) => {

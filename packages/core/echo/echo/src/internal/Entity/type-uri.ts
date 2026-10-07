@@ -8,18 +8,18 @@ import { raise } from '@dxos/debug';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, EID, URI } from '@dxos/keys';
 
-import { getSchemaURI, getTypename } from '../Annotation/annotations';
-import { type AnyEntity, InstancePhantomId, KindId, TypeId, getStaticTypeSchema } from '../common/types';
-import { getUri as getUriFromEntity } from './api';
+import { getSchemaURI, getTypename } from '../Annotation/annotations.ts';
+import { type AnyEntity, InstancePhantomId, KindId, TypeId, getStaticTypeSchema } from '../common/types/index.ts';
+import { getUri as getUriFromEntity } from './api.ts';
 
 /**
  * @param input schema, `Type.Type` entity, or a type URI (an `echo:` EID or a `dxn:` DXN).
  * @return type identifier URI — see {@link getSchemaURI}. A URI is returned verbatim. For a
  * `Type.Type` entity, the URI of the schema it declares, symmetric with what
  * `Obj.make(typeEntity, ...)` stamps on `system.type`: a static declaration resolves to its
- * typename DXN, a persisted entity to its local `echo:/<objectId>`.
+ * typename DXN, a persisted entity to its local `echo:///<objectId>`.
  */
-export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | URI.URI): URI.URI => {
+export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   }
@@ -30,7 +30,7 @@ export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | U
     // they declare via `StaticTypeSchemaSlot`, whose URI is exactly what
     // `Obj.make` stamps on `system.type` — a static declaration carries
     // `TypeAnnotation` (→ typename DXN), a persisted entity's rebuilt schema
-    // carries `TypeIdentifierAnnotation` (→ local `echo:/<objectId>`).
+    // carries `TypeIdentifierAnnotation` (→ local `echo:///<objectId>`).
     const schema = getStaticTypeSchema(input);
     if (schema != null) {
       // Static types carry TypeAnnotation → DXN; persisted db types carry
@@ -59,9 +59,9 @@ export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | U
  */
 // TODO(burdon): Can we use `Schema.is`?
 export const isInstanceOf = <S>(
-  schemaOrType: S extends Schema.Schema.AnyNoContext ? S : Schema.Schema.AnyNoContext | AnyEntity,
+  schemaOrType: S extends Schema.Codec<any, any> ? S : Schema.Codec<any, any> | AnyEntity,
   object: any,
-): object is S extends Schema.Schema.AnyNoContext
+): object is S extends Schema.Codec<any, any>
   ? Schema.Schema.Type<S>
   : S extends { readonly [InstancePhantomId]?: infer A }
     ? A

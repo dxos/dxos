@@ -26,7 +26,13 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/util"
@@ -35,7 +41,13 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/echo/blob"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -50,7 +62,13 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"

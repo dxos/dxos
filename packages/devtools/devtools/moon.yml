@@ -1,14 +1,19 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
+  - typetest
   - pack
   - storybook
 tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
+  # The devtools app dev server, distinct from the library build that `ts-vite-build`
+  # drives out of `vite.config.ts`.
+  serve:
+    command: pnpm exec vite dev -c vite.app.config.ts
+    deps:
+      - build
+    preset: server
   test:
     inputs:
       - .storybook/*

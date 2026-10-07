@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -14,11 +14,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
+import { Sheet } from '#types';
 
-import * as Sheet from '../../types/Sheet';
-import { useComputeGraph } from '../ComputeGraph';
-import { SheetRoot } from '../SheetRoot';
-import { SheetContent } from './SheetContent';
+import { useComputeGraph } from '../ComputeGraph/index.ts';
+import { SheetRoot } from '../SheetRoot/index.ts';
+import { SheetContent } from './SheetContent.tsx';
 
 export const Basic = () => {
   const [space] = useSpaces();
@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
-      <div className='grid h-full w-full'>
+      <div className='grid dx-fill'>
         <SheetContent />
       </div>
     </SheetRoot>
@@ -46,7 +46,7 @@ const meta = {
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin()],
+      plugins: [ProcessManagerPlugin.make()],
     }),
   ],
   parameters: {

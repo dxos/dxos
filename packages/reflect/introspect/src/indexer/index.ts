@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './cache';
-export * from './packages';
-export * from './plugins';
-export * from './symbols';
+export * from './cache.ts';
+export * from './packages.ts';
+export * from './plugins.ts';
+export * from './symbols.ts';

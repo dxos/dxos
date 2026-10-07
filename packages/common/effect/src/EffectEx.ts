@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-export { asyncTaskTaggingLayer } from './internal/async-task-tagging';
-export { contextFromScope } from './internal/context';
+export { asyncTaskTaggingLayer } from './internal/async-task-tagging.ts';
+export { contextFromScope, contextWithoutParentSpan, withContext } from './internal/context.ts';
 export {
   causeToError,
   runAndForwardErrors,
@@ -14,5 +14,6 @@ export {
   runPromise,
   throwCause,
   unwrapExit,
-} from './internal/errors';
-export { acquireReleaseResource } from './internal/resource';
+} from './internal/errors.ts';
+export { acquireReleaseResource } from './internal/resource.ts';
+export { type Emitter, streamFromEmitter } from './internal/stream.ts';

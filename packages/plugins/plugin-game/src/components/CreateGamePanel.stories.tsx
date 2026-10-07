@@ -9,24 +9,24 @@ import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Type } from '@dxos/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { GameCapabilities } from '#types';
 
-import * as GameCapabilities from '../types/GameCapabilities';
-import { CreateGamePanel } from './CreateGamePanel';
+import { CreateGamePanel } from './CreateGamePanel.tsx';
 
 // Two dummy variants for the story — no real ECHO state required, just the shape
 // the picker reads (label, icon, inputSchema). createVariant is a no-op since we
 // don't actually submit through a database here.
 const Card = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.cards', '0.1.0')));
 
 const Dice = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  faces: Schema.optional(Schema.Number.annotations({ title: 'Number of faces' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  faces: Schema.optional(Schema.Number.annotate({ title: 'Number of faces' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.dice', '0.1.0')));
 
 const dummyVariants: GameCapabilities.GameVariant[] = [
@@ -54,27 +54,25 @@ const DefaultStory = () => {
   const [submitted, setSubmitted] = useState<Record<string, any> | undefined>(undefined);
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>Create game</Dialog.Title>
-          </Dialog.Header>
-          <Dialog.Body>
-            <CreateGamePanel
-              target={{} as any}
-              variants={dummyVariants}
-              onCreateObject={(data) => {
-                setSubmitted(data);
-              }}
-            />
-            {submitted && (
-              <pre className='mt-form-gap p-2 text-xs bg-group-surface rounded-xs overflow-auto'>
-                {JSON.stringify(submitted, null, 2)}
-              </pre>
-            )}
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog.Overlay>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Create game</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <CreateGamePanel
+            target={{} as any}
+            variants={dummyVariants}
+            onCreateObject={(data) => {
+              setSubmitted(data);
+            }}
+          />
+          {submitted && (
+            <pre className='mt-form-gap p-2 text-xs bg-group-surface rounded-xs overflow-auto'>
+              {JSON.stringify(submitted, null, 2)}
+            </pre>
+          )}
+        </Dialog.Body>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };

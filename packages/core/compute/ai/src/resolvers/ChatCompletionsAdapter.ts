@@ -4,22 +4,90 @@
 
 // @import-as-namespace
 
-import * as AiError from '@effect/ai/AiError';
-import * as IdGenerator from '@effect/ai/IdGenerator';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Prompt from '@effect/ai/Prompt';
-import type * as Response from '@effect/ai/Response';
-import * as Tool from '@effect/ai/Tool';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as Chunk from 'effect/Chunk';
+import * as AiError from 'effect/ai/AiError';
+import * as IdGenerator from 'effect/ai/IdGenerator';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
+import type * as Response from 'effect/ai/Response';
+import * as Telemetry from 'effect/ai/Telemetry';
+import * as Tool from 'effect/ai/Tool';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
+
+import { log } from '@dxos/log';
+
+/**
+ * Effect 4 reshaped the AI errors the way it reshaped `HttpClientError`: one `AiError` wrapper
+ * carrying the module and method, with a semantic `reason` as the payload. `HttpRequestError`
+ * became `NetworkError` (and friends); the reasons have no `cause`, so a cause is rendered into
+ * the reason's `description`.
+ */
+const MODULE = 'ChatCompletionsClient';
+
+const describe = (detail: string, cause?: unknown): string =>
+  cause === undefined ? detail : `${detail}: ${cause instanceof Error ? cause.message : String(cause)}`;
+
+/** The request record v4's `NetworkError` carries, projected from an `HttpClientRequest` when there is one. */
+const toErrorRequest = (request?: HttpClientRequest.HttpClientRequest): AiError.NetworkError['request'] => ({
+  method: (request?.method ?? 'POST') as AiError.NetworkError['request']['method'],
+  url: request?.url ?? '',
+  urlParams: [],
+  hash: undefined,
+  headers: {},
+});
+
+const isConnectionRefused = (cause: unknown): boolean =>
+  Predicate.hasProperty(cause, 'code') && cause.code === 'ConnectionRefused';
+
+const networkError = (method: string, detail: string, options?: { request?: unknown; cause?: unknown }) =>
+  new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: new AiError.NetworkError({
+      reason: 'TransportError',
+      request: toErrorRequest(HttpClientRequest.isHttpClientRequest(options?.request) ? options.request : undefined),
+      description: describe(detail, options?.cause),
+    }),
+  });
+
+const unknownError = (method: string, detail: string, cause?: unknown) =>
+  new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: new AiError.UnknownError({ description: describe(detail, cause) }),
+  });
+
+/**
+ * The error for a non-2xx response, carrying the provider's own message. Ollama answers a tool call
+ * it cannot parse (gpt-oss writing a JS object literal for the arguments) with a 500, which is a
+ * fault in the model's output rather than the request, so it is reported as one: callers retry
+ * `InvalidOutputError` and not `UnknownError`.
+ */
+export const rejectionError = (method: string, status: number, body: string): AiError.AiError => {
+  let message = body;
+  try {
+    const error = JSON.parse(body).error;
+    if (typeof error === 'string') {
+      message = error;
+    } else if (typeof error?.message === 'string') {
+      message = error.message;
+    }
+  } catch {}
+  return new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: message.includes('error parsing tool call')
+      ? new AiError.InvalidOutputError({ description: message })
+      : new AiError.UnknownError({ description: `HTTP ${status}: ${message}` }),
+  });
+};
 
 /**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
@@ -50,6 +118,8 @@ type ChatMessage =
   | {
       role: 'assistant';
       content: string;
+      /** Sent back to a provider that asks for it; see {@link replaysReasoning}. */
+      reasoning_content?: string;
       tool_calls?: ChatToolCall[];
     }
   | {
@@ -76,8 +146,11 @@ type ChatTool = {
  */
 type OpenAiChatRequest = {
   model: string;
+  /** Provider-specific fields passed through from {@link RequestOptions.body} (e.g. DeepSeek `thinking`). */
+  [key: string]: unknown;
   messages: ChatMessage[];
   stream?: boolean;
+  stream_options?: { include_usage: boolean };
   response_format?: { type: 'json_object' };
   temperature?: number;
   tools?: ChatTool[];
@@ -111,6 +184,8 @@ type OpenAiChatResponse = {
     message: {
       role: string;
       content: string | null;
+      /** DeepSeek (and other reasoning models) return chain-of-thought alongside the answer. */
+      reasoning_content?: string | null;
       tool_calls?: ChatToolCall[];
     };
     finish_reason: string;
@@ -153,6 +228,7 @@ type OpenAiStreamChunk = {
     delta: {
       role?: string;
       content?: string | null;
+      reasoning_content?: string | null;
       tool_calls?: Array<{
         index: number;
         id?: string;
@@ -165,6 +241,12 @@ type OpenAiStreamChunk = {
     };
     finish_reason: string | null;
   }>;
+  /** Present only on the final chunk, and only when `stream_options.include_usage` was requested. */
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 };
 
 /**
@@ -200,6 +282,17 @@ export type ApiFormat = 'ollama' | 'openai';
 export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
+  /**
+   * The serving product, reported as `gen_ai.system`. Distinct from {@link ApiFormat}, which is the
+   * wire dialect: LM Studio and any other OpenAI-compatible endpoint speak `'openai'` without being
+   * OpenAI, and consumers price on this field. Defaults to the API format.
+   */
+  readonly provider?: string;
+  /**
+   * Request `stream_options.include_usage` on streamed OpenAI-format calls. Providers that meter on
+   * reported usage (DeepSeek via EDGE) need it; local servers that reject unknown fields do not.
+   */
+  readonly streamUsage?: boolean;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
   /**
    * Maximum duration to wait for the HTTP response to start. Applies to both
@@ -242,13 +335,13 @@ const DEFAULT_STREAM_IDLE_TIMEOUT: Duration.Duration = Duration.seconds(60);
  * This implementation provides a unified interface that abstracts over these differences,
  * allowing seamless switching between local and cloud providers via the `apiFormat` config.
  */
-export class ChatCompletionsClient extends Context.Tag('@dxos/ai/ChatCompletionsClient')<
+export class ChatCompletionsClient extends Context.Service<
   ChatCompletionsClient,
   {
     readonly config: ChatCompletionsClientConfig;
     readonly httpClient: HttpClient.HttpClient;
   }
->() {}
+>()('@dxos/ai/ChatCompletionsClient') {}
 
 /**
  * Convert Effect AI prompt to chat messages.
@@ -257,7 +350,25 @@ export class ChatCompletionsClient extends Context.Tag('@dxos/ai/ChatCompletions
  * result messages are mapped to the OpenAI function-calling convention which
  * Ollama also accepts.
  */
-const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
+/**
+ * Whether a provider wants an assistant turn's reasoning sent back with it. DeepSeek's thinking mode
+ * refuses a request whose earlier tool-calling turns come back without their `reasoning_content`,
+ * an empty one included, so a tool-calling turn always carries the field; OpenAI-format servers that
+ * never produced any would be sent a field they do not know.
+ */
+const replaysReasoning = (config: ChatCompletionsClientConfig): boolean => config.provider === 'deepseek';
+
+/** The messages of a request by role and what each carries, without their content. */
+const describeMessages = (messages: ChatMessage[]) =>
+  messages.map((message) => ({
+    role: message.role,
+    content: typeof message.content === 'string' ? message.content.length : undefined,
+    ...('reasoning_content' in message ? { reasoning: message.reasoning_content?.length } : {}),
+    ...('tool_calls' in message ? { toolCalls: message.tool_calls?.length } : {}),
+    ...('tool_call_id' in message ? { toolCallId: message.tool_call_id } : {}),
+  }));
+
+const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat, replayReasoning = false): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
   for (const message of prompt.content) {
@@ -281,32 +392,42 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
     } else if (message.role === 'assistant') {
       const assistantMsg = message as Prompt.AssistantMessage;
       const textParts: string[] = [];
+      const reasoningParts: string[] = [];
       const toolCalls: ChatToolCall[] = [];
       for (const part of assistantMsg.content) {
         if (part.type === 'text') {
           textParts.push(part.text);
+        } else if (part.type === 'reasoning') {
+          reasoningParts.push(part.text);
         } else if (part.type === 'tool-call') {
           toolCalls.push({
             id: part.id,
             type: 'function',
             function: {
               name: part.name,
-              arguments: encodeToolParams(part),
+              arguments: encodeToolParams(part, apiFormat),
             },
           });
         }
       }
       const text = textParts.join('\n');
+      const reasoning = reasoningParts.join('\n');
       if (toolCalls.length > 0 || text.length > 0) {
         messages.push({
           role: 'assistant',
           content: text,
+          ...(replayReasoning && (reasoning.length > 0 || toolCalls.length > 0)
+            ? { reasoning_content: reasoning }
+            : {}),
           ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
         });
       }
     } else if (message.role === 'tool') {
       const toolMsg = message as Prompt.ToolMessage;
       for (const part of toolMsg.content) {
+        if (part.type !== 'tool-result') {
+          continue;
+        }
         messages.push({
           role: 'tool',
           content: encodeToolResult(part),
@@ -320,7 +441,27 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
   return messages;
 };
 
-const encodeToolParams = (part: Prompt.ToolCallPart): string => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Ollama decodes `tool_calls[].function.arguments` into a map and rejects a string with 400, while
+ * OpenAI specifies that string — so the encoding follows the format rather than the value.
+ */
+const encodeToolParams = (part: Prompt.ToolCallPart, apiFormat: ApiFormat): string | Record<string, unknown> => {
+  if (apiFormat === 'ollama') {
+    if (isRecord(part.params)) {
+      return part.params;
+    }
+    // An empty map, since a string that does not parse to an object has no map form.
+    try {
+      const parsed = typeof part.params === 'string' ? Tool.unsafeSecureJsonParse(part.params) : undefined;
+      return isRecord(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
   if (typeof part.params === 'string') {
     return part.params;
   }
@@ -351,7 +492,9 @@ const toolsToRequest = (tools: ReadonlyArray<Tool.Any>): ChatTool[] | undefined 
   }
   const out: ChatTool[] = [];
   for (const tool of tools) {
-    if (!Tool.isUserDefined(tool)) {
+    // Operations project to dynamic tools, which carry their own JSON Schema; skipping them here would
+    // silently drop every operation-backed tool from the request.
+    if (!Tool.isUserDefined(tool) && !Tool.isDynamic(tool)) {
       continue;
     }
     out.push({
@@ -388,6 +531,8 @@ const buildRequestBody = (
   jsonFormat: boolean,
   apiFormat: ApiFormat,
   tools: ChatTool[] | undefined,
+  streamUsage = false,
+  extraBody: Readonly<Record<string, unknown>> = {},
 ): OllamaChatRequest | OpenAiChatRequest => {
   switch (apiFormat) {
     case 'ollama':
@@ -400,9 +545,11 @@ const buildRequestBody = (
       };
     case 'openai':
       return {
+        ...extraBody,
         model,
         messages,
         stream,
+        stream_options: stream && streamUsage ? { include_usage: true } : undefined,
         response_format: jsonFormat ? { type: 'json_object' } : undefined,
         tools,
         tool_choice: tools ? 'auto' : undefined,
@@ -428,7 +575,7 @@ const parseToolArguments = (
   args: string | Record<string, unknown>,
   toolName: string,
   method: string,
-): Effect.Effect<unknown, AiError.MalformedOutput> => {
+): Effect.Effect<unknown, AiError.AiError> => {
   if (typeof args !== 'string') {
     return Effect.succeed(args);
   }
@@ -438,11 +585,12 @@ const parseToolArguments = (
   return Effect.try({
     try: () => Tool.unsafeSecureJsonParse(args),
     catch: (cause) =>
-      new AiError.MalformedOutput({
-        module: 'ChatCompletionsClient',
+      new AiError.AiError({
+        module: MODULE,
         method,
-        description: `Failed to parse tool call parameters for tool '${toolName}': ${args}`,
-        cause,
+        reason: new AiError.InvalidOutputError({
+          description: describe(`failed to parse tool call parameters for tool '${toolName}': ${args}`, cause),
+        }),
       }),
   });
 };
@@ -481,6 +629,7 @@ const extractResponse = (
       const mappedReason = mapOpenAiFinishReason(choice?.finish_reason);
       return {
         text: choice?.message?.content ?? '',
+        reasoning: choice?.message?.reasoning_content ?? undefined,
         toolCalls,
         inputTokens: r.usage?.prompt_tokens,
         outputTokens: r.usage?.completion_tokens,
@@ -557,6 +706,9 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }
         const chunk = JSON.parse(data) as OpenAiStreamChunk;
         const choice = chunk.choices?.[0];
+        // The chunk is an unvalidated cast over `JSON.parse`; a non-numeric count would otherwise
+        // reach the finish payload and telemetry as a string.
+        const tokenCount = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
         const deltas = choice?.delta?.tool_calls?.map((tc) => ({
           index: tc.index,
           id: tc.id,
@@ -565,7 +717,10 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }));
         return {
           content: choice?.delta?.content ?? undefined,
+          reasoning: choice?.delta?.reasoning_content ?? undefined,
           done: choice?.finish_reason !== null && choice?.finish_reason !== undefined,
+          inputTokens: tokenCount(chunk.usage?.prompt_tokens),
+          outputTokens: tokenCount(chunk.usage?.completion_tokens),
           finishReason: choice?.finish_reason ? mapOpenAiFinishReason(choice.finish_reason) : undefined,
           toolCallDeltas: deltas,
         };
@@ -577,9 +732,20 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
 };
 
 /**
+ * Per-model request options.
+ */
+export type RequestOptions = {
+  /**
+   * Provider-specific request-body fields merged into every OpenAI-format call (DeepSeek's
+   * `thinking` and `reasoning_effort`, say). Ignored for the Ollama dialect.
+   */
+  readonly body?: Readonly<Record<string, unknown>>;
+};
+
+/**
  * Create a chat completions language model service.
  */
-export const make = (model: string) =>
+export const make = (model: string, requestOptions: RequestOptions = {}) =>
   Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) => {
     const requestTimeout = config.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
     const streamIdleTimeout = config.streamIdleTimeout ?? DEFAULT_STREAM_IDLE_TIMEOUT;
@@ -588,51 +754,58 @@ export const make = (model: string) =>
       generateText: (options) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
+          annotateRequest(options.span, model, config);
 
-          const messages = promptToMessages(options.prompt);
+          const messages = promptToMessages(options.prompt, config.apiFormat, replaysReasoning(config));
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
-          const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat, tools);
+          const requestBody = buildRequestBody(
+            model,
+            messages,
+            false,
+            jsonFormat,
+            config.apiFormat,
+            tools,
+            false,
+            requestOptions.body,
+          );
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
-            Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
-            Effect.timeoutFail({
+            Effect.flatMap((req) => httpClient.execute(req)),
+            // Without this a rejection's error body is read as a reply with no content, and the turn
+            // ends silently instead of failing.
+            Effect.flatMap((res) =>
+              res.status === 200
+                ? res.json
+                : Effect.flatMap(res.text, (body) => {
+                    log.warn('chat completions request rejected', {
+                      status: res.status,
+                      body: body.slice(0, 500),
+                      messages: describeMessages(messages),
+                    });
+                    return Effect.fail(rejectionError('generateText', res.status, body));
+                  }),
+            ),
+            Effect.timeoutOrElse({
               duration: requestTimeout,
-              onTimeout: () =>
-                new AiError.HttpRequestError({
-                  module: 'ChatCompletionsClient',
-                  method: 'generateText',
-                  request: undefined as any,
-                  reason: 'Transport',
-                  description: `Request timed out after ${Duration.format(requestTimeout)}`,
-                  cause: new Error('request timeout'),
-                }),
+              orElse: () => networkError('generateText', `request timed out after ${Duration.format(requestTimeout)}`),
             }),
-            Effect.catchAll((err) => {
-              if (err instanceof AiError.HttpRequestError) {
+            Effect.catch((err) => {
+              if (err instanceof AiError.AiError) {
                 return Effect.fail(err) as Effect.Effect<never, any, never>;
               }
-              if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
+              if (HttpClientError.isHttpClientError(err) && isConnectionRefused(err.cause)) {
                 return Effect.fail(
-                  new AiError.HttpRequestError({
-                    module: 'ChatCompletionsClient',
-                    method: 'generateText',
-                    request: (err as any).request,
-                    reason: 'Transport',
-                    description: 'Connection refused',
-                    cause: err,
-                  }),
+                  networkError('generateText', 'connection refused', { request: err.request, cause: err }),
                 ) as Effect.Effect<never, any, never>;
               }
 
-              return Effect.fail(
-                new AiError.UnknownError({
-                  module: 'ChatCompletionsClient',
-                  method: 'generateText',
-                  cause: err,
-                }),
-              ) as Effect.Effect<never, any, never>;
+              return Effect.fail(unknownError('generateText', 'request failed', err)) as Effect.Effect<
+                never,
+                any,
+                never
+              >;
             }),
           );
 
@@ -640,6 +813,7 @@ export const make = (model: string) =>
             response,
             config.apiFormat,
           );
+          annotateResponse(options.span, { inputTokens, outputTokens, finishReason });
 
           const parts: Response.PartEncoded[] = [];
           if (reasoning && reasoning.length > 0) {
@@ -663,9 +837,8 @@ export const make = (model: string) =>
             type: 'finish',
             reason: finishReason,
             usage: {
-              inputTokens,
-              outputTokens,
-              totalTokens: (inputTokens ?? 0) + (outputTokens ?? 0),
+              inputTokens: { total: inputTokens },
+              outputTokens: { total: outputTokens },
             },
           });
 
@@ -676,71 +849,62 @@ export const make = (model: string) =>
         Stream.unwrap(
           Effect.gen(function* () {
             const idGen = yield* IdGenerator.IdGenerator;
+            annotateRequest(options.span, model, config);
 
-            const messages = promptToMessages(options.prompt);
+            const messages = promptToMessages(options.prompt, config.apiFormat, replaysReasoning(config));
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
-            const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
+            const requestBody = buildRequestBody(
+              model,
+              messages,
+              true,
+              jsonFormat,
+              config.apiFormat,
+              tools,
+              config.streamUsage,
+              requestOptions.body,
+            );
             const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
               Effect.flatMap((req) => httpClient.execute(req)),
-              Effect.timeoutFail({
+              Effect.timeoutOrElse({
                 duration: requestTimeout,
-                onTimeout: () =>
-                  new AiError.HttpRequestError({
-                    module: 'ChatCompletionsClient',
-                    method: 'streamText',
-                    request: undefined as any,
-                    reason: 'Transport',
-                    description: `Request timed out after ${Duration.format(requestTimeout)}`,
-                    cause: new Error('request timeout'),
-                  }),
+                orElse: () => networkError('streamText', `request timed out after ${Duration.format(requestTimeout)}`),
               }),
-              Effect.catchAll((err) => {
-                if (err instanceof AiError.HttpRequestError) {
+              Effect.catch((err) => {
+                if (err instanceof AiError.AiError) {
                   return Effect.fail(err) as Effect.Effect<never, any, never>;
                 }
-                if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
+                if (HttpClientError.isHttpClientError(err) && isConnectionRefused(err.cause)) {
                   return Effect.fail(
-                    new AiError.HttpRequestError({
-                      module: 'ChatCompletionsClient',
-                      method: 'streamText',
-                      request: (err as any).request,
-                      reason: 'Transport',
-                      description: 'Connection refused',
-                      cause: err,
-                    }),
+                    networkError('streamText', 'connection refused', { request: err.request, cause: err }),
                   ) as Effect.Effect<never, any, never>;
                 }
 
-                return Effect.fail(
-                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
-                ) as Effect.Effect<never, any, never>;
+                // A client that rejects a non-2xx response itself lands here with the body in the
+                // error; the shape of what was sent goes next to it, as below.
+                log.warn('chat completions request failed', {
+                  error: describe('request failed', err),
+                  messages: describeMessages(messages),
+                });
+                return Effect.fail(unknownError('streamText', 'request failed', err)) as Effect.Effect<
+                  never,
+                  any,
+                  never
+                >;
               }),
             );
             if (response.status !== 200) {
               const body = yield* response.text;
-              try {
-                const json = JSON.parse(body);
-                const error = json.error;
-                if (typeof error === 'string') {
-                  return Stream.fail(
-                    new AiError.UnknownError({
-                      module: 'ChatCompletionsClient',
-                      method: 'streamText',
-                      description: error,
-                    }),
-                  );
-                }
-              } catch {}
-              return Stream.fail(
-                new AiError.UnknownError({
-                  module: 'ChatCompletionsClient',
-                  method: 'streamText',
-                  description: body,
-                }),
-              );
+              // A rejection is about the request, so the shape of what was sent goes next to it: a
+              // provider that wants a field on a turn names the turn, not the field it saw.
+              log.warn('chat completions request rejected', {
+                status: response.status,
+                body: body.slice(0, 500),
+                messages: describeMessages(messages),
+              });
+              return Stream.fail(rejectionError('streamText', response.status, body));
             }
 
             const textId = `chat-text-${Date.now()}`;
@@ -749,6 +913,16 @@ export const make = (model: string) =>
             let textEnded = false;
             let reasoningStarted = false;
             let reasoningEnded = false;
+
+            // The finish part is emitted once, after the source completes, rather than on the first
+            // chunk reporting `done`. Two shapes force this: OpenAI-format streams end with a
+            // `data: [DONE]` sentinel *after* the `finish_reason` chunk, so emitting per `done` sent
+            // a second, usage-less finish; and a provider may report usage in a trailing chunk whose
+            // `choices` is empty (OpenAI proper does), which arrives after `finish_reason`.
+            let finishSeen = false;
+            let finishReason: Response.FinishReason | undefined;
+            let inputTokens: number | undefined;
+            let outputTokens: number | undefined;
 
             /**
              * Ensure reasoning is closed before emitting non-reasoning parts.
@@ -767,8 +941,33 @@ export const make = (model: string) =>
               args: string;
               emittedId?: string;
               started: boolean;
+              flushed: boolean;
             };
             const openAiCalls = new Map<number, OpenAiCallState>();
+
+            /**
+             * Emits the terminating `tool-params-end` / `tool-call` pair for every started call whose
+             * index is below `before`. Consumers track a single open tool call, so a parallel call's
+             * `tool-params-start` must not arrive while the previous one is still open.
+             */
+            const flushOpenAiCalls = (parts: Response.StreamPartEncoded[], before: number) =>
+              Effect.gen(function* () {
+                for (const [index, call] of openAiCalls) {
+                  if (index >= before || call.flushed || !call.started || !call.name || !call.emittedId) {
+                    continue;
+                  }
+                  call.flushed = true;
+                  parts.push({ type: 'tool-params-end', id: call.emittedId });
+                  const params = yield* parseToolArguments(call.args, call.name, 'streamText');
+                  parts.push({
+                    type: 'tool-call',
+                    id: call.emittedId,
+                    name: call.name,
+                    params,
+                    providerExecuted: false,
+                  });
+                }
+              });
 
             // Buffer lines across chunk boundaries — newline-delimited frames and UTF-8
             // characters can be split across network chunks.
@@ -776,19 +975,10 @@ export const make = (model: string) =>
             let pendingLine = '';
 
             const parsedStream: Stream.Stream<Response.StreamPartEncoded, any, any> = response.stream.pipe(
-              withIdleTimeout(
-                streamIdleTimeout,
-                () =>
-                  new AiError.HttpRequestError({
-                    module: 'ChatCompletionsClient',
-                    method: 'streamText',
-                    request: undefined as any,
-                    reason: 'Transport',
-                    description: `Stream idle for more than ${Duration.format(streamIdleTimeout)}`,
-                    cause: new Error('stream idle timeout'),
-                  }),
+              withIdleTimeout(streamIdleTimeout, () =>
+                networkError('streamText', `stream idle for more than ${Duration.format(streamIdleTimeout)}`),
               ),
-              Stream.mapConcatEffect((chunk: Uint8Array) =>
+              Stream.mapEffect((chunk: Uint8Array) =>
                 Effect.gen(function* () {
                   const text = pendingLine + decoder.decode(chunk, { stream: true });
                   const frames = text.split('\n');
@@ -801,6 +991,11 @@ export const make = (model: string) =>
                     if (!parsed) {
                       continue;
                     }
+
+                    // Last reported value wins: a trailing usage-only chunk supersedes the counts on
+                    // the chunk that carried `finish_reason`.
+                    inputTokens = parsed.inputTokens ?? inputTokens;
+                    outputTokens = parsed.outputTokens ?? outputTokens;
 
                     if (parsed.reasoning && parsed.reasoning.length > 0) {
                       if (!reasoningStarted) {
@@ -853,6 +1048,7 @@ export const make = (model: string) =>
                         const existing: OpenAiCallState = openAiCalls.get(delta.index) ?? {
                           args: '',
                           started: false,
+                          flushed: false,
                         };
                         if (delta.id) {
                           existing.id = delta.id;
@@ -861,6 +1057,9 @@ export const make = (model: string) =>
                           existing.name = delta.name;
                         }
                         if (!existing.started && existing.name) {
+                          // Calls stream one index at a time, so a new index means every earlier call
+                          // is complete.
+                          yield* flushOpenAiCalls(parts, delta.index);
                           existing.started = true;
                           existing.emittedId = existing.id ?? (yield* idGen.generateId());
                           parts.push({
@@ -891,52 +1090,72 @@ export const make = (model: string) =>
                       }
                       closeReasoningIfOpen(parts);
 
-                      // Flush accumulated OpenAI tool calls.
-                      for (const [, call] of openAiCalls) {
-                        if (!call.started || !call.name || !call.emittedId) {
-                          continue;
-                        }
-                        parts.push({ type: 'tool-params-end', id: call.emittedId });
-                        const params = yield* parseToolArguments(call.args, call.name, 'streamText');
-                        parts.push({
-                          type: 'tool-call',
-                          id: call.emittedId,
-                          name: call.name,
-                          params,
-                          providerExecuted: false,
-                        });
-                      }
+                      // Flush whichever OpenAI tool call is still open.
+                      yield* flushOpenAiCalls(parts, Number.POSITIVE_INFINITY);
                       openAiCalls.clear();
 
-                      parts.push({
-                        type: 'finish',
-                        reason: parsed.finishReason ?? 'stop',
-                        usage: {
-                          inputTokens: parsed.inputTokens,
-                          outputTokens: parsed.outputTokens,
-                          totalTokens: (parsed.inputTokens ?? 0) + (parsed.outputTokens ?? 0),
-                        },
-                      });
+                      finishSeen = true;
+                      finishReason = parsed.finishReason ?? finishReason;
                     }
                   }
 
                   return parts;
                 }),
               ),
-              Stream.catchAll((err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
-                if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
+              Stream.flattenIterable,
+              Stream.catch((err): Stream.Stream<never, AiError.AiError, never> => {
+                if (err instanceof AiError.AiError) {
                   return Stream.fail(err);
                 }
-                return Stream.fail(
-                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
-                );
+                return Stream.fail(unknownError('streamText', 'request failed', err));
               }),
+              // Suspended so the accumulators are read after the source drains. A stream that ended
+              // without reporting `done` (truncated, or failed above) emits nothing, as before.
+              (stream) =>
+                Stream.concat(
+                  stream,
+                  Stream.suspend((): Stream.Stream<Response.StreamPartEncoded, never, never> => {
+                    if (!finishSeen) {
+                      return Stream.empty;
+                    }
+                    const reason = finishReason ?? 'stop';
+                    annotateResponse(options.span, { inputTokens, outputTokens, finishReason: reason });
+                    return Stream.succeed({
+                      type: 'finish',
+                      reason,
+                      usage: {
+                        inputTokens: { total: inputTokens },
+                        outputTokens: { total: outputTokens },
+                      },
+                    });
+                  }),
+                ),
             );
 
             return parsedStream;
           }),
         ),
     });
+  });
+
+const annotateRequest = (
+  span: LanguageModel.ProviderOptions['span'],
+  model: string,
+  config: ChatCompletionsClientConfig,
+): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    system: config.provider ?? config.apiFormat,
+    operation: { name: 'chat' },
+    request: { model },
+  });
+
+const annotateResponse = (
+  span: LanguageModel.ProviderOptions['span'],
+  { inputTokens, outputTokens, finishReason }: { inputTokens?: number; outputTokens?: number; finishReason?: string },
+): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    response: { finishReasons: finishReason ? [finishReason] : undefined },
+    usage: { inputTokens, outputTokens },
   });
 
 /**
@@ -946,23 +1165,19 @@ export const make = (model: string) =>
 const withIdleTimeout =
   <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
   <A, E, R>(stream: Stream.Stream<A, E, R>): Stream.Stream<A, E | E2, R> =>
-    Stream.unwrapScoped(
-      Effect.gen(function* () {
-        const pull = yield* Stream.toPull(stream);
-        const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(
-          Effect.timeoutFail({
-            duration: timeout,
-            onTimeout: (): Option.Option<E | E2> => Option.some(onTimeout()),
-          }),
-        );
-        return Stream.repeatEffectChunkOption(timedPull);
-      }),
-    );
+    // v4 replaced the `Option`-encoded pull protocol: a pull ends by failing with `Cause.Done`,
+    // which `fromPull` excludes from the resulting error type, so the timeout is a plain failure.
+    Stream.fromPull(
+      Effect.map(Stream.toPull(stream), (pull) =>
+        pull.pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(onTimeout()) })),
+      ),
+    ) as Stream.Stream<A, E | E2, R>;
 
 /**
  * Create a chat completions language model layer.
  */
-export const layer = (model: string) => Layer.effect(LanguageModel.LanguageModel, make(model));
+export const layer = (model: string, options?: RequestOptions) =>
+  Layer.effect(LanguageModel.LanguageModel, make(model, options));
 
 /**
  * Create a chat completions client layer.

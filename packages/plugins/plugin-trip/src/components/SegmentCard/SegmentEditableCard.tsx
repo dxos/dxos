@@ -6,12 +6,17 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon, Input, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
+import { Segment } from '#types';
 
-import * as Segment from '../../types/Segment';
-import { type SegmentCardActionHandler } from './SegmentCard';
+import { type SegmentCardActionHandler } from './SegmentCard.tsx';
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone (the value shape `<input type='datetime-local'>` expects). */
 const isoToLocalDateTime = (iso: string | undefined): string => {
@@ -42,11 +47,11 @@ type FlightEditableCardProps = {
 /**
  * Editable card variant for a flight Segment. Surfaces only the most important fields:
  * kind icon + title + delete in the toolbar, route and departure date in the content.
- * The departure date is always editable via `Input.DateTime`.
+ * The departure date is always editable via `Field.DateTime`.
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
 
     const handleDepartChange = useCallback(
       (next: string) => {
@@ -74,31 +79,32 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     const departAt = Segment.getDepartAt(segment);
 
     return (
-      <Card.Root fullWidth ref={forwardedRef}>
+      <Card.Root ref={forwardedRef}>
         <Card.Header>
-          <Card.Block>
-            <Icon icon={icon} />
-          </Card.Block>
+          <Layout.Block>
+            <Icon.Icon icon={icon} />
+          </Layout.Block>
           <Card.Title>{title}</Card.Title>
-          <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+          <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
         </Card.Header>
         <Card.Body>
           {route && (
             <Card.Row>
-              <Card.Text variant='description'>{route}</Card.Text>
+              <Card.Text variant='muted'>{route}</Card.Text>
             </Card.Row>
           )}
           <Card.Row>
-            <Card.Block>
-              <Icon icon='ph--calendar--regular' />
-            </Card.Block>
-            <Input.Root>
-              <Input.DateTime
+            <Layout.Block>
+              <Icon.Icon icon='ph--calendar--regular' />
+            </Layout.Block>
+            <Field.Root>
+              <Input.Date
+                type='datetime-local'
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}
                 onValueChange={handleDepartChange}
               />
-            </Input.Root>
+            </Field.Root>
           </Card.Row>
         </Card.Body>
       </Card.Root>

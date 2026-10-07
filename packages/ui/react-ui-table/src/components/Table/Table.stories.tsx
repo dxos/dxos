@@ -14,29 +14,31 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { useTestTableModel } from '../../testing';
-import { Table } from '../../types';
-import { Table as TableComponent } from './Table';
+import { useTestTableModel } from '../../testing/index.ts';
+import { Table } from '../../types/index.ts';
+import { Table as TableComponent } from './Table.tsx';
 
 const Example = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.
-  name: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-  urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
+  name: Schema.optional(Schema.String).annotate({ title: 'Title' }),
+  urgent: Schema.optional(Schema.Boolean).annotate({ title: 'Urgent' }),
   status: Schema.optional(
-    Schema.Literal('todo', 'in-progress', 'done')
+    Schema.Literals(['todo', 'in-progress', 'done'])
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect))
-      .annotations({
+      .annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -49,8 +51,8 @@ const Example = Schema.Struct({
         },
       }),
   ),
-  description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotations({
+  description: Schema.optional(Schema.String).annotate({ title: 'Description' }),
+  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotate({
     title: 'Parent',
   }),
 }).pipe(
@@ -123,14 +125,14 @@ const DefaultStory = () => {
     <div className='grow grid grid-cols-[1fr_350px]'>
       <TableComponent.Root ref={tableRef}>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <TableComponent.Toolbar
-              classNames='border-b border-subdued-separator'
+              classNames='border-b border-separator-subtle'
               onAdd={handleInsertRow}
               onSave={handleSaveView}
             />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <TableComponent.Content
               schema={schema}
               model={model}
@@ -138,7 +140,7 @@ const DefaultStory = () => {
               onRowClick={handleRowClick}
               ignoreAttention
             />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </TableComponent.Root>
       <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
@@ -324,7 +326,8 @@ export const RequiredSchema: StoryObj = {
     // character into dx-grid's `initialContent` and races the editor mount. The empty value
     // fails validation; the editor must stay open so the value below can be entered.
     await userEvent.keyboard('{Enter}');
-    await canvas.findByTestId('grid.cell-editor');
+    // The form editor mounts lazily, which outlasts the default 1s under load.
+    await canvas.findByTestId('grid.cell-editor', undefined, { timeout: 10_000 });
 
     // The editor is focused (autoFocus); type the required value and commit.
     await userEvent.keyboard('Alice');
@@ -363,13 +366,13 @@ const ExternalMutationStory = () => {
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <Toolbar.Button onClick={handleMutate}>Mutate row externally</Toolbar.Button>
+        <Button.Root onClick={handleMutate}>Mutate row externally</Button.Root>
       </Toolbar.Root>
       <TableComponent.Root ref={tableRef}>
         <Panel.Root>
-          <Panel.Content asChild>
+          <Panel.Body asChild>
             <TableComponent.Content schema={schema} model={model} presentation={presentation} ignoreAttention />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </TableComponent.Root>
     </div>

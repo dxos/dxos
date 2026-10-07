@@ -4,12 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const blockTypes = {
   blockquote: 'ph--quotes--regular',
@@ -39,7 +39,9 @@ export const addBlocks =
             {
               label: [`block.${type}.label`, { ns: translationKey }],
               checked,
-              ...(type === 'table' && { disabled: !!state.blankLine }),
+              // A table replaces the line it lands on, so it is offered on a blank one and withheld
+              // where it would clobber content — the condition was inverted.
+              ...(type === 'table' && { disabled: !state.blankLine }),
               icon,
             },
             () => {

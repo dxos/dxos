@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export type InitializeIdentityResult = {
   identity: Identity;
@@ -26,8 +28,8 @@ export type InitializeIdentityOptions = {
  * run. Returns the identity and spaces for further setup.
  *
  * Only the identity is this helper's own work: the spaces come from
- * {@link AppSpace.setupIdentitySpaces}, the same call the app's identity-created module and the
- * `halo create` command make, so a story's profile cannot drift from a real one.
+ * {@link AppSpace.setupIdentitySpaces}, the same call the app's identity-created module makes, so
+ * a story's profile cannot drift from a real one.
  */
 export const initializeIdentity = (
   client: Client,
@@ -37,7 +39,9 @@ export const initializeIdentity = (
     // The harness boots with client initialization forked off startup; `halo`/`spaces` are
     // unreadable until it completes.
     yield* Effect.promise(() => client.waitUntilInitialized());
-    const identity = yield* Effect.promise(() => client.halo.createIdentity(displayName ? { displayName } : {}));
+    const identity = yield* Effect.promise(() =>
+      client.halo.createIdentity(create(ProfileDocumentSchema, { displayName })),
+    );
     const spaces = yield* AppSpace.setupIdentitySpaces(client);
 
     return { identity, ...spaces };

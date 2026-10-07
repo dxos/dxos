@@ -4,7 +4,6 @@
 
 import {
   type DocumentId,
-  type Heads,
   type Message,
   NetworkAdapter,
   type PeerId,
@@ -25,14 +24,14 @@ import {
   type ReplicatorConnectionMessage,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
-} from './echo-replicator';
-import { PeerNotFoundError } from './errors';
+} from './echo-replicator.ts';
+import { PeerNotFoundError } from './errors.ts';
 import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
   isCollectionQueryMessage,
   isCollectionStateMessage,
-} from './network-protocol';
+} from './network-protocol.ts';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -50,6 +49,8 @@ export type EchoNetworkAdapterProps = {
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   /** Invoked when a replicator connection opens (including after reconnect). */
   onConnectionOpen?: () => void;
+  /** What a connected peer gaining access to more spaces does: re-announce it, or run this handler instead. */
+  onConnectionAuthScopeChanged: 'reannounce-peer' | ((peerId: PeerId) => void);
   monitor?: NetworkDataMonitor;
 };
 
@@ -70,6 +71,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
    * Remote peer id -> connection.
    */
   private readonly _connections = new Map<PeerId, ConnectionEntry>();
+  /** Peers mid-reset, whose event pair must not read as a peer leaving and rejoining (DX-1277). */
+  private readonly _resettingTransports = new Set<PeerId>();
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
@@ -130,6 +133,11 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     await this._connected.wait({ timeout: 10_000 });
   }
 
+  /** True while {@link _onConnectionTransportReset} is emitting for `peerId`; see that method. */
+  public isTransportResetting(peerId: PeerId): boolean {
+    return this._resettingTransports.has(peerId);
+  }
+
   public onConnectionAuthScopeChanged(peer: PeerId): void {
     const entry = this._connections.get(peer);
     if (entry) {
@@ -149,6 +157,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
+      onConnectionTransportReset: this._onConnectionTransportReset.bind(this),
       isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
       getContainingSpaceIdForDocument: this._params.getContainingSpaceIdForDocument,
@@ -166,6 +175,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
+      // Denies every document for the peer, so a stale peerId reads as a share-policy refusal.
+      log.verbose('share policy probe: no connection for peer', { peerId, documentId: params.documentId });
       return false;
     }
 
@@ -211,30 +222,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
           : null;
       })
       .filter(isNonNullable);
-  }
-
-  bundleSyncEnabledForPeer(peerId: PeerId): boolean {
-    const connection = this._connections.get(peerId);
-    if (!connection) {
-      return false;
-    }
-    return connection.connection.bundleSyncEnabled;
-  }
-
-  async pushBundle(ctx: Context, peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
-    const connection = this._connections.get(peerId);
-    if (!connection) {
-      throw new PeerNotFoundError({ context: { peerId } });
-    }
-    return connection.connection.pushBundle!(ctx, bundle);
-  }
-
-  async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
-    const connection = this._connections.get(peerId);
-    if (!connection) {
-      throw new PeerNotFoundError({ context: { peerId } });
-    }
-    return connection.connection.pullBundle!(ctx, docHeads);
   }
 
   private _send(message: Message): void {
@@ -339,8 +326,36 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
+    if (this._params.onConnectionAuthScopeChanged !== 'reannounce-peer') {
+      this._params.onConnectionAuthScopeChanged(connection.peerId as PeerId);
+      return;
+    }
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._emitPeerCandidate(connection);
+  }
+
+  /**
+   * Re-run the peer's transport handshake without closing the connection (DX-1275). The event pair
+   * is the only thing that drives `AdapterConnections` to rebuild a subduction transport; the mark
+   * covers exactly this pair, since both emissions are synchronous.
+   */
+  private _onConnectionTransportReset(connection: AutomergeReplicatorConnection): boolean {
+    const peerId = connection.peerId as PeerId;
+    const entry = this._connections.get(peerId);
+    if (!entry?.isOpen) {
+      log('no open connection to reset', { peerId });
+      return false;
+    }
+
+    log('resetting connection transport', { peerId });
+    this._resettingTransports.add(peerId);
+    try {
+      this.emit('peer-disconnected', { peerId });
+      this._emitPeerCandidate(connection);
+    } finally {
+      this._resettingTransports.delete(peerId);
+    }
+    return true;
   }
 
   private _emitPeerCandidate(connection: AutomergeReplicatorConnection): void {

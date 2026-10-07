@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { File } from '@dxos/types';
 
-import * as FileCapabilities from '../types/FileCapabilities';
-import * as FileOperation from '../types/FileOperation';
+import { FileCapabilities, FileOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,11 +21,14 @@ export default Capability.makeModule(
       createObject: (props, options) =>
         Effect.gen(function* () {
           const { object } = yield* Operation.invoke(FileOperation.Create, { ...props, db: options.db });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

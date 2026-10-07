@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
@@ -14,7 +14,6 @@ import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { getSpace } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import {
@@ -27,11 +26,12 @@ import {
 } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { versionDiff } from '../extensions';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
-import { authorHue, hueColour } from '../util';
-import { type VersionedEditor } from './useVersionedEditor';
-import { type useVersioning } from './useVersioning';
+import { ReviewCapabilities } from '#types';
+
+import { versionDiff } from '../extensions/index.ts';
+import { authorHue, hueColour } from '../util/index.ts';
+import { type VersionedEditor } from './useVersionedEditor.ts';
+import { type useVersioning } from './useVersioning.ts';
 
 export type ReviewExtensionsProps = {
   object: Markdown.Document | Text.Text;
@@ -80,7 +80,7 @@ export const useReviewExtensions = ({
   // in suggest mode — and `branch` is the compare (author) branch key (`reviewBranch`).
   // Optional: every call site already guards `invokePromise?.` — accept/reject are simply inert in
   // hosts without an operation invoker (bare stories, headless scenario tests).
-  const invokePromise = useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
+  const invokePromise = Hooks.useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
   const handleAcceptChange = useCallback(
     (hunk: DiffHunk) => {
       const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
@@ -185,7 +185,7 @@ export const useReviewExtensions = ({
 
   // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
   // the inline markers attribute the change by colour. Resolved against the space members.
-  const members = useMembers(getSpace(object)?.id);
+  const members = useMembers(Obj.getDatabase(object)?.spaceId);
   const suggestColour = useMemo(
     () => (activeBranch ? hueColour(authorHue(activeBranch, members)) : undefined),
     [activeBranch, members],

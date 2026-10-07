@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Table } from '@dxos/react-ui-table/types';
-import { ViewModel } from '@dxos/schema';
+import { ViewModel, createDefaultSchema } from '@dxos/schema';
 
-import * as TableOperation from '../types/TableOperation';
+import { TableOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,17 +22,28 @@ export default Capability.makeModule(
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
-            const { view, jsonSchema } = await ViewModel.makeFromDatabase({
-              db: options.db,
-              typename: props.typename,
-            });
+            // A new space has no types to pick, so an empty pick makes one, named after the table.
+            let typename = props.typename;
+            if (!typename) {
+              const type = await options.db.addType(createDefaultSchema());
+              if (props.name) {
+                Type.update(type, (type) => {
+                  type.name = props.name;
+                });
+              }
+              typename = Type.getTypename(type);
+            }
+            const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: options.db, typename });
             return Table.make({ name: props.name, view, jsonSchema });
           });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

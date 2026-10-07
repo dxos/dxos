@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Schedule from 'effect/Schedule';
 import { type Loader, type Plugin } from 'esbuild';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 
 const MAX_RETRIES = 5;
@@ -50,7 +49,7 @@ export const httpPlugin: Plugin = {
       return Effect.gen(function* () {
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
-          yield* Effect.fail(
+          return yield* Effect.fail(
             new HttpPluginError({
               message: `failed to fetch ${args.path}, status: ${response.status}`,
             }),
@@ -63,11 +62,10 @@ export const httpPlugin: Plugin = {
         return { contents, loader };
       }).pipe(
         Effect.retry(
-          Function.pipe(
-            Schedule.exponential(Duration.millis(INITIAL_DELAY)),
-            Schedule.jittered,
-            Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),
-          ),
+          Schedule.max([
+            Schedule.exponential(Duration.millis(INITIAL_DELAY)).pipe(Schedule.jittered),
+            Schedule.recurs(MAX_RETRIES - 1),
+          ]),
         ),
         Effect.provide(FetchHttpClient.layer),
         EffectEx.runAndForwardErrors,

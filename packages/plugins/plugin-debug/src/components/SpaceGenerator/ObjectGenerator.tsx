@@ -2,14 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { addressToA1Notation } from '@dxos/compute-hyperformula/types';
+import * as Operation from '@dxos/compute/Operation';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { EID, Filter, Key, Type, View } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { OperationInvoker } from '@dxos/operation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
@@ -28,7 +34,8 @@ export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) =
 
 export const createGenerator = <S extends Type.AnyObj>(
   client: Client,
-  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
+  invoker: OperationInvoker.OperationInvoker,
+  manager: PluginManager.PluginManager,
   schema: S,
 ): ObjectGenerator<Type.InstanceType<S>> => {
   return async (space: Space, n: number): Promise<Type.InstanceType<S>[]> => {
@@ -44,7 +51,20 @@ export const createGenerator = <S extends Type.AnyObj>(
           .find((s) => Type.getTypename(s) === typename)
       : undefined;
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
+      const { data } = await invoker.invokePromise(
+        SpaceOperation.AddType,
+        { type: schema, show: false },
+        { spaceId: space.id },
+      );
+      // The operation's process cannot see the managers, so the plugins (e.g. the table for the type) are told here.
+      if (data && !data.notified) {
+        await EffectEx.runAndForwardErrors(
+          SpaceCapabilities.notifyTypeAdded(
+            { plugins: manager, capabilities: manager.capabilities },
+            { db: space.db, type: data.object, show: false },
+          ).pipe(Effect.provideService(Operation.Service, invoker)),
+        );
+      }
     }
 
     // Create objects.
@@ -130,21 +150,20 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();
-        model.builder
-          .createNode({ id: 'gpt-INPUT', type: NODE_INPUT })
-          .createNode({ id: 'gpt-GPT', type: 'gpt' })
-          .createNode({
-            id: 'gpt-QUEUE_ID',
-            type: 'constant',
-            value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
-          })
-          .createNode({ id: 'gpt-APPEND', type: 'append' })
-          .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
-          .createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' })
-          .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' })
-          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-APPEND', property: 'id' })
-          .createEdge({ node: 'gpt-GPT', property: 'messages' }, { node: 'gpt-APPEND', property: 'items' })
-          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-OUTPUT', property: 'queue' });
+        model.createNode({ id: 'gpt-INPUT', type: NODE_INPUT });
+        model.createNode({ id: 'gpt-GPT', type: 'gpt' });
+        model.createNode({
+          id: 'gpt-QUEUE_ID',
+          type: 'constant',
+          value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
+        });
+        model.createNode({ id: 'gpt-APPEND', type: 'append' });
+        model.createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT });
+        model.createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' });
+        model.createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' });
+        model.createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-APPEND', property: 'id' });
+        model.createEdge({ node: 'gpt-GPT', property: 'messages' }, { node: 'gpt-APPEND', property: 'items' });
+        model.createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-OUTPUT', property: 'queue' });
 
         return space.db.add(model.root);
       });

@@ -6,8 +6,8 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import * as SpaceCapabilities from './SpaceCapabilities';
-import * as SpaceEvents from './SpaceEvents';
+import * as SpaceCapabilities from './SpaceCapabilities.ts';
+import * as SpaceEvents from './SpaceEvents.ts';
 
 /**
  * Module maker contributing a typed create-object entry. Gated by default on the create flow

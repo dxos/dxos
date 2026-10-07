@@ -30,7 +30,7 @@ import {
 } from '@automerge/automerge-repo';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -38,12 +38,19 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { isNonNullable, range } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { type HandleQueryState } from './handle-state';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { type HandleQueryState } from './handle-state.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
+
+/**
+ * Ceiling for a reload to read back what a previous adapter wrote. Local SQLite, so it lands in
+ * milliseconds; the bound exists so a dropped write reports itself instead of hanging until the
+ * suite's own timeout, which is how this surfaced in CI as an unexplained 15 s stall.
+ */
+const RELOAD_WINDOW_MS = 10_000;
 
 /**
  * Block until the {@link DocumentProgress} reports a state in `awaitStates`.
@@ -68,6 +75,22 @@ const waitForQueryState = async <T>(
     await trigger.wait({ timeout });
   } finally {
     unsubscribe();
+  }
+};
+
+/**
+ * Assert `handle` does not emit `heads-changed` within `timeoutMs` — gives a would-be
+ * replication a real window to land before asserting it did not, rather than guessing a
+ * sleep duration unrelated to any event the handle actually emits.
+ */
+const expectNoChangeWithin = async (handle: DocHandle<any>, timeoutMs: number): Promise<void> => {
+  const changed = new Trigger();
+  const onChange = () => changed.wake();
+  handle.on('heads-changed', onChange);
+  try {
+    await expect(changed.wait({ timeout: timeoutMs })).rejects.toThrow();
+  } finally {
+    handle.off('heads-changed', onChange);
   }
 };
 
@@ -286,7 +309,7 @@ describe('AutomergeRepo', () => {
           doc.offlineText = offlineText;
         });
 
-        await sleep(100);
+        await expectNoChangeWithin(docOnClient, 100);
         await asyncTimeout(docOnClient.whenReady(), 1000);
         expect(docOnClient.doc().offlineText).to.be.undefined;
       }
@@ -371,7 +394,7 @@ describe('AutomergeRepo', () => {
       // peers are announced and a reconnect re-enters sync.
       const progress = client.findWithProgress(docA.url);
       const { documentId: clientDocId } = parseAutomergeUrl(docA.url);
-      await sleep(100);
+      await expect(waitForQueryState(progress, ['ready'], { timeout: 100 })).rejects.toThrow();
       expect(progress.peek().state).to.not.equal('ready');
       expect(client.handles[clientDocId].doc()).to.deep.equal({});
 
@@ -485,7 +508,18 @@ describe('AutomergeRepo', () => {
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
-      const storage = await createSqliteAdapter();
+      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+      // Keyed on the document id, same as the "reload document without flush" case above: `save`
+      // no-ops once the adapter is closed, so guessing how long the write takes can silently drop it.
+      const saved = new Trigger();
+      const { adapter: storage, dispose } = await createTestSqliteStorageAdapter(':memory:', {
+        afterSave: (key) => {
+          if (key[0] === documentId) {
+            saved.wake();
+          }
+        },
+      });
+      onTestFinished(dispose);
 
       const repo = new Repo({ network: [], storage });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
@@ -495,7 +529,6 @@ describe('AutomergeRepo', () => {
       };
 
       let clientDoc = A.from<{ field?: string }>({ field: 'foo' });
-      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
       // Sync handshake.
       let sentHeads: Heads = [];
 
@@ -517,7 +550,7 @@ describe('AutomergeRepo', () => {
         expect(serverHandle.doc()!.field).to.deep.equal(value);
       }
 
-      await sleep(100);
+      await asyncTimeout(saved.wait(), RELOAD_WINDOW_MS);
 
       // Re-open repo.
       {
@@ -544,8 +577,10 @@ describe('AutomergeRepo', () => {
 
       expect(handleA.doc()!.text).to.equal(text);
 
-      await sleep(100);
       await asyncTimeout(handleB.whenReady(), 1000);
+      // `whenReady()` only resolves once the document has finished its initial load; it does not
+      // wait for a subsequent update to replicate, so poll for the replicated value instead.
+      await waitForCondition({ condition: () => handleB.doc()?.text === text, timeout: 1_000 });
       expect(handleB.doc()!.text).to.equal(text);
     });
 
@@ -572,7 +607,7 @@ describe('AutomergeRepo', () => {
       // body stays empty. Asserting on doc body is the substantive check;
       // the query state is incidentally `'loading'` here.
       const progress = repoB.findWithProgress<{ text: string }>(docA.url);
-      await sleep(100);
+      await expect(waitForQueryState(progress, ['ready'], { timeout: 100 })).rejects.toThrow();
       const docB = repoB.handles[parseAutomergeUrl(docA.url).documentId] as DocHandle<{ text: string }>;
       expect(progress.peek().state).to.not.equal('ready');
       expect(docB.doc()).to.deep.equal({});
@@ -651,7 +686,7 @@ describe('AutomergeRepo', () => {
         const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
-        await handle.whenReady();
+        await asyncTimeout(handle.whenReady(), RELOAD_WINDOW_MS);
         expect(handle.doc()?.text).to.equal(text);
         await close();
       }
@@ -663,15 +698,27 @@ describe('AutomergeRepo', () => {
       let url: AutomergeUrl;
 
       {
-        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
+        // Wait for this document's own chunk to land rather than a fixed window: `save` no-ops once
+        // the adapter is closed, so closing on a guess drops the write and the reload below finds
+        // nothing. Keyed on the document id because `afterSave` fires per chunk, and the first one
+        // is not necessarily this document's.
+        let documentId: string | undefined;
+        const saved = new Trigger();
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path, {
+          afterSave: (key) => {
+            if (documentId !== undefined && key[0] === documentId) {
+              saved.wake();
+            }
+          },
+        });
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
+        documentId = handle.documentId;
         handle.change((doc: any) => {
           doc.text = text;
         });
-        // No explicit flush - rely on auto-save.
-        await sleep(200);
+        await asyncTimeout(saved.wait(), RELOAD_WINDOW_MS);
         await close();
       }
 
@@ -679,7 +726,7 @@ describe('AutomergeRepo', () => {
         const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
-        await handle.whenReady();
+        await asyncTimeout(handle.whenReady(), RELOAD_WINDOW_MS);
         expect(handle.doc()?.text).to.equal(text);
         await close();
       }
@@ -724,7 +771,7 @@ describe('AutomergeRepo', () => {
           doc.offlineText = offlineText;
         });
         const docOnPeer2 = await peer2.repo.find<any>(handle.url);
-        await sleep(100);
+        await expectNoChangeWithin(docOnPeer2, 100);
         await asyncTimeout(docOnPeer2.whenReady(), 1000);
         expect(docOnPeer2.doc()!.offlineText).to.be.undefined;
       }
@@ -783,7 +830,7 @@ describe('AutomergeRepo', () => {
       // Substantive assertion: the handle body stays empty. (The query
       // state may be either `'loading'` or `'unavailable'` depending on
       // peer share-policy resolution timing — the body is the invariant.)
-      await sleep(200);
+      await expect(waitForQueryState(shouldNotFindProgress, ['ready'], { timeout: 200 })).rejects.toThrow();
       const shouldNotFindDoc = peer2.repo.handles[parseAutomergeUrl(docNotInRemoteCollection.url).documentId];
       expect(shouldNotFindProgress.peek().state).to.not.equal('ready');
       expect(shouldNotFindDoc.doc()).to.deep.equal({});
@@ -828,7 +875,7 @@ describe('AutomergeRepo', () => {
       // body stays empty. The query state may be `'loading'` or
       // `'unavailable'` depending on peer share-policy resolution timing.
       const otherSpaceProgress = peerFromAnotherSpace.repo.findWithProgress(document.url);
-      await sleep(200);
+      await expect(waitForQueryState(otherSpaceProgress, ['ready'], { timeout: 200 })).rejects.toThrow();
       const otherSpaceDoc = peerFromAnotherSpace.repo.handles[parseAutomergeUrl(document.url).documentId];
       expect(otherSpaceProgress.peek().state).to.not.equal('ready');
       expect(otherSpaceDoc.doc()).to.deep.equal({});
@@ -1041,6 +1088,7 @@ const createTeleportTestPeer = async (
     },
     onCollectionStateQueried: () => {},
     onCollectionStateReceived: () => {},
+    onConnectionAuthScopeChanged: 'reannounce-peer',
   });
   const repo = new Repo({
     peerId: options?.peerId as PeerId,
@@ -1063,9 +1111,9 @@ const connectPeers = async (
   peer2: TeleportTestPeer,
 ) => {
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);
-  await peer1.meshAdapter.authorizeDevice(spaceKey, peer2.teleport.peerId);
+  await peer1.meshAdapter.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer2.teleport.peerId);
   connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension());
-  await peer2.meshAdapter.authorizeDevice(spaceKey, peer1.teleport.peerId);
+  await peer2.meshAdapter.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer1.teleport.peerId);
   connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension());
 };
 

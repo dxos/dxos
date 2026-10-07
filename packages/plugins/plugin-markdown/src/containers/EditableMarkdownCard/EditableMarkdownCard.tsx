@@ -7,13 +7,12 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { Card } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Card from '@dxos/react-ui/Card';
 import { Text } from '@dxos/schema';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
-
-import * as Markdown from '../../types/Markdown';
+import { Markdown } from '#types';
 
 export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
@@ -33,7 +32,7 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
 
   return (
     <Card.Section classNames='overflow-hidden'>
-      <Card.Row fullWidth>
+      <Card.Row>
         <MarkdownEditorProvider id={id} object={subject} viewMode='source' identity={identity}>
           {(editorRootProps) => (
             <Editor.Root {...editorRootProps}>

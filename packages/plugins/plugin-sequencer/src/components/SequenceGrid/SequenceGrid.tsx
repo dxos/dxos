@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -20,11 +21,10 @@ import {
 } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import type * as Note from '../../types/Note';
-import type * as Sequence from '../../types/Sequence';
-import type * as Track from '../../types/Track';
-import { hueFor, hueToHex } from '../../util/hue';
-import { LoopMarkers } from '../LoopMarkers';
+import { Note, Sequence, Track } from '#types';
+
+import { hueFor, hueToHex } from '../../util/hue.ts';
+import { LoopMarkers } from '../LoopMarkers/index.ts';
 
 export type SequenceGridProps = {
   sequence: Sequence.Sequence;
@@ -561,7 +561,7 @@ export const SequenceGrid = ({
   const loopMaxBeats = Math.max(sequence.length, 256);
 
   return (
-    <div ref={paneRef} className={mx('relative w-full h-full', classNames)}>
+    <div ref={paneRef} className={mx('relative dx-fill', classNames)}>
       <CellGrid
         atoms={atoms as any}
         rows={rows}

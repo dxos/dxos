@@ -4,9 +4,9 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
-import * as PresenterOperation from './types/PresenterOperation';
+import { PresenterOperation } from '#types';
 
 /**
  * Exits presentation for the given object. Delegates to the toggle operation so the
@@ -14,10 +14,10 @@ import * as PresenterOperation from './types/PresenterOperation';
  * separately races, leaving the deck stuck in fullscreen.
  */
 export const useExitPresenter = (object: any) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   return useCallback(
-    () => invokePromise(PresenterOperation.TogglePresentation, { object, state: false }),
+    () => invokePromise(PresenterOperation.SetPresenting, { object, state: false }),
     [invokePromise, object],
   );
 };

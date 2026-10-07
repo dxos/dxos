@@ -2,31 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useContext, useState } from 'react';
 
 import { AiContext } from '@dxos/assistant';
 import { Database, Feed } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 export const useContextBinder = (
   space: Space | undefined,
   feed: Feed.Feed | undefined,
 ): AiContext.Binder | undefined => {
-  const registry = useContext(RegistryContext) as Registry.Registry;
+  const registry = useContext(RegistryContext) as Registry.AtomRegistry;
   const [binder, setBinder] = useState<AiContext.Binder>();
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     setBinder(undefined);
     if (!space || !feed) {
       return;
     }
 
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed, runtime, registry });
     await binder.open();

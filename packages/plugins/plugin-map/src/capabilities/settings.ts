@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
+import { MapCapabilities } from '#types';
 
-import * as MapCapabilities from '../types/MapCapabilities';
-import { Settings } from '../types/Settings';
+import { Settings } from '../types/Settings.ts';
 
 /**
  * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and exposes the
@@ -20,7 +20,7 @@ import { Settings } from '../types/Settings';
  */
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings,
       defaultValue: (): Settings => ({}),

@@ -15,18 +15,20 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, Version } from '@dxos/versioning';
 
-import { translations } from '../../translations';
-import { MarkdownProperties } from './MarkdownProperties';
+import { translations } from '#translations';
+
+import { MarkdownProperties } from './MarkdownProperties.tsx';
 
 const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.makeMeta({
@@ -67,10 +69,10 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -87,7 +89,7 @@ const meta = {
         }),
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     })),
   ],

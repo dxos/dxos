@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-navtree",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,13 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -44,9 +52,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/NavTreePlugin.tsx",
-      "types": "./dist/types/src/NavTreePlugin.d.ts",
-      "default": "./dist/lib/NavTreePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -57,6 +65,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -65,6 +78,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./NavTreeCapabilities": {
       "source": "./src/types/NavTreeCapabilities.ts",
       "types": "./dist/types/src/types/NavTreeCapabilities.d.ts",
@@ -75,13 +89,17 @@
       "types": "./dist/types/src/types/NavTreeNode.d.ts",
       "import": "./dist/lib/NavTreeNode.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./NavTreePlugin": {
+      "source": "./src/NavTreePlugin.ts",
+      "types": "./dist/types/src/NavTreePlugin.d.ts",
+      "import": "./dist/lib/NavTreePlugin.mjs"
     },
+    "./NavTreeSurface": {
+      "source": "./src/NavTreeSurface.ts",
+      "types": "./dist/types/src/NavTreeSurface.d.ts",
+      "import": "./dist/lib/ns/NavTreeSurface.mjs"
+    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -114,20 +132,19 @@
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/keyboard": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
@@ -135,8 +152,8 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@dxos/ui-types": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -148,8 +165,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

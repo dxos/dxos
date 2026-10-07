@@ -13,15 +13,16 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Blog } from '#types';
 
-import * as Blog from '../../types/Blog';
-import { PublicationArticle } from './PublicationArticle';
+import { PublicationArticle } from './PublicationArticle.tsx';
 
 const POST_COUNT = 3;
 
@@ -34,7 +35,8 @@ const makeStoryPublication = (): Blog.Publication => {
       description: `Summary for post ${i + 1}.`,
     });
     Obj.update(publication, (publication) => {
-      publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+      publication.posts ??= [];
+      publication.posts.push(Ref.make(post));
     });
   }
 
@@ -56,17 +58,17 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Blog.Publication, Blog.Post, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

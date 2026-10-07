@@ -5,29 +5,29 @@
 import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import { getEnvString } from '@dxos/config';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
-import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { SHORTCUTS_DIALOG } from '../../constants';
-
-// Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
-// inlined because composer-app is not a workspace dependency.
-const ABOUT_DIALOG = 'org.dxos.plugin.welcome.component.about-dialog';
+import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
+import { downloadUrl } from './download.ts';
 
 const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
-const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
 export const HelpMenu = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const releasedAt = timestamp ? new Date(timestamp) : undefined;
@@ -44,71 +44,79 @@ export const HelpMenu = () => {
     [invokePromise],
   );
 
+  // The dashboard on production, the channel's own latest installer elsewhere.
+  const downloadHref = downloadUrl(getEnvString(config, 'DX_ENVIRONMENT'));
+
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+    <Menu.Root positioning={{ placement: 'left-end' }}>
+      <Menu.Trigger asChild>
         <StatusBar.Item>
-          <IconButton variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <Button.Root variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content side='left' align='end'>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item asChild>
-              <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
-                <Icon icon='ph--book-open--regular' size={4} />
-                <span>{t('docs.label')}</span>
-              </a>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
-              <Icon icon='ph--keyboard--regular' size={4} />
-              <span>{t('shortcuts.label')}</span>
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item asChild>
-              <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
-                <Icon icon='ph--discord-logo--regular' size={4} />
-                <span>{t('discord.label')}</span>
-              </a>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item asChild>
-              <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
-                <Icon icon='ph--github-logo--regular' size={4} />
-                <span>{t('github.label')}</span>
-              </a>
-            </DropdownMenu.Item>
-            {!isTauri() && (
-              <DropdownMenu.Item asChild>
-                <a href={DOWNLOAD_URL} target='_blank' rel='noopener noreferrer'>
-                  <Icon icon='ph--download-simple--regular' size={4} />
-                  <span>{t('download-apps.label')}</span>
-                </a>
-              </DropdownMenu.Item>
+      </Menu.Trigger>
+      <Menu.Content>
+        <Menu.Item asChild item={{ value: 'docs.label', label: t('docs.label'), icon: 'ph--book-open--regular' }}>
+          <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
+            <Menu.ItemIcon />
+            <Menu.ItemText />
+          </a>
+        </Menu.Item>
+        <Menu.Item
+          item={{ value: 'shortcuts.label', label: t('shortcuts.label'), icon: 'ph--keyboard--regular' }}
+          onClick={openDialog(SHORTCUTS_DIALOG)}
+        />
+        <Menu.Separator />
+        <Menu.Item
+          asChild
+          item={{ value: 'discord.label', label: t('discord.label'), icon: 'ph--discord-logo--regular' }}
+        >
+          <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
+            <Menu.ItemIcon />
+            <Menu.ItemText />
+          </a>
+        </Menu.Item>
+        <Menu.Item asChild item={{ value: 'github.label', label: t('github.label'), icon: 'ph--github-logo--regular' }}>
+          <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
+            <Menu.ItemIcon />
+            <Menu.ItemText />
+          </a>
+        </Menu.Item>
+        {!isTauri() && (
+          <Menu.Item
+            asChild
+            item={{
+              value: 'download-apps.label',
+              label: t('download-apps.label'),
+              icon: 'ph--download-simple--regular',
+            }}
+          >
+            <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
+              <Menu.ItemIcon />
+              <Menu.ItemText />
+            </a>
+          </Menu.Item>
+        )}
+        <Menu.Separator />
+        <Menu.Item
+          item={{ value: 'about.label', label: t('about.label'), icon: 'ph--info--regular' }}
+          onClick={openDialog(ABOUT_DIALOG)}
+        />
+        {version && (
+          <Layout.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
+            <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
+              {version}
+            </a>
+            {released && (
+              <span>
+                {t('released.message', {
+                  released: formatDistance(released, new Date(), { addSuffix: true }),
+                })}
+              </span>
             )}
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item onClick={openDialog(ABOUT_DIALOG)}>
-              <Icon icon='ph--info--regular' size={4} />
-              <span>{t('about.label')}</span>
-            </DropdownMenu.Item>
-            {version && (
-              <div className='ps-8 pe-2 pb-2 flex flex-col text-xs text-description'>
-                <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
-                  {version}
-                </a>
-                {released && (
-                  <span>
-                    {t('released.message', {
-                      released: formatDistance(released, new Date(), { addSuffix: true }),
-                    })}
-                  </span>
-                )}
-              </div>
-            )}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          </Layout.Flex>
+        )}
+      </Menu.Content>
+    </Menu.Root>
   );
 };
 

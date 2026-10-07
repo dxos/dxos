@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
-import { organizationProfileContent, upsertProfile } from './research';
+import { CrmOperation } from '#types';
+
+import { organizationProfileContent, upsertProfile } from './research.ts';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ResearchOrganization> = CrmOperation.ResearchOrganization.pipe(
   Operation.withHandler(

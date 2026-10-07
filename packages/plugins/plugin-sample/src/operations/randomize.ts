@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
 
-import * as SampleOperation from '../types/SampleOperation';
+import { SampleOperation } from '#types';
 
 const STATUSES: string[] = ['active', 'archived', 'draft'];
 

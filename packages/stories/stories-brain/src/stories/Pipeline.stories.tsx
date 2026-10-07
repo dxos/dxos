@@ -32,11 +32,10 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';
@@ -49,18 +48,15 @@ import {
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -72,10 +68,10 @@ import {
   type OutputDetail,
   type PipelineInfo,
   type StatItem,
-} from '../components';
-import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
-import { StoryRole } from '../modules';
-import { StoryModulesPlugin } from '../testing/modules';
+} from '../components/index.ts';
+import { PIPELINE_RUN, PipelineStoryContext } from '../modules/index.ts';
+import { StoryRole } from '../modules/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -155,8 +151,8 @@ type StoryArgs = { ai: AiConfig };
 
 const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const progress = useCapability(AppCapabilities.ProgressRegistry);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
   const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
@@ -410,7 +406,7 @@ const toDocs = (text: string): { readonly text: string; readonly source: string 
     .map((part, index) => ({ text: part, source: `doc-${index}` }));
 
 const factEntities = (fact: RDF.Fact): string[] =>
-  [fact.assertion.subject, fact.assertion.object].flatMap((term) => ('entity' in term ? [term.entity] : []));
+  [fact.assertion.subject, fact.assertion.object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 
@@ -457,10 +453,10 @@ const MessageList = ({
       return (
         <div
           key={message.id}
-          className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+          className='flex flex-col dx-card-surface border border-separator-subtle rounded-sm px-3 py-2'
         >
           <span className='font-medium truncate'>{String(message.properties?.subject ?? '')}</span>
-          <span className='text-sm text-description truncate'>{message.sender.email}</span>
+          <span className='text-sm text-fg-muted truncate'>{message.sender.email}</span>
           <span className='text-sm'>{summary || Message.extractText(message)}</span>
         </div>
       );
@@ -473,10 +469,10 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
     {result.threads.map((thread) => (
       <div
         key={thread.id}
-        className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+        className='flex flex-col dx-card-surface border border-separator-subtle rounded-sm px-3 py-2'
       >
         <span className='font-medium truncate'>{thread.subject}</span>
-        <span className='text-sm text-description'>
+        <span className='text-sm text-fg-muted'>
           {thread.state} · {thread.messageIds.length} message(s) · {thread.participants.join(', ')}
         </span>
       </div>
@@ -488,12 +484,12 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
   <div className='flex flex-col gap-3 p-3 h-full overflow-auto'>
     {summary && (
       <div className='flex flex-col gap-1'>
-        <span className='text-sm text-description'>Summary</span>
+        <span className='text-sm text-fg-muted'>Summary</span>
         <span className='text-sm'>{summary}</span>
       </div>
     )}
     <div className='flex flex-col gap-1'>
-      <span className='text-sm text-description'>Transcript</span>
+      <span className='text-sm text-fg-muted'>Transcript</span>
       {lines.map((line, index) => (
         <span key={index} className='text-sm'>
           {line}
@@ -506,34 +502,26 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
 const meta = {
   title: 'stories/stories-brain/Pipeline',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace: space } = yield* initializeIdentity(client);
-              // Seed a couple of entities so the transcription pipeline has something to link against
-              // and the Objects tab is populated before the email pipeline runs.
-              // TODO(burdon): From const.
-              space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
-              space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
-            }),
-        }),
-        SpacePlugin({}),
-        MarkdownPlugin(),
-        TranscriptionPlugin(),
-        BrainPlugin(),
-        ProgressPlugin(),
-        StoryModulesPlugin(),
-        StorybookPlugin({}),
-      ],
-    }),
-  ],
+  decorators: createStoryDecorators({
+    types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
+    onInit: async ({ space }) => {
+      // Seed a couple of entities so the transcription pipeline has something to link against
+      // and the Objects tab is populated before the email pipeline runs.
+      // TODO(burdon): From const.
+      space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
+      space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
+      // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+      await space.db.flush({ indexes: true, secondaryIndexes: true });
+    },
+    plugins: [
+      SpacePlugin({}),
+      MarkdownPlugin.make(),
+      TranscriptionPlugin.make(),
+      BrainPlugin.make(),
+      ProgressPlugin.make(),
+      StoryModulesPlugin(),
+    ],
+  }),
   args: {
     ai: { preset: 'edge-remote' },
   },

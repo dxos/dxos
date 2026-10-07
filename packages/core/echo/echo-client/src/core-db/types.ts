@@ -10,7 +10,7 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import type { EntityMeta } from '@dxos/echo-protocol';
 import type { SpaceId, URI } from '@dxos/keys';
 
-import * as Doc from '../automerge/Doc';
+import * as Doc from '../automerge/Doc.ts';
 
 //
 // TargetKey — proxy-target cache key (shared with echo-handler to avoid
@@ -153,3 +153,13 @@ export interface LoadObjectDocumentOptions {
 }
 
 export type InitRootProxyFn = (core: unknown) => void;
+
+/** @see EntityManager `_releaseObject`. */
+export type ReleaseObjectOptions = {
+  /**
+   * Also drop the object's document (when nothing else is mounted in it). Set where the object left
+   * the space directory; never where its core was merely collected, since the document may still be
+   * under load or shared.
+   */
+  releaseDocument?: boolean;
+};

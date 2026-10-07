@@ -8,14 +8,16 @@ import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { EdgeWebsocketProtocol } from '@dxos/protocols';
+import { EDGE_CLIENT_VERSION_PROTOCOL_PREFIX, EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
-import { type EdgeIdentity } from './edge-identity';
-import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketMuxer } from './edge-ws-muxer';
-import { toUint8Array } from './protocol';
+import { version } from '../package.json';
+import { protocol } from './defs.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketClosedError, WebSocketMuxer } from './edge-ws-muxer.ts';
+import { toUint8Array } from './protocol.ts';
+import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
@@ -26,11 +28,26 @@ const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
  * nothing about the connection. Probe and re-arm instead of restarting.
  */
 const KEEPALIVE_WATCHDOG_LATE_TOLERANCE = 3_000;
+/**
+ * Probes in a row that may go unanswered before the watchdog restarts even though the loop keeps stalling: a live
+ * connection answers between blocks, so only a dead one gets this far.
+ */
+const KEEPALIVE_MAX_UNANSWERED_PROBES = 3;
+
+/** `WebSocket.CONNECTING`, inlined because `isomorphic-ws` exposes no static in every runtime. */
+const WS_CONNECTING = 0;
+
+/**
+ * Bound on messages held while the socket completes its handshake. A handshake takes a
+ * round trip, so the backlog is small in practice; the cap stops a server that never
+ * finishes connecting from growing the queue without limit.
+ */
+const MAX_PENDING_MESSAGES = 256;
 
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
   onMessage: (message: Message) => void;
-  onRestartRequired: () => void;
+  onRestartRequired: (reason: ReconnectReason) => void;
 };
 
 export class EdgeWsConnection extends Resource {
@@ -44,6 +61,13 @@ export class EdgeWsConnection extends Resource {
   // Latency tracking.
   private _pingTimestamp: number | undefined;
   private _lastPingSentTimestamp = 0;
+  /**
+   * When a ping last went out later than its interval allows: the event loop was blocked until then,
+   * so pongs that arrived meanwhile went unread.
+   */
+  private _loopStalledAt: number | undefined;
+  /** Probes the watchdog sent since anything was last received. */
+  private _unansweredProbes = 0;
   private _rtt = 0;
 
   // Rate tracking with sliding window.
@@ -64,6 +88,12 @@ export class EdgeWsConnection extends Resource {
    * processing is serialized through this lock.
    */
   private readonly _receiveMutex = new Mutex();
+
+  /**
+   * Messages submitted before the handshake completed. `send()` on a CONNECTING socket throws
+   * `InvalidStateError`, and callers holding the connection across a reconnect do exactly that.
+   */
+  private _pendingMessages: Message[] = [];
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -86,8 +116,9 @@ export class EdgeWsConnection extends Resource {
     return this._rtt;
   }
 
+  /** Floor uptime to satisfy the int32 EdgeStatus.uptime wire type. */
   public get uptime(): number {
-    return this._openTimestamp ? (Date.now() - this._openTimestamp) / 1000 : 0;
+    return this._openTimestamp ? Math.floor((Date.now() - this._openTimestamp) / 1000) : 0;
   }
 
   public get uploadRate(): number {
@@ -109,6 +140,17 @@ export class EdgeWsConnection extends Resource {
   public send(message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
+    if (this._ws.readyState === WS_CONNECTING) {
+      if (this._pendingMessages.length >= MAX_PENDING_MESSAGES) {
+        // Drop the oldest: during a reconnect the freshest signalling state is the useful one.
+        const dropped = this._pendingMessages.shift();
+        log.warn('pending message dropped (queue full while connecting)', {
+          payload: dropped && protocol.getPayloadType(dropped),
+        });
+      }
+      this._pendingMessages.push(message);
+      return;
+    }
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
     this._messagesSent++;
     if (this._ws?.protocol.includes(EdgeWebsocketProtocol.V0)) {
@@ -127,12 +169,20 @@ export class EdgeWsConnection extends Resource {
       // For muxer, we need to track the size of the message being sent.
       const binary = buf.toBinary(MessageSchema, message);
       this._recordBytes(binary.byteLength, 0);
-      this._wsMuxer.send(message).catch((e) => log.catch(e));
+      this._wsMuxer.send(message).catch((error) => {
+        // A close mid-send is routine (the close handler reconnects), so it is not reported as an error.
+        if (error instanceof WebSocketClosedError) {
+          log.verbose('message dropped (websocket closed)', { payload: protocol.getPayloadType(message) });
+        } else {
+          log.catch(error);
+        }
+      });
     }
   }
 
   protected override async _open(): Promise<void> {
-    const baseProtocols = [...Object.values(EdgeWebsocketProtocol)];
+    // Browsers cannot set WebSocket headers, so the SDK version rides in the subprotocol list.
+    const baseProtocols = [...Object.values(EdgeWebsocketProtocol), `${EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}${version}`];
     this._ws = new WebSocket(
       this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader
@@ -151,24 +201,28 @@ export class EdgeWsConnection extends Resource {
       if (this.isOpen) {
         log('connected');
         this._openTimestamp = Date.now();
+        this._flushPendingMessages();
         this._callbacks.onConnected();
         this._scheduleHeartbeats();
         this._scheduleRateCalculation();
       } else {
+        this._pendingMessages = [];
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
     };
     this._ws.onclose = (event: WebSocket.CloseEvent) => {
       if (this.isOpen) {
-        log.warn('server disconnected', { code: event.code, reason: event.reason });
-        this._callbacks.onRestartRequired();
+        const reason = classifyCloseCode(event.code, isOnline());
+        log.warn('server disconnected', { code: event.code, reason: event.reason, classified: reason });
+        this._pendingMessages = [];
+        this._callbacks.onRestartRequired(reason);
         muxer.destroy();
       }
     };
     this._ws.onerror = (event: WebSocket.ErrorEvent) => {
       if (this.isOpen) {
         log.warn('edge connection socket error', { error: event.error, info: event.message });
-        this._callbacks.onRestartRequired();
+        this._callbacks.onRestartRequired(classifySocketError(isOnline()));
       } else {
         log.verbose('error ignored on closed connection', { error: event.error });
       }
@@ -182,6 +236,7 @@ export class EdgeWsConnection extends Resource {
         return;
       }
       this._lastReceivedMessageTimestamp = Date.now();
+      this._unansweredProbes = 0;
       if (event.data === '__pong__') {
         // Calculate latency.
         if (this._pingTimestamp) {
@@ -196,6 +251,15 @@ export class EdgeWsConnection extends Resource {
       // so locks are taken in arrival order regardless of async conversion timing.
       void this._receiveMessage(event.data, muxer).catch((err) => log.catch(err));
     };
+  }
+
+  /** Replays messages buffered during the handshake, in submission order. */
+  private _flushPendingMessages(): void {
+    const pending = this._pendingMessages;
+    this._pendingMessages = [];
+    for (const message of pending) {
+      this.send(message);
+    }
   }
 
   private async _receiveMessage(data: WebSocket.Data, muxer: WebSocketMuxer): Promise<void> {
@@ -223,6 +287,7 @@ export class EdgeWsConnection extends Resource {
 
   protected override async _close(): Promise<void> {
     void this._inactivityTimeoutCtx?.dispose().catch(() => {});
+    this._pendingMessages = [];
 
     try {
       this._ws?.close();
@@ -256,18 +321,27 @@ export class EdgeWsConnection extends Resource {
     if (!this._ws) {
       return;
     }
-    this._pingTimestamp = Date.now();
-    this._lastPingSentTimestamp = Date.now();
+    const now = Date.now();
+    if (
+      this._lastPingSentTimestamp &&
+      now - this._lastPingSentTimestamp > SIGNAL_KEEPALIVE_INTERVAL + KEEPALIVE_WATCHDOG_LATE_TOLERANCE
+    ) {
+      this._loopStalledAt = now;
+    }
+    this._pingTimestamp = now;
+    this._lastPingSentTimestamp = now;
     this._ws.send('__ping__');
   }
 
   /**
    * Inactivity watchdog. Restarts the connection only after a fair trial: pings were actually
-   * flowing (a recent send), the timer fired on schedule (the local event loop was alive to
-   * process an answer), and still nothing was received for the full window. Wall-clock silence
-   * alone is not evidence — sync compute can pin the event loop for seconds, during which the
-   * ping sender does not run and arrived pongs are not processed; restarting a healthy
-   * connection on that basis costs a re-handshake and fails in-flight sync rounds.
+   * flowing (a recent send), the timer fired on schedule and no ping went out late within the
+   * window (the local event loop was alive to process an answer), and still nothing was received
+   * for the full window. Wall-clock silence alone is not evidence — sync compute can pin the event
+   * loop for seconds, during which the ping sender does not run and arrived pongs are not
+   * processed; restarting a healthy connection on that basis costs a re-handshake and fails
+   * in-flight sync rounds. A stalled loop is excused only until {@link KEEPALIVE_MAX_UNANSWERED_PROBES}
+   * probes in a row go unanswered.
    */
   private _rescheduleHeartbeatTimeout(): void {
     if (!this.isOpen) {
@@ -291,14 +365,20 @@ export class EdgeWsConnection extends Resource {
         const pingAgeMs = this._lastPingSentTimestamp ? now - this._lastPingSentTimestamp : Number.POSITIVE_INFINITY;
         const firedLateByMs = now - armedAt - SIGNAL_KEEPALIVE_TIMEOUT;
         const pingsWereFlowing = pingAgeMs <= SIGNAL_KEEPALIVE_INTERVAL * 2;
-        const loopWasLive = firedLateByMs < KEEPALIVE_WATCHDOG_LATE_TOLERANCE;
-        if (pingsWereFlowing && loopWasLive) {
+        // The timer fires on time when the loop was blocked for most of the window but freed up before
+        // the deadline, so the late ping that block caused has to count too.
+        const loopStalledAgoMs =
+          this._loopStalledAt === undefined ? Number.POSITIVE_INFINITY : now - this._loopStalledAt;
+        const loopWasLive =
+          firedLateByMs < KEEPALIVE_WATCHDOG_LATE_TOLERANCE && loopStalledAgoMs >= SIGNAL_KEEPALIVE_TIMEOUT;
+        if ((pingsWereFlowing && loopWasLive) || this._unansweredProbes >= KEEPALIVE_MAX_UNANSWERED_PROBES) {
           log.warn('restart due to inactivity timeout', {
             silenceMs,
             pingAgeMs,
+            unansweredProbes: this._unansweredProbes,
             lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
           });
-          this._callbacks.onRestartRequired();
+          this._callbacks.onRestartRequired('inactivity_timeout');
           return;
         }
         // The silence is self-inflicted (starved event loop stopped our pings and delayed this
@@ -307,7 +387,10 @@ export class EdgeWsConnection extends Resource {
           silenceMs,
           pingAgeMs,
           firedLateByMs,
+          loopStalledAgoMs,
+          unansweredProbes: this._unansweredProbes,
         });
+        this._unansweredProbes++;
         this._sendPing();
         this._rescheduleHeartbeatTimeout();
       },

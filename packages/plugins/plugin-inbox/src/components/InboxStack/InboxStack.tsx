@@ -2,22 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import type { PaginationResult } from '@dxos/echo-react';
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Avatar, CardTile, Row } from '@dxos/react-ui-card';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { type Database, Filter } from '@dxos/echo';
+import { type PaginationResult, useQuery } from '@dxos/echo-react';
+import { EID } from '@dxos/keys';
+import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
-import { type Message } from '@dxos/types';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
+import { type Actor, type Message, Person } from '@dxos/types';
 
 import { useVisibleTags } from '#hooks';
 
-import { getMessageBodyText, getMessageProps } from '../../util';
-import { isMessageGroup } from './is-message-group';
+import { getMessageBodyText, getMessageProps } from '../../util/index.ts';
+import { buildContactIndex } from './contact-index.ts';
+import { isMessageGroup } from './is-message-group.ts';
+import { buildTileMenuItems } from './tile-menu.ts';
 
 export type InboxStackAction =
   // `newPlank` when the gesture asked for its own plank (meta/ctrl click) rather than reusing the
@@ -27,6 +35,7 @@ export type InboxStackAction =
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
+  | { type: 'archive'; messageId: string }
   | { type: 'ignore-sender'; messageId: string }
   | { type: 'create-topic'; messageId: string }
   | { type: 'save'; filter: string };
@@ -59,12 +68,30 @@ export type InboxStackItem = Message.Message | MessageGroup;
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
 export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]>;
 
+/** Per-message boolean-membership atom family; each tile subscribes to only its own state. */
+export type MembershipFamily = (messageId: string) => Atom.Atom<boolean>;
+
 /** Per-message starred atom family; each tile subscribes to just its own star state. */
-export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
+export type StarredFamily = MembershipFamily;
 
 const EMPTY_TAGS_ATOM = Atom.make((): InboxStackTag[] => []);
 
 const NOT_STARRED_ATOM = Atom.make(() => false);
+
+/**
+ * Resolves any sender's contact from ONE query of the space's people, so a list of tiles costs a
+ * single query rather than one per row (which is why the tiles were previously contact-blind).
+ */
+const useContactLookup = (db?: Database.Database) => {
+  const people = useQuery(db, Filter.type(Person.Person));
+  return useMemo(() => {
+    if (!db) {
+      return undefined;
+    }
+    const byEmail = buildContactIndex(people);
+    return (actor: Actor.Actor) => (actor.email ? byEmail.get(actor.email.toLowerCase()) : undefined);
+  }, [db, people]);
+};
 
 export type InboxStackProps = {
   id: string;
@@ -78,6 +105,11 @@ export type InboxStackProps = {
   /** Per-message starred atom family; each tile subscribes to only its own star state. */
   starredAtom?: StarredFamily;
   /**
+   * Per-message `inbox`-membership atom family. Drives the archive menu item's direction — archiving
+   * is that tag coming off, so the same entry restores a message that no longer carries it.
+   */
+  inboxAtom?: MembershipFamily;
+  /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
    * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
    * result directly (its `items` field is unused here) so callers can pass it through without
@@ -86,6 +118,8 @@ export type InboxStackProps = {
   pagination?: PaginationResult<unknown>;
   /** Renders a spinner after the last item while a page loads (at the top when the list is empty). */
   loading?: boolean;
+  /** Show the archive / move-to-inbox tile menu item. Off by default (only the mailbox handles `archive`). */
+  enableArchive?: boolean;
   /**
    * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the
    * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
@@ -95,13 +129,20 @@ export type InboxStackProps = {
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
   searchQuery?: string;
+  /**
+   * Resolves each sender's contact for the whole list from ONE query, rather than a query hook per
+   * row: passing it makes every tile's avatar interactive (hover card / create contact) at list cost.
+   */
+  db?: Database.Database;
+  /** Creates the Person for a sender the space does not know (the avatar's hover affordance). */
+  onContactCreate?: (actor: Actor.Actor) => void;
   onAction?: InboxStackActionHandler;
 };
 
 /**
  * Card-based message stack component using mosaic layout.
  */
-export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
+export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
   (
     {
       items,
@@ -109,45 +150,69 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
       currentId,
       selectedIds,
       starredAtom,
+      inboxAtom,
       pagination,
       loading,
+      enableArchive,
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
+      db,
+      onContactCreate,
       onAction,
       ...props
     },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const getContact = useContactLookup(db);
 
     const tileItems = useMemo(
       () =>
-        items?.map(
-          (item): StackTileData =>
-            isMessageGroup(item)
-              ? {
-                  conversationId: item.id,
-                  messages: item.messages,
-                  total: item.total,
-                  // Conversations show the latest message; star reflects/toggles that message.
-                  starredAtom: starredAtom?.(item.messages[0]?.id),
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  onAction,
-                }
-              : {
-                  message: item,
-                  tagsAtom: tagsAtom?.(item.id),
-                  starredAtom: starredAtom?.(item.id),
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  onAction,
-                },
+        items?.map((item): StackTileData =>
+          isMessageGroup(item)
+            ? {
+                conversationId: item.id,
+                messages: item.messages,
+                total: item.total,
+                // Conversations show the latest message; star reflects/toggles that message.
+                starredAtom: starredAtom?.(item.messages[0]?.id),
+                inboxAtom: inboxAtom?.(item.messages[0]?.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              }
+            : {
+                message: item,
+                tagsAtom: tagsAtom?.(item.id),
+                starredAtom: starredAtom?.(item.id),
+                inboxAtom: inboxAtom?.(item.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              },
         ),
-      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction],
+      [
+        items,
+        tagsAtom,
+        starredAtom,
+        inboxAtom,
+        enableArchive,
+        enableIgnoreSender,
+        enableCreateTopic,
+        searchQuery,
+        getContact,
+        onContactCreate,
+        onAction,
+      ],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -211,7 +276,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
     );
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -220,8 +285,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
           selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root padding centered>
-            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}
@@ -233,13 +298,14 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 pagination={pagination}
               />
               {loading && (
-                <div role='status' className='grid place-items-center px-2 py-3'>
-                  <Icon
+                <Layout.Grid role='status' center classNames='px-2 py-3'>
+                  <Icon.Icon
                     icon='ph--spinner-gap--regular'
-                    size={5}
-                    classNames='text-subdued [animation:spin_1s_linear_infinite]'
+                    size='lg'
+                    classNames='[animation:spin_1s_linear_infinite]'
+                    tone='subtle'
                   />
-                </div>
+                </Layout.Grid>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -278,21 +344,39 @@ type MessageTileData = {
   message: Message.Message;
   tagsAtom?: Atom.Atom<InboxStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
+  inboxAtom?: Atom.Atom<boolean>;
+  enableArchive?: boolean;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
   searchQuery?: string;
+  /** List-level contact lookup (see `InboxStackProps.db`). */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  onContactCreate?: (actor: Actor.Actor) => void;
   onAction?: InboxStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction } = data;
+  const {
+    message,
+    tagsAtom,
+    starredAtom,
+    inboxAtom,
+    enableArchive,
+    enableIgnoreSender,
+    enableCreateTopic,
+    searchQuery,
+    getContact,
+    onContactCreate,
+    onAction,
+  } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
   const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+  const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
   const messageTags = useVisibleTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
@@ -323,27 +407,19 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     [message, searchQuery],
   );
 
-  const menuItems = useMemo(() => {
-    if (!onAction) {
-      return undefined;
-    }
-    const items = [];
-    if (enableIgnoreSender && message.sender?.email) {
-      items.push({
-        label: 'Ignore sender',
-        icon: 'ph--prohibit--regular',
-        onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }),
-      });
-    }
-    if (enableCreateTopic) {
-      items.push({
-        label: 'Create Project',
-        icon: 'ph--stack--regular',
-        onClick: () => onAction({ type: 'create-topic', messageId: message.id }),
-      });
-    }
-    return items.length > 0 ? items : undefined;
-  }, [enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
+  const menuItems = useMemo(
+    () =>
+      buildTileMenuItems({
+        messageId: message.id,
+        senderEmail: message.sender?.email,
+        inInbox,
+        enableArchive,
+        enableIgnoreSender,
+        enableCreateTopic,
+        onAction,
+      }),
+    [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id],
+  );
 
   return (
     <CardTile.Root
@@ -363,22 +439,26 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         title={
           <>
             <span className='grow truncate font-medium'>{subject}</span>
-            <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+            <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
           </>
         }
       />
       <Card.Body>
-        <Row.Person actor={message.sender} avatar role='from' onClick={handleAvatarClick} />
-
+        <Row.Person
+          actor={message.sender}
+          role='from'
+          getContact={getContact}
+          onContactCreate={onContactCreate}
+          onClick={handleAvatarClick}
+        />
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
           <Card.Row>
-            <Card.Text variant='description'>
+            <Card.Text variant='muted'>
               {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
             </Card.Text>
           </Card.Row>
         )}
-
         <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
       </Card.Body>
     </CardTile.Root>
@@ -397,10 +477,15 @@ type ConversationTileData = {
   /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
   total?: number;
   starredAtom?: Atom.Atom<boolean>;
+  inboxAtom?: Atom.Atom<boolean>;
+  enableArchive?: boolean;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */
   searchQuery?: string;
+  /** List-level contact lookup (see `InboxStackProps.db`). */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  onContactCreate?: (actor: Actor.Actor) => void;
   onAction?: InboxStackActionHandler;
 };
 
@@ -413,15 +498,20 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       messages,
       total,
       starredAtom,
+      inboxAtom,
+      enableArchive,
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
+      getContact,
+      onContactCreate,
       onAction,
     } = data;
     const latest = messages[0];
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
     const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+    const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 
@@ -469,30 +559,17 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       >
         <CardTile.Header
           menu
-          menuItems={
-            onAction
-              ? [
-                  ...(enableIgnoreSender && latest.sender?.email
-                    ? [
-                        {
-                          label: 'Ignore sender',
-                          icon: 'ph--prohibit--regular',
-                          onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }),
-                        },
-                      ]
-                    : []),
-                  ...(enableCreateTopic
-                    ? [
-                        {
-                          label: 'Create Project',
-                          icon: 'ph--stack--regular',
-                          onClick: () => onAction({ type: 'create-topic', messageId: latest.id }),
-                        },
-                      ]
-                    : []),
-                ]
-              : undefined
-          }
+          // Acts on the latest message, as the star does — the conversation is represented by it
+          // everywhere else in this tile.
+          menuItems={buildTileMenuItems({
+            messageId: latest.id,
+            senderEmail: latest.sender?.email,
+            inInbox,
+            enableArchive,
+            enableIgnoreSender,
+            enableCreateTopic,
+            onAction,
+          })}
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
           title={<span className='grow truncate font-medium'>{subject}</span>}
@@ -503,12 +580,14 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
               key={message.id}
               message={message}
               searchQuery={searchQuery}
+              getContact={getContact}
+              onContactCreate={onContactCreate}
               onMessageClick={handleMessageClick}
             />
           ))}
           {remaining > 0 && (
             <Card.Row>
-              <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
+              <Card.Text variant='muted'>{`+${remaining} more`}</Card.Text>
             </Card.Row>
           )}
         </Card.Body>
@@ -527,6 +606,9 @@ type ConversationMessageRowProps = {
   message: Message.Message;
   /** Active mailbox search term; when set, renders a highlighted best-match snippet. */
   searchQuery?: string;
+  /** List-level contact lookup (see `InboxStackProps.db`). */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  onContactCreate?: (actor: Actor.Actor) => void;
   onMessageClick: (event: MouseEvent, messageId: string) => void;
 };
 
@@ -535,7 +617,13 @@ type ConversationMessageRowProps = {
  * memoized per message via `useMemo` — inlining it in the `messages.map` would recompute the
  * snippet on every keystroke for every message in the conversation.
  */
-const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: ConversationMessageRowProps) => {
+const ConversationMessageRow = ({
+  message,
+  searchQuery,
+  getContact,
+  onContactCreate,
+  onMessageClick,
+}: ConversationMessageRowProps) => {
   const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
   const searchSnippet = useMemo(
     () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
@@ -543,19 +631,17 @@ const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: Conver
   );
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Avatar actor={message.sender} size={6} />
-      </Card.Block>
+    <Card.Row
+      classNames='items-start'
+      leading={<ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />}
+    >
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
-        <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
-          {from && <span className='truncate'>{from}</span>}
-          <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+        <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
+          <span className='truncate'>{from}</span>
+          <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
-
-        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
-          <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
+          <button type='button' className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
           </button>
         )}

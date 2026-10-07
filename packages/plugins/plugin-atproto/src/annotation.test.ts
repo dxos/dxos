@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { DXN, Type } from '@dxos/echo';
 import { AtprotoVisibilityAnnotation } from '@dxos/schema';
 
-import { getFieldPublishFlags } from './annotation';
+import { getFieldPublishFlags } from './annotation.ts';
 
 // A partially-published struct (`meta`), a mirrored struct (`link`, whose unannotated fields are
 // visible via an external record, with one field forced private), plus non-optional published,
@@ -29,8 +29,8 @@ class Sample extends Type.makeObject<Sample>(DXN.make('org.dxos.test.publishFlag
   Schema.Struct({
     title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     rating: Schema.Number.pipe(
-      Schema.int(),
-      Schema.between(1, 10),
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 1, maximum: 10 })),
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),

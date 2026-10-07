@@ -29,7 +29,7 @@ export default defineConfig({
   // Dev pre-bundling + per-file transformation can swing wide on a cold cache.
   timeout: 180_000,
   webServer: {
-    command: 'pnpm vite --port 4173',
+    command: 'pnpm vite --port 4173 --configLoader native',
     port: 4173,
     reuseExistingServer: false,
     // Vite pre-bundling on a cold `.vite` cache for composer-app routinely

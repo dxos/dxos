@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { CommentsArticle } from '@dxos/plugin-review';
+import * as Containers from '@dxos/plugin-review/Containers';
 
 import { PostArticle, PublicationArticle } from '#containers';
-
-import * as Blog from '../types/Blog';
+import { Blog } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -31,9 +30,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // Comments companion for a Post plank. Scoped to the `comments` companion variant (the draft's
-      // `Markdown.Document` as `subject`) so it fires only for blogger's own companion. NOTE: the id's
-      // final segment must be camelCase (`isValidLocalId`, no hyphens) or the surface is silently
-      // dropped — then the generic `recordArticle` fallback (subject-only, `position: 'last'`) wins.
+      // `Markdown.Document` as `subject`) so it fires only for blogger's own companion.
       Surface.create({
         id: 'blogger.postComments',
         filter: AppSurface.object(
@@ -41,7 +38,7 @@ export default Capability.makeModule(() =>
           Markdown.Document,
           (data) => (data as { variant?: string }).variant === 'comments',
         ),
-        component: CommentsArticle,
+        component: Containers.CommentsArticle,
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
     ]),

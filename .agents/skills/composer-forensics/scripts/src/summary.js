@@ -90,7 +90,6 @@ export const printProbeSummary = (dbPath) => {
     ],
     ['automerge_heads', countRows(db, 'automerge_heads')],
     ['automerge_chunks', countRows(db, 'automerge_chunks')],
-    ['blobs_meta', countRows(db, 'blobs_meta')],
     ['keyring keys', countRows(db, 'keyring')],
     ['hypercore_files', countRows(db, 'hypercore_files')],
   ];

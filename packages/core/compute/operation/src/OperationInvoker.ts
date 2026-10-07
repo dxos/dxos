@@ -9,13 +9,14 @@ import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
-import { InvokerNotInitializedError, NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
-import { DynamicRuntime, EffectEx, Performance } from '@dxos/effect';
+import * as DynamicRuntime from '@dxos/effect/DynamicRuntime';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Performance from '@dxos/effect/Performance';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Scheduler from './scheduler';
+import * as Scheduler from './scheduler.ts';
 
 // @import-as-namespace
 
@@ -50,7 +51,7 @@ export interface OperationInvoker {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ) => Effect.Effect<O, NoHandlerError>;
+  ) => Effect.Effect<O, Operation.NoHandlerError>;
   invokePromise: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I
@@ -89,7 +90,7 @@ export interface OperationInvokerInternal extends OperationInvoker {
     op: Operation.Definition<I, O>,
     input: I,
     options?: Operation.InvokeOptions,
-  ) => Effect.Effect<O, NoHandlerError>;
+  ) => Effect.Effect<O, Operation.NoHandlerError>;
 }
 
 //
@@ -124,7 +125,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
    * Get or create a DynamicRuntime for the given service tags.
    * Caches instances to allow runtime caching to work across invocations.
    */
-  private _getDynamicRuntime(services: readonly Context.Tag<any, any>[]): DynamicRuntime.DynamicRuntime<any> {
+  private _getDynamicRuntime(services: readonly Context.Key<any, any>[]): DynamicRuntime.DynamicRuntime<any> {
     const cacheKey = services
       .map((s) => s.key)
       .sort()
@@ -163,10 +164,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ): Effect.Effect<O, NoHandlerError> => {
+  ): Effect.Effect<O, Operation.NoHandlerError> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const output = yield* this._invokeCore(op, input, options);
 
       // Publish a success event. Failures propagate without an event; in-progress/failure lifecycle is
@@ -197,8 +198,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
   private _resolveHandler(
     operation: Operation.Definition<any, any>,
-  ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
-    return Effect.gen(this, function* () {
+  ): Effect.Effect<Operation.Handler<any, any, Operation.NoHandlerError, Operation.Service> | undefined> {
+    return Effect.gen({ self: this }, function* () {
       const match = yield* this._getHandlers().pipe(
         // Last registration wins so plugins can override earlier handlers (e.g. story testing hooks).
         Effect.map((handlers) => handlers.findLast((reg) => reg.meta.key === operation.meta.key)),
@@ -216,12 +217,12 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     op: Operation.Definition<I, O>,
     input: I,
     options?: Operation.InvokeOptions,
-  ): Effect.Effect<O, NoHandlerError> => {
-    return Effect.gen(this, function* () {
+  ): Effect.Effect<O, Operation.NoHandlerError> => {
+    return Effect.gen({ self: this }, function* () {
       const handler = yield* this._resolveHandler(op);
       if (!handler) {
         // TODO(burdon): Only throw in development mode.
-        return yield* Effect.fail(new NoHandlerError(op.meta.key));
+        return yield* Effect.fail(new Operation.NoHandlerError(op.meta.key));
       }
 
       // TODO(burdon): Add debug flag to composer to enable this.
@@ -248,8 +249,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
       // If the operation declares external services, use DynamicRuntime to resolve them.
       if (op.services && op.services.length > 0) {
         const dynamicRuntime = this._getDynamicRuntime(op.services);
-        const runtime = yield* dynamicRuntime.runtimeEffect;
-        output = yield* handlerEffect.pipe(Effect.provide(runtime.context));
+        const context = yield* dynamicRuntime.contextEffect;
+        output = yield* handlerEffect.pipe(Effect.provideContext(context));
       } else {
         output = yield* handlerEffect;
       }
@@ -309,7 +310,7 @@ export const make = (
 
   const invokeFn: Scheduler.InvokeFn = (op, input, options) => {
     if (!ref.invoker) {
-      return Effect.fail(new InvokerNotInitializedError());
+      return Effect.fail(new Operation.InvokerNotInitializedError());
     }
     return ref.invoker._invokeCore(op, input, options);
   };

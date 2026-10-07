@@ -2,26 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
-
-import * as ChannelBackend from '../../types/ChannelBackend';
-import * as ThreadCapabilities from '../../types/ThreadCapabilities';
-import * as ThreadOperation from '../../types/ThreadOperation';
+import { ChannelBackend, ThreadCapabilities, ThreadOperation } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -51,15 +51,15 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const members = useMembers(space?.id);
   const id = channel ? Obj.getURI(channel) : undefined;
   const activity = useStatus(space, id);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+  const providers = Hooks.useCapabilities(ThreadCapabilities.ChannelBackend);
   const provider = channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 
-  const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
-  const callManager = useCapabilities(CallsCapabilities.Manager)[0];
+  const callProvider = Hooks.useCapabilities(CallsCapabilities.CallTransportProvider)[0];
+  const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
   const joined = useAtomValue(callManager?.joinedAtom ?? NOT_JOINED);
   const currentRoomId = useAtomValue(callManager?.roomIdAtom ?? NO_ROOM);
   // `chatOnly` (the in-call chat companion) keeps showing messages so the call lives only in the primary.
@@ -71,7 +71,13 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     if (!callProvider || !id) {
       return;
     }
-    await callProvider.join(id);
+    try {
+      await callProvider.join(id);
+    } catch (err) {
+      // The menu action fires this without awaiting, so a failed join (e.g. the transport rejects
+      // the room) must be reported here rather than surface as an unhandled rejection.
+      log.catch(err);
+    }
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {
@@ -109,20 +115,16 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   return (
     <Panel.Root role={role}>
       {canStartCall && (
-        <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Header>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
+        </Panel.Header>
       )}
       {showCall ? (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       ) : (
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <MessageThread
             id={id}
             classNames='dx-document'
@@ -133,7 +135,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
             onSend={handleSend}
             readOnly={readOnly}
           />
-        </Panel.Content>
+        </Panel.Body>
       )}
     </Panel.Root>
   );

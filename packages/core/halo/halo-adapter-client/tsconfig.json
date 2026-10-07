@@ -13,6 +13,12 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
@@ -20,6 +26,15 @@
     },
     {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/client-protocol"
+    },
+    {
+      "path": "../../compute/link"
+    },
+    {
+      "path": "../../echo/echo-protocol"
     },
     {
       "path": "../../protocols"

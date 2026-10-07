@@ -4,24 +4,26 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Image, Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Media from '@dxos/react-ui/Media';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
+import { Bookmark, BookmarkOperation } from '#types';
 
-import type * as Bookmark from '../../types/Bookmark';
-import * as BookmarkOperation from '../../types/BookmarkOperation';
-import { useImageLoads } from '../useImageLoads';
+import { useImageLoads } from '../useImageLoads.ts';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
 
 export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [bookmark] = useObject(subject);
   const imageLoads = useImageLoads(bookmark.image);
   const [summarizing, setSummarizing] = useState(false);
@@ -81,41 +83,37 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content classNames='dx-container flex flex-col'>
-          <div className='flex justify-center'>
-            <div className='dx-document py-3'>
-              <Card.Root fullWidth border={false}>
-                <Card.Header>
-                  <Card.Block>
-                    <img src={bookmark.favicon} alt={bookmark.title} />
-                  </Card.Block>
-                  <Card.Title>{bookmark.title}</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                  <Card.Section>
-                    <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
-                      {bookmark.url}
-                    </Card.Text>
-                    <Card.Text>{bookmark.excerpt}</Card.Text>
-                    {bookmark.image && imageLoads && (
-                      <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
-                    )}
-                  </Card.Section>
-                </Card.Body>
-              </Card.Root>
-            </div>
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col'>
+        <Layout.Flex justify='center'>
+          <div className='dx-document py-3'>
+            <Card.Root border={false}>
+              <Card.Header>
+                <Layout.Block>
+                  <img src={bookmark.favicon} alt={bookmark.title} />
+                </Layout.Block>
+                <Card.Title>{bookmark.title}</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Card.Section>
+                  <Card.Text onClick={handleOpenSource} classNames='dx-link-accent font-mono text-sm'>
+                    {bookmark.url}
+                  </Card.Text>
+                  <Card.Text>{bookmark.excerpt}</Card.Text>
+                  {bookmark.image && imageLoads && (
+                    <Media.Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                  )}
+                </Card.Section>
+              </Card.Body>
+            </Card.Root>
           </div>
-          {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+        </Layout.Flex>
+        {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

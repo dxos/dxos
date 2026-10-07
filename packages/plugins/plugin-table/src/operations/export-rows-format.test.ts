@@ -8,9 +8,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { DXN, Format, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
-import { exportRows, exportRowsAsCsv, exportRowsAsJson, exportRowsAsXml } from './export-rows-format';
+import { exportRows, exportRowsAsCsv, exportRowsAsJson, exportRowsAsXml } from './export-rows-format.ts';
 
 const Person = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
   Schema.Struct({

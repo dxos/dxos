@@ -5,19 +5,21 @@
 import md5Hex from 'md5-hex';
 
 import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { type ClientServices } from '@dxos/client-protocol';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { buf } from '@dxos/protocols/buf';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
-import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { ConnectionState, PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema, LeaveRequestSchema, QueryRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { isNonNullable } from '@dxos/util';
 
-import { type ActivityState, type UserState, codec } from './types';
+import { type ActivityState, type UserState, codec } from './types.ts';
 
 export type CallState = {
   /**
@@ -50,7 +52,7 @@ export type CallState = {
   tracks?: UserState['tracks'];
 };
 
-export type CallSwarmSynchronizerProps = { networkService: NetworkService };
+export type CallSwarmSynchronizerProps = { networkService: ClientServices['NetworkService'] };
 
 /**
  * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
@@ -64,7 +66,7 @@ export class CallSwarmSynchronizer extends Resource {
   public readonly stateUpdated = new Event<CallState>();
 
   private readonly _state: CallState = { activities: {} };
-  private readonly _networkService: NetworkService;
+  private readonly _networkService: ClientServices['NetworkService'];
   private _lastSwarmEvent?: SwarmResponse = undefined;
   private _reconcileSwarmStateTask?: DeferredTask = undefined;
 
@@ -187,10 +189,12 @@ export class CallSwarmSynchronizer extends Resource {
       if (topic && this._identityKey && this._deviceKey) {
         log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
         void this._networkService
-          .leaveSwarm({
-            topic,
-            peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
-          })
+          .leaveSwarm(
+            buf.create(LeaveRequestSchema, {
+              topic: fromPublicKey(topic),
+              peer: buf.create(PeerSchema, { identityKey: this._identityKey, peerKey: this._deviceKey }),
+            }),
+          )
           .catch((err) => log.catch(err));
       }
       window.removeEventListener('beforeunload', cleanup);
@@ -216,7 +220,9 @@ export class CallSwarmSynchronizer extends Resource {
 
   async querySwarm(roomId: string) {
     const topic = getTopic(roomId);
-    const swarm = await this._networkService.querySwarm({ topic });
+    const swarm = await this._networkService.querySwarm(
+      buf.create(QueryRequestSchema, { topic: fromPublicKey(topic) }),
+    );
     return swarm.peers ?? [];
   }
 
@@ -249,14 +255,16 @@ export class CallSwarmSynchronizer extends Resource {
         : {},
     };
 
-    await this._networkService.joinSwarm({
-      topic: getTopic(this._state.roomId),
-      peer: {
-        identityKey: this._identityKey,
-        peerKey: this._deviceKey,
-        state: codec.encode(state),
-      },
-    });
+    await this._networkService.joinSwarm(
+      buf.create(JoinRequestSchema, {
+        topic: fromPublicKey(getTopic(this._state.roomId)),
+        peer: buf.create(PeerSchema, {
+          identityKey: this._identityKey,
+          peerKey: this._deviceKey,
+          state: codec.encode(state),
+        }),
+      }),
+    );
   }
 
   private _processSwarmEvent(swarmEvent: SwarmResponse): void {

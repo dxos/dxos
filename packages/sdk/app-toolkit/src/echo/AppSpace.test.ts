@@ -4,9 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
+import { Expando } from '@dxos/schema';
 
-import * as AppSpace from './AppSpace';
+import * as AppSpace from './AppSpace.ts';
 
 describe('space tags', () => {
   test('hasTag returns true when tag is present', ({ expect }) => {
@@ -39,14 +41,41 @@ describe('space visibility', () => {
     expect(AppSpace.isVisibleSpace(makeSpace([]))).toBe(true);
   });
 
-  test('the exemplar space and pre-migration personal spaces stay visible', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.EXEMPLAR_SPACE_TAG]))).toBe(true);
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
+  test("the settings space is hidden, tagged alone or alongside the user's own tags", ({ expect }) => {
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
+    expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned', AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
   });
 
-  test('spaces the app manages on the user behalf are hidden', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
-    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.filesystem-mirror']))).toBe(false);
+  test('every other tagged space belongs to the user, including tags this one has not heard of', ({ expect }) => {
+    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
+    expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned']))).toBe(true);
+  });
+});
+
+describe('settings space resolution', () => {
+  test('tagged spaces order by id, not list order', ({ expect }) => {
+    // Healing deletes everything but the first entry, so the order must be identical on every
+    // device regardless of how the local list happens to be arranged.
+    const second = makeClosedSpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
+    const first = makeClosedSpace('B00000000000000000000000000000001', [AppSpace.SETTINGS_SPACE_TAG]);
+    expect(AppSpace.getSettingsSpaces({ spaces: { get: () => [second, first] } }).map((space) => space.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+    expect(AppSpace.getSettingsSpaces({ spaces: { get: () => [first, second] } }).map((space) => space.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+    // With no readable designation the read-side resolution falls back to the same order.
+    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [second, first] } })?.id).toBe(first.id);
+  });
+
+  test('a readable duplicate beats an unopened lower-id one for reading', ({ expect }) => {
+    // Waiting on an unopened space would stall the bootstrap while a readable copy already exists.
+    const closed = makeClosedSpace('B00000000000000000000000000000001', [AppSpace.SETTINGS_SPACE_TAG]);
+    const ready = makeReadySpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
+    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [closed, ready] } })?.id).toBe(ready.id);
   });
 });
 
@@ -55,3 +84,43 @@ describe('space visibility', () => {
  * predicates, so production code sees a real `Space` and the fake stays contained to the test.
  */
 const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unknown as Space;
+
+/** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */
+const makeClosedSpace = (id: string, tags: string[]): Space =>
+  ({ id, tags, properties: {}, state: { get: () => SpaceState.SPACE_CLOSED } }) as unknown as Space;
+
+/** As {@link makeClosedSpace}, ready and with real (annotation-readable) properties. */
+const makeReadySpace = (id: string, tags: string[]): Space =>
+  ({
+    id,
+    tags,
+    properties: Obj.make(Expando.Expando, {}),
+    state: { get: () => SpaceState.SPACE_READY },
+  }) as unknown as Space;
+
+describe('space templates', () => {
+  const LEGACY_TAG = 'org.dxos.space.exemplar';
+  const TEMPLATE_ID = 'org.dxos.plugin.onboarding.template.bramble';
+  const client = (spaces: Space[]) => ({ spaces: { get: () => spaces } });
+
+  test('stamps the template a legacy onboarding space came from', ({ expect }) => {
+    const space = makeReadySpace('a', [LEGACY_TAG]);
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual(['a']);
+    expect(AppSpace.getSpaceTemplateId(space)).toBe(TEMPLATE_ID);
+    expect(AppSpace.findSpaceFromTemplate(client([space]), TEMPLATE_ID)).toBe(space);
+  });
+
+  test('re-running stamps nothing, so a later template wins over the tag', ({ expect }) => {
+    const space = makeReadySpace('a', [LEGACY_TAG]);
+    AppSpace.setSpaceTemplateId(space, 'com.example.template.other');
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual([]);
+    expect(AppSpace.getSpaceTemplateId(space)).toBe('com.example.template.other');
+  });
+
+  test('skips spaces that are untagged or not yet readable', ({ expect }) => {
+    const untagged = makeReadySpace('a', []);
+    const closed = makeClosedSpace('b', [LEGACY_TAG]);
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([untagged, closed]), TEMPLATE_ID)).toEqual([]);
+    expect(AppSpace.getSpaceTemplateId(untagged)).toBeUndefined();
+  });
+});

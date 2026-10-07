@@ -5,21 +5,24 @@
 import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
-import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
-
-import * as OutlineOperation from '../../types/OutlineOperation';
+import { OutlineOperation } from '#types';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
-    Schema.filter((value) => value.trim().length > 0, { message: () => 'Entry cannot be empty.' }),
+    Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Entry cannot be empty.')),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ description: 'Journal entry' }),
+    Schema.annotate({ description: 'Journal entry' }),
   ),
 });
 
@@ -36,7 +39,7 @@ type QuickEntryActionsProps = {
  * Custom form actions with Cancel, Save & Add Another, and Save buttons.
  */
 const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const {
     form: { canSave, onSave, onCancel },
   } = useFormContext(QUICK_ENTRY_ACTIONS_NAME);
@@ -52,41 +55,38 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   }, [onSave, continueRef]);
 
   return (
-    <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
+    <Layout.Grid gap='form' classNames='grid-flow-col auto-cols-fr py-form-padding'>
       {onCancel && (
-        <IconButton
-          icon='ph--x--regular'
-          iconEnd
+        <Button.Root
+          iconEnd='ph--x--regular'
           label={t('quick-entry-cancel.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
       )}
-      <IconButton
+      <Button.Root
         disabled={!canSave}
-        icon='ph--plus--regular'
-        iconEnd
+        iconEnd='ph--plus--regular'
         label={t('quick-entry-save-and-continue.label')}
         onClick={handleSaveAndContinue}
         data-testid='save-and-continue-button'
       />
-      <IconButton
+      <Button.Root
         type='submit'
         variant='primary'
         disabled={!canSave}
-        icon='ph--check--regular'
-        iconEnd
+        iconEnd='ph--check--regular'
         label={t('quick-entry-save.label')}
         onClick={onSave}
         data-testid='save-button'
       />
-    </div>
+    </Layout.Grid>
   );
 };
 
 export const QuickEntryDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [formKey, setFormKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const continueRef = useRef(false);
@@ -135,9 +135,9 @@ export const QuickEntryDialog = () => {
     <Dialog.Content ref={contentRef} onKeyDownCapture={handleKeyDownCapture}>
       <Dialog.Header>
         <Dialog.Title>{t('quick-entry-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Form.Root
@@ -148,12 +148,10 @@ export const QuickEntryDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.FieldSet />
-              <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
+          </Form.Content>
         </Form.Root>
       </Dialog.Body>
     </Dialog.Content>

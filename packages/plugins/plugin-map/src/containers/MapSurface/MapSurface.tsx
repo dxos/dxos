@@ -4,16 +4,17 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Obj } from '@dxos/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import * as MapCapabilities from '../../types/MapCapabilities';
 // Import the lazy wrapper (ComponentType<any>) so JSX assignment is not blocked by the
 // compound GeoControlProps & MapArticleProps intersection that TS cannot unify directly.
-import { MapArticle } from '../index';
-import { buildTileUrl } from './build-tile-url';
+import { MapArticle } from '#containers';
+import { MapCapabilities } from '#types';
+
+import { buildTileUrl } from './build-tile-url.ts';
 
 // MapTiler raster style used when an API key for `maptiler.com` is configured.
 
@@ -29,12 +30,12 @@ export type MapSurfaceProps = {
  * generic `map` inline role, and the map companion.
  */
 export const MapSurface = ({ subject, attendableId, role }: MapSurfaceProps) => {
-  const providers = useCapabilities(MapCapabilities.MarkerProvider);
+  const providers = Hooks.useCapabilities(MapCapabilities.MarkerProvider);
   const provider = useMemo(() => providers.find((entry) => entry.match(subject)), [providers, subject]);
-  const settings = useAtomCapability(MapCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(MapCapabilities.Settings);
   const tileUrl = useMemo(() => buildTileUrl(settings?.apiKeys), [settings?.apiKeys]);
-  const state = useAtomCapability(MapCapabilities.State);
-  const { invokePromise } = useOperationInvoker();
+  const state = Hooks.useAtomCapability(MapCapabilities.State);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
   const [zoom, setZoom] = useState<number | undefined>(undefined);

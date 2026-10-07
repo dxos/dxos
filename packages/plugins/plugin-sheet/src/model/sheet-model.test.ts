@@ -10,10 +10,10 @@ import { TestBuilder, testFunctionPlugins } from '@dxos/compute-hyperformula/tes
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import * as Sheet from '../types/Sheet';
-import * as SheetUtil from '../types/SheetUtil';
-import { SheetModel } from './sheet-model';
-import { createTestGrid } from './testing';
+import { Sheet, SheetUtil } from '#types';
+
+import { SheetModel } from './sheet-model.ts';
+import { createTestGrid } from './testing.ts';
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;

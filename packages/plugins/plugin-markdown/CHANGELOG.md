@@ -1,5 +1,776 @@
 # @dxos/plugin-markdown
 
+## 0.13.0
+
+### Minor Changes
+
+- 3672aff: The project timeline (Gantt) draws its chart again beside the lane names, and its panel scrolls vertically with a thin scrollbar when the lanes outgrow it. An object card's title is one truncated line by default (pass `lines` to `ObjectCard.Header` to clamp to more), and the card popover is only as tall as its content rather than at least `--spacing-card-min-height`.
+- 2f95d25: The project timeline is two columns: lane names and the chart. A lane's token and tool counts move into a hover card over its name, and a new `Gantt.LegendToggle` beside the axis switch shows the counts in that column instead (`legend` / `onLegendChange` on `Gantt.Root`, persisted with the project view). The chart scrolls both ways in one area with the horizontal scrollbar at the panel's foot, and is keyboard-navigable: clicking a node focuses the chart, the arrow keys move between lanes and along the timeline, and Space toggles the node's card (Enter selects it). A parent task's bar no longer starts after its sub-tasks'. In a flat deck, a plank's breadcrumbs show its place in the tree (e.g. a session's project and Sessions branch) rather than the navigation history.
+
+  **Breaking:** `Gantt.Meta` is removed (its content is the legend's hover card and stats mode), and `Gantt.Chart`'s ref is now the `svg` element.
+
+- 7715216: UI layout primitives get simpler, typed APIs; heavy components move into their own packages; and the chat bounds what an agent can queue or spend on its own.
+
+  **Breaking:**
+
+  - `Grid`'s `cols` and `rows` take typed track tokens instead of raw CSS: `'fill'` (a flexible track that may shrink below its content), a number (a share of the free space, also shrinkable), `'min'`/`'max'`/`'auto'` (sized to the content), or a length such as `'18rem'` or `var(--…)`. A count is that many equal `fill` tracks, and `grow` now defaults to `false`.
+  - `Spinner` is now an interface (`SpinnerProps`, with an `ActivityState` of `'ready' | 'thinking' | 'alert' | 'error'`) with two implementations: `ShapeSpinner`, the morphing square (its states were `pulse`/`spin`/`flash`), and `PulseSpinner`, a dot matrix. Import spinners from the root of `@dxos/react-ui-components`, whose `./Spinner` subpath is removed.
+  - `QueryEditor`, `QueryForm` and `useQueryBuilder` move to the new `@dxos/react-ui-query` (translations at `@dxos/react-ui-query/translations`), and `Html` with its colour-scheme and email transforms moves to the new `@dxos/react-ui-html`, so `@dxos/react-ui-components` no longer carries CodeMirror, `@dxos/echo-query` or DOMPurify. `Matrix` moves to `@dxos/react-ui-experimental`.
+  - The `dx-fullscreen` utility is renamed `dx-cover` (`absolute inset-0`): it covers the nearest positioned ancestor, not the screen.
+  - `ScrollArea.Root` hides its overlay thumbs until the pointer is over the frame (`autoHide` defaults to `true`).
+
+  **Fixes and behaviour:**
+
+  - A popover whose content mounts after it opens (the chat thread outline's card) is positioned beside its anchor instead of the viewport's top-left corner.
+  - The chat prompt takes at most three prompts queued behind a running turn (`maxQueue`), on every submit path; queued prompts are small, right-aligned rows flush with the status chip.
+  - An agent may wake itself with alarms at most `Alarm.MAX_SELF_WAKES` (10) times in a row without a user prompt; each wake-up prompt states how many remain, a later alarm is dropped without a turn, and the chat status shows the count beside the next wake time.
+
+- 1737cad: `@dxos/react-ui` is rebuilt on Ark UI primitives styled by plain `dx-*` component CSS, and every UI package and plugin
+  renders on it; the former component APIs are removed.
+
+  - Components are exported flat by name (`Button`, `Toolbar`, `Card`, `Panel`, `Container`, `Field`, `Input`, `Combobox`,
+    `Menu`, `Tabs`, `Main`, `Splitter`, `Toast`, `Tour`, `Banner`, `Empty`, …) and sized by `data-size` scopes (`xs`–`xl`;
+    `Size` is that scale). `Container` lays out rails and subgrids, `ControlFrame` frames a control with adornments
+    (`Input copyable`, `variant='mono'`), and `useMainLandmark` declares the app's focus areas (Tab and Arrow Left/Right
+    move between them). `Combobox` adds a trigger mode, option descriptions, a create row and async results. `Label` is
+    no longer public (use `Field.Label`), and the flow helper is `Match` (`Match.Root`/`Match.Case`).
+  - `@dxos/react-ui-list` provides `Listbox`, `OrderedList` and `Tree` (virtual rows, drag and drop, disclosure
+    animation); `@dxos/react-ui-form` provides `Form` (`Root`, `Viewport`, `Content`, `Fields`, `Actions`, …),
+    `ObjectProperties`, `ObjectPicker`, `ViewEditor` and `RefEditor`; `@dxos/react-ui-menu` renders `ActionToolbar` and
+    `ActionMenu` on the new Toolbar and Menu; `@dxos/app-toolkit` adds the `ObjectCard` composite.
+  - `@dxos/ui-theme` renames the text tokens to `--color-fg`/`fg-muted`/`fg-subtle` (`text-fg`, `text-fg-muted`,
+    `text-fg-subtle`; Typography and Icon `tone='muted' | 'subtle'`) and `--color-subdued-separator` to
+    `--color-separator-subtle`, adds `--color-focus` for the keyboard focus ring, and derives the control fill from one
+    offset off its host surface in both themes.
+  - `@dxos/echo` adds `Annotation.ArrayPresentationAnnotation` (`ordered`, `display: 'tag' | 'title'`) for reference
+    arrays; `@dxos/effect` `SchemaEx.getProperties` keeps an annotated optional field's annotations; `@dxos/ui-editor`
+    markdown tables keep empty cells; `@dxos/plugin-markdown` marks `Document.description` as markdown, and the rename
+    popover shows an object's properties.
+
+  Breaking: the former `@dxos/react-ui` component APIs and the transitional `Next` namespace are gone; import components
+  from `@dxos/react-ui` by name and use the renamed theme tokens.
+
+- 3022878: The selection companion stacks the selected objects as plain cards in one scroll area with a small gutter, and its "No objects selected" banner sits in the same column, where the first card would. A form's nested object shows its label and disclosure above the bordered group of its fields rather than inside it. `Banner.Root` takes `inset` to override its own gutter, for a host that already pads it.
+
+  **Breaking:** `Instructions` no longer has a `description` field (nothing read it), and `Instructions.make` no longer accepts one.
+
+- a449958: Task lists, trees and the chat prompt are reworked on the react-ui components.
+
+  - Task list rows and the task editor place their cells by column name on one shared template, so the editor's fields, pickers and cancel sit in the rows' columns. The editor creates with an estimate and a priority, saves from an end adornment on its title field, and always takes the list's grid. `TaskList.Root` adds `flush`, `showAssignees` and `showMnemonics`; the leading column holds one reference button that shows the ordinal and copies the task's URI. `TaskProperties` and `TaskHistory` are top-level components, and the task's reference heads `TaskProperties`.
+  - **Breaking:** `Grid` no longer grows by default (pass `grow` to fill and clip its parent), matching `Flex`. `TaskEditor` and `TaskOrdinal` are removed (the task article renders a form over the `Task` schema, whose description is Markdown), `TaskMnemonic` is no longer exported, and `TaskList.Editor` drops `grid` and `showControls`.
+  - `Tree.Content` has no gutter by default and pads row ends (`rowInset`), so row highlights run edge to edge under an overlay thumb. A deferred `ActionMenu` keeps the focus an outside click moved; `ActionToolbar` takes a `start` slot.
+  - `Form.Root` takes `markdownExtensions`. Popup options sit in an equal inset, an empty `Select` opens no popup, `Select.Trigger` takes `fixed`, a splitter drag no longer dims its panes, and clickable tags keep their hue's text colour.
+  - Surface modules in plugin-client, plugin-preview and plugin-file declare every role they bind.
+
+### Patch Changes
+
+- 66727e3: Fixes found driving a Composer basics demo. Creating an object from an `@` link keeps the typed name. Creating a type now opens its table, from the create dialog and from the debug object generator. Types and views navigate to their node in the Database section instead of a plank stuck on "Loading…". A table can be created without picking a type: it gets a new type named after it. The table's add-column button appears for a database type. The type and location pickers in the create forms list their options and show their labels. A map created on a table's type offers the type's location properties. Toggling a world-view map shows the whole globe.
+- 665261a: The Create Space dialog puts the icon and colour pickers side by side, and its Cancel and Create buttons end at the fields' edge rather than in the gutter. Across forms, a control narrower than its field (a picker button) now starts under its label instead of centring.
+- 945092e: Layout and contrast fixes for the new `@dxos/react-ui` components:
+
+  - Forms in a dialog or popover now line up with the host's columns, and a form in a popover takes the popover's surface.
+  - Combobox and select triggers placed directly in a form span the form's content column.
+  - A panel no longer shifts its body under the header when focus scrolls it.
+  - List rows with a description keep their icon and actions on the title's line.
+  - A scrolling block in a settings row (such as the debug port log) spans the row instead of collapsing to zero width.
+  - The log list scrolls inside its panel, an expanded entry opens beneath its row, a clicked row is ringed as current, rows' checkboxes are optional (`Logger.List checkable`), and the drawer's focus ring is no longer hidden by its panes.
+  - Row hover and selection are lower-contrast, and a fieldset's collapse button is a ghost button.
+  - The `description` of Project, Task, TaskSet, Milestone, Organization, Issue, PullRequest, Event, Pipeline, Skill, Routine and Script is `Format.Text`, so forms edit it as multi-line text; `Format.Text` is also on the `Format` namespace from `@dxos/echo/Format`.
+  - The task set's add-task editor stays at the bottom, below the list.
+  - Popovers are unpadded by default (the call site sets the inset; Body and Header keep theirs); a popup's arrow no longer covers its first highlighted row; menu checkbox and radio rows show the action's icon with a trailing check; an inheriting Container whose parent is no grid lays out its own column.
+  - `Select.Trigger`'s `fit='options'` is now the boolean `fixed` (the trigger keeps its widest option's width); a selected tab takes the control fill.
+
+- 6a7bed4: A ScrollArea contains overscroll only along the axis it scrolls, so a vertical two-finger swipe over a horizontally scrolling area (such as the project timeline's chart) scrolls the panel around it instead of being swallowed.
+- 4f8e566: Card layout cleanups. A grid `Card.Root` takes `gutter` (`rail`, `md` or `lg`) to widen its rails; stats cards use `lg`, so their rows sit further in at the same text size. `Card.Row` takes `end`, content centred in the end rail (unlike `trailing`, which reaches back into the content track); stats rows put their controls there, centred, and their units at its start, so values end on one edge. Every stats card header has one layout: the icon in the start rail, the title and optional info as a two-column grid, and the button or menu centred in an end rail that is kept even when empty, so the info ends at the same edge on every card. An icon-only button inside a `Block` no longer adds its own inset, which had pushed it off-centre in the cell. The Surfaces card shows a selected role's surfaces as JSON blocks again (a label row had clipped them to nothing), and the EDGE, Indexer and Sync cards show each space's name or id beside its copy button rather than a bare icon. `Card.Row` takes `span` — `full` across both rails, `end` on through the end rail — in place of hand-written grid-column overrides, and a markdown card's word count now spans the rails as its snippet does, so the two start at the same edge. A parent task's timeline lane carries every descendant's start and finish as nodes, read from the task tree, so its first node is where its sub-tasks' work began even when they are not on one checklist. The project timeline's horizontal scrollbar spans only the chart, not the sticky lane names, via a new `trackStart` on `ScrollArea.Root`. The debug port's session id is a disabled copyable input, as the Space ID is. A form's markdown field (e.g. a task's description) fills its frame and wraps long tokens such as an inline-code URL, so it no longer scrolls sideways with its scrollbar mid-field.
+- Updated dependencies [ecd099a]
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [66727e3]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [7a177b9]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [64f1a7a]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/assistant@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/versioning@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+
+## 0.12.0
+
+### Minor Changes
+
+- 2800d03: New `Annotation.SetParent` marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the field, or creating the holder with one, now sets the target's ECHO parent automatically, so the child cascade-deletes and deep-clones with its holder. Nested struct fields and members of a discriminated union field are covered too.
+
+  Types across the repo now declare ownership on the field instead of calling `Obj.setParent` next to every write — `Instructions.text`, `Outline.content`, `Project.{instructions,outline,taskSet,routines}`, `Chat.feed`, `Agent.instructions`, `File.data`, `Channel.backend.config`, `Document.content`, `Mailbox`/`Calendar`/`Search`/`Subscription` feeds and tag indexes, `Routine.{spec.instructions,triggers}`, `Scene.objects`, `Terra.objects`, and `Artifact.variants`. Removing a ref still does not clear the target's parent; call `Obj.setParent(child, undefined)` for that.
+
+- 3aa3d63: Bind credentials to Claude-managed agent sessions by AccessToken reference, upsert or revoke them on a running session, and carry required scopes on the connector prompt.
+- 75971ad: Add plugin management to the CLI. `dx plugin add <url>` fetches a manifest and snapshots it and the bundle under `plugins/<id>/`, so the install is self-describing on disk and needs no network afterwards; `add --dev <path>` reads a directory in place, falling back to its `dx.config.ts` when there is no built manifest, and may override a builtin of the same id. Installing asks for confirmation before any third-party code is evaluated — the plugin runs with the CLI's identity and `dx mcp serve` exposes its operations to agents — and non-interactive callers must pass `--yes`. Both enable by default (`--no-enable` stops at install) and print the resolved plugin id; `remove` deletes a snapshot or forgets a linked directory. Installed plugins register from metadata cached at install time, so a plugin's code is imported only once something enables it, and one that fails to import is reported by `dx plugin list` instead of failing every command. `dx plugin list` now reports `installed`, `enabled`, `core` and the plugin's source as separate fields rather than one collapsed status, with `--enabled` to filter; `enable`/`disable` are idempotent and fail with actionable messages. Hosts can supply their own core plugin set through `PluginManager`'s new `core` option instead of inheriting every `system`-tagged plugin, which is how telemetry, connectors and routines became disableable in the CLI; its demo plugins are no longer enabled by default. A profile whose enabled list is empty is no longer re-seeded with the defaults. A plugin installed from a URL has its `@dxos/*` imports served from the host's own modules, so it shares the CLI's instance of ECHO's schema registry and the capability system rather than loading its own copy; the shared-package list is exported as `@dxos/app-framework/SharedPackages`.
+- a3b6ef0: Migrate the entire monorepo from Effect 3 to Effect 4 (`effect@4.0.0-rc.108`). **This is a breaking change**, carried as a minor because the fixed publish group is pre-1.0.
+
+  Every `@dxos` package now builds against the consolidated `effect` package — `@effect/platform`, `@effect/rpc`, `@effect/cli`, `@effect/sql-*`, `@effect/ai` and `@effect/printer` usages moved to their `effect/unstable/*` counterparts (or were vendored where v4 ships no counterpart). Consumers embedding `@dxos` packages must be on the Effect 4 line: v3 and v4 cannot coexist in one bundle.
+
+  Consumer-visible API consequences include: schemas are values rather than extensible classes (statics such as `SpaceId.random` are merged onto the schema value), `Schema`-derived types follow v4 shapes (`Codec`, checks instead of refinement nodes, string annotation keys), and `Either`-based results became `Result`.
+
+  The AI tool surface changed with it. An `Operation` now projects to a **dynamic** tool carrying the JSON Schema shown to the model, because v4 describes an Effect-schema tool through the provider's structured-output codec while validating the model's arguments against the untransformed schema — a record was advertised as an array of `[key, value]` pairs but validated as an object, and an optional key was advertised nullable-and-required but validated as absent-or-`T`, so a compliant model was always rejected. Tool arguments are decoded at the execution boundary instead, which is also where a ref supplied as a URI string becomes a `Ref`. Alongside it, an open record (`Schema.Record(String, Any)`) now serializes with an explicit `additionalProperties: true`: v4 omits the keyword when the value type is unconstrained, which made a persisted schema round-trip back as a closed struct that accepted no keys.
+
+- 8ea2bf9: Render a task set as the sub-task tree it stores, restructurable by dragging a row's handle or with `Alt`+arrow. `TaskList` gains `hierarchical`, `onTaskMove` and controlled `collapsed` state; `Listbox.Item` accepts `onKeyDown`; and the `MoveTask` operation takes an optional `parentTask` so a drop re-parents and repositions in one mutation.
+- 2a41efd: Let a planning agent ask the user a question and resume on the answer.
+
+  An agent working a checklist had two options when it hit something it could not decide: guess, or
+  stop. `ask-question` is the third. It takes the exact title of a checklist task, files a durable
+  `Question` on that task as an artifact, and moves the task to `blocked` — so the checklist says what
+  is waiting and on whom, rather than showing work that nothing is advancing. The question may carry
+  suggested answers; the surface that renders it always offers a free-form field besides them, since
+  the point of asking is that the asker did not know.
+
+  Answering records the answer on the object and sends the conversation a synthetic prompt naming the
+  question, which the agent reads back with `get-objects` before continuing. The answer is not quoted
+  into that prompt: it lives on the object, so the agent sees whatever the reader actually chose,
+  including a later edit. The task is left `blocked` for the agent to clear — only it knows whether
+  the answer unblocked anything.
+
+  `question.asked` and `question.answered` join the trace alongside the status change, so the stretch
+  a task spent waiting on a person is visible on the session timeline.
+
+- 93c7523: Enable the Plugin Manager skill in new chats on extensible hosts, and have it search the installed
+  plugins for the one best suited to a request rather than only reacting to a disabled name it spots.
+- 4a71ef2: Add a Plugin Manager skill so the assistant can list installed plugins — including disabled ones — and offer a disabled plugin to the user as an inline prompt whose button enables it via the new registry `EnablePlugins` operation.
+- 987f7e1: Replace each plugin's `./plugin` entrypoint with an `XPlugin` namespace. **Breaking:** import the plugin from its own subpath and construct it with `make` — `import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin'; ChessPlugin.make()` in place of `import { ChessPlugin } from '@dxos/plugin-chess/plugin'; ChessPlugin()`. Plugin metadata is available as `XPlugin.meta` without loading the plugin body. **Breaking:** `@dxos/plugin-graph` no longer re-exports `@dxos/app-graph`, which now publishes per-namespace subpaths: `AppGraph`, `AppGraphBuilder` and `AppGraphNode`. The old `NodeMatcher` splits by member — the generic combinators (`whenRoot`, `whenId`, `whenNodeType`, `whenAll`, `whenAny`, `whenNot`) move to `@dxos/graph/GraphNodeMatcher` and the ECHO-aware ones (`whenEchoObject`, `whenEchoObjectMatches`, `whenEchoType`, `whenEchoTypeMatches`) to `@dxos/app-toolkit/AppNodeMatcher`.
+- e7fc023: Replace each plugin's `./operations` and `./skills` barrel entrypoints with per-symbol subpaths. **Breaking:** import a handler set from its own subpath and read it off the namespace — `import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet'; MarkdownOperationHandlerSet.handlers` in place of `import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations'` — and import a skill from its own subpath, e.g. `import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill'`. **Breaking:** plugin root barrels no longer re-export handler sets or skills, so those names must come from their subpaths. `@dxos/plugin-inbox` additionally publishes `./FeedCursor` and `./MessageExtractor`, and `@dxos/plugin-projects` renames `CodeProjectSkillDefinition` to the `./CodeProjectSkill` namespace.
+- 142ba02: Sync plugin settings and the plugin set through the settings space, so they follow the identity across devices. Settings are shared by default; a plugin's settings panel can be switched to this device only from its header, and the plugin registry offers a matching switch for using a different plugin set on one device.
+- 0280a6a: Retire the `/types` aggregate entrypoint in favour of the per-namespace subpaths.
+
+  `@dxos/plugin-*/types` re-exported every namespace of a plugin from one module, so a
+  single import statically pulled in all of them. These are Effect/ECHO schemas — runtime
+  values rather than erased types — so the aggregate defeated the per-namespace subpaths
+  it sat alongside and kept the plugin's whole schema graph in the eager module graph.
+
+  Breaking: the `./types` export is removed from every plugin that published it. Import the
+  namespace you need instead — `@dxos/plugin-chess/Chess` rather than
+  `@dxos/plugin-chess/types`. The `dxos-subpath-imports` lint rule autofixes call sites.
+
+  Plugins whose barrel mixed namespaces with flat exports gained real modules for those
+  exports (`ConnectorAnnotations`, `SettingsPath`, `AssistantOptions`, `SpaceSchema`, and
+  others); plugin-client and plugin-space additionally had their `export namespace X` wrappers
+  unwrapped, so `X.X.member` becomes `X.member`.
+
+### Patch Changes
+
+- 86d1482: Let a dev server start the agent debug port on a known session, and let plugins contribute
+  slash-menu commands to the markdown editor.
+
+  `DebugPortStartOptions` gains `session`, so a caller that already knows the id skips the
+  copy-the-id handshake. `MarkdownCapabilities.MenuExtension` is a new multi capability: an entry
+  names an Operation (not a callback), and contributions are grouped by the contributing plugin.
+
+  Also renames the settings-panel operation's key to `org.dxos.operation.appToolkit.openSettings`.
+  It collided with `LayoutOperation.Open`, so neither could be resolved by key alone.
+
+- 9049c30: Fix ECHO array-field appends inside `Obj.update` to mutate in place instead of copying the whole array on every push, and retype `ScrollToAnchor`, `DeleteMessage`, and `MergeDuplicates` operation fields to hold typed refs instead of bare ids so handlers no longer have to re-resolve what they point at.
+- 34a8433: Order module activation by capability dependencies instead of hand-wired events.
+  A module declares the capabilities it `requires` and `provides` (or a runtime
+  `activatesOn` event) and the plugin manager topologically orders activation from
+  that graph. Capabilities are yieldable Effect services, so accessing an undeclared
+  capability or omitting a declared one is now a type error, and missing providers,
+  dependency cycles, and duplicate providers fail fast with tagged errors instead of
+  runtime assertions. Plugins compose as a flat chain of `Plugin.addModule` over
+  module bodies authored with `Capability.lazyModule` (code-split) or
+  `Capability.inlineModule` (eager), or with a per-capability maker from the new
+  `AppCapability` namespace (`surface`, `settings`, `appGraphBuilder`, `translations`,
+  `schema`, ...) that bakes in the module name and default provides. A module is an
+  opaque `Capability.Module<Options>`, parameterized only by its options type, so a
+  module export never leaks a foreign capability's type into declaration emit.
+
+  Every plugin in the repository is migrated to this API. The plugins gain no
+  behaviour of their own from the change, but any plugin defined outside the
+  repository must be migrated too — the legacy API is removed, not deprecated.
+
+  Breaking: the legacy event-wiring API is removed — `AppPlugin` and its
+  `addXModule` helpers, `firesBeforeActivation`/`firesAfterActivation`, `compatFires`,
+  and the ordering-only `Setup*`/`*Ready` activation events (genuine runtime events
+  remain). `Capability.provide`/`provideAll` are renamed to
+  `Capability.contribute`/`contributeAll`, and the untyped raw builder
+  `Capability.contributes` is removed. Multi is now the default capability arity:
+  `Capability.make` defines a multi (registry) capability and
+  `Capability.makeSingleton` the single-provider case, both curried
+  (`make<T>()(nsid)`) so the NSID literal brands the identifier. The
+  `withPluginManager` `capabilities` test option now accepts `Contribution[]`.
+
+- 28ad891: A chat's retained model is now resolved through a provider that actually serves it. Model ids are provider-scoped, so a conversation that kept its model selection across a provider change was handed whichever provider the settings named and failed to resolve. The active provider is still used whenever it serves the selected model, which keeps a local model on the sidecar, Ollama or LM Studio instance actually in use.
+- 3958355: Import `dx.config.ts` directly instead of transpiling it, so `dx registry publish` can read a plugin config from the compiled CLI.
+- ba08e65: Evaluate `dx.config.ts` in a node subprocess, so the compiled CLI reads a plugin's config the same way every other runtime does.
+- 4800a6f: Restore a markdown document's scroll position when navigating back to it: the position is now recorded as you scroll (not only when the caret moves), read back on mount, and re-anchored to the exact pixel rather than the enclosing line.
+- 5b99c47: An inline object embed whose target was deleted now shows an "Object not found" chip inline after its source, which stays editable, instead of an empty box at the label's reserved height; card embeds no longer reserve a section's height. A block embed is atomic to the caret: one arrow press steps over it instead of two invisible stops. Link widgets can report `unresolved`/`intrinsic` to the editor via `setLinkWidgetState`, block widgets can opt into `keepAlive`, and the placeholder no longer inherits a replaced widget's element or reserved height.
+- 181f374: An inline embed that renders as a section after having rendered as a card takes its reserved height back.
+- 4c107a2: Support combining a full-text search filter with type filters via `Filter.and` — the query planner pushes the type scope down into the FTS index instead of rejecting the query as too complex. The search plugin now scopes full-text results to user-visible types (the same set the nav tree's Database section lists, plus collections), so search no longer surfaces internal objects such as views, stored schemas, or relation rows, and each result takes its icon from the type's annotation like the nav tree and cards do. Mailbox search stays scoped to the active tag view when combining free text with tag terms. Search is now a system plugin, always enabled rather than opt-in under Labs.
+- 0132aab: Arrow keys move between listbox rows again when a row carries its own controls (a task row's status toggle no longer swallows the keypress), a textarea's text is inset like an input's rather than sitting against its border, and a toolbar's density now reaches the controls inside it instead of leaving them at the default size. Markdown edited in place wraps, shows a caret against a dark surface, and takes Tab straight into the text. **Breaking:** `TaskList.Create` is now `TaskList.Edit` — it edits the selected task and creates one only when nothing is selected.
+- b600f72: Remove LevelDB and the `@dxos/kv-store` package. Automerge document storage, heads, and the query index are now backed exclusively by SQLite. Profile export/import no longer reads or writes a LevelDB store — legacy `KEY_VALUE` archive entries are skipped on import.
+- ea11703: Replace the dead `bs-*`/`is-*`/`pli-*`/`plb-*`/`mli-*`/`mlb-*`/`pis-*`/`pie-*` Tailwind classes with their physical equivalents; they came from `tailwindcss-logical`, removed in the Tailwind v4 migration, and had been generating no CSS.
+- 5913020: Importing a public pull request no longer fails because of the space's GitHub connection: a request the stored token could not make is retried anonymously on 403 and 404 as well as 401.
+- 818a096: Inline object embeds in markdown documents are focus-gated: an embed is inert until clicked, so the wheel scrolls the document rather than the sketch or embedded document; once attended it takes input, shows a subtle focus border, keeps keys and scroll chaining inside, and returns focus to the editor on Escape. Document cards fade their snippet into the card on any surface. Theme ring tokens (`ring-focus-line`, `ring-offset-focus-offset`) survive `mx()` beside a ring colour. Scenes (`@dxos/plugin-spacetime`) render a card preview in object grids, remember their camera pose per scene, always save a selected object's colour change, and orbit with half the inertia. Mermaid diagrams (`@dxos/plugin-mermaid`) and tldraw canvases (`@dxos/plugin-tldraw`) follow the app's colour mode and design-system tokens; `mermaid()` accepts `theme`/`themeVariables`/`themeCSS`. Deleting a single card from a type view (`@dxos/plugin-space`) is undoable.
+- 043c792: Typing in a markdown document no longer re-renders the editor article, the Properties panel or the Comments panel on every keystroke. A document whose first line is a single word longer than 32 characters now gets that word, truncated, as its fallback title instead of `…`.
+- 0ac2e5f: Three fixes to the operation surface the MCP server projects.
+
+  `space.queryObjects` with a `typename` filter under-returned, nondeterministically: the typename was resolved to one registered `Type` entity and the filter built from that entity's identity — a versioned `dxn:` for a static declaration, an `echo:` id for a copy persisted in the space. Objects of the same typename written under any other registration did not match, and which registration was picked depended on the order the registry query happened to return, so the same call could answer with every object, some of them, or none. The typename now filters as the bare-typename DXN `Filter.type` documents for this case; the registry is consulted only to reject a typename nothing declares.
+
+  `projects.get` and `tasks.list` timed out on a task set with members. Loading a set's tasks resolved the refs one at a time, each a separate indexed query, and an unresolvable ref does not fail — it waits out the resolver's own 30s timeout. Materialized refs are now read from the working set, the cold remainder resolves concurrently, and a ref that does not resolve within 5s is treated as gone.
+
+  `tasks.getOutline` given a ref to something that is not an outline now fails with a typed `InvalidOperationInput` naming the actual typename, rather than throwing `TypeError: Cannot read properties of undefined (reading 'tryLoad')`.
+
+  Adds `Database.makeRef`, the Effect wrapper around `db.makeRef`.
+
+- ebb8f4a: Task-set operations now work over MCP (DX-1217). `tasks.list`, `tasks.listMilestone`, and `projects.get` load the set's member refs instead of resolving them synchronously, so a set written in one session no longer reads as empty from another; new `TaskSet.loadTasks`/`loadMilestones` carry that behaviour. `tasks.create` and `tasks.createMilestone` flush the new object before the set references it, so a crash mid-create can no longer leave the set pointing at an object that was never stored — and readers skip any dangling ref left behind. `space.updateObject` converts `{"/": "echo:..."}` ref envelopes at any depth, so ref-array properties can be patched. The project skill's setup instructions call `whoami` instead of the removed `listSpaces`.
+- 770c73d: A pull request import that fails now says why: a GitHub connection the API rejects asks you to reconnect, a repository the connection cannot see is named as such, and the HTTP status appears alongside the reference.
+- 1b6e258: Show recorded demos of markdown, sheet, thread, illustrator, support and search on their plugin details pages.
+- 1ab4bb8: Single-entry plugin authoring: `Plugin.addModule` skips `undefined` (headless barrels stub excluded modules), module specs and makers accept an `environments` annotation, and `@dxos/app-framework` ships a `dx-plugin` bin that generates the per-environment `#capabilities` barrels (`src/capabilities/gen/`) and syncs the package.json condition map from those annotations.
+
+  Every `@dxos/plugin-*` package now authors a single canonical `plugin.ts(x)` and `capabilities/index.ts` on this pattern, instead of hand-maintained `plugin.node.ts`/`plugin.workerd.ts`/`capabilities/{node,workerd}.ts` variants. This migration also fixed two real drift bugs the hand-maintained variants had introduced: `plugin-client` and `plugin-routine`'s node-environment `OperationHandler` now activates on the `Startup` wave, matching browser and workerd, instead of silently defaulting to `Idle`.
+
+  `@dxos/react-ui-assistant` gains a `./translations` export so consumers can take its translation resources without pulling the React root barrel.
+
+- 22c7a70: Opening an artifact or a session chat from a project now adds a plank beside the project instead of replacing it.
+- 256f286: Projects gain a lifecycle `status` field (`active | paused | blocked | ended`), surfaced through the MCP-projected verbs, and plugin-projects ships a project-management skill for external agents — including the `/codeProject setup` flow that binds a repo to an existing space. The skill's key segment is `codeProject` because the segment doubles as the projected MCP prompt name and plain `project` belongs to assistant-toolkit's own skill.
+
+  `toEffectSchema` recognizes ECHO's reference sentinel before the generic `type: 'object'` branch, so a reference node widened with structural keywords (as a wire boundary may do for schema-unaware consumers) decodes as a reference instead of a plain struct. Serialization is unchanged — persisted schemas stay byte-identical to previous releases.
+
+  Worker (`workerd`) bundles no longer pull in React. Wrangler resolves `workerd, worker, browser` and never `node`, so a `#capabilities` map offering only `node` and `default` handed workers the browser barrel and its React surfaces. Every plugin with a headless entry now resolves a server-safe barrel under a `workerd` condition, and the `check-module-structure` guards trace with `workerd,worker` — the conditions a worker actually resolves — so a reintroduced leak fails the check instead of passing against a build that is never shipped.
+
+- d7b0a3b: `dx registry publish` authenticates the edge upload with `DX_HUB_API_KEY` when set, so headless callers without a HALO identity can publish.
+- ea11703: Add an agent debug port to the devtools hook (`dxos.debugPort`) that evaluates snippets delivered by a loopback server, and surface start/stop plus the session id in the Debug plugin's settings. Off by default, activated only by an explicit gesture, and never persisted.
+- 72b2984: `Task.edit`, `Task.setStatus`, `Task.assign` and `Task.appendHistory` write a field and the activity-log entry describing it in one transaction; an edit that changes nothing records nothing. `UpdateTask` goes through them, so a patched task now carries its own history.
+
+  `Task` gains `reviewers` (an optional `Actor` array), `artifacts` (refs to what the task produced), and a `review` status — a task with reviewers lands there rather than `done`. Bumped to `0.5.0`.
+
+  **Breaking:** `TaskEdit` and `TaskDraft` are gone from `@dxos/react-ui-task` — the editable surface of a task now has one definition, `Task.Edit` and `Task.Draft` in `@dxos/types`, shared by the list UI, the mutation helpers and the `UpdateTask` operation. `UpdateTask` accepts `null` to clear `description`, `priority`, `estimate` and `assignee`; it could previously set an assignee but never remove one.
+
+  **Breaking:** `Task.Event` is now `created | updated` — the `status-changed`, `assigned`, `moved`, `commented` and `delegated` literals are gone, and a history entry's `description` is optional. Nothing wrote the log before this release, so no stored task carries a removed value.
+
+  A plugin can now put a menu item on another plugin's object: `ObjectAction<T>` in `@dxos/app-toolkit` is the shared shape, and a host declares a capability over it. plugin-tasks declares `TaskAction`, so a task row shows contributed actions — plugin-projects contributes `Discuss in chat`, which opens a chat carrying the task in its checklist.
+
+  **Breaking:** `TaskList.Root`'s `onTaskDelete` is replaced by `getTaskActions`, which returns the row's menu items; delete is now an ordinary action the container supplies. One item renders as a button, several as an overflow menu.
+
+  **Breaking:** a chat's checklist no longer owns the tasks on it. `Chat.tasks` was an owning field, so adding a task re-parented it — a task delegated from a project disappeared from that project's task list. `Chat.addTask` parents what it creates, a delegated task keeps the parent it arrived with, and `Chat.deleteTask` deletes only members the chat owns. `AssistantOperation.RunPromptInChat` opens a chat and queues its first turn, which is how delegation now starts one: a session spawned outside the chat's UI carries a different model, and the mismatch terminated the running process mid-turn.
+
+- 559acfa: Fix the TaskSet article and section surfaces never rendering (the Tasks section of a Project article was empty), and the Excalidraw plugin settings surface never rendering — both surface ids ended in a hyphenated segment, which the surface manager drops. Surface and graph-extension ids are now checked at compile time: `id` on `Surface.create`, `Surface.createWeb`, `GraphBuilder.createExtension` and `createExtensionRaw` takes `DXN.Path`, so a malformed literal is a type error instead of a contribution that silently disappears at dispatch. A computed id still falls through to the existing runtime check.
+- 8bf4620: Opening a 200-task project no longer blocks the page for over a second: task tree walks
+  (`Task.orderTree`, `Task.subtree`, the task list's forest) index parent edges once through the new
+  `Task.childIndex`, and `Obj.getParent` caches the resolved parent rather than resolving it on every
+  read. `markdown.create`, `sheet.create` and `sandbox.downloadFile` file what they create into the
+  space's root collection again.
+- 40b50c2: Surface a process's environment (space, conversation) on `Process.Info`, and add a trace panel filter that shows only the processes running in the selected environments.
+- Updated dependencies [a92ea18]
+- Updated dependencies [0280a6a]
+- Updated dependencies [375de88]
+- Updated dependencies [0c6c186]
+- Updated dependencies [86d1482]
+- Updated dependencies [4025ffe]
+- Updated dependencies [2cad6c0]
+- Updated dependencies [af1c007]
+- Updated dependencies [12461e1]
+- Updated dependencies [4862c8e]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6186edc]
+- Updated dependencies [e3ceced]
+- Updated dependencies [d2be597]
+- Updated dependencies [6a457ac]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [4ececc6]
+- Updated dependencies [96f94c2]
+- Updated dependencies [c95def4]
+- Updated dependencies [b47fd84]
+- Updated dependencies [3c7b013]
+- Updated dependencies [fd873d2]
+- Updated dependencies [f4e481a]
+- Updated dependencies [b1dc20c]
+- Updated dependencies [ac71815]
+- Updated dependencies [7c87626]
+- Updated dependencies [c020513]
+- Updated dependencies [ab734ba]
+- Updated dependencies [f48689d]
+- Updated dependencies [f82c78f]
+- Updated dependencies [1a8043c]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [28b7621]
+- Updated dependencies [9714c75]
+- Updated dependencies [3b78bb6]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [5df602e]
+- Updated dependencies [63fc847]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [bd6ba8e]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [7560ca7]
+- Updated dependencies [b8762ef]
+- Updated dependencies [f3f55a8]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [ea4093c]
+- Updated dependencies [069e8ed]
+- Updated dependencies [7becabf]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fee7666]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [4e417e9]
+- Updated dependencies [577b434]
+- Updated dependencies [7d04444]
+- Updated dependencies [5262408]
+- Updated dependencies [d194929]
+- Updated dependencies [6ef35a6]
+- Updated dependencies [d17d75a]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [cff33b7]
+- Updated dependencies [5305365]
+- Updated dependencies [b2caee6]
+- Updated dependencies [9baf25f]
+- Updated dependencies [9a36b1e]
+- Updated dependencies [5dc2419]
+- Updated dependencies [a09e18e]
+- Updated dependencies [5d2ee16]
+- Updated dependencies [34f7d92]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [938bd20]
+- Updated dependencies [dcf911b]
+- Updated dependencies [881f900]
+- Updated dependencies [b63506b]
+- Updated dependencies [b83b831]
+- Updated dependencies [dd17e57]
+- Updated dependencies [6d28380]
+- Updated dependencies [6af89f4]
+- Updated dependencies [329faa0]
+- Updated dependencies [d770fe7]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [6f4a887]
+- Updated dependencies [318d610]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [1aabb03]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [d0beedc]
+- Updated dependencies [731b264]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [2643a00]
+- Updated dependencies [362fd0f]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [9817b6f]
+- Updated dependencies [f38f3ae]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [6409948]
+- Updated dependencies [792c756]
+- Updated dependencies [497caab]
+- Updated dependencies [35d6e86]
+- Updated dependencies [1cf6347]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [9ab38fa]
+- Updated dependencies [99dcc7c]
+- Updated dependencies [b3673ee]
+- Updated dependencies [915db6a]
+- Updated dependencies [3e02201]
+- Updated dependencies [6c25ed3]
+- Updated dependencies [2e4c299]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [4c55b5d]
+- Updated dependencies [b02fe16]
+- Updated dependencies [f0d3620]
+- Updated dependencies [472ca95]
+- Updated dependencies [5b99c47]
+- Updated dependencies [49271cd]
+- Updated dependencies [0426925]
+- Updated dependencies [548e82c]
+- Updated dependencies [252ca39]
+- Updated dependencies [8fb29b3]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [2c442f9]
+- Updated dependencies [0264069]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [872f391]
+- Updated dependencies [bd792a6]
+- Updated dependencies [8608f03]
+- Updated dependencies [51820a1]
+- Updated dependencies [9ae0e5f]
+- Updated dependencies [7d000b9]
+- Updated dependencies [66e9264]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [84362af]
+- Updated dependencies [8cb5553]
+- Updated dependencies [9d0132f]
+- Updated dependencies [76d6fca]
+- Updated dependencies [4c107a2]
+- Updated dependencies [26e31c1]
+- Updated dependencies [8c20ee2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [9477170]
+- Updated dependencies [eeff74c]
+- Updated dependencies [279f87b]
+- Updated dependencies [967b130]
+- Updated dependencies [75d9c7c]
+- Updated dependencies [0ef896f]
+- Updated dependencies [777d24a]
+- Updated dependencies [d2f3d87]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [d90fe83]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [5cf307d]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [72f7584]
+- Updated dependencies [e94ed89]
+- Updated dependencies [882ac2a]
+- Updated dependencies [0132aab]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [851791f]
+- Updated dependencies [4e4c25d]
+- Updated dependencies [9c86066]
+- Updated dependencies [608a172]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [3294b3d]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [9477170]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [12b6618]
+- Updated dependencies [df0ab57]
+- Updated dependencies [ce194c0]
+- Updated dependencies [41e2750]
+- Updated dependencies [818a096]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [9636ce1]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [9426389]
+- Updated dependencies [2e5e188]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [4f760ce]
+- Updated dependencies [9d2466a]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [9f2557b]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [08cddf6]
+- Updated dependencies [07531e0]
+- Updated dependencies [8efc4f1]
+- Updated dependencies [a04ab6e]
+- Updated dependencies [47d48cd]
+- Updated dependencies [df22dec]
+- Updated dependencies [a283607]
+- Updated dependencies [40ecd44]
+- Updated dependencies [24fcadc]
+- Updated dependencies [1160094]
+- Updated dependencies [77a2d34]
+- Updated dependencies [b00ee72]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [2bb84d8]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [b72c1a2]
+- Updated dependencies [7c426d4]
+- Updated dependencies [064a184]
+- Updated dependencies [cd4da46]
+- Updated dependencies [ec4f4ca]
+- Updated dependencies [78e5596]
+- Updated dependencies [5662dfc]
+- Updated dependencies [d1a69fb]
+- Updated dependencies [b1bb838]
+- Updated dependencies [19f19a2]
+- Updated dependencies [5959b41]
+- Updated dependencies [2a41efd]
+- Updated dependencies [139a3b0]
+- Updated dependencies [d308bf8]
+- Updated dependencies [07514c2]
+- Updated dependencies [142ba02]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [f17ff25]
+- Updated dependencies [a5dfa5e]
+- Updated dependencies [f3c02b3]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [8f372ce]
+- Updated dependencies [61becad]
+- Updated dependencies [6c881a2]
+- Updated dependencies [ddc01c6]
+- Updated dependencies [690dcaa]
+- Updated dependencies [3b09a05]
+- Updated dependencies [092f3be]
+- Updated dependencies [74f9b30]
+- Updated dependencies [b7822a7]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [d005fd9]
+- Updated dependencies [0e44f24]
+- Updated dependencies [cef0a3b]
+- Updated dependencies [bd06669]
+- Updated dependencies [c4188a6]
+- Updated dependencies [5b504b4]
+- Updated dependencies [eb95cd7]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [1482a3f]
+- Updated dependencies [a574300]
+- Updated dependencies [2513a52]
+- Updated dependencies [fa79a0e]
+- Updated dependencies [5a00dcb]
+- Updated dependencies [d7bec53]
+- Updated dependencies [17ed864]
+- Updated dependencies [1d6f730]
+- Updated dependencies [f81a4f0]
+- Updated dependencies [6668dba]
+- Updated dependencies [b125655]
+- Updated dependencies [f962a7d]
+- Updated dependencies [9996125]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [f4c2702]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [dea5df9]
+- Updated dependencies [7407d65]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [178bc6d]
+- Updated dependencies [58b59d7]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [7263241]
+- Updated dependencies [66e5008]
+- Updated dependencies [ff45e97]
+- Updated dependencies [dd039d2]
+- Updated dependencies [6fed038]
+- Updated dependencies [adcad97]
+- Updated dependencies [77d0026]
+- Updated dependencies [0a27bde]
+- Updated dependencies [97b247c]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [fa82aef]
+- Updated dependencies [178a283]
+- Updated dependencies [886453b]
+- Updated dependencies [baa40a1]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [9205bd3]
+- Updated dependencies [fce2060]
+- Updated dependencies [582fc22]
+- Updated dependencies [892b718]
+- Updated dependencies [bda45ac]
+- Updated dependencies [63629c5]
+- Updated dependencies [5885380]
+- Updated dependencies [881f900]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [a357f0c]
+- Updated dependencies [82a9c4e]
+- Updated dependencies [1957b39]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [d8e9de1]
+- Updated dependencies [72b2984]
+- Updated dependencies [5dedae9]
+- Updated dependencies [693d1b4]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [3ea8217]
+- Updated dependencies [559acfa]
+- Updated dependencies [1862edc]
+- Updated dependencies [8bf4620]
+- Updated dependencies [631df48]
+- Updated dependencies [97efbaa]
+- Updated dependencies [d205e96]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [5d816a6]
+- Updated dependencies [4c5b2c7]
+- Updated dependencies [f9816c0]
+- Updated dependencies [78523d2]
+- Updated dependencies [6fd2a5d]
+- Updated dependencies [525aee0]
+- Updated dependencies [a20d4d9]
+- Updated dependencies [06cbe76]
+- Updated dependencies [40b50c2]
+- Updated dependencies [f112c37]
+- Updated dependencies [8048e42]
+- Updated dependencies [520c34f]
+- Updated dependencies [85bdad2]
+- Updated dependencies [b2a44d6]
+- Updated dependencies [a1d42c4]
+- Updated dependencies [077cd58]
+- Updated dependencies [77d0026]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [c209b42]
+- Updated dependencies [78433b0]
+- Updated dependencies [77976e4]
+- Updated dependencies [e0a9adb]
+- Updated dependencies [f99a6e9]
+- Updated dependencies [eda8b55]
+- Updated dependencies [11de244]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+- Updated dependencies [6dadb41]
+  - @dxos/echo@0.12.0
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/assistant@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/schema@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/types@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/react-ui-editor@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/halo@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/echo-doc@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/versioning@0.12.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/react-ui-dnd@0.12.0
+  - @dxos/ui@0.12.0
+  - @dxos/halo-react@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

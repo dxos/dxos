@@ -8,8 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { DraftMessage } from '@dxos/types';
 
-import * as InboxOperation from '../types/InboxOperation';
-import * as SystemTags from '../types/SystemTags';
+import { InboxOperation, SystemTags } from '#types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOperation.DraftEmail.pipe(
   Operation.withHandler(

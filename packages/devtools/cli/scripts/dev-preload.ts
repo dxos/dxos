@@ -39,7 +39,7 @@ import { extname } from 'node:path';
 // The lookahead rejects any path containing `/packages/devtools/cli/src/`
 // (Unix) or `\packages\devtools\cli\src\` (Windows). Everything else that
 // ends in `.jsx` or `.tsx` matches.
-const NON_CLI_JSX = /^(?!.*[\/\\]packages[\/\\]devtools[\/\\]cli[\/\\]src[\/\\]).*\.(?:j|t)sx$/;
+const NON_CLI_JSX = /^(?!.*[/\\]packages[/\\]devtools[/\\]cli[/\\]src[/\\]).*\.(?:j|t)sx$/;
 
 const LOADER_BY_EXT: Record<string, 'tsx' | 'jsx'> = {
   '.tsx': 'tsx',

@@ -10,9 +10,10 @@ import { translations as threadTranslations } from '@dxos/react-ui-thread/transl
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SuggestionSource } from '@dxos/ui-editor';
 
-import { type SuggestionGroup, buildSuggestionSources, suggestionGroupKey } from '../../hooks';
-import { translations } from '../../translations';
-import { SuggestionThread } from './SuggestionThread';
+import { type SuggestionGroup, buildSuggestionSources, suggestionGroupKey } from '#hooks';
+import { translations } from '#translations';
+
+import { SuggestionThread } from './SuggestionThread.tsx';
 
 // A base document and two reviewers' proposals over it. Alice and Bob both rewrite "quick"
 // (an overlap); each has one further, non-overlapping change.

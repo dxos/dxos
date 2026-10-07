@@ -2,9 +2,9 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './animation';
-export * from './debug';
-export * from './inertia';
-export * from './path';
-export * from './render';
-export * from './styles';
+export * from './animation.ts';
+export * from './debug.ts';
+export * from './inertia.ts';
+export * from './path.ts';
+export * from './render.ts';
+export * from './styles.ts';

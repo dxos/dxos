@@ -4,8 +4,8 @@
 
 import { type Component, onCleanup, onMount } from 'solid-js';
 
-import { ClassicRing } from './ClassicRing';
-import { type LoaderStore } from './store';
+import { ClassicRing } from './ClassicRing.tsx';
+import { type LoaderStore } from './store.ts';
 import {
   RING_LINK_COLOR,
   type SwarmConfig,
@@ -25,7 +25,7 @@ import {
   slotPosition,
   stepSettle,
   transientLinks,
-} from './swarm';
+} from './swarm.ts';
 
 export type SwarmProps = {
   store: LoaderStore;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -13,25 +13,31 @@ import { AiModelResolver, type AiService } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
-import { ClientService } from '@dxos/client';
+import { ClientService, ConfigService } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import type * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Trace from '@dxos/compute/Trace';
-import { type Database, type Key, Registry } from '@dxos/echo';
+import { type Database, Hypergraph, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
+import { EdgeHttpClientService } from '@dxos/edge-client';
+import { type Identity } from '@dxos/halo';
+import { layerIdentity } from '@dxos/halo-adapter-client';
 
 export type AiChatServices =
   | AiService.AiService
+  | ConfigService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
+  | Identity.Service
   | Operation.Service
   | Registry.Service
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
-export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
+export const Provider = Schema.Literals(['edge', 'lmstudio', 'ollama']);
 export type Provider = Schema.Schema.Type<typeof Provider>;
 
 export type LayerOptions = {
@@ -48,12 +54,8 @@ export const chatLayer = ({
 }: LayerOptions): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
   const aiServiceLayer = Match.value(provider).pipe(
     Match.when('edge', () => AiServiceTestingPreset('direct')),
-    Match.when('lmstudio', () =>
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make())),
-    ),
-    Match.when('ollama', () =>
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make())),
-    ),
+    Match.when('lmstudio', () => AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make()))),
+    Match.when('ollama', () => AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make()))),
     Match.exhaustive,
   );
 
@@ -87,7 +89,9 @@ export const chatLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
+          // registry down.
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),
@@ -98,9 +102,28 @@ export const chatLayer = ({
     Layer.provideMerge(credentialsLayerFromDatabase()),
     // Resolves server-custodied tokens through EDGE; the client is only touched when one is hit.
     Layer.provideMerge(
-      Layer.unwrapEffect(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
+      Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
+    // The cross-space graph, beside the one space `spaceLayer` resolves: an operation that has to
+    // FIND its space (a session report, whose hook payload cannot name one) declares this instead
+    // of the database, and without it the call fails with "Service not found".
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => Hypergraph.layer(client.graph)))),
+    // What plugin operations declare in place of the client (e.g. the script skill's deploy and invoke).
+    Layer.provideMerge(
+      Layer.unwrap(Effect.map(ClientService, (client) => Layer.succeed(ConfigService, client.config))),
+    ),
+    // Only with an EDGE URL, since `client.edge` throws without one and non-EDGE providers must still start.
+    Layer.provideMerge(
+      Layer.unwrap(
+        Effect.map(ClientService, (client) =>
+          client.config.get('runtime.services.edge.url')
+            ? Layer.succeed(EdgeHttpClientService, client.edge.http)
+            : Layer.empty,
+        ),
+      ),
+    ),
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => layerIdentity(client)))),
     Layer.provideMerge(Trace.writerLayerNoop),
   );
 };

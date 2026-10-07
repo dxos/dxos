@@ -7,17 +7,18 @@ import { describe, test, vi } from 'vitest';
 import { type Client } from '@dxos/client';
 import { SpaceId } from '@dxos/keys';
 
-import * as WnfsCapabilities from '../types/WnfsCapabilities';
+import { WnfsCapabilities } from '#types';
 
-vi.mock('../helpers', () => ({
+vi.mock('../helpers/index.ts', () => ({
   loadWnfs: vi.fn(),
   readWnfsFile: vi.fn(),
   upload: vi.fn(),
   getBlobUrl: vi.fn(),
 }));
 
-import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '../helpers';
-import { createWnfsBlobBackend } from './blob-backend';
+import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '#helpers';
+
+import { createWnfsBlobBackend } from './blob-backend.ts';
 
 describe('createWnfsBlobBackend', () => {
   // Test doubles: `Client`/`Space`/`Blockstore`/`PrivateDirectory`/`PrivateForest` are only ever

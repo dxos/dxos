@@ -30,19 +30,19 @@ export type Mark = 'em' | 'strong' | 'code';
 /** A run of text carrying zero or more inline marks — what makes the lensed view *rich* text. */
 export const Inline = Schema.Struct({
   text: Schema.String,
-  marks: Schema.optional(Schema.Array(Schema.Literal('em', 'strong', 'code'))),
+  marks: Schema.optional(Schema.Array(Schema.Literals(['em', 'strong', 'code']))),
 });
 
 export type Inline = Schema.Schema.Type<typeof Inline>;
 
 export const Block = Schema.Struct({
-  type: Schema.Literal('heading', 'paragraph', 'bullet'),
+  type: Schema.Literals(['heading', 'paragraph', 'bullet']),
   /** Heading depth, 1-6; absent for other blocks. */
   level: Schema.optional(Schema.Number),
   /** The block's inline runs, with the markdown syntax that produced them stripped. */
   content: Schema.Array(Inline),
   /** `[start, end)` in the source string — the anchor a write splices over. */
-  range: Schema.Tuple(Schema.Number, Schema.Number),
+  range: Schema.Tuple([Schema.Number, Schema.Number]),
 });
 
 export type Block = Schema.Schema.Type<typeof Block>;

@@ -7,6 +7,7 @@ import {
   selection as d3Selection,
   easeLinear,
   easeSinOut,
+  geoEquirectangular,
   geoMercator,
   geoOrthographic,
   geoPath,
@@ -29,16 +30,10 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import {
-  type ThemedClassName,
-  type ThemeMode,
-  useComposedRefs,
-  useControlledState,
-  useDynamicRef,
-  useThemeContext,
-} from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+import { type ThemeMode } from '@dxos/ui-types';
 
 import {
   GlobeContext,
@@ -48,10 +43,11 @@ import {
   type Size,
   type Vector,
   useGlobeContext,
-} from '../../hooks';
+} from '../../hooks/index.ts';
 import {
   type Features,
   type StyleSet,
+  createAxisRotationTween,
   createLayers,
   createRotationTween,
   flyDuration,
@@ -59,8 +55,8 @@ import {
   positionToRotation,
   renderLayers,
   timer,
-} from '../../util';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+} from '../../util/index.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -108,12 +104,29 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
   },
 };
 
-export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
+export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator' | 'equirectangular';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
   'orthographic': geoOrthographic,
   'mercator': geoMercator,
   'transverse-mercator': geoTransverseMercator,
+  // The flat plate-carrée map (longitude and latitude straight to x and y), as a world-clock backdrop.
+  'equirectangular': geoEquirectangular,
+};
+
+const SPHERE = { type: 'Sphere' } as const;
+
+/**
+ * The scale at zoom 1. With a `fit`, the sphere's projected bounds are measured at unit scale and
+ * scaled to fit inside (`contain`) or fill (`cover`) the canvas, whatever the projection's shape.
+ */
+const baseScale = (projection: GeoProjection, size: { width: number; height: number }, fit?: GlobeFit): number => {
+  if (!fit) {
+    return Math.min(size.width, size.height) / 2;
+  }
+  const [[x0, y0], [x1, y1]] = geoPath(projection.scale(1).translate([0, 0]).rotate([0, 0, 0])).bounds(SPHERE);
+  const ratios = [size.width / (x1 - x0), size.height / (y1 - y0)];
+  return fit === 'cover' ? Math.max(...ratios) : Math.min(...ratios);
 };
 
 const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): GeoProjection => {
@@ -151,10 +164,10 @@ const GlobeRoot = forwardRef<GlobeController | null, GlobeRootProps>(
     forwardedRef,
   ) => {
     const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-    const [center, setCenter] = useControlledState(centerProp);
-    const [zoom, setZoom] = useControlledState(zoomProp);
-    const [translation, setTranslation] = useControlledState<Point>(translationProp);
-    const [rotation, setRotation] = useControlledState<Vector>(rotationProp);
+    const [center, setCenter] = Hooks.useControlledState(centerProp);
+    const [zoom, setZoom] = Hooks.useControlledState(zoomProp);
+    const [translation, setTranslation] = Hooks.useControlledState<Point>(translationProp);
+    const [rotation, setRotation] = Hooks.useControlledState<Vector>(rotationProp);
 
     // The controller is built by Globe.Canvas and registered here; Globe.Root re-exposes it via its
     // ref. Held in state (not a ref) so that when Globe.Canvas registers a new controller, Root
@@ -195,16 +208,16 @@ GlobeRoot.displayName = 'Globe.Root';
 //
 
 /** Consumer-facing props for `Globe.Viewport` (classNames + children). */
-type GlobeViewportProps = ThemedClassName<PropsWithChildren>;
+type GlobeViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
- * Measured container for the globe. Renders the `relative dx-container` div, observes its size, and
+ * Measured container for the globe. Renders the `relative dx-expand` div, observes its size, and
  * publishes measurements to the context so `Globe.Canvas` can size the canvas.
  */
-const GlobeViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const GlobeViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { setSize } = useGlobeContext();
   const localRef = useRef<HTMLDivElement>(null);
-  const composedRef = useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
+  const composedRef = Hooks.useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
   const { width, height } = useResizeDetector<HTMLDivElement>({ targetRef: localRef });
 
   useEffect(() => {
@@ -212,7 +225,7 @@ const GlobeViewport = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [width, height, setSize]);
 
   return (
-    <div {...composableProps(props, { classNames: 'relative dx-container' })} ref={composedRef}>
+    <div {...Util.composableProps(props, { classNames: 'relative dx-expand overflow-hidden' })} ref={composedRef}>
       {children}
     </div>
   );
@@ -224,8 +237,13 @@ GlobeViewport.displayName = 'Globe.Viewport';
 // Canvas
 //
 
+/** How the whole sphere sits in the canvas at zoom 1, as `object-fit` places an image. */
+export type GlobeFit = 'contain' | 'cover';
+
 type GlobeCanvasProps = {
   projection?: ProjectionType | GeoProjection;
+  /** Unset keeps each projection's own scale: a globe's radius fills the shorter side. */
+  fit?: GlobeFit;
   topology?: Topology;
   features?: Features;
   styles?: StyleSet;
@@ -237,17 +255,16 @@ type GlobeCanvasProps = {
  * the live instance.
  * https://github.com/topojson/world-atlas
  */
-const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
-  const { themeMode } = useThemeContext();
+const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
+  const themeMode = Hooks.useThemeMode();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
   const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
     useGlobeContext();
 
-  const zoomRef = useDynamicRef(zoom);
+  const zoomRef = Hooks.useDynamicRef(zoom);
 
   // Canvas.
   const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
-  const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
   // Projection.
   const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
@@ -308,18 +325,23 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
       setTranslation,
       setRotation,
       flyTo: (target, options = {}) => {
-        const { duration = 1_200, tilt = 0, onTick } = options;
+        const { duration = 1_200, msPerRadian = 1_500, tilt = 0, onTick, path = 'arc' } = options;
         const p2 = geoToPosition(target);
         const r1 = projection.rotate() as Vector;
         const r2 = positionToRotation(p2, tilt);
 
         // Approximate current centre from the inverse of the rotation.
         const p1: [number, number] = [-r1[0], -r1[1]];
-        const rotationTween = createRotationTween(projection, setRotation, r1, r2);
+        const rotationTween = (path === 'axis' ? createAxisRotationTween : createRotationTween)(
+          projection,
+          setRotation,
+          r1,
+          r2,
+        );
         const iz = target.zoom !== undefined ? interpolateNumber(zoomRef.current, target.zoom) : undefined;
 
         flyToSelection.interrupt(flyToTransitionName);
-        const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, 1_500));
+        const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, msPerRadian));
         if (onTick) {
           tx.tween('flyToOnTick', () => onTick);
         }
@@ -366,7 +388,7 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
       timer(() => {
         // https://d3js.org/d3-geo/projection
         projection
-          .scale((Math.min(size.width, size.height) / 2) * zoom)
+          .scale(baseScale(projection, size, fit) * zoom)
           .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
           .rotate(rotation ?? [0, 0, 0]);
 
@@ -381,13 +403,13 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
         renderLayers(generator, layers, zoom, styles, viewCenter);
       });
     }
-  }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
+  }, [generator, size, zoom, translation, rotation, layers, projectionProp, fit]);
 
   if (!size.width || !size.height) {
     return null;
   }
 
-  return <canvas ref={canvasRef} className='bg-base-surface' width={size.width} height={size.height} />;
+  return <canvas ref={setCanvas} className='bg-base-surface' width={size.width} height={size.height} />;
 };
 
 GlobeCanvas.displayName = 'Globe.Canvas';
@@ -420,7 +442,7 @@ const GlobePanel = ({
   position,
   classNames,
   children,
-}: ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => {
+}: Util.ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => {
   return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>;
 };
 

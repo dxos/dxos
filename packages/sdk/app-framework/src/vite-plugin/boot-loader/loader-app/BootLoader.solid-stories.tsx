@@ -8,9 +8,9 @@ import { Show, createSignal, onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
 import markSvg from './composer-icon.svg?raw';
-import { Loader } from './Loader';
-import { createLoaderStore } from './store';
-import { SWARM_VARIANTS, type SwarmConfig, type SwarmVariant } from './swarm';
+import { Loader } from './Loader.tsx';
+import { createLoaderStore } from './store.ts';
+import { SWARM_VARIANTS, type SwarmConfig, type SwarmVariant } from './swarm.ts';
 
 type StoryProps = Partial<SwarmConfig> & {
   variant: SwarmVariant | 'random';

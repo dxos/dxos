@@ -37,6 +37,9 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../../tools/vite-plugin-module-url"
+    },
+    {
       "path": "../../../tools/vite-plugin-shutdown"
     },
     {
@@ -47,6 +50,9 @@
     },
     {
       "path": "../../common/effect-atom-solid"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -79,6 +85,27 @@
       "path": "../../common/web-context-solid"
     },
     {
+      "path": "../../core/compute/agent-claude"
+    },
+    {
+      "path": "../../core/compute/agent-code-mode"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -89,6 +116,12 @@
     },
     {
       "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../e2e/perf-harness"
+    },
+    {
+      "path": "../../plugins/plugin-agent"
     },
     {
       "path": "../../plugins/plugin-assistant"
@@ -118,19 +151,31 @@
       "path": "../../plugins/plugin-calls"
     },
     {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
       "path": "../../plugins/plugin-chess-com"
     },
     {
+      "path": "../../plugins/plugin-claude"
+    },
+    {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-cloudflare"
     },
     {
       "path": "../../plugins/plugin-code"
     },
     {
       "path": "../../plugins/plugin-commerce"
+    },
+    {
+      "path": "../../plugins/plugin-computer"
     },
     {
       "path": "../../plugins/plugin-conductor"
@@ -149,6 +194,9 @@
     },
     {
       "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-deepseek"
     },
     {
       "path": "../../plugins/plugin-devtools"
@@ -172,6 +220,9 @@
       "path": "../../plugins/plugin-file"
     },
     {
+      "path": "../../plugins/plugin-file-system"
+    },
+    {
       "path": "../../plugins/plugin-freeq"
     },
     {
@@ -188,6 +239,9 @@
     },
     {
       "path": "../../plugins/plugin-heygen"
+    },
+    {
+      "path": "../../plugins/plugin-higgsfield"
     },
     {
       "path": "../../plugins/plugin-ibkr"
@@ -211,10 +265,19 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-labeler"
+    },
+    {
+      "path": "../../plugins/plugin-lametric"
+    },
+    {
       "path": "../../plugins/plugin-library"
     },
     {
       "path": "../../plugins/plugin-linear"
+    },
+    {
+      "path": "../../plugins/plugin-lingo"
     },
     {
       "path": "../../plugins/plugin-magazine"
@@ -235,10 +298,13 @@
       "path": "../../plugins/plugin-mermaid"
     },
     {
-      "path": "../../plugins/plugin-native"
+      "path": "../../plugins/plugin-messenger"
     },
     {
-      "path": "../../plugins/plugin-native-filesystem"
+      "path": "../../plugins/plugin-mobile"
+    },
+    {
+      "path": "../../plugins/plugin-native"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -274,6 +340,9 @@
       "path": "../../plugins/plugin-pwa"
     },
     {
+      "path": "../../plugins/plugin-qa"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -281,6 +350,9 @@
     },
     {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-s3"
     },
     {
       "path": "../../plugins/plugin-sample"
@@ -307,9 +379,6 @@
       "path": "../../plugins/plugin-sidekick"
     },
     {
-      "path": "../../plugins/plugin-simple-layout"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -326,6 +395,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-stream-deck"
     },
     {
       "path": "../../plugins/plugin-studio"
@@ -364,6 +436,12 @@
       "path": "../../plugins/plugin-typefully"
     },
     {
+      "path": "../../plugins/plugin-typesafe"
+    },
+    {
+      "path": "../../plugins/plugin-uml"
+    },
+    {
       "path": "../../plugins/plugin-video"
     },
     {
@@ -379,10 +457,16 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/client-services"
@@ -400,13 +484,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/shell"
-    },
-    {
       "path": "../../sdk/worker-framework"
+    },
+    {
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-primitives/react-error-boundary"
@@ -415,7 +496,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-geo"
     },
     {
       "path": "../../ui/react-ui-menu"

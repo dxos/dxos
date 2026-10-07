@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-export class CommandConfig extends Context.Tag('CommandConfig')<
+export class CommandConfig extends Context.Service<
   CommandConfig,
   {
     json: boolean;
@@ -14,7 +14,7 @@ export class CommandConfig extends Context.Tag('CommandConfig')<
     profile: string;
     logLevel: string;
   }
->() {
+>()('CommandConfig') {
   static isJson: Effect.Effect<boolean, never, CommandConfig> = CommandConfig.pipe(Effect.map((config) => config.json));
   static isVerbose: Effect.Effect<boolean, never, CommandConfig> = CommandConfig.pipe(
     Effect.map((config) => config.verbose),

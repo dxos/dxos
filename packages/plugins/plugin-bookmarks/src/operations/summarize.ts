@@ -18,8 +18,9 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import * as BookmarkOperation from '../types/BookmarkOperation';
-import { extractReadableText, fetchPage } from '../util';
+import { BookmarkOperation } from '#types';
+
+import { extractReadableText, fetchPage } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof BookmarkOperation.Summarize> = BookmarkOperation.Summarize.pipe(
   Operation.withHandler(
@@ -64,7 +65,7 @@ const handler: Operation.WithHandler<typeof BookmarkOperation.Summarize> = Bookm
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

@@ -5,16 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Work';
 const TEMPLATE_ID = 'org.dxos.project.mailboxFacts';
 
 /** Owns `org.dxos.skill.brain`, the per-space FactStore, and the mailbox toolbar's `Analyze` action. */
-const plugins = [BrainPlugin()];
+const plugins = [BrainPlugin.make()];
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-projects/FactSummaries',
@@ -97,10 +97,11 @@ export const Test: Story = {
       timeout: 30_000,
     });
 
-    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded).
-    await waitFor(async () => expect(canvas.getByDisplayValue('Brain')).toBeInTheDocument(), { timeout: 10_000 });
-    await expect(canvas.getByDisplayValue('Inbox')).toBeInTheDocument();
+    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded); references show as
+    // chips and the picker's text rather than input values.
+    await waitFor(async () => expect(canvas.getAllByText('Brain')[0]).toBeInTheDocument(), { timeout: 10_000 });
+    await expect(canvas.getAllByText('Inbox')[0]).toBeInTheDocument();
 
-    await expect(canvas.getByDisplayValue(MAILBOX_NAME)).toBeInTheDocument();
+    await expect(canvas.getAllByText(MAILBOX_NAME)[0]).toBeInTheDocument();
   },
 };

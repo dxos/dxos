@@ -17,8 +17,8 @@ import { log } from '@dxos/log';
 // TODO(wittjosiah): Re-enable once @dxos/compute.js is available at the R2 dev bucket
 // (https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/@dxos/compute.js currently 404s).
 describe.skip('Functions deployment', { tags: ['functions-e2e'] }, () => {
-  test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
-    const config = configPreset({ edge: 'main' });
+  test('deploys FOREX (effect) function and invokes it via EDGE (preview)', { timeout: 120_000 }, async () => {
+    const config = configPreset({ edge: 'preview' });
     await testDeploy(config);
   });
 

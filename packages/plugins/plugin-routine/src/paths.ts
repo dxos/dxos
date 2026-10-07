@@ -4,15 +4,17 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Routine from '@dxos/compute/Routine';
-
-import { meta } from '#meta';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 const { getSectionPath: getRoutinesPath } = GraphPath.createTypeSectionPaths(Routine.Routine, {
   groupId: GraphPath.GroupSegments.ai,
 });
 
-/** Path to the routines settings section for a given space. */
+/** Segment of the routines panel within a space's settings section. */
+export const ROUTINES_SETTINGS_ID = 'routines';
+
+/** Path to the routines settings panel for a given space. */
 export const getRoutinesSettingsPath = (spaceId: string): string =>
-  GraphPath.getSpacePath(spaceId, 'settings', `${meta.profile.key}.routines`);
+  GraphPath.getSpacePath(spaceId, SpaceSchema.SETTINGS_SECTION_ID, ROUTINES_SETTINGS_ID);
 
 export { getRoutinesPath };

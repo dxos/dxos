@@ -2,15 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-// Import from the focused constants module rather than the `../util` barrel: the barrel re-exports
+// Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
-// esbuild cannot load. The Worker only needs this one constant.
-import { LOG_STORE_MAX_BYTES } from '../util/constants';
+// esbuild cannot load.
+import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
+import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
+import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
+import { injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
 
 type Env = {
   ASSETS: Fetcher;
   APPLE_TEAM_ID?: string;
   ENVIRONMENT?: string;
+  /**
+   * Assets from previous builds, keyed by their path. Optional: while it is unbound the Worker
+   * behaves as if every previous build were gone, which is the behaviour that predates it.
+   */
+  ASSET_ARCHIVE?: R2Bucket;
   FEEDBACK_LOGS?: R2Bucket;
   SIGNOZ_INGEST_URL?: string;
   SIGNOZ_INGESTION_KEY?: string;
@@ -19,33 +27,35 @@ type Env = {
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
 const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
-const ALLOWED_ORIGINS = new Set([
-  'https://composer.space',
-  'https://staging.composer.space',
-  'https://labs.composer.space',
-  'https://main.composer.space',
-]);
-
-const corsHeaders = (origin: string | null): Record<string, string> => ({
-  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
-  'Vary': 'Origin',
-});
-
-/** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */
+/**
+ * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
+ *
+ * Current clients send gzipped NDJSON (`Content-Type: application/gzip`), stored as `.ndjson.gz`; plain
+ * NDJSON is still accepted because native builds already in the field upload it uncompressed.
+ *
+ * Admits `nativeOrigins`, whose uploads are necessarily cross-origin, and carries the CORS headers on
+ * every response, since the client reads the returned key.
+ */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
   const origin = request.headers.get('Origin');
+  const allowed = nativeOrigins(env.ENVIRONMENT);
+  const cors = corsHeaders(request.url, origin, allowed);
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    return new Response(null, { status: 204, headers: cors });
   }
 
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return new Response('Method not allowed', { status: 405, headers: cors });
+  }
+
+  // Rejected server-side, not just via CORS headers; a missing `Origin` means a client no
+  // same-origin policy is holding back, on a route that writes megabytes to storage.
+  if (!origin || !isAllowedOrigin(request.url, origin, allowed)) {
+    return new Response('Forbidden', { status: 403, headers: cors });
   }
 
   if (!env.FEEDBACK_LOGS) {
-    return new Response('Feedback logs storage not configured', { status: 503 });
+    return new Response('Feedback logs storage not configured', { status: 503, headers: cors });
   }
 
   // R2 only accepts a known-length stream, so Content-Length is required rather than advisory: it
@@ -53,40 +63,41 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   const contentLengthHeader = request.headers.get('content-length');
   const contentLength = contentLengthHeader === null ? Number.NaN : Number(contentLengthHeader);
   if (!Number.isInteger(contentLength) || contentLength < 0) {
-    return new Response('Content-Length required', { status: 411 });
+    return new Response('Content-Length required', { status: 411, headers: cors });
   }
 
   if (contentLength === 0) {
-    return new Response('Empty body', { status: 400 });
+    return new Response('Empty body', { status: 400, headers: cors });
   }
 
   if (contentLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
+    return new Response('Payload too large', { status: 413, headers: cors });
   }
 
   if (!request.body) {
-    return new Response('Empty body', { status: 400 });
+    return new Response('Empty body', { status: 400, headers: cors });
   }
 
+  const gzipped = request.headers.get('content-type')?.split(';')[0].trim() === 'application/gzip';
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
-  const key = `logs/${date}/${id}.ndjson`;
+  const key = `logs/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
 
   try {
     // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
     // near its memory limit, and a Worker torn down that way resets the connection — the client
     // then sees a rejected `fetch` with no status rather than an error response.
     await env.FEEDBACK_LOGS.put(key, request.body, {
-      httpMetadata: { contentType: 'application/x-ndjson' },
+      httpMetadata: { contentType: gzipped ? 'application/gzip' : 'application/x-ndjson' },
     });
   } catch {
     // R2 rejects a body that does not match Content-Length, as well as its own failures.
-    return new Response('Failed to store feedback logs', { status: 502 });
+    return new Response('Failed to store feedback logs', { status: 502, headers: cors });
   }
 
   return new Response(JSON.stringify({ key }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...cors },
   });
 };
 
@@ -112,10 +123,9 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  // Restrict to same-origin / known origins to avoid being abused as an open proxy.
-  // Same-origin GETs typically omit Origin; allow when absent or when a known origin is set.
+  // Restrict to same-origin, to avoid being abused as an open proxy.
   const origin = request.headers.get('Origin');
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+  if (!isAllowedOrigin(request.url, origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -135,13 +145,18 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Invalid url protocol', { status: 400 });
   }
 
+  const userAgent = request.headers.get('User-Agent');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RSS_FETCH_TIMEOUT_MS);
   try {
     // Forward the original method so HEAD probes don't download the full body upstream.
     const upstream = await fetch(parsedFeedUrl.toString(), {
       method: request.method,
-      headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
+      headers: {
+        Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        // Feed hosts' WAFs reject a request with no User-Agent (The Guardian answers 406), and a Worker's fetch adds none.
+        ...(userAgent ? { 'User-Agent': userAgent } : {}),
+      },
       signal: controller.signal,
     });
 
@@ -217,6 +232,12 @@ const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
 const BUNDLE_ID = 'org.dxos.composer';
 
 /**
+ * Prerelease desktop channels signed under their own App ID (`MACOS_PROVISION_PROFILE_<CHANNEL>`). They share the
+ * released app's passkeys but not its universal links, which stay with the released app.
+ */
+const CHANNEL_BUNDLE_IDS = ['org.dxos.composer.dev', 'org.dxos.composer.preview'];
+
+/**
  * The well-known documents that verify this domain, keyed by path.
  *
  * These are Worker routes rather than static assets because both must be served as
@@ -235,9 +256,10 @@ const WELL_KNOWN_DOCUMENTS: Record<string, (env: Env) => object | undefined> = {
     }
 
     const appId = `${env.APPLE_TEAM_ID}.${BUNDLE_ID}`;
+    const channelAppIds = CHANNEL_BUNDLE_IDS.map((bundleId) => `${env.APPLE_TEAM_ID}.${bundleId}`);
     return {
       applinks: { details: [{ appIDs: [appId], components: [{ '/': '/*' }] }] },
-      webcredentials: { apps: [appId] },
+      webcredentials: { apps: [appId, ...channelAppIds] },
     };
   },
   // WebAuthn Related Origin Requests: origins permitted to assert the `composer.space` relying party.
@@ -267,31 +289,124 @@ const handleWellKnown = (request: Request, document: object | undefined): Respon
   });
 };
 
+/**
+ * Serve an asset a previous build shipped, from the retention bucket.
+ *
+ * A deploy replaces the asset manifest wholesale, so the moment a new version goes live every chunk
+ * the previous build owned stops resolving — and a tab open across that deploy still imports them.
+ * Every deploy mirrors its `assets/` into this bucket, keyed by path, so those requests keep working
+ * for the environment's retention window.
+ *
+ * Returns `undefined` when there is nothing to serve, leaving the caller to 404: the bucket may be
+ * unbound, and a hit is by definition the uncommon path — the live manifest answers everything the
+ * current build references.
+ */
+const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise<Response | undefined> => {
+  if (!env.ASSET_ARCHIVE || !isHashedAssetPath(url.pathname)) {
+    return undefined;
+  }
+
+  // Keys are stored without the leading slash so the bucket listing reads as a path.
+  const key = url.pathname.slice(1);
+  const object = request.method === 'HEAD' ? await env.ASSET_ARCHIVE.head(key) : await env.ASSET_ARCHIVE.get(key);
+  if (!object) {
+    return undefined;
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('ETag', object.httpEtag);
+  // `_headers` does not reach a Worker-built response. Only hashed paths get this far.
+  headers.set('Cache-Control', IMMUTABLE_CACHE_CONTROL);
+  // Distinguishes a retention hit from a live one in the logs, which is how we learn whether the
+  // window is long enough without instrumenting the client.
+  headers.set('X-Asset-Source', 'archive');
+
+  return new Response('body' in object ? object.body : null, { status: 200, headers });
+};
+
+/**
+ * Serve a request the asset server did not match: it serves live files itself, so the Worker sees only
+ * misses and the `run_worker_first` routes no handler above claimed.
+ *
+ * A request naming a file gets the archived copy or a real 404, never `index.html` with a 200, which a
+ * stale tab's lazy import would report as a MIME error instead of a missing file. Everything else is a
+ * client-side route. A navigation always is, so a route containing a dot keeps the SPA.
+ */
+const serveAsset = async (request: Request, env: Env): Promise<Response> => {
+  const response = await env.ASSETS.fetch(request);
+  if (response.status !== 404) {
+    return response;
+  }
+
+  const url = new URL(request.url);
+  if (isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') })) {
+    const archived = await serveArchivedAsset(request, env, url);
+    return (
+      archived ??
+      new Response('Not found', {
+        status: 404,
+        headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
+      })
+    );
+  }
+
+  const page = await env.ASSETS.fetch(new Request(new URL('/', url), request));
+  return withLinkPreview(request, page, url);
+};
+
+/**
+ * Name a client-side route's `index.html` after the `title` its URL carries, so a link pasted into a
+ * messenger previews as the object it opens rather than as the bare app. Anything else passes through.
+ */
+const withLinkPreview = async (request: Request, page: Response, url: URL): Promise<Response> => {
+  const title = readLinkTitle(url);
+  if (
+    !title ||
+    request.method !== 'GET' ||
+    page.status !== 200 ||
+    !page.headers.get('Content-Type')?.includes('text/html')
+  ) {
+    return page;
+  }
+
+  const headers = new Headers(page.headers);
+  // The body changes, so the asset's length and validator no longer describe it.
+  headers.delete('Content-Length');
+  headers.delete('ETag');
+  return new Response(injectLinkPreview(await page.text(), title), { status: page.status, headers });
+};
+
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
 /** Reverse-proxy OTel ingestion to SigNoz, injecting the access token server-side. */
 const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
   const origin = request.headers.get('Origin');
+  // Native builds export here cross-origin; their own asset server has no `/api` routes.
+  const allowed = nativeOrigins(env.ENVIRONMENT);
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    return new Response(null, { status: 204, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders(origin) });
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
-    return new Response('Forbidden', { status: 403, headers: corsHeaders(origin) });
+  if (!isAllowedOrigin(request.url, origin, allowed)) {
+    return new Response('Forbidden', { status: 403, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
-    return new Response('OTel proxy not configured', { status: 503, headers: corsHeaders(origin) });
+    return new Response('OTel proxy not configured', {
+      status: 503,
+      headers: corsHeaders(request.url, origin, allowed),
+    });
   }
 
   if (!request.body) {
-    return new Response('Empty body', { status: 400, headers: corsHeaders(origin) });
+    return new Response('Empty body', { status: 400, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   const upstreamHeaders: Record<string, string> = {
@@ -341,18 +456,18 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   await pipePromise;
 
   if (sizeExceeded) {
-    return new Response('Payload too large', { status: 413, headers: corsHeaders(origin) });
+    return new Response('Payload too large', { status: 413, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   if (!upstreamResponse) {
-    return new Response('Bad gateway', { status: 502, headers: corsHeaders(origin) });
+    return new Response('Bad gateway', { status: 502, headers: corsHeaders(request.url, origin, allowed) });
   }
 
   return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
     headers: {
       'Content-Type': upstreamResponse.headers.get('Content-Type') ?? 'application/json',
-      ...corsHeaders(origin),
+      ...corsHeaders(request.url, origin, allowed),
     },
   });
 };
@@ -373,7 +488,7 @@ const handler: ExportedHandler<Env> = {
     }
 
     // API routes.
-    if (url.pathname === '/api/feedback-logs') {
+    if (url.pathname === FEEDBACK_LOGS_PATH) {
       return handleFeedbackLogs(request, env);
     }
 
@@ -389,7 +504,7 @@ const handler: ExportedHandler<Env> = {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    return serveAsset(request, env);
   },
 };
 

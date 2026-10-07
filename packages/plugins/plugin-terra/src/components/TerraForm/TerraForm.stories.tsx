@@ -8,8 +8,9 @@ import React, { useMemo, useState } from 'react';
 import { useObject } from '@dxos/echo-react';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import * as Terra from '../../types/Terra';
-import { TerraForm } from './TerraForm';
+import { Terra } from '#types';
+
+import { TerraForm } from './TerraForm.tsx';
 
 const DefaultStory = () => {
   const terra = useMemo(() => Terra.make({ config: { seed: 'terra-1', resolution: 128 } }), []);
@@ -23,7 +24,7 @@ const DefaultStory = () => {
         onChange={(patch) => updateConfig((draft) => Object.assign(draft, patch))}
         onWaterSheen={setWaterSheen}
       />
-      <div className='text-sm text-description'>water sheen: {String(waterSheen)}</div>
+      <div className='text-sm text-fg-muted'>water sheen: {String(waterSheen)}</div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,7 +13,11 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -53,15 +57,14 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-react": "workspace:*",
@@ -71,11 +74,9 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect/platform": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -87,8 +88,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useOptionalCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -12,9 +12,10 @@ import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
-import { deriveBinding } from './review-lifecycle';
-import { type useVersioning } from './useVersioning';
+import { ReviewCapabilities } from '#types';
+
+import { deriveBinding } from './review-lifecycle.ts';
+import { type useVersioning } from './useVersioning.ts';
 
 export type VersionedEditorProps = {
   object: Markdown.Document | Text.Text;
@@ -104,7 +105,7 @@ export const useVersionedEditor = ({
   // selection (branch/checkpoint/fork) keeps the advanced behaviour untouched — the policy is
   // consulted only on the ambient path. The policy capability is contributed by plugin-space (A2);
   // absent (e.g. a host that does not install it) ⇒ the GDocs-parity default.
-  const [reviewRenderPolicy] = useOptionalCapabilities(ReviewCapabilities.ReviewRenderPolicy);
+  const [reviewRenderPolicy] = Hooks.useOptionalCapabilities(ReviewCapabilities.ReviewRenderPolicy);
   const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.defaultReviewRenderPolicy;
   const ambient = selection.kind === 'current';
   const policy = renderPolicy(mode);

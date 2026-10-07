@@ -2,17 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import { type Database, Entity, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { isNonNullable } from '@dxos/util';
 
 /**
  * Returns objects related to `subject` via direct references and/or relations.
  * Returns an empty array when `subject` is undefined.
+ *
+ * Withholds only objects whose types are not user-facing, which the user cannot address at all; narrowing
+ * the rest belongs to the consumer (see `useRelatedTypeFilter`).
  */
 // TODO(burdon): Factor out (make more generally useful -- e.g., in cards).
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
@@ -73,19 +75,9 @@ export const useRelatedObjects = (
 
     return (
       Array.from(new Set(related))
-        // TODO(burdon): Configure.
-        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.text')
-        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
-        .filter((obj) => {
-          if (!Obj.isObject(obj)) {
-            return true;
-          }
-          const typeEntity = Obj.getType(obj);
-          if (!typeEntity) {
-            return true;
-          }
-          return !HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
-        })
+        // A relation may name the subject at both ends, which would otherwise relate it to itself.
+        .filter((obj) => obj !== subject)
+        .filter((obj) => !Obj.isObject(obj) || TypeOptions.isUserObject(obj))
     );
   }, [subject, objects, options.references, options.relations]);
 };

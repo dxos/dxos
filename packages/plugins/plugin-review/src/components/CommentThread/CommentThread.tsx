@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import {
   Message as MessageComponent,
   type MessageMetadata,
@@ -14,6 +13,11 @@ import {
   type ThreadComponents,
   ThreadStatusProps,
 } from '@dxos/react-ui-thread';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
@@ -49,7 +53,7 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   onActivate?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<Message.Message>) => void;
   onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
   /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
@@ -77,7 +81,7 @@ export const CommentThread = ({
   onAcceptProposal,
   onAcceptChange,
 }: CommentThreadProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
@@ -92,10 +96,29 @@ export const CommentThread = ({
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
+  // Activating reveals the thread in the anchored document, moving focus to that plank. Operating the
+  // thread's own controls is not that gesture: it would pull focus out of the editor a control just
+  // opened, mid-keystroke.
+  const handleContentClickCapture = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (event.target instanceof Element && event.target.closest('button')) {
+        return;
+      }
+      handleActivate();
+    },
+    [handleActivate],
+  );
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback(
-    (messageId: string) => onMessageDelete?.(anchor, messageId),
-    [onMessageDelete, anchor],
+    (messageId: string) => {
+      // `Thread.Root` (react-ui-thread) hands back the bare entity id it renders each tile under;
+      // resolve it against the thread's own refs so the operation receives a typed ref, not an id.
+      const ref = messages?.find(Ref.hasEntityId(messageId));
+      if (ref) {
+        onMessageDelete?.(anchor, ref);
+      }
+    },
+    [onMessageDelete, anchor, messages],
   );
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
   const handleAcceptChange = useCallback(() => onAcceptChange?.(anchor), [onAcceptChange, anchor]);
@@ -121,10 +144,10 @@ export const CommentThread = ({
   }
 
   const headerControls = (
-    <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
+    <Layout.Flex align='center' classNames='gap-0.5 pe-2'>
+      {status === 'staged' && <Tag.Tag hue='neutral'>{t('draft.button')}</Tag.Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
-        <IconButton
+        <Button.Root
           data-testid='thread.accept-change'
           variant='ghost'
           icon='ph--check-circle--regular'
@@ -135,7 +158,7 @@ export const CommentThread = ({
         />
       )}
       {onResolve && !(status === 'staged') && (
-        <IconButton
+        <Button.Root
           data-testid='thread.resolve'
           variant='ghost'
           icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
@@ -146,7 +169,7 @@ export const CommentThread = ({
         />
       )}
       {onThreadDelete && (
-        <IconButton
+        <Button.Root
           data-testid='thread.delete'
           variant='ghost'
           icon='ph--x--regular'
@@ -156,7 +179,7 @@ export const CommentThread = ({
           onClick={handleThreadDelete}
         />
       )}
-    </div>
+    </Layout.Flex>
   );
 
   const header = detached ? (
@@ -184,9 +207,9 @@ export const CommentThread = ({
     >
       <Thread.Content
         id={threadUri}
-        classNames='pt-2 border-b border-subdued-separator last:border-none'
+        classNames='pt-2 border-b border-separator-subtle last:border-none'
         current={current}
-        onClickCapture={handleActivate}
+        onClickCapture={handleContentClickCapture}
         onFocusCapture={handleAttend}
       >
         {header}
@@ -196,8 +219,12 @@ export const CommentThread = ({
           scroll area, so render tiles inline (not the virtual stack) — this keeps
           them at full width so their controls align with the header's controls.
         */}
+        {/*
+          Keyed by the object id, not the URI (see `CommentState`): a URI's spelling changes as the
+          thread persists, remounting the tile and destroying an editor holding in-progress text.
+        */}
         {loadedMessages.map((message) => (
-          <MessageComponent.Tile key={Obj.getURI(message)} message={message} />
+          <MessageComponent.Tile key={message.id} message={message} />
         ))}
 
         {/*

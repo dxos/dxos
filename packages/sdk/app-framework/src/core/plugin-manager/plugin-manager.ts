@@ -38,27 +38,29 @@
 // status channel (the loader publishes module errors; the catalog owns disabling).
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Ref from 'effect/Ref';
+import * as Semaphore from 'effect/Semaphore';
 
-import { EffectEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
-import type * as ActivationEvent from '../activation-event';
-import * as CapabilityManager from '../capability-manager';
-import * as Plugin from '../plugin';
-// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
+import type * as ActivationEvent from '../activation-event.ts';
+import * as CapabilityManager from '../capability-manager.ts';
+import * as Plugin from '../plugin.ts';
+// Imported with a `PluginRegistry` alias because the unrelated `@effect/atom-react`
 // `Registry` is already imported above; from outside this file the namespace is
 // re-exported as `Registry` via `./index.ts`.
-import * as PluginRegistry from '../registry';
-import { ActivationScheduler } from './activation-scheduler';
-import { ManagerState } from './manager-state';
+import * as PluginRegistry from '../registry.ts';
+import { ActivationScheduler } from './activation-scheduler.ts';
+import { ManagerState } from './manager-state.ts';
 import {
   type ActivationMessage,
   DEFAULT_ACTIVATION_TIMEOUT,
@@ -66,13 +68,13 @@ import {
   type PluginFailure,
   PluginInitializationError,
   PluginTimeoutError,
-} from './manager-types';
-import { ModuleLoader } from './module-loader';
-import { PluginCatalog } from './plugin-catalog';
+} from './manager-types.ts';
+import { ModuleLoader } from './module-loader.ts';
+import { PluginCatalog } from './plugin-catalog.ts';
 
 // Shared with the manager's collaborating units; the canonical public surface stays here.
-export { PluginInitializationError, PluginTimeoutError } from './manager-types';
-export type { ActivationMessage, PluginFailure, PluginFailurePhase, PluginFailureReason } from './manager-types';
+export { PluginInitializationError, PluginTimeoutError } from './manager-types.ts';
+export type { ActivationMessage, PluginFailure, PluginFailurePhase, PluginFailureReason } from './manager-types.ts';
 
 /**
  * Identifier denoting a Manager.
@@ -99,7 +101,18 @@ export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   enabled?: string[];
-  registry?: Registry.Registry;
+  /**
+   * Ids of plugins the host pins on: always enabled, never disableable.
+   *
+   * Defaults to every plugin declaring `system` in `meta.profile.tags`. Hosts pass
+   * this when the tag is the wrong authority — a plugin's `dx.config.ts` declares
+   * one `system` tag for every host, so without an override the CLI inherits
+   * Composer's judgment about what a user may turn off. Ids not present in
+   * `plugins` are ignored.
+   */
+  core?: string[];
+  /** Registry to use instead of creating one; `atomIdleTTL` does not apply to it. */
+  registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
    * no-op `pluginRegistry` (empty list, no versions endpoint). Implementations
@@ -119,14 +132,24 @@ export type ManagerOptions = {
    * atom and auto-disabled so a stuck remote host can't stall app boot.
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
-  loadTimeout?: Duration.DurationInput;
+  loadTimeout?: Duration.Input;
+  /**
+   * Grace period before an atom with no subscribers is removed from the registry this manager creates.
+   * Defaults to {@link AtomEx.DEFAULT_IDLE_TTL}; see `AtomEx.makeRegistry`.
+   */
+  atomIdleTTL?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
    * plugin is recorded on `failed` and auto-disabled. Defaults to 30 seconds;
    * pass `Duration.infinity` to disable.
    */
-  activationTimeout?: Duration.DurationInput;
+  activationTimeout?: Duration.Input;
+  /**
+   * Completes when the host is idle, gating the Idle wave. Defaults to the real paint/idle wait,
+   * which resolves immediately off-browser; `Effect.never` models a browser that has not idled.
+   */
+  whenIdle?: Effect.Effect<void>;
 };
 
 /**
@@ -136,7 +159,7 @@ export interface PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId;
   readonly activation: PubSub.PubSub<ActivationMessage>;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   /**
    * Cached registry catalog state plus pass-throughs for `listVersions` /
    * `getPlugin`. Always present — the host supplies a `pluginRegistryProvider`
@@ -186,6 +209,8 @@ export interface PluginManager {
    * Loads a plugin via the plugin loader and registers it without enabling it.
    * Returns the loaded plugin so callers can enable it by its canonical id
    * (which may differ from the locator used to load it, e.g. URL loaders).
+   * A plugin whose id is already enabled, such as one persisted from an earlier
+   * session, is activated as part of the add.
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error>;
 
@@ -281,34 +306,39 @@ export const isManager = (value: unknown): value is PluginManager => {
 class ManagerImpl implements PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   readonly pluginRegistry: PluginRegistry.Manager;
 
   private readonly _state: ManagerState;
   private readonly _loader: ModuleLoader;
   private readonly _scheduler: ActivationScheduler;
   private readonly _catalog: PluginCatalog;
-  private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  private readonly _shutdownSemaphore = Semaphore.makeUnsafe(1);
   /** The failure-supervision fiber; stopped by `shutdown`, restarted by `_withRuntime`. */
-  private _supervisor: Fiber.RuntimeFiber<never> | undefined;
+  private _supervisor: Fiber.Fiber<never> | undefined;
 
   constructor({
     pluginLoader,
     plugins = [],
     enabled = [],
+    core: coreProp,
     registry,
     pluginRegistryProvider,
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    atomIdleTTL = AtomEx.DEFAULT_IDLE_TTL,
+    whenIdle,
   }: ManagerOptions) {
-    // Core plugins are derived from `meta.tags.includes('system')`; the set is
-    // a snapshot of the initial `plugins` array (later `add()` calls do not
-    // promote plugins to core).
-    const core: string[] = plugins
-      .filter(({ meta }) => meta.profile.tags?.includes('system'))
-      .map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? Registry.make();
+    // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
+    // explicit set. Either way the set is a snapshot of the initial `plugins` array
+    // (later `add()` calls do not promote plugins to core), and a host-supplied id
+    // that names no registered plugin is dropped rather than pinning a phantom.
+    const registered = new Set(plugins.map(({ meta }) => meta.profile.key));
+    const core: string[] = coreProp
+      ? coreProp.filter((id) => registered.has(id))
+      : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
+    this.registry = registry ?? AtomEx.makeRegistry({ idleTTL: atomIdleTTL });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });
@@ -316,7 +346,7 @@ class ManagerImpl implements PluginManager {
 
     this._state = new ManagerState(this.registry, { plugins, core, enabled });
     this._loader = new ModuleLoader(this._state, this.capabilities, activationTimeout);
-    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader);
+    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader, whenIdle);
     this._catalog = new PluginCatalog(this._state, this._scheduler, this.pluginRegistry, {
       pluginLoader,
       loadTimeout,
@@ -346,7 +376,7 @@ class ManagerImpl implements PluginManager {
       .pipe(
         Effect.mapError((cause) => new PluginInitializationError({ cause })),
         Effect.tap(() => Deferred.succeed(this._state.initialized, undefined)),
-        Effect.tapErrorCause((cause) => Deferred.failCause(this._state.initialized, cause)),
+        Effect.tapCause((cause) => Deferred.failCause(this._state.initialized, cause)),
       )
       .pipe(EffectEx.runAndForwardErrors);
   }
@@ -366,7 +396,7 @@ class ManagerImpl implements PluginManager {
     }
     this._supervisor = PubSub.subscribe(this._state.activation).pipe(
       Effect.flatMap((subscription) =>
-        Queue.take(subscription).pipe(
+        PubSub.take(subscription).pipe(
           Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
           Effect.forever,
         ),
@@ -508,7 +538,13 @@ class ManagerImpl implements PluginManager {
   }
 
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
-    return this._catalog.add(id);
+    return this._catalog.add(id).pipe(
+      // An id already in the enabled set (persisted from an earlier session) would otherwise read
+      // as enabled while none of its modules is registered, and no toggle short of off-and-on starts it.
+      Effect.tap((plugin) =>
+        this._state.isEnabled(plugin.meta.profile.key) ? this.enable(plugin.meta.profile.key) : Effect.void,
+      ),
+    );
   }
 
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error> {
@@ -550,7 +586,7 @@ class ManagerImpl implements PluginManager {
 
   shutdown(): Effect.Effect<boolean, Error> {
     return this._shutdownSemaphore.withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         yield* Ref.set(this._state.shuttingDown, true);
         log('shutdown');
 

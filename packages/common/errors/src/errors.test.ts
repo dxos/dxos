@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { BaseError, type BaseErrorOptions } from './base';
-import { SystemError } from './errors';
+import { BaseError, type BaseErrorOptions, messageOf } from './base.ts';
+import { SystemError } from './errors.ts';
 
 describe('errors', () => {
   test('error code and message, cause', ({ expect }) => {
@@ -50,6 +50,52 @@ describe('errors', () => {
   test('is', ({ expect }) => {
     const error = new SystemError({ message: 'Test message' });
     expect(SystemError.is(error)).toBe(true);
+  });
+
+  describe('wrap', () => {
+    test('carries the wrapped message so the cause is not the only place it survives', ({ expect }) => {
+      const error = SystemError.wrap()(new Error('disk full'));
+      expect(error).toBeInstanceOf(SystemError);
+      expect(error.message).toBe('disk full');
+      expect((error.cause as Error).message).toBe('disk full');
+    });
+
+    test('an explicit message wins over the wrapped one', ({ expect }) => {
+      expect(SystemError.wrap({ message: 'Upload failed.' })(new Error('disk full')).message).toBe('Upload failed.');
+    });
+
+    test('falls back to the class default when the value carries no message', ({ expect }) => {
+      expect(SystemError.wrap()(42).message).toBe('System error');
+      expect(SystemError.wrap()({}).message).toBe('System error');
+    });
+
+    test('reads a string and a plain error-shaped object', ({ expect }) => {
+      expect(SystemError.wrap()('boom').message).toBe('boom');
+      expect(SystemError.wrap()({ name: 'QuotaExceeded', message: 'too many' }).message).toBe('too many');
+    });
+
+    test('ifTypeDiffers passes an error of this class through untouched', ({ expect }) => {
+      const original = new SystemError({ message: 'Test message' });
+      expect(SystemError.wrap({ ifTypeDiffers: true })(original)).toBe(original);
+      expect(SystemError.wrap({ ifTypeDiffers: true })(new Error('other')).message).toBe('other');
+    });
+
+    test('positions the stack at the caller rather than inside wrap', ({ expect }) => {
+      const raise = () => SystemError.wrap()(new Error('inner'));
+      expect(raise().stack!.split('\n')[1]).to.match(/^ {4}at raise \(/);
+    });
+  });
+});
+
+describe('messageOf', () => {
+  test('reads Error, string and error-shaped values, and nothing else', ({ expect }) => {
+    expect(messageOf(new Error('boom'))).toBe('boom');
+    expect(messageOf('boom')).toBe('boom');
+    expect(messageOf({ message: 'boom' })).toBe('boom');
+    expect(messageOf({ message: 7 })).toBeUndefined();
+    expect(messageOf({})).toBeUndefined();
+    expect(messageOf(null)).toBeUndefined();
+    expect(messageOf(42)).toBeUndefined();
   });
 });
 

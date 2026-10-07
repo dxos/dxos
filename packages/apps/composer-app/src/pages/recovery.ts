@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import { getDebugPortController, mountDevtoolsHooks, resolveDebugPortOrigin } from '@dxos/client/devtools';
+import { toPublicKey } from '@dxos/protocols/buf';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import {
@@ -26,7 +27,7 @@ import {
   resetComposerStorage,
   runRecoveryDiagnostics,
   runSqlStorageDiagnostics,
-} from '../recovery';
+} from '../recovery/index.ts';
 
 const { print, setBusy, setDebugPortActive, onAction } = createRecoveryUi({
   container: document.getElementById('root')!,
@@ -71,10 +72,14 @@ const exportProfileArchiveBytes = async (): Promise<Uint8Array> => {
   const archiveOptions = { origin: window.location.host };
   if (isRecoveryClientBooted()) {
     const database = await exportBootedSqlite();
-    return encodeProfileArchive(createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, archiveOptions));
+    return Storage.encodeProfileArchive(
+      Storage.createSqliteProfileArchive(Storage.OPFS_SQLITE_DB_FILENAME, database, archiveOptions),
+    );
   }
   const database = await exportOpfsSqlite();
-  return encodeProfileArchive(createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, archiveOptions));
+  return Storage.encodeProfileArchive(
+    Storage.createSqliteProfileArchive(Storage.OPFS_SQLITE_DB_FILENAME, database, archiveOptions),
+  );
 };
 
 const recoveryHelpers: RecoveryHelpers = {
@@ -85,7 +90,7 @@ const recoveryHelpers: RecoveryHelpers = {
     const client = await bootRecoveryClient();
     attachRecoveryHelpers(recoveryHelpers);
     print(`Client started in ${(performance.now() - started).toFixed(0)} ms — dxos.client available`);
-    return { identity: client.halo.identity.get()?.identityKey.truncate() };
+    return { identity: toPublicKey(client.halo.identity.get()?.identityKey)?.truncate() };
   },
   /** @deprecated Use {@link RecoveryHelpers.startClient}. */
   boot: async () => recoveryHelpers.startClient(),
@@ -107,8 +112,8 @@ const recoveryHelpers: RecoveryHelpers = {
   },
   exportProfile: async () => {
     const bytes = await exportProfileArchiveBytes();
-    downloadProfileArchiveExport(bytes);
-    return { byteLength: bytes.byteLength };
+    const saved = await downloadProfileArchiveExport(bytes);
+    return { byteLength: bytes.byteLength, saved };
   },
   exportSqlite: async () => recoveryHelpers.exportProfile(),
   downloadLogs: downloadRecoveryLogs,
@@ -214,7 +219,11 @@ const actions: Record<RecoveryAction, () => void> = {
     void runAction('Export', async () => {
       print('Exporting profile archive (.dxprofile with SQLite entry)…');
       const started = performance.now();
-      const { byteLength } = await recoveryHelpers.exportProfile();
+      const { byteLength, saved } = await recoveryHelpers.exportProfile();
+      if (!saved) {
+        print('Cancelled.');
+        return;
+      }
       print(`Exported ${byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
     }),
 
@@ -240,7 +249,11 @@ const actions: Record<RecoveryAction, () => void> = {
     void runAction('Download logs', async () => {
       print('Downloading logs from IDB log collector…');
       const started = performance.now();
-      const { byteLength } = await recoveryHelpers.downloadLogs();
+      const { byteLength, saved } = await recoveryHelpers.downloadLogs();
+      if (!saved) {
+        print('Cancelled.');
+        return;
+      }
       print(`Downloaded ${byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
     }),
 

@@ -6,6 +6,12 @@ import * as Predicate from 'effect/Predicate';
 
 import { BaseError } from '@dxos/errors';
 
+/** The binding names no Linear team: its cursor carries no `externalId`. */
+export class LinearTeamUnresolvedError extends BaseError.extend(
+  'LinearTeamUnresolvedError',
+  'Binding does not name a Linear team.',
+) {}
+
 /** Linear GraphQL replied 200 OK with a non-empty `errors` array. */
 export class LinearGraphQLError extends BaseError.extend('LinearGraphQLError', 'Linear GraphQL request failed.') {}
 
@@ -15,10 +21,10 @@ export const formatLinearSyncFailure = (error: unknown): string => {
     const keys = Object.keys(error.context);
     return keys.length > 0 ? `${error.name}: ${JSON.stringify(error.context)}` : error.name;
   }
-  if (Predicate.isRecord(error) && typeof error._tag === 'string') {
+  if (Predicate.isObject(error) && typeof error._tag === 'string') {
     if (
       error._tag === 'ResponseError' &&
-      Predicate.isRecord(error.response) &&
+      Predicate.isObject(error.response) &&
       typeof error.response.status === 'number'
     ) {
       return `HTTP ${error.response.status}`;

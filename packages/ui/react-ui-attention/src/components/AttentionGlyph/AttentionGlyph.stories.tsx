@@ -1,90 +1,86 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
+import { expect, within } from 'storybook/test';
 
-import { Button } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { range } from '@dxos/util';
+import '@dxos/react-ui/theme.css';
+import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
 
-import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
+import { AttentionGlyph, type AttentionGlyphPresence, type AttentionGlyphProps } from './AttentionGlyph.tsx';
 
-const DefaultStory = (props: AttentionGlyphProps) => {
-  return (
-    <ul className='flex gap-2 mb-2'>
-      <li>
-        <AttentionGlyph presence='none' {...props} />
-      </li>
-      <li>
-        <AttentionGlyph presence='one' {...props} />
-      </li>
-      <li>
-        <AttentionGlyph presence='many' {...props} />
-      </li>
-    </ul>
-  );
+/** The `withSizes` row holding the story rendered at `size`. */
+const sizeRow = (root: HTMLElement, size: string) => {
+  const element = root.querySelector<HTMLElement>(`[data-testid="size-${size}"]`);
+  if (!element) {
+    throw new Error(`missing size-${size}`);
+  }
+  return element;
 };
 
-const meta = {
-  title: 'ui/react-ui-attention/AttentionGlyph',
-  component: AttentionGlyph as any,
+type StoryArgs = SizeArgs & Pick<AttentionGlyphProps, 'attended' | 'containsAttended' | 'syncing'>;
+
+const PRESENCES: AttentionGlyphPresence[] = ['none', 'one', 'many'];
+
+const DefaultStory = ({ attended, containsAttended, syncing }: StoryArgs) => (
+  <div className='flex items-center gap-4'>
+    {PRESENCES.map((presence) => (
+      <AttentionGlyph
+        key={presence}
+        presence={presence}
+        {...{ attended, containsAttended, syncing }}
+        data-testid={presence}
+      />
+    ))}
+    <AttentionGlyph attended presence='one' data-testid='attended' />
+    <AttentionGlyph containsAttended data-testid='contains' />
+    <AttentionGlyph syncing data-testid='syncing' />
+  </div>
+);
+
+const meta: Meta<StoryArgs> = {
+  title: 'ui/react-ui-core/components/AttentionGlyph',
   render: DefaultStory,
-  decorators: [withTheme()],
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
+  args: { size: 'md', attended: false, containsAttended: false, syncing: false },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered' },
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {},
-};
+export const Default: Story = {};
 
-export const Attention: Story = {
-  args: { attended: true },
-};
+/** The glyph is 3/4 of the icon size; its state colours it, and its mark shows presence or a spinner. */
+export const Test: Story = {
+  args: { allSizes: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    const rest = canvas.getByTestId('none');
+    await expect(rest.getBoundingClientRect().width).toBe(12);
+    await expect(rest.getBoundingClientRect().height).toBe(12);
+    await expect(within(sizeRow(canvasElement, 'xl')).getByTestId('none').getBoundingClientRect().width).toBe(18);
+    await expect(rest.childElementCount).toBe(0);
 
-export const Contains: Story = {
-  args: { containsAttended: true },
-};
+    // Presence marks are decorative; one and many draw different marks.
+    const one = canvas.getByTestId('one').querySelector('svg');
+    const many = canvas.getByTestId('many').querySelector('svg');
+    await expect(one).toHaveAttribute('aria-hidden', 'true');
+    await expect(one?.innerHTML).not.toBe(many?.innerHTML);
 
-export const Syncing: Story = {
-  render: () => {
-    const [spaces, setSpaces] = useState(
-      new Map<string, boolean>(range(8).map((i) => [`space-${i + 1}`, Math.random() > 0.5])),
-    );
-    const [attended, setAttended] = useState(0);
+    // Attended fills with the accent; containing the attended item tints; at rest it is transparent.
+    const background = (testId: string) => getComputedStyle(canvas.getByTestId(testId)).backgroundColor;
+    await expect(background('none')).toBe('rgba(0, 0, 0, 0)');
+    await expect(background('attended')).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(background('contains')).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(background('contains')).not.toBe(background('attended'));
 
-    const handleChangeAttended = useCallback(() => {
-      setAttended((attended) => (attended + 1) % 3);
-    }, []);
-
-    useEffect(() => {
-      const t = setInterval(
-        () => {
-          setSpaces((spaces) => {
-            const space = Array.from(spaces.keys())[Math.floor(Math.random() * spaces.size)];
-            spaces.set(space, !spaces.get(space));
-            return new Map(spaces);
-          });
-        },
-        2_000 + Math.random() * 3_000,
-      );
-      return () => clearInterval(t);
-    });
-
-    return (
-      <div className='flex flex-col p-2 w-[200px]'>
-        <Button onClick={handleChangeAttended}>Change attended</Button>
-        {Array.from(spaces.entries()).map(([space, sync]) => (
-          <div key={space} className='flex items-center'>
-            <div className='grow'>{space}</div>
-            {sync && <AttentionGlyph syncing attended={attended === 1} containsAttended={attended === 2} />}
-          </div>
-        ))}
-      </div>
-    );
+    // Syncing replaces the mark with a spinner turning every two seconds.
+    const spinner = canvas.getByTestId('syncing').querySelector<SVGElement>('[data-scope="icon"]');
+    await expect(spinner ? getComputedStyle(spinner).animationDuration : '').toBe('2s');
   },
 };

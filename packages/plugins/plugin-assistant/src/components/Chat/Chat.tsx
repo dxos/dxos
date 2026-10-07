@@ -2,56 +2,84 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { Collapsible } from '@ark-ui/react/collapsible';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { SessionConfig } from '@dxos/ai';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { Alarm } from '@dxos/assistant';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
+import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  Button,
-  type ThemedClassName,
-  Toast,
-  composable,
-  composableProps,
-  useDynamicRef,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
-import { type DocumentRange, type MarkdownStreamController } from '@dxos/react-ui-markdown';
-import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
-import { Outline } from '@dxos/types';
-import { Message } from '@dxos/types';
+  type ChatThreadController,
+  type ChatThreadEvent,
+  type ChatView,
+  ChatThread as NaturalChatThread,
+} from '@dxos/react-ui-assistant';
+import {
+  type MessageRange,
+  type OutlineMarker,
+  Outline as OutlineRail,
+  isPrompt,
+  useFeedModel,
+} from '@dxos/react-ui-feed';
+import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
+import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Toast from '@dxos/react-ui/Toast';
+import * as Util from '@dxos/react-ui/Util';
+import { Message, Task } from '@dxos/types';
+import { keyToFallback, markWork } from '@dxos/util';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
+import { AssistantOperation } from '#types';
 
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import {
+  AiUsageQuotaError,
+  type ProcessorRequestContext,
+  getProcessorState,
+  projectAlarms,
+  projectSelfWakes,
+  resolveRewind,
+} from '../../processor/index.ts';
 import {
   ChatStatus,
+  DEFAULT_MAX_QUEUE,
+  ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-} from '../ChatPrompt';
+} from '../ChatPrompt/index.ts';
 import {
-  type MessageSpan,
-  ChatThread as NaturalChatThread,
-  type ChatThreadProps as NaturalChatThreadProps,
-} from '../ChatThread';
-import { TaskList } from '../TaskList';
-import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
-import { type ChatEvent } from './events';
-import { projectThread, resolveRewind } from './thread';
+  ChatContextProvider,
+  type ChatContextValue,
+  ChatReportContextProvider,
+  type ChatRequestTiming,
+  ChatThreadContextProvider,
+  useChatContext,
+  useChatThreadContext,
+} from './context.ts';
+import { type ChatEvent } from './events.ts';
+import { objectCardWidget } from './ObjectCardWidget.tsx';
+import { SurfaceWidget } from './SurfaceWidget.tsx';
 
 //
 // Root
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'chat' | 'processor' | 'debug'> & {
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -70,16 +98,22 @@ const ChatRoot = ({
   chat,
   processor,
   db: dbFallback,
+  debug: debugProp,
   onEvent,
   onSubmit,
   getContext,
   ...props
 }: ChatRootProps) => {
-  const [debug, setDebug] = useState(false);
-  const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
+  const [debug, setDebug] = useState(debugProp ?? false);
+  // Slash commands run their operations through the same invoker the rest of the UI uses.
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const processorState = getProcessorState(processor);
+  const streaming = useAtomValue(processorState.streaming);
+  const active = useAtomValue(processorState.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
+  // A slash command runs outside the processor, so `streaming` does not cover it.
+  const commandPending = useRef(false);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
@@ -91,25 +125,24 @@ const ChatRoot = ({
   // Event sink.
   const event = useMemo(() => new Event<ChatEvent>(), []);
 
-  // The editor controller and per-message ranges are produced by `Chat.Thread` and consumed by
-  // `Chat.Minimap`; lifted here so both sub-components share the same instance.
-  const [controller, setController] = useState<MarkdownStreamController | null>(null);
-  const [messageRanges, setMessageRanges] = useState<MessageSpan[]>([]);
+  // The thread controller and visible range are produced by `Chat.Thread` and consumed by
+  // `Chat.Outline`; lifted here so both sub-components share the same instance.
+  const [controller, setController] = useState<ChatThreadController | null>(null);
+  const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
-  const feedMessages = useQuery(
+  const feedAlarms = useQuery(
     db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
   );
-  const pendingMessages = useAtomValue(processor.messages);
-  const { messages } = useMemo(
-    () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
-    [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
-  );
+  // The processor queries the feed and reconciles it with the streamed turn and the outbox.
+  const { messages, delivery, queued, tail } = useAtomValue(processorState.thread);
+  const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
+  const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
 
   const dump = useDebug({ processor });
 
   // Surface processor failures (e.g., AI service unavailable) to subscribers via the event bus.
-  const error = useAtomValue(processor.error);
+  const error = useAtomValue(processorState.error);
   useEffect(() => {
     if (Option.isSome(error)) {
       event.emit({ type: 'error', error: error.value });
@@ -131,29 +164,153 @@ const ChatRoot = ({
           break;
         }
 
-        case 'submit': {
-          const text = ev.text.trim();
-          if (!streaming && text.length) {
-            lastPrompt.current = ev.text;
-            const context = getContext?.();
-            // Await persistence (transient chat) before requesting so the agent resolves the
-            // now-durable conversation feed; resolves immediately when there is no hook.
-            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
-          }
-          break;
-        }
-
         case 'rewind': {
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
           // composer so it can be revised. Recorded on the feed rather than the chat because the
           // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          // chat. A stale click (message already gone) resolves to nothing and is a no-op. A prompt sent
+          // from here keeps its own row id, so the feed is pointed at its turn's message.
           const rewind = feed && resolveRewind(messages, ev.id);
           if (rewind) {
             Obj.update(feed, (feed) => {
-              feed.rewindFrom = rewind.rewindFrom;
+              feed.rewindFrom = delivery.get(rewind.rewindFrom)?.turnId ?? rewind.rewindFrom;
             });
             event.emit({ type: 'update-prompt', text: rewind.text });
+          }
+          break;
+        }
+
+        case 'remove-prompt': {
+          // Withdrawing a prompt the agent has not taken up: the queue is feed state, so removing the
+          // entry is what takes it out of the agent's queue, and the outbox forgets this client's copy.
+          const row = delivery.get(ev.id);
+          if (row?.status === 'failed' || row?.status === 'delivered') {
+            if (row.entryId && db && feed) {
+              void db.removeFeedItemsByIds(feed, [row.entryId]).catch((err) => log.catch(err));
+            }
+            if (row.outboxId) {
+              processor?.removePrompt(row.outboxId);
+            }
+          }
+          break;
+        }
+      }
+
+      onEvent?.(ev);
+    });
+    // `feed`, `messages` and `delivery` are dependencies because the rewind and prompt branches read
+    // them: without them the handler would keep resolving against whatever was mounted first.
+  }, [event, dump, onEvent, db, feed, messages, delivery, processor]);
+
+  useEffect(() => {
+    return event.on((ev) => {
+      if (ev.type !== 'respond' || !chat) {
+        return;
+      }
+      const { messageId, requestId, optionId } = ev;
+      // The operation reads the chat's feed, so it runs in the chat's space.
+      const spaceId = Obj.getDatabase(chat)?.spaceId;
+      void invokePromise(
+        AssistantOperation.RespondToRequest,
+        { chat, messageId, requestId, optionId },
+        spaceId ? { spaceId } : undefined,
+      ).then(({ error }) => {
+        if (error) {
+          event.emit({ type: 'error', error });
+        }
+      });
+    });
+  }, [event, chat, invokePromise]);
+
+  useEffect(() => {
+    if (!processor) {
+      return;
+    }
+
+    return event.on((ev) => {
+      switch (ev.type) {
+        case 'submit': {
+          const text = ev.text.trim();
+          if (text.length) {
+            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // the loop; an unknown command falls through to the model as plain text.
+            const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
+            if (resolved) {
+              // One command at a time: `invokePromise` does not queue, so two quick submissions
+              // would interleave their operations and land their summaries out of order.
+              if (commandPending.current) {
+                break;
+              }
+              commandPending.current = true;
+              // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
+              // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
+              void (async () => {
+                await Promise.resolve(onSubmit?.(text));
+                // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
+                // began without a database has one only now.
+                const currentDb = (chat && Obj.getDatabase(chat)) || db;
+                if (!chat || !currentDb) {
+                  throw new Error('Command requires a persisted chat.');
+                }
+
+                const result = await resolved.command.execute(resolved.args, {
+                  db: currentDb,
+                  chat,
+                  invoke: invokePromise,
+                });
+                if (result instanceof Error) {
+                  throw result;
+                }
+
+                // The command's effect is otherwise invisible in the conversation: the prompt was
+                // never sent, so nothing records that the user ran it. The feed is re-read here
+                // because `onSubmit` is what persists a transient chat, creating it.
+                const currentFeed = feed ?? chat.feed?.target;
+                if (currentFeed && result.summary) {
+                  await currentDb.appendToFeed(currentFeed, [
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
+                  ]);
+                }
+
+                if (result.followUp) {
+                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+                  // command wakes the conversation with a short synthetic prompt.
+                  void processor.request({ message: result.followUp });
+                }
+              })()
+                .catch((error) => {
+                  event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
+                })
+                .finally(() => {
+                  commandPending.current = false;
+                });
+              break;
+            }
+            // The prompt's own guard does not cover submits emitted elsewhere (a checklist's execute action).
+            if (active && queued >= DEFAULT_MAX_QUEUE) {
+              break;
+            }
+            markWork('chat.submit');
+            lastPrompt.current = ev.text;
+            // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
+            // transient chat and before the agent acknowledges it. The processor requests it when the
+            // agent is idle and queues it behind a running turn otherwise.
+            processor.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
+          }
+          break;
+        }
+
+        case 'report': {
+          const text = ev.text.trim();
+          if (text.length) {
+            // Same seam as a submitted prompt (persist first, queue while a turn runs), but the
+            // content is synthetic — nobody typed it.
+            void Promise.resolve(onSubmit?.(text)).then(() =>
+              active
+                ? processor.enqueue({ message: text, disposition: 'synthetic' })
+                : processor.request({ message: text, disposition: 'synthetic' }),
+            );
           }
           break;
         }
@@ -175,12 +332,12 @@ const ChatRoot = ({
           break;
         }
       }
-
-      onEvent?.(ev);
     });
-    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
-    // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
+  }, [event, processor, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
+
+  // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
+  // turn, so the agent resumes without the report reading as something the user typed.
+  const handleReport = useCallback((text: string) => event.emit({ type: 'report', text }), [event]);
 
   return (
     <ChatContextProvider
@@ -188,16 +345,23 @@ const ChatRoot = ({
       event={event}
       db={db}
       chat={chat}
-      messages={messages}
       processor={processor}
-      requestTiming={requestTiming}
-      controller={controller}
+      queueSize={queued}
       setController={setController}
-      messageRanges={messageRanges}
-      setMessageRanges={setMessageRanges}
+      setVisibleRange={setVisibleRange}
       {...props}
     >
-      {children}
+      <ChatThreadContextProvider
+        messages={messages}
+        tail={tail}
+        alarms={alarms}
+        selfWakes={selfWakes}
+        requestTiming={requestTiming}
+        controller={controller}
+        visibleRange={visibleRange}
+      >
+        <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
+      </ChatThreadContextProvider>
     </ChatContextProvider>
   );
 };
@@ -223,23 +387,28 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> &
+type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
   PropsWithChildren<{
     companionTo?: Obj.Unknown;
+    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+    switcher?: ChatSwitcher;
   }>;
 
-const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, ...props }, forwardedRef) => {
+const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
+  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-    const menuActions = useChatToolbarActions({ chat, companionTo });
+    const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-          {children}
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        {...Util.composableProps(props)}
+        ref={forwardedRef}
+      >
+        {children}
+      </ActionToolbar>
     );
   },
 );
@@ -254,9 +423,9 @@ const CHAT_CONTENT_NAME = 'Chat.Content';
 
 type ChatContentProps = {};
 
-const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
+const ChatContent = Util.composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...Util.composableProps(props, { classNames: 'dx-expand flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -272,9 +441,18 @@ const PROMPT_SNIPPET_LINES = 3;
 const PROMPT_SNIPPET_CHARS = 280;
 const PROMPT_TITLE_CHARS = 100;
 
+/**
+ * The text the reader actually wrote. Synthetic blocks carry injected context and tool results, so
+ * titling a marker from them would name the machinery rather than the prompt.
+ */
+const authoredText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n');
+
 /** First non-empty line of a message's text, truncated for the marker title. */
 const promptTitle = (message: Message.Message): string => {
-  const text = Message.extractText(message).trim();
+  const text = authoredText(message).trim();
   const firstLine = text.split('\n').find((line) => line.trim().length) ?? '';
   return firstLine.length > PROMPT_TITLE_CHARS ? `${firstLine.slice(0, PROMPT_TITLE_CHARS)}…` : firstLine;
 };
@@ -295,38 +473,30 @@ const replySnippet = (message: Message.Message): string | undefined => {
 };
 
 /**
- * Build one minimap marker per user-prompt turn: title = the prompt text, description = a
- * snippet of the following assistant reply, range = the turn's document span (prompt start →
- * next prompt start). Positions come from the syncer's per-message range table.
+ * Build one outline marker per user-prompt turn: title = the prompt text, description = a snippet
+ * of the following assistant reply, range = the turn's index span (prompt → next prompt). Message
+ * indices, not document offsets: the feed navigates by index, so no range table exists any more.
  */
-const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): MinimapMarker[] => {
-  const rangeById = new Map(ranges.map((range) => [range.id, range] as const));
-  const markers: MinimapMarker[] = [];
+const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
+  const markers: OutlineMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
-    if (message.sender.role !== 'user') {
-      continue;
-    }
-    const range = rangeById.get(message.id);
-    if (!range) {
+    // Role alone would also match tool results and injected context, which travel back as
+    // `user`-role messages; `isPrompt` is the feed's single definition of a stop.
+    if (!isPrompt(message)) {
       continue;
     }
 
-    // Extend the turn through the following non-user messages and grab the first assistant reply.
-    let turnTo = range.to;
+    // Extend the turn up to the next prompt: a tool-result turn belongs to the turn it serves, so
+    // stopping on any `user`-role message would cut the range at the first tool call.
+    let turnTo = index + 1;
     let description: string | undefined;
     for (let next = index + 1; next < messages.length; next++) {
       const nextMessage = messages[next];
-      const nextRange = rangeById.get(nextMessage.id);
-      if (nextMessage.sender.role === 'user') {
-        if (nextRange) {
-          turnTo = nextRange.from;
-        }
+      if (isPrompt(nextMessage)) {
         break;
       }
-      if (nextRange) {
-        turnTo = nextRange.to;
-      }
+      turnTo = next + 1;
       if (!description && nextMessage.sender.role === 'assistant') {
         description = replySnippet(nextMessage);
       }
@@ -336,7 +506,7 @@ const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): Minim
       id: message.id,
       title: promptTitle(message) || 'Prompt',
       description,
-      range: { from: range.from, to: turnTo },
+      range: { from: index, to: turnTo },
     });
   }
   return markers;
@@ -348,79 +518,91 @@ const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): Minim
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'> & {
+/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+const chatRegistry = {
+  surface: {
+    block: true,
+    Component: SurfaceWidget,
+  },
+} as const;
+
+type ChatThreadProps = Util.ThemedClassName<{
+  viewType?: ChatView;
+  /** Blank lines kept below the tail at rest — breathing room above the composer. */
+  tailLines?: number;
+  /** Hue of the user's messages; defaults to the identity's hue. */
+  userHue?: string;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
-};
+}>;
 
-const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatThreadProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { debug, event, messages, processor, messageRanges, setController, setMessageRanges } =
-    useChatContext(CHAT_THREAD_NAME);
-  const extensions = useChatKeymapExtensions({ event });
+const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { chat, db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
+  // Embedded objects resolve against the chat's database (the fallback one while it is transient).
+  const objectImage = useMemo(() => objectCardWidget(db), [db]);
+  // A block reference's chip reads the object's name once it is loaded — resolved through the
+  // database's own ref, which honours the URI's space and the DXN forms — and the package default's
+  // bare "Object" until then; the thread re-renders as the message's blocks settle.
+  const getObjectLabel = useCallback(
+    (uri: URI.URI): string => {
+      let object: Obj.Unknown | undefined;
+      try {
+        object = db?.makeRef<Obj.Unknown>(uri).target;
+      } catch {
+        object = undefined;
+      }
+      return (object && Obj.getLabel(object)) || 'Object';
+    },
+    [db],
+  );
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
   // The toast renders whatever action the error declares (data-driven) rather than branching on type.
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
-  const debugView = viewType === 'debug';
 
-  const controllerRef = useRef<MarkdownStreamController | null>(null);
-  // Share the controller with `Chat.Minimap` (and keep the local ref for event handling).
+  // The model is the adapter: the projected array is folded in with `replace`, streaming chunks
+  // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
+  // and range table have no equivalent left.
+  const model = useFeedModel(messages, { stops: 'prompt' });
+  const streaming = useAtomValue(getProcessorState(processor).streaming);
+  useEffect(() => {
+    // The answer streams above any prompts still waiting for the agent, which end the thread.
+    const last = messages[messages.length - 1 - tail];
+    model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
+  }, [model, streaming, messages, tail]);
+
+  const userHue = useMemo(
+    () =>
+      userHueProp ||
+      identity?.data?.hue ||
+      keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
+    [userHueProp, identity],
+  );
+
+  const controllerRef = useRef<ChatThreadController | null>(null);
+  // Share the controller with `Chat.Outline` (and keep the local ref for event handling).
   const handleControllerRef = useCallback(
-    (instance: MarkdownStreamController | null) => {
+    (instance: ChatThreadController | null) => {
       controllerRef.current = instance;
       setController(instance);
     },
     [setController],
   );
 
-  // Prompt-turn positions for navigation; a ref keeps the event handler stable without stale reads.
-  const promptPositions = useMemo(
-    () =>
-      buildMarkers(messages, messageRanges)
-        .map((marker) => marker.range.from)
-        .sort((a, b) => a - b),
-    [messages, messageRanges],
-  );
-  const promptPositionsRef = useDynamicRef(promptPositions);
-
-  // Navigate between prompt turns using the range table (not the xml-tag widget bookmarks).
-  const navigateToPrompt = useCallback(
-    (direction: 1 | -1) => {
-      const controller = controllerRef.current;
-      const positions = promptPositionsRef.current;
-      if (!controller || !positions.length) {
-        return;
-      }
-      const anchor = controller.getVisibleRange()?.from ?? 0;
-      const epsilon = 2;
-      const target =
-        direction > 0
-          ? positions.find((pos) => pos > anchor + epsilon)
-          : [...positions].reverse().find((pos) => pos < anchor - epsilon);
-      if (target != null) {
-        controller.scrollTo(target, { y: 'start' });
-      }
-    },
-    [promptPositionsRef],
-  );
-
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
-        case 'rewind':
-          console.log('rewind', event);
-          break;
         case 'submit':
         case 'scroll-to-bottom':
           controllerRef.current?.scrollToBottom();
           break;
         case 'nav-previous':
-          navigateToPrompt(-1);
+          controllerRef.current?.navigation.step(-1);
           break;
         case 'nav-next':
-          navigateToPrompt(1);
+          controllerRef.current?.navigation.step(1);
           break;
         case 'error':
           setToastError(event.error);
@@ -429,57 +611,56 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
           log.info('no handled', event);
       }
     });
-  }, [event, navigateToPrompt]);
+  }, [event]);
 
-  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
-    (ev) => {
-      event.emit(ev);
-    },
-    [event],
-  );
+  // Rewind (the prompt toolbar) and submit (suggestion/select widgets) land on the shared bus,
+  // where `Chat.Root` already resolves them.
+  const handleEvent = useCallback((ev: ChatThreadEvent) => event.emit(ev), [event]);
 
   if (!identity) {
-    return <div className='dx-expander' />;
+    return <div className='dx-expand' />;
   }
 
   return (
     <>
-      <NaturalChatThread
-        {...props}
-        identity={identity}
-        messages={messages}
-        error={error}
-        debug={debugProp ?? (debug || debugView)}
+      <NaturalChatThread.Root
+        model={model}
         viewType={viewType}
-        extensions={extensions}
+        registry={chatRegistry}
+        objectImage={objectImage}
+        getObjectLabel={getObjectLabel}
+        userHue={userHue}
+        tailLines={tailLines}
+        debug={debug}
+        // An external agent keeps its own context, which a rewind of the transcript cannot reach.
+        rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         onEvent={handleEvent}
-        onSpans={setMessageRanges}
-        ref={handleControllerRef}
-      />
+        onRangeChange={setVisibleRange}
+        controllerRef={handleControllerRef}
+      >
+        <NaturalChatThread.Viewport classNames={classNames} />
+      </NaturalChatThread.Root>
 
+      {/* TODO(burdon): Why is this required? */}
       <Toast.Root
-        type='foreground'
+        data-testid='assistant.error'
         open={!!toastError}
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
       >
-        <Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
-          {t('ai-service-error.label')}
-        </Toast.Title>
+        <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
         <Toast.Description>{toastError?.message}</Toast.Description>
         {toastAction && onViewUsage && (
-          <Toast.Actions>
-            <Toast.Action altText={t(toastAction.labelKey)} asChild>
-              <Button
-                onClick={() => {
-                  setToastError(undefined);
-                  onViewUsage();
-                }}
-              >
-                {t(toastAction.labelKey)}
-              </Button>
-            </Toast.Action>
-          </Toast.Actions>
+          <Toast.Footer>
+            <Toast.ActionTrigger
+              onClick={() => {
+                setToastError(undefined);
+                onViewUsage();
+              }}
+            >
+              {t(toastAction.labelKey)}
+            </Toast.ActionTrigger>
+          </Toast.Footer>
         )}
       </Toast.Root>
     </>
@@ -489,43 +670,47 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
 ChatThread.displayName = CHAT_THREAD_NAME;
 
 //
-// Minimap
+// Outline
 //
 
-const CHAT_MINIMAP_NAME = 'Chat.Minimap';
+const CHAT_OUTLINE_NAME = 'Chat.Outline';
 
-type ChatMinimapProps = ThemedClassName<{}>;
+type ChatOutlineProps = Util.ThemedClassName<{}>;
 
 /**
  * Anchor-marker rail for the thread: one tick per user-prompt turn. Reads the shared controller
- * and the syncer's range table from context; clicking a tick scrolls the thread to that turn.
+ * and the visible index range from context; clicking a tick jumps the thread to that turn, on the
+ * same navigation seam as the toolbar and the arrow keys.
  */
-const ChatMinimap = ({ classNames }: ChatMinimapProps) => {
-  const { messages, messageRanges, controller } = useChatContext(CHAT_MINIMAP_NAME);
-  const [visibleRange, setVisibleRange] = useState<DocumentRange | undefined>(undefined);
-  useEffect(() => {
-    if (!controller) {
-      return;
-    }
-    return controller.onVisibleRangeChange(setVisibleRange);
-  }, [controller]);
+const ChatOutline = ({ classNames }: ChatOutlineProps) => {
+  const { messages, visibleRange, controller } = useChatThreadContext(CHAT_OUTLINE_NAME);
 
-  const markers = useMemo(() => buildMarkers(messages, messageRanges), [messages, messageRanges]);
+  const markers = useMemo(() => buildMarkers(messages), [messages]);
   const handleSelect = useCallback(
-    (marker: MinimapMarker) => {
-      controller?.scrollTo(marker.range.from, { y: 'start' });
+    (marker: OutlineMarker) => {
+      controller?.navigation.jumpTo(marker.range.from, 'smooth');
     },
     [controller],
   );
+  const handleNavigate = useCallback((delta: number) => controller?.navigation.step(delta), [controller]);
 
-  if (!markers.length) {
+  if (markers.length < 2) {
     return null;
   }
 
-  return <Minimap classNames={classNames} markers={markers} visibleRange={visibleRange} onSelect={handleSelect} />;
+  return (
+    <OutlineRail
+      classNames={classNames}
+      markers={markers}
+      // `endIndex` is inclusive; the rail's `to` is exclusive.
+      visibleRange={visibleRange ? { from: visibleRange.startIndex, to: visibleRange.endIndex + 1 } : undefined}
+      onSelect={handleSelect}
+      onNavigate={handleNavigate}
+    />
+  );
 };
 
-ChatMinimap.displayName = CHAT_MINIMAP_NAME;
+ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 //
 // Prompt
@@ -533,11 +718,70 @@ ChatMinimap.displayName = CHAT_MINIMAP_NAME;
 
 const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
-type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' | 'event'>;
+type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' | 'event' | 'tasksVisible'> & {
+  /** Whether the checklist is disclosed on mount. */
+  defaultTasksVisible?: boolean;
+};
 
-const ChatPrompt = (props: ChatPromptProps) => {
-  const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
-  return <NaturalChatPrompt {...props} chat={chat} db={db} processor={processor} event={event} />;
+/**
+ * The composer with the chat's checklist disclosed above it.
+ *
+ * One component rather than two siblings: they share a border and a rounded shell, and the control
+ * that discloses the checklist lives in the composer's own action bar — so a host that placed them
+ * side by side had to hold the disclosure state between them and coordinate the corner radius.
+ *
+ * Ark's `Collapsible` owns the disclosure (it measures the height the animation ramps against). Its
+ * trigger is not used: the toggle is a button inside the composer, which reports through the chat
+ * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
+ */
+const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
+  const { chat, db, processor, event, queueSize } = useChatContext(CHAT_PROMPT_NAME);
+
+  // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
+  // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
+  const [tasks] = useObject(chat, 'tasks');
+  const hasTasks = tasks != null;
+
+  // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
+  // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
+  // it is a glance, not a preference.
+  const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
+  useEffect(() => {
+    return event.on((ev) => {
+      if (ev.type === 'toggle-tasks') {
+        setTasksVisible((visible) => !visible);
+      }
+    });
+  }, [event]);
+
+  return (
+    <Collapsible.Root
+      open={tasksVisible}
+      onOpenChange={({ open }) => setTasksVisible(open)}
+      // Clipped rather than unmounted: the list holds its own subscriptions, and remounting it on
+      // every toggle would refetch the checklist to show what the reader just hid.
+      lazyMount={false}
+    >
+      {/* The height the machine measures is what the ramp animates against, so the region clips. */}
+      {hasTasks && (
+        <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+          {/* The same surface and border as the prompt below, so the two read as one shell. */}
+          <ChatTaskList classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm text-fg-muted' />
+        </Collapsible.Content>
+      )}
+      <NaturalChatPrompt
+        {...props}
+        // Square where the checklist meets it, so the two read as one shell rather than two cards.
+        classNames={[tasksVisible && 'rounded-t-none', classNames]}
+        db={db}
+        chat={chat}
+        processor={processor}
+        event={event}
+        queueSize={queueSize}
+        tasksVisible={hasTasks ? tasksVisible : undefined}
+      />
+    </Collapsible.Root>
+  );
 };
 
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
@@ -548,41 +792,190 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
-type ChatTaskListProps = {
-  outline?: Outline.Outline;
-};
+/** Rows the chat's checklist shows before it scrolls. */
+const CHAT_TASK_ROWS = 4;
 
-// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
-//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
-const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
-  ({ outline: outlineProp, ...props }, forwardedRef) => {
-    const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
-    const outline = useAtomValue(
-      useMemo(
-        () =>
-          Atom.make(
-            (get) =>
-              outlineProp ??
-              Option.fromNullable(chat).pipe(
-                Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullable((_) => _?.outline?.atom),
-                Option.map(get),
-                Option.getOrUndefined,
-              ),
-          ),
-        [chat, outlineProp],
-      ),
-    );
-    if (!outline) {
-      return null;
-    }
+  // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
+  const [chatSnapshot] = useObject(chat);
+  const taskRefs = chatSnapshot?.tasks;
+  const tasks = useAtomValue(
+    useMemo(() => Atom.make((get) => Task.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
+  );
 
-    return <TaskList {...props} outline={outline} ref={forwardedRef} />;
-  },
-);
+  // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
+  const handleCreate = useCallback(
+    ({ title, ...props }: Task.Draft) => {
+      const db = chat && Obj.getDatabase(chat);
+      if (chat && db) {
+        AssistantChat.addTask(db, chat, title, props);
+      }
+    },
+    [chat],
+  );
+
+  // The same primitive the task commands use: it sweeps the checklist and destroys only what the
+  // chat owns, so a delegated task keeps the set that parents it.
+  const handleDelete = useCallback(
+    (task: Task.Task) => {
+      const db = chat && Obj.getDatabase(chat);
+      if (chat && db) {
+        AssistantChat.deleteTask(db, chat, tasks, task);
+      }
+    },
+    [chat, tasks],
+  );
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Task.update(task, patch);
+  }, []);
+
+  // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
+  // delegation, status), so the row asks for the work the way the reader would, by ordinal — the
+  // number the row shows, and the one `/task:run` and the agent's selectors resolve.
+  const handleExecute = useCallback(
+    (task: Task.Task) => {
+      const ordinal = tasks.findIndex(({ id }) => id === task.id) + 1;
+      event.emit({ type: 'submit', text: t('execute-task.prompt', { ordinal }) });
+    },
+    [tasks, event, t],
+  );
+
+  // Contributed actions rather than fixed chrome, matching `TaskSetArticle`: two items, so the row
+  // shows one overflow menu rather than a bare delete button.
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`execute-${task.id}`, () => handleExecute(task), {
+        label: t('execute-task.label'),
+        icon: 'ph--play--regular',
+        // A finished task has nothing left to implement.
+        disabled: task.status === 'done' || task.status === 'cancelled',
+        testId: 'tasks.task.execute',
+      }),
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: t('delete-task.label'),
+        icon: 'ph--trash--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [handleExecute, handleDelete, t],
+  );
+
+  if (!chat) {
+    return null;
+  }
+
+  return (
+    <TaskList.Root
+      tasks={tasks}
+      showGroupLabels={false}
+      showOrdinals
+      showEstimates
+      // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
+      flush
+      showAssignees={false}
+      showMnemonics={false}
+      onTaskCreate={handleCreate}
+      onTaskUpdate={handleUpdate}
+      getTaskActions={getTaskActions}
+    >
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+        {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
+        <TaskList.Viewport rows={CHAT_TASK_ROWS}>
+          <TaskList.Content />
+        </TaskList.Viewport>
+        {/* What the agent is blocked on, under the list it asked about: the list itself carries no
+            questions — a row replaying them grew by a line each — but a chat is where the asking
+            happened, so the answer is given here rather than in a pane the reader has to open. */}
+        <ChatTaskQuestions tasks={tasks} />
+        {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
+        <TaskList.Editor createOnly />
+      </div>
+    </TaskList.Root>
+  );
+});
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
+
+/**
+ * The open questions across the chat's tasks, each with the means to answer it.
+ *
+ * Answers go through the operation rather than `Task.answer`, so the conversation that asked is
+ * resumed — which is the whole point of answering here instead of on the task.
+ */
+const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const threads = useMemo(
+    () =>
+      tasks.flatMap((task) =>
+        Task.getQuestions(task.history)
+          .filter(({ answer }) => !answer)
+          .map((thread) => ({ task, thread })),
+      ),
+    [tasks],
+  );
+
+  const handleAnswer = useCallback(
+    (task: Task.Task, questionId: string, answer: string) => {
+      const spaceId = Obj.getDatabase(task)?.spaceId;
+      if (spaceId) {
+        // The operation reports a refused write in its result, not only by rejecting, so both are checked.
+        invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId })
+          .then((result) => {
+            if (result.error || !result.data?.accepted) {
+              log.warn('question was not answered', { task: task.id, question: questionId, error: result.error });
+            }
+          })
+          .catch((err) => log.catch(err));
+      }
+    },
+    [invokePromise],
+  );
+
+  if (threads.length === 0) {
+    return null;
+  }
+
+  return (
+    <Layout.Flex column gap='sm' classNames='p-2' data-testid='chat.taskQuestions'>
+      {threads.map(({ task, thread }) => (
+        <TaskQuestion
+          key={thread.question.id}
+          thread={thread}
+          onAnswer={(answer) => handleAnswer(task, thread.question.id, answer)}
+        />
+      ))}
+    </Layout.Flex>
+  );
+};
+
+ChatTaskQuestions.displayName = 'Chat.TaskQuestions';
+
+//
+// Activity
+//
+
+const CHAT_ACTIVITY_NAME = 'Chat.Activity';
+
+/**
+ * The activity line bound to the chat's processor and the chat's pending alarms: what the agent is
+ * doing, for as long as it is doing anything. The line itself takes resolved values, so it lives
+ * beside the prompt with the rest of the presentational parts and only the binding is here.
+ */
+const ChatActivity = ({ classNames }: Util.ThemedClassName) => {
+  const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { alarms } = useChatThreadContext(CHAT_ACTIVITY_NAME);
+  const activity = useAtomValue(getProcessorState(processor).activity);
+
+  // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
+  // wait in front of the reader.
+  return <NaturalChatActivity classNames={classNames} activity={activity} wakeAt={alarms[0]?.wakeAt} />;
+};
+
+ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
 // Chat
@@ -593,16 +986,16 @@ export const Chat = {
   Toolbar: ChatToolbar,
   Content: ChatContent,
   Prompt: ChatPrompt,
+  Activity: ChatActivity,
   Status: ChatStatus,
   Thread: ChatThread,
-  Minimap: ChatMinimap,
-  TaskList: ChatTaskList,
+  Outline: ChatOutline,
 };
 
 export type {
   ChatContentProps,
   ChatEvent,
-  ChatMinimapProps,
+  ChatOutlineProps,
   ChatPromptProps,
   ChatRootProps,
   ChatThreadProps,

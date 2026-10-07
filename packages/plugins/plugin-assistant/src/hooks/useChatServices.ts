@@ -3,12 +3,12 @@
 //
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useActivationSignal, useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Key } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 
-import * as AssistantEvents from '../types/AssistantEvents';
+import { AssistantEvents } from '#types';
 
 export type UseChatServicesProps = {
   id?: Key.SpaceId;
@@ -28,7 +28,7 @@ export const useChatServices = ({ id }: UseChatServicesProps) => {
   // Every chat entry point resolves its services here, so this is the assistant-in-use demand
   // signal: start-gated assistant modules (skills included) load now and register via the
   // reactive RegistrySync.
-  useActivationSignal(AssistantEvents.Start);
-  const runtime = useCapability(Capabilities.ProcessManagerRuntime);
+  Hooks.useActivationSignal(AssistantEvents.Start);
+  const runtime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
   return id ? runtime : undefined;
 };

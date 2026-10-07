@@ -25,7 +25,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -58,6 +58,9 @@
       "path": "../../ui/lit-ui"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -73,10 +76,10 @@
       "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/ui-theme"
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"

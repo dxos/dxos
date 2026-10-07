@@ -6,6 +6,20 @@ User-reported defects and small UX corrections found while using Composer, track
 across whichever package owns the fix. Findings and rationale live in
 [DESIGN.md](DESIGN.md); this file is the ledger.
 
+## Markdown editor
+
+- [ ] **Disable the smart em-dash input rule — it breaks tables.** Typing `--` inside a table
+      delimiter row (`| --- |`) is rewritten to an em-dash, which destroys the alignment row and
+      with it the table. Reported 2026-08-23 while fixing the table-insert defects below.
+- [x] **Table toolbar button was disabled on a blank line and enabled on a full one** — inverted.
+      A table replaces the line it lands on, so it belongs on a blank line
+      ([blocks.ts](../../../packages/ui/react-ui-editor/src/components/EditorToolbar/blocks.ts)).
+- [x] **Slash menu and toolbar inserted different tables** — the menu had its own literal (three
+      empty columns) while the toolbar used a snippet (two columns, placeholder cells). The menu now
+      calls the same `insertTable`, which takes an optional position so it can insert at the
+      consumed trigger
+      ([menu-presets.ts](../../../packages/ui/react-ui-editor/src/components/EditorMenuProvider/menu-presets.ts)).
+
 ## Phase 1: Inbox message article
 
 - [x] **Drop per-message expand/collapse when a conversation has one message**
@@ -23,8 +37,8 @@ across whichever package owns the fix. Findings and rationale live in
 ## Phase 2: HTML rendering + dark mode — SUPERSEDED
 
 Implemented and moved. The component, its dialect seam and the full design write-up now live in
-`packages/ui/react-ui-components/src/components/HtmlViewer/` — see its
-[DESIGN.md](../../../packages/ui/react-ui-components/src/components/HtmlViewer/DESIGN.md), which is
+`packages/ui/react-ui-html/src/HtmlViewer/` — see its
+[DESIGN.md](../../../packages/ui/react-ui-html/src/docs/DESIGN.md), which is
 the current record for everything below.
 
 - [x] **Capture real email fixtures to analyze against** — done in the MailboxSync
@@ -141,7 +155,7 @@ and its [DESIGN.md](../../../packages/plugins/plugin-deck/DESIGN.md).
 ## References
 
 - [DESIGN.md](DESIGN.md) — findings and rationale.
-- `packages/ui/react-ui-components/src/components/HtmlViewer/` — the HTML sandbox, email dialect and
+- `packages/ui/react-ui-html/src/HtmlViewer/` — the HTML sandbox, email dialect and
   its own DESIGN.md.
 - `packages/plugins/plugin-connector/src/util/sync-routine.ts`
 - `packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx`

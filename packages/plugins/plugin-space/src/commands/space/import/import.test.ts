@@ -2,22 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as NodeContext from '@effect/platform-node/NodeContext';
-import * as FileSystem from '@effect/platform/FileSystem';
+import * as NodeServices from '@effect/platform-node/NodeServices';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { type Format, handler as exportSpace } from '../export';
-import { handler as importSpace } from './import';
+import { type Format, handler as exportSpace } from '../export/index.ts';
+import { handler as importSpace } from './import.ts';
 
-const ImportTestLayer = Layer.mergeAll(TestLayer, NodeContext.layer);
+const ImportTestLayer = Layer.mergeAll(TestLayer, NodeServices.layer);
 
 describe('space import', () => {
   it('should import a json archive as a new space', () =>

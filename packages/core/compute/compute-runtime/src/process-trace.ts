@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { detachData } from './trace-buffer';
+import { detachData } from './trace-buffer.ts';
 
 export interface ProcessTraceServiceOptions {
   /** Id of the process whose events we're tagging. */
@@ -47,7 +47,7 @@ export interface ProcessTraceServiceOptions {
  */
 export const createProcessTraceService = (
   opts: ProcessTraceServiceOptions,
-): Context.Tag.Service<typeof Trace.TraceService> => ({
+): Context.Service.Shape<typeof Trace.TraceService> => ({
   write: (event, data) => {
     try {
       // TODO(dmaretskyi): Batching.

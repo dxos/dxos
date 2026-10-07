@@ -1,17 +1,13 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation } from '@dxos/echo';
-import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
+import { Migrations } from '@dxos/migrations';
 
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import { SpaceOperation } from './definitions';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOperation.Migrate.pipe(
   Operation.withHandler(
@@ -30,15 +26,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOpera
         }));
       }
       const result = yield* Effect.promise(() => Migrations.migrate(space, targetVersion));
-
-      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.migrate',
-        properties: {
-          spaceId: space.id,
-          targetVersion,
-          version: Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined),
-        },
-      });
 
       return result;
     }),

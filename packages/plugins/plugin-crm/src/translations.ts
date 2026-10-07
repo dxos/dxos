@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -12,7 +12,8 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'CRM',
         'nav-tree-group-crm.label': 'CRM',
+        'research.label': 'Research',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

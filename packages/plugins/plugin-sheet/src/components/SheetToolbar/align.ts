@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
@@ -15,12 +16,11 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { SheetRange, SheetUtil } from '#types';
 
-import { type SheetModel } from '../../model';
-import * as SheetRange from '../../types/SheetRange';
-import * as SheetUtil from '../../types/SheetUtil';
-import { useSheetContext } from '../SheetRoot';
-import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
+import { type SheetModel } from '../../model/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
+import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState.ts';
 
 export type AlignAction = { key: SheetRange.AlignKey; value: SheetRange.AlignValue };
 
@@ -62,7 +62,7 @@ type AlignActionsContext = {
   model: SheetModel;
   state: ToolbarState;
   stateAtom: ToolbarStateAtom;
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   cursorFallbackRange?: CompleteCellRange;
 };
 

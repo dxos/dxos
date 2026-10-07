@@ -5,11 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import * as Book from '../../types/Book';
-import { BookCard } from './BookCard';
+import { Book } from '#types';
+
+import { BookCard } from './BookCard.tsx';
 
 // NOTE: build the ECHO object inside `render` — never pass a reactive ECHO object as a story `arg`,
 // since Storybook deep-traverses/mutates args (which the ECHO proxy rejects outside `Obj.update`).

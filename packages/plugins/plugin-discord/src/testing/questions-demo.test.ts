@@ -17,7 +17,7 @@ import { describe, test } from 'vitest';
 
 import { StateStore } from '@dxos/crawler';
 import { deterministicAiService } from '@dxos/crawler/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import {
   ExtractedQuestionStore,
@@ -41,9 +41,9 @@ describe('questions demo', () => {
       const { questions, topics } = await EffectEx.runPromise(
         Effect.gen(function* () {
           yield* replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
-          const questions = yield* (yield* ExtractedQuestionStore).list();
+          const questions = yield* ExtractedQuestionStore.list();
 
-          const targets = yield* (yield* StateStore).listTargets();
+          const targets = yield* StateStore.listTargets();
           const topics: TopicSegment[] = [];
           for (const target of targets) {
             topics.push(...(yield* buildTopicsForTarget(target)));

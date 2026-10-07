@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
+  AttachmentArticle,
   CalendarArticle,
   CalendarProperties,
   EditMessageArticle,
@@ -24,12 +25,12 @@ import {
   SaveFilterPopover,
   SubscriptionsArticle,
 } from '#containers';
+import { Calendar, Mailbox } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../constants';
-import { getSubscriptionsId } from '../paths';
-import * as Calendar from '../types/Calendar';
-import * as Mailbox from '../types/Mailbox';
-import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces';
+import { POPOVER_SAVE_FILTER } from '../constants.ts';
+import { getSubscriptionsId } from '../paths.ts';
+import { isAttachmentRef } from './app-graph-builder.ts';
+import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -41,7 +42,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const lastSegment = data.attendableId.split('/').pop();
+          // A filter runs against every article candidate, including ones whose data carries no
+          // `attendableId` despite the type — throwing here fails the whole surface match.
+          const lastSegment = data.attendableId?.split('/').pop();
           return lastSegment === getSubscriptionsId() && Mailbox.instanceOf(data.subject);
         }),
         component: SubscriptionsArticle,
@@ -72,25 +75,29 @@ export default Capability.makeModule(() =>
           AppSurface.subject(AppSurface.Section, isNonDraftMessage),
         ),
         component: MessageArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
+      }),
+      Surface.create({
+        id: 'attachment',
+        // Matched by the node's own type rather than the subject: the subject is the MESSAGE, which
+        // the message surface also claims, so only the attachment node distinguishes the two.
+        filter: AppSurface.subject(AppSurface.Article, isAttachmentRef),
+        component: AttachmentArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({
+          role,
+          subject: subject.message,
+          attachmentIndex: subject.index,
+          attendableId,
+        }),
       }),
       Surface.create({
         id: 'event',
         filter: AppSurface.oneOf(
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Article, Event.Event),
-            AppSurface.companion(AppSurface.Article, Calendar.Calendar),
-          ),
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Section, Event.Event),
-            AppSurface.companion(AppSurface.Section, Calendar.Calendar),
-          ),
-          // Primary mode (navigated directly — no companion; calendar looked up from parent node).
           AppSurface.object(AppSurface.Article, Event.Event),
           AppSurface.object(AppSurface.Section, Event.Event),
         ),
         component: EventArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'calendar',

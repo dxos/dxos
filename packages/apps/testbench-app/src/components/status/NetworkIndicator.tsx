@@ -4,12 +4,12 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
-import { styles } from './styles';
+import { styles } from './styles.ts';
 
 /**
  * Swarm connection handler.
@@ -25,13 +25,13 @@ export const NetworkIndicator = () => {
   if (state === 0) {
     return (
       <span title='Connected to swarm.'>
-        <Icon icon='ph--lightning--regular' />
+        <Icon.Icon icon='ph--lightning--regular' />
       </span>
     );
   } else {
     return (
       <span title='Disconnected from swarm.'>
-        <Icon icon='ph--lightning-slash--regular' classNames={mx(styles.warning)} />
+        <Icon.Icon icon='ph--lightning-slash--regular' classNames={mx(styles.warning)} />
       </span>
     );
   }

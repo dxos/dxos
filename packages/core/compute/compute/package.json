@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Umbrella package for AI-aware DXOS compute primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,6 +38,11 @@
       "types": "./dist/types/src/Credential.d.ts",
       "import": "./dist/lib/Credential.mjs"
     },
+    "./FunctionsAiError": {
+      "source": "./src/FunctionsAiError.ts",
+      "types": "./dist/types/src/FunctionsAiError.d.ts",
+      "import": "./dist/lib/FunctionsAiError.mjs"
+    },
     "./Header": {
       "source": "./src/Header.ts",
       "types": "./dist/types/src/Header.d.ts",
@@ -73,6 +78,7 @@
       "types": "./dist/types/src/OperationRegistry.d.ts",
       "import": "./dist/lib/OperationRegistry.mjs"
     },
+    "./package.json": "./package.json",
     "./Process": {
       "source": "./src/Process.ts",
       "types": "./dist/types/src/Process.d.ts",
@@ -108,6 +114,11 @@
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
     },
+    "./SqlService": {
+      "source": "./src/SqlService.ts",
+      "types": "./dist/types/src/SqlService.d.ts",
+      "import": "./dist/lib/SqlService.mjs"
+    },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
@@ -117,6 +128,11 @@
       "source": "./src/types/Template.ts",
       "types": "./dist/types/src/types/Template.d.ts",
       "import": "./dist/lib/types/Template.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     },
     "./Trace": {
       "source": "./src/Trace.ts",
@@ -132,17 +148,6 @@
       "source": "./src/types/TriggerEvent.ts",
       "types": "./dist/types/src/types/TriggerEvent.d.ts",
       "import": "./dist/lib/types/TriggerEvent.mjs"
-    },
-    "./errors": {
-      "source": "./src/errors.ts",
-      "types": "./dist/types/src/errors.d.ts",
-      "import": "./dist/lib/errors.mjs"
-    },
-    "./package.json": "./package.json",
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -157,17 +162,16 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/vendor-kbn-handlebars": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:"
+    "@dxos/vendor-kbn-handlebars": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

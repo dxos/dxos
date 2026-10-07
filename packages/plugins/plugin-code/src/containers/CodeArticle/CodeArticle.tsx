@@ -6,16 +6,18 @@ import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -27,11 +29,7 @@ import { isTruthy } from '@dxos/util';
 
 import { BuildOutput, CodeToolbar, FileTree } from '#components';
 import { meta } from '#meta';
-
-import * as CodeCapabilities from '../../types/CodeCapabilities';
-import * as CodeOperation from '../../types/CodeOperation';
-import type * as CodeProject from '../../types/CodeProject';
-import type * as SourceFile from '../../types/SourceFile';
+import { CodeCapabilities, CodeOperation, CodeProject, SourceFile } from '#types';
 
 export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 
@@ -66,13 +64,13 @@ const languageForPath = (path: string) => {
 //   └───────────┴─────────────────┘
 //
 // 30rem fixed left column, 1fr right; left split 1:2 vertically. Same
-// `dx-container grid` + `divide-x`/`divide-y separator` idiom as the
+// `dx-expand grid` + `divide-x`/`divide-y separator` idiom as the
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    const invoker = useOperationInvoker();
-    const [buildRunState, updateBuildRun] = useAtomCapabilityState(CodeCapabilities.BuildRun);
+    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const invoker = Hooks.useOperationInvoker();
+    const [buildRunState, updateBuildRun] = Hooks.useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;
     const projectState = buildRunState[projectId];
 
@@ -218,8 +216,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
     const fileEntries = useMemo(() => resolvedFiles.map(({ path }) => ({ path })), [resolvedFiles]);
 
     return (
-      <Panel.Root classNames='dx-expander' role={role} ref={forwardedRef}>
-        <Panel.Toolbar>
+      <Panel.Root classNames='dx-expand' role={role} ref={forwardedRef}>
+        <Panel.Header>
           <CodeToolbar
             attendableId={attendableId}
             role={role}
@@ -227,31 +225,27 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             onBuild={handleBuild}
             onRun={handleRun}
           />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator'>
-            <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-subdued-separator'>
-              <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Layout.Grid grow cols={['30rem', 'fill']} classNames='divide-x divide-separator'>
+            <Layout.Grid grow rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
+              <Layout.Grid grow role='region' aria-label={t('browse-pane.label')} classNames='overflow-auto'>
                 <FileTree
                   files={fileEntries}
                   selectedPath={selectedPath}
                   onSelect={setSelectedPath}
                   emptyMessage={t('view.code.empty.placeholder')}
                 />
-              </div>
-              <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid overflow-hidden'>
+              </Layout.Grid>
+              <Layout.Grid grow role='region' aria-label={t('inspect-pane.label')}>
                 <BuildOutput state={projectState} />
-              </div>
-            </div>
-            <div
-              role='region'
-              aria-label={t('output-pane.label')}
-              className='dx-container grid min-h-0 overflow-hidden'
-            >
+              </Layout.Grid>
+            </Layout.Grid>
+            <Layout.Grid grow role='region' aria-label={t('output-pane.label')}>
               {selected ? <FileEditor file={selected} role={role} /> : null}
-            </div>
-          </div>
-        </Panel.Content>
+            </Layout.Grid>
+          </Layout.Grid>
+        </Panel.Body>
       </Panel.Root>
     );
   },
@@ -263,7 +257,7 @@ type FileEditorProps = {
 };
 
 const FileEditor = ({ file, role }: FileEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = UiHooks.useThemeMode();
   const identity = useIdentity();
   const space = getSpace(file);
 

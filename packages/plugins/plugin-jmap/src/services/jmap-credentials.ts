@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
+import { type AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as Connection from '@dxos/plugin-connector/Connection';
 
 /**
  * Credentials needed to talk to a JMAP server: the server `host` (used to discover the session at
@@ -31,7 +30,7 @@ export type Credentials = {
  * Unlike Google, there is no database-credential fallback — a JMAP connection always carries host +
  * token in its token record.
  */
-export class JmapCredentials extends Context.Tag('JmapCredentials')<JmapCredentials, Credentials>() {
+export class JmapCredentials extends Context.Service<JmapCredentials, Credentials>()('JmapCredentials') {
   /** Creates a credentials layer from an AccessToken ref. Loads its `source` (host), `account`, `token`. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(

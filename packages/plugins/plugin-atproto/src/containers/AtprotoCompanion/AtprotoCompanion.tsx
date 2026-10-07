@@ -5,22 +5,28 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
-import { Treegrid } from '@dxos/react-ui-list';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type PublishFieldNote } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
-import { getFieldPublishFlags } from '../../annotation';
-import { isAtprotoConnection } from '../../connection';
-import { resolveDisplayValue } from '../../field-values';
+import { getFieldPublishFlags } from '../../annotation.ts';
+import { isAtprotoConnection } from '../../connection.ts';
+import { resolveDisplayValue } from '../../field-values.ts';
 import {
   type DisplayStatus,
   computeStatus,
@@ -29,10 +35,8 @@ import {
   inspectPublish,
   publishObject,
   unpublishObject,
-} from '../../publish';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
-import * as AtprotoPublication from '../../types/AtprotoPublication';
+} from '../../publish.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
 
 export type AtprotoCompanionProps = AppSurface.ArticleProps<Obj.Unknown>;
 
@@ -46,8 +50,8 @@ const STATUS_META: Record<DisplayStatus, { key: string; icon: string; valence: S
   outOfDate: { key: 'status-out-of-date.label', icon: 'ph--cloud-arrow-up--regular', valence: 'warning' },
 };
 
-// Inline-start inset per nesting level (Treegrid's own row-level indentation is calibrated for deep
-// navtrees; nested field rows are indented directly, following ProcessTree).
+// Inline-start inset per nesting level; the grouping is presentational, so the indent is applied
+// directly rather than derived from a row level.
 const INDENT_REM = 1;
 
 /**
@@ -56,8 +60,8 @@ const INDENT_REM = 1;
  * unpublish toolbar against the space's atproto connection.
  */
 export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const makeRepoLayer = useCapability(AtprotoCapabilities.RepoLayer);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const makeRepoLayer = Hooks.useCapability(AtprotoCapabilities.RepoLayer);
   const db = Obj.getDatabase(subject);
   // Subscribe to the object so edits recompute status and field values (read from this snapshot).
   const [live] = useObject(subject);
@@ -203,83 +207,69 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <div role='none' className='flex flex-col gap-3 p-3'>
+            <Layout.Flex column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
-              <Message.Root
+              <Banner.Root
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Message.Content>
-                  <Message.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Message.Title>
-                </Message.Content>
-              </Message.Root>
+                <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
+              </Banner.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
-                <Message.Root valence='info'>
-                  <Message.Content>
-                    <Message.Body>{t('no-connection.label')}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='info'>
+                  <Banner.Body>{t('no-connection.label')}</Banner.Body>
+                </Banner.Root>
               )}
               {ineligibleReason && (
-                <Message.Root valence={reasonValence}>
-                  <Message.Content>
-                    <Message.Body>{ineligibleReason}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence={reasonValence}>
+                  <Banner.Body>{ineligibleReason}</Banner.Body>
+                </Banner.Root>
               )}
               {error && (
-                <Message.Root valence='error'>
-                  <Message.Content>
-                    <Message.Body>{error}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='error'>
+                  <Banner.Body>{error}</Banner.Body>
+                </Banner.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
-                <Message.Root valence='warning'>
-                  <Message.Content>
-                    <Message.Body>{t('confirm-publish.message')}</Message.Body>
-                    <Message.Body asChild>
-                      <div role='none' className='flex gap-2 pbs-2'>
-                        <Button variant='primary' disabled={busy} onClick={handlePublish}>
-                          {t('confirm-publish.label')}
-                        </Button>
-                        <Button disabled={busy} onClick={() => setConfirming(false)}>
-                          {t('cancel.label')}
-                        </Button>
-                      </div>
-                    </Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='warning'>
+                  <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
+                  <Banner.Body asChild>
+                    <Layout.Flex gap='sm' classNames='pt-2'>
+                      <Button.Root variant='primary' disabled={busy} onClick={handlePublish}>
+                        {t('confirm-publish.label')}
+                      </Button.Root>
+                      <Button.Root disabled={busy} onClick={() => setConfirming(false)}>
+                        {t('cancel.label')}
+                      </Button.Root>
+                    </Layout.Flex>
+                  </Banner.Body>
+                </Banner.Root>
               )}
 
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <div role='none' className='flex flex-col gap-1'>
-                <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
+              <Layout.Container gap='sm' gutter='none'>
+                <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
-                  <Message.Root valence='warning'>
-                    <Message.Content>
-                      <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
-                    </Message.Content>
-                  </Message.Root>
+                  <Banner.Root valence='warning'>
+                    <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
+                  </Banner.Root>
                 )}
-                <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>
+                {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
+                    is a table rather than the `treegrid` this used to claim. Depth is visual indent only. */}
+                <Layout.Grid role='table' cols={['fill', 'fill', 'min']} classNames='gap-x-3'>
                   {fields.map((field) => {
                     const published = field.visibility === 'publish';
                     const mirrored = field.visibility === 'mirror';
@@ -298,46 +288,48 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           typeof publishedValues?.[field.path] === 'string' &&
                           publishedValues[field.path] !== value));
                     return (
-                      <Treegrid.Row
+                      <Layout.Grid
                         key={field.path}
-                        id={field.path.replaceAll('.', '~')}
-                        classNames={[
-                          'grid grid-cols-subgrid col-span-full items-center py-0.5',
-                          field.group ? 'font-medium' : 'font-normal',
-                        ]}
+                        role='row'
+                        cols='subgrid'
+                        align='center'
+                        classNames={['py-0.5', field.group ? 'font-medium' : 'font-normal']}
                       >
-                        <Treegrid.Cell
-                          classNames='flex items-center'
+                        <Layout.Flex
+                          role='rowheader'
+                          align='center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
-                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-description'}`}>
+                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-fg-muted'}`}>
                             {field.name}
                           </span>
-                        </Treegrid.Cell>
-                        <Treegrid.Cell classNames='truncate text-sm text-description'>{value}</Treegrid.Cell>
-                        <Treegrid.Cell classNames='flex shrink-0 items-center justify-end gap-1'>
+                        </Layout.Flex>
+                        <div role='cell' className='truncate text-sm text-fg-muted'>
+                          {value}
+                        </div>
+                        <Layout.Flex role='cell' align='center' justify='end' gap='xs' classNames='shrink-0'>
                           {!field.group && (
                             <>
-                              {diverged && <Tag hue='warning'>{t('diverged-field.label')}</Tag>}
-                              <Tag hue={published ? 'success' : mirrored ? 'info' : 'neutral'}>
+                              {diverged && <Tag.Tag hue='warning'>{t('diverged-field.label')}</Tag.Tag>}
+                              <Tag.Tag hue={published ? 'success' : mirrored ? 'info' : 'neutral'}>
                                 {published
                                   ? t('published-field.label')
                                   : mirrored
                                     ? t('mirrored-field.label')
                                     : t('private-field.label')}
-                              </Tag>
+                              </Tag.Tag>
                             </>
                           )}
-                        </Treegrid.Cell>
-                      </Treegrid.Row>
+                        </Layout.Flex>
+                      </Layout.Grid>
                     );
                   })}
-                </Treegrid.Root>
-              </div>
-            </div>
+                </Layout.Grid>
+              </Layout.Container>
+            </Layout.Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

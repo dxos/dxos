@@ -11,9 +11,9 @@ import { Database, Filter, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import { Memory } from '../../../types/Memory';
-import { SaveMemory } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import * as Memory from '../../../types/Memory.ts';
+import { SaveMemory } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -27,13 +27,13 @@ describe('SaveMemory', () => {
           content: 'TypeScript',
         });
 
-        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
+        const memories = yield* Database.query(Query.select(Filter.type(Memory.Memory))).run;
         expect(memories).toHaveLength(1);
         expect(memories[0].title).toBe('Favourite language');
         expect(memories[0].content).toBe('TypeScript');
 
         // The handler returns the stored entity so the agent can reference it by id.
-        const { id } = yield* Schema.decodeUnknown(Schema.Struct({ id: Schema.String }))(saved);
+        const { id } = yield* Schema.decodeUnknownEffect(Schema.Struct({ id: Schema.String }))(saved);
         expect(id).toBe(memories[0].id);
       },
       Effect.provide(OperationTestLayer),

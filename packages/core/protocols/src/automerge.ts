@@ -14,9 +14,8 @@ export type PeerId = string & { __peerId: true };
 // These types mirror upstream `@automerge/automerge-repo` `Message` variants
 // (see `automerge-repo/src/network/messages.ts`). They are the wire protocol
 // of the classical automerge-repo sync state machine, not DXOS extensions.
-// Carried by `EchoEdgeReplicator` (classical edge wiring) and in-memory test
-// adapters; NOT used on the subduction channel except via the
-// `SubductionConnectionMessage` byte tunnel.
+// Carried by mesh replication and in-memory test adapters; NOT used on the
+// subduction channel except via the `SubductionConnectionMessage` byte tunnel.
 
 /**
  * Sent by a peer when joining a connection.
@@ -326,7 +325,7 @@ export type CollectionStateMessage = {
 
 /**
  * Union of every message that flows through the **classical automerge-repo**
- * sync channel (`EchoEdgeReplicator`, in-memory `TestAdapter`).
+ * sync channel (mesh replication, in-memory `TestAdapter`).
  *
  * @remarks
  * Combines the upstream automerge-repo sync messages (join / leave / peer /
@@ -355,8 +354,8 @@ export type AutomergeProtocolMessage =
  *
  * @remarks
  * Distinct from {@link AutomergeProtocolMessage}, which describes the classical
- * automerge-repo sync protocol carried by `EchoEdgeReplicator` (mesh sync,
- * in-memory test adapters). The subduction channel multiplexes:
+ * automerge-repo sync protocol carried by mesh sync and in-memory test
+ * adapters. The subduction channel multiplexes:
  *
  *   - opaque transport frames ({@link SubductionConnectionMessage}) produced
  *     by `@automerge/automerge-repo/subduction/network.ts`;

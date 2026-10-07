@@ -14,9 +14,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -24,6 +21,9 @@
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/invariant"
@@ -48,6 +48,12 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/echo/blob"
     },
     {
       "path": "../../core/echo/echo"

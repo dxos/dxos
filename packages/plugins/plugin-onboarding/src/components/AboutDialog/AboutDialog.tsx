@@ -6,22 +6,30 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
-// Keyed by the full edge host: `<env>.dxos.network` (apex = production) plus the
-// legacy `edge[-<env>].dxos.workers.dev` names still present in stored configs.
+// Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {
+  'dev.dxos.network': 'Dev',
+  'preview.dxos.network': 'Preview',
+  'dxos.network': 'Production',
   'edge.dxos.workers.dev': 'Dev',
-  'edge-main.dxos.workers.dev': 'Main',
-  'edge-labs.dxos.workers.dev': 'Labs',
+  'edge-preview.dxos.workers.dev': 'Preview',
+  'edge-main.dxos.workers.dev': 'Main (retired)',
+  'edge-labs.dxos.workers.dev': 'Labs (retired)',
   'edge-staging.dxos.workers.dev': 'Staging',
   'edge-production.dxos.workers.dev': 'Production',
-  'main.dxos.network': 'Main',
-  'labs.dxos.network': 'Labs',
+  'main.dxos.network': 'Preview',
+  'labs.dxos.network': 'Labs (retired)',
   'staging.dxos.network': 'Staging',
-  'dxos.network': 'Production',
 };
 
 const REPO = 'https://github.com/dxos/dxos';
@@ -36,7 +44,7 @@ const parseUrl = (url: string): URL | undefined => {
 };
 
 export const AboutDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 
@@ -54,49 +62,49 @@ export const AboutDialog = () => {
 
   return (
     <Dialog.Content size='sm'>
-      <Dialog.Header>
+      <Dialog.Header classNames='pb-3'>
         <Dialog.Title asChild>
           <h1 className="font-['Poiret One'] text-5xl" style={{ fontFamily: 'Poiret One' }}>
             composer
           </h1>
         </Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
-        <div className='flex items-center text-description'>
+        <Layout.Flex align='center' classNames='text-fg-muted'>
           {t('version.label', { version: version ?? 'unknown' })}
-        </div>
-        <div className='flex flex-col gap-3'>
+        </Layout.Flex>
+        <Layout.Flex column gap='md'>
           {timestamp && (
-            <div className='flex items-center gap-1'>
-              <Link href={releaseUrl} variant='neutral'>
+            <Layout.Flex align='center' gap='xs'>
+              <Typography.Link href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
-              </Link>
-            </div>
+              </Typography.Link>
+            </Layout.Flex>
           )}
-          {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
+          {showEnv && <Layout.Flex align='center'>{t('environment.label', { environment: edgeEnv })}</Layout.Flex>}
           <p>
-            <Trans
+            <Theme.Trans
               {...{
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link href='https://dxos.org' variant='neutral' />,
+                  dxos: <Typography.Link href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />
           </p>
-        </div>
+        </Layout.Flex>
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <Button variant='primary'>{t('close.label')}</Button>
-        </Dialog.Close>
-      </Dialog.ActionBar>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button.Root variant='primary'>{t('close.label')}</Button.Root>
+        </Dialog.CloseTrigger>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

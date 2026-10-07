@@ -37,6 +37,15 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
   stories: baseStories ?? stories,
   addons: ['@storybook/addon-docs', '@storybook/addon-links', '@storybook/addon-themes'],
   staticDirs: [staticDir],
+  // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
+  // "Get started" onboarding checklist (sidebar widget and menu guide page).
+  core: {
+    disableWhatsNewNotifications: true,
+  },
+  features: {
+    sidebarOnboardingChecklist: false,
+    menuOnboardingChecklist: false,
+  },
   ...baseConfig,
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final

@@ -15,7 +15,10 @@ import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
+import * as Chat from '@dxos/assistant/Chat';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -23,19 +26,22 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { AssistantE2eError } from './errors.ts';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
 // Memoized replays still initialize the test harness and process conversations — allow enough
@@ -44,7 +50,7 @@ const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [
   Ref.make(SkillManagerSkill.make()),
-  Ref.make(DatabaseSkill.make()),
+  Ref.make(ChatContextSkill.make()),
 ];
 
 const INSTRUCTIONS = trim`
@@ -127,7 +133,7 @@ const makeLanguageModelFixtureMiddleware = (
   ctx: TestContext,
   options: Pick<AgentTestOptions, 'inferenceProvider' | 'disableLlmMemoization'>,
 ): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
+  AiService.tag.pipe(
     Effect.provide(
       // `dynamicValuePatterns` defaults to LanguageModelFixture.DEFAULT_DYNAMIC_VALUE_PATTERNS
       // (space keys, entity IDs, UUIDs, timestamps) — the ids that differ across runs are
@@ -150,17 +156,18 @@ const DEFAULT_CLIENT_TYPES: Type.AnyEntity[] = [
 ];
 
 const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions): Promise<Plugin.Plugin[]> => [
-  ClientPlugin({
+  ClientPlugin.make({
     ...(options.edge || options.sandbox
       ? { config: configPreset({ edge: options.edge, sandbox: options.sandbox }) }
       : {}),
     types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
-  AssistantPlugin({
+  AssistantPlugin.make({
     aiServiceMiddleware: await makeLanguageModelFixtureMiddleware(ctx, options),
   }),
-  RoutinePlugin(),
-  InboxPlugin(),
+  RoutinePlugin.make(),
+  InboxPlugin.make(),
+  SpacePlugin.make({}),
   ...(options.plugins ?? []),
 ];
 
@@ -196,7 +203,7 @@ const runInstructions = (
       }
 
       return yield* Operation.invoke(
-        RunInstructions,
+        AgentOperation.RunInstructions,
         {
           instructions: Ref.make(instructions),
           input: {},
@@ -228,12 +235,12 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     options.model ??
     (options.inferenceProvider === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({
       ...Record.fromIterableWith(options.completionCriteria ?? [], (criterion) => [criterion, Schema.Boolean]),
-    }).annotations({
+    }).annotate({
       description: 'True/false for passed or not passed completion criteria.',
     }),
   });
@@ -256,7 +263,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
       Effect.gen(function* () {
         const harness = yield* Effect.acquireRelease(
           Effect.promise(async () =>
-            createComposerTestApp({
+            Harness.createComposerTestApp({
               plugins: await createDefaultPlugins(ctx, options),
             }),
           ),
@@ -288,7 +295,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         if (options.expect === 'failure') {
           console.log('exit', exit);
           if (Exit.isSuccess(exit)) {
-            return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
+            return yield* Effect.fail(
+              new AssistantE2eError({ message: 'Expected the agent to fail, but it succeeded' }),
+            );
           }
         } else if (Exit.isFailure(exit)) {
           return yield* Effect.fail(exit.cause);

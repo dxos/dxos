@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type MutableRefObject } from 'react';
 
-import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine';
-import { type GridCellSize } from './geometry';
+import * as Hooks from '@dxos/react-ui/Hooks';
+
+import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine.ts';
+import { type GridCellSize } from './geometry.ts';
 
 // Kept out of `Board.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
@@ -70,4 +71,4 @@ export type BoardContextValue = {
   onResizePreview: (id: string, size: { w: number; h: number } | null) => void;
 };
 
-export const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>('BoardContext');
+export const [BoardContextProvider, useBoardContext] = Hooks.createContext<BoardContextValue>('BoardContext');

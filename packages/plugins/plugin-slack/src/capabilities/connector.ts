@@ -8,13 +8,14 @@ import * as Layer from 'effect/Layer';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
-import { SlackApi } from '../services';
-import * as SlackOperation from '../types/SlackOperation';
+import { SlackOperation } from '#types';
+
+import { SLACK_SCOPES, SLACK_SOURCE } from '../constants.ts';
+import { SlackApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for Slack.
@@ -57,7 +58,10 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   ).pipe(
     Effect.asVoid,
     Effect.mapError(
-      () => new ConnectionTestError({ message: 'Slack rejected the credential. Reauthenticate to continue syncing.' }),
+      () =>
+        new ConnectorError.ConnectionTestError({
+          message: 'Slack rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 

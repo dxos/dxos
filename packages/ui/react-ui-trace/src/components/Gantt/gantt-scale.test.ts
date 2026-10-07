@@ -1,0 +1,105 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { timeScale, unitScale } from './gantt-scale.ts';
+
+const PAD = 10;
+const STEP = 20;
+
+describe('timeScale', () => {
+  test('maps the range onto the padded width', ({ expect }) => {
+    const scale = timeScale({ range: { start: 100, end: 200 }, width: 220, pad: PAD });
+    expect(scale.at(100)).toBe(PAD);
+    expect(scale.at(200)).toBe(210);
+    expect(scale.at(150)).toBe(110);
+    expect(scale.width).toBe(220);
+  });
+
+  test('labels ticks with elapsed time at round intervals', ({ expect }) => {
+    const labels = (end: number) =>
+      timeScale({ range: { start: 1_000_000, end: 1_000_000 + end }, width: 600, pad: PAD }).ticks.map(
+        ({ label }) => label,
+      );
+    expect(labels(40_000)).toEqual(['0s', '5s', '10s', '15s', '20s', '25s', '30s', '35s', '40s']);
+    expect(labels(800)).toEqual(['0.0s', '0.1s', '0.2s', '0.3s', '0.4s', '0.5s', '0.6s', '0.7s', '0.8s']);
+    expect(labels(150_000)).toEqual(['0:00', '0:30', '1:00', '1:30', '2:00', '2:30']);
+  });
+
+  test('an instantaneous range does not divide by zero', ({ expect }) => {
+    const scale = timeScale({ range: { start: 100, end: 100 }, width: 220, pad: PAD });
+    expect(scale.at(100)).toBe(PAD);
+  });
+
+  test('ticks thin out with the width, never below two', ({ expect }) => {
+    const wide = timeScale({ range: { start: 0, end: 1_000 }, width: 800, pad: PAD });
+    const narrow = timeScale({ range: { start: 0, end: 1_000 }, width: 120, pad: PAD });
+    // Round 0.2s steps across the wide one; the narrow one keeps just its two ends.
+    expect(wide.ticks).toHaveLength(6);
+    expect(narrow.ticks).toHaveLength(2);
+    expect(wide.ticks[0].at).toBe(PAD);
+    expect(wide.ticks[5].at).toBe(790);
+  });
+});
+
+describe('unitScale', () => {
+  test('one step per event, whatever the gaps between them', ({ expect }) => {
+    // The third event is a hundred times further from the second than the second is from the first;
+    // on this axis that lull is one step like any other.
+    const scale = unitScale({ times: [0, 10, 1_010], step: STEP, pad: PAD });
+    expect(scale.at(0)).toBe(PAD);
+    expect(scale.at(10)).toBe(30);
+    expect(scale.at(1_010)).toBe(50);
+  });
+
+  test('out of order and duplicate instants land on the same units', ({ expect }) => {
+    const scale = unitScale({ times: [1_010, 10, 0, 10], step: STEP, pad: PAD });
+    expect([scale.at(0), scale.at(10), scale.at(1_010)]).toEqual([PAD, 30, 50]);
+  });
+
+  test('an instant between two events sits proportionally between their units', ({ expect }) => {
+    const scale = unitScale({ times: [0, 100], step: STEP, pad: PAD });
+    expect(scale.at(25)).toBe(15);
+    expect(scale.at(50)).toBe(20);
+  });
+
+  test('an instant outside the events clamps to the nearest end', ({ expect }) => {
+    const scale = unitScale({ times: [100, 200], step: STEP, pad: PAD });
+    expect(scale.at(0)).toBe(PAD);
+    expect(scale.at(10_000)).toBe(30);
+  });
+
+  test('the width ends at the newest event, with no empty unit after it', ({ expect }) => {
+    expect(unitScale({ times: [0, 10, 20], step: STEP, pad: PAD }).width).toBe(2 * PAD + 2 * STEP);
+  });
+
+  test('no events is a drawing with no axis rather than a division by zero', ({ expect }) => {
+    const scale = unitScale({ times: [], step: STEP, pad: PAD });
+    expect(scale.at(1_234)).toBe(PAD);
+    expect(scale.ticks).toEqual([]);
+    expect(scale.width).toBe(2 * PAD);
+  });
+
+  test('ticks are event ordinals, strided so their labels cannot collide', ({ expect }) => {
+    // A step as wide as a label leaves room for one tick per event.
+    expect(unitScale({ times: [0, 1, 2, 3, 4, 5], step: 40, pad: PAD }).ticks).toEqual([
+      { at: PAD, label: '#1' },
+      { at: PAD + 40, label: '#2' },
+      { at: PAD + 80, label: '#3' },
+      { at: PAD + 120, label: '#4' },
+      { at: PAD + 160, label: '#5' },
+      { at: PAD + 200, label: '#6' },
+    ]);
+    // Half that, and only every third event can carry one.
+    expect(unitScale({ times: [0, 1, 2, 3, 4, 5], step: STEP, pad: PAD }).ticks).toEqual([
+      { at: PAD, label: '#1' },
+      { at: PAD + 3 * STEP, label: '#4' },
+    ]);
+  });
+
+  test('a single event still labels itself', ({ expect }) => {
+    expect(unitScale({ times: [7], step: STEP, pad: PAD }).ticks).toEqual([{ at: PAD, label: '#1' }]);
+  });
+});

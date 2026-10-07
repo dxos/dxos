@@ -11,6 +11,6 @@ import { ProjectOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet.handlers);
   }),
 );

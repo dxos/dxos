@@ -4,18 +4,19 @@
 
 import { useEffect } from 'react';
 
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomInPlace, zoomTo } from '@dxos/react-ui-canvas';
 import { isTruthy } from '@dxos/util';
 
-import { type ActionHandler } from '../actions';
-import { type TestId } from '../components';
-import { doLayout, fireBullet, getCenter, getRect, rectUnion } from '../layout';
-import { createRectangle } from '../shapes';
-import { createId, itemSize } from '../testing';
-import { type CanvasBoard, isPolygon } from '../types';
-import { useEditorContext } from './useEditorContext';
+import { type ActionHandler } from '../actions/index.ts';
+import { type TestId } from '../components/index.ts';
+import { doLayout, fireBullet, getCenter, getRect, rectUnion } from '../layout/index.ts';
+import { createRectangle } from '../shapes/index.ts';
+import { createId, itemSize } from '../testing/index.ts';
+import { type CanvasBoard, isPolygon } from '../types/index.ts';
+import { useEditorContext } from './useEditorContext.ts';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
@@ -161,7 +162,7 @@ export const useActionHandler = () => {
           const { ids = selection.getSelectedIds() } = action;
           const nodes = ids.map((id: string) => graph.getNode(id)).filter(isTruthy);
           const edges = ids.map((id: string) => graph.getEdge(id)).filter(isTruthy);
-          clipboard.clear().builder.addNodes(nodes).addEdges(edges);
+          clipboard.clear().pipe(GraphModel.addNodes(nodes), GraphModel.addEdges(edges));
           return true;
         }
         case 'paste': {

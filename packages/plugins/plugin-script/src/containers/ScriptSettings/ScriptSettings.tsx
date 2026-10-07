@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, useTranslation } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
-
-import * as Settings from '../../types/Settings';
+import { Settings } from '#types';
 
 export type ScriptSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
@@ -19,8 +19,8 @@ export type ScriptSettingsProps = AppSurface.SettingsProps<
   }
 >;
 
-export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: ScriptSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const ScriptSettings = ({ settings, onSettingsChange, scope, onAuthenticate }: ScriptSettingsProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Form.Root
@@ -32,15 +32,19 @@ export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: S
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             {/* TODO(wittjosiah): Hide outside of dev environments. */}
-            <Form.Row label={t('authenticate-action.label')} description={t('authenticate-action.description')}>
-              <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
+            <Form.Field
+              standalone
+              label={t('authenticate-action.label')}
+              description={t('authenticate-action.description')}
+            >
+              <Button.Root disabled={!onSettingsChange} onClick={onAuthenticate}>
                 {t('authenticate-button.label')}
-              </Button>
-            </Form.Row>
-            <Form.FieldSet />
-          </Form.Section>
+              </Button.Root>
+            </Form.Field>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -4,25 +4,37 @@
 
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { SettingsOperation } from '../../operations';
+import { SettingsOperation } from '../../operations/index.ts';
+import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
-export type PluginRegistryButtonProps = Partial<Omit<ComponentPropsWithoutRef<typeof IconButton>, 'icon' | 'label'>>;
+export type PluginRegistryButtonProps = Pick<
+  ComponentPropsWithoutRef<typeof Button.Root>,
+  'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
+>;
 
 /**
  * Icon button that opens the plugin registry via {@link SettingsOperation.OpenPluginRegistry}.
  * Composable: forwards ref/props so it works on its own or as a Slot child (e.g. `Dialog.Close asChild`).
+ *
+ * Renders nothing in a build without the registry. A `Slot` parent needs an element child, so a
+ * caller wrapping this in `asChild` must gate on {@link usePluginRegistryAvailable} itself.
  */
 export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
-    const { invokePromise } = useOperationInvoker();
+    const { t } = UiHooks.useTranslation(osTranslations);
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const available = usePluginRegistryAvailable();
+    if (!available) {
+      return null;
+    }
 
     return (
-      <IconButton
+      <Button.Root
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

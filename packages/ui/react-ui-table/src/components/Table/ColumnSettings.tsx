@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Registry, type View } from '@dxos/echo';
-import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { type ModalController, type TableModel } from '../../model';
+import { type ModalController, type TableModel } from '../../model/index.ts';
 
 type ColumnSettingsProps = {
   registry?: Registry.Registry;
@@ -60,22 +61,22 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
   }
 
   return (
-    <Popover.Root modal={false} open={state?.type === 'columnSettings'}>
-      <Popover.VirtualTrigger virtualRef={modals.trigger} />
-      <Popover.Portal>
-        <Popover.Content classNames='md:w-64'>
-          <Popover.Viewport>
-            <FieldEditor
-              projection={model.projection}
-              field={field}
-              registry={registry}
-              onSave={handleSave}
-              onCancel={handleCancel}
-            />
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+    <Popover.Root
+      modal={false}
+      open={state?.type === 'columnSettings'}
+      positioning={VirtualAnchor.virtualAnchor(modals.trigger)}
+    >
+      <Popover.Content classNames='md:w-64'>
+        <Popover.Body>
+          <FieldEditor
+            projection={model.projection}
+            field={field}
+            registry={registry}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };

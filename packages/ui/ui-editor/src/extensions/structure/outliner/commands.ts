@@ -3,13 +3,13 @@
 //
 
 import { getIndentUnit } from '@codemirror/language';
-import { type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
+import { Annotation, type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
-import { escapeLinkLabel } from '../../language/markdown';
-import { blockSelectionField, setBlockSelection } from '../blocks';
-import { mergeRanges, selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd';
-import { type Item, getRange, treeFacet } from './tree';
+import { escapeLinkLabel } from '../../language/markdown/index.ts';
+import { blockSelectionField, setBlockSelection } from '../blocks/index.ts';
+import { mergeRanges, selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd.ts';
+import { type Item, getRange, treeFacet } from './tree.ts';
 
 //
 // Menu / action scope.
@@ -26,6 +26,36 @@ export const getActionScope = (state: EditorState): Item[] => {
   const found =
     anchors.length > 0 ? anchors.map((anchor) => tree.find(anchor)) : [tree.find(state.selection.main.from)];
   return found.filter((item): item is Item => item != null);
+};
+
+//
+// Exit.
+//
+
+/** Marks the transaction that turns an empty item into a blank line, so the edit filter admits it. */
+export const exitItemAnnotation = Annotation.define<boolean>();
+
+/**
+ * Enter on an empty, childless item ends the list there: the marker goes, a blank line separates the
+ * list from what follows, and the caret lands on the line below it. The separator is what makes the
+ * next text a paragraph of its own rather than the item's lazy continuation. Mid-list this splits the
+ * list in two. Anything else is left to the markdown continuation.
+ */
+export const exitEmptyItem: Command = (view: EditorView) => {
+  const pos = view.state.selection.main.from;
+  const tree = view.state.facet(treeFacet);
+  const item = tree.find(pos);
+  if (!item || item.children.length > 0 || item.contentRange.from !== item.contentRange.to) {
+    return false;
+  }
+
+  const line = view.state.doc.lineAt(item.contentRange.from);
+  view.dispatch({
+    changes: { from: line.from, to: line.to, insert: '\n' },
+    selection: EditorSelection.cursor(line.from + 1),
+    annotations: exitItemAnnotation.of(true),
+  });
+  return true;
 };
 
 //
@@ -162,6 +192,20 @@ export type ItemLink = {
   url: string;
 };
 
+/** A whole item consisting of one markdown link, e.g. the result of {@link replaceItemWithLink}. */
+const ITEM_LINK = /^\[[^\]]*\]\([^)]+\)$/;
+
+/**
+ * Whether the action scope's first item is already a single markdown link.
+ *
+ * Converting such an item again would replace the link with a link to a NEW object titled after the
+ * old link's label, silently orphaning the first one — so callers gate the convert action on this.
+ */
+export const isItemLink = (state: EditorState): boolean => {
+  const text = getItemText(state)?.trim();
+  return !!text && ITEM_LINK.test(text);
+};
+
 /**
  * Replaces the action scope's first item with a markdown link to `url`.
  * A task marker is demoted to a bullet since completion state now belongs to the linked object.
@@ -263,6 +307,7 @@ export const commands = (): Extension =>
     //
     {
       key: 'Enter',
+      run: exitEmptyItem,
       shift: (view) => {
         const pos = view.state.selection.main.from;
         const insert = '\n  '; // TODO(burdon): Fix parsing.

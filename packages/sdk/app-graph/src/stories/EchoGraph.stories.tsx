@@ -2,28 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
-import * as CreateAtom from '../atoms';
-import * as Graph from '../graph';
-import * as GraphBuilder from '../graph-builder';
-import * as Node from '../node';
-import { JsonTree } from './Tree';
+import * as Graph from '../AppGraph.ts';
+import * as GraphBuilder from '../AppGraphBuilder.ts';
+import * as CreateAtom from '../atoms.ts';
+import { JsonTree } from './Tree.tsx';
 
 const DEFAULT_PERIOD = 500;
 
@@ -45,14 +52,14 @@ const actionWeights = {
   [Action.RENAME_OBJECT]: 4,
 };
 
-const createGraph = (client: Client, registry: Registry.Registry): Graph.ExpandableGraph => {
+const createGraph = (client: Client, registry: Registry.AtomRegistry): Graph.ExpandableGraph => {
   const spaceBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'space',
     connector: (node) =>
       Atom.make((get) =>
         Function.pipe(
           get(node),
-          Option.flatMap((node) => (node.id === Node.RootId ? Option.some(node) : Option.none())),
+          Option.flatMap((node) => (node.id === GraphNode.RootId ? Option.some(node) : Option.none())),
           Option.map(() => {
             const spaces = get(CreateAtom.fromObservable(client.spaces)) ?? [];
             return spaces
@@ -101,9 +108,9 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
   GraphBuilder.addExtension(builder, objectBuilderExtension);
   const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    Graph.expand(graph, id, 'child');
+    Graph.expandSync(graph, id, 'child');
   });
-  Graph.expand(graph, Node.RootId, 'child');
+  Graph.expandSync(graph, GraphNode.RootId, 'child');
   (window as any).graph = graph;
   return graph;
 };
@@ -204,40 +211,35 @@ const Controls = ({ children }: PropsWithChildren) => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <IconButton
+        <Button.Root
           icon={generating ? 'ph--pause--regular' : 'ph--play--regular'}
           label={generating ? 'Pause' : 'Play'}
           onClick={() => setGenerating((generating) => !generating)}
         />
         <div className='relative' title='mutation period'>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Input.Root
               autoComplete='off'
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
-          </Input.Root>
-          <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
+          </Field.Root>
+          <Icon.Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
-        <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
-        <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
-          <Select.TriggerButton placeholder='Select value' />
-          <Select.Portal>
-            <Select.Content>
-              <Select.ScrollUpButton />
-              <Select.Viewport>
-                {Object.keys(actionWeights).map((action) => (
-                  <Select.Option key={action} value={action}>
-                    {action}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
-            </Select.Content>
-          </Select.Portal>
+        <Button.Root icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
+        <Select.Root
+          value={action ? [action.toString()] : []}
+          onValueChange={({ value: [value] }) => setAction(Object.values(Action).find((action) => action === value))}
+          items={Object.keys(actionWeights).map((action) => ({ value: action, label: action }))}
+        >
+          <Select.Trigger placeholder='Select value' />
+          <Select.Content>
+            {Object.keys(actionWeights).map((action) => (
+              <Select.Item key={action} item={{ value: action, label: action }} />
+            ))}
+          </Select.Content>
         </Select.Root>
       </div>
       {children}
@@ -319,10 +321,10 @@ const GraphTreeItem = ({
         onClick={() => onSelect(id)}
       >
         {expandable ? (
-          <IconButton
+          <Button.Root
             iconOnly
             variant='ghost'
-            density='sm'
+            size='sm'
             icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
             label={open ? 'Collapse' : 'Expand'}
             onClick={(event) => {
@@ -332,9 +334,9 @@ const GraphTreeItem = ({
             }}
           />
         ) : (
-          <Icon icon='ph--dot--regular' classNames={getSize(4)} />
+          <Icon.Icon icon='ph--dot--regular' classNames={getSize(4)} />
         )}
-        <Icon icon={icon} classNames={getSize(4)} />
+        <Icon.Icon icon={icon} classNames={getSize(4)} />
         <span className='truncate'>{node?.id ?? id}</span>
       </div>
       {expandable && open && (
@@ -366,7 +368,7 @@ const GraphTree = ({ graph }: { graph: Graph.ExpandableGraph }) => {
     <div role='tree' className='p-2 overflow-auto'>
       <GraphTreeItem
         graph={graph}
-        id={Node.RootId}
+        id={GraphNode.RootId}
         ancestors={NO_ANCESTORS}
         selectedId={selectedId}
         onSelect={onSelect}

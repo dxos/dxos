@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-
-import { type AllowedAxis } from '@dxos/react-ui';
+import { createContext } from '@dxos/react-hooks';
 import { type DndContainerHandler, type DndDraggingState, type DndLocation } from '@dxos/react-ui-dnd';
+import { type AllowedAxis } from '@dxos/ui-types';
 
 // Kept out of `Container.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the context and hook exported beside them force a full page reload on every edit.

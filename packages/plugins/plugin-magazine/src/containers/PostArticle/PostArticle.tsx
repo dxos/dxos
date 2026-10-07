@@ -2,24 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
 import { meta } from '#meta';
+import { FeedOperation, Subscription } from '#types';
 
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
-import { PostToolbar } from './PostToolbar';
+import { PostToolbar } from './PostToolbar.tsx';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -28,7 +28,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
   // parent plank — resolve to the parent so the toolbar reads as attended (active).
   const toolbarAttendableId =
     attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const registry = useContext(RegistryContext);
   const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
@@ -130,12 +130,12 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onSetStarred={handleSetStarred}
         onSetArchived={handleSetArchived}
         onMarkUnread={handleMarkUnread}
-        onRefresh={() => void handleRefresh()}
         onOpenOriginal={handleOpenOriginal}
+        onRefresh={() => void handleRefresh()}
       />
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

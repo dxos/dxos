@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { type ModelVariant } from '../models';
+import { type ModelVariant } from '../models.ts';
 
 // Runs a task across the model ladder with fair timing. For each variant it WARMS the model once
 // (a cold Ollama load is a 10–30s VRAM spike that would poison the average), then runs every item

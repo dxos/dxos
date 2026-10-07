@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom, type Registry } from '@effect-atom/atom';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Schema from 'effect/Schema';
 
 /**
@@ -17,7 +18,7 @@ export type BackendName = 'memory' | 'local';
 export interface Aspect<T, Encoded = T> {
   readonly key: string;
   readonly backend: BackendName;
-  readonly schema: Schema.Schema<T, Encoded>;
+  readonly schema: Schema.Codec<T, Encoded>;
   readonly defaultValue: () => T;
 }
 
@@ -54,7 +55,7 @@ export interface Backend {
 }
 
 export interface ManagerOptions {
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   readonly backends: Record<BackendName, Backend>;
 }
 
@@ -63,7 +64,7 @@ export interface ManagerOptions {
  * effect-atom registry so React hooks and graph atoms observe changes uniformly.
  */
 export class Manager {
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
   readonly #backends: Record<BackendName, Backend>;
 
   constructor({ registry, backends }: ManagerOptions) {

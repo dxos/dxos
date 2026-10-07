@@ -2,19 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
-import { EffectEx } from '@dxos/effect';
+import * as FunctionsAiError from '@dxos/compute/FunctionsAiError';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
 
 const makeStubService = (response: Response): EdgeFunctionEnv.FunctionsAiService => ({
   fetch: async () => response as any,
@@ -32,7 +31,7 @@ const extractDefect = (exit: Exit.Exit<unknown, unknown>): Error | null => {
   if (Exit.isSuccess(exit)) {
     return null;
   }
-  return (Chunk.toReadonlyArray(Cause.defects(exit.cause))[0] as Error | undefined) ?? null;
+  return (exit.cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect)[0] as Error | undefined) ?? null;
 };
 
 describe('FunctionsAiHttpClient', () => {
@@ -55,7 +54,7 @@ describe('FunctionsAiHttpClient', () => {
 
     const exit = await Effect.runPromiseExit(runRequest(service));
     const error = extractDefect(exit);
-    expect(error).toBeInstanceOf(FunctionsAiMemoizationMissError);
+    expect(error).toBeInstanceOf(FunctionsAiError.MemoizationMissError);
     expect(error?.name).toBe('FunctionsAiMemoizationMissError');
     expect((error as any)?.context?.cacheKey).toBe('abc');
     expect((error as any)?.context?.status).toBe(500);
@@ -74,7 +73,7 @@ describe('FunctionsAiHttpClient', () => {
 
     const exit = await Effect.runPromiseExit(runRequest(service));
     const error = extractDefect(exit);
-    expect(error).toBeInstanceOf(FunctionsAiUpstreamError);
+    expect(error).toBeInstanceOf(FunctionsAiError.UpstreamError);
     expect((error as any)?.context?.type).toBe('overloaded_error');
     expect((error as any)?.context?.status).toBe(529);
   });

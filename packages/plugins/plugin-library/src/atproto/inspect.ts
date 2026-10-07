@@ -3,12 +3,12 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type PublishFieldNote, type PublishInspection } from '@dxos/schema';
 
-import { type BookSuggestion, lookupHiveBook } from '../operations/bookhive';
-import { browserCorsProxy } from '../operations/cors';
-import { getHiveId } from './hive';
+import { type BookSuggestion, lookupHiveBook } from '../operations/bookhive.ts';
+import { browserCorsProxy } from '../operations/cors.ts';
+import { getHiveId } from './hive.ts';
 
 const isEmpty = (value: unknown): boolean =>
   value == null || value === '' || (Array.isArray(value) && value.length === 0);

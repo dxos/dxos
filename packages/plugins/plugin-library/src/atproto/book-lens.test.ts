@@ -8,9 +8,10 @@ import { Obj, Ref } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
-import * as Book from '../types/Book';
-import { bookLens } from './book-lens';
-import { canPublishBook } from './hive';
+import { Book } from '#types';
+
+import { bookLens } from './book-lens.ts';
+import { canPublishBook } from './hive.ts';
 import bookLexicon from './lexicons/buzz.bookhive.book.json';
 
 // ECHO-only fields (private) and catalog metadata not carried by buzz.bookhive.book — none may appear

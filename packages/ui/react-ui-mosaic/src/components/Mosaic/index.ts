@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export { styles as mosaicStyles } from './styles';
+export { styles as mosaicStyles } from './styles.ts';
 
-export * from './extension';
+export * from './extension.ts';
 
-export * from './Mosaic';
+export * from './Mosaic.ts';

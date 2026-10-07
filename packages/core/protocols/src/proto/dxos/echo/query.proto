@@ -7,7 +7,6 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 
 import "dxos/keys.proto";
-import "dxos/echo/filter.proto";
 import "dxos/echo/object.proto";
 import "dxos/echo/indexing.proto";
 
@@ -19,9 +18,6 @@ message QueryRequest {
 
   /// JSON-encoded `QueryAST.Query`.
   string query = 5;
-
-  /// @deprecated Use `query` instead.
-  optional dxos.echo.filter.Filter filter = 2;
 }
 
 /**
@@ -67,10 +63,4 @@ message QueryResponse {
   optional string queryId = 1;
   repeated QueryResult results = 2;
   repeated dxos.echo.object.EchoObject objects = 3;
-}
-
-service QueryService {
-  rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
-  rpc ExecQuery(QueryRequest) returns (stream QueryResponse);
-  rpc Reindex(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

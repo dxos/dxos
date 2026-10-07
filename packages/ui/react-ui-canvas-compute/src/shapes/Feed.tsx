@@ -5,28 +5,23 @@
 import React, { Fragment } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, type BoxActionHandler } from './common';
-import { type FeedShape } from './feed-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box } from './common/index.ts';
+import { type FeedShape } from './feed-def.ts';
 
 export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const items = runtime.outputs[DEFAULT_OUTPUT]?.type === 'executed' ? runtime.outputs[DEFAULT_OUTPUT].value : [];
 
-  const handleAction: BoxActionHandler = (action) => {
-    if (action === 'run') {
-      runtime.evalNode();
-    }
-  };
-
   return (
-    <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
+    <Box shape={shape} status={`${items.length} items`}>
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
+        <ScrollArea.Viewport classNames='divide-y divide-separator-subtle'>
           {[...items].map((item, i) => (
             <FeedItem key={i} classNames='p-1 px-2' item={item} />
           ))}
@@ -36,7 +31,7 @@ export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   );
 };
 
-export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+export const FeedItem = ({ classNames, item }: Util.ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
     return <div className={mx(classNames, 'whitespace-pre-wrap')}>{item}</div>;
   }
@@ -45,7 +40,7 @@ export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
     <div className={mx('grid grid-cols-[80px_1fr]', classNames)}>
       {Object.entries(item).map(([key, value]) => (
         <Fragment key={key}>
-          <div className='p-1 text-xs text-subdued'>{key}</div>
+          <div className='p-1 text-xs text-fg-subtle'>{key}</div>
           <div>{typeof value === 'string' ? value : JSON.stringify(value)}</div>
         </Fragment>
       ))}

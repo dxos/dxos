@@ -13,16 +13,17 @@ import { AccessToken } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
+import { InboxPlugin } from '#plugin';
 import { initializeMailbox } from '#testing';
+import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as Mailbox from '../../types/Mailbox';
-import { InitializeMailbox } from './InitializeMailbox';
+import { InitializeMailbox } from './InitializeMailbox.tsx';
 
 type StoryArgs = {
   withToken?: boolean;
@@ -45,8 +46,8 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { withToken = false } }) => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [AccessToken.AccessToken, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -64,9 +65,9 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

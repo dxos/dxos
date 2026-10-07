@@ -2,6 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './events';
-export * from './meta';
-export * from './types';
+export * as BlueskyEvents from './BlueskyEvents.ts';
+export * as BlueskyPlugin from './BlueskyPlugin.ts';

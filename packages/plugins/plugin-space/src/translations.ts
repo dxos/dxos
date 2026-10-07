@@ -3,7 +3,7 @@
 //
 
 import { Collection, Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -115,6 +115,8 @@ export const translations = [
         'plugin.name': 'Spaces',
         'navigation-failed-toast.title': 'Link could not be processed',
         'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
+        'join-by-key-failed-toast.title': 'Couldn’t join space',
+        'join-by-key-failed-toast.description': 'Couldn’t reach a member of this space — try again later.',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
@@ -125,11 +127,13 @@ export const translations = [
         'import-space-dialog.title': 'Import space',
         'import-space-dialog.description': 'Importing from a backup will create a new space from the file.',
         'import-space-dialog.upload.label': 'Drag file here or click to browse',
+        'import-space-dialog.importing.label': 'Importing {{filename}}…',
+        'import-space-failed.title': 'Could not import space',
         'empty-space.message': 'No documents',
         'empty-tree.message': 'No spaces',
         'unnamed-space.label': 'New space',
         'closed-space.label': 'Closed',
-        'loading-space.label': 'Loading space…',
+        'pending-space.label': 'Loading space…',
         'lock-space.label': 'Lock space',
         'unlock-space.label': 'Unlock space',
         'rename-space.label': 'Rename space',
@@ -161,21 +165,21 @@ export const translations = [
         'duplicate-object.label': 'Duplicate object',
         'object-deleted.label': 'Object deleted',
         'objects-deleted.label': 'Objects deleted',
-        'go-to-object.alt': 'Open',
-        'go-to-object.label': 'Open object',
-        'found-object.label': 'Ready.',
-        'found-object.description': 'The requested object is now available.',
-        'waiting-for-object.label': 'Loading…',
-        'waiting-for-object.description': 'The requested object is still being synchronized.',
-        'object-not-found.label': 'Nothing found.',
-        'object-not-found.description':
-          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'archive-object.label': 'Archive',
+        'unarchive-object.label': 'Unarchive',
+        'objects-archived.label': 'Archived',
+        'objects-unarchived.label': 'Unarchived',
+        'archived.label': 'Archived',
         'missing-object.message': 'Object not available.',
         'missing-object.description':
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'create-object-in-space.label': 'Add to space',
         'create-object-in-collection.label': 'Add to collection',
         'remove-from-collection.label': 'Remove from collection',
+        'add-to-collection-dialog.title': 'Add to collection',
+        'add-to-collection-dialog.placeholder': 'Search collections…',
+        'add-to-collection-failed.title': 'Could not add to collection',
+        'show-original.label': 'Show original',
         'create-object-in-system-collection.label': 'Add to system collection',
         'new-type.label': 'New type',
         'add-view-to-schema.label': 'Add view for type',
@@ -222,8 +226,13 @@ export const translations = [
         'show-all.label': 'Show all',
         'no-sync-status.label': 'No space with missing objects.',
         'create-space-dialog.title': 'Create Space',
+        'create-space-dialog.create.label': 'Create',
         'create-space-dialog.error.message': 'Failed to create space. Please try again.',
+        'create-space-dialog.templates.label': 'Templates',
+        'create-space-dialog.templates.description': 'Select a pre-built template to get started quickly.',
         'create-object-dialog.title': 'Create {{object}}',
+        'object-form-confirm.label': 'Create',
+        'object-form-cancel.label': 'Cancel',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
         'plugin-subtitle.label': '{{plugin}} Plugin',
@@ -247,6 +256,7 @@ export const translations = [
         'settings-panel.label': 'Open settings',
         'related-actions.label': 'Related Actions',
         'related-objects.label': 'Related Objects',
+        'type-filter.label': 'Filter by type',
         'row-details-no-selection.label': 'No objects selected',
         'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
@@ -257,6 +267,14 @@ export const translations = [
         'members.description': 'Current space members and pending invitations.',
         'members.label': 'Members',
         'invitations.label': 'Invitations',
+        'add-known-people.label': 'Add from contacts',
+        'add-members-failed-toast.title': 'Some people could not be added',
+        'add-members-failed-toast.description': 'Could not add: {{names}}',
+        'add-members-not-notified-toast.title': 'Added, but not notified',
+        'add-members-not-notified-toast.description':
+          '{{names}} was added but couldn’t be notified; share the space link instead.',
+        'add-members-not-notified-account-toast.description':
+          '{{names}} was added but couldn’t be notified: notifications need an account on this deployment. Share the space link instead.',
         'space-invitation.description': 'Manage invitations to the space.',
         'qr-code.description': 'Share this QR code, or copy the URL and share it with the person you want to invite.',
         'locked-space.description': 'This space is locked, unlock it to invite new members.',
@@ -283,7 +301,6 @@ export const translations = [
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'space-id.title': 'Space ID',
         'space-id.description': 'The unique identifier for this space. Use this to connect external services.',
-        'copy-space-id.label': 'Copy space ID',
 
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',
@@ -332,7 +349,7 @@ export const translations = [
         'layout-table.label': 'Table',
         'layout-duplicates.label': 'Duplicates',
         'open-object.label': 'Open object',
-        'search-placeholder.label': 'Filter...',
+        'search-placeholder.label': 'Filter objects...',
         'search-no-results.message': 'No matches.',
         'item-count.label_zero': 'No items',
         'item-count.label_one': '1 item',
@@ -381,4 +398,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

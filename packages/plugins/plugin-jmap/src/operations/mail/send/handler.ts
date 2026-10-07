@@ -2,21 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
-import { JmapCredentials } from '../../../services';
+import { Jmap, JmapMail } from '#apis';
+import { JmapCredentials } from '#services';
+import { JmapOperation } from '#types';
+
+import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors.ts';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-export default InboxOperation.JmapSend.pipe(
+export default JmapOperation.JmapSend.pipe(
   Operation.withHandler(({ message, connection: connectionRef }) =>
     Effect.gen(function* () {
       log('sending email via jmap', { connection: connectionRef.uri });
@@ -88,7 +90,7 @@ export default InboxOperation.JmapSend.pipe(
         // draft to match the copy that will sync down.
         sentTag: { ...SystemTags.systemTagKey('sent'), label: SystemTags.SystemTag.sent.label },
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(JmapCredentials.fromConnection(connectionRef))),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, JmapCredentials.fromConnection(connectionRef)))),
   ),
   Operation.opaqueHandler,
 );

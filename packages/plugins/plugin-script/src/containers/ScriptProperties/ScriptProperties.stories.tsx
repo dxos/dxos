@@ -14,7 +14,8 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -23,7 +24,7 @@ import { Text } from '@dxos/schema';
 import { createScript } from '#testing';
 import { translations } from '#translations';
 
-import { ScriptProperties } from './ScriptProperties';
+import { ScriptProperties } from './ScriptProperties.tsx';
 
 type StoryArgs = {};
 
@@ -49,8 +50,8 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Script.Script, Operation.PersistentOperation, Skill.Skill, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -60,7 +61,7 @@ const meta = {
               createScript(space);
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

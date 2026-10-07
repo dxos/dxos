@@ -4,7 +4,7 @@
 
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 
-import type * as Model from '../types/Model';
+import { Model } from '#types';
 
 /** Result of a boolean operation: the combined solid and its world position. */
 export type BooleanResult = {

@@ -9,10 +9,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import * as Account from '../types/Account';
-import { ShareIdentity } from './definitions';
+import { Account } from '#types';
 
-const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(
+import * as ClientOperation from '../types/ClientOperation.ts';
+
+const handler: Operation.WithHandler<typeof ClientOperation.ShareIdentity> = ClientOperation.ShareIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });

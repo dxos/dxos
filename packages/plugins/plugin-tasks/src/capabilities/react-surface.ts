@@ -6,14 +6,34 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Outline, TaskSet } from '@dxos/types';
+import * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
+import * as Position from '@dxos/util/Position';
 
-import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
+import {
+  JournalArticle,
+  OutlineArticle,
+  OutlineCard,
+  QuickEntryDialog,
+  RemoteSessionCard,
+  TaskArticle,
+  TaskSetArticle,
+} from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
+import { Journal } from '#types';
 
-import * as Journal from '../types/Journal';
+/**
+ * The section role, typed for an embedded outline: same NSID (role identity is structural), plus the
+ * optional `taskSet` an embedder passes so promoted items are filed into ITS ledger rather than the
+ * outline's own — a project's inline outline promotes into the project's task set.
+ */
+const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
+  Role.make('org.dxos.role.section');
+
+const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean }>> =
+  Role.make('org.dxos.role.section');
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -29,23 +49,57 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
+        id: 'card.remoteSession',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.CardContent, RemoteSession.RemoteSession),
+        component: RemoteSessionCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
         id: 'article.outline',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Outline.Outline),
-          AppSurface.object(AppSurface.Section, Outline.Outline),
-        ),
+        filter: AppSurface.object(AppSurface.Article, Outline.Outline),
         component: OutlineArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
-        id: 'article.task-set',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
-          AppSurface.object(AppSurface.Section, TaskSet.TaskSet),
-        ),
+        // Its own surface rather than a second filter on the article: only the embedded (section) case
+        // carries `taskSet`, and a union data type could not destructure it.
+        id: 'section.outline',
+        filter: AppSurface.object(OutlineSection, Outline.Outline),
+        component: OutlineArticle,
+        // No toolbar when embedded: the host surface (e.g. `ProjectArticle`) owns the toolbar, and a
+        // second one inside its section reads as a nested editor.
+        props: ({ role, data: { subject, attendableId, taskSet } }) => ({
+          role,
+          subject,
+          attendableId,
+          taskSet,
+          toolbar: false,
+        }),
+      }),
+      Surface.create({
+        // A single task's detail: the plank a row opens, reused as the reader moves down a list.
+        id: 'article.task',
+        filter: AppSurface.object(AppSurface.Article, Task.Task),
+        component: TaskArticle,
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
+      }),
+      Surface.create({
+        id: 'article.taskSet',
+        filter: AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'section.taskSet',
+        filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
+        component: TaskSetArticle,
+        props: ({ role, data: { subject, attendableId, showDescription } }) => ({
+          role,
+          subject,
+          attendableId,
+          showDescription,
+        }),
       }),
       Surface.create({
         id: 'card.outline',

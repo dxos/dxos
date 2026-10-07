@@ -2,25 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { GoogleMail } from '../../../apis';
-import { GoogleCredentials } from '../../../services/google-credentials';
+import { GoogleMail } from '#apis';
+
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
 
 const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([
     {
       service: 'google.com',
       // TODO(burdon): Rename `credential`.
-      apiKey: Config.redacted('GOOGLE_ACCESS_TOKEN'),
+      apiKey: Config.Redacted('GOOGLE_ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,

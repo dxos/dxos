@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Card, Icon } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 export type GalleryImageProps = {
@@ -28,19 +30,19 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
       {/* col-span-full so the poster spans Card.Root's grid (icon|title|menu); fixed ratio reserves height. */}
       <div className='col-span-full overflow-hidden bg-modal-surface' style={{ aspectRatio: 16 / 9 }}>
         {src && isVideo ? (
-          <video src={src} muted playsInline preload='metadata' className='block w-full h-full object-cover' />
+          <video src={src} muted playsInline preload='metadata' className='block dx-fill object-cover' />
         ) : src ? (
-          <img src={src} alt={alt ?? ''} loading='lazy' className='block w-full h-full object-cover' />
+          <img src={src} alt={alt ?? ''} loading='lazy' className='block dx-fill object-cover' />
         ) : (
-          <div role='img' aria-label={alt} className='w-full h-full' />
+          <div role='img' aria-label={alt} className='dx-fill' />
         )}
       </div>
       {alt ? (
         <Card.Header>
-          <Card.Block>
-            <Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size={5} />
-          </Card.Block>
-          <Card.Title classNames='text-description'>{alt}</Card.Title>
+          <Layout.Block>
+            <Icon.Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size='lg' />
+          </Layout.Block>
+          <Card.Title tone='muted'>{alt}</Card.Title>
         </Card.Header>
       ) : null}
     </Card.Root>

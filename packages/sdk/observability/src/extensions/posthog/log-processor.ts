@@ -22,7 +22,7 @@ export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) =
     return;
   }
 
-  const additionalProperties: Record<string, string | boolean | number> = {};
+  const additionalProperties: Record<string, unknown> = {};
   const { filename, line } = entry.computedMeta;
   if (filename !== undefined && line !== undefined) {
     additionalProperties.transaction = `${filename}:${line}`;
@@ -39,15 +39,27 @@ export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) =
     additionalProperties.invariant_violation = true;
   }
 
-  // Forward primitive context values so callers can attach queryable attributes (e.g. fatal_dialog: true).
+  // Forward the whole context, nesting included: PostHog stores structured property values and
+  // OTEL's log data model takes a nested `AnyValueMap`, so dropping them only loses detail. A
+  // top-level primitive is still what the PostHog UI filter picker can select on, so callers that
+  // want a queryable attribute (e.g. `fatal_dialog: true`) keep emitting it flat.
   const context = getContextFromEntry(entry);
-  if (context) {
-    for (const [key, value] of Object.entries(context)) {
-      if (typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
-        additionalProperties[key] = value;
-      }
+  for (const [key, value] of Object.entries(context ?? {})) {
+    // The exception is the event; repeating it as a property duplicates its message and stack.
+    if (value instanceof Error || typeof value === 'function' || typeof value === 'symbol') {
+      continue;
+    }
+    if (value !== undefined) {
+      additionalProperties[key] = value;
     }
   }
 
-  posthog.captureException(capturedError, additionalProperties);
+  try {
+    posthog.captureException(capturedError, additionalProperties);
+  } catch (err) {
+    // A processor throws back into `log.error`'s caller: posthog's error coercion has thrown on
+    // exotic error shapes (e.g. an Effect `TimeoutError`), which crashed the fatal-dialog render
+    // and hid the very error it was reporting. Telemetry must never break the reporting path.
+    console.warn('posthog.captureException failed', err);
+  }
 };

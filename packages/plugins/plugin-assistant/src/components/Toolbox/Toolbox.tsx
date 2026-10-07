@@ -9,12 +9,13 @@ import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
-import { type AiChatProcessor } from '../../processor';
-import * as AssistantService from '../../types/AssistantService';
+import { AssistantService } from '#types';
+
+import { type AiChatProcessor } from '../../processor/index.ts';
 
 export type ToolboxProps = {
   services?: { service: AssistantService.ServiceType }[];
@@ -24,10 +25,10 @@ export type ToolboxProps = {
   activeSkills?: readonly Ref.Ref<Skill.Skill>[];
 };
 
-export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
+export const Toolbox = Util.composable<HTMLDivElement, ToolboxProps>(
   ({ functions, services, skills, activeSkills, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
           {skills && skills.length > 0 && (
             <Section
@@ -81,35 +82,34 @@ type SectionProps = {
 
 const Section = ({ title, items, striped }: SectionProps) => {
   const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
-  const gridClassNames = 'grid grid-cols-[8rem_1fr]';
-  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
+  const subGridClassNames = ['text-xs px-2', striped && stripeClassNames];
 
   return (
     <div>
       <h1 className='px-2 text-sm'>{title}</h1>
-      <div className={gridClassNames}>
+      <Layout.Grid cols={['8rem', 'fill']}>
         {items.map(({ name, description, subitems }, i) => (
           <Fragment key={i}>
             {name && (
-              <div className={subGridClassNames}>
-                <div className='truncate text-primary-500'>{name}</div>
+              <Layout.Grid cols='subgrid' classNames={subGridClassNames}>
+                <div className='truncate text-accent-text'>{name}</div>
                 <div className='line-clamp-2'>{description}</div>
-              </div>
+              </Layout.Grid>
             )}
             {subitems?.map(({ name, description }, i) => (
-              <div key={i} className={mx(subGridClassNames, striped && stripeClassNames)}>
+              <Layout.Grid key={i} cols='subgrid' classNames={subGridClassNames}>
                 <div className='truncate'>{name}</div>
-                <div className='line-clamp-3 text-subdued'>{description}</div>
-              </div>
+                <div className='line-clamp-3 text-fg-subtle'>{description}</div>
+              </Layout.Grid>
             ))}
           </Fragment>
         ))}
-      </div>
+      </Layout.Grid>
     </div>
   );
 };
 
-export type ToolboxPanelProps = ThemedClassName<{
+export type ToolboxPanelProps = Util.ThemedClassName<{
   db?: Database.Database;
   processor?: AiChatProcessor;
 }>;

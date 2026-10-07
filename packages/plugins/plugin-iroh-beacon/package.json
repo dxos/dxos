@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-iroh-beacon",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Iroh beacon plugin for peer-to-peer presence over iroh-gossip",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -30,9 +38,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/IrohBeaconPlugin.ts",
-      "types": "./dist/types/src/IrohBeaconPlugin.d.ts",
-      "default": "./dist/lib/IrohBeaconPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -56,15 +64,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./IrohBeaconPlugin": {
+      "source": "./src/IrohBeaconPlugin.ts",
+      "types": "./dist/types/src/IrohBeaconPlugin.d.ts",
+      "import": "./dist/lib/IrohBeaconPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -83,7 +91,6 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

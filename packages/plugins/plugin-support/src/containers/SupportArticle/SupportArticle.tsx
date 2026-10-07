@@ -4,113 +4,121 @@
 
 import React, { useCallback } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Button, Column, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useObject } from '@dxos/echo-react';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
-
-import type * as Support from '../../types/Support';
+import { Support } from '#types';
 
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
-export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [ticket] = useObject(subject);
 
   const handleSetTitle = useCallback(
     (value: string) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.title = value;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const handleSetBody = useCallback(
     (value: string) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.body = value;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const handleSetResolution = useCallback(
     (value: string) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.resolution = value;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const handleStatus = useCallback(
     (status: Support.TicketStatus) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.status = status;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const status = ticket.status ?? 'open';
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{t(`status-${status}.label`)}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <Column.Root>
-          <ScrollArea.Root orientation='vertical' padding>
-            <ScrollArea.Viewport>
-              <Input.Root>
-                <Input.Label>{t('title.label')}</Input.Label>
-                <Input.TextInput value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
-              </Input.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport asChild>
+            <Layout.Container gutter='lg' gap='md'>
+              <Field.Root>
+                <Field.Label>{t('title.label')}</Field.Label>
+                <Input.Root value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
+              </Field.Root>
 
-              <Input.Root>
-                <Input.Label>{t('body.label')}</Input.Label>
-                <Input.TextArea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
-              </Input.Root>
+              <Field.Root>
+                <Field.Label>{t('body.label')}</Field.Label>
+                <Input.Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
+              </Field.Root>
 
               {status === 'resolved' && (
-                <Input.Root>
-                  <Input.Label>{t('resolution.label')}</Input.Label>
-                  <Input.TextArea
+                <Field.Root>
+                  <Field.Label>{t('resolution.label')}</Field.Label>
+                  <Input.Textarea
                     value={ticket.resolution ?? ''}
                     onChange={(event) => handleSetResolution(event.target.value)}
                   />
-                </Input.Root>
+                </Field.Root>
               )}
 
-              <div className='flex items-center gap-2'>
+              <Layout.Flex gap='sm' align='center'>
                 {status === 'open' && (
-                  <Button variant='outline' onClick={() => handleStatus('in_progress')}>
+                  <Button.Root variant='outline' onClick={() => handleStatus('in_progress')}>
                     {t('mark-in-progress.button')}
-                  </Button>
+                  </Button.Root>
                 )}
                 {status !== 'resolved' && (
-                  <Button variant='primary' onClick={() => handleStatus('resolved')}>
+                  <Button.Root variant='primary' onClick={() => handleStatus('resolved')}>
                     {t('resolve.button')}
-                  </Button>
+                  </Button.Root>
                 )}
                 {status === 'resolved' && (
-                  <Button variant='outline' onClick={() => handleStatus('open')}>
+                  <Button.Root variant='outline' onClick={() => handleStatus('open')}>
                     {t('reopen.button')}
-                  </Button>
+                  </Button.Root>
                 )}
-              </div>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Column.Root>
-      </Panel.Content>
+              </Layout.Flex>
+            </Layout.Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { CapabilityManager } from '@dxos/app-framework';
-import type { Client } from '@dxos/client';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { type Hypergraph } from '@dxos/echo';
+import { type Space } from '@dxos/halo';
 
-import { type DiagnosticContext, type DiagnosticProvider, type DiagnosticRunResult } from './types';
+import { type DiagnosticContext, type DiagnosticProvider, type DiagnosticRunResult } from './types.ts';
 
 export type RunDiagnosticsOptions = {
-  readonly client: Client;
+  readonly spaces: Space.ServiceApi;
+  readonly graph: Hypergraph.Hypergraph;
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly providers: readonly DiagnosticProvider[];
   readonly signal: AbortSignal;
@@ -23,7 +25,7 @@ export type RunDiagnosticsOptions = {
  * than aborting the run.
  */
 export const runDiagnostics = async (options: RunDiagnosticsOptions): Promise<DiagnosticRunResult[]> => {
-  const { client, capabilities, providers, signal, onProviderStart, onProviderComplete, onProgress } = options;
+  const { spaces, graph, capabilities, providers, signal, onProviderStart, onProviderComplete, onProgress } = options;
   const results: DiagnosticRunResult[] = [];
   for (let index = 0; index < providers.length; index++) {
     if (signal.aborted) {
@@ -33,7 +35,8 @@ export const runDiagnostics = async (options: RunDiagnosticsOptions): Promise<Di
     onProviderStart?.(provider, index, providers.length);
     const startedAt = Date.now();
     const ctx: DiagnosticContext = {
-      client,
+      spaces,
+      graph,
       capabilities,
       reportProgress: (message) => onProgress?.(provider, message),
       signal,

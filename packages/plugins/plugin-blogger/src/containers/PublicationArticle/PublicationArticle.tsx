@@ -4,27 +4,30 @@
 
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as Connection from '@dxos/plugin-connector/Connection';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-
-import * as Blog from '../../types/Blog';
-import * as BloggerCapabilities from '../../types/BloggerCapabilities';
+import { Blog, BloggerCapabilities } from '#types';
 
 type ViewMode = 'gallery' | 'instructions';
 
@@ -44,11 +47,11 @@ export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publica
  * `plugin-markdown`'s `surface.document`).
  */
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [publication] = useObject(subject);
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const [mode, setMode] = useState<ViewMode>('gallery');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -73,13 +76,17 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   }, [invokePromise, subject]);
 
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
+    void invokePromise(
+      SpaceOperation.RemoveObjects,
+      { objects: [subject] },
+      { spaceId: Obj.getDatabase(subject)?.spaceId },
+    );
   }, [invokePromise, subject]);
 
   // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider
   // plugin (e.g. plugin-typefully); default to the first. The `Connection` it needs is looked up by
   // its access token's `source` (the provider-neutral credential handle).
-  const publishers = useCapabilities(BloggerCapabilities.PublisherService);
+  const publishers = Hooks.useCapabilities(BloggerCapabilities.PublisherService);
   const publisher = publishers[0];
   const db = Obj.getDatabase(subject);
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -193,17 +200,15 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   );
 
   return (
-    <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
+    <>
       <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document'>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
+        <Panel.Header>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Layout.Grid rows={['auto', 'fill']} gap='md' classNames='overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
-            <div className='dx-container'>
+            <div className='dx-expand'>
               {mode === 'gallery' ? (
                 <Masonry.Root Tile={PostTile}>
                   <Masonry.Content>
@@ -214,31 +219,25 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
                 instructionsData && <Surface.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
               )}
             </div>
-          </div>
-        </Panel.Content>
+          </Layout.Grid>
+        </Panel.Body>
       </Panel.Root>
 
-      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialog.Overlay>
-          <AlertDialog.Content>
-            <AlertDialog.Body>
-              <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
-              <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
-            </AlertDialog.Body>
-            <AlertDialog.ActionBar>
-              <AlertDialog.Cancel asChild>
-                <Button>{t('cancel.label')}</Button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button variant='destructive' onClick={handleDelete}>
-                  {t('delete-publication-dialog.confirm.label')}
-                </Button>
-              </AlertDialog.Action>
-            </AlertDialog.ActionBar>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
+      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={({ open }) => setConfirmDeleteOpen(open)}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>{t('cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action variant='destructive' onClick={handleDelete}>
+              {t('delete-publication-dialog.confirm.label')}
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
       </AlertDialog.Root>
-    </Menu.Root>
+    </>
   );
 };
 

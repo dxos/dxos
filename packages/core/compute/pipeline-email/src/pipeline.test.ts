@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { EmailPipeline } from './pipeline';
-import { type FactIndexer } from './stages';
-import { Thread } from './types';
+import { EmailPipeline } from './pipeline.ts';
+import { type FactIndexer } from './stages/index.ts';
+import { Thread } from './types/index.ts';
 
 // `mockAiService`'s `generateText` always answers `''` (only `generateObject` echoes the payload), so
 // summarize degrades to its empty-summary default and extract-contacts derives no LLM contacts here;

@@ -7,16 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Plugin$ from '@dxos/app-framework/Plugin';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Position, isNonNullable } from '@dxos/util';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
-
-import * as SettingsPath from '../types/SettingsPath';
+import { SettingsPath } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -26,9 +28,9 @@ export default Capability.makeModule(
     const settingsAtom = capabilities.atom(AppCapabilities.Settings);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'action',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -46,17 +48,18 @@ export default Capability.makeModule(
             },
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'core',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: SettingsPath.SETTINGS_ID,
               type: meta.profile.key,
               properties: {
                 label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
+                iconHue: 'emerald',
                 disposition: 'pin-end',
                 position: Position.first,
                 testId: 'treeView.appSettings',
@@ -64,10 +67,15 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'plugin', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
+        url: {
+          key: 'plugin',
+          kind: 'item',
+          path: [],
+          workspace: (workspace) => workspace === SettingsPath.SETTINGS_ID,
+        },
+        match: GraphNodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
@@ -89,14 +97,16 @@ export default Capability.makeModule(
                 }),
               )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
-                Node.make({
+                AppGraphNode.make({
                   id: `${SettingsPath.SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,
                   properties: {
                     label: meta.profile.name ?? meta.profile.key,
+                    // One hue for every plugin, matching the space settings nodes, so the list reads as one group.
                     icon: meta.profile.icon?.key ?? 'ph--circle--regular',
-                    iconHue: meta.profile.icon?.hue,
+                    iconHue: 'emerald',
+                    testId: `settings.${meta.profile.key}`,
                   },
                 }),
               ),

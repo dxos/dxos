@@ -4,23 +4,26 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
-import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import { downloadBlob } from '@dxos/util';
 
 import { SequenceGrid, TrackList } from '#components';
+import { Score, Sequence, Track } from '#types';
 
-import { ScorePlayer } from '../../audio';
-import type * as Score from '../../types/Score';
-import type * as Sequence from '../../types/Sequence';
-import type * as Track from '../../types/Track';
-import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet';
-import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet';
+import { ScorePlayer } from '../../audio/index.ts';
+import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet.ts';
+import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet.ts';
 
 export type ScoreArticleProps = AppSurface.ObjectArticleProps<Score.Score>;
 
@@ -192,16 +195,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     const document = scoreToLeadSheet(score);
     const text = formatLeadSheet(document, { beatsPerBar });
     const filename = `${(score.name ?? 'score').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60) || 'score'}.txt`;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = window.document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.style.display = 'none';
-    window.document.body.appendChild(anchor);
-    anchor.click();
-    window.document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+    void downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
   }, [score, beatsPerBar]);
 
   const handleImport = useCallback(() => {
@@ -358,7 +352,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     };
   }, [isPlaying, activeSequence, score.tempo, score.loopStart, score.loopEnd]);
 
-  // Toolbar actions composed via the MenuBuilder / Menu.Root idiom
+  // Toolbar actions composed via the MenuBuilder / ActionToolbar idiom
   // (org.dxos.react-ui-menu.toolbarMenu). Deps cover every value the menu's
   // invoke handlers close over so the actions stay in sync.
   const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
@@ -448,26 +442,24 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-            <Input.Root>
-              <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
-              <Input.TextInput
-                type='number'
-                min={1}
-                value={score.tempo}
-                onChange={(event) => handleTempoChange(Number(event.target.value))}
-                classNames='w-16'
-              />
-            </Input.Root>
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
-      <Panel.Content>
-        <div className='flex h-full min-h-0'>
-          <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
+          <Field.Root>
+            <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
+            <Input.Root
+              min={1}
+              value={score.tempo}
+              onChange={(event) => handleTempoChange(Number(event.target.value))}
+              classNames='w-16'
+              type='number'
+            />
+          </Field.Root>
+        </ActionToolbar>
+      </Panel.Header>
+
+      <Panel.Body asChild>
+        <Layout.Flex>
+          <Layout.Grid rows={['fill', 'auto']} classNames='h-full w-48 shrink-0 border-r border-separator'>
             <TrackList
               tracks={score.tracks}
               selectedTrackId={selectedTrackId}
@@ -489,7 +481,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 source={audioOutputNode}
               />
             </div>
-          </div>
+          </Layout.Grid>
           <div className='flex-1 min-w-0 relative'>
             {activeTrack && activeSequence ? (
               <SequenceGrid
@@ -517,17 +509,17 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 }
               />
             ) : (
-              <div className={mx('absolute inset-0 flex items-center justify-center text-neutral-500 text-sm')}>
-                <div className='flex flex-col items-center gap-2'>
-                  <Icon icon='ph--music-notes--regular' size={6} />
+              <Layout.Flex center classNames='dx-cover text-fg-subtle text-sm'>
+                <Layout.Flex column gap='sm' align='center'>
+                  <Icon.Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>
-                  <Button onClick={handleAddTrack}>Add track</Button>
-                </div>
-              </div>
+                  <Button.Root onClick={handleAddTrack}>Add track</Button.Root>
+                </Layout.Flex>
+              </Layout.Flex>
             )}
           </div>
-        </div>
-      </Panel.Content>
+        </Layout.Flex>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -7,19 +7,19 @@ import * as Layer from 'effect/Layer';
 import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space } from '@dxos/react-client/echo';
 
-import { DEFAULT_SPARQL, QueryPanel } from '../components';
-import { useFactsStory } from './context';
+import { DEFAULT_SPARQL, QueryPanel } from '../components/index.ts';
+import { useFactsStory } from './context.ts';
 
 /** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
 export const QueryModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -27,7 +27,7 @@ export const QueryModule = () => {
 };
 
 const QueryModuleContainer = ({ space }: { space: Space }) => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const { setFacts } = useFactsStory();
 
   const [question, setQuestion] = useState('');

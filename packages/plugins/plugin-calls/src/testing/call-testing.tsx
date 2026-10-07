@@ -5,23 +5,24 @@
 import * as Effect from 'effect/Effect';
 import { useLayoutEffect } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 
-import { type CallManager, type GlobalState, type MediaState, type UserState } from '../calls';
-import { CallsPlugin } from '../plugin';
-import * as CallsCapabilities from '../types/CallsCapabilities';
+import { CallsPlugin } from '#plugin';
+import { CallsCapabilities } from '#types';
+
+import { type CallManager, type GlobalState, type MediaState, type UserState } from '../calls/index.ts';
 
 // CallManager reads the edge service config on construction and throws without it; the URL is never
 // dialed because stories seed state directly rather than joining a swarm.
 const storyConfig = new Config({
   runtime: {
     services: {
-      edge: { url: 'https://edge.dxos.workers.dev/' },
-      iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+      edge: { url: 'https://dev.dxos.network/' },
+      iceProviders: [{ urls: 'https://dxos.network/ice' }],
     },
   },
 });
@@ -33,8 +34,8 @@ const storyConfig = new Config({
 export const withCallManager = () =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
-      ClientPlugin({
+      ...CorePlugins.make(),
+      ClientPlugin.make({
         config: storyConfig,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -68,7 +69,7 @@ export const makeCallState = (self: UserState, users: UserState[], media?: Parti
 
 /** Seeds the contributed `CallManager` with deterministic state for the lifetime of the story. */
 export const useSeedCallManager = (state: GlobalState): CallManager => {
-  const callManager = useCapability(CallsCapabilities.Manager);
+  const callManager = Hooks.useCapability(CallsCapabilities.Manager);
   useLayoutEffect(() => {
     callManager._setState(state);
   }, [callManager, state]);

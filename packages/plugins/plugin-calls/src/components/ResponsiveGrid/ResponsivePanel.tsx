@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -18,12 +19,12 @@ import { mx } from '@dxos/ui-theme';
 export const ResponsivePanel = ({ children }: PropsWithChildren) => {
   return (
     // Outer container that takes full size of parent.
-    <div className='dx-expander relative flex'>
+    <Layout.Flex classNames='dx-expand relative'>
       {/* Absolute positioning layer for centering content. */}
-      <div className='absolute inset-0 flex justify-center items-center'>
+      <Layout.Flex center classNames='dx-cover'>
         {/* Content container that maintains given aspect ratio and proper scaling. */}
         <div className={mx('max-h-full max-w-full w-auto h-auto aspect-video')}>{children}</div>
-      </div>
-    </div>
+      </Layout.Flex>
+    </Layout.Flex>
   );
 };

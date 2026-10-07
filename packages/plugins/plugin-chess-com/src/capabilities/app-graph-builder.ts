@@ -5,24 +5,23 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
-import * as ChessComAccount from '../types/ChessComAccount';
-import * as ChessComOperation from '../types/ChessComOperation';
+import { ChessComAccount, ChessComOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const accountActions = yield* GraphBuilder.createTypeExtension({
+    const accountActions = yield* AppGraphBuilder.createTypeExtension({
       id: 'chessComAccountActions',
       type: ChessComAccount.Account,
       actions: (account) =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: ChessComOperation.SyncGames.meta.key,
             data: () => Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) }),
             properties: {
@@ -32,7 +31,7 @@ export default Capability.makeModule(
               testId: 'chessComPlugin.syncGames',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: ChessComOperation.ClearSyncedGames.meta.key,
             data: () => Operation.invoke(ChessComOperation.ClearSyncedGames, { account: Ref.make(account) }),
             properties: {

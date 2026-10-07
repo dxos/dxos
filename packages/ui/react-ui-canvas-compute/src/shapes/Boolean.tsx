@@ -3,12 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { type FC } from 'react';
 
 import { type ShapeDef, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
 import { createAnchors } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
 
 //
 // Gate utils.
@@ -17,9 +18,8 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from
 
 type GateType = 'and' | 'or' | 'not';
 
-const GateShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+const GateShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.String,
   }),
 );
@@ -95,7 +95,7 @@ const createSymbol =
     const paths = pathConstructor({ startX, endX, height });
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} className='h-full w-full'>
+      <svg viewBox={`0 0 ${width} ${height}`} className='dx-fill'>
         {/* Input line. */}
         {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
           <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />

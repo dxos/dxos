@@ -4,8 +4,8 @@
 
 import { addDays, addHours } from 'date-fns';
 
-import { type GoogleCalendar } from '../apis';
-import { type CalendarDataset } from '../services';
+import { type GoogleCalendar } from '#apis';
+import { type CalendarDataset } from '#services';
 
 export type GenerateCalendarDatasetOptions = {
   /** Remote calendar id the events belong to. */

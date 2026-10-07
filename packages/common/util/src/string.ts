@@ -30,9 +30,10 @@ export function inline(strings: TemplateStringsArray, ...values: any[]): string 
 }
 
 /**
- * Remove leading space from multi-line strings.
+ * Dedents a multi-line tagged template and returns its lines, blank leading/trailing lines dropped.
+ * An interpolated multi-line value is re-indented to the column it was interpolated at.
  */
-export function trim(strings: TemplateStringsArray, ...values: any[]) {
+export function lines(strings: TemplateStringsArray, ...values: unknown[]): string[] {
   // First, build the raw result with relative indentation.
   const raw = strings.reduce((out, str, i) => {
     out += str;
@@ -59,7 +60,18 @@ export function trim(strings: TemplateStringsArray, ...values: any[]) {
   const minIndent = Math.min(...lines.filter((l) => l.trim()).map((l) => l.match(/^[ \t]*/)?.[0].length ?? 0));
 
   // Remove that indent from all lines.
-  return lines.map((l) => l.slice(minIndent)).join('\n');
+  return lines.map((line) => line.slice(minIndent));
+}
+
+/** {@link lines}, joined with a space: a paragraph written across several source lines. */
+export function concat(strings: TemplateStringsArray, ...values: unknown[]): string {
+  return lines(strings, ...values).join(' ');
+}
+
+/** {@link lines}, joined with a newline: the dedented block as written. */
+// TODO(burdon): Rename to join.
+export function trim(strings: TemplateStringsArray, ...values: unknown[]): string {
+  return lines(strings, ...values).join('\n');
 }
 
 // From https://stackoverflow.com/a/67243723/2804332

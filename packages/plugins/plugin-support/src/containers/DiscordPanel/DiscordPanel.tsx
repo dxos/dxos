@@ -4,16 +4,18 @@
 
 import React from 'react';
 
-import { DiscordComponent } from './DiscordComponent';
+import * as Layout from '@dxos/react-ui/Layout';
+
+import { DiscordComponent } from './DiscordComponent.tsx';
 
 export const DiscordPanel = () => (
   <DiscordComponent.Root>
-    <div className='h-full grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden h-full w-full'>
+    <Layout.Grid rows={['auto', 'auto', 'fill', 'auto']} classNames='dx-fill overflow-hidden'>
       <DiscordComponent.Header />
       <DiscordComponent.Channels />
       <DiscordComponent.Content />
       <DiscordComponent.StatusBar />
-    </div>
+    </Layout.Grid>
   </DiscordComponent.Root>
 );
 

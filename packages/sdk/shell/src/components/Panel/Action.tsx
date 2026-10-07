@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
+  type ComponentProps,
   type ComponentPropsWithoutRef,
   type Dispatch,
   type ReactNode,
@@ -11,22 +11,19 @@ import React, {
   forwardRef,
 } from 'react';
 
-import {
-  Button,
-  type ButtonProps,
-  DropdownMenu,
-  Icon,
-  IconButton,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { useControllableState } from '@dxos/react-hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = ButtonProps & {
+export type LargeButtonProps = ComponentProps<typeof Button.Root> & {
   isFull?: boolean;
 };
 
@@ -35,7 +32,7 @@ export type ActionMenuItem = {
   description: string;
   icon: string;
   testId?: string;
-} & Pick<ButtonProps, 'onClick'>;
+} & Pick<Button.RootProps, 'onClick'>;
 
 const defaultActions = {
   noopAction: {
@@ -81,11 +78,11 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 
   const activeAction = actions[activeActionKey as string] ?? {};
 
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
-      <Button
+      <Button.Root
         {...rest}
         classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
@@ -93,13 +90,13 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <Icon icon={activeAction.icon} />}
+        {activeAction.icon && <Icon.Icon icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
-      </Button>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <IconButton
-            size={4}
+      </Button.Root>
+      <Menu.Root>
+        <Menu.Trigger asChild>
+          <Button.Root
+            iconSize='md'
             label={t('invite-options.label')}
             icon='ph--caret-down--regular'
             iconOnly
@@ -107,42 +104,38 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
-        </DropdownMenu.Trigger>
-        {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              {Object.entries(actions).map(([id, action]) => {
-                return (
-                  <DropdownMenu.CheckboxItem
-                    key={id}
-                    aria-labelledby={`${id}__label`}
-                    aria-describedby={`${id}__description`}
-                    checked={activeActionKey === id}
-                    onCheckedChange={(checked) => checked && setActiveAction(id)}
-                    classNames='gap-2'
-                    data-testid={action.testId}
-                  >
-                    {action.icon && <Icon icon={action.icon} />}
-                    <div className='flex-1 min-w-0 space-b-1'>
-                      <p id={`${id}__label`}>{action.label}</p>
-                      {action.description && (
-                        <p id={`${id}__description`} className='text-description'>
-                          {action.description}
-                        </p>
-                      )}
-                    </div>
-                    <DropdownMenu.ItemIndicator asChild>
-                      <Icon icon='ph--check--regular' size={4} />
-                    </DropdownMenu.ItemIndicator>
-                  </DropdownMenu.CheckboxItem>
-                );
-              })}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+        </Menu.Trigger>
+        {/* TODO(thure): Putting `Menu.Portal` here breaks highlighting and focus. Why? */}
+        <Menu.Content>
+          {Object.entries(actions).map(([id, action]) => {
+            return (
+              <Menu.CheckboxItem
+                key={id}
+                item={{ value: id, label: action.label, icon: action.icon }}
+                aria-labelledby={`${id}__label`}
+                aria-describedby={`${id}__description`}
+                checked={activeActionKey === id}
+                onCheckedChange={(checked) => checked && setActiveAction(id)}
+                classNames='gap-2'
+                data-testid={action.testId}
+              >
+                {action.icon && <Icon.Icon icon={action.icon} />}
+                <div className='flex-1 min-w-0 space-b-1'>
+                  <p id={`${id}__label`}>{action.label}</p>
+                  {action.description && (
+                    <p id={`${id}__description`} className='text-fg-muted'>
+                      {action.description}
+                    </p>
+                  )}
+                </div>
+                <Menu.ItemIndicator asChild>
+                  <Icon.Icon icon='ph--check--regular' size='md' />
+                </Menu.ItemIndicator>
+              </Menu.CheckboxItem>
+            );
+          })}
+        </Menu.Content>
+      </Menu.Root>
     </div>
   );
 });
@@ -157,9 +150,9 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
+    <Button.Root {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
       {children}
-    </Button>
+    </Button.Root>
   );
 });
 
@@ -167,7 +160,7 @@ export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, fo
 // Actions
 //
 
-type ActionBarProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
+type ActionBarProps = Omit<Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
   children: ReactNode | ReactNode[];
 };
 

@@ -5,11 +5,11 @@
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { Vec2 } from '../../util';
-import { type FlockBoid, FlockModel } from './FlockModel';
+import { Vec2 } from '../../util/index.ts';
+import { type FlockBoid, FlockModel } from './FlockModel.ts';
 
 // Boids flocking.
 // https://en.wikipedia.org/wiki/Boids
@@ -348,7 +348,7 @@ const generateDefaultBoids = (
   return boids;
 };
 
-export type FlockProps = ThemedClassName<{
+export type FlockProps = Util.ThemedClassName<{
   /**
    * Reactive source of truth for the boid array. Flock subscribes via `model.subscribe`
    * and restarts the simulation whenever `setBoids` replaces the array. Per-tick
@@ -545,7 +545,7 @@ export const Flock = ({
 
   return (
     <div
-      className={mx('dx-expander absolute inset-0', classNames)}
+      className={mx('dx-fill dx-cover', classNames)}
       ref={setContainer}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}

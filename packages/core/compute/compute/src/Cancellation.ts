@@ -16,7 +16,9 @@ import * as Option from 'effect/Option';
 // Tags unify by key string: a version-skewed bundle carrying two `@dxos/compute` instances (e.g. an
 // EDGE worker whose provider and handlers resolve different copies) must still share this service,
 // so the key must never change.
-export class Service extends Context.Tag('@dxos/compute/Cancellation')<Service, { readonly signal: AbortSignal }>() {}
+export class Service extends Context.Service<Service, { readonly signal: AbortSignal }>()(
+  '@dxos/compute/Cancellation',
+) {}
 
 /**
  * The current run's cancellation signal — e.g. for `Pipeline.abortWith` or `fetch`. Never fires when

@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schema from 'effect/Schema';
 
-import { ChessComNotFoundError, ChessComRequestError } from '../errors';
-import * as ChessComAccount from '../types/ChessComAccount';
+import { ChessComAccount } from '#types';
+
+import { ChessComNotFoundError, ChessComRequestError } from '../errors.ts';
 
 /** Base URL for the Chess.com Published (JSON) API. */
 const CHESS_COM_API_BASE = 'https://api.chess.com/pub';
@@ -69,7 +70,7 @@ export type RemoteGame = Schema.Schema.Type<typeof ChessComGame>;
 
 const getJson = <A, I>(
   url: string,
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
 ): Effect.Effect<A, ChessComNotFoundError | ChessComRequestError, HttpClient.HttpClient> =>
   Effect.gen(function* () {
     const response = yield* HttpClientRequest.get(url).pipe(HttpClient.execute);

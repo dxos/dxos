@@ -8,13 +8,14 @@ import * as Layer from 'effect/Layer';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { TRELLO_SOURCE } from '../constants';
-import { TrelloApi } from '../services';
-import * as TrelloOperation from '../types/TrelloOperation';
+import { TrelloOperation } from '#types';
+
+import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for Trello.
@@ -56,7 +57,10 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     yield* TrelloApi.fetchMember().pipe(Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)));
   }).pipe(
     Effect.mapError(
-      () => new ConnectionTestError({ message: 'Trello rejected the credential. Reauthenticate to continue syncing.' }),
+      () =>
+        new ConnectorError.ConnectionTestError({
+          message: 'Trello rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -59,7 +59,7 @@
       "import": "./dist/lib/plugin/vite-plugin.mjs"
     }
   },
-  "main": "dist/lib/node/index.cjs",
+  "main": "dist/lib/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -69,13 +69,13 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "localforage": "catalog:",
     "lodash.defaultsdeep": "catalog:",
@@ -84,6 +84,8 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@effect/platform-node": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.ismatch": "catalog:"
   },

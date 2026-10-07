@@ -7,14 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.Struct({
-  enableGitHubIssues: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Enable GitHub issue submission',
-      description: 'Show the "Create GitHub Issue" button in the feedback panel.',
+  hideHelpCompanions: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Hide help panels',
+      description: 'Hide the help companion beside open items and on each space home.',
     }),
   ),
   showDiscordCompanion: Schema.optional(
-    Schema.Boolean.annotations({
+    Schema.Boolean.annotate({
       title: 'Show Discord community panel',
       description: 'Show the Discord community tab in the sidebar.',
     }),

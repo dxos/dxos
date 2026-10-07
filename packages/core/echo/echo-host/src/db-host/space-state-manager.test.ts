@@ -2,18 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  SpaceDocVersion,
+  type SpaceRoot,
+  createIdFromSpaceKey,
+  isSpaceRoot,
+} from '@dxos/echo-protocol';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { PublicKey, SpaceId } from '@dxos/keys';
+import { openAndClose } from '@dxos/test-utils';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { EchoHost } from './echo-host';
-import { SpaceStateManager } from './space-state-manager';
+import { AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { EchoHost } from './echo-host.ts';
+import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager.ts';
 
 describe('SpaceStateManager and EchoHost persistent space store', () => {
   test('SpaceStateManager persists and restores space root mappings', async () => {
@@ -45,7 +57,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         links: {},
       });
       docId = handle.documentId;
-      const query = automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+      const query = automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
 
       const manager = new SpaceStateManager({ runtime });
       await manager.open(Context.default());
@@ -100,6 +112,193 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       await manager.close();
       await dispose();
     }
+  });
+
+  test('SpaceStateManager persists space root references and keeps them across a directory rotation', async () => {
+    const dbPath = join(__dirname, 'test-space-root-refs.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const spaceId = SpaceId.random();
+    let spaceRootDocUrl: AutomergeUrl;
+    let credentialsDocUrl: AutomergeUrl;
+    let rotatedDirectoryId: string;
+
+    {
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const automergeHost = new AutomergeHost({ runtime });
+      await automergeHost.open(Context.default());
+      const manager = new SpaceStateManager({ runtime });
+      await manager.open(Context.default());
+
+      const directory = async () => {
+        const handle = await automergeHost.createDoc<DatabaseDirectory>({
+          version: SpaceDocVersion.CURRENT,
+          objects: {},
+          links: {},
+        });
+        return automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
+      };
+
+      // The refs are opaque URLs to the store, so real documents stand in for the root and credentials.
+      spaceRootDocUrl = (await automergeHost.createDoc({})).url;
+      credentialsDocUrl = (await automergeHost.createDoc({})).url;
+
+      await manager.assignRootToSpace(spaceId, await directory());
+      expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
+
+      await manager.setSpaceRootRefs(spaceId, { spaceRootDocUrl, credentialsDocUrl });
+      expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
+
+      // Rotating the directory must not disturb the immutable root — the upsert writes only root_doc_url.
+      const rotated = await manager.assignRootToSpace(spaceId, await directory());
+      rotatedDirectoryId = rotated.documentId;
+      expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
+
+      await manager.close();
+      await automergeHost.close();
+      await dispose();
+    }
+
+    {
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const manager = new SpaceStateManager({ runtime });
+      await manager.open(Context.default());
+
+      expect(manager.getSpaceRootDocumentId(spaceId)).to.equal(rotatedDirectoryId);
+      expect(manager.getSpaceRootRefs(spaceId)).to.deep.equal({
+        spaceRootDocUrl,
+        credentialsDocUrl,
+      });
+
+      // Removing the space must not leave references a reused id could inherit.
+      await manager.removeSpace(spaceId);
+      expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
+
+      await manager.close();
+      await dispose();
+    }
+  });
+
+  test('setting space root references on an unknown space fails rather than losing them', async () => {
+    const dbPath = join(__dirname, 'test-space-root-refs-unknown.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => {
+      void dispose();
+    });
+
+    const automergeHost = new AutomergeHost({ runtime });
+    await automergeHost.open(Context.default());
+    onTestFinished(() => {
+      void automergeHost.close();
+    });
+
+    const manager = new SpaceStateManager({ runtime });
+    await manager.open(Context.default());
+    onTestFinished(() => {
+      void manager.close();
+    });
+
+    // No directory assigned, so there is no row to hold the columns.
+    await expect(
+      manager.setSpaceRootRefs(SpaceId.random(), {
+        spaceRootDocUrl: (await automergeHost.createDoc({})).url,
+      }),
+    ).rejects.toThrow();
+  });
+
+  test('EchoHost anchors a space on a root document while keeping its key-derived id', async () => {
+    const dbPath = join(__dirname, 'test-create-space-with-root.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => {
+      void dispose();
+    });
+
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(() => {
+      void host.close();
+    });
+
+    const spaceKey = PublicKey.random();
+    const { spaceId, spaceRootUrl, directory } = await host.createSpaceWithRootDocument(Context.default(), spaceKey);
+
+    // The id comes from the space genesis key, exactly as a feed-backed space's does: the root
+    // changes where credentials live, not how the space is identified.
+    expect(spaceId).to.equal(await createIdFromSpaceKey(spaceKey));
+
+    // The root is a separate document from the directory it points at.
+    expect(directory.url).to.not.equal(spaceRootUrl);
+    expect(directory.doc()?.access?.spaceId).to.equal(spaceId);
+    expect(directory.doc()?.access?.spaceKey).to.equal(spaceKey.toHex());
+
+    const root = await host.loadDoc<SpaceRoot>(Context.default(), spaceRootUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.directory).to.equal(directory.url);
+    expect(root!.doc()!.spaceId).to.equal(spaceId);
+
+    expect(host.getSpaceRootRefs(spaceId)).to.deep.equal({
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: undefined,
+    });
+
+    // The refs must survive a restart: without them a reopened host cannot tell a rootDoc space
+    // from a legacy one, and would re-anchor it under a second root.
+    await host.close();
+    await dispose();
+
+    const reopened = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => {
+      void reopened.dispose();
+    });
+    const reopenedHost = new EchoHost({ runtime: reopened.runtime });
+    await reopenedHost.open(Context.default());
+    onTestFinished(() => {
+      void reopenedHost.close();
+    });
+
+    expect(reopenedHost.spaceIds).to.deep.equal([spaceId]);
+    expect(reopenedHost.getSpaceRootRefs(spaceId)).to.deep.equal({
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: undefined,
+    });
+  });
+
+  test('createSpaceRoot leaves a space key-derived and unanchored', async () => {
+    // The ECHO-layer default: `createSpaceRoot` makes the DIRECTORY only. Anchoring is
+    // `createSpaceWithRootDocument`, which nothing here calls on its own — a caller opts in.
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => {
+      void dispose();
+    });
+
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(() => {
+      void host.close();
+    });
+
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const directory = await host.createSpaceRoot(Context.default(), spaceKey);
+
+    expect(host.spaceIds).to.deep.equal([spaceId]);
+    expect(directory.doc()?.access?.spaceId).to.equal(spaceId);
+
+    // No root document, so nothing certifies the id and nothing carries credentials.
+    expect(host.getSpaceRootRefs(spaceId)).to.be.undefined;
   });
 
   test('EchoHost openSpaceRoot works without url on reopened host', async () => {
@@ -176,5 +375,165 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       await host.close();
       await dispose();
     }
+  });
+
+  test('two spaces sharing one root keep independent contexts', async ({ expect }) => {
+    // The contexts are per space, not per document: keyed by the root's id, removing either space
+    // would tear down the listener the other one still reads its directory through.
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const automergeHost = new AutomergeHost({ runtime });
+    await openAndClose(automergeHost);
+    const manager = new SpaceStateManager({ runtime });
+    await openAndClose(manager);
+
+    using created = await automergeHost.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      objects: {},
+      links: {},
+    });
+    const spaceA = SpaceId.random();
+    const spaceB = SpaceId.random();
+    await manager.assignRootToSpace(spaceA, automergeHost.acquireDoc<DatabaseDirectory>(created.documentId));
+    const rootB = await manager.assignRootToSpace(
+      spaceB,
+      automergeHost.acquireDoc<DatabaseDirectory>(created.documentId),
+    );
+
+    const updates: SpaceId[] = [];
+    manager.spaceDocumentListUpdated.on(({ spaceId }) => {
+      updates.push(spaceId);
+    });
+
+    await manager.removeSpace(spaceA);
+
+    // The surviving space still reports its documents, which requires both its context and the root.
+    expect(rootB.isLoaded).toBe(true);
+    created.change((doc) => {
+      doc.links = { ...(doc.links ?? {}), someObject: `automerge:${created.documentId}` };
+    });
+    await expect.poll(() => updates.includes(spaceB), { timeout: 2_000 }).toBe(true);
+    // The scheduler the removed space owned runs on the same tick as the survivor's: give it room to
+    // fire, so a context that outlived its space surfaces here rather than after the test.
+    await sleep(200);
+    expect(updates).not.toContain(spaceA);
+  });
+
+  test('a reopened space keeps its collection sync state when its document list changes', async ({ expect }) => {
+    const dbPath = join(__dirname, 'test-reopened-space-sync-state.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    {
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const host = new EchoHost({ runtime });
+      await host.open(Context.default());
+      await host.createSpaceRoot(Context.default(), spaceKey);
+      await host.close();
+      await dispose();
+    }
+
+    const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => dispose());
+    const host = new EchoHost({ runtime });
+    await openAndClose(host);
+    const clearLocalCollectionState = vi.spyOn(host.automergeHost, 'clearLocalCollectionState');
+    const updateLocalCollectionState = vi.spyOn(host.automergeHost, 'updateLocalCollectionState');
+
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    const collectionId = deriveCollectionIdFromSpaceId(spaceId, root.documentId);
+
+    // Creating an object links a new document from the directory, which is what changes the list.
+    using object = await host.createDoc({});
+    using directory = host.automergeHost.acquireDoc<DatabaseDirectory>(root.documentId);
+    directory.change((doc) => {
+      doc.links = { ...(doc.links ?? {}), someObject: object.url };
+    });
+    await expect
+      .poll(() =>
+        updateLocalCollectionState.mock.calls.some(
+          ([updatedCollectionId, documentIds]) =>
+            updatedCollectionId === collectionId && documentIds.includes(object.documentId),
+        ),
+      )
+      .toBe(true);
+
+    // Clearing the live collection drops every peer's recorded state, so sync with each restarts.
+    expect(clearLocalCollectionState).not.toHaveBeenCalledWith(collectionId);
+  });
+
+  test('a replaced directory is reported once, not on every later change', async ({ expect }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const automergeHost = new AutomergeHost({ runtime });
+    await openAndClose(automergeHost);
+    const manager = new SpaceStateManager({ runtime });
+    await openAndClose(manager);
+
+    const createDirectory = () =>
+      automergeHost.createDoc<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT, objects: {}, links: {} });
+    using first = await createDirectory();
+    using second = await createDirectory();
+    const spaceId = SpaceId.random();
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(first.documentId));
+
+    const updates: SpaceDocumentListUpdatedEvent[] = [];
+    manager.spaceDocumentListUpdated.on((event) => {
+      updates.push(event);
+    });
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(second.documentId));
+    await expect.poll(() => updates.some((event) => event.spaceRootId === second.documentId)).toBe(true);
+    const swap = updates.find((event) => event.spaceRootId === second.documentId);
+    expect(swap?.previousRootId).toBe(first.documentId);
+
+    using object = await automergeHost.createDoc({});
+    second.change((doc) => {
+      doc.links = { ...(doc.links ?? {}), someObject: object.url };
+    });
+    await expect.poll(() => updates.some((event) => event.documentIds.includes(object.documentId))).toBe(true);
+
+    // Only the swap retires the first directory: repeating it makes every later list change look like one.
+    const linked = updates.find((event) => event.documentIds.includes(object.documentId));
+    expect(linked?.previousRootId).toBeUndefined();
+  });
+
+  test('restoring a space with its saved directory writes nothing', async ({ expect }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const run = RuntimeProvider.runPromise(runtime);
+    const selectRows = Effect.flatMap(
+      SqlClient.SqlClient,
+      (sql) => sql<{ space_id: string }>`SELECT space_id FROM echo_spaces`,
+    );
+    const rows = () => run(selectRows);
+    const automergeHost = new AutomergeHost({ runtime });
+    await openAndClose(automergeHost);
+
+    const createDirectory = () =>
+      automergeHost.createDoc<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT, objects: {}, links: {} });
+    using saved = await createDirectory();
+    using replacement = await createDirectory();
+    const spaceId = SpaceId.random();
+    {
+      const manager = new SpaceStateManager({ runtime });
+      await manager.open(Context.default());
+      await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
+      await manager.close();
+    }
+
+    const manager = new SpaceStateManager({ runtime });
+    await openAndClose(manager);
+    // Dropping the row behind the manager's back makes any later save visible as a reappearing row.
+    await run(Effect.flatMap(SqlClient.SqlClient, (sql) => sql`DELETE FROM echo_spaces`));
+
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
+    expect(await rows()).toHaveLength(0);
+
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(replacement.documentId));
+    expect(await rows()).toHaveLength(1);
   });
 });

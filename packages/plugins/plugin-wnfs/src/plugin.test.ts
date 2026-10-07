@@ -1,0 +1,20 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as Harness from '@dxos/plugin-testing/Harness';
+
+import { WnfsPlugin } from '#plugin';
+
+describe('WnfsPlugin', () => {
+  test('activates without errors', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [ClientPlugin.make({}), WnfsPlugin()],
+    });
+
+    expect(harness.manager.getActive()).toBeInstanceOf(Array);
+  });
+});

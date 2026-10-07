@@ -7,8 +7,8 @@ import { useEffect } from 'react';
 import { feature, mesh } from 'topojson-client';
 import { type GeometryCollection, type GeometryObject, type Objects, type Topology } from 'topojson-specification';
 
-import { useSvgContext } from '../../hooks';
-import { type Size } from '../../util';
+import { useSvgContext } from '../../hooks/index.ts';
+import { type Size } from '../../util/index.ts';
 
 export type MeshProps = {
   radius?: number;

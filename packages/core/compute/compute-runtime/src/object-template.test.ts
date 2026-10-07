@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { objectTemplate } from './object-template';
+import { objectTemplate } from './object-template.ts';
 
 interface TestContext {
   event: {

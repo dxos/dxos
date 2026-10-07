@@ -29,7 +29,7 @@ export const SynthPatch = Schema.Struct({
   minPitch: Schema.Number,
   maxPitch: Schema.Number,
   /** Tone.js oscillator waveform. Defaults to 'sine'. */
-  oscillator: Schema.optional(Schema.Literal('sine', 'square', 'triangle', 'sawtooth')),
+  oscillator: Schema.optional(Schema.Literals(['sine', 'square', 'triangle', 'sawtooth'])),
   envelope: Schema.optional(Envelope),
   /** Linear gain 0..1. Defaults to 0.2 so a single note isn't ear-shatteringly loud. */
   gain: Schema.optional(Schema.Number),
@@ -41,7 +41,7 @@ export interface SynthPatch extends Schema.Schema.Type<typeof SynthPatch> {}
 export const DrumPatch = Schema.Struct({
   kind: Schema.Literal('drum'),
   pitch: Schema.Number,
-  drum: Schema.Literal('kick', 'snare', 'hat', 'openhat', 'clap', 'crash', 'ride', 'tomLo', 'tomMid', 'tomHi'),
+  drum: Schema.Literals(['kick', 'snare', 'hat', 'openhat', 'clap', 'crash', 'ride', 'tomLo', 'tomMid', 'tomHi']),
   gain: Schema.optional(Schema.Number),
 });
 
@@ -61,6 +61,6 @@ export const SamplePatch = Schema.Struct({
 
 export interface SamplePatch extends Schema.Schema.Type<typeof SamplePatch> {}
 
-export const Patch = Schema.Union(SynthPatch, DrumPatch, SamplePatch);
+export const Patch = Schema.Union([SynthPatch, DrumPatch, SamplePatch]);
 
 export type Patch = SynthPatch | DrumPatch | SamplePatch;

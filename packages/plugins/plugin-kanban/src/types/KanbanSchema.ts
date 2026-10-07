@@ -16,14 +16,14 @@ import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
  */
 
 // TODO(wittjosiah): Factor out?
-export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
+export const PivotColumnAnnotationId = '@dxos/plugin-kanban/annotation/PivotColumn';
 
 /**
  * Settings common to every Kanban (view or items). Rendered as form fields
  * by `KanbanProperties`.
  */
 export const KanbanSettingsSchema = Schema.Struct({
-  hideUncategorized: Schema.Boolean.annotations({
+  hideUncategorized: Schema.Boolean.annotate({
     title: 'Hide uncategorized column',
     description: 'When enabled, items without a pivot value won’t be shown as a column.',
   }).pipe(Schema.optional),
@@ -36,7 +36,7 @@ export const KanbanSettingsSchema = Schema.Struct({
  * this control.
  */
 export const KanbanViewSettingsSchema = Schema.Struct({
-  columnFieldId: Schema.String.annotations({
+  columnFieldId: Schema.String.annotate({
     title: 'Column field',
   }),
   ...KanbanSettingsSchema.fields,
@@ -46,7 +46,7 @@ export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
-    Schema.annotations({ title: 'Select card type' }),
+    Schema.annotate({ title: 'Select card type' }),
     SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
@@ -54,7 +54,7 @@ export const CreateKanbanSchema = Schema.Struct({
     Schema.optional,
   ),
   initialPivotColumn: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       [PivotColumnAnnotationId]: true,
       title: 'Pivot column',
     }),

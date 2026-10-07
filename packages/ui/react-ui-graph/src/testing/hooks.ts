@@ -4,12 +4,12 @@
 
 import update from 'immutability-helper';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { random } from '@dxos/random';
 
-import { useStateRef } from '../hooks';
-import { createEdge, createNode } from './data';
-import { type TestNode } from './model';
+import { useStateRef } from '../hooks/index.ts';
+import { createEdge, createNode } from './data.ts';
+import { type TestNode } from './model.ts';
 
 export type ObjectMutator<T> = [
   T, // Current value.
@@ -46,7 +46,7 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
 /**
  * Test data set generator and mutator.
  */
-export const useGraphGenerator = (options: { data?: Graph.Any } = {}) => {
+export const useGraphGenerator = (options: { data?: GraphModel.AnyData } = {}) => {
   const [data, setData, updateData] = useObjectMutator(options.data || { nodes: [], edges: [] });
 
   let interval;

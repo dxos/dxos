@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-pwa",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Surface plugin for PWA registration and update handling.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,23 +10,46 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/PwaPlugin.tsx",
-      "types": "./dist/types/src/PwaPlugin.d.ts",
-      "default": "./dist/lib/PwaPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -35,15 +58,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./PwaPlugin": {
+      "source": "./src/PwaPlugin.ts",
+      "types": "./dist/types/src/PwaPlugin.d.ts",
+      "import": "./dist/lib/PwaPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -55,12 +78,14 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -72,6 +97,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
+    "@dxos/react-ui-form": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:",

@@ -1,0 +1,35 @@
+layer: application
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+tasks:
+  # Assembles the `<uuid>.sdPlugin` directory the Stream Deck app loads: the compiled entry into
+  # `bin/`, the manifest with its version injected from package.json, and the images.
+  assemble:
+    command: node scripts/assemble.mjs
+    deps:
+      - build
+    inputs:
+      - assets/**/*
+      - scripts/assemble.mjs
+      - package.json
+      - dist/lib/**/*
+    outputs:
+      - org.dxos.composer.sdPlugin
+  # Zips the assembled directory into the distributable Elgato installer.
+  pack:
+    command: node scripts/pack.mjs
+    deps:
+      - assemble
+    outputs:
+      - composer-stream-deck.streamDeckPlugin
+  # Runs the assembled plugin against a stand-in Stream Deck application and drives it as Composer
+  # would. Catches what unit tests cannot: bundle loading, SDK registration, and module
+  # initialization order inside the single-file bundle.
+  smoke:
+    command: node scripts/smoke.mjs
+    deps:
+      - assemble
+    options:
+      cache: false

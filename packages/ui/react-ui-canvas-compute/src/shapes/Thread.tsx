@@ -4,12 +4,13 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { Box } from './common';
-import { type ThreadShape } from './thread-def';
+import { Box } from './common/index.ts';
+import { type ThreadShape } from './thread-def.ts';
 
 export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => {
   const items: any[] = [];
@@ -33,7 +34,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
   );
 };
 
-export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+export const ThreadItem = ({ classNames, item }: Util.ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
     return <div className={mx(classNames)}>{item}</div>;
   }

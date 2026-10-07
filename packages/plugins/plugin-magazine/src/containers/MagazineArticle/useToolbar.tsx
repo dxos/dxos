@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomSet } from '@effect-atom/atom-react';
+import { useAtomSet } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { Obj, Ref, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
-
-import * as FeedOperation from '../../types/FeedOperation';
-import type * as Magazine from '../../types/Magazine';
+import { FeedOperation, Magazine, Subscription } from '#types';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;
@@ -26,10 +27,10 @@ export type UseToolbarProps = {
  * handlers, and the reactive menu action graph. The action graph reads its state — view filter,
  * curate-busy flag, and whether the magazine has feeds — via `get` inside the builder, so it
  * subscribes to those atoms and rebuilds whenever they change. Returns the menu props (spread into
- * `Menu.Root`) plus `viewAtom`, which the article also reads to filter the visible posts.
+ * `ActionToolbar`) plus `viewAtom`, which the article also reads to filter the visible posts.
  */
 export const useToolbar = ({ magazine }: UseToolbarProps) => {
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(magazine);
   const viewAtom = useMemo(() => Atom.make<MagazineView>('default'), []);
@@ -60,6 +61,34 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
       ),
     [runExclusive, invoker, magazine, db],
   );
+
+  // `live` so the form edits a real subscription: the URL-driven name autofill and the feed's own
+  // properties surface behave exactly as they do after creation. A dismissed dialog removes it again,
+  // so only a confirmed feed comes back here to be attached to the magazine.
+  const handleAddFeed = useCallback(() => {
+    if (!db) {
+      return;
+    }
+
+    void EffectEx.runAndForwardErrors(
+      Effect.gen(function* () {
+        const feed = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
+          target: db,
+          typename: Type.getTypename(Subscription.Subscription),
+          mode: 'live',
+          defaults: { type: 'rss' },
+          // The magazine stays put: the feed is added to the article the user is already looking at.
+          navigable: false,
+        });
+        const subscription = feed?.target;
+        if (Obj.instanceOf(Subscription.Subscription, subscription)) {
+          Obj.update(magazine, (magazine) => {
+            magazine.feeds.push(Ref.make(subscription));
+          });
+        }
+      }),
+    );
+  }, [db, magazine, invoker]);
 
   const handleClear = useCallback(
     () =>
@@ -114,8 +143,17 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
               );
             },
           )
-          // `gap` is a flexible spacer that pushes Clear + Curate to the trailing edge.
+          // `gap` is a flexible spacer that pushes the trailing group to the trailing edge.
           .separator('gap')
+          .action(
+            'add-feed',
+            {
+              label: ['add-feed.label', { ns: meta.profile.key }],
+              icon: 'ph--plus--regular',
+              iconOnly: true,
+            },
+            handleAddFeed,
+          )
           .action(
             'clear',
             {
@@ -140,7 +178,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
           .build()
       );
     },
-    [magazine, viewAtom, busyAtom, setView, handleClear, handleCurate],
+    [magazine, viewAtom, busyAtom, setView, handleAddFeed, handleClear, handleCurate],
   );
 
   return { menu, viewAtom };

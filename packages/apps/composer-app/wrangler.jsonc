@@ -4,7 +4,7 @@
   // paths run the Worker first (feedback-logs, RSS proxy, OTel -> SigNoz, the domain-verification
   // documents) while every other route is asset-first with SPA fallback.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
-  // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.main` —
+  // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.dev` —
   // also consumes it there), so it is kept out of the asset upload with a generated `.assetsignore`.
   // Bindings match what `_worker.ts` reads.
   // Local dev: `moon run composer-app:bundle && wrangler dev` (uses the default bindings below).
@@ -12,19 +12,29 @@
   "name": "composer",
   "main": "./out/composer/_worker.js",
   "compatibility_date": "2024-04-05",
+  // Each channel serves from its own domain; a `*.workers.dev` hostname would be a second origin with its own
+  // storage and cross-origin `DX_OTEL_ENDPOINT`. Preview URLs stay on for the per-PR `pr-<n>-composer-dev` deploys.
+  // Both keys are inherited by every env below.
+  "workers_dev": false,
+  "preview_urls": true,
   // Default / local-dev bindings (wrangler dev); per-env deploys use the `env` sections below.
+  // `ENVIRONMENT` is `local` rather than `dev` so it cannot be mistaken for the deployed `env.dev`.
   "vars": {
     "APPLE_TEAM_ID": "9428WC5MR8",
-    "ENVIRONMENT": "dev",
+    "ENVIRONMENT": "local",
     "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
   },
-  "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+  "r2_buckets": [
+    { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+    { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+  ],
   "assets": {
     "directory": "./out/composer",
     "binding": "ASSETS",
-    // Unmatched routes return index.html (client-side router owns them)...
-    "not_found_handling": "single-page-application",
-    // ...except these, which must reach the Worker before the SPA fallback swallows them.
+    // Misses reach the Worker, which serves the SPA itself: "single-page-application" would answer a
+    // missing chunk with index.html before the Worker could 404 it or serve it from ASSET_ARCHIVE.
+    "not_found_handling": "none",
+    // These must reach the Worker even where an asset would match.
     "run_worker_first": ["/api/*", "/.well-known/*"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
@@ -38,7 +48,10 @@
         "ENVIRONMENT": "production",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets" },
+      ],
     },
     "staging": {
       "name": "composer-staging",
@@ -47,25 +60,37 @@
         "ENVIRONMENT": "staging",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-staging" },
+      ],
     },
-    "labs": {
-      "name": "composer-labs",
+    // The daily dogfood build (preview.composer.space) — deployed from `main` on a schedule, talking to
+    // EDGE production. Distinct from the per-PR previews, which are Worker versions of `dev` below.
+    "preview": {
+      "name": "composer-preview",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
-        "ENVIRONMENT": "labs",
+        "ENVIRONMENT": "preview",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-preview" },
+      ],
     },
-    "main": {
-      "name": "composer-main",
+    // Deployed on demand, talking to EDGE preview; also the Worker PR previews upload versions to.
+    "dev": {
+      "name": "composer-dev",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
-        "ENVIRONMENT": "main",
+        "ENVIRONMENT": "dev",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+      ],
     },
   },
 }

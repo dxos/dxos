@@ -5,7 +5,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import * as Effect from 'effect/Effect';
 
-import { PluginAssetCache } from '@dxos/app-framework';
+import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 
 /**
  * Tauri-backed `PluginAssetCache.Cache` for desktop + iOS. Drives the Rust

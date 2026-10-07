@@ -18,7 +18,7 @@ export type ObjectPointerDecoded = {
  */
 export type ObjectPointerEncoded = string;
 
-export const ObjectPointerEncoded = Schema.String.annotations({ title: 'ObjectPointerEncoded' });
+export const ObjectPointerEncoded = Schema.String.annotate({ title: 'ObjectPointerEncoded' });
 
 const V1_PREFIX = '#01';
 

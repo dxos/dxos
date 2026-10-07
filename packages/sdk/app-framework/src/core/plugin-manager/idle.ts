@@ -26,7 +26,7 @@ const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
   if (typeof requestAnimationFrame !== 'function') {
     return Effect.void;
   }
-  return Effect.async<void>((resume) => {
+  return Effect.callback<void>((resume) => {
     let inner: number | undefined;
     const outer = requestAnimationFrame(() => {
       inner = requestAnimationFrame(() => resume(Effect.void));
@@ -37,25 +37,28 @@ const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
     });
   }).pipe(
     Effect.timeout(PAINT_TIMEOUT),
-    Effect.orElse(() => Effect.void),
+    Effect.catch(() => Effect.void),
   );
 });
 
 /**
+ * Whether the host has a paint the idle wave should yield to. False under node and workerd, where
+ * {@link whenIdle} completes immediately — so forking the wave there buys nothing and only leaves
+ * it unfinished when `start()` returns.
+ */
+export const hostYieldsToPaint = (): boolean => typeof requestIdleCallback === 'function';
+
+/**
  * Completes once the host is idle, so work scheduled behind it lands after the shell has painted
  * rather than competing with it.
- *
- * Feature-tested rather than presence-checked on a platform flag: `requestIdleCallback` is
- * browser-only and this package also builds for node and workerd, where there is no paint to
- * yield to and completing immediately is the correct behaviour.
  */
 export const whenIdle: Effect.Effect<void> = Effect.suspend(() => {
-  if (typeof requestIdleCallback !== 'function') {
+  if (!hostYieldsToPaint()) {
     return Effect.void;
   }
   return afterPaint.pipe(
     Effect.andThen(
-      Effect.async<void>((resume) => {
+      Effect.callback<void>((resume) => {
         const handle = requestIdleCallback(() => resume(Effect.void), { timeout: IDLE_TIMEOUT });
         return Effect.sync(() => cancelIdleCallback(handle));
       }),

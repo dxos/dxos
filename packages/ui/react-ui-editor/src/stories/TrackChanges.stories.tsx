@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -18,7 +18,7 @@ import {
   trackChanges,
 } from '@dxos/ui-editor';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // The accepted base (main). The editor is bound to a *branch* whose live edits are tracked against it.
 const MAIN = 'The quick brown fox jumps over the lazy dog.';
@@ -45,7 +45,7 @@ const documentText = (canvasElement: HTMLElement): string => {
 type RenderProps = EditorViewProps & { branch: string };
 
 const Render = ({ branch, ...args }: RenderProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -71,7 +71,7 @@ const Render = ({ branch, ...args }: RenderProps) => {
  * foreign author would remove.
  */
 const ForeignAuthorRender = ({ branch, ...args }: RenderProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

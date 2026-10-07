@@ -11,8 +11,11 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -20,7 +23,7 @@ import { meta } from '#meta';
 export type SkillEditorProps = { object: Script.Script };
 
 export const SkillEditor = ({ object }: SkillEditorProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(object);
   const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const skills = useQuery(db, Filter.type(Skill.Skill));
@@ -32,7 +35,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
   const existingSkill = skills.find((bp) => Obj.getMeta(bp).key === skillKey);
   const fnKey = fn ? Obj.getMeta(fn).key : undefined;
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!existingSkill) {
       return;
     }
@@ -58,7 +61,8 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
           const toolId = ToolId.make(fnKey);
           if (!existingSkill.tools?.includes(toolId)) {
             Obj.update(existingSkill, (existingSkill) => {
-              existingSkill.tools = [...(existingSkill.tools ?? []), toolId];
+              existingSkill.tools ??= [];
+              existingSkill.tools.push(toolId);
             });
           }
         }
@@ -79,26 +83,24 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
   }, [db, existingSkill, fnKey, skillKey, object.name, instructions]);
 
   return (
-    <div className='flex flex-col'>
-      <Form.Section title={t('skill-editor.label')} description={t('skill-editor.description')} />
-
-      <Input.Root>
-        <Input.Label>{t('skill-instructions.label')}</Input.Label>
-        <Input.TextArea
+    <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
+      <Field.Root>
+        <Field.Label>{t('skill-instructions.label')}</Field.Label>
+        <Input.Textarea
           placeholder={t('skill-instructions.placeholder')}
           rows={6}
           value={instructions}
           onChange={(event) => setInstructions(event.target.value)}
           classNames='resize-y'
         />
-      </Input.Root>
+      </Field.Root>
 
       <div className='pt-2'>
-        <Button disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
+        <Button.Root disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
           {t(existingSkill ? 'update-skill.label' : 'create-skill.label')}
-        </Button>
+        </Button.Root>
       </div>
-    </div>
+    </Form.FieldSet>
   );
 };
 

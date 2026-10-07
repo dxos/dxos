@@ -7,7 +7,7 @@ import '@dxos/shell/style.css';
 //  This is intentional to demonstrate the use of the shell as an external dependency.
 import { runShell } from '@dxos/shell';
 
-import { getConfig } from './config';
+import { getConfig } from './config.ts';
 
 const main = async () => {
   const config = await getConfig();

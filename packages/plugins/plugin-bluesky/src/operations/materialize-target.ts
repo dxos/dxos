@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
-import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants';
-import { MaterializeBlueskyTarget } from './definitions';
+import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants.ts';
+import { MaterializeBlueskyTarget } from './definitions.ts';
 
 /**
  * Find-or-create the empty local `Subscription.Feed` root for a Bluesky target
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof MaterializeBlueskyTarget> = Material
       //   target and provide `Database.layer(db)` ourselves.
       const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
+        return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
       }
       const remoteId = remoteTarget.id;
 

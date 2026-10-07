@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { Node } from '@dxos/app-graph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
-import { MenuBuilder } from './builder';
-import { MenuSeparatorType } from './types';
+import { MenuBuilder } from './builder.ts';
+import { MenuSeparatorType } from './types.ts';
 
 describe('MenuBuilder', () => {
   test('builds a flat menu with actions', ({ expect }) => {
@@ -163,7 +163,7 @@ describe('MenuBuilder', () => {
 
   test('composable curried subgraph functions', ({ expect }) => {
     // Simulates the curried pattern: addX(args) returns (builder) => void.
-    const addHeadingsSection = () => (builder: import('./builder').ActionGroupBuilder) => {
+    const addHeadingsSection = () => (builder: import('./builder.ts').ActionGroupBuilder) => {
       builder.group(
         'headings',
         { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' },
@@ -175,7 +175,7 @@ describe('MenuBuilder', () => {
       );
     };
 
-    const addFormattingSection = () => (builder: import('./builder').ActionGroupBuilder) => {
+    const addFormattingSection = () => (builder: import('./builder.ts').ActionGroupBuilder) => {
       builder.group('formatting', { label: 'Formatting' }, (group) => {
         group.action('bold', { label: 'Bold', icon: 'ph--text-b--regular' }, () => {});
       });
@@ -256,8 +256,8 @@ describe('MenuBuilder', () => {
     const actionNode = graph.nodes.find((node) => node.id === 'bold');
     const groupNode = graph.nodes.find((node) => node.id === 'headings');
 
-    expect(rootNode!.type).toBe(Node.ActionGroupType);
-    expect(actionNode!.type).toBe(Node.ActionType);
-    expect(groupNode!.type).toBe(Node.ActionGroupType);
+    expect(rootNode!.type).toBe(AppGraphNode.ActionGroupType);
+    expect(actionNode!.type).toBe(AppGraphNode.ActionType);
+    expect(groupNode!.type).toBe(AppGraphNode.ActionGroupType);
   });
 });

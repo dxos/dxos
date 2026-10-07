@@ -4,31 +4,48 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { mergeExecEnv } from '../../services/sandbox-env';
-import { createSandboxClient } from '../../services/sandbox-url';
-import { Exec } from './definitions';
+import { SandboxOperation, SandboxService } from '#types';
 
-export default Exec.pipe(
+import { mergeExecEnv } from '../../services/sandbox-env.ts';
+
+/**
+ * How long a command may run when the caller sets no limit. The service's own default is two
+ * minutes, which an install or a deploy overruns; five fits those and bounds a hung command.
+ */
+const DEFAULT_EXEC_TIMEOUT = 5 * 60 * 1_000;
+
+export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ sandbox, command, cwd, env, timeout }) {
+    Effect.fn(function* ({ sandbox, command, cwd, env, timeout = DEFAULT_EXEC_TIMEOUT, background }) {
       const { db } = yield* Database.Service;
-      const client = yield* ClientService;
 
       const loaded = yield* Database.load(sandbox);
       const sandboxId = loaded.id;
       const spaceId = db.spaceId;
-      const sandboxClient = createSandboxClient(client);
       const mergedEnv = yield* mergeExecEnv(loaded.credentials, env);
+      const sandboxService = yield* SandboxService.Service;
 
-      const result = yield* Effect.promise(() =>
-        sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }),
+      // Yielded directly rather than through `Effect.promise`: that wrapper is uninterruptible, so
+      // terminating the operation left the request running — the tool handler reported "Operation
+      // was terminated" while the fetch underneath it stayed open.
+      //
+      // A request failure is reported as a failed command rather than raised. `Operation.make` has no
+      // error channel, so a typed failure escaping here is not part of the operation's contract and
+      // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
+      // A non-zero exit carrying the reason is also what the model can actually act on.
+      return yield* sandboxService.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout, background }).pipe(
+        Effect.catch((error) =>
+          Effect.succeed({
+            stdout: '',
+            stderr: `sandbox exec failed: ${error.message}`,
+            exitCode: -1,
+            success: false,
+          }),
+        ),
       );
-
-      return result;
     }),
   ),
 );

@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
+import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector.tsx';
 
 const DefaultStory = () => {
   const [kind, setKind] = useState<TriggerKind | undefined>();
@@ -18,7 +18,7 @@ const DefaultStory = () => {
     <div className='p-4 flex flex-col gap-3'>
       <TriggerKindSelector onChange={setKind} />
       <div className='flex flex-col gap-1'>
-        <p className='text-xs text-subdued'>Selected kind</p>
+        <p className='text-xs text-fg-subtle'>Selected kind</p>
         <pre className='font-mono text-sm bg-base-surface rounded p-2'>{kind ?? '(none)'}</pre>
       </div>
     </div>

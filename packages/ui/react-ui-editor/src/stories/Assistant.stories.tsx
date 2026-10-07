@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type AssistantOptions,
@@ -24,7 +24,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {
@@ -32,7 +32,7 @@ const useTestGenerate = () => {
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
-      AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+      AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
         Layer.provide(AiServiceTestingPreset('edge-remote')),
         Layer.orDie,
       ),
@@ -64,7 +64,7 @@ const useTestGenerate = () => {
 type StoryArgs = Pick<EditorViewProps, 'value'>;
 
 const DefaultStory = (props: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const generate = useTestGenerate();
   const extensions = useMemo(
     () =>
@@ -84,7 +84,7 @@ const DefaultStory = (props: StoryArgs) => {
 
   return (
     <Editor.Root>
-      <Editor.View {...props} classNames='dx-container border border-subdued-separator' extensions={extensions} />
+      <Editor.View {...props} classNames='dx-expand border border-separator-subtle' extensions={extensions} />
     </Editor.Root>
   );
 };

@@ -4,45 +4,48 @@
 
 import React from 'react';
 
-import { type KeyBinding, Keyboard } from '@dxos/keyboard';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type HotkeyCommand, useActiveHotkeys } from '@dxos/react-focus';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { Key } from './Key';
+import { Key } from './Key.tsx';
 
-const Shortcut = ({ binding }: { binding: KeyBinding }) => {
-  const { t } = useTranslation(osTranslations);
+const Shortcut = ({ binding }: { binding: HotkeyCommand }) => {
+  const { t } = Hooks.useTranslation(osTranslations);
   return (
-    <div className='flex items-center gap-2 whitespace-nowrap'>
-      <Key binding={binding.shortcut} />
-      <span className='text-sm'>{toLocalizedString(binding.data, t)}</span>
-    </div>
+    <Layout.Flex align='center' gap='sm' classNames='whitespace-nowrap'>
+      <Key binding={binding.hotkey} />
+      <span className='text-sm'>{Theme.toLocalizedString(binding.label ?? binding.hotkey, t)}</span>
+    </Layout.Flex>
   );
 };
 
 export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   // TODO(burdon): Display by context/weight/cycle.
   const defaults = ['meta+k', 'meta+/', 'meta+,'];
-  const bindings = Keyboard.singleton.getBindings();
-  const hints = bindings.filter((binding) => defaults.includes(binding.shortcut));
+  const bindings = useActiveHotkeys();
+  const hints = bindings.filter((binding) => defaults.includes(binding.hotkey));
 
   return (
-    <div className='flex overflow-hidden px-2 gap-4'>
+    <Layout.Flex gap='lg' classNames='overflow-hidden px-2'>
       {hints.map((binding) => (
-        <Shortcut key={binding.shortcut} binding={binding} />
+        <Shortcut key={binding.id} binding={binding} />
       ))}
       {onClose && (
-        <IconButton
+        <Button.Root
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label='Close'
           iconOnly
-          noTooltip
+          showTooltip={false}
           variant='ghost'
           classNames='p-0 cursor-pointer'
           onClick={onClose}
         />
       )}
-    </div>
+    </Layout.Flex>
   );
 };

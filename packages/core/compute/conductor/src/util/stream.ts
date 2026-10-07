@@ -2,44 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as ParseResult from 'effect/ParseResult';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 const isStream = (value: any): value is Stream.Stream<any> =>
-  Predicate.hasProperty(value, Stream.StreamTypeId) && Predicate.isObject(value[Stream.StreamTypeId]);
+  Predicate.hasProperty(value, Stream.TypeId) && Predicate.isObject(value[Stream.TypeId]);
 
-// "API-type" style borrowed from effect
-export interface StreamSchema<Item extends Schema.Schema.AnyNoContext> extends Schema.Schema<
-  Stream.Stream<Schema.Schema.Type<Item>, never, never>,
-  Stream.Stream<Schema.Schema.Encoded<Item>, never, never>,
-  Schema.Schema.Context<Item>
+// "API-type" style borrowed from effect.
+//
+// v4's `declare` describes an opaque value by a type guard; the parse-issue plumbing and the
+// separate encoded type parameter are gone, so a stream is declared by its guard and carries the
+// item schema on an annotation as before.
+export interface StreamSchema<Item extends Schema.Codec<any, any>> extends Schema.Codec<
+  Stream.Stream<Schema.Schema.Type<Item>, never, never>
 > {}
 
-export const StreamSchema = <Item extends Schema.Schema.AnyNoContext>(item: Item): StreamSchema<Item> =>
-  Schema.declare<
-    Stream.Stream<Schema.Schema.Type<Item>, never, never>,
-    Stream.Stream<Schema.Schema.Encoded<Item>, never, never>,
-    readonly [Item]
-  >(
-    [item],
-    {
-      // TODO(dmaretskyi): This should be handling encoding/decoding of the stream elements.
-      decode: (_schema) => (input, _options, ast) =>
-        isStream(input)
-          ? Effect.succeed(input)
-          : Effect.fail(new ParseResult.Type(ast, String(input), 'expected a stream')),
-      encode: (_schema) => (input, _options, ast) =>
-        isStream(input)
-          ? Effect.succeed(input)
-          : Effect.fail(new ParseResult.Type(ast, String(input), 'expected a stream')),
-    },
-    {
-      [StreamItemAnnotationId]: item,
-    },
-  );
+export const StreamSchema = <Item extends Schema.Codec<any, any>>(item: Item): StreamSchema<Item> =>
+  Schema.declare<Stream.Stream<Schema.Schema.Type<Item>, never, never>>(isStream).annotate({
+    [StreamItemAnnotationId]: item,
+  });
 
 // We don't have a separate AST node for stream, so we put the item schema on an annotation.
-export const StreamItemAnnotationId: unique symbol = Symbol.for('@dxos/conductor/StreamItemAnnotation');
+export const StreamItemAnnotationId = '@dxos/conductor/StreamItemAnnotation';

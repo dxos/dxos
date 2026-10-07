@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import * as ScoreOperation from '../types/ScoreOperation';
-import { parseLeadSheet } from '../util/lead-sheet';
-import { type MutableScore, applyLeadSheetToScore } from '../util/score-leadsheet';
+import { ScoreOperation } from '#types';
+
+import { parseLeadSheet } from '../util/lead-sheet.ts';
+import { type MutableScore, applyLeadSheetToScore } from '../util/score-leadsheet.ts';
 
 export default ScoreOperation.Write.pipe(
   Operation.withHandler(

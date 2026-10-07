@@ -9,7 +9,7 @@ import { Index } from 'usearch';
 
 import { Message } from '@dxos/types';
 
-import { embedBatch, embedText } from './embeddings';
+import { embedBatch, embedText } from './embeddings.ts';
 
 export type Snippet = {
   readonly text: string;
@@ -23,7 +23,7 @@ export interface VectorStoreApi {
 }
 
 /** A semantic-similarity index over message text, injected into the RAG skill's retrieve tool. */
-export class VectorStore extends Context.Tag('@dxos/stories-brain/VectorStore')<VectorStore, VectorStoreApi>() {}
+export class VectorStore extends Context.Service<VectorStore, VectorStoreApi>()('@dxos/stories-brain/VectorStore') {}
 
 // The embedded document per message: sender + subject + body, so both "from <sender>" and topical
 // queries retrieve. Truncated to keep embedding inputs bounded.

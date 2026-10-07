@@ -5,12 +5,12 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { EmailFactPipeline } from './fact-pipeline';
-import { type FactIndexer } from './stages';
-import { Thread } from './types';
+import { EmailFactPipeline } from './fact-pipeline.ts';
+import { type FactIndexer } from './stages/index.ts';
+import { Thread } from './types/index.ts';
 
 describe('email fact pipeline (facts-only assembly)', () => {
   let builder: EchoTestBuilder;

@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useEditorContext } from '../../hooks';
-import { type TestId } from '../defs';
-import { eventsAuto, eventsNone } from '../styles';
-import { Toolbar, Tools } from '../Toolbar';
+import { useEditorContext } from '../../hooks/index.ts';
+import { type TestId } from '../defs.ts';
+import { eventsAuto, eventsNone } from '../styles.tsx';
+import { Toolbar, Tools } from '../Toolbar/index.ts';
 
-export type UIProps = ThemedClassName<{
+export type UIProps = Util.ThemedClassName<{
   showTools?: boolean;
   showToolbar?: boolean;
 }>;
@@ -39,7 +39,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
   };
 
   return (
-    <div {...testId<TestId>('dx-ui')} className={mx('absolute h-full inset-0', eventsNone)}>
+    <div {...testId<TestId>('dx-ui')} className={mx('dx-cover h-full', eventsNone)}>
       <div>
         <div className='absolute top-2 left-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
       </div>

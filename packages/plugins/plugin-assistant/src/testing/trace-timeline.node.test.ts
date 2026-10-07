@@ -7,15 +7,10 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import {
-  AgentHandlers,
-  DatabaseHandlers,
-  DatabaseSkill,
-  RunInstructions,
-  WebSearchHandlers,
-  WebSearchSkill,
-  WebSearchToolkitOpaque,
-} from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -27,10 +22,8 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
-import { renderTimelineAscii } from '@dxos/react-ui-components';
+import { buildExecutionGraph, renderTimelineAscii } from '@dxos/react-ui-trace';
 import { Organization, Person } from '@dxos/types';
-
-import { buildExecutionGraph } from '#execution-graph';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -43,9 +36,14 @@ const queryTraceMessages = Effect.gen(function* () {
 
 const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
-  skills: [DatabaseSkill.make(), WebSearchSkill.make()],
-  operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
-  toolkits: [WebSearchToolkitOpaque],
+  skills: [ChatContextSkill.make(), WebSearchSkill.make()],
+  operationHandlers: [
+    ChatContextSkill.Handlers,
+    AgentOperationHandlerSet.handlers,
+    WebSearchSkill.Handlers,
+    ExampleHandlers,
+  ],
+  toolkits: [WebSearchSkill.ToolkitOpaque],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
 });
@@ -58,7 +56,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            skills: [DatabaseSkill.make()],
+            skills: [ChatContextSkill.make()],
           });
           yield* agent.submitPrompt('Create an organization called "Cyberdyne Systems".');
           yield* agent.waitForCompletion();
@@ -96,7 +94,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            skills: [DatabaseSkill.make()],
+            skills: [ChatContextSkill.make()],
           });
           yield* Database.add(Obj.make(Organization.Organization, { name: 'Acme Corp' }));
           yield* Database.add(Obj.make(Organization.Organization, { name: 'Globex Industries' }));
@@ -128,7 +126,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            skills: [DatabaseSkill.make()],
+            skills: [ChatContextSkill.make()],
           });
           yield* agent.submitPrompt('List all available schemas. Tell me what typenames are available.');
           yield* agent.waitForCompletion();
@@ -178,7 +176,7 @@ describe.skip('Trace timeline', () => {
           );
           yield* Database.add(
             Trigger.make({
-              runnable: Ref.make(Operation.serialize(RunInstructions)),
+              runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
               enabled: true,
               spec: Trigger.specFeed(feed),
               input: {

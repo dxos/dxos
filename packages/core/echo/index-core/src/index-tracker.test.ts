@@ -2,31 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type IndexCursor, IndexTracker } from './index-tracker';
-
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
+import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
 describe('IndexTracker', () => {
   it.effect(
     'should store and retrieve index cursors',
     Effect.fnUntraced(function* () {
-      const tracker = new IndexTracker();
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
       yield* tracker.migrate();
 
       const cursor1: IndexCursor = {

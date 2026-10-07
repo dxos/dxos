@@ -5,15 +5,16 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
-import * as KanbanOperation from '../types/KanbanOperation';
+import { KanbanOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = KanbanOperation.DeleteCardField.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ view, fieldId }) {
+    Effect.fnUntraced(function* ({ view: viewRef, fieldId }) {
+      const view = yield* Database.load(viewRef);
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');

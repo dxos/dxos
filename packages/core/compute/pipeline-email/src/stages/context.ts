@@ -22,11 +22,11 @@ export const emptyStats = (): Stats => ({ from: new Map(), to: new Map(), total:
  * ECHO space database (browser-safe); `stats` and `summaries` are mutable accumulators read after
  * the run. Callers provide it once at the pipeline edge (`Effect.provide`).
  */
-export class EmailPipelineCtx extends Context.Tag('@dxos/pipeline-email/EmailPipelineCtx')<
+export class EmailPipelineCtx extends Context.Service<
   EmailPipelineCtx,
   {
     readonly db: Database.Database;
     readonly stats: Stats;
     readonly summaries: Array<{ messageId: string; summary: Summary }>;
   }
->() {}
+>()('@dxos/pipeline-email/EmailPipelineCtx') {}

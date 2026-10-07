@@ -10,7 +10,7 @@ import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type Message } from '@dxos/types';
 
-import { EditorChunkDocument, type TranscriptModel } from '../../model';
+import { EditorChunkDocument, type TranscriptModel } from '../../model/index.ts';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.
@@ -166,7 +166,7 @@ class TimestampMarker extends GutterMarker {
 
   override toDOM(view: EditorView) {
     const el = document.createElement('div');
-    el.className = 'text-sm text-subdued hover:bg-hover-surface cursor-pointer';
+    el.className = 'text-sm text-fg-subtle hover:bg-hover-surface cursor-pointer';
     el.textContent = formatTimestamp(this._timestamp, this._started);
     // TODO(burdon): Click to bookmark or copy hyperlink.
     el.onclick = () => {

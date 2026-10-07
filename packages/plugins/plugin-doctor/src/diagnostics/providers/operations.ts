@@ -12,8 +12,8 @@ import { Database, Filter, Obj, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces } from '../helpers';
-import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
+import { getReadyDatabases } from '../helpers.ts';
+import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
  * Services known to be available to operations at invocation time.
@@ -41,15 +41,15 @@ export const operationsServicesDiagnostic: DiagnosticProvider = {
   id: 'operations-services',
   label: ['diagnostic.operations-services.label', { ns: meta.profile.key }],
   description: ['diagnostic.operations-services.description', { ns: meta.profile.key }],
-  run: async ({ client, reportProgress, signal }) => {
+  run: async ({ spaces, graph, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
-    const spaces = getReadySpaces(client);
-    for (const space of spaces) {
+    const databases = await getReadyDatabases({ spaces, graph });
+    for (const db of databases) {
       if (signal.aborted) {
         break;
       }
-      reportProgress(space.id);
-      const operations = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
+      reportProgress(db.spaceId);
+      const operations = await db.query(Filter.type(Operation.PersistentOperation)).run();
       for (const operation of operations) {
         if (signal.aborted) {
           break;
@@ -60,11 +60,11 @@ export const operationsServicesDiagnostic: DiagnosticProvider = {
           const operationKey = Obj.getMeta(operation).key;
           const label = operation.name || operationKey || operation.id;
           issues.push({
-            id: `${space.id}:${operation.id}:unknown-services`,
+            id: `${db.spaceId}:${operation.id}:unknown-services`,
             severity: 'error',
             message: `Operation "${label}" requests unknown service(s): ${unknownServices.join(', ')}.`,
             subjectLabel: operationKey ?? operation.id,
-            spaceId: space.id,
+            spaceId: db.spaceId,
           });
         }
       }

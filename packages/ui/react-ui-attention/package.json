@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,21 +35,18 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -60,7 +57,6 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:",

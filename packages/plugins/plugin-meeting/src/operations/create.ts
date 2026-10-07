@@ -2,15 +2,14 @@
 
 import * as Effect from 'effect/Effect';
 
+import { getSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOperation';
-import { getSpace } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 
-import * as Meeting from '../types/Meeting';
-import * as MeetingOperation from '../types/MeetingOperation';
+import { Meeting, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOperation.Create.pipe(
   Operation.withHandler(
@@ -28,7 +27,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOp
       );
       const space = channelSpace ?? eventSpace;
       invariant(space);
-      const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { space });
+      const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { db: space.db });
       // `event` is a Ref (works for feed/queue events, unlike a relation endpoint).
       const meeting = Obj.make(Meeting.Meeting, {
         name,

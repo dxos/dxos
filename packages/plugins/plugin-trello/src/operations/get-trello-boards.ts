@@ -2,15 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { TrelloApi } from '../services';
-import * as TrelloOperation from '../types/TrelloOperation';
+import { TrelloOperation } from '#types';
+
+import { TrelloApi } from '../services/index.ts';
 
 /**
  * Discovery only — list Trello boards reachable from the connection's token
@@ -28,7 +30,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = T
       const target = connection.target;
       const db = target ? Obj.getDatabase(target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
+        return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
       }
 
       return yield* Effect.gen(function* () {
@@ -39,10 +41,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = T
           description: board.shortUrl,
         }));
         return { targets };
-      }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(TrelloApi.TrelloCredentials.fromConnection(connection)),
-      );
+      }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), TrelloApi.fromConnection(connection))));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

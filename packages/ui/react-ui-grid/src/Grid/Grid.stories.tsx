@@ -5,22 +5,23 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type MouseEvent, type RefObject, useCallback, useRef, useState } from 'react';
 
-import { defaultRowSize } from '@dxos/lit-grid';
-import { type DxGridPlaneCells } from '@dxos/lit-grid';
+import { type DxGridPlaneCells, defaultRowSize } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { DropdownMenu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
-import { useSearchListResults } from '@dxos/react-ui-search';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as Menu from '@dxos/react-ui/Menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
+import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
 
-const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
+const storybookItems = random.helpers
+  .uniqueArray(random.commerce.productName, 16)
+  .map((name) => ({ value: name, label: name }));
 
-type GridStoryProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
+type GridStoryArgs = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
-const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
+const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
   const triggerRef = useRef<HTMLButtonElement>(null) as RefObject<HTMLButtonElement>;
 
   const [cells, setCells] = useState<GridContentProps['initialCells']>(initialCells);
@@ -33,8 +34,8 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 
   // Multiselect
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [multiSelectValue, setInternalMultiselectValue] = useState('');
-  const setMultiselectValue = useCallback<NonNullable<ComboboxRootProps['onValueChange']>>((nextValue) => {
+  const [multiSelectValue, setInternalMultiselectValue] = useState<string[]>([]);
+  const setMultiselectValue = useCallback((nextValue: string[]) => {
     setInternalMultiselectValue(nextValue);
     setCells((cells) => {
       // TODO(burdon): How can we get the cell address to update?
@@ -72,43 +73,35 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
       </Grid.Root>
 
       {/* Menu */}
-      <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-        <DropdownMenu.Content>
-          <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+      <Menu.Root
+        open={menuOpen}
+        onOpenChange={({ open }) => setMenuOpen(open)}
+        positioning={VirtualAnchor.virtualAnchor(triggerRef)}
+      >
+        <Menu.Content>
+          <Menu.Item
+            onClick={() => console.log('[Click on dropdown menu item]')}
+            item={{ value: 'Hello', label: 'Hello' }}
+          />
+        </Menu.Content>
+      </Menu.Root>
 
       {/* Multiselect */}
       <Combobox.Root
+        items={storybookItems}
+        multiple
         open={popoverOpen}
-        onOpenChange={setPopoverOpen}
+        onOpenChange={({ open }) => setPopoverOpen(open)}
         value={multiSelectValue}
-        onValueChange={setMultiselectValue}
+        onValueChange={({ value }) => setMultiselectValue(value)}
+        positioning={VirtualAnchor.virtualAnchor(triggerRef)}
       >
-        <Combobox.VirtualTrigger virtualRef={triggerRef} />
-        <ComboboxContentWithFiltering />
+        <Combobox.Content>
+          <Combobox.Input placeholder='Search...' />
+          <Combobox.List />
+        </Combobox.Content>
       </Combobox.Root>
     </div>
-  );
-};
-
-const ComboboxContentWithFiltering = () => {
-  const { results, query, handleSearch } = useSearchListResults({
-    items: storybookItems,
-  });
-
-  return (
-    <Combobox.Content>
-      <Combobox.Input placeholder='Search...' value={query} onValueChange={handleSearch} />
-      <Combobox.List>
-        {results.map((value) => (
-          <Combobox.Item key={value} value={value} label={value} />
-        ))}
-      </Combobox.List>
-      <Combobox.Arrow />
-    </Combobox.Content>
   );
 };
 
@@ -179,7 +172,7 @@ export const Basic: Story = {
         '1,1': {
           value: 'Demo decoration',
           accessoryHtml: `
-            <button class="dx-button w-6 px-0.5 min-h-0 absolute inset-y-1 right-1" data-story-action="menu">
+            <button class="dx-control dx-button dx-button-square absolute inset-y-1 right-1" data-size="sm" data-story-action="menu">
               <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
             </button>
           `,
@@ -223,7 +216,7 @@ export const Calendar: Story = {
             // TODO(burdon): Formatting changes when cell is selected.
             cells[toPlaneCellIndex({ col, row })] = {
               readonly: true,
-              accessoryHtml: '<div class="flex h-full w-full justify-center items-center overflow-hidden">0</div>',
+              accessoryHtml: '<div class="flex dx-fill justify-center items-center overflow-hidden">0</div>',
               className: '',
             };
           }

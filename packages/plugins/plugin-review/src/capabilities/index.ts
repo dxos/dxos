@@ -6,16 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 
+import { meta } from '#meta';
 import type { ReviewPluginOptions } from '#plugin';
+import { translations } from '#translations';
+import { AgentIdentity, CommentCapabilities, ReviewCapabilities, ReviewEvents } from '#types';
 
-import * as AgentIdentity from '../types/AgentIdentity';
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
-import * as ReviewEvents from '../types/ReviewEvents';
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',
@@ -28,13 +31,19 @@ export const AgentIdentityModule = Capability.inlineModule(
 export const AgentRunner = Capability.lazyModule(
   'AgentRunner',
   { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
-  () => import('./agent-runner'),
+  () => import('./agent-runner.ts'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
-  name: 'HistoryGraph',
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: ['browser', 'node', 'tauri'],
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph.ts'), {
+  name: 'HistoryGraph',
+  environments: ['browser', 'node', 'tauri'],
+});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the
@@ -45,29 +54,31 @@ export const Markdown = Capability.lazyModule(
     provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
     activatesOn: MarkdownEvents.Start,
   },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
 // Markdown owns the editor-binding socket; this plugin owns the version-aware behaviour, and gates
-// the history companion for markdown documents.
+// the history companion for markdown documents. Browser-only: the binding it contributes is
+// `useMarkdownEditorBinding`, a React hook that mounts the version toolbar and suggestion overlays.
 export const MarkdownBinding = Capability.lazyModule(
   'MarkdownBinding',
   {
     provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
     activatesOn: MarkdownEvents.Start,
+    environments: ['browser', 'tauri'],
   },
-  () => import('./markdown-binding'),
+  () => import('./markdown-binding.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const HistorySurface = AppCapability.surface(() => import('./history-surface'), {
+export const HistorySurface = AppCapability.surface(() => import('./history-surface.tsx'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
   name: 'HistorySurface',
 });
-export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
+export const CommentsSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [CommentCapabilities.Settings],
 });
@@ -77,13 +88,30 @@ export const CommentState = Capability.lazyModule(
   // this on the review UI's start is wrong. Ungated (hence idle) it is also pullable by the
   // consumers that need it earlier, which a start-gated provider is not.
   { provides: [CommentCapabilities.State] },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
-  () => import('./review-state'),
+  {
+    provides: [ReviewCapabilities.ReviewRenderPolicy],
+    activatesOn: ReviewEvents.Start,
+    environments: ['browser', 'node', 'tauri'],
+  },
+  () => import('./review-state.ts'),
 );
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: ReviewEvents.Start,
+  environments: ['browser', 'node', 'tauri'],
+});
+export const TourFragment = Capability.lazyModule(
+  'TourFragment',
+  { provides: [AppCapabilities.TourFragment], environments: ['browser', 'tauri'] },
+  () => import('./tour-fragment.ts'),
+);
+export const Translations = AppCapability.translations([...translations, ...threadTranslations]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

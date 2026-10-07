@@ -7,34 +7,29 @@ import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
   type CancellableInvitationObservable,
-  Invitation,
+  Invitation_State,
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import {
-  Avatar,
-  type AvatarContentProps,
-  Button,
-  Clipboard,
-  IconButton,
-  type ThemedClassName,
-  Tooltip,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { getSize, mx } from '@dxos/ui-theme';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
+import { mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { translationKey } from '../../translations';
-import { AuthCode } from '../AuthCode/AuthCode';
-import { type SharedInvitationListProps } from './InvitationListProps';
+import { translationKey } from '../../translations.ts';
+import { AuthCode } from '../AuthCode/index.ts';
+import { type SharedInvitationListProps } from './InvitationListProps.ts';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
   onClickRemove?: (invitation: CancellableInvitationObservable) => void;
   reverseEffects?: boolean;
-} & ThemedClassName<ComponentPropsWithoutRef<'li'>>;
+} & Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export type InvitationListItemImplProps = InvitationListItemProps & {
   invitationStatus: InvitationStatus;
@@ -46,46 +41,32 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const avatarProps: Pick<AvatarContentProps, 'size' | 'variant'> = {
-  size: 10,
-  variant: 'circle',
-};
+const AVATAR_SIZE = 'lg';
 
+/** Two faded rings behind a multi-use invitation's avatar, so it reads as a stack. */
 const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<AvatarContentProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
-  const { tx } = useThemeContext();
-  return (
-    <>
-      <span
-        className={mx(
-          'absolute right-auto opacity-20',
-          reverseEffects ? 'left-3' : 'left-1',
-          getSize(avatarProps.size!),
-        )}
-      >
-        <span
-          className={tx('avatar.ring', { ...avatarProps, status, animation })}
-          style={{ animationDelay: '400ms' }}
-        />
-      </span>
-      <span
-        className={mx(
-          'absolute right-auto opacity-50',
-          reverseEffects ? 'left-2' : 'left-2',
-          getSize(avatarProps.size!),
-        )}
-      >
-        <span
-          className={tx('avatar.ring', { ...avatarProps, status, animation })}
-          style={{ animationDelay: '200ms' }}
-        />
-      </span>
-    </>
-  );
-};
+}: Pick<Avatar.RootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
+  <>
+    {[
+      { offset: reverseEffects ? 'left-3' : 'left-1', opacity: 'opacity-20', delay: '400ms' },
+      { offset: 'left-2', opacity: 'opacity-50', delay: '200ms' },
+    ].map(({ offset, opacity, delay }) => (
+      <Avatar.Root
+        key={delay}
+        aria-hidden
+        size={AVATAR_SIZE}
+        status={status}
+        animation={animation}
+        hueVariant='transparent'
+        classNames={mx('absolute right-auto', offset, opacity)}
+        style={{ animationDelay: delay }}
+      />
+    ))}
+  </>
+);
 
 export const InvitationListItemImpl = ({
   invitation,
@@ -96,19 +77,19 @@ export const InvitationListItemImpl = ({
   reverseEffects,
   ...props
 }: InvitationListItemImplProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
-    [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
+    [Invitation_State.ERROR, Invitation_State.TIMEOUT, Invitation_State.CANCELLED].indexOf(invitationStatus) >= 0
   );
 
   const showShare =
     shareable &&
     (multiUse ||
-      [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0);
+      [Invitation_State.INIT, Invitation_State.CONNECTING, Invitation_State.CONNECTED].indexOf(invitationStatus) >= 0);
 
-  const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
+  const showAuthCode = invitationStatus === Invitation_State.READY_FOR_AUTHENTICATION;
 
   const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
@@ -120,24 +101,24 @@ export const InvitationListItemImpl = ({
     : undefined;
 
   const avatarAnimation = [
-    Invitation.State.INIT,
-    Invitation.State.CONNECTING,
-    Invitation.State.CONNECTED,
-    Invitation.State.READY_FOR_AUTHENTICATION,
-    Invitation.State.AUTHENTICATING,
+    Invitation_State.INIT,
+    Invitation_State.CONNECTING,
+    Invitation_State.CONNECTED,
+    Invitation_State.READY_FOR_AUTHENTICATION,
+    Invitation_State.AUTHENTICATING,
   ].includes(invitationStatus)
     ? 'pulse'
     : 'none';
 
-  const avatarError = [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].includes(
+  const avatarError = [Invitation_State.ERROR, Invitation_State.TIMEOUT, Invitation_State.CANCELLED].includes(
     invitationStatus,
   );
 
   const avatarGreen = [
-    Invitation.State.CONNECTED,
-    Invitation.State.READY_FOR_AUTHENTICATION,
-    Invitation.State.AUTHENTICATING,
-    Invitation.State.SUCCESS,
+    Invitation_State.CONNECTED,
+    Invitation_State.READY_FOR_AUTHENTICATION,
+    Invitation_State.AUTHENTICATING,
+    Invitation_State.SUCCESS,
   ].includes(invitationStatus);
 
   const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
@@ -148,24 +129,23 @@ export const InvitationListItemImpl = ({
       {...props}
       classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
-      <Listbox.ItemLabel classNames='sr-only'>
+      <Listbox.ItemText classNames='sr-only'>
         {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
-      </Listbox.ItemLabel>
+      </Listbox.ItemText>
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
-      <Avatar.Root>
-        <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
-          <Avatar.Content
-            {...avatarProps}
-            animation={avatarAnimation}
-            status={avatarStatus}
-            fallback={hexToEmoji(invitationId)}
-            tabIndex={0}
-            classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
-          />
-        </Tooltip.Trigger>
-      </Avatar.Root>
+      <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
+        <Avatar.Root
+          size={AVATAR_SIZE}
+          animation={avatarAnimation}
+          status={avatarStatus}
+          fallback={hexToEmoji(invitationId)}
+          label={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
+          tabIndex={0}
+          classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
+        />
+      </Tooltip.Trigger>
       {showShare && invitationUrl ? (
         <>
           <Tooltip.Trigger
@@ -174,28 +154,28 @@ export const InvitationListItemImpl = ({
               invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
-            <Button
+            <Button.Root
               variant='ghost'
               classNames='grow justify-start font-medium'
-              onClick={() => send({ type: 'selectInvitation', invitation })}
               data-testid='show-qrcode'
+              onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
-            </Button>
+            </Button.Root>
           </Tooltip.Trigger>
-          <Clipboard.IconButton variant='ghost' value={invitationUrl} />
+          <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
-      ) : invitationStatus === Invitation.State.CONNECTING ? (
+      ) : invitationStatus === Invitation_State.CONNECTING ? (
         <span className='px-2 grow text-neutral-500'>Connecting...</span>
-      ) : invitationStatus === Invitation.State.AUTHENTICATING ? (
+      ) : invitationStatus === Invitation_State.AUTHENTICATING ? (
         <span className='px-2 grow text-neutral-500'>Authenticating...</span>
-      ) : invitationStatus === Invitation.State.ERROR || invitationStatus === Invitation.State.TIMEOUT ? (
+      ) : invitationStatus === Invitation_State.ERROR || invitationStatus === Invitation_State.TIMEOUT ? (
         <span className='px-2 grow text-neutral-500'>Failed</span>
-      ) : invitationStatus === Invitation.State.CANCELLED ? (
+      ) : invitationStatus === Invitation_State.CANCELLED ? (
         <span className='px-2 grow text-neutral-500'>Cancelled</span>
-      ) : invitationStatus === Invitation.State.SUCCESS ? (
+      ) : invitationStatus === Invitation_State.SUCCESS ? (
         <span className='px-2 grow truncate'>User joined</span>
       ) : !shareable ? (
         <span className='px-2 grow text-neutral-500'>Pending Invitation</span>
@@ -203,9 +183,9 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <IconButton
+        <Button.Root
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label={t('cancel-invitation.label')}
           iconOnly
           variant='ghost'
@@ -214,9 +194,9 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <IconButton
+        <Button.Root
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label={t('remove-invitation.label')}
           iconOnly
           variant='ghost'

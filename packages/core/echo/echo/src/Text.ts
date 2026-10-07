@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import * as Err from './Err';
-import * as internal from './internal';
-import * as Obj from './Obj';
+import * as Error from './Error.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
 
 /**
  * A key path addressing a string value within an object, mirroring `Obj.getValue` / `Obj.setValue`.
@@ -30,11 +30,13 @@ export type Edit = {
  * anchors, and merging cleanly with concurrent edits); for in-memory objects it is a plain assignment.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
+ *
+ * @performance O(text length) diff, so concurrent edits merge minimally.
  */
 export const update = (obj: Obj.Unknown, path: KeyPath | string | number, newText: string): void => {
   const { handler, target } = resolve(obj, 'update');
   if (typeof handler.textUpdate !== 'function') {
-    throw new Err.TextNotSupportedError('update');
+    throw new Error.TextNotSupportedError('update');
   }
   handler.textUpdate(target, normalizePath(path), newText);
 };
@@ -44,6 +46,8 @@ export const update = (obj: Obj.Unknown, path: KeyPath | string | number, newTex
  * remove `deleteCount` characters at `start` and insert `insert`. Returns the removed substring.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
+ *
+ * @performance O(delete count + insert length) CRDT splice.
  */
 export const splice = (
   obj: Obj.Unknown,
@@ -54,7 +58,7 @@ export const splice = (
 ): string => {
   const { handler, target } = resolve(obj, 'splice');
   if (typeof handler.textSplice !== 'function') {
-    throw new Err.TextNotSupportedError('splice');
+    throw new Error.TextNotSupportedError('splice');
   }
   return handler.textSplice(target, normalizePath(path), start, deleteCount, insert);
 };
@@ -64,9 +68,12 @@ export const splice = (
  * full string. Implemented on top of {@link splice} so it works for both backends.
  *
  * An edit with a missing or empty `oldString` appends its `newString`. A non-`replaceAll` edit whose
- * `oldString` is not found throws {@link Err.TextEditNotFoundError}.
+ * `oldString` is not found throws {@link Error.TextEditNotFoundError}.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
+ *
+ * @performance O(N) per edit plus O(M · N) for `replaceAll` (N = text length, M = matches): it re-reads and searches the
+ * whole string after every splice, so one `replaceAll` edit can be O(N²).
  */
 export const apply = (obj: Obj.Unknown, path: KeyPath | string | number, edits: readonly Edit[]): string => {
   const keyPath = normalizePath(path);
@@ -89,7 +96,7 @@ export const apply = (obj: Obj.Unknown, path: KeyPath | string | number, edits: 
     } else {
       const idx = text.indexOf(edit.oldString);
       if (idx === -1) {
-        throw new Err.TextEditNotFoundError(edit.oldString);
+        throw new Error.TextEditNotFoundError(edit.oldString);
       }
       splice(obj, keyPath, idx, edit.oldString.length, edit.newString);
     }
@@ -108,7 +115,7 @@ const normalizePath = (path: KeyPath | string | number): KeyPath =>
  */
 const resolve = (obj: Obj.Unknown, operation: string) => {
   if (!internal.isProxy(obj)) {
-    throw new Err.TextNotSupportedError(operation);
+    throw new Error.TextNotSupportedError(operation);
   }
   const handler = internal.getProxyHandler(obj);
   const target = internal.getProxyTarget(obj);

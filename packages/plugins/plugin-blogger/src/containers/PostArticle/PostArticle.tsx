@@ -4,13 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { qualifyId } from '@dxos/plugin-graph';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
-import * as Blog from '../../types/Blog';
+import { Blog } from '#types';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Blog.Post>;
 
@@ -33,7 +33,7 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
   const contentDoc = contentRef?.target;
   const contentAttendableId = contentDoc
     ? attendableId
-      ? qualifyId(attendableId, contentDoc.id)
+      ? GraphNode.qualifyId(attendableId, contentDoc.id)
       : Obj.getURI(contentDoc)
     : undefined;
   const contentData = useMemo(

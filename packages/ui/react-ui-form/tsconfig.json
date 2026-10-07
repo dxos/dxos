@@ -18,9 +18,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/effect-proto"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -28,9 +25,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
     },
     {
       "path": "../../common/util"
@@ -45,9 +39,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -60,10 +51,10 @@
       "path": "../lit-ui"
     },
     {
-      "path": "../react-ui"
+      "path": "../react-primitives/react-hooks"
     },
     {
-      "path": "../react-ui-components"
+      "path": "../react-ui"
     },
     {
       "path": "../react-ui-editor"
@@ -72,13 +63,7 @@
       "path": "../react-ui-list"
     },
     {
-      "path": "../react-ui-markdown"
-    },
-    {
-      "path": "../react-ui-pickers"
-    },
-    {
-      "path": "../react-ui-search"
+      "path": "../react-ui-query"
     },
     {
       "path": "../react-ui-syntax-highlighter"

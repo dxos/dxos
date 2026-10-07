@@ -4,17 +4,16 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Space } from '@dxos/client/echo';
-import { type Feed } from '@dxos/echo';
+import { type Database, type Feed } from '@dxos/echo';
 import { type EntityLookup as EntityLookupFn } from '@dxos/pipeline-transcription';
 import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as SettingsModule from './Settings';
+import * as SettingsModule from './Settings.ts';
 
 /**
  * Enriches a transcript message before it is written to the feed (e.g. entity linking).
@@ -28,7 +27,7 @@ export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Me
  */
 export interface TranscriptionManager {
   readonly enabled: Atom.Atom<boolean>;
-  setFeed(space: Space, feed: Feed.Feed): void;
+  setFeed(db: Database.Database, feed: Feed.Feed): void;
   setAudioTrack(track?: MediaStreamTrack): Promise<void>;
   setRecording(recording?: boolean): void;
   setEnabled(enabled: boolean): Promise<void>;

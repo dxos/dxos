@@ -10,26 +10,26 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { test } from 'vitest';
 
-import { runAndForwardErrors } from './internal/errors';
+import { runAndForwardErrors } from './internal/errors.ts';
 
-class ClientConfig extends Context.Tag('ClientConfig')<ClientConfig, { endpoint: string }>() {}
+class ClientConfig extends Context.Service<ClientConfig, { endpoint: string }>()('ClientConfig') {}
 
-class Client extends Context.Tag('Client')<Client, { call: () => Effect.Effect<void> }>() {
-  static layer = Layer.effect(
-    Client,
-    Effect.gen(function* () {
-      const config = yield* ClientConfig;
-      return {
-        call: () => {
-          console.log('called', config.endpoint);
-          return Effect.void;
-        },
-      };
-    }),
-  );
-}
+class Client extends Context.Service<Client, { call: () => Effect.Effect<void> }>()('Client') {}
 
-const ServerLive = Layer.scoped(
+const layer = Layer.effect(
+  Client,
+  Effect.gen(function* () {
+    const config = yield* ClientConfig;
+    return {
+      call: () => {
+        console.log('called', config.endpoint);
+        return Effect.void;
+      },
+    };
+  }),
+);
+
+const ServerLive = Layer.effect(
   ClientConfig,
   Effect.gen(function* () {
     console.log('start server');
@@ -56,7 +56,7 @@ it.effect.skip(
       const client = yield* Client;
       yield* client.call();
     },
-    Effect.provide(Layer.provide(Client.layer, ServerLive)),
+    Effect.provide(Layer.provide(layer, ServerLive)),
   ),
 );
 
@@ -64,7 +64,7 @@ class ServerPlugin {
   #runtime = ManagedRuntime.make(ServerLive);
 
   readonly clientConfigLayer = Layer.effectContext(
-    this.#runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(ClientConfig)))),
+    this.#runtime.contextEffect.pipe(Effect.map((context) => Context.pick(ClientConfig)(context))),
   );
 
   async dispose() {
@@ -76,13 +76,13 @@ class ClientPlugin {
   constructor(private readonly _serverPlugin: ServerPlugin) {}
 
   async run() {
-    const layer = Layer.provide(Client.layer, this._serverPlugin.clientConfigLayer);
+    const providedLayer = Layer.provide(layer, this._serverPlugin.clientConfigLayer);
 
     await runAndForwardErrors(
       Effect.gen(function* () {
         const client = yield* Client;
         yield* client.call();
-      }).pipe(Effect.provide(layer)),
+      }).pipe(Effect.provide(providedLayer)),
     );
   }
 }

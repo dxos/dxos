@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
-import * as BrainOperation from '../types/BrainOperation';
-import { toCompactFact } from './facts';
+import { BrainOperation } from '#types';
+
+import { toCompactFact } from './facts.ts';
 
 export default BrainOperation.QueryFacts.pipe(
   Operation.withHandler(

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
+import type * as Tool from 'effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 

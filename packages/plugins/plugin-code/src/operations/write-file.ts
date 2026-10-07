@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import * as CodeOperation from '../types/CodeOperation';
-import * as SourceFile from '../types/SourceFile';
+import { CodeOperation, SourceFile } from '#types';
 
 const handler: Operation.WithHandler<typeof CodeOperation.WriteFile> = CodeOperation.WriteFile.pipe(
   Operation.withHandler(
@@ -30,8 +29,8 @@ const handler: Operation.WithHandler<typeof CodeOperation.WriteFile> = CodeOpera
       const file = SourceFile.make({ path, content });
       const added = yield* Database.add(file);
       Obj.update(code, (code) => {
-        const next = [...(code.files ?? []), Ref.make(added)];
-        (code as Obj.Mutable<typeof code>).files = next;
+        code.files ??= [];
+        code.files.push(Ref.make(added));
       });
       return { path, created: true };
     }),

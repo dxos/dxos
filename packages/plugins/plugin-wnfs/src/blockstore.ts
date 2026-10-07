@@ -12,7 +12,7 @@ import all from 'it-all';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
 
-import { storeName } from './helpers';
+import { storeName } from '#helpers';
 
 export const create = (apiHost?: string) => {
   return new MixedBlockstore(apiHost);
@@ -57,7 +57,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   url(apiHost: string, cid?: CID): string {
     const path = cid ? cid.toString() : '';
-    return `${apiHost}/api/file${path.length ? '/' + path : ''}`;
+    return `${apiHost}/blob/file${path.length ? '/' + path : ''}`;
   }
 
   // BLOCKSTORE IMPLEMENTATION

@@ -8,14 +8,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
+import { DeckCapabilities } from '#types';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.ScrollIntoView> = LayoutOperation.ScrollIntoView.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
         ...state,
-        scrollIntoView: input.subject,
+        scrollIntoView: input.subject === undefined ? undefined : { id: input.subject, focus: input.focus },
       }));
     }),
   ),

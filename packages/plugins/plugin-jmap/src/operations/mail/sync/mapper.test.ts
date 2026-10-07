@@ -9,9 +9,10 @@ import { Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Person } from '@dxos/types';
 
-import { JmapMail } from '../../../apis';
-import { JMAP_DOMAIN } from '../../../constants';
-import { decodeBody, mapEmail } from '../mapper';
+import { JmapMail } from '#apis';
+
+import { JMAP_DOMAIN } from '../../../constants.ts';
+import { decodeBody, mapEmail } from '../mapper.ts';
 
 const makeJmapEmail = (overrides?: Partial<JmapMail.Email>): JmapMail.Email => ({
   id: 'email-001',

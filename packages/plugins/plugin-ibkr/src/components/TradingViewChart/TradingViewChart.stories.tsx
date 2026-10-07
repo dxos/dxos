@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TradingViewChart } from './TradingViewChart';
+import { TradingViewChart } from './TradingViewChart.tsx';
 
 // Fictional symbol only — this is a public repo (never real holdings).
 const meta = {

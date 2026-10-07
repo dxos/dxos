@@ -4,12 +4,12 @@
 
 import React, { useCallback } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
-import { OPTIONS } from './trigger-kind-icon';
+import { OPTIONS } from './trigger-kind-icon.ts';
 
 /** Trigger spec kinds surfaced as selectable variants. Matches the discriminants of `Trigger.Spec`. */
 export type TriggerKind = 'timer' | 'feed' | 'subscription' | 'webhook' | 'email';
@@ -32,7 +32,7 @@ export type TriggerKindSelectorProps = {
  * selecting a row emits its kind. Selection is transient — the parent swaps in the variant editor on change.
  */
 export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const handleValueChange = useCallback(
     (id: string) => {
       const option = OPTIONS.find((option) => option.kind === id);
@@ -44,15 +44,22 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
   );
 
   return (
-    <Listbox.Root onValueChange={handleValueChange}>
+    <Listbox.Root
+      onValueChange={handleValueChange}
+      items={OPTIONS.map(({ kind, icon, disabled }) => ({
+        value: kind,
+        label: t(`trigger-kind.${kind}.label`),
+        description: t(`trigger-kind.${kind}.description`),
+        icon,
+        disabled,
+      }))}
+    >
       <Listbox.Content classNames='gap-1' aria-label={t('trigger-kind.placeholder')}>
-        {OPTIONS.map(({ kind, icon, disabled }) => (
-          <Listbox.Item key={kind} id={kind} disabled={disabled} classNames='dx-input-surface rounded-sm'>
-            <Listbox.ItemContent
-              icon={<Icon icon={icon} size={5} classNames='text-description' />}
-              title={<span className='font-medium'>{t(`trigger-kind.${kind}.label`)}</span>}
-              description={t(`trigger-kind.${kind}.description`)}
-            />
+        {OPTIONS.map(({ kind }) => (
+          <Listbox.Item key={kind} id={kind} classNames='dx-input-surface rounded-sm'>
+            <Listbox.ItemIcon classNames='text-fg-muted' />
+            <Listbox.ItemText classNames='font-medium' />
+            <Listbox.ItemDescription />
           </Listbox.Item>
         ))}
       </Listbox.Content>

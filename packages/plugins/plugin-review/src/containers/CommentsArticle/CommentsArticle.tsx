@@ -2,40 +2,47 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
+import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
+import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
-import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { type SuggestionGroup, useStatus } from '../../hooks';
-import * as CommentCapabilities from '../../types/CommentCapabilities';
-import * as CommentOperation from '../../types/CommentOperation';
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
-import { getMessageMetadata } from '../../util';
+import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
+import { currentObjectId, findCommentConfig, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -76,7 +83,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     () => stringField(subject, 'name') ?? stringField(subject, 'title') ?? stringField(subject, 'type') ?? 'Object',
     [subject],
   );
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-fg-muted'>{title}</span>, [title]);
 
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
@@ -100,9 +107,9 @@ const threadComponents = { Object: ObjectTile };
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
 
@@ -149,7 +156,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [members],
   );
 
-  const stateAtom = useCapability(CommentCapabilities.State);
+  const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
   const drafts = state.drafts[subjectId];
 
@@ -157,8 +164,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
-  const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
-  const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
+  const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  // An object whose comments are not anchored to a span (a drawing) has no text to select, so its empty state points
+  // only to the toolbar's whole-object comment.
+  const unanchored = findCommentConfig(commentConfigs, subject)?.comments === 'unanchored';
+  const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -179,6 +189,16 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     return branch?.key;
   }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
+
+  // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over.
+  const handleAddObjectComment = useCallback(
+    () =>
+      invokePromise(CommentOperation.Create, {
+        subject,
+        branch: reviewBranch,
+      }),
+    [invokePromise, subject, reviewBranch],
+  );
 
   const db = Obj.getDatabase(subject);
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
@@ -224,24 +244,26 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [setCommentsView],
   );
 
-  const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
-  const isAttended = hasAttention || isAncestor || isRelated;
-  const currentId = isAttended ? state.current : undefined;
+  // Membership, not attention: an attention gate closes in the window between a click recording
+  // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
+  // from `anchors` + `state.current`, both reactive, involves no timing.
+  const currentThreadId = currentObjectId(state.current);
 
-  // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
-  // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
-  // (a newly created draft autofocusing, a re-render restoring focus), and moving the document caret
-  // there would retarget the comment they create next.
+  // Attention (a thread taking focus) records it as current and brings its plank into view without taking
+  // focus from the thread; the anchored content is left alone, since focus lands there unasked.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
-      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
-      if (state.current === threadId) {
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      const threadId = Obj.getURI(thread);
+      // Recorded unconditionally, so a freshly persisted comment's new spelling shows the marker. A reveal
+      // re-scrolls the deck, so only a newly current thread asks for one.
+      const sameThread = currentObjectId(state.current) === thread.id;
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      if (sameThread) {
         return;
       }
 
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
-      // Scroll plank into view (deck handler).
-      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId, focus: false });
     },
     [state.current, invokePromise, registry, stateAtom, attendableId],
   );
@@ -256,18 +278,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
 
-      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
+      const thread = Relation.getSource(anchor) as Thread.Thread;
 
-      // Scroll within content to anchor (comment config per typename). Fall back to the object URI:
-      // this is what tells the editor which thread is current, so skipping it when the companion has
-      // no attendable id leaves the previous comment highlighted while the app selection moves on.
+      // This is what tells the editor which thread is current, so skipping it leaves the previous
+      // comment highlighted while the app selection moves on.
       const typename = Obj.getTypename(subject);
       const commentConfig = commentConfigs.find(({ id }) => id === typename);
       if (commentConfig?.scrollToAnchor) {
         void invokePromise(commentConfig.scrollToAnchor, {
           subject: attendableId ?? subjectId,
           cursor: anchor.anchor,
-          id: threadId,
+          id: Ref.make(thread),
         });
       }
     },
@@ -276,6 +297,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
+      // Persisting spans an await, and the reader can click another thread while it runs. Re-assert
+      // the selection only if nothing moved it in the meantime, so a submit cannot drag the marker
+      // back off the thread they have since chosen.
+      const selectionBefore = registry.get(stateAtom).current;
       await invokePromise(CommentOperation.AddMessage, {
         anchor,
         subject,
@@ -283,17 +308,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         text,
       });
 
+      const latest = registry.get(stateAtom);
+      if (latest.current !== selectionBefore) {
+        return;
+      }
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getURI(thread) });
+      // Direct write, not a queued Select: this is a compare-and-set, and its guard is only sound
+      // while the read and the write share one synchronous turn.
+      registry.set(stateAtom, { ...latest, current: Obj.getURI(thread) });
     },
     [invokePromise, identity, subject, registry, stateAtom],
   );
 
   const handleResolve = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(CommentOperation.ToggleResolved, {
-        thread: Relation.getSource(anchor) as Thread.Thread,
-      }),
+    (anchor: AnchoredTo.AnchoredTo) => {
+      // The control flips, so it reads the thread's status and states the one it wants.
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      return invokePromise(CommentOperation.SetResolved, { thread, resolved: thread.status !== 'resolved' });
+    },
     [invokePromise],
   );
 
@@ -303,11 +335,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleMessageDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
+    (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<MessageType.Message>) =>
       invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
-        messageId,
+        message,
       }),
     [invokePromise, subject],
   );
@@ -327,7 +359,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.SetResolved, { thread, resolved: true });
     },
     [invokePromise, subject],
   );
@@ -346,15 +378,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         branch,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+      await invokePromise(CommentOperation.SetResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+        resolved: true,
+      });
     },
     [invokePromise, subject, reviewBranch],
   );
 
   // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
   // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
-  const mainText = markdownDoc?.content.target;
-  const [base = ''] = useObject(markdownDoc?.content, 'content');
+  const mainText = useResolveRef(markdownDoc?.content);
 
   const routeSuggestion = useCallback(
     async (
@@ -415,10 +449,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
-    if (currentId) {
-      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (!currentThreadId) {
+      return;
     }
-  }, [currentId]);
+    // The rendered element is keyed by URI, so scroll by whichever spelling is in the DOM now rather
+    // than by a remembered one.
+    const target = anchors
+      .map((anchor) => {
+        try {
+          return Relation.getSource(anchor);
+        } catch {
+          return undefined;
+        }
+      })
+      .find((thread) => thread?.id === currentThreadId);
+    if (target && Obj.instanceOf(Thread.Thread, target)) {
+      document.getElementById(Obj.getURI(target))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [currentThreadId, anchors]);
 
   const filteredAnchors = showResolvedThreads
     ? anchors.filter((anchor) => !!Relation.getSource(anchor))
@@ -440,7 +488,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           const threadId = Obj.getURI(thread);
           return (
             <CommentThreadItem
-              key={threadId}
+              // Keyed by the stable object id, NOT the URI: a draft thread's URI changes when its
+              // first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by
+              // URI remounted the whole thread subtree at exactly that moment — a reply being typed
+              // in the composer was destroyed and Enter fired on the fresh empty instance.
+              key={thread.id}
               space={space}
               threadUri={threadId}
               anchor={anchor}
@@ -448,7 +500,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               getMetadata={getMetadata}
               authorMetadata={authorMetadata}
               identityDid={identity?.did}
-              current={currentId === threadId}
+              current={currentThreadId === thread.id}
               onAttend={handleAttend}
               onActivate={handleActivate}
               onComment={handleComment}
@@ -462,24 +514,27 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <Message.Root>
-        <Message.Content classNames='m-trim-md'>
-          <Message.Body>
-            <span>
-              <Trans
-                {...{
-                  t,
-                  i18nKey: 'no-comments.message',
-                  components: {
-                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                    versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
-                  },
-                }}
-              />
-            </span>
-          </Message.Body>
-        </Message.Content>
-      </Message.Root>
+      <Banner.Root>
+        <Banner.Body>
+          <span>
+            <Theme.Trans
+              {...{
+                t,
+                i18nKey: unanchored ? 'no-comments-unanchored.message' : 'no-comments.message',
+                components: {
+                  commentIcon: (
+                    <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  versionsIcon: (
+                    <Icon.Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  addIcon: <Icon.Icon icon='ph--plus--regular' size='md' classNames='inline-block align-[-0.125em]' />,
+                },
+              }}
+            />
+          </span>
+        </Banner.Body>
+      </Banner.Root>
     );
 
   return (
@@ -489,24 +544,33 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         value={showResolvedThreads ? 'all' : 'unresolved'}
         onValueChange={handleChangeViewState}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Tabs.Tablist classNames='p-0'>
-              <Tabs.Button classNames='text-sm' value='unresolved'>
+            <Tabs.List>
+              <Tabs.Trigger classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Tabs.Button>
-              <Tabs.Button classNames='text-sm' value='all'>
+              </Tabs.Trigger>
+              <Tabs.Trigger classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
+            <Toolbar.Separator variant='gap' />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--plus--regular'
+              label={t('add-object-comment.label')}
+              onClick={handleAddObjectComment}
+              data-testid='comments.object-comment.add'
+            />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
-                base={base}
+                base={mainText}
                 authorLabels={authorLabels}
                 authorHues={authorHues}
                 onAccept={handleAcceptSuggestion}
@@ -516,11 +580,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 hiddenAuthors={hiddenAuthors}
                 onToggleAuthor={handleToggleAuthor}
               />
-              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
-              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Content value='all'>{showResolvedThreads && comments}</Tabs.Content>
+              <Tabs.Content value='unresolved'>{!showResolvedThreads && comments}</Tabs.Content>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Tabs.Root>
     </Panel.Root>
   );

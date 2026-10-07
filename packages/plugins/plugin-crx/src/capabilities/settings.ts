@@ -6,12 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
-
-import * as CrxCapabilities from '../types/CrxCapabilities';
-import * as Settings from '../types/Settings';
+import { CrxCapabilities, Settings } from '#types';
 
 /**
  * Contributes the Settings atom both under the plugin-scoped capability (so
@@ -20,7 +18,7 @@ import * as Settings from '../types/Settings';
  */
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => Settings.defaults,

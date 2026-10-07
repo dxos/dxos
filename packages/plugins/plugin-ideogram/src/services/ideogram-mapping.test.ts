@@ -7,9 +7,9 @@ import { afterEach, describe, test } from 'vitest';
 
 import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
-import { IDEOGRAM_GENERATE_URL } from '../constants';
-import { generateWithIdeogram } from './ideogram-client';
-import { mapIdeogramResponse } from './ideogram-mapping';
+import { IDEOGRAM_GENERATE_URL } from '../constants.ts';
+import { generateWithIdeogram } from './ideogram-client.ts';
+import { mapIdeogramResponse } from './ideogram-mapping.ts';
 
 describe('ideogram mapping', () => {
   test('maps data entries to variants and drops url-less ones', ({ expect }) => {
@@ -94,7 +94,7 @@ describe('generateWithIdeogram', () => {
     }) as typeof fetch;
 
     const result = await generateWithIdeogram(
-      { prompt: 'a cat', count: 2, aspectRatio: '1x1' },
+      { prompt: 'a cat', count: 2, aspectRatio: 'ASPECT_1_1' },
       Redacted.make('sk-test'),
     );
 
@@ -103,7 +103,7 @@ describe('generateWithIdeogram', () => {
     expect(captured?.url).toContain(new URL(IDEOGRAM_GENERATE_URL).host);
     expect(captured?.url).toContain('/generate');
     expect(captured?.apiKey).toBe('sk-test');
-    expect(captured?.body.image_request).toMatchObject({ prompt: 'a cat', num_images: 2, aspect_ratio: '1x1' });
+    expect(captured?.body.image_request).toMatchObject({ prompt: 'a cat', num_images: 2, aspect_ratio: 'ASPECT_1_1' });
   });
 
   test('throws MissingCredentialError with no api key (no request made)', async ({ expect }) => {

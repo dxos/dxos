@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 
-import * as TableOperation from '../types/TableOperation';
-import { exportRows } from './export-rows-format';
+import { TableOperation } from '#types';
+
+import { exportRows } from './export-rows-format.ts';
 
 const handler: Operation.WithHandler<typeof TableOperation.ExportRows> = TableOperation.ExportRows.pipe(
   Operation.withHandler(

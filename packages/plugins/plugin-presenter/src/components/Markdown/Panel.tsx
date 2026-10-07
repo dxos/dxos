@@ -5,10 +5,10 @@
 import React, { type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type PanelProps = ThemedClassName<PropsWithChildren<{}>>;
+export type PanelProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Scaled markdown panel.
@@ -36,7 +36,7 @@ export const Panel = ({ children, classNames }: PanelProps) => {
   // https://www.npmjs.com/package/react-markdown
   return (
     <div ref={containerRef} className={mx('flex grow relative overflow-hidden dx-attention-surface', classNames)}>
-      <div className={mx('dx-container absolute')} style={props}>
+      <div className={mx('dx-expand absolute')} style={props}>
         {width && height && children}
       </div>
     </div>

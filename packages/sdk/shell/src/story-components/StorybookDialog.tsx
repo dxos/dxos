@@ -4,36 +4,29 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Clipboard, Dialog, Tooltip } from '@dxos/react-ui';
-import { type DialogSize } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
-  size?: DialogSize;
+  size?: Util.Size;
   /** Passed to `Dialog.Overlay` (default `center`). */
   blockAlign?: 'center' | 'start' | 'end';
 };
 
 /**
  * Renders shell story content inside a real `Dialog` so Storybook matches production
- * layout, portal/overlay behavior, and focus management. `Dialog.Content` supplies
- * `Column.Root`; overlay layout is taken from `Dialog.Overlay` context.
+ * layout, portal/overlay behavior, and focus management.
  */
 export const StorybookDialog = ({ children, size = 'md', blockAlign = 'center' }: StorybookDialogProps) => {
   return (
-    <Tooltip.Provider>
-      <Clipboard.Provider>
-        <Dialog.Root defaultOpen modal>
-          <Dialog.Overlay blockAlign={blockAlign}>
-            <Dialog.Content size={size}>
-              <Dialog.Header>
-                <Dialog.Title classNames='sr-only'>Storybook Dialog</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>{children}</Dialog.Body>
-            </Dialog.Content>
-          </Dialog.Overlay>
-        </Dialog.Root>
-      </Clipboard.Provider>
-    </Tooltip.Provider>
+    <Dialog.Root defaultOpen modal>
+      <Dialog.Content size={size}>
+        <Dialog.Header>
+          <Dialog.Title classNames='sr-only'>Storybook Dialog</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>{children}</Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 };

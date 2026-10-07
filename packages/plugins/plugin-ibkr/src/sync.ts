@@ -6,9 +6,9 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, EID, Obj, Ref } from '@dxos/echo';
 
-import { IBKR_SYNC_CRON } from './constants';
-import type * as Ibkr from './types/Ibkr';
-import * as IbkrOperation from './types/IbkrOperation';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { IBKR_SYNC_CRON } from './constants.ts';
 
 /** Stable string form of the sync operation's key, used to recognize its serialized record. */
 export const SYNC_OPERATION_KEY = String(IbkrOperation.SyncPortfolioReport.meta.key);
@@ -60,8 +60,12 @@ export const createDailySyncTrigger = (
   const op = operation ?? db.add(Operation.serialize(IbkrOperation.SyncPortfolioReport));
   Obj.setParent(op, portfolio);
   const trigger = db.add(
-    Trigger.make({ enabled: true, spec: Trigger.specTimer(IBKR_SYNC_CRON), runnable: Ref.make(op) }),
+    Trigger.make({
+      [Obj.Parent]: portfolio,
+      enabled: true,
+      spec: Trigger.specTimer(IBKR_SYNC_CRON),
+      runnable: Ref.make(op),
+    }),
   );
-  Obj.setParent(trigger, portfolio);
   return trigger;
 };

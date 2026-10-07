@@ -10,9 +10,7 @@ import { Obj, Type } from '@dxos/echo';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-
-import type * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 //
 // Constants
@@ -36,10 +34,14 @@ export const makeCreateObjectEntryForDatabaseType = (type: Type.AnyObj): SpaceCa
   createObject: (props, options) =>
     Effect.gen(function* () {
       const object = Obj.make(type, props);
-      return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object,
-        target: options.target,
-      });
+      return yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        {
+          object,
+          target: options.target,
+        },
+        { spaceId: options.db.spaceId },
+      );
     }),
 });
 

@@ -4,7 +4,7 @@
 
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { makeScheduledRoutine } from './scaffold';
+import { makeScheduledRoutine } from './scaffold.ts';
 
 /** Inbox supplies new messages; database queries recent objects; markdown writes the digest document. */
 const SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.database', 'org.dxos.skill.markdown'] as const;
@@ -24,7 +24,6 @@ export const dailyDigest: RoutineCapabilities.Template = {
   label: 'Daily Digest',
   icon: 'ph--list-bullets--regular',
   // Scheduled space-level digest — not meaningful for a specific object companion.
-  appliesTo: (subject) => subject == null,
   scaffold: ({ name }) =>
     makeScheduledRoutine({
       name: name ?? 'Daily Digest',

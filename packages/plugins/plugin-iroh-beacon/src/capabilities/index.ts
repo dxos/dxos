@@ -7,7 +7,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
-import { BeaconCapabilities } from './beacon-service';
+import { translations } from '#translations';
+
+import { BeaconCapabilities } from './beacon-service.ts';
 
 export const BeaconServiceModule = Capability.lazyModule(
   'BeaconServiceModule',
@@ -16,11 +18,12 @@ export const BeaconServiceModule = Capability.lazyModule(
     provides: [BeaconCapabilities.State],
     // Genuine runtime event: spaces become ready when the client observes them, not at a fixed
     // startup point.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./beacon-service'),
+  () => import('./beacon-service.ts'),
 );
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.statusIndicator'],
 });
+export const Translations = AppCapability.translations(translations);

@@ -4,15 +4,15 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 
-import { type UserState } from '../../calls';
-import { ResponsiveGrid } from '../ResponsiveGrid';
-import { Participant, SCREENSHARE_SUFFIX } from './Participant';
+import { type UserState } from '../../calls/index.ts';
+import { ResponsiveGrid } from '../ResponsiveGrid/index.ts';
+import { Participant, SCREENSHARE_SUFFIX } from './Participant.tsx';
 
 const getId = (user: UserState): string => user.id!;
 
-export type ParticipantGridProps = ThemedClassName<{
+export type ParticipantGridProps = Util.ThemedClassName<{
   self: UserState;
   users: UserState[];
   fullscreen?: boolean;

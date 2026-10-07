@@ -7,13 +7,14 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/ui-theme';
 
-import { decorateMarkdown } from '../../language';
-import { CONTENT_WIDTH, blockSelectionField } from '../blocks';
-import { commands } from './commands';
-import { outlinerDnd } from './dnd';
-import { editor } from './editor';
-import { menu } from './menu';
-import { getRange, outlinerTree, treeFacet } from './tree';
+import { decorateMarkdown } from '../../language/index.ts';
+import { CONTENT_WIDTH, blockSelectionField } from '../blocks/index.ts';
+import { commands } from './commands.ts';
+import { outlinerDnd } from './dnd.ts';
+import { editor } from './editor.ts';
+import { type GhostOptions, ghost } from './ghost.ts';
+import { menu } from './menu.ts';
+import { getRange, outlinerTree, treeFacet } from './tree.ts';
 
 // ISSUES: (move to DESIGN.md)
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -24,7 +25,16 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
 
-export type OutlinerProps = {};
+export type OutlinerProps = {
+  /** Copy for the empty-row hints; see {@link GhostOptions}. */
+  ghost?: GhostOptions;
+  /**
+   * Presentation only: no editing affordances. Drops the drag grips, the floating menu, and the
+   * gutters reserved for them — a read-only surface (a card preview) has nothing to grab and no room
+   * to spare. Pair with `readOnly` on the basic extensions, which is what actually blocks edits.
+   */
+  readonly?: boolean;
+};
 
 /**
  * Outliner extension.
@@ -33,7 +43,7 @@ export type OutlinerProps = {};
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = (_options: OutlinerProps = {}): Extension => [
+export const outliner = ({ readonly, ghost: ghostOptions }: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
@@ -44,7 +54,9 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   editor(),
 
   // Block selection, drag-to-reorder, highlight, and clipboard (built on the `blocks` extensions).
-  outlinerDnd(),
+  // Kept in its original position: CodeMirror resolves decorations and themes by extension order, so
+  // moving this below the markdown decorations changes what the document renders as.
+  ...(readonly ? [] : [outlinerDnd()]),
 
   // Current-item indicator (the selection highlight is drawn by `outlinerDnd`).
   decorations(),
@@ -52,11 +64,17 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Floating menu (with reserved margins left/right for the grip and menu).
-  menu(),
-  EditorView.contentAttributes.of({
-    class: CONTENT_WIDTH,
-  }),
+  // Floating menu (with reserved margins left/right for the grip and menu). A read-only surface has
+  // neither, so it also reclaims the margins.
+  ...(readonly
+    ? []
+    : [
+        ghost(ghostOptions),
+        menu(),
+        EditorView.contentAttributes.of({
+          class: CONTENT_WIDTH,
+        }),
+      ]),
 ];
 
 /**
@@ -120,6 +138,10 @@ const decorations = () => [
                 ),
               }).range(line.from, line.from),
             );
+          } else {
+            // Prose sits flush with the content edge, so a blank line reads as a gap between lists,
+            // not as a continuation of the item above.
+            decorations.push(Decoration.line({ class: 'cm-outline-prose' }).range(line.from, line.from));
           }
         }
 

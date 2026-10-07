@@ -2,21 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type JsonSchema, type Type } from '@dxos/echo';
-import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { useTableModel } from '../../hooks';
-import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
-import { type Table as TableType } from '../../types';
-import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
-import { Table, type TableController } from './Table';
+import { useTableModel } from '../../hooks/index.ts';
+import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model/index.ts';
+import { type Table as TableType } from '../../types/index.ts';
+import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util/index.ts';
+import { Table, type TableController } from './Table.tsx';
 
-export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
+export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Util.ThemedClassName<{
   type?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
@@ -72,7 +73,7 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
     tableRef.current?.update?.();
   }, []);
 
-  const features = useDefaultValue(
+  const features = Hooks.useDefaultValue(
     props.features,
     () =>
       ({

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Ref, Type } from '@dxos/echo';
 
-import * as Drawing from './Drawing';
+import * as Drawing from './Drawing.ts';
 
 /**
  * The pre-rename `Sketch` object, kept solely so `Migration.define` can read existing data and

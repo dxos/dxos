@@ -12,6 +12,6 @@
   },
   "env": {
     "production": { "name": "storybook-react" },
-    "main": { "name": "storybook-react-main" },
+    "preview": { "name": "storybook-react-preview" },
   },
 }

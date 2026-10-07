@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './AttentionGlyph';
-export * from './AttentionProvider';
-export * from './ViewStateProvider';
+export * from './AttentionGlyph/index.ts';
+export * from './AttentionProvider/index.ts';
+export * from './ViewStateProvider/index.ts';

@@ -4,13 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
 
-import * as Subscription from '../../types/Subscription';
-import { formatDate, getImageUrl, getSnippet } from '../../util';
+import { Subscription } from '#types';
+
+import { formatDate, getImageUrl, getSnippet } from '../../util/index.ts';
 
 export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 
@@ -42,25 +44,30 @@ export const PostCard = ({ subject }: PostCardProps) => {
 
   return (
     <Card.Body>
-      {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
+      {imageUrl && <Card.Poster alt={post.title ?? ''} src={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Card.Row>
-          <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title>
+          <Card.Title lines={2}>{post.title}</Card.Title>
         </Card.Row>
       )}
       {snippet && (
         <Card.Row>
-          <Card.Text variant='description' classNames='line-clamp-3'>
+          <Card.Text variant='muted' classNames='line-clamp-3'>
             {snippet}
           </Card.Text>
         </Card.Row>
       )}
       {(feedName || published) && (
         <Card.Row>
-          <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-sm text-description overflow-hidden'>
+          <Layout.Grid
+            cols={['fill', 'auto']}
+            gap='sm'
+            align='center'
+            classNames='text-sm text-fg-muted overflow-hidden'
+          >
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>
-          </div>
+          </Layout.Grid>
         </Card.Row>
       )}
       {post.link && <Card.Link label={post.link} href={post.link} />}

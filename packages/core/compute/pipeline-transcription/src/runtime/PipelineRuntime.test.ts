@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { makeCorrectionStage, makeSummarizationStage } from '../stages';
-import { SAMPLE_MEETING, scriptedSource } from '../testing';
-import { type Stage, StageWrite, TranscriptEvent } from '../types';
-import { captureCommit } from './dispatch';
-import { PipelineRuntime, type TelemetryEvent } from './PipelineRuntime';
+import { makeCorrectionStage, makeSummarizationStage } from '../stages/index.ts';
+import { SAMPLE_MEETING, scriptedSource } from '../testing/index.ts';
+import { type Stage, StageWrite, TranscriptEvent } from '../types/index.ts';
+import { captureCommit } from './dispatch.ts';
+import { PipelineRuntime, type TelemetryEvent } from './PipelineRuntime.ts';
 
 describe('PipelineRuntime', () => {
   test('runs correction per block and summarizes on silence', async ({ expect }) => {

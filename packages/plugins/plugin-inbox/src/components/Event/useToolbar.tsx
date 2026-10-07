@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph } from '@dxos/app-graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-import { deleteAction, openGroup } from '../Toolbar';
-import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { deleteAction, openGroup } from '../Toolbar/index.ts';
+import { type ViewMode, viewModeGroup } from '../ViewMode/index.ts';
 
 export type UseEventToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */
-  graph?: Graph.ReadableGraph;
+  graph?: AppGraph.ReadableGraph;
   /** Graph node id of the event (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
   /** Editing (draft) mode — disables the open + view-mode actions (irrelevant while editing). */

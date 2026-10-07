@@ -4,41 +4,47 @@
 
 import React, { useContext, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Collection, Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
+import { useObject } from '@dxos/echo-react';
+import * as Panel from '@dxos/react-ui/Panel';
 
-import { PageNumber, Pager, PresentationShell, Layout as PresenterLayout } from '#components';
+import { PageNumber, Pager, PresentationShell, PresenterContext, Layout as PresenterLayout } from '#components';
 
-import * as Presenter from '../../types/Presenter';
-import { useExitPresenter } from '../../useExitPresenter';
+import { useExitPresenter } from '../../useExitPresenter.ts';
 
 export type CollectionArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const CollectionArticle = ({ role, subject: collection }: CollectionArticleProps) => {
   const [slide, setSlide] = useState(0);
-  const { running } = useContext(Presenter.PresenterContext);
+  const { running } = useContext(PresenterContext);
   const handleExit = useExitPresenter(collection);
+  const layout = Hooks.useLayout();
+  const fullscreen = layout.mode === 'solo--fullscreen';
+  const [liveCollection] = useObject(collection);
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
-        <PresentationShell onExit={handleExit}>
+      <Panel.Body asChild>
+        <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           <PresenterLayout
-            bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
-            bottomLeft={<Pager index={slide} count={collection.objects.length} keys={running} onChange={setSlide} />}
+            bottomRight={<PageNumber index={slide} count={liveCollection.objects.length} />}
+            bottomLeft={
+              <Pager index={slide} count={liveCollection.objects.length} keys={running} onChange={setSlide} />
+            }
           >
             <Surface.Surface
               type={AppSurface.Slide}
               data={{
-                subject: collection.objects[slide],
+                subject: liveCollection.objects[slide],
                 attendableId: Obj.getURI(collection),
               }}
             />
           </PresenterLayout>
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

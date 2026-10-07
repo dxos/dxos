@@ -4,12 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Card from '@dxos/react-ui/Card';
 
 import { VoxelEditor } from '#components';
-
-import * as Voxel from '../../types/Voxel';
+import { Voxel } from '#types';
 
 export type VoxelCardProps = AppSurface.ObjectCardProps<Voxel.World>;
 

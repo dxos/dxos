@@ -4,22 +4,24 @@
 
 import React, { type ChangeEvent, useCallback } from 'react';
 
-import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
-import { getInvocationUrl } from '@dxos/compute-runtime';
+import { getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 
 export type FunctionBindingProps = { object: Script.Script };
 
 export const FunctionBinding = ({ object }: FunctionBindingProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const client = useClient();
   const db = Obj.getDatabase(object);
 
@@ -31,7 +33,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
       spaceId: db?.spaceId,
     });
 
-  const [binding, setBinding] = useControlledState(fn?.binding ?? '');
+  const [binding, setBinding] = Hooks.useControlledState(fn?.binding ?? '');
   const handleBindingChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setBinding(event.target.value),
     [setBinding],
@@ -50,13 +52,11 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
   }
 
   return (
-    <div className='flex flex-col'>
-      <Form.Section title={t('remote-function-settings.heading')} />
-
+    <Form.FieldSet label={t('remote-function-settings.heading')}>
       {functionUrl && (
-        <Input.Root>
-          <Input.Label>{t('function-url.label')}</Input.Label>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Label>{t('function-url.label')}</Field.Label>
+          <Input.Root
             disabled
             value={functionUrl}
             onChange={(event) => {
@@ -65,20 +65,20 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
               });
             }}
           />
-          <Clipboard.IconButton value={functionUrl} />
-        </Input.Root>
+          <SystemButton.Clipboard iconOnly value={functionUrl} />
+        </Field.Root>
       )}
 
-      <Input.Root>
-        <Input.Label>{t('function-binding.label')}</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label>{t('function-binding.label')}</Field.Label>
+        <Input.Root
           placeholder={t('function-binding.placeholder')}
           value={binding}
           onChange={handleBindingChange}
           onBlur={handleBindingBlur}
         />
-      </Input.Root>
-    </div>
+      </Field.Root>
+    </Form.FieldSet>
   );
 };
 

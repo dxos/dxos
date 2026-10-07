@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as CodeProject from '../types/CodeProject';
-import * as Spec from '../types/Spec';
+import { CodeProject, Spec } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,11 +21,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Spec.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -36,16 +38,22 @@ export default Capability.makeModule(
               const spec = Spec.make();
               const project = CodeProject.make({ name: props?.name, spec });
               // Add the linked Spec to the space so the Ref resolves.
-              yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: spec,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: project,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: spec,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: project,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

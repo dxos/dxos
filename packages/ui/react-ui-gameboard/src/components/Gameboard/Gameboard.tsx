@@ -6,13 +6,13 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext';
-import { Piece, type PieceProps } from './Piece';
-import { Square, type SquareProps } from './Square';
-import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types';
+import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext.ts';
+import { Piece, type PieceProps } from './Piece.tsx';
+import { Square, type SquareProps } from './Square.tsx';
+import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types.ts';
 
 //
 // Root
@@ -87,13 +87,13 @@ GameboardRoot.displayName = 'Gameboard.Root';
 // Content
 //
 
-type GameboardContentProps = ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
+type GameboardContentProps = Util.ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
 
 const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   ({ children, classNames, grow, contain }, forwardedRef) => {
     return (
       <div
-        className={mx(grow && 'dx-size-container dx-expander grid place-content-center', classNames)}
+        className={mx(grow && 'dx-container-type-size dx-expand grid place-content-center', classNames)}
         ref={forwardedRef}
       >
         {contain ? <div className='w-[min(100cqw,100cqh)] h-[min(100cqw,100cqh)]'>{children}</div> : children}

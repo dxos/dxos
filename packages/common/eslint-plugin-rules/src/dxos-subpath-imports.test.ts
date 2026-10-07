@@ -30,7 +30,7 @@ describe('dxos-subpath-imports', () => {
         // Not a participating package.
         { code: "import { foo } from '@dxos/echo';", filename },
         // A subpath that is neither the barrel nor the aggregate is left alone.
-        { code: "import { anything } from '@dxos/plugin-chess/plugin';", filename },
+        { code: "import { anything } from '@dxos/plugin-chess/translations';", filename },
         // A lowercase exports key is a module entrypoint, not a namespace: rewriting this to
         // `import * as translations from '.../translations'` would bind a different runtime value.
         { code: "import { translations } from '@dxos/plugin-chess';", filename },

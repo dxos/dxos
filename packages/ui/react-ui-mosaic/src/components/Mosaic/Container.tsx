@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
 import React, {
   type CSSProperties,
@@ -22,7 +20,7 @@ import React, {
   useState,
 } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { useComposedRefs } from '@dxos/react-hooks';
 import {
   type DndContainerData,
   type DndLocation,
@@ -30,15 +28,16 @@ import {
   getSourceData,
   useDndRootContext,
 } from '@dxos/react-ui-dnd';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Util from '@dxos/react-ui/Util';
 import { isTruthy } from '@dxos/util';
 
-import { useFocus } from '../Focus';
 import {
   MOSAIC_CONTAINER_NAME,
   MosaicContainerContextProvider,
   type MosaicContainerContextValue,
   type MosaicContainerState,
-} from './MosaicContainerContext';
+} from './MosaicContainerContext.ts';
 
 //
 // Container
@@ -87,7 +86,7 @@ type MosaicContainerProps = PropsWithChildren<
  * Container for a Mosaic layout.
  */
 // TODO(burdon): Make generic.
-const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
+const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
   (
     {
       children,
@@ -107,7 +106,6 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     },
     forwardedRef,
   ) => {
-    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
 
@@ -148,7 +146,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     }, [currentId]);
 
     // Focus container.
-    const { setFocus } = useFocus();
+    const { setFocus } = Focus.useFocus();
     useEffect(() => {
       if (withFocus) {
         setFocus?.(state.type === 'active' ? 'active' : undefined);
@@ -292,8 +290,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         setSelected={setSelected}
         registerScrollTo={registerScrollTo}
       >
-        <Comp
-          {...composableProps(props, {
+        <ark.div
+          asChild={asChild}
+          {...Util.composableProps(props, {
             classNames: 'h-full group',
             style: {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:
@@ -309,7 +308,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           ref={composedRef}
         >
           {children}
-        </Comp>
+        </ark.div>
         {debug?.()}
       </MosaicContainerContextProvider>
     );

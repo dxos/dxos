@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Response from '@effect/ai/Response';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { createPatch } from 'diff';
+import * as AiError from 'effect/ai/AiError';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
+import * as Response from 'effect/ai/Response';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -21,13 +21,13 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
-import * as AiService from '../../AiService';
-import { withoutToolCallParising } from '../../util';
+import * as AiService from '../../AiService.ts';
+import { withoutToolCallParsing } from '../../util/index.ts';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -125,6 +125,26 @@ export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}
 export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
 
 /**
+ * Matches the whole `<result pid=N>` opening tag the agent wraps a redelivered tool result in. The
+ * pid is assigned by the process manager at spawn, so it differs between the run that recorded a
+ * conversation and any replay of it. The full tag is matched (rather than the bare number) because
+ * canonicalization substitutes the matched token everywhere it appears.
+ * @example <result pid=9>
+ */
+export const RESULT_PID_PATTERN = /<result pid=\d+>/;
+
+/**
+ * Matches the label of a markdown link whose text is an object mnemonic (the last 6 Crockford
+ * base-32 chars of an EntityId, uppercased) — the form task refs take in a rendered checklist.
+ * The mnemonic is a projection of an id that {@link ENTITY_ID_PATTERN} already canonicalizes, so
+ * it would otherwise drift with the id while its URI stayed normalized. The `](echo:/` lookahead
+ * keeps six ordinary uppercase letters, and any non-ECHO link, from matching — two unrelated links
+ * canonicalized to the same label would otherwise share a fixture key.
+ * @example [KCNT8N](echo:/
+ */
+export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\(echo:\/)/;
+
+/**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
  * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
@@ -133,6 +153,8 @@ export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
  * token. Opt a fixture layer out by passing `dynamicValuePatterns: []`.
  */
 export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
+  RESULT_PID_PATTERN,
+  MNEMONIC_LINK_LABEL_PATTERN,
   SPACE_ID_PATTERN,
   ENTITY_ID_PATTERN,
   UUID_PATTERN,
@@ -264,8 +286,38 @@ const remapStoredResponse = (
     }
   }
 
-  return replaceTokens(storedResponse, mapping) as readonly unknown[];
+  // Coalesced first: a provider streams arguments in small chunks that split an id across deltas,
+  // and a token replaced per string never matches a split one.
+  return replaceTokens(
+    mapping.size > 0 ? coalesceDeltas(storedResponse) : storedResponse,
+    mapping,
+  ) as readonly unknown[];
 };
+
+const DELTA_TYPES = new Set(['text-delta', 'reasoning-delta', 'tool-params-delta']);
+
+/** Merges consecutive stream deltas of one part into a single delta; consumers concatenate them anyway. */
+const coalesceDeltas = (response: readonly unknown[]): unknown[] => {
+  const merged: unknown[] = [];
+  for (const part of response) {
+    const previous = merged.at(-1);
+    if (isDelta(part) && isDelta(previous) && previous.type === part.type && previous.id === part.id) {
+      merged[merged.length - 1] = { ...previous, delta: previous.delta + part.delta };
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged;
+};
+
+const isDelta = (part: unknown): part is { type: string; id: string; delta: string } =>
+  typeof part === 'object' &&
+  part !== null &&
+  'type' in part &&
+  typeof part.type === 'string' &&
+  DELTA_TYPES.has(part.type) &&
+  'delta' in part &&
+  typeof part.delta === 'string';
 
 /**
  * Internal seams exposed for unit testing the dynamic-value matching/substitution logic.
@@ -306,7 +358,8 @@ export type ServiceOptions = {
 
 /** Wraps an upstream {@link AiService.Service} so every model it builds replays through the fixture store. */
 export const makeService = (options: ServiceOptions): AiService.Service => ({
-  model: (model) =>
+  ...options.upstream,
+  languageModel: (model) =>
     Layer.provide(
       layer({
         modelName: model,
@@ -314,7 +367,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       }),
-      options.upstream.model(model),
+      options.upstream.languageModel(model),
     ),
 });
 
@@ -379,7 +432,7 @@ export const layer = (
   );
 
 type MakeProps = {
-  upstreamModel: LanguageModel.Service;
+  upstreamModel: LanguageModel.LanguageModel;
   modelName: string;
   testFilePath: string;
   allowGeneration: boolean;
@@ -387,11 +440,11 @@ type MakeProps = {
 };
 
 /**
- * Builds the replaying {@link LanguageModel.Service}: each turn is looked up in the store by request
+ * Builds the replaying {@link LanguageModel.LanguageModel}: each turn is looked up in the store by request
  * hash and replayed; on a miss it errors, unless `allowGeneration` is set, when it calls the upstream
  * model and records the turn.
  */
-export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.LanguageModel> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? DEFAULT_DYNAMIC_VALUE_PATTERNS);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 
@@ -419,17 +472,21 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
           toolChoice: params.toolChoice as any,
           disableToolCallResolution: true,
         });
-        const response = yield* Schema.mutable(Schema.Array(Response.Part(toolkit)))
-          .pipe(Schema.encode)(upstreamResult.content)
-          .pipe(
-            Effect.catchTag('ParseError', (error) =>
-              AiError.MalformedOutput.fromParseError({
+        const response = yield* Schema.encodeEffect(Schema.mutable(Schema.Array(Response.Part(toolkit))))(
+          upstreamResult.content,
+        ).pipe(
+          Effect.catchTag('SchemaError', (error) =>
+            Effect.fail(
+              new AiError.AiError({
                 module: 'LanguageModel',
                 method: 'generateText',
-                error,
+                reason: new AiError.InvalidOutputError({
+                  description: `failed to encode response: ${error.message}`,
+                }),
               }),
             ),
-          );
+          ),
+        );
 
         const newConversation: FixtureConversation = {
           parameters: getFixtureConversationParameters(options.modelName, false, params),
@@ -473,25 +530,29 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                 disableToolCallResolution: true,
               })
               .pipe(
-                withoutToolCallParising,
+                withoutToolCallParsing,
                 Stream.mapEffect((part) =>
-                  Schema.encode(PartCodec)(part).pipe(
-                    Effect.catchTag('ParseError', (error) =>
-                      AiError.MalformedOutput.fromParseError({
-                        module: 'LanguageModel',
-                        method: 'generateText',
-                        error,
-                      }),
+                  Schema.encodeEffect(PartCodec)(part).pipe(
+                    Effect.catchTag('SchemaError', (error) =>
+                      Effect.fail(
+                        new AiError.AiError({
+                          module: 'LanguageModel',
+                          method: 'generateText',
+                          reason: new AiError.InvalidOutputError({
+                            description: `failed to encode response: ${error.message}`,
+                          }),
+                        }),
+                      ),
                     ),
                   ),
                 ),
-                Stream.mapChunksEffect(
+                Stream.mapArrayEffect(
                   Effect.fnUntraced(function* (chunk) {
                     parts.push(...chunk);
                     return chunk;
                   }),
                 ),
-                Stream.onDone(() =>
+                Stream.onEnd(
                   Effect.gen(function* () {
                     const conversation: FixtureConversation = {
                       parameters: getFixtureConversationParameters(options.modelName, true, params),
@@ -576,13 +637,35 @@ const hashKey = async (key: string): Promise<string> => {
   return createHash('sha256').update(key).digest('hex');
 };
 
+/**
+ * Provider HTTP transport envelopes carried on encoded response parts: `request` (method, url and
+ * request headers) on `response-metadata`, `response` (status and response headers) on `finish`.
+ */
+const TRANSPORT_FIELDS: ReadonlySet<string> = new Set(['request', 'response']);
+
+/**
+ * Drops the transport envelopes from the response parts on their way into the committed store.
+ * Replay reads none of them, while they carry account and trace identifiers
+ * (`anthropic-organization-id`, `anthropic-workspace-id`, `cf-ray`, `request-id`, `traceparent`/`b3`)
+ * plus per-request rate-limit state that would otherwise be published in a public repo. Stripping on
+ * write rather than on receipt leaves the live in-process response exactly as the provider sent it.
+ */
+const stripTransportMetadata = (parts: readonly unknown[]): unknown[] =>
+  parts.map((part) => {
+    if (part === null || typeof part !== 'object' || Array.isArray(part)) {
+      return part;
+    }
+    const retained = Object.entries(part).filter(([key]) => !TRANSPORT_FIELDS.has(key));
+    return retained.length === Object.keys(part).length ? part : Object.fromEntries(retained);
+  });
+
 const decodeConversation = (data: string): FixtureConversation =>
-  Schema.decodeSync(Schema.parseJson(FixtureConversation))(data);
+  Schema.decodeSync(Schema.fromJsonString(FixtureConversation))(data);
 
 // Compact (single-line) JSON: the store is treated as opaque generated blobs via `.gitattributes`
 // (`-diff -merge linguist-generated`), so pretty-printing only inflates line counts in review.
 const encodeConversation = (conversation: FixtureConversation): string =>
-  Schema.encodeSync(Schema.parseJson(FixtureConversation))(conversation);
+  Schema.encodeSync(Schema.fromJsonString(FixtureConversation))(conversation);
 
 /**
  * Resolves the suite directory for a test file: `<repo-root>/.store/conversations/<suite>`, where
@@ -690,7 +773,7 @@ class FixtureStore {
       }));
       return Function.pipe(
         scored,
-        Array.sortBy(Order.mapInput(Order.number, (entry) => entry.distance)),
+        Array.sortBy(Order.mapInput(Order.Number, (entry) => entry.distance)),
         Array.map((entry) => entry.conversation),
         Option.fromIterable,
       );
@@ -710,7 +793,11 @@ class FixtureStore {
       const dir = await this.#dir();
       await mkdir(dir, { recursive: true });
       const file = join(dir, `${await hashKey(matchKey(conversation, this.#dynamicMatcher))}.json`);
-      await writeFile(file, encodeConversation(conversation));
+      // The hash keys on parameters + prompt only, so sanitizing the response cannot move the file.
+      await writeFile(
+        file,
+        encodeConversation({ ...conversation, response: stripTransportMetadata(conversation.response) }),
+      );
     });
   }
 
@@ -756,7 +843,7 @@ class FixtureStore {
 export const __migrate = async (testFilePath: string, legacyCachePath: string): Promise<number> => {
   const { readFile } = await import('node:fs/promises');
   const legacy = Schema.decodeSync(
-    Schema.parseJson(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
+    Schema.fromJsonString(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
   )(await readFile(legacyCachePath, 'utf-8'));
   const store = new FixtureStore(testFilePath, undefined);
   for (const conversation of legacy.conversations) {
@@ -785,7 +872,7 @@ const FixtureConversation = Schema.Struct({
   // This is supposed to be Response.AllParts for arbitrary tools.
   // Tool call schema is generated based on the available tools so we can't use a static schema.
   response: Schema.Array(Schema.Unknown),
-}).annotations({ identifier: 'FixtureConversation' });
+}).annotate({ identifier: 'FixtureConversation' });
 type FixtureConversation = Schema.Schema.Type<typeof FixtureConversation>;
 
 /**
@@ -837,6 +924,22 @@ const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureCo
     if (!DISABLE_CLOSEST_MATCH_SEARCH) {
       const closestMatch = yield* store.getClosestMatch(conversation);
       if (Option.isSome(closestMatch)) {
+        const dumpDir = process.env.DX_DUMP_FIXTURE_TOOLS;
+        if (dumpDir) {
+          // A toolkit whose JSON Schema emission changed (an Effect upgrade) misses on every fixture
+          // at once. Dumping both tool lists lets `migrate-model-fixture-tools.mjs` rewrite the store
+          // from what the runtime actually emits rather than from a transcribed guess.
+          yield* Effect.promise(async () => {
+            const { mkdir, writeFile } = await import('node:fs/promises');
+            const { createHash } = await import('node:crypto');
+            const payload = JSON.stringify({
+              stored: closestMatch.value.parameters.tools,
+              prompted: conversation.parameters.tools,
+            });
+            await mkdir(dumpDir, { recursive: true });
+            await writeFile(`${dumpDir}/${createHash('sha256').update(payload).digest('hex')}.json`, payload);
+          });
+        }
         const patch = createPatch(
           'conversation',
           store.formatConversation(closestMatch.value),
@@ -844,11 +947,11 @@ const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureCo
           'saved',
           'new',
         );
-        return yield* Effect.dieMessage(error(patch));
+        return yield* Effect.die(new Error(error(patch)));
       }
     }
 
-    return yield* Effect.dieMessage(error());
+    return yield* Effect.die(new Error(error()));
   });
 
 const error = (patch?: string) =>

@@ -13,9 +13,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ibkr } from '#types';
 
-import * as Ibkr from '../../types/Ibkr';
-import { PortfolioProperties } from './PortfolioProperties';
+import { PortfolioProperties } from './PortfolioProperties.tsx';
 
 const DefaultStory = () => {
   const { space } = useClientStory();

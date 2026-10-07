@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Graph } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
 
-import { type LayoutKind } from '../layout';
-import { type CanvasBoard } from '../types';
+import { type LayoutKind } from '../layout/index.ts';
+import { type CanvasBoard } from '../types/index.ts';
 
 export type Action =
   | { type: 'debug' }
@@ -36,6 +36,6 @@ export type Action =
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //
-  | { type: 'trigger'; edges?: Partial<Graph.Edge.Any>[] };
+  | { type: 'trigger'; edges?: Partial<GraphEdge.Any>[] };
 
 export type ActionHandler = (action: Action) => Promise<boolean>;

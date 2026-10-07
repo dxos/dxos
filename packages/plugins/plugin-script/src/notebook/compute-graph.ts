@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
-import type * as Notebook from '../types/Notebook';
-import { evalScript } from './eval';
-import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
+import { Notebook } from '#types';
+
+import { evalScript } from './eval.ts';
+import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser.ts';
 
 /**
  * Compute graph that evaluates the notebook cells.
@@ -23,7 +25,7 @@ export class ComputeGraph {
 
   constructor(
     private readonly _notebook: Notebook.Notebook,
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
   ) {}
 
   /**

@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as AtprotoRepo from '../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../types/AtprotoCapabilities';
+import { AtprotoCapabilities } from '#types';
+
+import * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
 /**
  * Default (live) repo-layer factory: resolves credentials + PDS for the connection and talks to the
@@ -21,7 +22,7 @@ export default Capability.makeModule(
     const client = yield* ClientCapabilities.Client;
     return [
       Capability.contribute(AtprotoCapabilities.RepoLayer, (connection) =>
-        AtprotoRepo.layerLive({ connection: Ref.make(connection), client }),
+        AtprotoRepo.layerLive({ connection: Ref.make(connection), config: client.config }),
       ),
       Capability.contribute(AtprotoCapabilities.ReadRepoLayer, (handle) => AtprotoRepo.layerPublic(handle)),
     ];

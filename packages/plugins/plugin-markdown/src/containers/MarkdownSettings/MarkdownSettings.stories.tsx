@@ -2,24 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import { Markdown } from '#types';
 
-import * as Markdown from '../../types/Markdown';
-import { MarkdownSettings } from './MarkdownSettings';
+import { MarkdownSettings } from './MarkdownSettings.tsx';
 
-type StoryProps = {
+type StoryArgs = {
   settings: Markdown.Settings;
 };
 
 // The container reads and writes the contributed settings entry, so the story owns one per render.
-const DefaultStory = ({ settings }: StoryProps) => {
+const DefaultStory = ({ settings }: StoryArgs) => {
   const subject = useMemo(
     () => ({
       prefix: pluginMeta.profile.key,
@@ -36,7 +37,7 @@ const meta = {
   title: 'plugins/plugin-markdown/containers/MarkdownSettings',
   tags: ['settings'],
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
     layout: 'fullscreen',
     translations,

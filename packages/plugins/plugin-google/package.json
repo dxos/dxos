@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-google",
-  "version": "0.10.0",
+  "version": "0.13.0",
   "description": "DXOS plugin that syncs Gmail, Google Calendar and Google Contacts into the workspace.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#apis": {
@@ -19,9 +19,17 @@
       "default": "./dist/lib/apis.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -34,9 +42,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/GooglePlugin.ts",
-      "types": "./dist/types/src/GooglePlugin.d.ts",
-      "default": "./dist/lib/GooglePlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -47,6 +55,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -54,11 +67,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": {
@@ -73,6 +81,21 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./GooglePlugin": {
+      "source": "./src/GooglePlugin.ts",
+      "types": "./dist/types/src/GooglePlugin.d.ts",
+      "import": "./dist/lib/GooglePlugin.mjs"
+    },
+    "./GoogleOperationHandlerSet": {
+      "source": "./src/operations/GoogleOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/GoogleOperationHandlerSet.d.ts",
+      "import": "./dist/lib/GoogleOperationHandlerSet.mjs"
+    },
+    "./GoogleOperation": {
+      "source": "./src/types/GoogleOperation.ts",
+      "types": "./dist/types/src/types/GoogleOperation.d.ts",
+      "import": "./dist/lib/GoogleOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -81,11 +104,13 @@
     "dx.config.ts",
     "src"
   ],
+  "scripts": {
+    "import-mbox": "vite-node ./scripts/import-mbox-space.ts --"
+  },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -111,22 +136,23 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/random": "workspace:*",
     "@effect/opentelemetry": "catalog:",
-    "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-node": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@types/mailparser": "catalog:",
     "effect": "catalog:",
+    "mailparser": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

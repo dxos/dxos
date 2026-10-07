@@ -7,20 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
 import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 
 import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';
-
-import * as DuffelCapabilities from '../types/DuffelCapabilities';
-import * as Settings from '../types/Settings';
+import { DuffelCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({ apiKey: undefined }),

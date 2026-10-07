@@ -6,11 +6,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EID, parseId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as Meeting from '../types/Meeting';
-import * as MeetingCapabilities from '../types/MeetingCapabilities';
-import * as MeetingOperation from '../types/MeetingOperation';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
@@ -38,12 +37,16 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
           : undefined;
         if (feed && Obj.instanceOf(Feed.Feed, feed)) {
-          transcriptionManager.setFeed(space, feed);
+          transcriptionManager.setFeed(space.db, feed);
         }
       }
 
       if (transcriptionManager) {
-        yield* Effect.promise(() => transcriptionManager.setEnabled(enabled));
+        // Transcription is optional (it needs a configured endpoint); a failure here must not take
+        // down the rest of the payload handling as a defect.
+        yield* Effect.promise(() => transcriptionManager.setEnabled(enabled)).pipe(
+          Effect.catchCause((cause) => Effect.sync(() => log.warn('failed to toggle transcription', { cause }))),
+        );
       }
     }),
   ),

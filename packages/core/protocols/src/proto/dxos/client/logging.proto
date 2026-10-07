@@ -4,56 +4,16 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/config.proto";
-import "dxos/echo/metadata.proto";
-import "dxos/echo/timeframe.proto";
 import "dxos/error.proto";
-import "dxos/halo/credentials.proto";
-import "dxos/keys.proto";
-import "dxos/mesh/signal.proto";
-import "dxos/mesh/teleport/gossip.proto";
-import "dxos/value.proto";
 
 package dxos.client.services;
 
 //
 // Development Tooling
 //
-
-message Metrics {
-  message KeyPair {
-    optional string key = 1;
-    optional dxos.value.Value value = 2;
-    optional dxos.value.Stats stats = 3;
-  }
-
-  google.protobuf.Timestamp timestamp = 1;
-  repeated KeyPair values = 10;
-}
-
-message ControlMetricsRequest {
-  optional bool reset = 1;
-  optional bool record = 2;
-}
-
-message ControlMetricsResponse {
-  optional bool recording = 1;
-}
-
-// TODO(burdon): Rename Trace?
-message QueryMetricsRequest {
-  optional int32 interval = 1;
-}
-
-message QueryMetricsResponse {
-  google.protobuf.Timestamp timestamp = 1;
-  Metrics metrics = 2;
-}
 
 // NOTE: Keep aligned with LogLevel in @dxos/log.
 enum LogLevel {
@@ -102,9 +62,3 @@ message LogEntry {
   google.protobuf.Timestamp timestamp = 6;
 }
 
-service LoggingService {
-  // TODO(burdon): Deprecated: move to system service/diagnostics.
-  rpc ControlMetrics(ControlMetricsRequest) returns (ControlMetricsResponse);
-  rpc QueryMetrics(QueryMetricsRequest) returns (stream QueryMetricsResponse);
-  rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
-}

@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 4,
+    "why": 3,
+    "load": 5,
+    "trust": 3,
+    "reasons": {
+      "order": "The single-line change is stated in the title and opening paragraph, and the one section that follows ('`MAX_EDGE_RETRIES` bounds how many times...') just explains the constant it changed, which is the right shape for a one-constant patch.",
+      "why": "'Transient EDGE unavailability during that window failed the notarize call outright' supplies a concrete failure mode the bare diff does not, which is more rationale than a restatement, though it is asserted rather than sourced.",
+      "load": "Two short paragraphs with no term used before definition — 'EDGE', 'notarization plugin', and the constant's role are all introduced in order, readable in one pass.",
+      "trust": "The failure narrative about transient unavailability is not supported anywhere in the patch, and the cited range `lines=35-38` stops short of the actual changed line (`MAX_EDGE_RETRIES` sits at line 39 of the 35-41 hunk)."
+    }
+  },
+  "B": {
+    "order": 3,
+    "why": 2,
+    "load": 3,
+    "trust": 3,
+    "reasons": {
+      "order": "Core change is up front, but the closing paragraph pivots sideways to the notarize timeout and polling interval rather than to any consequence of the change, so the second half does not build on the first.",
+      "why": "'It is a single constant edit with no accompanying logic change' and 'The constant governs how many times the plugin retries' only narrate what the diff shows; no failure avoided or alternative rejected is given.",
+      "load": "The final sentence, 'Five retries fits more attempts inside that timeout window than the previous two did,' is circular enough that a reader must back up to work out what claim is being made about the 10s timeout.",
+      "trust": "The quoted constants (10s notarize timeout, 3s active-EDGE polling) are real context lines in the hunk, but the inference that five retries 'fits' inside the timeout window has no basis in the patch and is arguably backwards."
+    }
+  }
+}

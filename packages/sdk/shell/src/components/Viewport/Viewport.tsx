@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type Dispatch,
@@ -14,7 +11,10 @@ import React, {
   useEffect,
 } from 'react';
 
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { KEYBOARD_MODALITY_ATTR, findFirstFocusable } from '@dxos/react-focus';
+import { createContext, useControllableState } from '@dxos/react-hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 const VIEWPORT_NAME = 'Viewport';
@@ -27,13 +27,9 @@ type ViewportContextValue = {
   setActiveView: Dispatch<SetStateAction<string | undefined>>;
 };
 
-type ViewportScopedProps<P> = P & { __viewportScope?: Scope };
+const [ViewportProvider, useViewportContext] = createContext<ViewportContextValue>(VIEWPORT_NAME);
 
-const [createViewportContext, createViewportScope] = createContextScope(VIEWPORT_NAME, []);
-
-const [ViewportProvider, useViewportContext] = createViewportContext<ViewportContextValue>(VIEWPORT_NAME);
-
-type ViewportRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
+type ViewportRootProps = Util.ThemedClassName<ComponentPropsWithRef<'div'>> &
   Partial<{
     focusManaged: boolean;
     defaultActiveView: string;
@@ -42,7 +38,6 @@ type ViewportRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   }>;
 
 const ViewportRoot = ({
-  __viewportScope,
   classNames,
   children,
   defaultActiveView,
@@ -50,19 +45,14 @@ const ViewportRoot = ({
   focusManaged = false,
   onActiveViewChange,
   ...props
-}: ViewportScopedProps<ViewportRootProps>) => {
+}: ViewportRootProps) => {
   const [activeView = 'never', setActiveView] = useControllableState({
     prop: propsActiveView,
     defaultProp: defaultActiveView,
     onChange: onActiveViewChange,
   });
   return (
-    <ViewportProvider
-      focusManaged={focusManaged}
-      activeView={activeView}
-      setActiveView={setActiveView}
-      scope={__viewportScope}
-    >
+    <ViewportProvider focusManaged={focusManaged} activeView={activeView} setActiveView={setActiveView}>
       <div role='region' aria-live='polite' {...props} className={mx('w-full overflow-hidden', classNames)}>
         {children}
       </div>
@@ -72,7 +62,9 @@ const ViewportRoot = ({
 
 ViewportRoot.displayName = VIEWPORT_NAME;
 
-type ViewportViewsProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>> & { children: ReactNode[] };
+type ViewportViewsProps = Util.ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>> & {
+  children: ReactNode[];
+};
 
 const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) => {
   const size = { inlineSize: `${Math.ceil(children.length) * 100}%` };
@@ -85,18 +77,17 @@ const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) =
 
 ViewportViews.displayName = VIEWS_NAME;
 
-type ViewportViewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'>> & {
+type ViewportViewProps = Util.ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'>> & {
   id: string;
 };
 
-const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportViewProps>>(
-  ({ __viewportScope, classNames, children, id, ...props }, forwardedRef) => {
-    const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME, __viewportScope);
+const ViewportView = forwardRef<HTMLDivElement, ViewportViewProps>(
+  ({ classNames, children, id, ...props }, forwardedRef) => {
+    const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME);
     const isActive = id === activeView;
-    const ref = useForwardedRef(forwardedRef);
-    const { findFirstFocusable } = useFocusFinders();
+    const ref = Hooks.useForwardedRef(forwardedRef);
     useEffect(() => {
-      if (!focusManaged && isActive && document.body.hasAttribute('data-w-keyboard') && ref.current) {
+      if (!focusManaged && isActive && document.body.hasAttribute(KEYBOARD_MODALITY_ATTR) && ref.current) {
         findFirstFocusable(ref.current)?.focus();
       }
     }, [focusManaged, ref.current, isActive]);
@@ -122,6 +113,6 @@ export const Viewport = {
   View: ViewportView,
 };
 
-export { createViewportScope, useViewportContext };
+export { useViewportContext };
 
-export type { ViewportRootProps, ViewportScopedProps, ViewportViewProps, ViewportViewsProps };
+export type { ViewportRootProps, ViewportViewProps, ViewportViewsProps };

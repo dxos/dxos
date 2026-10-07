@@ -87,7 +87,29 @@ the new store + tag.
 
 ## Reviewer follow-ups (not blocking this PR)
 
-- [ ] **`query` tool `in`-example bug** (`assistant-toolkit .../database/operations/definitions.ts`) — the description's example shows nested object refs (`{"/": "echo://…"}`) for `in`, but the param decodes only plain URI strings, so the model copies the wrong shape and the call fails (recorded faithfully in the database-skill fixtures). Needs its own PR: fixing the description changes the hashed tool parameters and invalidates fixtures across every toolkit suite, so it must land with a coordinated regen.
+- [x] **Strip provider transport metadata from committed fixtures** — recorded parts carried the raw
+      Anthropic HTTP envelopes (`request` on `response-metadata`, `response` on `finish`): account and
+      trace identifiers (`anthropic-organization-id`, `anthropic-workspace-id`, `cf-ray`, `request-id`,
+      `traceparent`/`b3`) plus per-request rate-limit state, none of which replay reads. Dropped at the
+      store-write boundary in `LanguageModelFixture` and rewritten in place across the 77 affected
+      records by `tools/codemods/strip-model-fixture-transport.mjs`. Hashes key on parameters + prompt,
+      so no fixture moved and no regeneration was needed.
+- [x] **`query` tool `in`-example bug** (`assistant-toolkit .../database/operations/definitions.ts`) — the
+      description's example showed nested object refs (`{"/": "echo://…"}`) for `in`, but the param decodes
+      only plain URI strings, so the model copied the wrong shape and burned a retry on every scoped query.
+      Example rewritten to URI strings. All three JSON examples in the description are now valid: the
+      "Financial report" one was missing a comma and the "Cyberdyne" one had a trailing comma (the latter
+      caught by CodeRabbit on #12576). A repo-wide sweep of `<example>` blocks under `src/skills/**` finds
+      no other malformed one.
+      The database-skill suite was regenerated with `DX_UPDATE_MODEL_FIXTURES=1`; all 54 pre-change records
+      are stale and deleted (replay is green on the 52 new ones alone), and no fixture now records an
+      `Expected string at ["in"][0]` retry.
+- [ ] **`query` tool quotes `limit`** — the model frequently emits `"limit": "10"` (a JSON string), which
+      `Schema.Number` rejects with `SchemaError: Expected number at ["limit"]`. Pre-existing and independent
+      of the `in` fix — present in 8 fixtures before it and 8 after. It blocks the one call that
+      `query operation: in param can be passed as string` exists to assert, so that test still never reaches
+      the string→`Ref` coercion (the two agent-driven `in` tests do exercise it successfully). Fixing it means
+      a coercible `limit` schema, which re-hashes the tool parameters and needs another coordinated regen.
 - [ ] **`toolChoice as any` / `params.tools as never[]`** (`LanguageModelFixture.ts` record path) — external `@effect/ai` generic-variance at the untyped-tool-list → typed-`Toolkit` boundary; only runs under `DX_UPDATE_MODEL_FIXTURES`. A true source fix means reconstructing tool types from the stored JSON schemas.
 
 ## References

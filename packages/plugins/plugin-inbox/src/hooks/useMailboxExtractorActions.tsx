@@ -9,9 +9,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';
 
-import { isAiServiceUnavailable } from '../operations/extractor/ai-gate';
-import * as InboxOperation from '../types/InboxOperation';
-import type * as Mailbox from '../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
+
+import { isAiServiceUnavailable } from '../operations/extractor/ai-gate.ts';
 
 export type MailboxExtractorMenuItem = {
   id: string;

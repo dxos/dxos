@@ -2,24 +2,104 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
-import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 
-import type { Obj } from '@dxos/echo';
-import { ATTR_TYPE } from '@dxos/echo/internal';
-import type { EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
+import type { SpaceId } from '@dxos/keys';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
-import type { EntityMeta } from './entity-meta-index';
-import type { Index, IndexerObject } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
+import {
+  SqlBoundVariableLimit,
+  chunkArray,
+  chunkRows,
+  countBoundVariables,
+  measuredVariableCost,
+  mergeChunkedRows,
+  planChunkPairs,
+  planChunks,
+  readConsistently,
+} from '../utils.ts';
+import {
+  type EntityMeta,
+  type QueueRef,
+  type SourceRef,
+  buildTypeDxnCondition,
+  sourceRefs,
+  splitSourceRefs,
+} from './entity-meta-index.ts';
+import { type Index, type IndexerObject } from './interface.ts';
+import { extractIndexableText } from './text-extractor.ts';
 
-// SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
-// Use 500 as a safe chunk size for IN (...) clauses.
-const SQL_CHUNK_SIZE = 500;
+/** One statement of a full-text read: the chunk of each list it is restricted to, absent if unrestricted. */
+type FtsStatement = { readonly types?: string[]; readonly sources?: SourceRef[] };
+
+/**
+ * Plans the statements of a full-text read. Unlike an entity read, an absent list here restricts
+ * nothing: no type filter searches every type, and no sources search every space.
+ */
+const planFtsStatements = (
+  sql: SqlClient.SqlClient,
+  typeDxns: readonly string[] | undefined,
+  sources: readonly SourceRef[],
+  includeAllQueues: boolean,
+  budget: number,
+): FtsStatement[] => {
+  const typeCost = measuredVariableCost(sql, (types: readonly string[]) => buildTypeDxnCondition(sql, types));
+  const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
+    buildFtsSourceCondition(sql, chunk, includeAllQueues),
+  );
+  if (typeDxns === undefined && sources.length === 0) {
+    return [{}];
+  }
+  if (typeDxns === undefined) {
+    return planChunks(sources, sourceCost, budget).map((chunk) => ({ sources: chunk }));
+  }
+  if (sources.length === 0) {
+    return planChunks(typeDxns, typeCost, budget).map((chunk) => ({ types: chunk }));
+  }
+  return planChunkPairs({ items: typeDxns, costOf: typeCost }, { items: sources, costOf: sourceCost }, budget).map(
+    ([types, chunk]) => ({ types, sources: chunk }),
+  );
+};
+
+/**
+ * The space and queue restriction of a full-text read, over the joined `objectMeta` row `m`. A row can
+ * match both a space and one of its queues, so the rows of separate chunks overlap.
+ */
+const buildFtsSourceCondition = (
+  sql: SqlClient.SqlClient,
+  sources: readonly SourceRef[],
+  includeAllQueues: boolean,
+): Statement.Fragment => {
+  const { spaceIds, queues } = splitSourceRefs(sources);
+  const conditions: Statement.Fragment[] = [];
+  if (spaceIds.length > 0) {
+    conditions.push(
+      includeAllQueues
+        ? // All items from these spaces (both space objects and queue objects).
+          sql`m.spaceId IN ${sql.in(spaceIds)}`
+        : // Only space objects (not queue objects) from these spaces.
+          sql`(m.spaceId IN ${sql.in(spaceIds)} AND m.queueId = '')`,
+    );
+  }
+  if (queues.length > 0) {
+    // Items from specific queues, each scoped by its own space: a queue id is unique only within
+    // one, so matching on the id alone would admit another space's rows.
+    conditions.push(
+      sql`(${sql.or(
+        queues.map((queue) =>
+          queue.spaceId !== undefined
+            ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId})`
+            : sql`m.queueId = ${queue.queueId}`,
+        ),
+      )})`,
+    );
+  }
+  return sql.or(conditions);
+};
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -41,9 +121,17 @@ export interface FtsQuery {
   includeAllQueues: boolean;
 
   /**
-   * Queue IDs to search within.
+   * Queues to search within, each scoped by the space owning it — a queue id is unique only
+   * within its own space. A ref without a `spaceId` matches on the id alone.
    */
-  queueIds: readonly EntityId[] | null;
+  queues: readonly QueueRef[] | null;
+
+  /**
+   * Type identifiers to restrict matches to (any form accepted by the meta index — typename
+   * DXN or stored-schema EID). Null or undefined disables type scoping; an empty list matches
+   * nothing.
+   */
+  typeDxns?: readonly string[] | null;
 }
 
 /**
@@ -92,19 +180,38 @@ const escapeFts5Query = (text: string): string => {
     .join(' ');
 };
 
+/**
+ * Trigram full-text index over {@link ObjectSnapshotIndex}.
+ *
+ * A secondary index: `IndexEngine` feeds it from {@link IndexedObjectSource} rather than from
+ * automerge or a feed, which is what makes re-tokenization deferrable — and cheap under a burst,
+ * since 300 edits move one object's counter 300 times and are caught up in a single pass.
+ *
+ * Deferring it matters because re-tokenizing is what made editing expensive: FTS5 cannot update a
+ * row in place and a trigram tokenizer emits one token per 3-character window, so one changed
+ * property rewrote hundreds of kilobytes. Only search reads this table — every read of object data
+ * goes to the snapshot store, which is never behind. A caller that needs its own write matched
+ * drains first, via `Database.flush({ secondaryIndexes: true })`.
+ *
+ * The indexed column holds the object's extracted text, not its JSON (see
+ * {@link extractIndexableText}), so property names are not searchable.
+ */
 export class FtsIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
    */
   migrate = Effect.fn('FtsIndex.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -112,15 +219,21 @@ export class FtsIndex implements Index {
     query,
     spaceId,
     includeAllQueues,
-    queueIds,
-  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
+    queues,
+    typeDxns,
+  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
         return [];
       }
 
-      const sql = yield* SqlClient.SqlClient;
+      // An explicit empty type scope admits no type, so no row can match.
+      if (typeDxns && typeDxns.length === 0) {
+        return [];
+      }
+
+      const sql = this.#sql;
 
       // Trigram tokenizer requires at least 3 characters per term.
       // Check if ALL terms are at least 3 chars; otherwise use LIKE fallback.
@@ -132,140 +245,125 @@ export class FtsIndex implements Index {
       // so we negate it to get higher = better.
       const useBm25 = minTermLength >= 3;
 
-      const conditions =
+      const textConditions =
         minTermLength < 3
-          ? // LIKE fallback - scan the entire table, AND all terms.
-            terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
+          ? // LIKE fallback - scan the index text column, AND all terms.
+            terms.map((term) => sql`f.text LIKE ${'%' + term + '%'}`)
           : // MATCH - fast index lookup.
-            [sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`];
+            [sql`f.text MATCH ${escapeFts5Query(trimmed)}`];
+      const text = sql.and(textConditions);
+      const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, text);
 
-      // Space and queue constraints are combined with OR.
-      const sourceConditions: Statement.Statement<{}>[] = [];
+      const statements = planFtsStatements(
+        sql,
+        typeDxns ?? undefined,
+        sourceRefs(spaceId ?? [], queues),
+        includeAllQueues,
+        budget,
+      );
+      const results = yield* readConsistently(
+        sql,
+        statements.length,
+        Effect.forEach(statements, (statement) => {
+          const conditions: Statement.Fragment[] = [text];
+          if (statement.sources) {
+            conditions.push(sql`(${buildFtsSourceCondition(sql, statement.sources, includeAllQueues)})`);
+          }
+          // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `text`.
+          if (statement.types) {
+            conditions.push(sql`(${buildTypeDxnCondition(sql, statement.types)})`);
+          }
 
-      if (spaceId && spaceId.length > 0) {
-        if (includeAllQueues) {
-          // All items from these spaces (both space objects and queue objects).
-          sourceConditions.push(sql`m.spaceId IN ${sql.in(spaceId)}`);
-        } else {
-          // Only space objects (not queue objects) from these spaces.
-          sourceConditions.push(sql`(m.spaceId IN ${sql.in(spaceId)} AND m.queueId = '')`);
-        }
-      }
+          if (useBm25) {
+            // Use BM25 ranking for FTS5 MATCH queries.
+            // BM25 returns negative values, negate to get higher = better match.
+            // Note: bm25() requires the actual table name, not an alias.
+            return sql<FtsQueryResult>`
+              SELECT m.*, -bm25(ftsIndex) AS rank
+              FROM ftsIndex AS f
+              JOIN objectMeta AS m ON f.rowid = m.recordId
+              WHERE ${sql.and(conditions)}
+            `;
+          }
+          // LIKE fallback - no ranking available, default to 1. A term below the trigram minimum
+          // has no tokens to match, so this scans the stored text of every row instead.
+          return sql<EntityMeta>`
+            SELECT m.*
+            FROM ftsIndex AS f
+            JOIN objectMeta AS m ON f.rowid = m.recordId
+            WHERE ${sql.and(conditions)}
+          `.pipe(Effect.map((rows): FtsQueryResult[] => rows.map((row) => ({ ...row, rank: 1 }))));
+        }),
+      );
 
-      if (queueIds && queueIds.length > 0) {
-        // Items from specific queues.
-        sourceConditions.push(sql`m.queueId IN ${sql.in(queueIds)}`);
-      }
-
-      if (sourceConditions.length > 0) {
-        conditions.push(sql`(${sql.or(sourceConditions)})`);
-      }
-
-      if (useBm25) {
-        // Use BM25 ranking for FTS5 MATCH queries.
-        // BM25 returns negative values, negate to get higher = better match.
-        // Order by rank descending so best matches come first.
-        // Note: bm25() requires the actual table name, not an alias.
-        const rows = yield* sql<EntityMeta & { rank: number }>`
-          SELECT m.*, -bm25(ftsIndex) AS rank 
-          FROM ftsIndex AS f 
-          JOIN objectMeta AS m ON f.rowid = m.recordId 
-          WHERE ${sql.and(conditions)}
-          ORDER BY rank DESC
-        `;
-        return rows;
-      } else {
-        // LIKE fallback - no ranking available, default to 1.
-        const rows = yield* sql<EntityMeta>`
-          SELECT m.* 
-          FROM ftsIndex AS f 
-          JOIN objectMeta AS m ON f.rowid = m.recordId 
-          WHERE ${sql.and(conditions)}
-        `;
-        return rows.map((row) => ({ ...row, rank: 1 }));
-      }
+      // Best match first. bm25 scores one match expression against the whole table, whatever else
+      // a statement filters on, so ranks from separate statements compare.
+      return mergeChunkedRows(results, {
+        compare: (left, right) => right.rank - left.rank || left.recordId - right.recordId,
+      });
     });
   }
 
-  /**
-   * Query snapshots by recordIds.
-   * Returns the parsed JSON snapshots for queue objects.
-   * RecordIds not present in the FTS index are silently omitted from the result.
-   */
-  querySnapshotsJSON(
-    recordIds: number[],
-  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
-      if (recordIds.length === 0) {
-        return [];
-      }
-      const sql = yield* SqlClient.SqlClient;
-
-      // Chunk to avoid SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER,
-      // typically 999 in wasm builds). 500 gives a safe margin.
-      const chunks: number[][] = [];
-      for (let i = 0; i < recordIds.length; i += SQL_CHUNK_SIZE) {
-        chunks.push(recordIds.slice(i, i + SQL_CHUNK_SIZE));
-      }
-
-      const allResults: { recordId: number; snapshot: Obj.JSON }[] = [];
-      for (const chunk of chunks) {
-        const rows = yield* sql<{
-          rowid: number;
-          snapshot: string;
-        }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
-        for (const r of rows) {
-          allResults.push({ recordId: r.rowid, snapshot: JSON.parse(r.snapshot) });
+  /** Delete index rows by record id. Used by garbage collection. */
+  deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
         }
-      }
-
-      return allResults;
-    });
-  }
-
-  update = Effect.fn('FtsIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen(function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
-              }
-
-              // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
-              const existing = yield* sql<{
-                rowid: number;
-                snapshot: string;
-              }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
-
-              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
-              // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
-              // partial onto the prior snapshot to retain the body and type while layering the new
-              // marker; otherwise the DELETE+INSERT below would replace the full snapshot with the
-              // bare partial and the client could not hydrate the deleted object (`Obj.fromJSON`
-              // needs `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
-              // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
-              // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
-              const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-              const merged =
-                isPartialBlock && existing.length > 0
-                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
-                  : data;
-              const snapshot = JSON.stringify(merged);
-
-              if (existing.length > 0) {
-                yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
-              }
-
-              yield* sql`INSERT INTO ftsIndex (rowid, snapshot) VALUES (${recordId}, ${snapshot})`;
-            }),
-          { discard: true },
-        );
       }),
   );
+
+  /**
+   * Re-tokenizes the given objects, whose text this reads from {@link IndexerObject.data} rather
+   * than from the snapshot store so that one pass writes one index. Only the text
+   * {@link extractIndexableText} pulls out of the object is stored — never its property names.
+   */
+  update = Effect.fn('FtsIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      if (objects.length === 0) {
+        return;
+      }
+      const sql = this.#sql;
+
+      const rows: { rowid: number; text: string }[] = [];
+      for (const object of objects) {
+        if (object.recordId === null) {
+          return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
+        }
+        rows.push({ rowid: object.recordId, text: extractIndexableText(object.data) });
+      }
+
+      // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
+      for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
+        yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+      }
+      for (const chunk of chunkRows(rows)) {
+        yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
+      }
+    }),
+  );
 }
+
+/**
+ * The `WHERE` fragment matching `ftsIndex f` against free text, and whether BM25 ranking applies.
+ * Terms shorter than the trigram tokenizer's three characters fall back to `LIKE`, which cannot
+ * rank. `undefined` when the text has no terms. Mirrors the conditions {@link FtsIndex.query}
+ * builds, so the compiled and in-memory executors match the same rows.
+ */
+export const buildFtsCondition = (
+  sql: SqlClient.SqlClient,
+  text: string,
+): { condition: Statement.Fragment; ranked: boolean } | undefined => {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const terms = trimmed.split(/\s+/).filter(Boolean);
+  const minTermLength = Math.min(...terms.map((term) => term.length));
+  if (minTermLength < 3) {
+    return { condition: sql.and(terms.map((term) => sql`f.text LIKE ${'%' + term + '%'}`)), ranked: false };
+  }
+  return { condition: sql`f.text MATCH ${escapeFts5Query(trimmed)}`, ranked: true };
+};

@@ -4,16 +4,15 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { composableProps, slottable } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 type TestLayoutProps = PropsWithChildren<{ json?: unknown }>;
 
 export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div className={mx('dx-container grid grid-cols-1 p-4 gap-4', !!json && 'grid-cols-[1fr_1fr]')}>
+    <div className={mx('dx-expand grid grid-cols-1 p-4 gap-4', !!json && 'grid-cols-[1fr_1fr]')}>
       <TestPanel>{children}</TestPanel>
       {!!json && (
         <TestPanel>
@@ -31,11 +30,14 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
   );
 };
 
-type TestPanelProps = ThemedClassName<PropsWithChildren>;
+type TestPanelProps = Util.ThemedClassName<PropsWithChildren>;
 
-export const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
+export const TestPanel = Util.slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
-    <div {...composableProps({ classNames: 'dx-container dx-card-surface rounded-sm' })} ref={forwardedRef}>
+    <div
+      {...Util.composableProps({ classNames: 'dx-expand overflow-hidden dx-card-surface rounded-sm' })}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );

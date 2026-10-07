@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { assembleDocument } from './align';
-import { sourceHash } from './hash';
+import { assembleDocument } from './align.ts';
+import { sourceHash } from './hash.ts';
 
 describe('assembleDocument', () => {
   test('assigns exact offsets to each token', ({ expect }) => {

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import path from 'node:path';
 
@@ -18,6 +18,8 @@ import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/
 import { incrementSemverPatch } from '@dxos/edge-compute';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
+
+import { CliError } from '../../../util/errors.ts';
 
 export const DATA_TYPES: Type.AnyEntity[] = [
   Operation.PersistentOperation,
@@ -44,7 +46,7 @@ export const loadFunctionObject: (
   const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Operation.PersistentOperation)).run());
   const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
   if (!functionObject) {
-    return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
+    return yield* Effect.fail(new CliError({ message: `Function ECHO object not found for ${functionId}` }));
   }
 
   return functionObject;

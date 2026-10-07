@@ -5,10 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, type Database, DXN, Feed, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { TagIndex } from '@dxos/schema';
 
-import { Provider } from './Provider';
+import { Provider } from './Provider.ts';
 
 /** System {@link Tag} foreign key for the user-applied star flag on a Result (within a Search). */
 export const STARRED_TAG = { source: 'org.dxos.plugin.commerce', id: 'starred' };
@@ -16,22 +15,23 @@ export const STARRED_TAG = { source: 'org.dxos.plugin.commerce', id: 'starred' }
 /** A user's saved product search configuration. */
 export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.commerce.Search', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
+    name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
     providers: Schema.Array(Ref.Ref(Provider)),
     /** Values for the union of provider fields, keyed by field name. */
-    params: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
+    params: Schema.Record(Schema.String, Schema.Unknown).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
      * Timestamp of the last run; persisted metadata, hidden from forms.
      * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
      */
-    lastRunAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    lastRunAt: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -47,17 +47,14 @@ export const make = (
 ): Search => {
   const feed = Feed.make();
   const tags = TagIndex.make();
-  const search = Obj.make(Search, {
+  // The feed and tag index are children (`SetParent`): both cascade-delete with the search.
+  return Obj.make(Search, {
     ...props,
     providers: props.providers ?? [],
     params: props.params ?? {},
     feed: Ref.make(feed),
     tags: Ref.make(tags),
   });
-  Obj.setParent(feed, search);
-  // Tag index is a child: cascade-deleted with the search.
-  Obj.setParent(tags, search);
-  return search;
 };
 
 /** Resolves the uri of the `starred` {@link Tag} if it exists (does not create one). Async. */

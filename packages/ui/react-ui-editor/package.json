@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Text editor components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,7 +13,11 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -43,13 +47,11 @@
     "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "catalog:",
@@ -69,12 +71,9 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/ai": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
@@ -89,8 +88,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

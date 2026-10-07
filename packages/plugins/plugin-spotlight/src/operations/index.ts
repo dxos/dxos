@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { log } from '@dxos/log';
 
-import * as SpotlightCapabilities from '../types/SpotlightCapabilities';
+import { SpotlightCapabilities } from '#types';
 
 const DISMISS_DEBOUNCE_MS = 100;
 
@@ -65,16 +65,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
         yield* Effect.promise(async () => {
           try {
             const { emitTo } = await import('@tauri-apps/api/event');
-            await emitTo('main', 'spotlight:invoke', {
-              operation: 'open',
-              payload: {
-                subject: input.subject,
-                state: input.state,
-                variant: input.variant,
-                workspace: input.workspace,
-                scrollIntoView: input.scrollIntoView,
-              },
-            });
+            await emitTo('main', 'spotlight:invoke', { operation: 'open', payload: input });
           } catch (err) {
             log.catch(err);
           }

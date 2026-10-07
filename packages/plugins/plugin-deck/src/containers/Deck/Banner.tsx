@@ -4,18 +4,20 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { DeckRole } from '#types';
 
-import * as DeckRole from '../../types/DeckRole';
-import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
+import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
-export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
-  const { t } = useTranslation(meta.profile.key);
+export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <header
@@ -29,10 +31,10 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
       <span className='self-center grow ms-1'>{t('current-app.name', { ns: osTranslations })}</span>
       {variant === 'topbar' && (
-        <div className='absolute inset-0 pointer-events-none'>
-          <div className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
+        <div className='dx-cover pointer-events-none'>
+          <Layout.Grid classNames='h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
             <Surface.Surface type={AppSurface.SearchInput} limit={1} />
-          </div>
+          </Layout.Grid>
         </div>
       )}
       <span className='grow' />

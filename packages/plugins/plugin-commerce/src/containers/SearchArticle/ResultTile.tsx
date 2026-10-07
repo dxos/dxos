@@ -5,10 +5,11 @@
 import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Focus } from '@dxos/react-ui';
+import * as Focus from '@dxos/react-ui/Focus';
 
-import type * as Result from '../../types/Result';
-import { ResultCard } from '../ResultCard';
+import { Result } from '#types';
+
+import { ResultCard } from '../ResultCard/index.ts';
 
 export type ResultTileProps = {
   result: Result.Result;

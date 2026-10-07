@@ -2,31 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Graph } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
-export type GraphNode = {
+export type ForceNode = {
   id?: string;
 };
 
-export type GraphLink = {
+export type ForceLink = {
   source?: string;
   target?: string;
 };
 
 export type GraphData = {
-  nodes: GraphNode[];
-  links: GraphLink[];
+  nodes: ForceNode[];
+  links: ForceLink[];
 };
 
 /**
  * Map common graph to force-graph format.
  */
 export class GraphAdapter implements GraphData {
-  private readonly _nodes: GraphNode[] = [];
-  private readonly _links: GraphLink[] = [];
+  private readonly _nodes: ForceNode[] = [];
+  private readonly _links: ForceLink[] = [];
 
-  constructor(private readonly graph: Graph.Any) {
-    this._nodes = graph.nodes.map((node: Graph.Node.Any) => ({
+  constructor(private readonly graph: GraphModel.AnyData) {
+    this._nodes = graph.nodes.map((node: GraphNode.Any) => ({
       id: node.id,
       type: node.type,
       data: node.data,
@@ -37,8 +39,8 @@ export class GraphAdapter implements GraphData {
 
     // Filter out edges where source or target node doesn't exist.
     this._links = graph.edges
-      .filter((edge: Graph.Edge.Any) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
-      .map((edge: Graph.Edge.Any) => ({
+      .filter((edge: GraphEdge.Any) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+      .map((edge: GraphEdge.Any) => ({
         type: edge.type,
         source: edge.source,
         target: edge.target,

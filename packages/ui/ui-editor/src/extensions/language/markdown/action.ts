@@ -4,10 +4,10 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type Node } from '@dxos/app-graph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { createComment } from '../../review/comments';
+import { createComment } from '../../review/comments.ts';
 import {
   Inline,
   List,
@@ -25,7 +25,7 @@ import {
   toggleBlockquote,
   toggleList,
   toggleStyle,
-} from './formatting';
+} from './formatting.ts';
 
 export type PayloadType =
   | 'view-mode'
@@ -52,7 +52,7 @@ export type EditorActionPayload = {
   data?: any;
 };
 
-export type EditorAction = Node.Action<MenuActionProperties & EditorActionPayload>;
+export type EditorAction = AppGraphNode.Action<MenuActionProperties & EditorActionPayload>;
 
 export type EditorPayloadHandler = (view: EditorView, payload: EditorActionPayload) => void;
 

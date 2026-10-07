@@ -10,11 +10,12 @@ import { Message, request } from '@dxos/crx-protocol';
 import { createMockPeer } from '@dxos/crx-protocol/testing';
 import { DXN } from '@dxos/keys';
 
-import { handleInvokeEvent, handleListEvent } from './page-actions';
-import * as PageAction from './types/PageAction';
+import { PageAction } from '#types';
+
+import { handleInvokeEvent, handleListEvent } from './page-actions.ts';
 
 const TestOp = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.operation.pageAction'), name: 'Test' },
+  meta: { key: DXN.make('com.example.operation.test.pageAction'), name: 'Test' },
   input: Schema.Struct({ snapshot: PageAction.Snapshot, target: Schema.Any }),
   output: Schema.Struct({ id: Schema.String }),
 });

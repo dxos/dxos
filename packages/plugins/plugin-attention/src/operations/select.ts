@@ -8,9 +8,9 @@ import * as Match from 'effect/Match';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
-import * as AttentionCapabilities from '../types/AttentionCapabilities';
+import { AttentionCapabilities } from '#types';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Select> = LayoutOperation.Select.pipe(
   Operation.withHandler(

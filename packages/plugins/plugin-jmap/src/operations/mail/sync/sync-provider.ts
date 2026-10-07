@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -15,19 +14,20 @@ import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MailSyncError, type MailSyncItem, MailSyncProvider, type MailSyncSource } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import type * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JMAP_DOMAIN } from '../../../constants';
-import { type JmapApiError } from '../../../errors';
-import { JmapMailApi } from '../../../services';
-import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
-import { findOrCreateJmapTag } from '../tags';
-import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
+import { Jmap, JmapMail } from '#apis';
+import { JmapMailApi } from '#services';
+
+import { JMAP_DOMAIN } from '../../../constants.ts';
+import { type JmapApiError } from '../../../errors.ts';
+import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper.ts';
+import { findOrCreateJmapTag } from '../tags.ts';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags.ts';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `Email/changes` chunk. */
 type DeltaPlan = {
@@ -39,12 +39,17 @@ type DeltaPlan = {
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
+/**
+ * JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
+ *
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
   fetchConcurrency: 5,
   commitPageSize: 10,
-  maxItemsPerRun: 500,
+  maxItemsPerRun: 100,
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 /**
@@ -52,9 +57,9 @@ const JMAP_SYNC_CONFIG = {
  * the fused decode+map. Captures {@link JmapMailApi} + {@link Resolver} so the harness never names them.
  * Mirror of the Gmail provider (`googleMailSyncProvider`).
  */
-export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, JmapMailApi | Resolver> =>
+export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, never, JmapMailApi | Resolver> =>
   Layer.effect(
-    MailSyncProvider,
+    MailSync.MailSyncProvider,
     Effect.gen(function* () {
       // The API is provided into the source stream (leaving `Cursor.Service` for the harness); the full
       // context into each `process` (whose only needs are API + resolver).
@@ -107,6 +112,14 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               keywordTagMap.set(keyword, Mailbox.tagUri(tag));
             }
 
+            // Mail from someone the space already knows is worth surfacing, so it lands under the
+            // `important` folder on arrival. Resolved once per sync rather than per message, and
+            // reusing the shared canonical tag rather than a parallel one — the Gmail provider marks
+            // known senders the same way, so both read identically downstream.
+            const knownSenderTagUri = Mailbox.tagUri(
+              yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, 'important')),
+            );
+
             // Fused decode + map; `undefined` drops the item (no body, or unmappable). Constructs the
             // `Change` (an `insert`) directly, so no separate wrapping stage is needed downstream.
             const toMapped = (
@@ -132,6 +145,11 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   return uri ? [uri] : [];
                 });
                 const tagUris = [...folderUris, ...keywordUris];
+                // `contact` is the Person the space already holds for this sender (resolved above to
+                // link `message.sender.contact`), so knowing they are known costs no extra lookup.
+                if (contact && !tagUris.includes(knownSenderTagUri)) {
+                  tagUris.push(knownSenderTagUri);
+                }
                 const attachments = yield* fetchAttachments(target, decoded.attachments);
                 return {
                   _tag: 'insert',
@@ -143,7 +161,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (email: JmapMail.Email): MailSyncItem => ({
+            const toItem = (email: JmapMail.Email): MailSync.MailSyncItem => ({
               foreignId: email.id,
               key: new Date(email.receivedAt).getTime(),
               process: toMapped(email).pipe(Effect.provide(context)),
@@ -152,15 +170,12 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             // The first-tick baseline (and stale-token fallback): the current `Email/get` state with no
             // delta applied (so mail arriving during backfill is caught by the next incremental, not
             // missed). Defined once so both call sites share the same capture.
-            const captureFreshDelta = Effect.map(
-              api.emailGet(target, []),
-              (result): DeltaPlan => ({
-                token: result.state,
-                createdIds: undefined,
-                updatedIds: [],
-                hasMoreDelta: false,
-              }),
-            );
+            const captureFreshDelta = Effect.map(api.emailGet(target, []), (result): DeltaPlan => ({
+              token: result.state,
+              createdIds: undefined,
+              updatedIds: [],
+              hasMoreDelta: false,
+            }));
 
             // Resolve the delta plan. An incremental run fetches one bounded `Email/changes` chunk since
             // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives `runAgain`, and
@@ -201,7 +216,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   );
             const { token: capturedToken, createdIds, updatedIds, hasMoreDelta } = yield* resolveDelta;
 
-            const source: MailSyncSource = {
+            const source: MailSync.MailSyncSource = {
               buildSource: ({ windows, filter, tagIndex, onEnumerated, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
@@ -222,13 +237,13 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(JmapMailApi, providerApi),
-                    Stream.mapError(MailSyncError.wrap()),
+                    Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),
                   // Empty on non-incremental runs; `jmapReconcile` re-fetches + diffs each `updated` id
                   // and resolves it to a `Change` itself (it needs the entityId to read local tags).
                   reconciles: jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(
                     Stream.provideService(JmapMailApi, providerApi),
-                    Stream.mapError(MailSyncError.wrap()),
+                    Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),
                 };
               },
@@ -237,7 +252,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               hasMoreDelta: () => hasMoreDelta,
             };
             return source;
-          }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
+          }).pipe(Effect.provide(context), Effect.mapError(MailSync.MailSyncError.wrap())),
       };
     }),
   );
@@ -319,16 +334,14 @@ const fetchAttachments = (
       attachments,
       (attachment) =>
         api.downloadBlob(target, attachment.blobId, { name: attachment.name, type: attachment.mimeType }).pipe(
-          Effect.map(
-            (bytes): EmailStage.Attachment => ({
-              name: attachment.name,
-              mimeType: attachment.mimeType,
-              size: attachment.size ?? bytes.byteLength,
-              bytes,
-              contentId: attachment.contentId,
-            }),
-          ),
-          Effect.catchAll((error) => {
+          Effect.map((bytes): EmailStage.Attachment => ({
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            size: attachment.size ?? bytes.byteLength,
+            bytes,
+            contentId: attachment.contentId,
+          })),
+          Effect.catch((error) => {
             log.catch(error, { blobId: attachment.blobId, name: attachment.name });
             return Effect.succeed(undefined);
           }),
@@ -395,7 +408,7 @@ const jmapIds = (
         conditions: conditions.length,
       });
 
-      return Stream.paginateChunkEffect(0, (position: number) =>
+      return Stream.paginate(0, (position: number) =>
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
@@ -408,7 +421,7 @@ const jmapIds = (
           options.onEnumerated?.(ids.length);
           const next =
             ids.length < JMAP_SYNC_CONFIG.listPageSize ? Option.none<number>() : Option.some(position + ids.length);
-          return [Chunk.fromIterable(ids), next];
+          return [ids, next] as const;
         }),
       );
     }),
@@ -439,7 +452,7 @@ const jmapEmailsForIds = (
             options.onRetrieved?.();
             return list[0];
           }),
-        ).pipe(Stream.filter(Predicate.isNotNullable)),
+        ).pipe(Stream.filter(Predicate.isNotNullish)),
       { concurrency: JMAP_SYNC_CONFIG.fetchConcurrency, bufferSize: 10 },
     ),
   );

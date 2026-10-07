@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-form",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,16 +10,30 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types.ts",
+      "types": "./dist/types/src/types.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./annotations": {
+      "source": "./src/annotations.ts",
+      "types": "./dist/types/src/annotations.d.ts",
+      "import": "./dist/lib/annotations.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -44,26 +58,19 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-query": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
+    "@effect/atom-react": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@codemirror/lang-xml": "catalog:",
-    "@dxos/effect-proto": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
@@ -75,7 +82,6 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tabster": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

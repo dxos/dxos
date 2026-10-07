@@ -6,18 +6,18 @@ import React, { type PropsWithChildren } from 'react';
 
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 
-import { useEditorContext } from '../../hooks';
-import { PathComponent } from '../../shapes';
-import { type CanvasBoard, isPath, isPolygon } from '../../types';
-import { Frame } from './Frame';
+import { useEditorContext } from '../../hooks/index.ts';
+import { PathComponent } from '../../shapes/index.ts';
+import { type CanvasBoard, isPath, isPolygon } from '../../types/index.ts';
+import { Frame } from './Frame.tsx';
 
 /**
  * Runtime representations of shape.
  */
 export type ShapeComponentProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = PropsWithChildren<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     shape: S;
     debug?: boolean;
     selected?: boolean;

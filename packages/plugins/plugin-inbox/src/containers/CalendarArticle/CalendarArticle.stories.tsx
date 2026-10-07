@@ -12,15 +12,16 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { InboxPlugin } from '#plugin';
 import { Builder } from '#testing';
+import { Calendar } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as Calendar from '../../types/Calendar';
-import { CalendarArticle } from './CalendarArticle';
+import { CalendarArticle } from './CalendarArticle.tsx';
 
 type StoryArgs = {
   count?: number;
@@ -44,8 +45,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -66,9 +67,9 @@ const meta = {
             }),
         }),
 
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

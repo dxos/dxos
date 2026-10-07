@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
@@ -15,8 +15,8 @@ import {
   type TableRow,
   type TableRowAction,
   createEchoChangeCallback,
-} from '../model';
-import { type Table } from '../types';
+} from '../model/index.ts';
+import { type Table } from '../types/index.ts';
 
 export type UseTableModelProps<T extends TableRow = TableRow> = {
   object?: Table.Table;

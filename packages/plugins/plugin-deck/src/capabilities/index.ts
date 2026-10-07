@@ -9,16 +9,21 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { DeckCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const CheckAppScheme = Capability.lazyModule(
   'CheckAppScheme',
   {
     requires: [DeckCapabilities.Settings, Capabilities.OperationInvoker, AppCapabilities.NavigationHandler],
     provides: [],
   },
-  () => import('./check-app-scheme'),
+  () => import('./check-app-scheme.ts'),
 );
 export const NotificationTracker = Capability.lazyModule(
   'NotificationTracker',
@@ -26,21 +31,35 @@ export const NotificationTracker = Capability.lazyModule(
     requires: [
       Capabilities.AtomRegistry,
       DeckCapabilities.EphemeralState,
-      Capabilities.ProcessMonitor,
+      Capabilities.ProcessManager,
       Capabilities.PluginManager,
       Capabilities.OperationInvoker,
       Capabilities.OperationHandler,
     ],
     provides: [],
   },
-  () => import('./notification-tracker'),
+  () => import('./notification-tracker.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const GraphRetention = Capability.lazyModule(
+  'GraphRetention',
+  {
+    requires: [DeckCapabilities.State, AppCapabilities.Layout],
+    provides: [AppCapabilities.AppGraphRetention],
+  },
+  () => import('./graph-retention.ts'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const DeckSettings = AppCapability.settings(() => import('./settings'), {
+export const DeckSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [DeckCapabilities.Settings],
 });
 export const DeckState = Capability.lazyModule(
@@ -52,10 +71,17 @@ export const DeckState = Capability.lazyModule(
     // demotes the reader into this module's wave rather than promoting this module.
     activatesOn: ActivationEvents.Startup,
     requires: [Capabilities.AtomRegistry],
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      AppCapabilities.Layout,
+      DeckCapabilities.Platform,
+      DeckCapabilities.Projection,
+    ],
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
+export const Translations = AppCapability.translations(translations);
 export const UrlHandler = Capability.lazyModule(
   'UrlHandler',
   {
@@ -68,6 +94,7 @@ export const UrlHandler = Capability.lazyModule(
       AppCapabilities.NavigationTargetLoader,
       Capabilities.AtomRegistry,
       DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
       DeckCapabilities.Settings,
       AppCapabilities.AppGraph,
       AttentionCapabilities.ViewState,
@@ -75,5 +102,5 @@ export const UrlHandler = Capability.lazyModule(
     ],
     provides: [],
   },
-  () => import('./url-handler'),
+  () => import('./url-handler.ts'),
 );

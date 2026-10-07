@@ -7,7 +7,7 @@ import * as Stream from 'effect/Stream';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import {
@@ -19,10 +19,10 @@ import {
   runBenchmark,
 } from '@dxos/pipeline/testing';
 
-import { SAMPLES } from './config';
-import { type ModelVariant } from './models';
-import { progressReportingLayer } from './progress';
-import { startResponseLog, writeResults } from './results';
+import { SAMPLES } from './config.ts';
+import { type ModelVariant } from './models.ts';
+import { progressReportingLayer } from './progress.ts';
+import { startResponseLog, writeResults } from './results.ts';
 
 /** Logs the comparison table and writes the results JSON; returns the result. */
 export const reportBenchmark = (

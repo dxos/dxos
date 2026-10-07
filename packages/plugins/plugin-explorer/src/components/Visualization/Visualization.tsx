@@ -2,11 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { composableProps, slottable } from '@dxos/react-ui';
+import { createContext } from '@dxos/react-hooks';
 import {
   type GraphLayout,
   type GraphLayoutNode,
@@ -17,10 +16,11 @@ import {
   type SVGContext,
   type TreeNode,
 } from '@dxos/react-ui-graph';
+import * as Util from '@dxos/react-ui/Util';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { type VisualizationVariant, type VisualizationVariantId, getVariant } from './variants';
+import { type VisualizationVariant, type VisualizationVariantId, getVariant } from './variants.ts';
 
 //
 // Context
@@ -53,17 +53,16 @@ export type VisualizationRootProps = SlottableProps<{
  * focus) with the child `Visualization.Graph` via context, so the variant string is set in one
  * place. The surface element is slottable via `asChild` for composition into a host layout.
  */
-const VisualizationRoot = slottable<
+const VisualizationRoot = Util.slottable<
   HTMLDivElement,
   { model: SpaceGraphModel; variant: VisualizationVariantId; focus?: string; onSurfaceClick?: () => void }
 >(({ children, asChild, model, variant, focus, onSurfaceClick, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { classNames: 'dx-expander relative' });
-  const Comp = asChild ? Slot : 'div';
+  const { className, ...rest } = Util.composableProps(props, { classNames: 'dx-expand relative' });
   return (
     <VisualizationProvider model={model} variant={getVariant(variant)} focus={focus}>
-      <Comp {...rest} className={className} onClick={onSurfaceClick} ref={forwardedRef}>
+      <ark.div asChild={asChild} {...rest} className={className} onClick={onSurfaceClick} ref={forwardedRef}>
         {children}
-      </Comp>
+      </ark.div>
     </VisualizationProvider>
   );
 });

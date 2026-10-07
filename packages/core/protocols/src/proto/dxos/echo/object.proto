@@ -76,7 +76,3 @@ message MutationMeta {
   /// If this mutation was created by this client, this field will be set to the tag in the mutation.
   repeated string client_tag = 5;
 }
-
-message EchoObjectBatch {
-  repeated EchoObject objects = 1;
-}

@@ -13,8 +13,8 @@ const usage = `Usage: profile-wrap.js [--name DXOS] [--origin host] <input.sqlit
 Wrap a raw SQLite file into a CBOR .dxprofile archive with a SQLITE_DATABASE entry.
 
 Examples:
-  node profile-wrap.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
-  node profile-wrap.js --name DXOS --origin main.composer.space ./DXOS.sqlite ./backup.dxprofile
+  node profile-wrap.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
+  node profile-wrap.js --name DXOS --origin preview.composer.space ./DXOS.sqlite ./backup.dxprofile
 
 Requires Node.js 24+. Run from scripts/ after pnpm install.
 `;

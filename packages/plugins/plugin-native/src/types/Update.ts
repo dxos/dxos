@@ -2,23 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
-
 // @import-as-namespace
 
-export type Status =
-  | { kind: 'unsupported' }
-  | { kind: 'idle' }
-  | { kind: 'checking' }
-  | { kind: 'up-to-date'; checkedAt: number }
-  | { kind: 'available'; version: string }
-  | { kind: 'downloading'; downloaded: number; contentLength: number }
-  | { kind: 'ready' }
-  | { kind: 'failed'; error: string };
-
-export type Manager = {
-  status: Atom.Writable<Status>;
-  check: () => Promise<void>;
-  install: () => Promise<void>;
-  relaunch: () => Promise<void>;
-};
+// The update surface is shared with the web (`plugin-pwa` contributes the same capability), so the
+// shape lives in app-toolkit and this module only re-exports it. Kept as a module rather than deleted
+// so `#types`' `Update` namespace and the existing imports keep resolving.
+export type { Manager, Progress, Status } from '@dxos/app-toolkit/AppUpdate';

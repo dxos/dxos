@@ -5,11 +5,12 @@
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Input } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 
-import { useComputeNodeState } from '../hooks';
-import { type SwitchShape } from './switch-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type SwitchShape } from './switch-def.ts';
 
 // TODO(burdon): Should model as a constant.
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
@@ -20,10 +21,16 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
   }, [value]);
 
   return (
-    <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
-      <Input.Root>
-        <Input.Switch checked={value} onCheckedChange={(value) => setValue(value)} />
-      </Input.Root>
+    // The node frame would otherwise take the press as select-and-drag and capture the pointer, so the
+    // switch never sees the click.
+    <div
+      className='flex w-full justify-center items-center'
+      onPointerDown={(ev) => ev.stopPropagation()}
+      onClick={(ev) => ev.stopPropagation()}
+    >
+      <Field.Root>
+        <Input.Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
+      </Field.Root>
     </div>
   );
 };

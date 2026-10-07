@@ -12,10 +12,10 @@ import { DXN } from '@dxos/keys';
 
 export const QuerySkills = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.skillManager.querySkills'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.querySkills'),
     name: 'Query skills',
     description: 'Queries available skills.',
-    icon: 'ph--blueprint--regular',
+    icon: 'ph--student--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Array(Type.getSchema(Skill.Skill)),
@@ -24,14 +24,14 @@ export const QuerySkills = Operation.make({
 
 export const EnableSkills = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.skillManager.enableSkills'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.enableSkills'),
     name: 'Enable skills',
     description:
       'Enables skills in the current conversation by their keys. Only skills with agentCanEnable=true can be enabled. The available keys are already listed in the system prompt, so call this directly rather than querying first.',
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    keys: Schema.Array(Schema.String).annotations({
+    keys: Schema.Array(Schema.String).annotate({
       description: 'The keys of the skills to enable.',
       examples: [['org.dxos.skill.memory', 'org.dxos.skill.database']],
     }),

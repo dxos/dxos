@@ -11,11 +11,10 @@ import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { Organization, Person } from '@dxos/types';
+import { Organization, Person, ProfileOf } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
-import * as ProfileOf from '../types/ProfileOf';
-import { CrmOperationHandlerSet } from './index';
+import { CrmOperationHandlerSet } from '#operations';
+import { CrmOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CrmOperationHandlerSet,

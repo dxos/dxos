@@ -2,21 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { usePluginManager } from '@dxos/app-framework/ui';
-import { composable } from '@dxos/react-ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Util from '@dxos/react-ui/Util';
 
-import { BaseRegistryArticle } from '../BaseRegistryArticle';
+import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
 
 const sortByPluginMeta = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.profile.name ?? a.meta.profile.key).localeCompare(b.meta.profile.name ?? b.meta.profile.key);
 
 export type RegistryArticleProps = {
-  id: string;
+  contextId: string;
   plugins: Plugin.Plugin[];
   /**
    * Map from plugin id → display-only tags (e.g. `registry`, `local`) computed by the caller.
@@ -24,9 +24,9 @@ export type RegistryArticleProps = {
   extraTagsById?: Record<string, readonly string[]>;
 };
 
-export const RegistryArticle = composable<HTMLDivElement, RegistryArticleProps>(
-  ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
-    const manager = usePluginManager();
+export const RegistryArticle = Util.composable<HTMLDivElement, RegistryArticleProps>(
+  ({ contextId, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
+    const manager = PluginManagerProvider.usePluginManager();
     const failed = useAtomValue(manager.failed);
     const plugins = useMemo(() => [...pluginsProp].sort(sortByPluginMeta), [pluginsProp]);
     const failuresById = useMemo(
@@ -41,7 +41,7 @@ export const RegistryArticle = composable<HTMLDivElement, RegistryArticleProps>(
     return (
       <BaseRegistryArticle
         {...props}
-        id={id}
+        contextId={contextId}
         plugins={plugins}
         extraTagsById={extraTagsById}
         failuresById={failuresById}

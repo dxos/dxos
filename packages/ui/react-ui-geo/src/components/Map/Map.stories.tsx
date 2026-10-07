@@ -5,12 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { useMapZoomHandler } from '../../hooks';
-import { type GeoMarker } from '../../types';
-import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map';
+import { useMapZoomHandler } from '../../hooks/index.ts';
+import { type GeoMarker } from '../../types.ts';
+import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map.tsx';
 
 type StoryArgs = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
 
@@ -25,30 +28,30 @@ const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
   return (
     <Panel.Root>
       {urlProp && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Input.Root
                 spellCheck={false}
                 placeholder='API KEY'
                 value={key}
                 onChange={(ev) => setKey(ev.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
       {/* Map.Root is headless (context only), so it sits outside Panel.Content; Panel.Content asChild
           then targets the Leaflet frame (Map.Viewport) directly — no extra wrapper element. */}
       <Map.Root ref={setController}>
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <Map.Viewport>
             <Map.Tiles url={url} />
             <Map.Markers markers={markers} />
             <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
             <Map.Action position='bottomright' />
           </Map.Viewport>
-        </Panel.Content>
+        </Panel.Body>
       </Map.Root>
     </Panel.Root>
   );

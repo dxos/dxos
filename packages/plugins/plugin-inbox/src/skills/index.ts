@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as CalendarSkill } from './calendar';
-export { default as InboxSkill } from './inbox';
-export { default as InboxSendSkill } from './inbox-send';
+export * as CalendarSkill from './CalendarSkill.ts';
+export * as InboxSendSkill from './InboxSendSkill.ts';
+export * as InboxSkill from './InboxSkill.ts';

@@ -13,22 +13,21 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Client } from '@dxos/client';
 import { DXN, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/link';
+import * as Annotation from '@dxos/echo/Annotation';
+import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as Connection from '@dxos/plugin-connector/Connection';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
-import { hashRecord } from '../../hash';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
-import * as AtprotoPublication from '../../types/AtprotoPublication';
-import { AtprotoCompanion } from './AtprotoCompanion';
+import { hashRecord } from '../../hash.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
+import { AtprotoCompanion } from './AtprotoCompanion.tsx';
 
 const NOTE_COLLECTION = 'com.example.note';
 
@@ -40,7 +39,7 @@ class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atpro
     title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     secret: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', lens: demoLens }),
   ),
 ) {}
@@ -94,6 +93,7 @@ const Story = () => {
 };
 
 const decorators = (options: SeedOptions) => [
+  withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     capabilities: [
@@ -102,9 +102,9 @@ const decorators = (options: SeedOptions) => [
       Capability.contribute(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
     ],
     plugins: [
-      ...corePlugins(),
-      StorybookPlugin({}),
-      ClientPlugin({
+      ...CorePlugins.make(),
+      StorybookPlugin.make({}),
+      ClientPlugin.make({
         types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
         onClientInitialized: makeSeed(options),
       }),

@@ -6,23 +6,24 @@ import { type Observer } from '@babylonjs/core/Misc/observable';
 import { type Scene } from '@babylonjs/core/scene';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Select, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { useAttention } from '@dxos/react-ui-attention';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Tabs from '@dxos/react-ui/Tabs';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
+import { Terra, TerraCapabilities, TerraObject } from '#types';
 
-import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine';
-import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
-import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
-import * as Terra from '../../types/Terra';
-import * as TerraCapabilities from '../../types/TerraCapabilities';
-import * as TerraObject from '../../types/TerraObject';
+import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine/index.ts';
+import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene/index.ts';
+import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim/index.ts';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };
@@ -76,7 +77,9 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
   });
 
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  // The selected view tab reads as primary while this article has attention.
+  const { hasAttention } = useAttention(attendableId);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
@@ -106,7 +109,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // The plugin owns the cache so it survives this article's remounts (resize, companion, navigation);
   // rendered without a plugin manager (stories, tests) the mount owns a private one instead.
   const fallbackCache = useMemo(() => new PlanetCache(), []);
-  const planetCache = useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
+  const planetCache = Hooks.useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
   const [isPlaying, setIsPlaying] = useState(true);
   const [gizmosVisible, setGizmosVisible] = useState(false);
   const [view, setView] = useState<ViewMode>('scene');
@@ -296,7 +299,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   const handleAddRandomObject = useCallback(() => {
     const definition = Terra.makeRandomObject(terra, performance.now());
-    Obj.setParent(definition, terra);
     Obj.update(terra, (terra) => {
       terra.objects.push(Ref.make(definition));
     });
@@ -347,57 +349,54 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-            <div className='grow' />
-            {view === 'camera' && (
-              <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
-            )}
-            <Tabs.Root
-              orientation='horizontal'
-              value={view}
-              onValueChange={handleViewChange}
-              attendableId={attendableId}
-            >
-              <Tabs.Tablist classNames='w-auto p-0'>
-                <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
-                  {t('scene-view.label')}
-                </Tabs.Button>
-                <Tabs.Button value='map' data-testid='terra.toolbar.view-map'>
-                  {t('map-view.label')}
-                </Tabs.Button>
-                <Tabs.Button value='camera' data-testid='terra.toolbar.view-camera'>
-                  {t('camera-view.label')}
-                </Tabs.Button>
-              </Tabs.Tablist>
-            </Tabs.Root>
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <div className='relative grow'>
-            {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
+          <div className='grow' />
+          {view === 'camera' && (
+            <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
+          )}
+          <Tabs.Root
+            orientation='horizontal'
+            value={view}
+            onValueChange={handleViewChange}
+            selectedVariant={hasAttention ? 'primary' : 'default'}
+          >
+            <Tabs.List>
+              <Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
+                {t('scene-view.label')}
+              </Tabs.Trigger>
+              <Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
+                {t('map-view.label')}
+              </Tabs.Trigger>
+              <Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
+                {t('camera-view.label')}
+              </Tabs.Trigger>
+            </Tabs.List>
+          </Tabs.Root>
+        </ActionToolbar>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <div className='relative'>
+          {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
-            <canvas
-              ref={canvasRef}
-              className={`dx-container absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
-              style={{ touchAction: 'none' }}
-            />
-            {view === 'map' && (
-              <TerraMap objects={objects} config={values} selectedId={selectedId} onSelect={setSelectedId} />
-            )}
-            <div className='absolute top-2 right-2 z-10'>
-              <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
-            </div>
-            <div className='absolute bottom-2 right-2 z-10'>
-              <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
-            </div>
+          <canvas
+            ref={canvasRef}
+            className={`dx-expand absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
+            style={{ touchAction: 'none' }}
+          />
+          {view === 'map' && (
+            <TerraMap objects={objects} config={values} selectedId={selectedId} onSelect={setSelectedId} />
+          )}
+          <div className='absolute top-2 right-2 z-10'>
+            <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
           </div>
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+          <div className='absolute bottom-2 right-2 z-10'>
+            <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+        </div>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -411,25 +410,23 @@ type CameraTargetSelectProps = {
 
 /** Picks which object the chase camera rides. */
 const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
-    <Select.Root value={value} onValueChange={onChange}>
-      <Select.TriggerButton
+    <Select.Root
+      value={value ? [value] : []}
+      onValueChange={({ value: [value] }) => value && onChange(value)}
+      items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
+    >
+      <Select.Trigger
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
         classNames='min-w-32'
       />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {definitions.map((definition) => (
-              <Select.Option key={definition.id} value={definition.id}>
-                {definition.name ?? definition.kind}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Content>
+        {definitions.map((definition) => (
+          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

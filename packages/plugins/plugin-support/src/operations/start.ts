@@ -4,16 +4,25 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Tour from '@dxos/app-toolkit/Tour';
 import * as Operation from '@dxos/compute/Operation';
+import { log } from '@dxos/log';
 
-import * as HelpCapabilities from '../types/HelpCapabilities';
-import * as HelpOperation from '../types/HelpOperation';
+import { HelpOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof HelpOperation.Start> = HelpOperation.Start.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, running: true }));
+      const tours = yield* Capability.getAll(AppCapabilities.Tour);
+      const [tour] = Tour.matching(tours);
+      if (!tour) {
+        log.warn('no global tour registered');
+        return;
+      }
+
+      yield* Operation.invoke(HelpOperation.StartTour, { tourId: tour.id });
     }),
   ),
 );

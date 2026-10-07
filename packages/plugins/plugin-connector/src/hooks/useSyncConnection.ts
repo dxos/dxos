@@ -2,16 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Obj, Ref } from '@dxos/echo';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Operation from '@dxos/compute/Operation';
+import { Obj } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
 
-import * as Connection from '../types/Connection';
-import * as ConnectorOperation from '../types/ConnectorOperation';
+import * as Binding from '../Binding.ts';
 
 export type UseSyncConnectionResult = {
   /** True when the connection's connector exposes a `sync` operation. Drives sync button visibility. */
@@ -19,40 +24,42 @@ export type UseSyncConnectionResult = {
   /** True while a sync is in flight. */
   readonly syncing: boolean;
   /**
-   * Invokes {@link ConnectorOperation.SyncConnection} which fans out over every
-   * external-sync cursor authenticated by the connection. No-op when `available` is false.
+   * Runs the account's sync — through its sync routine's trigger when the connector declares a
+   * schedule (the dispatcher drives continuation), directly otherwise. A missing routine opens the
+   * seeded create-routine form instead; saving re-runs the sync. No-op when `available` is false.
    */
   readonly sync: () => Promise<void>;
 };
 
 /**
  * Trigger a sync for every external-sync cursor authenticated by a {@link Connection}.
- * Delegates to the {@link ConnectorOperation.SyncConnection} operation so the
- * same fan-out logic is shared with the graph-builder action.
+ * Delegates to {@link Binding.syncOrOfferRoutine} so the graph-builder actions, the target's sync
+ * button, and this hook share one code path (and one recreation offer).
  */
 export const useSyncConnection = (connection: Connection.Connection | undefined): UseSyncConnectionResult => {
-  const { invokePromise } = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
   const connector = useConnector(connection?.connectorId);
   const db = connection ? Obj.getDatabase(connection) : undefined;
   const [syncing, setSyncing] = useState(false);
 
   const sync = useCallback(async () => {
-    if (!connection || !connector?.sync) {
+    if (!connection || !connector?.sync || !db) {
       return;
     }
     setSyncing(true);
     try {
-      await invokePromise(
-        ConnectorOperation.SyncConnection,
-        { connection: Ref.make(connection) },
-        { spaceId: db?.spaceId },
+      await Binding.syncOrOfferRoutine({ connection, connector, db }).pipe(
+        Effect.provideService(Operation.Service, invoker),
+        Effect.provideService(Capability.Service, manager.capabilities),
+        EffectEx.runPromise,
       );
     } catch (err) {
       log.catch(err);
     } finally {
       setSyncing(false);
     }
-  }, [connection, connector, invokePromise, db]);
+  }, [connection, connector, invoker, manager, db]);
 
   return {
     available: !!connector?.sync,

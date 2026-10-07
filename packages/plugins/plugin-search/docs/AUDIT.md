@@ -95,7 +95,7 @@ via `JSON.parse(JSON.stringify(object))`, keeps string fields, and scans them.
 
 - **Surfaces** (`react-surface.tsx`): the `SEARCH_DIALOG` command palette, an
   `AppSurface.SearchInput` slot, and a `Space` deck-companion (`SearchArticle`).
-- **Operation**: `OpenSearch` (opens the dialog; keybinding `shift+meta+f`).
+- **Operation**: `OpenSearch` (opens the dialog; keybinding `meta+k`).
 - **The global-filter side channel matters:** `GlobalFilterProvider` /
   `useGlobalFilteredObjects` (re-exported from `@dxos/react-ui-search`) let other
   views live-filter on the active query — `plugin-table` consumes it in
@@ -113,21 +113,35 @@ client-side** (in the client worker) — there is no server/edge indexer.
 ### 2.1 The index engine
 
 `IndexEngine` ([`index-engine.ts`](../../../core/echo/index-core/src/index-engine.ts))
-owns four indexes, each implementing the `Index` interface (`migrate()` +
-`update(objects)`):
+owns five stores. Three are fed from a data source and implement the `Index`
+interface (`migrate()` + `update(objects)`); `FtsIndex` is a second step over what
+those write, sourced from the index itself:
 
-| Index             | Backing                                       | Purpose                                                              |
-| ----------------- | --------------------------------------------- | -------------------------------------------------------------------- |
-| `EntityMetaIndex` | `objectMeta` table                            | type / id / timestamp / relation / hierarchy queries — the workhorse |
-| **`FtsIndex`**    | **FTS5 virtual table** (`tokenize='trigram'`) | full-text search + JSON snapshot store                               |
-| `ReverseRefIndex` | `reverseRef` table                            | incoming-reference traversal                                         |
-| `IndexTracker`    | `indexCursor` table                           | per-source incremental cursors (Automerge heads / queue positions)   |
+| Index                 | Backing                                       | Purpose                                                              |
+| --------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| `EntityMetaIndex`     | `objectMeta` table                            | type / id / timestamp / relation / hierarchy queries — the workhorse |
+| `ObjectSnapshotIndex` | `objectSnapshot` table                        | the JSON row store every reader hydrates from                        |
+| **`FtsIndex`**        | **FTS5 virtual table** (`tokenize='trigram'`) | full-text index over the snapshot store                              |
+| `ReverseRefIndex`     | `reverseRef` table                            | incoming-reference traversal                                         |
+| `IndexTracker`        | `indexCursor` table                           | per-source incremental cursors (Automerge heads / queue positions)   |
 
 Indexing is incremental and event-driven: `EchoHost._runUpdateIndexes` batches 50
 objects per pass off `AutomergeDataSource` and `FeedDataSource`, triggered by
 `documentsSaved` / `feedStore.onNewBlocks`, and invalidates affected queries via a
 hint after each pass. The join key across tables is `objectMeta.recordId ==
-ftsIndex.rowid == reverseRef.recordId`.
+objectSnapshot.recordId == ftsIndex.rowid == reverseRef.recordId`.
+
+The snapshot store is written on the indexing pass; the trigram index is not. It is
+a _secondary_ index, fed by `IndexEngine.updateSecondaryIndexes` from
+`IndexedObjectSource` — the index read back as a data source, ordered by the
+monotonic `objectMeta.version` that `EntityMetaIndex.update` stamps on everything
+the primary pass writes. Its cursor over that counter is an ordinary `indexCursor`
+row (`sourceName='index'`), so it is retired and rebuilt like any other. The pass
+runs on an idle moment after a burst of writes and on
+`Database.flush({ secondaryIndexes: true })`; a query never runs one, so a caller
+that needs its own write matched flushes first. FTS5 cannot update a row in place,
+so re-tokenizing a large object on every keystroke was the dominant cost of editing;
+a burst now moves the counter many times and is caught up once.
 
 ### 2.2 Full-text: what works and what doesn't
 
@@ -139,10 +153,12 @@ ftsIndex.rowid == reverseRef.recordId`.
   (trigram minimum), rank 1, no ranking.
 - The whole object JSON is indexed as one `snapshot` column — **no per-field
   text indexing**, so matches can hit structural/key text, not just user content.
+- The `LIKE` fallback scans `objectSnapshot`, so it sees writes the trigram index
+  has not caught up with; `MATCH` flushes first and so does too.
 
 Query path: `Filter.text(...)` → `text-search` AST node → a `TextSelector`
 **SelectStep** that calls `IndexEngine.queryText` → `FtsIndex.query` (BM25). Queue
-results are hydrated from FTS snapshots; space results are loaded from Automerge
+results are hydrated from `objectSnapshot`; space results are loaded from Automerge
 docs. Rank is threaded onto each result.
 
 **Documented limitations (TODOs in `query-executor.ts` / `fts-index.ts`):**

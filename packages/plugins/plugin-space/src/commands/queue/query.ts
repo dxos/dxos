@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
@@ -12,12 +12,12 @@ import { ClientService } from '@dxos/client';
 import { Entity, Filter, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { printQueueObject } from './util';
+import { printQueueObject } from './util.ts';
 
 export const query = Command.make(
   'query',
   {
-    dxn: Options.text('dxn').pipe(Options.withDescription('DXN of the queue.')),
+    dxn: Options.String('dxn').pipe(Options.withDescription('DXN of the queue.')),
   },
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;

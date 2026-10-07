@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 import type { Blockstore } from 'interface-blockstore';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { type BlobBackend } from '@dxos/blob';
 import { type Client } from '@dxos/client';
-import { type BlobBackend } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 
-import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '../helpers';
-import * as WnfsCapabilities from '../types/WnfsCapabilities';
+import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '#helpers';
+import { WnfsCapabilities } from '#types';
 
 interface CreateWnfsBlobBackendOptions {
   client: Client;
@@ -82,8 +82,15 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
-    const blockstore = yield* WnfsCapabilities.Blockstore;
-    const instances = yield* WnfsCapabilities.Instances;
+    // Declared requires resolve before the body runs, so the blockstore is awaited below instead —
+    // otherwise this opt-out could never be reached when EDGE is unconfigured.
+    yield* Effect.promise(() => client.waitUntilInitialized());
+    if (!client.config.values.runtime?.services?.edge?.url) {
+      log('wnfs blob backend disabled: EDGE services not configured');
+      return [];
+    }
+    const blockstore = yield* Capability.waitFor(WnfsCapabilities.Blockstore);
+    const instances = yield* Capability.waitFor(WnfsCapabilities.Instances);
 
     const cleanup = client.graph.registerBlobBackend(
       WnfsCapabilities.WNFS_BACKEND,

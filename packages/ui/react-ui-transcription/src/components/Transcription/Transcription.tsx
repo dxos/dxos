@@ -4,33 +4,22 @@
 
 import React from 'react';
 
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Message, type Transcript } from '@dxos/types';
 import {
-  AnchorWidget,
-  type XmlWidgetProps,
-  type XmlWidgetRegistry,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   documentSlots,
+  objectLinks,
   scroller,
-  xmlTags,
 } from '@dxos/ui-editor';
 
-import { type TranscriptModel } from '../../model';
-import { transcription } from './transcription-extension';
-
-const inlinePreviewRegistry: XmlWidgetRegistry = {
-  'link-preview': {
-    block: false,
-    urlSchemes: ['dxn:', 'echo:'],
-    factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-      typeof label === 'string' && typeof dxn === 'string' ? new AnchorWidget(label, dxn) : null,
-  },
-};
+import { type TranscriptModel } from '../../model/index.ts';
+import { transcription } from './transcription-extension.ts';
 
 export type TranscriptionProps = {
   transcript?: Transcript.Transcript;
@@ -38,18 +27,17 @@ export type TranscriptionProps = {
 };
 
 // TODO(burdon): Rename Transcript.
-export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
+export const Transcription = Util.composable<HTMLDivElement, TranscriptionProps>(
   ({ transcript: object, model, children, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Hooks.useThemeMode();
     const { parentRef } = useTextEditor(() => {
       return {
         extensions: [
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),
-          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
-          decorateMarkdown({ skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:') }),
-          xmlTags({ registry: inlinePreviewRegistry }),
+          decorateMarkdown(),
+          objectLinks(),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
           scroller(),
         ],
@@ -58,7 +46,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'dx-container' })}
+        {...Util.composableProps(props, { classNames: 'dx-expand' })}
         data-popover-collision-boundary={true}
         ref={parentRef}
       />

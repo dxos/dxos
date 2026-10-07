@@ -5,13 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Toast, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toast from '@dxos/react-ui/Toast';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { AiUsageQuotaError, parseError } from '../../processor';
+import { AiUsageQuotaError, parseError } from '../../processor/index.ts';
 
 type FailureToastProps = {
   /**
@@ -29,26 +30,22 @@ type FailureToastProps = {
  * class. The toast is held open (controlled) so it can be reviewed; production auto-dismisses after 20s.
  */
 const FailureToast = ({ rawError }: FailureToastProps) => {
-  const { t } = useTranslation(pluginMeta.profile.key);
+  const { t } = Hooks.useTranslation(pluginMeta.profile.key);
   const [open, setOpen] = useState(true);
   const error = parseError(rawError);
   const action = error instanceof AiUsageQuotaError ? error.action : undefined;
 
   return (
     <Toast.Provider>
-      <Toast.Viewport />
+      <Toast.Toaster />
       {/* Long, 32-bit-safe duration keeps the toast up for review; larger values overflow setTimeout and fire immediately. */}
-      <Toast.Root type='foreground' open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
-        <Toast.Title icon='ph--warning--regular' onClose={() => setOpen(false)}>
-          {t('ai-service-error.label')}
-        </Toast.Title>
+      <Toast.Root open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
+        <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
         <Toast.Description>{error.message}</Toast.Description>
         {action && (
-          <Toast.Actions>
-            <Toast.Action altText={t(action.labelKey)} asChild>
-              <Button onClick={() => setOpen(false)}>{t(action.labelKey)}</Button>
-            </Toast.Action>
-          </Toast.Actions>
+          <Toast.Footer>
+            <Toast.ActionTrigger onClick={() => setOpen(false)}>{t(action.labelKey)}</Toast.ActionTrigger>
+          </Toast.Footer>
         )}
       </Toast.Root>
     </Toast.Provider>
@@ -75,7 +72,7 @@ type Story = StoryObj<typeof meta>;
 export const QuotaExceeded: Story = {
   args: {
     rawError:
-      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://edge.dxos.workers.dev/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
+      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://dev.dxos.network/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
   },
 };
 
@@ -83,6 +80,16 @@ export const QuotaExceeded: Story = {
 export const ModelUnavailable: Story = {
   args: {
     rawError: "UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found",
+  },
+};
+
+/**
+ * The model resolver chain rejecting the configured model before the request leaves the browser —
+ * the user's fix is to pick a different model in settings, so the toast names the one that failed.
+ */
+export const ModelNotResolved: Story = {
+  args: {
+    rawError: 'AiModelNotAvailableError: AI Model not available: dxn:com.anthropic.model.claude-opus-4-8.default',
   },
 };
 

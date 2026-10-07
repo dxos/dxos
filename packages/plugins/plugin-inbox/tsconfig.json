@@ -32,6 +32,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -48,6 +51,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/ai"
@@ -74,9 +80,6 @@
       "path": "../../core/compute/pipeline-email"
     },
     {
-      "path": "../../core/compute/pipeline-rdf"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -92,9 +95,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -105,9 +105,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -146,13 +143,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-list"
+      "path": "../../ui/react-ui-html"
     },
     {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/react-ui-search"
@@ -167,6 +167,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../../ui/ui-types"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -179,10 +182,13 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-observability"
+      "path": "../plugin-preview"
     },
     {
-      "path": "../plugin-preview"
+      "path": "../plugin-progress"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-settings"

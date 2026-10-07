@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Obj from '../../../Obj';
-import { TestSchema } from '../../../testing';
+import * as Obj from '../../../Obj.ts';
+import { TestSchema } from '../../../testing/index.ts';
 
 describe('Obj.subscribe', () => {
   test('subscribes and fires for reactive proxies', () => {

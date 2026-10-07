@@ -11,26 +11,19 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
-import { type Translations } from '../app';
-import * as AppActivationEvents from './AppActivationEvents';
-import * as AppCapabilities from './AppCapabilities';
+import { type Translations } from '../app/index.ts';
+import * as AppActivationEvents from './AppActivationEvents.ts';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
- * Type of a maker built by {@link Capability$.moduleMaker}, spelled out explicitly (rather than
- * inferred) so a capability tag whose type structurally carries a type this module doesn't
- * re-export (e.g. `@dxos/compute`'s `Skill.Definition`) doesn't force that foreign type to be
- * named in this package's declaration emit (TS2883) — `C` is referenced here via `typeof`.
+ * Type of a maker built by {@link Capability$.moduleMaker}. Naming it keeps declaration emit
+ * portable: a capability tag whose type structurally carries a type this module doesn't re-export
+ * (e.g. `@dxos/compute`'s `Skill.Definition`) would otherwise have to be named here (TS2883), and
+ * `C` reaches this alias only through `typeof`.
  */
-type Maker<C extends Capability$.AnyTag> = <
-  Props = void,
-  Options = Props,
-  const Requires extends readonly Capability$.AnyTag[] = readonly [],
-  const Extra extends readonly Capability$.AnyTag[] = readonly [],
->(
-  loader: Capability$.LoadModule<Props, Requires, readonly [C, ...Extra]>,
-  options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
-) => Capability$.Module<Options>;
+type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleMaker<C>>;
 
 //
 // Lazy module makers (loader-based bodies).
@@ -45,7 +38,7 @@ type Maker<C extends Capability$.AnyTag> = <
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
-  { activatesOn: ActivationEvents.Idle },
+  { activatesOn: ActivationEvents.Idle, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -62,7 +55,7 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -74,7 +67,7 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: AppActivationEvents.AssistantStart },
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -92,32 +85,34 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
  * Module maker contributing a {@link Capabilities.LayerSpec}.
  *
- * LayerSpecs are RESTART-SCOPED: the process manager takes a one-shot snapshot of the collection
- * during boot and bakes it into a single Effect runtime. The list cannot be dynamic — rebuilding
- * the runtime for a late contribution would destroy every live service on it — so a LayerSpec
- * contributed after that snapshot (including by a plugin enabled post-boot) is ignored until the
- * next full boot, and the process manager logs an error naming the module.
- *
- * The gate is therefore baked in rather than left to the author: every contributor must be on the
- * startup pass, and they must all be there together. Multi requires never gate, so getting this
- * wrong does not fail loudly at the contribution site — it surfaces hops away as a missing service.
+ * The process manager builds its service stack from the LayerSpecs present at boot and adds any
+ * contributed later (e.g. by a plugin enabled post-boot) to the live stack, extending it without
+ * rebuilding the services already running. Contributors are still gated on the startup pass so
+ * that services operations need during boot are in place before the first one is invoked.
  */
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
+  { environments: ['browser', 'node', 'tauri', 'workerd'] },
+);
+
+/** Module maker contributing observability event mappings. */
+export const observabilityMappings: Maker<typeof AppCapabilities.ObservabilityMapping> = Capability$.moduleMaker(
+  'ObservabilityMappings',
+  AppCapabilities.ObservabilityMapping,
 );
 
 /** Module maker contributing a React context. */
@@ -127,7 +122,7 @@ export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$
   // A context provider has to wrap the tree on the FIRST render, and shell components read what it
   // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
   // missing-capability invariant rather than merely rendering late.
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
 
 /** Module maker contributing a React root. */
@@ -135,7 +130,17 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
   'ReactRoot',
   Capabilities.ReactRoot,
   // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
+);
+
+/**
+ * Module maker contributing a {@link AppCapabilities.DefaultParent} rule. On the startup pass: an
+ * operation handler asks for rules mid-create, which has no demand event to gate on.
+ */
+export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capability$.moduleMaker(
+  'DefaultParent',
+  AppCapabilities.DefaultParent,
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -146,7 +151,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
@@ -154,8 +159,55 @@ export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetRe
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/**
+ * The roles the surfaces in a module body's result bind that `declared` omits. Read structurally —
+ * a contribution's `values`, and the `role` (one or several) `Surface.create` resolves from each
+ * definition's filter — so this headless module need not load React's `Surface`.
+ */
+export const undeclaredSurfaceRoles = (result: unknown, declared: readonly string[]): string[] => {
+  const bound = (Array.isArray(result) ? result : [result])
+    .flatMap((contribution) =>
+      isRecord(contribution) &&
+      contribution.capability === Capabilities.ReactSurface &&
+      Array.isArray(contribution.values)
+        ? contribution.values
+        : [],
+    )
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .flatMap((surface) => (isRecord(surface) ? [surface.role].flat() : []))
+    .filter((role): role is string => typeof role === 'string');
+  return [...new Set(bound)].filter((role) => !declared.includes(role));
+};
+
+/**
+ * Reports, when a role-gated module loads, any role its surfaces bind but do not declare: a request
+ * for only that role never loads the module, so the surface silently renders nothing wherever no
+ * declared role was requested first.
+ */
+const withDeclaredRolesCheck =
+  <Props, Requires extends readonly Capability$.AnyTag[], Provides extends readonly Capability$.AnyTag[]>(
+    loader: Capability$.LoadModule<Props, Requires, Provides>,
+    roles: readonly string[],
+  ): Capability$.LoadModule<Props, Requires, Provides> =>
+  () =>
+    loader().then((module) => ({
+      default: (props: Props) =>
+        module.default(props).pipe(
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              const undeclared = undeclaredSurfaceRoles(result, roles);
+              if (undeclared.length > 0) {
+                log.error('surface module binds roles missing from its declared roles', { undeclared, roles });
+              }
+            }),
+          ),
+        ),
+    }));
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
@@ -179,8 +231,9 @@ export const surface = <
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
 ): Capability$.Module<Options> => {
   const { roles, ...rest } = options ?? {};
-  return surfaceMaker(loader, {
+  return surfaceMaker(roles?.length ? withDeclaredRolesCheck(loader, roles) : loader, {
     ...rest,
+    environments: rest.environments ?? ['browser', 'tauri'],
     activatesOn:
       rest.activatesOn ??
       (roles?.length
@@ -193,18 +246,22 @@ export const surface = <
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
+  { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
+  { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing an anchor sort comparator. */
 export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.moduleMaker(
   'AnchorSort',
   AppCapabilities.AnchorSort,
+  // Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
+  { environments: ['browser', 'tauri'] },
 );
 
 //
@@ -214,11 +271,16 @@ export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.
 /** Module contributing translations. */
 export const translations = (
   resources: Translations.Resource | Translations.Resource[],
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const value: Translations.Resource[] = Array.isArray(resources) ? resources : [resources];
-  return Capability$.inlineModule(options?.name ?? 'translations', { provides: [AppCapabilities.Translations] }, () =>
-    Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
+  return Capability$.inlineModule(
+    options?.name ?? 'translations',
+    {
+      provides: [AppCapabilities.Translations],
+      environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+    },
+    () => Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
 };
 
@@ -229,32 +291,61 @@ export const translations = (
  */
 export const schema = (
   types: ReadonlyArray<Type.AnyEntity> | (() => Promise<{ default: ReadonlyArray<Type.AnyEntity> }>),
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
+  const spec = {
+    provides: [AppCapabilities.Schema],
+    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+  } as const;
   if (typeof types === 'function') {
     const loader = types;
-    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
-      options?.name ?? 'schema',
-      { provides: [AppCapabilities.Schema] },
-      () =>
-        loader().then(({ default: values }) => ({
-          default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
-        })),
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
+      loader().then(({ default: values }) => ({
+        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
+      })),
     );
   }
-  return Capability$.inlineModule(options?.name ?? 'schema', { provides: [AppCapabilities.Schema] }, () =>
+  return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>
     Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
+  );
+};
+
+/** Module contributing guided tours. */
+export const tour = (
+  tours: AppCapabilities.Tour | ReadonlyArray<AppCapabilities.Tour>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour',
+    { provides: [AppCapabilities.Tour], environments: options?.environments ?? ['browser', 'tauri'] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
+  );
+};
+
+/** Module contributing steps into other plugins' tours. */
+export const tourFragment = (
+  fragments: AppCapabilities.TourFragment | ReadonlyArray<AppCapabilities.TourFragment>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour-fragment',
+    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? ['browser', 'tauri'] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
   );
 };
 
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
-  return Capability$.inlineModule(options?.name ?? 'plugin-asset', { provides: [AppCapabilities.PluginAsset] }, () =>
-    Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
+  return Capability$.inlineModule(
+    options?.name ?? 'plugin-asset',
+    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? ['browser', 'tauri'] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
   );
 };
 
@@ -272,11 +363,38 @@ export const pluginAsset = (
  * service graph land in the definition's closure and are paid at boot by every session. A loader
  * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
+/**
+ * Module contributing space templates.
+ *
+ * Loader-only, so the content a template writes stays in its own chunk rather than the plugin
+ * definition's closure.
+ */
+export const spaceTemplates = (
+  loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SpaceTemplate> }>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) =>
+  Capability$.lazyModule<readonly [typeof AppCapabilities.SpaceTemplate]>(
+    options?.name ?? 'SpaceTemplates',
+    {
+      activatesOn: ActivationEvents.SpaceTemplatesRequested,
+      provides: [AppCapabilities.SpaceTemplate],
+      environments: options?.environments ?? ['browser', 'tauri'],
+    },
+    () =>
+      loader().then(({ default: templates }) => ({
+        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SpaceTemplate, templates)]),
+      })),
+  );
+
 export const commands = (
   values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
-  const spec = { activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command] } as const;
+  const spec = {
+    activatesOn: ActivationEvents.CommandsRequested,
+    provides: [Capabilities.Command],
+    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+  } as const;
   if (typeof values === 'function') {
     const loader = values;
     return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>

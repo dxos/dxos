@@ -2,39 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
-import { subscribe } from '../common/proxy/reactive';
-import { ObjectDeletedId } from '../common/types/model-symbols';
-import type { Ref } from './ref';
-import { loadRefTarget } from './utils';
+import { isNonNullable } from '@dxos/util';
+
+import { subscribe } from '../common/proxy/reactive.ts';
+import type { LoadOptions, Ref } from './ref.ts';
+import { isTargetDeleted, loadRefTarget } from './utils.ts';
+
+const toOptions = (includeDeleted: boolean): LoadOptions | undefined =>
+  includeDeleted ? { deleted: 'include' } : undefined;
 
 /**
- * Atom family for ECHO refs.
- * Uses ref reference as key — same ref returns same atom.
- * Subscribes to target object changes and resolves to undefined when the target is deleted.
+ * Atom family for ECHO refs, keyed by `[ref, includeDeleted]`.
+ * Subscribes to target object changes; a deleted target reads as `undefined` unless included.
  */
-export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undefined> => {
-  return Atom.make<T | undefined>((get) => {
-    let unsubscribeTarget: (() => void) | undefined;
+export const refFamily = Atom.family(
+  <T>([ref, includeDeleted]: readonly [Ref<T>, boolean]): Atom.Atom<T | undefined> => {
+    return Atom.make<T | undefined>((get) => {
+      let unsubscribeTarget: (() => void) | undefined;
 
-    const setupSubscription = (target: T): T | undefined => {
-      // Release any previous subscription before re-subscribing (loadRefTarget may call this more than once).
-      // T has no ECHO-proxy constraint at this generic level; `subscribe` and ObjectDeletedId
-      // both require the internal proxy shape that cannot be expressed statically here.
-      unsubscribeTarget?.();
-      unsubscribeTarget = subscribe(target as any, () => {
-        const deleted = !!(target as any)[ObjectDeletedId];
-        get.setSelf(deleted ? undefined : target);
-      });
-      const deleted = !!(target as any)[ObjectDeletedId];
-      return deleted ? undefined : target;
-    };
+      const read = (target: T): T | undefined => (!includeDeleted && isTargetDeleted(target) ? undefined : target);
 
-    get.addFinalizer(() => {
-      unsubscribeTarget?.();
+      const setupSubscription = (target: T): T | undefined => {
+        // Release any previous subscription before re-subscribing (loadRefTarget may call this more than once).
+        unsubscribeTarget?.();
+        unsubscribeTarget = subscribe(target, () => {
+          get.setSelf(read(target));
+        });
+        // Runs at once when the node was disposed while the target loaded.
+        get.addFinalizer(unsubscribeTarget);
+        return read(target);
+      };
+
+      return loadRefTarget(ref, get, setupSubscription, toOptions(includeDeleted));
     });
+  },
+);
 
-    return loadRefTarget(ref, get, setupSubscription);
-  }).pipe(Atom.keepAlive);
-});
+/**
+ * Atom family for arrays of ECHO refs, keyed by `[refs, includeDeleted]` (arrays compare structurally).
+ * Holds the targets in ref order, omitting those not loaded yet and, unless included, deleted ones.
+ */
+export const refArrayFamily = Atom.family(
+  <T>([refs, includeDeleted]: readonly [readonly Ref<T>[], boolean]): Atom.Atom<T[]> =>
+    Atom.make<T[]>((get) => refs.map((ref) => get(refFamily([ref, includeDeleted]))).filter(isNonNullable)),
+);

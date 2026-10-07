@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+
+import { JmapOperation } from '#types';
 
 /**
  * Eagerly materializes a local Mailbox so the sync cursor's target exists before the cursor is
@@ -16,8 +17,8 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
  * created; the connection's `accessToken.account` seeds the default name. Mirrors the Gmail
  * materialize-target.
  */
-const handler: Operation.WithHandler<typeof InboxOperation.MaterializeJmapTarget> =
-  InboxOperation.MaterializeJmapTarget.pipe(
+const handler: Operation.WithHandler<typeof JmapOperation.MaterializeJmapTarget> =
+  JmapOperation.MaterializeJmapTarget.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection }) {
         // The operation derives the db from the connection ref's target and provides
@@ -25,7 +26,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.MaterializeJmapTarget
         const connectionObj = connection.target;
         const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
         if (!connectionObj || !db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {

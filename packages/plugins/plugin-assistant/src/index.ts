@@ -2,16 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as Assistant from './types/Assistant';
-export * as AssistantCapabilities from './types/AssistantCapabilities';
-export * as AssistantEvents from './types/AssistantEvents';
-export * as AssistantOperation from './types/AssistantOperation';
-export * as AssistantOptions from './types/AssistantOptions';
-export * as AssistantPreset from './types/AssistantPreset';
-export * as AssistantService from './types/AssistantService';
-export * as ChatSurface from './types/ChatSurface';
-export * as Ollama from './types/Ollama';
-export * as Settings from './types/Settings';
-export * from './meta';
-export * from './paths';
-export * from './skills';
+export * as AssistantPlugin from './AssistantPlugin.ts';
+export * from '#skills';
+export * from '#types';
+export * as Chat from './Chat.ts';
+export * as Extensions from './Extensions.ts';
+export * as Hooks from './Hooks.ts';
+export * as TracePanel from './TracePanel.ts';

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormBuilder } from '@dxos/cli-util';
+import { Doc, FormBuilder } from '@dxos/cli-util';
 import { Entity } from '@dxos/echo';
 
 /**
  * Pretty prints an object with ANSI colors.
  */
-export const printObject = (obj: Entity.Unknown) => {
+export const printObject = (obj: Entity.Unknown): Doc.Doc<any> => {
   const typename = Entity.getTypename(obj) ?? '<unknown>';
 
   // TODO(wittjosiah): Obj.getType and thus Obj.getLabel are coming back undefined for some reason.
@@ -22,11 +22,11 @@ export const printObject = (obj: Entity.Unknown) => {
 /**
  * Pretty prints object stats with ANSI colors.
  */
-export const printStats = (typename: string, count: number) =>
+export const printStats = (typename: string, count: number): Doc.Doc<any> =>
   FormBuilder.make({ title: typename }).pipe(FormBuilder.set('count', count), FormBuilder.build);
 
 /**
  * Pretty prints object removal result with ANSI colors.
  */
-export const printObjectRemoved = (count: number) =>
+export const printObjectRemoved = (count: number): Doc.Doc<any> =>
   FormBuilder.make({ title: 'Objects removed' }).pipe(FormBuilder.set('count', count), FormBuilder.build);

@@ -10,34 +10,34 @@ import { type Obj } from '@dxos/echo';
 import { type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  type CreateEpochRequest,
-  type Invitation,
-  SpaceArchive,
+  type Space_PipelineState,
   type Space as SpaceData,
   type SpaceMember,
-  type SpaceState,
-  type UpdateMemberRoleRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
+import { type MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, type Epoch, type SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type SpacesService } from '@dxos/protocols/rpc';
 
-import { type CancellableInvitation } from './invitations';
-import { type SpaceProperties } from './types';
+import { type CancellableInvitation } from './invitations/index.ts';
+import { type SpaceProperties } from './types/index.ts';
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration;
+  migration?: SpacesService.Migration;
   automergeRootUrl?: string;
 };
 
 export type ExportSpaceOptions = {
   /**
    * Archive format.
-   * @default SpaceArchive.Format.BINARY
+   * @default SpacesService.SpaceArchiveFormat.enums.BINARY
    */
-  format?: SpaceArchive.Format;
+  format?: SpacesService.SpaceArchiveFormat;
 };
 
 export interface SpaceInternal {
@@ -54,7 +54,7 @@ export interface SpaceInternal {
   // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
 
-  export(options?: ExportSpaceOptions): Promise<SpaceArchive>;
+  export(options?: ExportSpaceOptions): Promise<SpacesService.SpaceArchive>;
 
   /**
    * Migrate space data to the latest version.
@@ -123,7 +123,7 @@ export interface Space extends Messenger {
   /**
    * Current state of space pipeline.
    */
-  get pipeline(): MulticastObservable<SpaceData.PipelineState>;
+  get pipeline(): MulticastObservable<Space_PipelineState>;
 
   get invitations(): MulticastObservable<CancellableInvitation[]>;
 
@@ -166,15 +166,16 @@ export interface Space extends Messenger {
   // TODO(burdon): Create invitation?
   // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
-  admitContact(contact: Contact): Promise<void>;
-  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
+  /** Admits a known identity directly, without an invitation; the guest completes with `joinBySpaceKey`. */
+  admitContact(contact: Contact, role?: SpaceMember_Role): Promise<void>;
+  updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 }
 
 export const isSpace = (object: unknown): object is Space =>
   typeof object === 'object' && object != null && (object as Space)[SPACE_TAG] === true;
 
 // TODO(burdon): Create lower-level definition (HasId, db, etc.) and move to @dxos/echo.
-export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
-  Schema.filter((space) => isSpace(space)),
-  Schema.annotations({ title: 'Space' }),
+export const SpaceSchema: Schema.Codec<Space> = Schema.Any.pipe(
+  Schema.refine(isSpace),
+  Schema.annotate({ title: 'Space' }),
 );

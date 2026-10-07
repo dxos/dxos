@@ -5,7 +5,8 @@ version: 0.1.0
 ---
 
 The Deck plugin is the core layout engine for DXOS Composer. It manages the multi-plank workspace
-("deck"), the sidebar, the complementary sidebar, dialogs, popovers, and toast notifications.
+("deck"), the sidebar, the complementary sidebar, the bottom drawer, dialogs, popovers, and toast
+notifications.
 It owns the persisted and ephemeral layout state, handles URL routing, and implements every
 `LayoutOperation` that changes what is visible on screen.
 
@@ -18,9 +19,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `op@1.1`    | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -60,6 +63,8 @@ type StoredDeckState
     sidebarState: closed | collapsed | expanded
     complementarySidebarState: closed | collapsed | expanded
     complementarySidebarPanel?: string
+    drawerState?: open | closed   # the bottom drawer; absent (state persisted before it existed) reads as closed
+    drawerHeight?: number         # drawer height in rem; absent falls back to react-ui's DRAWER_DEFAULT_HEIGHT (24)
     activeDeck: string
     previousDeck: string
     decks: Record<string, DeckState>
@@ -82,7 +87,7 @@ type EphemeralDeckState
     popoverContent?: { component: string } | { subject: any }
     toasts: Toast[]
     currentUndoId?: string
-    scrollIntoView?: string
+    scrollIntoView?: { id: string; focus?: boolean }   # focus unset means the plank takes focus once in view
 ```
 
 ```mdl
@@ -131,7 +136,29 @@ component Matrix
     │            │            │            │
     │            ├────────────┤            │
     │            │ companion  │            │
-    └────────────┴────────────┴────────────┘
+    │            ├────────────┴────────────┤
+    │            │ drawer (Surface.Drawer) │
+    └────────────┴─────────────────────────┘
+```
+
+```mdl
+component DeckContent
+  desc: |
+    The `Main.Root` host for the whole layout: the navigation and complementary sidebars, the
+    `Main.Content` the deck renders into, and the bottom drawer — a `Main.Drawer` (`@dxos/react-ui`)
+    fixed to the block-end edge between the two sidebars, whose inline insets follow the sidebar
+    states. It renders one `Surface type={AppSurface.Drawer} limit={1}` (`org.dxos.role.drawer`), so
+    the first plugin contributing a drawer surface owns it (plugin-debug's panel today). Open, the
+    content pads block-end by the drawer height (`--main-drawer-height`) so planks reflow above it
+    rather than being covered; the top-edge handle resizes it live and the height is persisted on
+    drag end (`drawerHeight`, clamped to react-ui's DRAWER_MIN_HEIGHT..DRAWER_MAX_HEIGHT, 8..64rem).
+    Fullscreen renders it closed without touching the persisted state, so it returns when
+    fullscreen ends. The drawer is chrome, not a plank: it never takes attention and is not in the URL.
+  props:
+    children?: ReactNode          # the deck; the layout state is read from DeckCapabilities.State atoms
+  state:
+    drawerState: open | closed    # StoredDeckState.drawerState, closed while EphemeralDeckState.fullscreen is set
+    drawerHeight: number          # live during a drag, StoredDeckState.drawerHeight (or the default) otherwise
 ```
 
 ```mdl
@@ -147,6 +174,7 @@ component DeckSettings
 
 ```mdl
 op Open
+  key: org.dxos.operation.appToolkit.open
   desc: |
     Opens one or more subjects (item IDs or navigation paths) in the deck.
     `disposition` places them (see F-7): 'solo' — the default — navigates, so the deck becomes just
@@ -181,6 +209,7 @@ op Open
 
 ```mdl
 op Close
+  key: org.dxos.operation.appToolkit.close
   desc: |
     Removes one or more subjects from the active deck.
     Computes which plank (if any) should receive attention after removal and
@@ -194,6 +223,7 @@ op Close
 
 ```mdl
 op UpdateSidebar
+  key: org.dxos.operation.appToolkit.updateSidebar
   desc: Update the sidebar visibility state (closed / collapsed / expanded).
   input:
     state?: closed | collapsed | expanded
@@ -203,7 +233,23 @@ op UpdateSidebar
 ```
 
 ```mdl
+op UpdateDrawer
+  key: org.dxos.operation.appToolkit.updateDrawer
+  desc: |
+    Open, close, toggle or resize the bottom drawer. `toggle` flips the persisted state (absent
+    reads as closed); `height` is clamped to the react-ui drag bounds (8..64rem) and applies whether
+    or not the state changes. The store is written only when something changed.
+  input:
+    state?: open | closed | toggle
+    height?: number               # rem
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
 op UpdateComplementary
+  key: org.dxos.operation.appToolkit.updateComplementary
   desc: Update the complementary-sidebar visibility state and optional panel selection.
   input:
     state?: closed | collapsed | expanded
@@ -215,6 +261,7 @@ op UpdateComplementary
 
 ```mdl
 op UpdateDialog
+  key: org.dxos.operation.appToolkit.updateDialog
   desc: |
     Show or hide the global dialog overlay. Accepts a surface component identifier
     or a boolean state flag. Propagates to EphemeralDeckState.
@@ -232,6 +279,7 @@ op UpdateDialog
 
 ```mdl
 op UpdatePopover
+  key: org.dxos.operation.appToolkit.updatePopover
   desc: |
     Show or hide the global popover. Accepts anchor, content reference, or
     an explicit subject reference.
@@ -249,6 +297,7 @@ op UpdatePopover
 
 ```mdl
 op UpdateCompanion
+  key: org.dxos.operation.appToolkit.updateCompanion
   desc: Update the companion-pane open state and active variant.
   input:
     open?: boolean
@@ -260,6 +309,7 @@ op UpdateCompanion
 
 ```mdl
 op AdjustPlank
+  key: org.dxos.operation.deck.adjust
   desc: |
     Apply a PartAdjustment to a specific plank (close, fullscreen, move, companion). 'fullscreen'
     toggles EphemeralDeckState.fullscreen for the given plank rather than mutating active.
@@ -274,6 +324,7 @@ op AdjustPlank
 
 ```mdl
 op UpdatePlankSize
+  key: org.dxos.operation.deck.updatePlankSize
   desc: Persist the width of a plank in rem.
   input:
     id: string
@@ -297,6 +348,7 @@ op UpdateTilingSize
 
 ```mdl
 op AddToast
+  key: org.dxos.operation.appToolkit.addToast
   desc: Push a toast notification into the ephemeral queue.
   input:
     title?: string
@@ -309,9 +361,11 @@ op AddToast
 
 ```mdl
 op ScrollIntoView
+  key: org.dxos.operation.appToolkit.scrollIntoView
   desc: Schedule a subject to be scrolled into view when its plank mounts.
   input:
     subject: string
+    focus?: boolean               # default true; false reveals the plank without taking focus
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities]
@@ -319,6 +373,7 @@ op ScrollIntoView
 
 ```mdl
 op SwitchWorkspace
+  key: org.dxos.operation.appToolkit.switchWorkspace
   desc: Switch the active workspace deck, persisting the previous workspace ID.
   input:
     subject: string               # workspace ID to switch to
@@ -329,6 +384,7 @@ op SwitchWorkspace
 
 ```mdl
 op RevertWorkspace
+  key: org.dxos.operation.appToolkit.revertWorkspace
   desc: Revert to the previously active workspace.
   input: void
   output: void
@@ -415,6 +471,20 @@ feat F-3: Sidebar & Complementary Sidebar
   req F-3.2:
     when: UpdateComplementary is dispatched with a panel
     then: complementary sidebar opens to the specified panel
+
+  req F-3.3:
+    when: UpdateDrawer is dispatched with a state or height
+    then: the bottom drawer opens, closes, toggles or resizes; `drawerState` and `drawerHeight` are
+          persisted with the rest of the layout state, and `Main.Content` pads block-end by the
+          drawer height so open planks reflow above it
+
+  req F-3.4:
+    when: the drawer is open and the navigation or complementary sidebar changes state
+    then: the drawer's inline edges follow the sidebars (it spans the content area between them)
+
+  req F-3.5:
+    when: the drawer is open and a plank enters fullscreen
+    then: the drawer is hidden for the duration and reappears, at the same height, when fullscreen ends
 ```
 
 ```mdl
@@ -576,7 +646,7 @@ feat F-8: Flat Navigation (breadcrumbs)
 ## Acceptance
 
 ```mdl
-test T-1: Open subject beside an active plank
+scenario T-1: Open subject beside an active plank
   given: deck has planks A and B active (tiling presentation, desktop)
   when: Open({ subject: ['C'], disposition: 'add' }) is dispatched
   then:
@@ -587,7 +657,7 @@ test T-1: Open subject beside an active plank
 ```
 
 ```mdl
-test T-2: Open with pivot insertion
+scenario T-2: Open with pivot insertion
   given: deck has planks [A, B, C] active
   when: Open({ subject: ['D'], disposition: 'add', pivotId: 'A' }) is dispatched
   then:
@@ -596,7 +666,7 @@ test T-2: Open with pivot insertion
 ```
 
 ```mdl
-test T-3: Open already-visible subject
+scenario T-3: Open already-visible subject
   given: deck has plank A active
   when: Open({ subject: ['A'] }) is dispatched
   then:
@@ -605,7 +675,7 @@ test T-3: Open already-visible subject
 ```
 
 ```mdl
-test T-4: Enter fullscreen
+scenario T-4: Enter fullscreen
   given: deck has planks [A, B] active
   when: AdjustPlank({ id: 'A', type: 'fullscreen' }) is dispatched
   then:
@@ -615,7 +685,7 @@ test T-4: Enter fullscreen
 ```
 
 ```mdl
-test T-5: Exit fullscreen
+scenario T-5: Exit fullscreen
   given: EphemeralDeckState.fullscreen is 'A'
   when: AdjustPlank({ id: 'A', type: 'fullscreen' }) is dispatched
   then:
@@ -624,7 +694,17 @@ test T-5: Exit fullscreen
 ```
 
 ```mdl
-test T-6: Close plank
+scenario T-5a: Toggle and resize the bottom drawer
+  given: StoredDeckState.drawerState is absent
+  when: UpdateDrawer({ state: 'toggle' }) then UpdateDrawer({ height: 100 }) are dispatched
+  then:
+    - drawerState is 'open' and drawerHeight is 64 (clamped to DRAWER_MAX_HEIGHT)
+    - `main` carries data-drawer-state='open' and its padding-block-end equals the drawer height
+    - a following UpdateDrawer({ state: 'closed' }) keeps drawerHeight for the next open
+```
+
+```mdl
+scenario T-6: Close plank
   given: deck has planks [A, B, C] active; B has attention
   when: Close({ subject: ['B'] }) is dispatched
   then:
@@ -634,7 +714,7 @@ test T-6: Close plank
 ```
 
 ```mdl
-test T-7: Toast is shown and dismissed
+scenario T-7: Toast is shown and dismissed
   given: no toasts are in the queue
   when: AddToast({ title: 'Saved', duration: 3000 }) is dispatched
   then:
@@ -643,7 +723,7 @@ test T-7: Toast is shown and dismissed
 ```
 
 ```mdl
-test T-8: Two planks render tiling with a persisted split ratio
+scenario T-8: Two planks render tiling with a persisted split ratio
   given: deck has plank A active (fullbleed presentation, desktop)
   when: Open({ subject: ['B'], disposition: 'add' }) is dispatched and the user drags the divider
   then:
@@ -653,7 +733,7 @@ test T-8: Two planks render tiling with a persisted split ratio
 ```
 
 ```mdl
-test T-9: Sliding plank folds to a spine
+scenario T-9: Sliding plank folds to a spine
   given: deck has planks [A, B, C] active (sliding presentation, desktop)
   when: user scrolls until plank A's visible sliver is narrower than the fold threshold
   then:
@@ -662,7 +742,7 @@ test T-9: Sliding plank folds to a spine
 ```
 
 ```mdl
-test T-10: Desktop nav-tree click navigates solo
+scenario T-10: Desktop nav-tree click navigates solo
   tags: [F-7]
   given: deck has planks [A, B, C] active (desktop)
   when: user plain-clicks item D in the nav tree
@@ -672,7 +752,7 @@ test T-10: Desktop nav-tree click navigates solo
 ```
 
 ```mdl
-test T-11: Desktop modifier-click appends
+scenario T-11: Desktop modifier-click appends
   tags: [F-7]
   given: deck has planks [A, B] active (desktop)
   when: user modifier-clicks item C in the nav tree
@@ -680,7 +760,7 @@ test T-11: Desktop modifier-click appends
     - active deck becomes [A, B, C]
     - plank C is scrolled into view and attended
 
-test T-11a: Card navigation always adds beside the card's plank (add)
+scenario T-11a: Card navigation always adds beside the card's plank (add)
   tags: [F-7]
   given: a card navigation dispatches Open({ subject: ['C'], disposition: 'add', pivotId: 'A' })
          (pivotId is the plank the card is rendered within, resolved via Attention.getRootAttendableId)
@@ -691,7 +771,7 @@ test T-11a: Card navigation always adds beside the card's plank (add)
   then:
     - active deck becomes [A, C, B] (added beside its plank A, regardless of what is attended)
 
-test T-11b: In-plank inline reference follows the deck (auto)
+scenario T-11b: In-plank inline reference follows the deck (auto)
   tags: [F-7]
   given: an inline reference dispatches Open({ subject: ['C'], disposition: 'auto', pivotId: 'A' })
   when: the deck is solo [A]
@@ -703,7 +783,7 @@ test T-11b: In-plank inline reference follows the deck (auto)
 ```
 
 ```mdl
-test T-12: Mobile branch from mid-stack pops forward
+scenario T-12: Mobile branch from mid-stack pops forward
   tags: [F-7, proposed]
   given: deck has planks [A, B, C] active (mobile), B is the current plank
   when: user navigates to D from B
@@ -713,7 +793,7 @@ test T-12: Mobile branch from mid-stack pops forward
 ```
 
 ```mdl
-test T-13: Attention follows scroll with hysteresis
+scenario T-13: Attention follows scroll with hysteresis
   tags: [F-7]
   given: deck has planks [A, B, C] active (sliding presentation, desktop), A is attended
   when: user scrolls until plank A folds to a spine
@@ -723,7 +803,7 @@ test T-13: Attention follows scroll with hysteresis
 ```
 
 ```mdl
-test T-14: Flatten renders the current plank with breadcrumbs
+scenario T-14: Flatten renders the current plank with breadcrumbs
   tags: [F-8]
   given: the flatten setting is on and the active stack is [A, B, C]
   when: the deck renders
@@ -733,13 +813,97 @@ test T-14: Flatten renders the current plank with breadcrumbs
 ```
 
 ```mdl
-test T-15: Breadcrumb click goes back
+scenario T-15: Breadcrumb click goes back
   tags: [F-8]
   given: the flatten setting is on and the active stack is [A, B, C], C rendered
   when: the user clicks the breadcrumb for A
   then:
     - Close is dispatched for [B, C]
     - the active stack becomes [A] and plank A renders
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+plugin-deck is core layout infrastructure — it ships with every profile and is never toggled off.
+
+```mdl
+test QA-1: Open, resize, and close a second plank
+  desc: The core deck round-trip — open a document beside an existing plank, resize the tiling split, close it.
+  actors: agent
+  covers: [F-1.1, F-1.6, F-3.1, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - doc1: a Markdown document named "QA Deck Doc 1" already exists and is open as the sole plank
+  steps:
+    - name: Create a second document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA Deck Doc 2".
+      invoke: org.dxos.operation.markdown.createDraft { name: "QA Deck Doc 2", content: "# QA Deck Doc 2\n" }
+      capture: created
+      expect: a Document named "QA Deck Doc 2" now exists
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (the navtree create action places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Deck Doc 2" appears as a row under the collection
+    - name: Open it beside the first plank
+      do: Click "QA Deck Doc 2" in the navtree while holding Shift.
+      invoke: [op:Open] { subject: ["root/$given.space.id/content/collections/$created.object.id"], modifiers: { shift: true }, pivotId: $given.doc1.id }
+      capture: opened
+      expect: the deck now shows two planks, tiling side by side, "QA Deck Doc 2" alongside the first
+      assert: return $opened.length > 0
+      note: |
+        No explicit `disposition` — the step exercises Shift forwarding (F-1.6, F-1.8): `open.ts`
+        reads `input.modifiers?.shift` and forces an add regardless of disposition, so leaving
+        disposition at its `solo` default and setting `modifiers: { shift: true }` is what actually
+        tests the shift-forces-add rule, not a hard-coded `disposition: "add"`.
+    - name: Resize the tiling split
+      do: Drag the hairline divider between the two planks.
+      invoke: [op:UpdateTilingSize] { size: 40 }
+      expect: the split persists at the new ratio and survives a reload
+  after:
+    - name: Close the second plank
+      do: Click the close control on "QA Deck Doc 2"'s plank.
+      invoke: [op:Close] { subject: [$created.object.id] }
+      expect: the deck returns to a single plank (fullbleed), "QA Deck Doc 2"'s plank is gone
+    - name: Delete the second document
+      do: Right-click "QA Deck Doc 2" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree
+```
+
+```mdl
+test QA-2: Sidebar and companion toggles
+  desc: The chrome operations outside the deck itself — sidebar visibility and the companion pane.
+  actors: agent
+  covers: [F-3.1, F-3.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+  steps:
+    - name: Collapse the sidebar
+      do: Click the sidebar toggle in the top-left corner.
+      invoke: [op:UpdateSidebar] { state: "collapsed" }
+      expect: the navtree sidebar collapses to its icon rail
+    - name: Expand the sidebar again
+      do: Click the sidebar toggle again.
+      invoke: [op:UpdateSidebar] { state: "expanded" }
+      expect: the navtree sidebar is fully visible again
+    - name: Open the companion pane
+      do: Click the companion toggle for the attended plank.
+      invoke: [op:UpdateCompanion] { open: true }
+      expect: a companion pane opens beside the attended plank
+  after:
+    - name: Close the companion pane
+      do: Click the companion toggle again.
+      invoke: [op:UpdateCompanion] { open: false }
+      expect: the companion pane closes
 ```
 
 ---
@@ -771,8 +935,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

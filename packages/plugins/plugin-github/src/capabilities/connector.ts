@@ -8,13 +8,14 @@ import * as Layer from 'effect/Layer';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
-import { GitHubApi } from '../services';
-import * as GitHubOperation from '../types/GitHubOperation';
+import { GitHubOperation } from '#types';
+
+import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for GitHub.
@@ -50,7 +51,10 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   ).pipe(
     Effect.asVoid,
     Effect.mapError(
-      () => new ConnectionTestError({ message: 'GitHub rejected the credential. Reauthenticate to continue syncing.' }),
+      () =>
+        new ConnectorError.ConnectionTestError({
+          message: 'GitHub rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 

@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Blob, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import {
   AtprotoPolicyAnnotation,
   AtprotoRecordAnnotation,
@@ -16,14 +15,14 @@ import {
   Text,
 } from '@dxos/schema';
 
-import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto';
+import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto/index.ts';
 
 /**
  * Reading status, mirroring the `buzz.bookhive.defs` known values
  * (`finished`/`reading`/`wantToRead`/`abandoned`). Stored bare; the codec maps it to/from the
  * `buzz.bookhive.defs#<value>` knownValue reference on the wire.
  */
-export const Status = Schema.Literal('finished', 'reading', 'wantToRead', 'abandoned');
+export const Status = Schema.Literals(['finished', 'reading', 'wantToRead', 'abandoned']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
 /**
@@ -32,10 +31,10 @@ export type Status = Schema.Schema.Type<typeof Status>;
  * (published), not ECHO sync foreign keys; `hiveId` is the one that gates publishing to BookHive.
  */
 export const Identifiers = Schema.Struct({
-  hiveId: Schema.optional(Schema.String.annotations({ title: 'BookHive ID' })),
-  isbn10: Schema.optional(Schema.String.annotations({ title: 'ISBN-10' })),
-  isbn13: Schema.optional(Schema.String.annotations({ title: 'ISBN-13' })),
-  goodreadsId: Schema.optional(Schema.String.annotations({ title: 'Goodreads ID' })),
+  hiveId: Schema.optional(Schema.String.annotate({ title: 'BookHive ID' })),
+  isbn10: Schema.optional(Schema.String.annotate({ title: 'ISBN-10' })),
+  isbn13: Schema.optional(Schema.String.annotate({ title: 'ISBN-13' })),
+  goodreadsId: Schema.optional(Schema.String.annotate({ title: 'Goodreads ID' })),
 });
 export type Identifiers = Schema.Schema.Type<typeof Identifiers>;
 
@@ -45,26 +44,39 @@ export type Identifiers = Schema.Schema.Type<typeof Identifiers>;
  * creation time when unset so encoding stays deterministic.
  */
 export const Progress = Schema.Struct({
-  percent: Schema.optional(Schema.Number.pipe(Schema.int(), Schema.between(0, 100)).annotations({ title: 'Percent' })),
+  percent: Schema.optional(
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 0, maximum: 100 })),
+    ).annotate({
+      title: 'Percent',
+    }),
+  ),
   currentPage: Schema.optional(
-    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({ title: 'Current page' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Current page',
+    }),
   ),
   totalPages: Schema.optional(
-    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({ title: 'Total pages' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Total pages',
+    }),
   ),
   currentChapter: Schema.optional(
-    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({ title: 'Current chapter' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Current chapter',
+    }),
   ),
   totalChapters: Schema.optional(
-    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({ title: 'Total chapters' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Total chapters',
+    }),
   ),
-  updatedAt: Schema.optional(Format.DateTime.annotations({ title: 'Updated' })),
+  updatedAt: Schema.optional(Format.DateTime.annotate({ title: 'Updated' })),
   // Exact reading position (a foliate CFI) for precise restore. Private — kept for posterity but never
   // published: the `buzz.bookhive.defs#bookProgress` lexicon has no location anchor, and it is a
   // reader-local detail. The `private` override sits inside the otherwise-published `progress` struct.
-  cfi: Schema.optional(
-    Schema.String.annotations({ title: 'Location' }).pipe(AtprotoVisibilityAnnotation.set('private')),
-  ),
+  cfi: Schema.optional(Schema.String.annotate({ title: 'Location' }).pipe(AtprotoVisibilityAnnotation.set('private'))),
 });
 export type Progress = Schema.Schema.Type<typeof Progress>;
 
@@ -78,21 +90,25 @@ export type Progress = Schema.Schema.Type<typeof Progress>;
  * the network sources it from BookHive's own catalog, not from our record.
  */
 export const Catalog = Schema.Struct({
-  title: Schema.String.annotations({ title: 'Title' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
-  authors: Schema.Array(Schema.String)
-    .annotations({ title: 'Authors' })
-    .pipe(AtprotoVisibilityAnnotation.set('publish')),
+  title: Schema.String.annotate({ title: 'Title' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
+  authors: Schema.Array(Schema.String).annotate({ title: 'Authors' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
   identifiers: Schema.optional(
-    Identifiers.annotations({ title: 'Identifiers' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
+    Identifiers.annotate({ title: 'Identifiers' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
   ),
-  cover: Schema.optional(Schema.String.annotations({ title: 'Cover URL' })),
-  thumbnail: Schema.optional(Schema.String.annotations({ title: 'Thumbnail URL' })),
-  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
-  genres: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Genres' })),
-  language: Schema.optional(Schema.String.annotations({ title: 'Language' })),
-  numPages: Schema.optional(Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({ title: 'Pages' })),
-  publicationYear: Schema.optional(Schema.Number.pipe(Schema.int()).annotations({ title: 'Publication year' })),
-  publisher: Schema.optional(Schema.String.annotations({ title: 'Publisher' })),
+  cover: Schema.optional(Schema.String.annotate({ title: 'Cover URL' })),
+  thumbnail: Schema.optional(Schema.String.annotate({ title: 'Thumbnail URL' })),
+  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
+  genres: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Genres' })),
+  language: Schema.optional(Schema.String.annotate({ title: 'Language' })),
+  numPages: Schema.optional(
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Pages',
+    }),
+  ),
+  publicationYear: Schema.optional(
+    Schema.Number.pipe(Schema.check(Schema.isInt())).annotate({ title: 'Publication year' }),
+  ),
+  publisher: Schema.optional(Schema.String.annotate({ title: 'Publisher' })),
 });
 export type Catalog = Schema.Schema.Type<typeof Catalog>;
 
@@ -109,14 +125,14 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
     // Catalog metadata (first field); labels the book via `catalog.title`. Its published subset
     // (title/authors/identifiers) is marked on the struct's fields; the rest is mirrored (the network
     // sees it from the BookHive catalog by id, not from our record) rather than private.
-    catalog: Catalog.pipe(FormInlineAnnotation.set(true), AtprotoVisibilityAnnotation.set('mirror')),
+    catalog: Catalog.pipe(Annotation.FormInlineAnnotation.set(true), AtprotoVisibilityAnnotation.set('mirror')),
 
     // Published per-user reading state.
-    status: Status.annotations({ title: 'Status' }).pipe(AtprotoVisibilityAnnotation.set('publish'), Schema.optional),
+    status: Status.annotate({ title: 'Status' }).pipe(AtprotoVisibilityAnnotation.set('publish'), Schema.optional),
     stars: Schema.Number.pipe(
-      Schema.int(),
-      Schema.between(1, 10),
-      Schema.annotations({ title: 'Rating', description: 'Rating from 1 to 10.' }),
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 1, maximum: 10 })),
+      Schema.annotate({ title: 'Rating', description: 'Rating from 1 to 10.' }),
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),
@@ -124,42 +140,42 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       AtprotoVisibilityAnnotation.set('publish'),
       // Edited as a markdown editor in the activity form; the codec maps markdown <-> HTML on the wire.
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-      Schema.annotations({ title: 'Review' }),
+      Schema.annotate({ title: 'Review' }),
       Schema.optional,
     ),
     // Reading dates are date-only in ECHO; the codec widens them to the wire's ISO datetime format.
-    startedAt: Format.DateOnly.annotations({ title: 'Started' }).pipe(
+    startedAt: Format.DateOnly.annotate({ title: 'Started' }).pipe(
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),
-    finishedAt: Format.DateOnly.annotations({ title: 'Finished' }).pipe(
+    finishedAt: Format.DateOnly.annotate({ title: 'Finished' }).pipe(
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),
-    owned: Schema.Boolean.annotations({ title: 'Owned' }).pipe(
+    owned: Schema.Boolean.annotate({ title: 'Owned' }).pipe(
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),
-    progress: Progress.annotations({ title: 'Progress' }).pipe(
+    progress: Progress.annotate({ title: 'Progress' }).pipe(
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),
 
     // Private (ECHO-only) fields — unmarked, never published.
     notes: Ref.Ref(Text.Text)
-      .annotations({ title: 'Private notes' })
-      .pipe(FormInlineAnnotation.set(true), Schema.optional),
-    purchasePrice: Format.Currency().annotations({ title: 'Purchase price' }).pipe(Schema.optional),
-    purchaseDate: Format.DateOnly.annotations({ title: 'Purchase date' }).pipe(Schema.optional),
-    shelfLocation: Schema.String.annotations({ title: 'Shelf location' }).pipe(Schema.optional),
+      .annotate({ title: 'Private notes' })
+      .pipe(Annotation.FormInlineAnnotation.set(true), Schema.optional),
+    purchasePrice: Format.Currency().annotate({ title: 'Purchase price' }).pipe(Schema.optional),
+    purchaseDate: Format.DateOnly.annotate({ title: 'Purchase date' }).pipe(Schema.optional),
+    shelfLocation: Schema.String.annotate({ title: 'Shelf location' }).pipe(Schema.optional),
 
     // Optional DRM-free copy of the book (PDF/EPUB/…), stored as a direct blob reference. Private —
     // never published to atproto. A future reader view renders it as an alternative to the metadata.
     content: Ref.Ref(Blob.Blob)
-      .annotations({ title: 'Book file', description: 'A DRM-free copy of the book (PDF, EPUB, …).' })
+      .annotate({ title: 'Book file', description: 'A DRM-free copy of the book (PDF, EPUB, …).' })
       .pipe(Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['catalog.title']),
+    Annotation.LabelAnnotation.set(['catalog.title']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-bookmark--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     AtprotoRecordAnnotation.set({
@@ -172,6 +188,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       inspect: inspectBook,
       onImport: enrichBook,
     }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

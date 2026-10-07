@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const OpenSearch = Operation.make({
-  meta: { key: makeKey('openSearch'), name: 'Open Search', icon: 'ph--magnifying-glass--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.search.open'),
+    name: 'Open Search',
+    icon: 'ph--magnifying-glass--regular',
+  },
   input: Schema.Void,
   output: Schema.Void,
 });

@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useSchemaFilter } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -15,8 +15,7 @@ import { type GeoMarker } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import * as Map from '../types/Map';
-import * as MapCapabilities from '../types/MapCapabilities';
+import { Map, MapCapabilities } from '#types';
 
 /**
  * Reactive markers for a {@link Map.Map}: queries the map's backing view and plots each row at its
@@ -29,7 +28,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
   const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
   const schema = useType(db, typeUri);
-  const baseFilter = useSchemaFilter(schema);
+  const baseFilter = Hooks.useSchemaFilter(schema);
   const query = useMemo(
     () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
     [baseFilter, tag],
@@ -57,7 +56,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
 
           return { id: row.id, location: { lat, lng } };
         })
-        .filter(Predicate.isNotNullable),
+        .filter(Predicate.isNotNullish),
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 

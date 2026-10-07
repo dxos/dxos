@@ -1,53 +1,70 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
-import { createContext, useContext } from 'react';
+import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
 
-import { raise } from '@dxos/debug';
-import { type Label } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Listbox from '@dxos/react-ui/Listbox';
 
-// Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
-// components, so a context and hook exported beside one force a full page reload on every edit.
+import { type TreeNode, type TreeWalk } from './tree-collection.ts';
+import { type TreeData } from './tree-data.ts';
+import { type DropKind, type RowActivation } from './tree-model.ts';
 
-export type TreeItemDataProps = {
-  id: string;
-  label: Label;
-  parentOf?: string[];
-  /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` → section header). */
-  disposition?: string;
-  /** When `false`, the item cannot be dragged (overrides tree-level `draggable`). */
-  draggable?: boolean;
-  /** When `false`, the item does not participate as a drop target. */
-  droppable?: boolean;
-  className?: string;
-  headingClassName?: string;
-  icon?: string;
-  iconHue?: string;
-  disabled?: boolean;
-  testId?: string;
-  /** Optional item count rendered as a neutral badge directly after the label. */
-  count?: number;
-  /** Optional count of new/modified items; when greater than zero it shows as a rose badge in place of `count`. */
-  modifiedCount?: number;
+// Kept out of the component module: react-refresh only fast-refreshes a module whose exports are all components.
+
+/** `fixed` windows rows of one block each; `variable` mounts every row with `content-visibility: auto`. */
+export type TreeVirtual = Listbox.VirtualMode;
+
+/** A disclosure in flight: the rows under `path` fade in (`open`) or conceal before the close commits. */
+export type TreeDisclosure = { value: string; path: string[]; open: boolean };
+
+export type TreeContextValue = {
+  treeId: string;
+  walk: TreeWalk;
+  virtual?: TreeVirtual;
+  draggable: boolean;
+  /** `false` keeps the browser's snapshot of the row; otherwise a `DragPreview` chip is drawn. */
+  dragPreview: boolean;
+  /** The chip's content; the default is the row's icon and label. */
+  renderDragPreview?: (node: TreeNode) => ReactNode;
+  indentGuides: boolean;
+  /** Whether a childless row offers a make-child zone. */
+  leavesAcceptChildren: boolean;
+  /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */
+  dropBelowExpanded: boolean;
+  /** Render a strip after the last row that accepts a drop meaning "append at the end". */
+  dropAtEnd: boolean;
+  /** Take the dragged row out of the list for the drag, rather than fading it in place. */
+  hideDragSource: boolean;
+  selectionMode: 'single' | 'multiple';
+  canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
+  /** Whether the consumer lets the row be selected; a branch that cannot be toggles instead. */
+  allowsSelect: (node: TreeNode) => boolean;
+  /** Applies the select-or-toggle policy to a row activation. */
+  selectNode: (node: TreeNode, activation: RowActivation) => void;
+  onItemHover?: (node: TreeNode) => void;
+  /** Every disclosure goes through here, so an animated close can hold its rows until they have concealed. */
+  setOpen: (node: TreeNode, open: boolean) => void;
+  disclosures: readonly TreeDisclosure[];
+  /** The machine's roving tabstop; a windowed tree keeps this row mounted while it is out of view. */
+  focusedValue: string | null;
+  /** Takes DOM focus for a row the tree is waiting to focus (after a drop, or a windowed jump) once it is mounted. */
+  claimFocus: (value: string, row: HTMLElement) => void;
+  /** Set by Content when windowed; zag calls it before focusing a row it may not have mounted. */
+  scrollToIndexRef: RefObject<((index: number) => void) | null>;
+  /** Handlers for the tree element: they run before the machine's, so they can take a key from it. */
+  onTreeKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+  onTreePointerDownCapture: (event: PointerEvent<HTMLDivElement>) => void;
 };
 
-export interface TreeModel<T extends { id: string } = any> {
-  /** Atom family: resolve item by ID (content). */
-  item: (id: string) => Atom.Atom<T | undefined>;
-  /** Atom family: open state keyed by path. */
-  itemOpen: (path: string[]) => Atom.Atom<boolean>;
-  /** Atom family: current (selected) state keyed by path. */
-  itemCurrent: (path: string[]) => Atom.Atom<boolean>;
-  /** Atom family: display props for an item at a given path (path includes item's own ID at end). */
-  itemProps: (path: string[]) => Atom.Atom<TreeItemDataProps>;
-  /** Atom family: outbound child IDs for a parent ID (topology). Undefined = root. */
-  childIds: (parentId?: string) => Atom.Atom<string[]>;
-}
+// Behaviour only (drop policy, walk), never size or level (Next decision 3).
+export const [TreeProvider, useTreeContext] = Hooks.createContext<TreeContextValue>('Tree.Root');
 
-const TreeContext = createContext<TreeModel | null>(null);
+export type TreeItemContextValue = {
+  node: TreeNode;
+};
 
-export const TreeProvider = TreeContext.Provider;
-
-export const useTree = () => useContext(TreeContext) ?? raise(new Error('TreeContext not found'));
+export const [TreeItemProvider, useTreeItemContext] = Hooks.createContext<TreeItemContextValue>('Tree.Item');

@@ -27,7 +27,7 @@ export default Capability.makeModule(
         yield* service.hydrate();
       }).pipe(
         Effect.provide(ServiceResolver.provide({}, AgentService.AgentService)),
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           Effect.sync(() => log.warn('agent hydrate failed', { cause: Cause.pretty(cause) })),
         ),
       ),

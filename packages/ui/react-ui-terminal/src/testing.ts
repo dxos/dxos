@@ -5,7 +5,9 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+
+import { TerminalTestError } from './errors.ts';
 
 const POLL_INTERVAL = Duration.millis(50);
 const DEFAULT_TIMEOUT = Duration.seconds(15);
@@ -43,9 +45,14 @@ const pollTerminal = (element: HTMLElement, text: string): Effect.Effect<void> =
 export const waitForTerminal = (element: HTMLElement, text: string, timeout = DEFAULT_TIMEOUT): Promise<void> =>
   EffectEx.runPromise(
     pollTerminal(element, text).pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: timeout,
-        onTimeout: () => new Error(`Timed out waiting for "${text}". Terminal contents:\n${readTerminal(element)}`),
+        orElse: () =>
+          Effect.fail(
+            new TerminalTestError({
+              message: `Timed out waiting for "${text}". Terminal contents:\n${readTerminal(element)}`,
+            }),
+          ),
       }),
     ),
   );

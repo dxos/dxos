@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-masonry",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "A masonry component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,8 +25,8 @@
     "src"
   ],
   "dependencies": {
-    "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/react-context": "catalog:",
+    "@dxos/react-focus": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {

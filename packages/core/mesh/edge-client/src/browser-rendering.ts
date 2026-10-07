@@ -10,7 +10,7 @@ export const MarkdownRequest = Schema.Struct({
   html: Schema.optional(Schema.String),
   gotoOptions: Schema.optional(
     Schema.Struct({
-      waitUntil: Schema.optional(Schema.Literal('load', 'domcontentloaded', 'networkidle0', 'networkidle2')),
+      waitUntil: Schema.optional(Schema.Literals(['load', 'domcontentloaded', 'networkidle0', 'networkidle2'])),
       timeout: Schema.optional(Schema.Number),
     }),
   ),

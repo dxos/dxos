@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock } from '@dxos/types';
 
-import { TranscriptEvent } from '../types';
-import { PipelineRuntime, type RunOptions } from './PipelineRuntime';
+import { TranscriptEvent } from '../types/index.ts';
+import { PipelineRuntime, type RunOptions } from './PipelineRuntime.ts';
 
 /**
  * Imperative handle to a running pipeline fed by a live ASR source. The source pushes events as they

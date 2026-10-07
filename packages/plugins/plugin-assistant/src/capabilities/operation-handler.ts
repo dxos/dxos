@@ -6,18 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import {
-  AgentHandlers,
-  AgentSkillHandlers,
-  AgentWizardHandlers,
-  AlarmHandlers,
-  DatabaseHandlers,
-  DelegationHandlers,
-  PlanningHandlers,
-  ProjectHandlers,
-  SkillManagerHandlers,
-  WebSearchHandlers,
-} from '@dxos/assistant-toolkit';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
+import * as AlarmSkill from '@dxos/assistant-toolkit/AlarmSkill';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 
 import { AssistantOperationHandlerSet } from '#operations';
 
@@ -29,16 +25,14 @@ export default Capability.makeModule(
       // definitions: their operations (e.g. runInstructions) are invoked headlessly by
       // triggers, before any toolkit materialization fires the assistant's start event. The
       // sets are lazy-bodied, so eager registration costs only the definition map.
-      AgentHandlers,
-      AgentSkillHandlers,
-      SkillManagerHandlers,
-      DatabaseHandlers,
-      WebSearchHandlers,
-      AgentWizardHandlers,
-      DelegationHandlers,
-      PlanningHandlers,
-      AlarmHandlers,
-      ProjectHandlers,
+      AgentOperationHandlerSet.handlers,
+      AgentSkill.Handlers,
+      SkillManagerSkill.Handlers,
+      ChatContextSkill.Handlers,
+      WebSearchSkill.Handlers,
+      DelegationSkill.Handlers,
+      PlanningSkill.Handlers,
+      AlarmSkill.Handlers,
     ]);
   }),
 );

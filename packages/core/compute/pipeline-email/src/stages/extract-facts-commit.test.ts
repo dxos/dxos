@@ -5,20 +5,20 @@
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extract-facts-commit';
+import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extract-facts-commit.ts';
 
 const ALICE_FACT: RDF.Fact = {
   id: 'fact-1',
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: 'paris' },
+    object: { kind: 'entity', entity: 'paris' },
     validFrom: '2026-06-12',
     quote: "I think I'm probably going to Paris next week",
   },

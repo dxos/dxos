@@ -116,7 +116,7 @@ capital-case names and are re-exported as namespaces:
 src/
   Foo.ts
   Bar.ts
-  errors.ts
+  BazError.ts
   index.ts
   testing/
     index.ts
@@ -130,7 +130,7 @@ src/
 // index.ts
 export * as Foo from './Foo';
 export * as Bar from './Bar';
-export * from './errors';
+export * as BazError from './BazError';
 ```
 
 ```ts
@@ -149,7 +149,16 @@ export const func: {
 
 - The `@import-as-namespace` linter directive marks a file as a namespace export.
 - Internal code is hidden in `internal/`, which is not exported.
-- `testing/` and `errors.ts` are the exceptions (exported directly).
+- `testing/` is the exception (exported directly).
+- Errors follow the `effect` package. An error that belongs to one namespace is exported from it
+  (`Operation.NoHandlerError`, like `Cause.TimeoutError`). A family of errors with no owning
+  namespace gets a `<Domain>Error` namespace module (`FunctionsAiError.UpstreamError`, like
+  `SqlError` or `HttpClientError`). There is no catch-all `errors` export.
+- A namespace import uses the module's name. When the file already binds that name (another
+  package's namespace, a local declaration, or a global such as `Map` or `Error`), prefix it with
+  the package's short name: `ToolkitHooks` for `@dxos/app-toolkit/Hooks`, `GraphHooks` for
+  `@dxos/plugin-graph/Hooks`, `EchoError` for `@dxos/echo/Error`. app-framework's namespace keeps
+  the bare name. `import-as-namespace` enforces this for package subpaths.
 - For a namespace file, avoid prefixing top-level types with the namespace name —
   inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`,
   `FooService`, `FooOptions` (callers see `Foo.Manager` either way).
@@ -207,4 +216,25 @@ readonly over mutable.
   `TestLayer(opts?)` can be parametrized so tests configure it.
 - Place test layer, configuration, and main definitions at the top of the suite;
   helpers at the bottom.
-- Avoid sleep and polling. Use events and `TestClock` instead.
+- **Never wrap an official API in a trivial local helper.** A one-liner like
+  `const makeBody = (text: string) => Obj.make(Body, { text })` renames the API
+  rather than removing duplication: the reader has to jump to the definition to
+  see what is under test, and several of them turn a suite into an ad-hoc DSL.
+  Inline the real call — `Obj.make(Body, { text: 'x' })` — so the API being
+  exercised stays visible next to the assertion. A helper earns its place only
+  when it composes several calls or encodes a non-obvious setup sequence.
+- **Never sleep or poll for a result — await the concrete state.** A poll
+  (`expect.poll`, a retry loop, `await sleep(n)` before an assertion) hands the
+  test's control flow to a timer: it asserts whatever the system happened to
+  finish by an arbitrary deadline, so a real ordering bug degrades into a slow
+  pass and load degrades into a flake. Raising the timeout hides the problem
+  rather than fixing it. Wait on the event, promise or callback that **is** the
+  state being asserted — a `Trigger` woken by the write in question, a handle's
+  `whenReady`, the resolution of the call that does the work. When the subject
+  exposes no such signal (a fire-and-forget push, a best-effort send with no
+  ack), add the narrowest one — wrap the storage, transport or adapter it writes
+  through and await that — rather than sleeping past the gap. `TestClock` covers
+  time-dependent logic. Worked example: `withSaveSignal` in
+  `packages/core/echo/echo-host/src/automerge/automerge-subduction.test.ts`,
+  which awaits the receiving peer's own save because subduction's propagation
+  returns before delivery.

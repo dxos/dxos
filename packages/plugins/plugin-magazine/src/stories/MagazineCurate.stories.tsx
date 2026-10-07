@@ -14,31 +14,31 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { AgentHandlers } from '@dxos/assistant-toolkit';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { MagazinePlugin } from '#plugin';
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
+import { Magazine, Subscription } from '#types';
 
-import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
-import { MagazinePlugin } from '../MagazinePlugin';
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
+import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle.tsx';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
@@ -54,7 +54,7 @@ const AgentRuntimePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule<void>(
     Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentHandlers)]),
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentOperationHandlerSet.handlers)]),
     ),
   ),
   Plugin.addModule({
@@ -110,14 +110,14 @@ const DefaultStory = () => {
 
   return (
     <Panel.Root classNames='border-is border-separator'>
-      <Panel.Content classNames='px-3 grid grid-cols-2 gap-3'>
+      <Panel.Body classNames='px-3 grid grid-cols-2 gap-3'>
         {/* Rendered directly: the `article` role is shared with plugin-space's catch-all RecordArticle
             (position:last), so a raw `Surface type={Article}` here is ambiguous and resolves to the
             fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
         <MagazineArticle role='article' subject={magazine} attendableId='story' />
         {/* The object-properties companion surface (plugin-space DefaultProperties); 'settings' is unambiguous. */}
         <Surface.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -155,14 +155,14 @@ const meta: Meta<typeof DefaultStory> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,
         }),
         SpacePlugin({}),
-        StorybookPlugin({}),
-        RoutinePlugin(),
+        StorybookPlugin.make({}),
+        RoutinePlugin.make(),
         MagazinePlugin(),
         AgentRuntimePlugin(),
       ],

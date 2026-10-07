@@ -2,15 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
+import { DXN } from '@dxos/keys';
 
-import { DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder } from '../testing';
-import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor';
+import { DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor.ts';
+
+/** Ref at a nested path — unreachable by `reference`'s top-level key type. */
+class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrapper', '0.1.0'))(
+  Schema.Struct({
+    spec: Schema.optional(
+      Schema.Struct({
+        source: Schema.optional(Schema.Union([Ref.Ref(TestSchema.Person), Ref.Ref(TestSchema.Task)])),
+      }),
+    ),
+  }),
+) {}
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +34,9 @@ describe('WorkingSetQueryExecutor', () => {
   beforeEach(async () => {
     builder = new EchoTestBuilder();
     await builder.open();
-    const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager] });
+    const peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager, Wrapper],
+    });
     db = await peer.createDatabase();
   });
 
@@ -40,6 +55,22 @@ describe('WorkingSetQueryExecutor', () => {
     const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).toContain(bob.id);
+  });
+
+  test('declines an aggregate that asks for no members, so the host count is the only one', async ({ expect }) => {
+    db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    await db.flush();
+
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+    const countOnly = planner.createPlan(
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ count: Aggregate.count() }).from(db).ast,
+    );
+    expect(makeExecutor(db).tryExecute(countOnly)).toBeNull();
+
+    const withMembers = planner.createPlan(
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ items: Aggregate.items() }).from(db).ast,
+    );
+    expect(makeExecutor(db).tryExecute(withMembers)).toHaveLength(1);
   });
 
   test('type filter returns only objects of matching type', async ({ expect }) => {
@@ -89,7 +120,9 @@ describe('WorkingSetQueryExecutor', () => {
     // Query.without produces a SetDifferenceStep: all persons minus alice.
     const all = Query.select(Filter.type(TestSchema.Person)).from(db);
     const justAlice = Query.select(Filter.id(alice.id)).from(db);
-    const plan = makeNoIndexPlanner().createPlan(Query.without(all, justAlice).ast);
+    const plan = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true }).createPlan(
+      Query.without(all, justAlice).ast,
+    );
     const results = makeExecutor(db).tryExecute(plan);
     expect(results).not.toBeNull();
     const ids = results!.map((item) => item.objectId);
@@ -126,6 +159,37 @@ describe('WorkingSetQueryExecutor', () => {
     expect(ids).toContain(alice.id);
   });
 
+  test('reference traversal resolves a nested property path', async ({ expect }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    // Same type as the hop's result, but unreferenced — so a traversal that ignored the path and
+    // returned every Person would fail this test.
+    const unreferenced = Obj.make(TestSchema.Person, { name: 'Unreferenced' });
+    const task = Obj.make(TestSchema.Task, { title: 'Task 1' });
+    const personWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(alice) } });
+    const taskWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(task) } });
+    db.add(alice);
+    db.add(unreferenced);
+    db.add(task);
+    db.add(personWrapper);
+    db.add(taskWrapper);
+    await db.flush();
+
+    // The executor unescapes dot-paths and deep-gets, so a nested ref traverses even though the typed
+    // `reference` key cannot name it; `plugin-routine` reaches this via `Query.fromAst`.
+    const nestedHop = Query.fromAst({
+      type: 'reference-traversal',
+      anchor: Query.select(Filter.type(Wrapper)).ast,
+      property: 'spec.source',
+    });
+
+    const results = planAndExecute(db, nestedHop.select(Filter.type(TestSchema.Person)));
+    const ids = results.map((item) => item.objectId);
+    expect(ids).toContain(alice.id);
+    expect(ids).not.toContain(unreferenced.id);
+    // The type filter drops the ref that reaches a Task.
+    expect(ids).not.toContain(task.id);
+  });
+
   test('incoming reference traversal finds referencing objects', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
     const task = Obj.make(TestSchema.Task, { title: 'Task 1', assignee: Ref.make(alice) });
@@ -159,7 +223,9 @@ describe('WorkingSetQueryExecutor', () => {
     // Query.all produces a UnionStep over the given sub-queries.
     const persons = Query.select(Filter.type(TestSchema.Person)).from(db);
     const tasks = Query.select(Filter.type(TestSchema.Task)).from(db);
-    const plan = makeNoIndexPlanner().createPlan(Query.all(persons, tasks).ast);
+    const plan = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true }).createPlan(
+      Query.all(persons, tasks).ast,
+    );
     const results = makeExecutor(db).tryExecute(plan);
     expect(results).not.toBeNull();
     const ids = results!.map((item) => item.objectId);
@@ -181,11 +247,10 @@ describe('WorkingSetQueryExecutor', () => {
       Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')),
     );
     const personResults = results.filter((item) => {
-      const data = item.core?.getObjectStructure().data;
-      const name = data?.['name'];
+      const name = item.structure.data['name'];
       return name === 'Alice' || name === 'Bob' || name === 'Charlie';
     });
-    const names = personResults.map((item) => item.core!.getObjectStructure().data['name']);
+    const names = personResults.map((item) => item.structure.data['name']);
     expect(names).toEqual(['Alice', 'Bob', 'Charlie']);
   });
 
@@ -200,7 +265,7 @@ describe('WorkingSetQueryExecutor', () => {
   });
 
   test('TextSelector causes executor to return null', async ({ expect }) => {
-    const planner = makeNoIndexPlanner();
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
     const executor = makeExecutor(db);
     const query = Query.select(Filter.text('foo')).from(db);
     const plan = planner.createPlan(query.ast);
@@ -210,7 +275,7 @@ describe('WorkingSetQueryExecutor', () => {
   });
 
   test('TimestampSelector (updated) causes executor to return null', async ({ expect }) => {
-    const planner = makeNoIndexPlanner();
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
     const executor = makeExecutor(db);
     const query = Query.select(Filter.updated({ after: new Date(0) })).from(db);
     const plan = planner.createPlan(query.ast);
@@ -224,7 +289,7 @@ describe('WorkingSetQueryExecutor', () => {
     db.add(alice);
     await db.flush();
 
-    const planner = makeNoIndexPlanner();
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
     const executor = makeExecutor(db);
     // Feed-scoped subquery: `_execSelectStep` would return an *empty* (not null) working set for
     // a scope outside this space, so the executor must bail rather than silently resolve an empty
@@ -282,12 +347,37 @@ describe('WorkingSetQueryExecutor', () => {
 
     const results = planAndExecute(
       db,
-      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age') }),
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age'), items: Aggregate.items() }),
     );
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
     expect(byId.get(alice.id)).toEqual({ age: 30 });
     expect(byId.get(bob.id)).toEqual({ age: 30 });
     expect(byId.get(charlie.id)).toEqual({ age: 40 });
+  });
+
+  test('aggregate group key falls back through a coalesce chain, resolving `id` to the entity id', async ({
+    expect,
+  }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice', age: 30 });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
+    const charlie = Obj.make(TestSchema.Person, { name: 'Charlie' });
+    db.add(alice);
+    db.add(bob);
+    db.add(charlie);
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Person)).aggregate({
+        age: Aggregate.group({ coalesce: ['age', 'id'] }),
+        items: Aggregate.items(),
+      }),
+    );
+    const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
+    expect(byId.get(alice.id)).toEqual({ age: 30 });
+    // Members without `age` key on their own id instead of sharing the `null` group.
+    expect(byId.get(bob.id)).toEqual({ age: bob.id });
+    expect(byId.get(charlie.id)).toEqual({ age: charlie.id });
   });
 
   test('aggregate stable-partitions items so groups are contiguous', async ({ expect }) => {
@@ -303,7 +393,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Person))
         .orderBy(Order.property('name', 'asc'))
-        .aggregate({ age: Aggregate.group('age') }),
+        .aggregate({ age: Aggregate.group('age'), items: Aggregate.items() }),
     );
     // Alice (30) and Charlie (30) end up contiguous even though Bob (40) sorts between them by name.
     const ages = results.map((item) => item.groupKey?.age);
@@ -336,7 +426,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Task))
         .reference('assignee')
-        .aggregate({ age: Aggregate.group('age') }),
+        .aggregate({ age: Aggregate.group('age'), items: Aggregate.items() }),
     );
     expect(results).toHaveLength(2);
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
@@ -401,7 +491,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Expando))
         .orderBy(Order.property('rank', 'asc'))
-        .aggregate({ category: Aggregate.group('category') })
+        .aggregate({ category: Aggregate.group('category'), items: Aggregate.items() })
         .limit(2),
     );
 
@@ -427,7 +517,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Expando))
         .orderBy(Order.property('rank', 'asc'))
-        .aggregate({ category: Aggregate.group('category') })
+        .aggregate({ category: Aggregate.group('category'), items: Aggregate.items() })
         .skip(1)
         .limit(2),
     );
@@ -440,8 +530,6 @@ describe('WorkingSetQueryExecutor', () => {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const makeNoIndexPlanner = () => new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
-
 const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   get spaceId() {
     return db.spaceId;
@@ -449,6 +537,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   allCores: () => db.allObjectCores(),
   getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
+  areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
 });
 
 const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));
@@ -458,7 +547,7 @@ const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvi
  * Throws if the executor cannot satisfy the plan (i.e. it returned null).
  */
 const planAndExecute = (db: DatabaseImpl, query: Query.Query<any>) => {
-  const planner = makeNoIndexPlanner();
+  const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
   const executor = makeExecutor(db);
   // All queries must be scoped; bind to the given database so the planner sees a from() clause.
   const plan = planner.createPlan(query.from(db).ast);

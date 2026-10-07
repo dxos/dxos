@@ -2,27 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Filter, Query, Type, View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Query, Type, View } from '@dxos/echo';
 import { Format } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TypeEnum } from '@dxos/echo/Format';
 import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
-import { toJsonSchema } from '@dxos/echo/JsonSchema';
-import { Ref } from '@dxos/echo/Ref';
-import { SchemaEx } from '@dxos/effect';
+import * as Ref from '@dxos/echo/Ref';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 
-import { TestSchema } from '../testing';
-import { ViewModel } from '../types';
+import { TestSchema } from '../testing/index.ts';
+import { ViewModel } from '../types/index.ts';
 
 const createFieldId = View.createFieldId;
-import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection';
+import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection.ts';
 
 const getFieldId = (projection: View.Projection, path: string): string => {
   const field = projection.fields.find((field) => field.path === path);
@@ -32,7 +31,7 @@ const getFieldId = (projection: View.Projection, path: string): string => {
 
 describe('ProjectionModel', () => {
   let builder: EchoTestBuilder;
-  let atomRegistry: AtomRegistry.Registry;
+  let atomRegistry: AtomRegistry.AtomRegistry;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
@@ -48,7 +47,7 @@ describe('ProjectionModel', () => {
 
     const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ title: 'Name' }),
+        name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
         salary: Format.Currency({ code: 'usd', decimals: 2 }),
       }),
@@ -140,13 +139,13 @@ describe('ProjectionModel', () => {
     const typename = 'com.example.type.person';
     const schema = Type.makeObject(DXN.make(typename, '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ title: 'Name' }),
+        name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
         salary: Format.Currency({ code: 'usd', decimals: 2 }),
-        organization: Ref(TestSchema.Organization),
+        organization: Ref.Ref(TestSchema.Organization),
       }),
     );
-    const jsonSchema = toJsonSchema(schema);
+    const jsonSchema = JsonSchema.toJsonSchema(schema);
 
     const view = await ViewModel.makeWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -194,7 +193,7 @@ describe('ProjectionModel', () => {
 
     const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ title: 'Name' }),
+        name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
       }),
     );
@@ -471,10 +470,14 @@ describe('ProjectionModel', () => {
     });
 
     const effectSchema = Type.getSchema(mutable);
-    expect(() => Schema.validateSync(effectSchema)({ id: '1', status: 'draft' })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ id: '2', status: 'published' })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ id: '3', status: 'archived' })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ id: '4', status: 'invalid-status' })).to.throw();
+    expect(() => Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '1', status: 'draft' })).not.to.throw();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '2', status: 'published' }),
+    ).not.to.throw();
+    expect(() => Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '3', status: 'archived' })).not.to.throw();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '4', status: 'invalid-status' }),
+    ).to.throw();
 
     const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'status');
@@ -600,8 +603,10 @@ describe('ProjectionModel', () => {
 
     const effectSchema = Type.getSchema(mutable);
     expect(effectSchema).not.toBeUndefined;
-    expect(() => Schema.validateSync(effectSchema)({ id: '1', tags: ['draft'] })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ id: '2', tags: ['published'] })).not.to.throw();
+    expect(() => Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '1', tags: ['draft'] })).not.to.throw();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '2', tags: ['published'] }),
+    ).not.to.throw();
 
     // TODO(ZaymonFC): Get validation working.
     // expect(() => Schema.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
@@ -801,8 +806,8 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getHiddenFields()[0].path).to.equal('title');
 
     // Modify the schema - add a field.
-    Type.update(mutable, (draft) => {
-      draft.jsonSchema.properties!.status = { type: 'string' };
+    Type.update(mutable, (mutable) => {
+      mutable.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 
@@ -873,7 +878,7 @@ describe('ProjectionModel', () => {
   // TODO(burdon): Fix.
   test.skip('create view from static organization schema', async ({ expect }) => {
     const schema = TestSchema.Organization;
-    const jsonSchema = toJsonSchema(schema);
+    const jsonSchema = JsonSchema.toJsonSchema(schema);
 
     const view = ViewModel.make({ query: Query.select(Filter.type(schema)), jsonSchema });
     const projection = new ProjectionModel({
@@ -970,6 +975,7 @@ describe('ProjectionModel', () => {
       { format: Format.TypeFormat.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
       { format: Format.TypeFormat.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
       { format: Format.TypeFormat.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
+      { format: Format.TypeFormat.Text, expectedType: TypeEnum.String, fieldName: 'notes' },
     ];
 
     for (const { format, expectedType, fieldName } of testCases) {
@@ -1024,8 +1030,9 @@ describe('ProjectionModel', () => {
     const { db } = await builder.createDatabase();
 
     // Verify Format.Email has validation
-    expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();
-    expect(() => Schema.validateSync(Format.Email)('invalid-email')).toThrow(/Email/);
+    expect(() => Schema.decodeSync(Schema.toType(Format.Email))('valid@example.com')).not.toThrow();
+    // v4 reports the check's own message (the email pattern) rather than the format's title.
+    expect(() => Schema.decodeSync(Schema.toType(Format.Email))('invalid-email')).toThrow(/matching the RegExp/);
 
     // Create and register schema using Format.Email
     const schema = Type.makeObject(DXN.make('com.example.type.emailTest', '0.1.0'))(
@@ -1035,8 +1042,12 @@ describe('ProjectionModel', () => {
     );
 
     // Check with the primary schema (id is added by Type.makeObject)
-    expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '1', email: 'valid@example.com' })).not.toThrow();
-    expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '2', email: 'invalid-email' })).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(Type.getSchema(schema)))({ id: '1', email: 'valid@example.com' }),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(Type.getSchema(schema)))({ id: '2', email: 'invalid-email' }),
+    ).toThrow();
 
     const registeredSchema = await db.addType(schema);
 
@@ -1051,7 +1062,11 @@ describe('ProjectionModel', () => {
     // Verify reconstructed Effect schema maintains validation
     const reconstructedSchema = Type.getSchema(registeredSchema);
 
-    expect(() => Schema.validateSync(reconstructedSchema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
-    expect(() => Schema.validateSync(reconstructedSchema)({ id: '2', email: 'invalid-email' })).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(reconstructedSchema))({ id: '1', email: 'valid@example.com' }),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(reconstructedSchema))({ id: '2', email: 'invalid-email' }),
+    ).toThrow();
   });
 });

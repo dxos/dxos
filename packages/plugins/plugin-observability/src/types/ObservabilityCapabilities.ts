@@ -4,28 +4,27 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Client } from '@dxos/client';
-import { type Observability as ObservabilityNs } from '@dxos/observability';
+import type * as ObservabilityNs from '@dxos/observability/Observability';
 
 import { meta } from '#meta';
 
 export const Namespace = Capability.makeSingleton<string>()(`${meta.profile.key}.capability.namespace`);
 
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    group: Schema.optional(Schema.String),
-    notified: Schema.optional(Schema.Boolean),
-  }),
-);
+export const StateSchema = Schema.Struct({
+  group: Schema.optional(Schema.String),
+  notified: Schema.optional(Schema.Boolean),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 

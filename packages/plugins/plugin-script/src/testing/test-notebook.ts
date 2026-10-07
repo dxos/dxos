@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import * as Notebook from '../types/Notebook';
+import { Notebook } from '#types';
 
 // TODO(burdon): NOTE: createObject is required for tests.
 export const createNotebook = (): Notebook.Notebook =>

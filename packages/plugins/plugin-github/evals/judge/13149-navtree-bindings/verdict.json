@@ -1,0 +1,38 @@
+{
+  "A": {
+    "order": 5,
+    "why": 5,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "Sections build strictly: scope fix, then the reconciliation skip it enables, then the fire-time re-resolution that skip requires, then the shared-store consequence, environment exclusion, and finally the new test — each depends on the one before it.",
+      "why": "Each heading states the mechanical cause, e.g. 'the joined string never matched an id the store would ever see', naming the specific mismatch rather than describing the code change alone.",
+      "load": "Every claim (scope, skip check, fire-time lookup, conflict behavior, environments exclusion, test contents) has its own diff citation immediately below it, so a reader never has to hold an unverified claim in mind.",
+      "trust": "The description of the browser test ('a second asserting that a graph update re-registers only the changed binding while the kept binding still runs the current action') matches the two `test(...)` bodies in plugin.browser.test.ts exactly."
+    }
+  },
+  "B": {
+    "order": 5,
+    "why": 4,
+    "load": 4,
+    "trust": 5,
+    "reasons": {
+      "order": "Same build-up as the strongest document: scope fix, skip-reregistration, fire-time resolution, conflict-store change, environment exclusion, then the browser test that exercises all of it.",
+      "why": "Good but slightly weaker than a comparable passage: 'that closure can no longer capture the graph node directly — the node it captured may be stale' restates the mechanism without naming why staleness specifically matters (a graph rebuild replaces the action's data closure).",
+      "load": "The sentence 'Because an unchanged binding now keeps the closure it was registered with, that closure can no longer capture the graph node directly' requires a re-read to parse the causal chain before the diff resolves it.",
+      "trust": "Every factual claim, including the N-way hotkey conflict and the test's use of a versioned graph action, is directly supported by the diff's comments and the test file's `version` atom."
+    }
+  },
+  "C": {
+    "order": 4,
+    "why": 4,
+    "load": 3,
+    "trust": 4,
+    "reasons": {
+      "order": "Mostly builds up correctly, but folds two distinct mechanical changes (skip-reregistration and fire-time node resolution) into one heading, weakening the section-per-change structure the other two documents keep.",
+      "why": "Explains the N-squared warning blow-up and the stale-closure problem with real causes, matching the changeset's own reasoning about scoped bindings sharing a hotkey.",
+      "load": "The 'Skip re-registering an unchanged binding' section makes two separate claims (early-return on match, and node re-resolution at fire time) with no diff block for either, so the reader cannot check them against code in place.",
+      "trust": "The 'N-squared blow-up' claim is a reasonable paraphrase of the changeset's 'warns N²/2 times', but stating it as fact with no diff citation for that section leaves it unverifiable within the document itself."
+    }
+  }
+}

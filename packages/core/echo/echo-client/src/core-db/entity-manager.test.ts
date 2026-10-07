@@ -2,19 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
+import { asyncTimeout, waitForCondition } from '@dxos/async';
+import { ContextDisposedError } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { getObjectCore } from '../echo-handler';
-import { type DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder, createTmpPath } from '../testing';
+import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { getObjectCore } from '../echo-handler/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 
 describe('DatabaseImpl', () => {
   describe('space fragmentation', () => {
@@ -37,7 +41,7 @@ describe('DatabaseImpl', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db } = await testBuilder.createDatabase();
-      const object = createTextObject();
+      const object = Obj.make(TestSchema.Expando, { content: '' });
       db.add(object);
       await db.flush();
       const docHandles = getDocHandles(db);
@@ -46,7 +50,9 @@ describe('DatabaseImpl', () => {
     });
 
     test('reference loading via load() method', async () => {
-      const document = Obj.make(TestSchema.Expando, { text: Ref.make(createTextObject('Hello, world!')) });
+      const document = Obj.make(TestSchema.Expando, {
+        text: Ref.make(Obj.make(TestSchema.Expando, { content: 'Hello, world!' })),
+      });
       const db = await createClientDbInSpaceWithObject(document);
       const loadedDocument = await db.query(Query.type(TestSchema.Expando, { id: document.id })).first();
       expect(loadedDocument).not.to.be.undefined;
@@ -57,13 +63,13 @@ describe('DatabaseImpl', () => {
     });
 
     test('reference access triggers document loading', async () => {
-      const textObject = createTextObject('Hello, world!');
+      const textObject = Obj.make(TestSchema.Expando, { content: 'Hello, world!' });
       const db = await createClientDbInSpaceWithObject(textObject);
       await db.query(Query.type(TestSchema.Expando, { id: textObject.id })).first({ timeout: 1000 });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
-      const object = createTextObject();
+      const object = Obj.make(TestSchema.Expando, { content: '' });
       // The second peer treats text as inline right after opening the document
       const db = await createClientDbInSpaceWithObject(object, (handles) => {
         const textHandle = handles.linkedDocHandles[0]!;
@@ -85,9 +91,40 @@ describe('DatabaseImpl', () => {
     });
   });
 
+  describe('lazy loading', () => {
+    test('opening a space loads only the root until objects are asked for', async () => {
+      const tmpPath = createTmpPath();
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const spaceKey = PublicKey.random();
+      let rootUrl: string;
+      let objectIds: string[];
+      {
+        const peer = await testBuilder.createPeer({ storagePath: tmpPath });
+        const db = await peer.createDatabase(spaceKey);
+        objectIds = range(5).map((index) => db.add(Obj.make(TestSchema.Expando, { name: `object-${index}` })).id);
+        await db.flush({ indexes: true });
+        invariant(db.rootUrl);
+        rootUrl = db.rootUrl;
+        await peer.close();
+      }
+
+      const peer = await testBuilder.createPeer({ storagePath: tmpPath });
+      const db = await peer.openDatabase(spaceKey, rootUrl);
+      // Asking for one object is what opens a document: awaiting its load also drains a load the
+      // open itself started, so a space that opened its links would hold five handles here.
+      await db.loadObjectCoreById(objectIds[0]);
+      expect(db.getLinkedDocHandles()).toHaveLength(1);
+
+      const objects = await db.query(Filter.type(TestSchema.Expando)).run();
+      expect(objects).toHaveLength(5);
+      expect(db.getLinkedDocHandles()).toHaveLength(5);
+    });
+  });
+
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
-      const db = await createClientDbInSpaceWithObject(createTextObject());
+      const db = await createClientDbInSpaceWithObject(Obj.make(TestSchema.Expando, { content: '' }));
       const newRootDocHandle = await createTestRootDoc(db._repo);
       const newObject = addObjectToDoc(newRootDocHandle, { id: EntityId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url!);
@@ -123,9 +160,9 @@ describe('DatabaseImpl', () => {
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
       const stack = Obj.make(TestSchema.Expando, {
-        notLoadedDocument: Ref.make(createTextObject('text1')),
-        loadedDocument: Ref.make(createTextObject('text2')),
-        partiallyLoadedDocument: Ref.make(createTextObject('text3')),
+        notLoadedDocument: Ref.make(Obj.make(TestSchema.Expando, { content: 'text1' })),
+        loadedDocument: Ref.make(Obj.make(TestSchema.Expando, { content: 'text2' })),
+        partiallyLoadedDocument: Ref.make(Obj.make(TestSchema.Expando, { content: 'text3' })),
       });
 
       const partiallyLoadedDocumentId = stack.partiallyLoadedDocument.target?.id;
@@ -152,9 +189,9 @@ describe('DatabaseImpl', () => {
 
     test('linked objects can be remapped', async () => {
       const stack = Obj.make(TestSchema.Expando, {
-        text1: Ref.make(createTextObject('text1')),
-        text2: Ref.make(createTextObject('text2')),
-        text3: Ref.make(createTextObject('text3')),
+        text1: Ref.make(Obj.make(TestSchema.Expando, { content: 'text1' })),
+        text2: Ref.make(Obj.make(TestSchema.Expando, { content: 'text2' })),
+        text3: Ref.make(Obj.make(TestSchema.Expando, { content: 'text3' })),
       });
       const ids = [stack.text1.target?.id, stack.text2.target?.id, stack.text3.target?.id];
       const contents = [stack.text1.target?.content, stack.text2.target?.content, stack.text3.target?.content];
@@ -208,7 +245,7 @@ describe('DatabaseImpl', () => {
     });
 
     test('pending links are loaded', async () => {
-      const obj = createTextObject('Hello, world');
+      const obj = Obj.make(TestSchema.Expando, { content: 'Hello, world' });
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
       const newRootDocHandle = await createTestRootDoc(db._repo);
@@ -229,8 +266,8 @@ describe('DatabaseImpl', () => {
 
     test('multiple object update', async () => {
       const linksToRemove = range(5).map(() => Obj.make(TestSchema.Expando, {}));
-      const loadedLinks = range(4).map(() => createTextObject('test'));
-      const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
+      const loadedLinks = range(4).map(() => Obj.make(TestSchema.Expando, { content: 'test' }));
+      const partiallyLoadedLinks = range(3).map(() => Obj.make(TestSchema.Expando, { content: 'test2' }));
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
       const rootObject = Obj.make(TestSchema.Expando, {});
       Obj.update(rootObject, (rootObject: any) => {
@@ -347,6 +384,45 @@ describe('DatabaseImpl', () => {
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
       });
 
+      test('a body-less linked document yields an unavailable core that queries skip', async () => {
+        const object = Obj.make(TestSchema.Expando, { content: 'body' });
+        // The linked document replicates empty: the peer synced the space directory ahead of the
+        // object payload, which is what a second peer sees here.
+        const db = await createClientDbInSpaceWithObject(object, (handles) => {
+          handles.linkedDocHandles[0]!.change((newDoc: any) => {
+            newDoc.objects = {};
+          });
+        });
+
+        // Bounded: the load legitimately never settles while the body is missing, and the point of
+        // the test is what the working set holds meanwhile.
+        await db.loadObjectCoreById(object.id, { timeout: 1_000 }).catch(() => undefined);
+        await waitForCondition({
+          condition: () => db.getObjectCoreById(object.id, { load: false }) != null,
+          timeout: 5_000,
+        });
+
+        // A relation traversal scans every loaded core, and a core without a body crashed it with
+        // `Cannot read properties of undefined (reading 'system')`.
+        expect(await db.query(Query.select(Filter.everything()).sourceOf()).run()).to.have.length(0);
+        expect(await db.query(Filter.everything()).run()).to.have.length(0);
+
+        const core = db.getObjectCoreById(object.id, { load: false });
+        invariant(core, 'the core exists so the object keeps one identity across the body arriving');
+        const docHandle = core.docHandle;
+        invariant(docHandle);
+        expect(core.isBodyAvailable).to.be.false;
+        expect(db.getObjectById(object.id)).to.be.undefined;
+
+        // The body lands.
+        addObjectToDoc(docHandle, { id: object.id, content: 'body' });
+        await db.flush();
+
+        expect(db.getObjectCoreById(object.id), 'the same core carries the body').to.eq(core);
+        expect(core.isBodyAvailable).to.be.true;
+        expect((await db.query(Filter.id(object.id)).first({ timeout: 1_000 })).content).to.eq('body');
+      });
+
       test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {
         const testBuilder = new EchoTestBuilder();
         await openAndClose(testBuilder);
@@ -357,6 +433,103 @@ describe('DatabaseImpl', () => {
         const loaded = await db.loadObjectCoreById(object.id);
         expect(loaded?.id).to.eq(object.id);
       });
+    });
+
+    test('database reopens after close with inline objects in the space root', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      // Inline objects live in the space root doc, so re-opening re-creates them from the directory.
+      const { id } = addObjectToDoc(db.getSpaceRootDocHandle(), { id: EntityId.random() });
+      await db.flush();
+      // Held across the reopen so the core is not collected — the registry holds cores weakly.
+      const core = await db.loadObjectCoreById(id);
+      expect(core?.id).to.eq(id);
+
+      await db.close();
+      await db.open();
+      expect(db.getObjectById(id)).to.not.be.undefined;
+    });
+
+    test('a synchronous core lookup after close resolves to undefined rather than throwing', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      const object = Obj.make(TestSchema.Expando, { name: 'late-caller' });
+      db.add(object);
+      await db.flush();
+      const core = getObjectCore(object);
+
+      await db.close();
+
+      // Index-query hydration outlives the close and recomputes its result synchronously through
+      // `isDeleted`, where a throw would surface as an unhandled rejection nothing can catch.
+      expect(db.getObjectCoreById(object.id)).to.be.undefined;
+      expect(() => core.isDeleted()).to.not.throw();
+    });
+
+    test('loading a linked object after teardown is cancelled, not an invariant violation', async () => {
+      const object = Obj.make(TestSchema.Expando, { content: 'Hello, world!' });
+      // The object lives in its own linked document, so loading it reaches `RepoProxy.find`.
+      const db = await createClientDbInSpaceWithObject(object);
+      await db.close();
+      await expect(db._loadObjectById(object.id)).rejects.toBeInstanceOf(ContextDisposedError);
+    });
+
+    test('a link load reaching a closed repo proxy is abandoned, not an invariant violation', async () => {
+      const object = Obj.make(TestSchema.Expando, { content: 'Hello, world!' });
+      // The object lives in its own linked document, so loading it reaches `RepoProxy.find`.
+      const db = await createClientDbInSpaceWithObject(object);
+
+      // The proxy's lifetime is not the manager's: async work the manager started while open — query
+      // hydration, a graph rebuild on a timer — reaches the proxy after it has gone.
+      await db._repo.close();
+
+      expect(() => db.getObjectCoreById(object.id)).to.not.throw();
+      expect(db.getObjectCoreById(object.id)).to.be.undefined;
+    });
+
+    test('a load pending across close and reopen is cancelled, not resolved from the new lifetime', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+
+      // A document advertised in the directory but minted on an isolated peer: the load reaches the
+      // network wait and stays there, which is the in-flight state the close has to settle.
+      const orphanObjectId = EntityId.random();
+      const sourceBuilder = new EchoTestBuilder();
+      await openAndClose(sourceBuilder);
+      const sourcePeer = await sourceBuilder.createPeer();
+      const orphanHandle = await sourcePeer.host.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceKey: db.spaceKey.toHex() },
+        objects: {
+          [orphanObjectId]: { meta: { keys: [] }, data: { name: 'unreachable' }, system: { kind: 'object' } },
+        },
+      });
+      db.getSpaceRootDocHandle().change((newDoc: DatabaseDirectory) => {
+        newDoc.links ??= {};
+        newDoc.links[orphanObjectId] = new A.RawString(orphanHandle.url);
+      });
+      await db.flush();
+
+      const listenersBeforeLoad = db._updateEvent.listenerCount();
+      // Settled eagerly: the outcome is asserted after the reopen, and an unobserved rejection in
+      // between would surface as an unhandled one.
+      const outcome = db.loadObjectCoreById(orphanObjectId).then(
+        (core) => ({ kind: 'resolved' as const, core }),
+        (err: unknown) => ({ kind: 'rejected' as const, err }),
+      );
+
+      await db.close();
+      await db.open();
+
+      const result = await asyncTimeout(outcome, 5_000);
+      invariant(result.kind === 'rejected', 'a load spanning a close must not resolve from the reopened lifetime');
+      expect(result.err).to.be.instanceOf(ContextDisposedError);
+      // A cancelled load unsubscribes its update listener; one left behind would keep evaluating its
+      // predicate for the rest of the process, once per load a teardown interrupted.
+      expect(db._updateEvent.listenerCount()).to.eq(listenersBeforeLoad);
     });
 
     // TODO(dmaretskyi): Test for conflict resolution.
@@ -406,8 +579,6 @@ const createClientDbInSpaceWithObject = async (
   const peer2 = await testBuilder.createPeer({ storagePath: tmpPath });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
-
-const createTextObject = (content: string = '') => Obj.make(TestSchema.Expando, { content });
 
 interface DocumentHandles {
   spaceRootHandle: DocHandleProxy<DatabaseDirectory>;

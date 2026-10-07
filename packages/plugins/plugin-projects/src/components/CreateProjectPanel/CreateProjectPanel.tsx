@@ -2,31 +2,42 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
-
-import * as ProjectCapabilities from '../../types/ProjectCapabilities';
+import { ProjectCapabilities } from '#types';
 
 export type CreateProjectPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to ProjectCapabilities.Template. */
   templates?: ProjectCapabilities.Template[];
 };
 
+const CreateProjectValues = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  templateId: Schema.String,
+});
+
+type CreateProjectValues = Schema.Schema.Type<typeof CreateProjectValues>;
+
 /**
  * Create panel for projects: an optional name plus a SearchList picker over contributed templates.
- * Selecting a template submits `{ name, templateId }`; plugin-projects' CreateObjectEntry
- * `createObject` resolves the templateId and runs the template's `scaffold`.
+ * Picking a template selects it (Default, else the first, initially); Save submits `{ name, templateId }`,
+ * which plugin-projects' CreateObjectEntry `createObject` resolves to run the template's `scaffold`.
  */
-export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }: CreateProjectPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templatesProp }: CreateProjectPanelProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [name, setName] = useState('');
-  const capabilityTemplates = useCapabilities(ProjectCapabilities.Template);
+  const capabilityTemplates = Hooks.useCapabilities(ProjectCapabilities.Template);
+
   const templates = templatesProp ?? capabilityTemplates;
   // The global create dialog has no subject, so subject-required templates (e.g. an inbox research
   // template needing a Mailbox) are excluded; they are offered from the relevant object instead.
@@ -39,42 +50,72 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   );
   const { results, handleSearch } = useSearchListResults({ items: sorted, extract: (template) => template.label });
 
-  const handleSelect = useCallback(
-    (templateId: string) => {
-      void onCreateObject({ name: name.trim() || undefined, templateId });
-    },
-    [onCreateObject, name],
+  const [selectedId, setSelectedId] = useState<string>();
+  // Preselected so Save is ready without a pick; kept among the visible results so a filter never
+  // leaves Save acting on a row it hid.
+  const templateId = results.some(({ id }) => id === selectedId)
+    ? selectedId
+    : (results.find(({ id }) => id === ProjectCapabilities.DefaultTemplateId) ?? results[0])?.id;
+  const values = useMemo(() => ({ name, templateId }), [name, templateId]);
+
+  // Returned so the form's `saving` guard keeps Save disabled until creation settles.
+  const handleSave = useCallback(
+    async ({ name, templateId }: CreateProjectValues) =>
+      onCreateObject({ name: name?.trim() || undefined, templateId }),
+    [onCreateObject],
   );
 
   return (
-    <div role='none' className='flex flex-col gap-form-gap'>
-      <Input.Root>
-        <Input.TextInput
-          autoFocus
-          data-testid='create-project-panel.name-input'
-          placeholder={t('create-panel.name.placeholder')}
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </Input.Root>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input
-          classNames='mb-form-gap'
-          data-testid='create-project-panel.template-input'
-          placeholder={t('create-panel.template.placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((template) => (
-            <SearchList.Item
-              key={template.id}
-              value={template.id}
-              label={template.label}
-              icon={template.icon ?? 'ph--stack--regular'}
-              onSelect={() => handleSelect(template.id)}
+    <Form.Root schema={CreateProjectValues} values={values} onSave={handleSave} onCancel={onCancel}>
+      <Form.Viewport>
+        {/* `Form.Content` pads its bottom only, so the top is matched here to sit off the dialog's
+            chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
+        <CreateProjectContent>
+          <Field.Root>
+            <Input.Root
+              autoFocus
+              data-testid='create-project-panel.name-input'
+              placeholder={t('create-panel.name.placeholder')}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
             />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Root>
-    </div>
+          </Field.Root>
+          <SearchList.Root onSearch={handleSearch}>
+            <SearchList.Input
+              data-testid='create-project-panel.template-input'
+              placeholder={t('create-panel.template.placeholder')}
+            />
+            {/* Flush with the form's column: the viewport's default padding reserves a scroll strip,
+                which insets the rows from the name input above them. */}
+            <SearchList.Viewport padding={false}>
+              {results.map((template) => (
+                <SearchList.Item
+                  key={template.id}
+                  value={template.id}
+                  label={template.label}
+                  icon={template.icon ?? 'ph--stack--regular'}
+                  checked={template.id === templateId}
+                  onSelect={() => setSelectedId(template.id)}
+                />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Root>
+          <Form.Actions />
+        </CreateProjectContent>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
+
+/** Form body where a plain Enter in the name field saves (the picker spends Enter on picking). */
+const CreateProjectContent = ({ children }: PropsWithChildren) => {
+  const {
+    form: { canSave, onSave },
+  } = useFormContext(CreateProjectContent.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useSubmitOnEnter(contentRef, () => canSave && onSave());
+
+  return <Form.Content ref={contentRef}>{children}</Form.Content>;
+};
+
+CreateProjectContent.displayName = 'CreateProjectPanel.Content';

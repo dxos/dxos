@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type GridOptions, useGrid } from '../../hooks';
+import { type GridOptions, useGrid } from '../../hooks/index.ts';
 
-export type GridProps = ThemedClassName<GridOptions>;
+export type GridProps = Util.ThemedClassName<GridOptions>;
 
 /**
  * SVG grid wrapper.

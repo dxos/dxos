@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -20,8 +22,8 @@ import {
   getRelativeBounds,
   locationToString,
   useGameboardContext,
-} from '../Gameboard';
-import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
+} from '../Gameboard/index.ts';
+import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess.ts';
 
 /** Fallback atom for when model is undefined. */
 const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
@@ -31,7 +33,7 @@ const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
  */
 const CHESSBOARD_NAME = 'Chessboard';
 
-export type ChessboardProps = ThemedClassName<
+export type ChessboardProps = Util.ThemedClassName<
   PropsWithChildren<{
     orientation?: Player;
     showLabels?: boolean;
@@ -43,7 +45,7 @@ export type ChessboardProps = ThemedClassName<
 
 const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {
-    const targetRef = useForwardedRef(forwardedRef);
+    const targetRef = Hooks.useForwardedRef(forwardedRef);
     const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(CHESSBOARD_NAME);
     const pieces = useAtomValue(model?.pieces ?? EMPTY_PIECES_ATOM);
@@ -55,21 +57,8 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
       );
     }, [orientation, rows, cols]);
 
-    // Use DOM grid layout to position squares.
-    const layout = useMemo(() => {
-      return squares.map((location) => {
-        return (
-          <div
-            key={locationToString(location)}
-            {...{
-              'data-location': locationToString(location),
-            }}
-          />
-        );
-      });
-    }, [squares]);
-
-    // Build map of square locations to bounds.
+    // Square bounds, measured from the grid for the pieces (which are positioned absolutely so they can
+    // animate between squares).
     const [grid, setGrid] = useState<Record<string, DOMRectBounds>>({});
     const gridRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -104,19 +93,14 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     }, [grid, pieces, promoting]);
 
     return (
-      <div ref={targetRef} tabIndex={0} className={mx('dx-expander relative outline-hidden', classNames)}>
-        {/* DOM Layout. */}
+      <div ref={targetRef} tabIndex={0} className={mx('dx-expand overflow-hidden relative outline-hidden', classNames)}>
+        {/* Squares: the grid itself, so adjacent squares share exact edges. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
-          {layout}
-        </div>
-        {/* Squares. */}
-        <div>
           {squares.map((location) => (
             <Gameboard.Square
               key={locationToString(location)}
               location={location}
               label={showLabels ? locationToPos(location) : undefined}
-              bounds={grid[locationToString(location)]}
               classNames={getSquareColor(location)}
             />
           ))}

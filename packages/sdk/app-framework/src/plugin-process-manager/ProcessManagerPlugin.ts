@@ -2,9 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capabilities } from '../common';
-import { Capability, Plugin } from '../core';
-import { meta } from './meta';
+// @import-as-namespace
+
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { Capability, Plugin } from '../core/index.ts';
+import { meta } from './meta.ts';
+
+export { meta };
+export { layerIdb as storageLayer } from './idb-key-value-store.ts';
 
 const ProcessManagerCapability = Capability.lazyModule(
   'ProcessManager',
@@ -24,11 +29,12 @@ const ProcessManagerCapability = Capability.lazyModule(
     provides: [
       Capabilities.ProcessManagerRuntime,
       Capabilities.ServiceResolver,
-      Capabilities.ProcessMonitor,
+      Capabilities.ProcessManager,
       Capabilities.OperationInvoker,
+      Capabilities.OperationHandlers,
     ],
   },
-  () => import('./process-manager-capability'),
+  () => import('./process-manager-capability.ts'),
 );
 
 const HistoryCapabilities = Capability.lazyModule(
@@ -37,10 +43,10 @@ const HistoryCapabilities = Capability.lazyModule(
     requires: [Capabilities.UndoMapping, Capabilities.OperationInvoker],
     provides: [Capabilities.UndoRegistry, Capabilities.HistoryTracker],
   },
-  () => import('./history/capability'),
+  () => import('./history/capability.ts'),
 );
 
-export const ProcessManagerPlugin = Plugin.define(meta).pipe(
+export const make = Plugin.define(meta).pipe(
   Plugin.addModule(ProcessManagerCapability),
   Plugin.addModule(HistoryCapabilities),
   Plugin.make,

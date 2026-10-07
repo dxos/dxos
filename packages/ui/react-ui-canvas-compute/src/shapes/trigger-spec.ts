@@ -17,7 +17,7 @@ export const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?:
   const kind = props.triggerKind ?? 'email';
   switch (kind) {
     case 'timer':
-      return Trigger.specTimer('*/10 * * * * *');
+      return Trigger.specTimer('* * * * *');
     case 'webhook':
       return Trigger.specWebhook({ method: 'POST' });
     case 'subscription':

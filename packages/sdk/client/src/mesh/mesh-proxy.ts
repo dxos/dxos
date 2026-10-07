@@ -2,32 +2,33 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
 import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
-import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import { ConnectionState, type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { RPC_TIMEOUT } from '../common';
+import { RPC_TIMEOUT } from '../common.ts';
 
 /**
  * Public API for MESH services.
  */
 export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<NetworkStatus>();
-  private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
-    swarm: ConnectionState.OFFLINE,
-    signaling: [],
-  });
+  private readonly _networkStatus = MulticastObservable.from(
+    this._networkStatusUpdated,
+    buf.create(NetworkStatusSchema, { swarm: ConnectionState.OFFLINE, signaling: [] }),
+  );
 
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+    private readonly _runtime: Context.Context<never> = Context.empty(),
   ) {}
 
   toJSON(): { networkStatus: NetworkStatus } {
@@ -41,7 +42,7 @@ export class MeshProxy {
   }
 
   async updateConfig(swarm: ConnectionState): Promise<void> {
-    await runServiceCall(this._runtime, this._serviceProvider.rpc.NetworkService.updateConfig({ swarm }), {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc['NetworkService.updateConfig']({ swarm }), {
       timeout: RPC_TIMEOUT,
       label: 'NetworkService.updateConfig',
     });
@@ -70,7 +71,7 @@ export class MeshProxy {
     this._streamSubscriptions.clear();
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc.NetworkService.queryStatus(undefined), {
+      subscribeStream(this._runtime, this._serviceProvider.rpc['NetworkService.queryStatus'](undefined), {
         onData: (networkStatus) => this._networkStatusUpdated.emit(networkStatus),
       }),
     );

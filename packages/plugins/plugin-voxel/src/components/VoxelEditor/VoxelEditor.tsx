@@ -11,8 +11,9 @@ import * as THREE from 'three';
 
 import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
-import type * as Voxel from '../../types/Voxel';
-import { computeVoxelBounds, toThree } from './voxel-bounds';
+import { Voxel } from '#types';
+
+import { computeVoxelBounds, toThree } from './voxel-bounds.ts';
 
 //
 // Coordinate convention:

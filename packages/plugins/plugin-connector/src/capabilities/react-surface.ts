@@ -7,10 +7,9 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { SchemaEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Connection, Cursor } from '@dxos/link';
 
 import {
   ConnectionArticle,
@@ -20,10 +19,7 @@ import {
   SyncTargetsDialog,
 } from '#containers';
 
-import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
-import * as Connection from '../types/Connection';
-import { ConnectorAnnotationId } from '../types/ConnectorAnnotations';
-import { ConnectorSelectorField } from './ConnectorSelectorField';
+import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -59,11 +55,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: CustomTokenDialog,
         props: ({ data: { props } }) => ({ ...props }),
-      }),
-      Surface.create({
-        id: 'connectorSelector',
-        filter: AppSurface.formInputByField((ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotationId)),
-        component: ConnectorSelectorField,
       }),
     ]),
   ),

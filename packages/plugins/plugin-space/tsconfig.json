@@ -35,6 +35,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -62,10 +65,16 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
+      "path": "../../core/compute/progress"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -84,6 +93,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -143,13 +155,13 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"
@@ -165,9 +177,6 @@
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-preview"

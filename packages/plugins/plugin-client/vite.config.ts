@@ -6,15 +6,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/HaloServices': 'src/HaloServices.ts',
     'index': 'src/index.ts',
     'ClientPlugin': 'src/ClientPlugin.ts',
-    'ClientPlugin.node': 'src/ClientPlugin.node.ts',
-    'ClientPlugin.workerd': 'src/ClientPlugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
-    'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
+    'ClientOperation': 'src/types/ClientOperation.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing/index.ts',
@@ -25,6 +24,9 @@ export default defineConfig({
     'ClientAction': 'src/types/ClientAction.ts',
     'ClientCapabilities': 'src/types/ClientCapabilities.ts',
     'ClientEvents': 'src/types/ClientEvents.ts',
+    'CliLogin': 'src/types/CliLogin.ts',
+    'PasskeyError': 'src/types/PasskeyError.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

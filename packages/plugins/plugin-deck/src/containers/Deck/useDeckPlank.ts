@@ -2,20 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import type * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node } from '@dxos/plugin-graph';
-import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 
-import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';
+import { DeckOperation, DeckSchema } from '#types';
 
-import * as DeckOperation from '../../types/DeckOperation';
-import * as DeckSchema from '../../types/DeckSchema';
+import { RESOLVE_TIMEOUT_MS } from '../../url/index.ts';
+import { isCompanionOpen } from '../../util/index.ts';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
@@ -41,15 +44,19 @@ export type UseDeckPlankOptions = {
 };
 
 export type DeckPlank = {
-  node: Node.Node | undefined;
+  node: AppGraphNode.Node | undefined;
+  /** Whether the plank's target was confirmed missing. */
+  unresolved: boolean;
+  /** The not-found sentinel's node, so an unresolved plank can borrow its label and icon. */
+  notFoundNode: AppGraphNode.Node | undefined;
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
-  sigilActions: AttentionSigilAction[][] | undefined;
+  sigilActions: AttentionSigil.Action[][] | undefined;
   popoverAnchorId?: string;
-  scrollIntoView?: string;
+  scrollIntoView?: DeckSchema.ScrollIntoView;
   /** Whether this plank is the one currently expanded to fill the deck. */
   expanded: boolean;
-  onAction: (action: AttentionSigilAction) => void;
+  onAction: (action: AttentionSigil.Action) => void;
   onAdjust: (type: DeckOperation.PartAdjustment) => void;
   onResize: (size: number) => void;
   onScrollIntoView: (subject?: string) => void;
@@ -61,17 +68,29 @@ export type DeckPlank = {
  * ({@link CompanionPlank}), so this hook only handles ordinary content planks.
  */
 export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPlank => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { deck, state } = useDeckState();
-  const runAction = useActionRunner();
+  const { flatten } = useDeckSettings();
+  const runAction = GraphHooks.useActionRunner();
   const breakpoint = useBreakpoints();
-  const node = useNode(graph, id);
-  // Subscribe reactively to the node's actions: they are loaded asynchronously by `Graph.expand`
+  const node = GraphHooks.useNode(graph, id);
+  // Subscribe reactively to the node's actions: they are loaded asynchronously by `AppGraph.expand`
   // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
-  const actions = useActions(graph, node?.id);
-  const companions = useCompanions(id);
+  const actions = GraphHooks.useActions(graph, node?.id);
+  const companions = useCompanions(id) ?? [];
+  const notFoundNode = GraphHooks.useNode(graph, NotFound.NOT_FOUND_PATH);
+  const presence = ToolkitHooks.useNavigationPresence(graph, id);
+  // `absent` is proof; `unknown` is only ignorance, and a loader that could not form a question at all
+  // (a malformed space id) stays unknown forever. So the plank also gives up when resolution does:
+  // past that deadline no node is still coming, and a plank that waits for one waits for good.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    setWaited(false);
+    const timer = setTimeout(() => setWaited(true), RESOLVE_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [id]);
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -86,39 +105,50 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // Companions are per-plank: offer the toggle on any plank that has one while its own is off.
-      companion: companions.length > 0 && !deck.companionPlanks.includes(id),
+      // Offered on any plank that has a companion while the companion is off — deck-wide in flat mode,
+      // per-plank while the deck slides.
+      companion: companions.length > 0 && !isCompanionOpen(deck.companionPlanks, flatten, id),
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
+    [
+      breakpoint,
+      part,
+      canIncrementStart,
+      canIncrementEnd,
+      companions.length,
+      deck.companionPlanks,
+      flatten,
+      id,
+      active?.length,
+    ],
   );
 
   // Load the node's child actions so the sigil menu is populated.
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (node) {
-        void Graph.expand(graph, node.id, 'child');
+        void AppGraph.expandSync(graph, node.id, 'child');
       }
     });
 
     return () => cancelAnimationFrame(frame);
   }, [graph, node]);
 
-  const sigilActions = useMemo<AttentionSigilAction[][] | undefined>(() => {
+  const sigilActions = useMemo<AttentionSigil.Action[][] | undefined>(() => {
     if (!node) {
       return undefined;
     }
 
-    return [actions.filter((action) => Node.hasDisposition(action, PLANK_ACTION_DISPOSITIONS))].filter(
+    return [actions.filter((action) => AppGraphNode.hasDisposition(action, PLANK_ACTION_DISPOSITIONS))].filter(
       (group) => group.length > 0,
     );
   }, [actions, node]);
 
   const onAction = useCallback(
-    (action: AttentionSigilAction) => {
+    (action: AttentionSigil.Action) => {
       // Only actions whose `data` is a function are runnable graph actions; the menu-action view type
       // (AttentionSigilAction) is widened, so narrow at this runtime-checked boundary.
       if (typeof action.data === 'function') {
-        void runAction(action as Node.Action, { parent: node, caller: meta.profile.key });
+        void runAction(action as AppGraphNode.Action, { parent: node, caller: meta.profile.key });
       }
     },
     [node, runAction],
@@ -151,6 +181,8 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
 
   return {
     node,
+    unresolved: presence === 'absent' || (waited && presence !== 'exists'),
+    notFoundNode,
     capabilities,
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,

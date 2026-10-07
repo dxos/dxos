@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
@@ -14,27 +15,20 @@ import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
+import { downloadBlob } from '@dxos/util';
 
-import { exportFeedMessages, importMessages, resetMailbox } from '../testing';
+import { exportFeedMessages, importMessages, resetMailbox } from '../testing/index.ts';
 
 /** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
 const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);
-
-// `SystemIconButton.Download` fixes its own glyph, which would make the message save visually
-// identical to the feed export beside it; this drives a distinct button instead.
-const downloadBlob = (blob: Blob, filename: string): void => {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-};
 
 /** The message's raw email HTML, or undefined for a markdown/plaintext-only body. */
 const getMessageHtml = (message: Message.Message): string | undefined =>
@@ -69,7 +63,7 @@ const getFixtureName = (message: Message.Message): string => {
  * disconnected Connection accounts accumulate in the Connect menu across reconnects.
  */
 export const ArchiveModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -128,7 +122,10 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     setBusy(true);
     try {
       const serialized = await exportFeedMessages(feed, space.db);
-      downloadBlob(new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }), archiveFilename());
+      void downloadBlob(
+        new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }),
+        archiveFilename(),
+      );
       setStatus({ action: 'downloaded all', count: serialized.length });
     } catch (error) {
       log.warn('feed export failed', { error });
@@ -149,7 +146,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     const blob = selectedHtml
       ? new Blob([selectedHtml], { type: 'text/html' })
       : new Blob([JSON.stringify(Obj.toJSON(selected), null, 2)], { type: 'application/json' });
-    downloadBlob(blob, `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}`);
+    void downloadBlob(blob, `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}`);
     setStatus({ action: selectedHtml ? 'saved message html' : 'saved message json', count: 1 });
   }, [selected, selectedHtml]);
 
@@ -197,30 +194,32 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <SystemIconButton.Upload
+          <SystemButton.Upload
             iconOnly
             label='Import messages (appends)'
             accept='application/json,.json'
             disabled={!mailbox || busy}
             onFileChange={handleUpload}
           />
-          <SystemIconButton.Download
+          <SystemButton.Download
             iconOnly
             label={`Download starred (${starredIds.length})`}
             filename={archiveFilename()}
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
-          <IconButton
+          <Button.Root
             iconOnly
             icon='ph--tray-arrow-down--regular'
             label={`Download all (${messages.length})`}
             disabled={!feed || busy || messages.length === 0}
             onClick={() => void handleDownloadAll()}
           />
-          <IconButton
+          {/* Not `SystemIconButton.Download`: it fixes its own glyph, which would make this visually
+              identical to the feed export beside it. */}
+          <Button.Root
             iconOnly
             icon='ph--envelope-simple--regular'
             label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
@@ -228,7 +227,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             onClick={handleDownloadMessage}
           />
           <Toolbar.Separator />
-          <IconButton
+          <Button.Root
             iconOnly
             icon='ph--trash--regular'
             label='Reset'
@@ -236,10 +235,10 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => void handleReset()}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm'>
         <JsonHighlighter data={{ feed: feed?.id, ...status }} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

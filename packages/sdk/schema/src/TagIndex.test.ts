@@ -3,17 +3,17 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import * as TagIndex from './TagIndex';
+import * as TagIndex from './TagIndex.ts';
 
 /** A minimal item standing in for an immutable feed object. */
 const Item = Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0'))(

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-calls",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Calls (video / audio conferencing) plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,13 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -39,20 +47,19 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/CallsPlugin.workerd.ts",
-        "node": "./src/CallsPlugin.node.ts",
-        "default": "./src/CallsPlugin.tsx"
-      },
-      "types": "./dist/types/src/CallsPlugin.d.ts",
-      "workerd": "./dist/lib/CallsPlugin.workerd.mjs",
-      "node": "./dist/lib/CallsPlugin.node.mjs",
-      "default": "./dist/lib/CallsPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -62,15 +69,10 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./CallManager": {
+      "source": "./src/CallManager.ts",
+      "types": "./dist/types/src/CallManager.d.ts",
+      "import": "./dist/lib/ns/CallManager.mjs"
     },
     "./CallsCapabilities": {
       "source": "./src/types/CallsCapabilities.ts",
@@ -82,7 +84,17 @@
       "types": "./dist/types/src/types/CallsEvents.d.ts",
       "import": "./dist/lib/CallsEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./CallsPlugin": {
+      "source": "./src/CallsPlugin.ts",
+      "types": "./dist/types/src/CallsPlugin.d.ts",
+      "import": "./dist/lib/CallsPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -103,16 +115,19 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/av": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -126,8 +141,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@peermetrics/webrtc-stats": "catalog:",
     "md5-hex": "catalog:",
     "react-resize-detector": "catalog:"
@@ -136,7 +150,6 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@effect/platform": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -148,8 +161,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

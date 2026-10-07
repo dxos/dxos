@@ -5,17 +5,25 @@
 import type { MulticastObservable } from '@dxos/async';
 import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
-import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
-import type { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import type { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import type { SpacesService } from '@dxos/protocols/rpc';
 
-import type { AuthenticatingInvitation } from './invitations';
-import type { Space } from './space';
-import type { SpaceProperties } from './types';
+import type { AuthenticatingInvitation } from './invitations/index.ts';
+import type { Space } from './space.ts';
+import type { SpaceProperties } from './types/index.ts';
 
 /**
  * Public database API.
  */
 // TODO(wittjosiah): Rename Database (not product name).
+export type CreateSpaceOptions = {
+  tags?: string[];
+  membershipPolicy?: MembershipPolicy;
+  /** Whether creating the space was a person's action (see `Database.Origin`); `unknown` when not given. */
+  origin?: Database.Origin;
+};
+
 export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Returns the list of spaces.
@@ -38,13 +46,13 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
    */
   create(
     props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceFeed'>,
-    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+    options?: CreateSpaceOptions,
   ): Promise<Space>;
 
   /**
    * Creates a space from the given archive.
    */
-  import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
+  import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
 
   /**
    * Joins an existing space using the given invitation.

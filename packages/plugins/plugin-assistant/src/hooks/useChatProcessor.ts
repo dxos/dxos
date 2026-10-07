@@ -2,48 +2,51 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { AiSession } from '@dxos/assistant';
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { AiChatProcessor, type AiServicePreset } from '../processor';
-import type * as Assistant from '../types/Assistant';
+import { Assistant } from '#types';
+
+import { AiChatProcessor, type AiServicePreset } from '../processor/index.ts';
 
 export type UseChatProcessorProps = {
-  space?: Space;
+  db?: Database.Database;
   chat?: Chat.Chat;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
   registry?: Registry.Registry;
   settings?: Assistant.Settings;
+  /** Attributes the prompts submitted through this processor to a person (see `AiChatProcessorOptions.sender`). */
+  sender?: AgentService.PromptSender;
 };
 
 /**
  * Configure and create AiChatProcessor.
  */
 export const useChatProcessor = ({
-  space,
+  db,
   chat,
   preset,
   runtime,
   registry,
   settings,
+  sender,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
@@ -52,36 +55,41 @@ export const useChatProcessor = ({
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   const [session, setSession] = useState<AiSession.Session>();
-  useAsyncEffect(async () => {
-    if (!space || !chat || !feed) {
+  UiHooks.useAsyncEffect(async () => {
+    if (!db || !chat || !feed) {
       return;
     }
 
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(db))),
     );
     const session = new AiSession.Session({
       feed,
       runtime,
       registry: observableRegistry,
     });
+    const openedAt = performance.now();
     await session.open();
+    log('session opened', { chat: chat.id, duration: Math.round(performance.now() - openedAt) });
     setSession(session);
     return () => {
       void session.close();
       setSession(undefined);
     };
-  }, [space, chat, feed]);
+  }, [db, chat, feed]);
 
-  const serviceResolver = useCapability(Capabilities.ServiceResolver);
+  const serviceResolver = Hooks.useCapability(Capabilities.ServiceResolver);
+  // Primitives rather than the object, so an inline `sender` literal does not rebuild the processor each render.
+  const senderName = sender?.name;
+  const senderDid = sender?.identityDid;
 
   const processor = useMemo(() => {
-    if (!runtime || !session || !chat || !feed || !space) {
+    if (!runtime || !session || !chat || !feed || !db) {
       return undefined;
     }
 
     const spaceLayer = ServiceResolver.provide(
-      { space: space.id },
+      { space: db.spaceId },
       Database.Service,
       Credential.CredentialsService,
       AiService.AiService,
@@ -97,8 +105,18 @@ export const useChatProcessor = ({
       registry,
       model: preset?.model,
       provider: preset?.provider,
+      // Absent keys rather than `undefined` values: the sender crosses the process input schema.
+      sender:
+        senderName || senderDid
+          ? { ...(senderName ? { name: senderName } : {}), ...(senderDid ? { identityDid: senderDid } : {}) }
+          : undefined,
     });
-  }, [runtime, session, registry, preset, chat, feed, space?.id]);
+  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid]);
+
+  // A remount (e.g. the user navigated to another page mid-turn) gets a fresh processor whose
+  // active/streaming state starts empty, while the agent process for the feed keeps running;
+  // adopting it restores the running indicator and the streamed blocks.
+  useEffect(() => processor?.adopt(), [processor]);
 
   return processor;
 };

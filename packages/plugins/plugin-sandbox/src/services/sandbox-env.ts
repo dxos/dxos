@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database } from '@dxos/echo';
 
-import * as Sandbox from '../types/Sandbox';
+import { Sandbox } from '#types';
 
 /**
  * Resolves sandbox credential refs into env var names and token values for exec calls.

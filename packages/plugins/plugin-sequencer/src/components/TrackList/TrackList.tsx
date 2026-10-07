@@ -4,12 +4,15 @@
 
 import React from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
-import type * as Track from '../../types/Track';
-import { hueFor, hueToHex } from '../../util/hue';
+import { Track } from '#types';
+
+import { hueFor, hueToHex } from '../../util/hue.ts';
 
 export type TrackListProps = {
   tracks: ReadonlyArray<Track.Track>;
@@ -41,8 +44,8 @@ export const TrackList = ({
   classNames,
 }: TrackListProps) => {
   return (
-    <Listbox.Root>
-      <div className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}>
+    <Listbox.Root items={tracks.map((track) => ({ value: track.id, label: track.name }))}>
+      <Layout.Flex column gap='xs' classNames={['p-2 overflow-y-auto', classNames]}>
         <Listbox.Content aria-label='Tracks' classNames='gap-1'>
           {tracks.map((track) => {
             const selected = track.id === selectedTrackId;
@@ -50,11 +53,11 @@ export const TrackList = ({
               <Listbox.Item
                 key={track.id}
                 id={track.id}
-                aria-current={selected || undefined}
-                classNames='gap-2 px-2 py-1 rounded-sm text-sm dx-current'
+                current={selected}
+                classNames='gap-2 px-2 py-1 rounded-sm text-sm'
               >
                 <span
-                  className='inline-block w-3 h-3 rounded-sm shrink-0 border border-black/20'
+                  className='inline-block size-3 rounded-sm shrink-0 border border-black/20'
                   style={{ backgroundColor: hueToHex(hueFor(track)) }}
                   aria-hidden
                 />
@@ -70,21 +73,21 @@ export const TrackList = ({
                   type='button'
                   className={mx(
                     'p-1 rounded text-xs dx-focus-ring',
-                    track.muted ? 'text-amber-500' : 'text-neutral-500 hover:text-neutral-300',
+                    track.muted ? 'text-amber-text' : 'text-fg-subtle hover:text-fg',
                   )}
                   onClick={() => onMute?.(track.id, !track.muted)}
                   aria-label={track.muted ? 'Unmute' : 'Mute'}
                 >
-                  <Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size={4} />
+                  <Icon.Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
                 </button>
                 {onRemove && (
                   <button
                     type='button'
-                    className='p-1 rounded text-xs text-neutral-500 dx-focus-ring'
+                    className='p-1 rounded text-xs text-fg-subtle dx-focus-ring'
                     onClick={() => onRemove(track.id)}
                     aria-label='Remove track'
                   >
-                    <Icon icon='ph--trash--regular' size={4} />
+                    <Icon.Icon icon='ph--trash--regular' size='md' />
                   </button>
                 )}
               </Listbox.Item>
@@ -92,12 +95,12 @@ export const TrackList = ({
           })}
         </Listbox.Content>
         {onAdd && (
-          <Button onClick={onAdd} classNames='mt-1 justify-start gap-2'>
-            <Icon icon='ph--plus--regular' size={4} />
+          <Button.Root onClick={onAdd} classNames='mt-1 justify-start gap-2'>
+            <Icon.Icon icon='ph--plus--regular' size='md' />
             Add track
-          </Button>
+          </Button.Root>
         )}
-      </div>
+      </Layout.Flex>
     </Listbox.Root>
   );
 };

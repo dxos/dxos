@@ -2,23 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import type * as Schema from 'effect/Schema';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
-import { type Collection, type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
-import type * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 /** Display-ready option for the create object search list. */
 export type CreateObjectOption = {
@@ -38,12 +44,33 @@ export type CreateObjectPanelProps = {
   options: CreateObjectOption[];
   spaces: Space[];
   typename?: string;
-  target?: Database.Database | Collection.Collection;
+  target?: Database.Database | Obj.Unknown;
+  /** Whether the object is built from the form's values on submit (`draft`) or already exists (`live`). */
+  mode?: 'draft' | 'live';
   initialFormValues?: Partial<AnyProperties>;
+  /**
+   * Form schema, overriding the create entry's `inputSchema` (draft) or the object's own schema
+   * (live). Typically a projection of the type, e.g. `Type.getSchema(T).pipe(Schema.pick(...))`.
+   */
+  schema?: Schema.Codec<any, any>;
+  /**
+   * The live object being edited, once the dialog has added it to the database. Its presence is what
+   * switches the panel from building a draft on submit to writing through to a real object.
+   */
+  object?: Obj.Unknown;
+  /** The live object's type; required alongside `object`. */
+  type?: Type.AnyEntity;
   resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
+  /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
+  onCancel?: () => void;
+  /**
+   * Where the draft form's Cancel and Create go, e.g. a dialog's footer; inline under the fields when absent. A portal
+   * rather than a lifted form, since only the schema-form step of the panel has actions.
+   */
+  actionsContainer?: HTMLElement | null;
 };
 
 export const CreateObjectPanel = ({
@@ -51,13 +78,19 @@ export const CreateObjectPanel = ({
   spaces,
   typename,
   target,
+  mode = 'draft',
   initialFormValues: initialFormValuesProp,
+  schema,
+  object,
+  type,
   resolve,
   onTargetChange,
   onTypenameChange,
   onCreateObject,
+  onCancel,
+  actionsContainer,
 }: CreateObjectPanelProps) => {
-  const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
+  const initialFormValues = Hooks.useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
 
   const sortedOptions = useMemo(() => [...options].sort((a, b) => a.label.localeCompare(b.label)), [options]);
@@ -75,29 +108,52 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
-        await onCreateObject?.({ metadata });
+      // A live create always has a form to show — the object's own — so only a draft can skip
+      // straight to creating from an entry that declares no inputs.
+      if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
+        // No form to show, so the caller's defaults (a name typed into a link, say) are the data.
+        await onCreateObject?.({ metadata, data: initialFormValues });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [resolve, onCreateObject],
+    [mode, schema, resolve, initialFormValues, onCreateObject, onTypenameChange],
   );
 
-  const inputSchema = useMemo(
-    () => (metadata && typeof metadata === 'object' && metadata.inputSchema ? omitId(metadata.inputSchema) : undefined),
-    [metadata],
-  );
+  const inputSchema = useMemo(() => {
+    const base = schema ?? (metadata && typeof metadata === 'object' ? metadata.inputSchema : undefined);
+    return base ? omitId(base) : undefined;
+  }, [schema, metadata]);
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): Extends and use react-ui-form to handle variants.
 
-  if (!metadata) {
+  // The live object edits in place, so the type is settled and the submit lives in the dialog's
+  // action bar rather than in the form.
+  if (object && type) {
+    return <ObjectForm object={object} type={type} schema={schema} showTags={false} />;
+  }
+
+  // The type picker belongs to the case where no type has been chosen. Gating it on the entry
+  // instead would also catch a dialog opened *for* a type whose plugin is still activating, and
+  // flash the full list of every creatable type into a dialog already titled after one of them.
+  if (!typename) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
+  }
+
+  // A live create is driven by the type entity rather than a registered create entry, so only a
+  // draft waits on one; until it resolves there is nothing correct to draw.
+  if (mode !== 'live' && !metadata) {
+    return null;
   }
 
   if (!target) {
     return <SelectSpace spaces={spaces} onChange={onTargetChange} />;
+  }
+
+  // Live: both pickers are answered and the dialog is adding the object; it arrives next render.
+  if (!metadata) {
+    return null;
   }
 
   if (metadata.customPanel) {
@@ -107,11 +163,12 @@ export const CreateObjectPanel = ({
         target={target}
         initialFormValues={initialFormValues}
         onCreateObject={(data) => handleCreateObject(data)}
+        onCancel={onCancel}
       />
     );
   }
 
-  if (metadata.inputSchema) {
+  if (inputSchema) {
     return (
       <Form.Root
         autoFocus
@@ -123,10 +180,7 @@ export const CreateObjectPanel = ({
         testId='create-object-form'
       >
         <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Submit />
-          </Form.Content>
+          <CreateObjectFormContent onCancel={onCancel} actionsContainer={actionsContainer} />
         </Form.Viewport>
       </Form.Root>
     );
@@ -137,12 +191,57 @@ export const CreateObjectPanel = ({
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
 
+type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel' | 'actionsContainer'>;
+
+/** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
+const CreateObjectFormContent = ({ onCancel, actionsContainer }: CreateObjectFormContentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const {
+    form: { canSave, onSave },
+  } = useFormContext(CreateObjectFormContent.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const handleSubmit = useCallback(() => {
+    if (canSave) {
+      void onSave();
+    }
+  }, [canSave, onSave]);
+  useSubmitOnEnter(contentRef, handleSubmit);
+
+  const actions = (
+    <>
+      {onCancel && (
+        <Button.Root onClick={onCancel} data-testid='cancel-button'>
+          {t('object-form-cancel.label')}
+        </Button.Root>
+      )}
+      <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        {t('object-form-confirm.label')}
+      </Button.Root>
+    </>
+  );
+
+  return (
+    <Form.Content ref={contentRef}>
+      <Form.Fields />
+      {actionsContainer ? (
+        createPortal(actions, actionsContainer)
+      ) : (
+        <Layout.Flex gap='sm' justify='end' classNames='pt-form-padding'>
+          {actions}
+        </Layout.Flex>
+      )}
+    </Form.Content>
+  );
+};
+
+CreateObjectFormContent.displayName = 'CreateObjectPanel.FormContent';
+
 type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
   onChange: (id: string) => void;
 };
 
 const SelectType = ({ options, onChange }: SelectTypeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
@@ -152,7 +251,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -166,20 +266,22 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             value={option.id}
             onSelect={() => onChange(option.id)}
             classNames='flex gap-3 items-center px-2 py-2 rounded-xs'
+            // Keyed by typename, since the label is localized and, for database types, user-authored.
+            data-testid={`create-object-form.type.${option.id}`}
           >
-            <Icon
+            <Icon.Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
-              size={8}
+              size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
-            <div className='flex flex-col min-w-0 grow gap-0.5'>
+            <Layout.Flex column classNames='min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
+                <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
-            </div>
+            </Layout.Flex>
           </Picker.Item>
         ))}
       </SearchList.Viewport>
@@ -192,13 +294,13 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
 };
 
 const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = toLocalizedString(getSpaceDisplayName(a), t);
-        const labelB = toLocalizedString(getSpaceDisplayName(b), t);
+        const labelA = Theme.toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = Theme.toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
     [spaces, t],
@@ -206,11 +308,13 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
+    extract: (space) => Theme.toLocalizedString(getSpaceDisplayName(space), t),
   });
 
+  // TODO(burdon): Change to Masonry.
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -218,16 +322,14 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
         placeholder={t('space-input.placeholder')}
       />
       <SearchList.Viewport>
-        {results.map((space) => {
-          return (
-            <SearchList.Item
-              key={space.id}
-              value={space.id}
-              label={toLocalizedString(getSpaceDisplayName(space), t)}
-              onSelect={() => onChange?.(space.db)}
-            />
-          );
-        })}
+        {results.map((space) => (
+          <SearchList.Item
+            key={space.id}
+            value={space.id}
+            label={Theme.toLocalizedString(getSpaceDisplayName(space), t)}
+            onSelect={() => onChange?.(space.db)}
+          />
+        ))}
       </SearchList.Viewport>
     </SearchList.Root>
   );

@@ -14,13 +14,16 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Status from '@dxos/react-ui/Status';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import TaskList from './examples/TaskList';
+import TaskList from './examples/TaskList.tsx';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -80,49 +83,41 @@ const main = async () => {
     const [batching, setBatching] = useState(false);
 
     return (
-      <ThemeProvider tx={defaultTx} themeMode='light'>
+      <Theme.Provider tx={Theme.defaultTx} themeMode='light'>
         <div className='demo'>
-          <Tooltip.Provider>
-            <div className='buttons'>
-              <Tooltip.Trigger asChild content='Offline mode' className='flex'>
-                <Input.Root>
-                  <Input.Switch
-                    data-testid='airplane-mode'
-                    classNames='mr-2'
-                    onCheckedChange={(e) => {
-                      setOffline(!offline);
-                      return handleToggleNetwork(e);
-                    }}
-                  />
-                  <Input.Label>
-                    <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
-                  </Input.Label>
-                </Input.Root>
-              </Tooltip.Trigger>
-              <Tooltip.Trigger content='Write batching' className='flex'>
-                <Input.Root>
-                  <Input.Switch
-                    data-testid='batching'
-                    classNames='mr-2'
-                    onCheckedChange={(e) => {
-                      setBatching(!batching);
-                      return handleToggleBatching(e);
-                    }}
-                  />
-                  <Input.Label>
-                    <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
-                  </Input.Label>
-                </Input.Root>
-              </Tooltip.Trigger>
-            </div>
-          </Tooltip.Provider>
+          <div className='buttons'>
+            <Tooltip.Trigger content='Offline mode' className='flex'>
+              <Input.Switch
+                data-testid='airplane-mode'
+                classNames='mr-2'
+                onCheckedChange={({ checked: e }) => {
+                  setOffline(!offline);
+                  return handleToggleNetwork(e);
+                }}
+                label='Offline mode'
+              />
+              <Icon.Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
+            </Tooltip.Trigger>
+            <Tooltip.Trigger content='Write batching' className='flex'>
+              <Input.Switch
+                data-testid='batching'
+                classNames='mr-2'
+                onCheckedChange={({ checked: e }) => {
+                  setBatching(!batching);
+                  return handleToggleBatching(e);
+                }}
+                label='Write batching'
+              />
+              <Icon.Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
+            </Tooltip.Trigger>
+          </div>
           {clients.map((client, index) => (
             <ClientProvider key={index} client={client}>
               <TaskList id={index} spaceId={spaceId} />
             </ClientProvider>
           ))}
         </div>
-      </ThemeProvider>
+      </Theme.Provider>
     );
   };
 
@@ -131,11 +126,11 @@ const main = async () => {
 
 const fallback = () => {
   root.render(
-    <ThemeProvider tx={defaultTx}>
+    <Theme.Provider tx={Theme.defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Status indeterminate aria-label='Initializing' />
+        <Status.Progress indeterminate label='Initializing' />
       </div>
-    </ThemeProvider>,
+    </Theme.Provider>,
   );
 };
 

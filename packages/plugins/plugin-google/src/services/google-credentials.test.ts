@@ -10,13 +10,12 @@ import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { AccessToken, Connection } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
-import { GoogleCredentials } from './google-credentials';
+import { GOOGLE_INTEGRATION_SOURCE } from '../constants.ts';
+import { GoogleCredentials } from './google-credentials.ts';
 
 const TYPES = [AccessToken.AccessToken, Connection.Connection];
 
@@ -72,10 +71,13 @@ describe('GoogleCredentials', () => {
           yield* GoogleCredentials.get();
           yield* GoogleCredentials.get();
         }).pipe(
-          Effect.provide(GoogleCredentials.fromConnection(Ref.make(connection))),
-          Effect.provide(credentialsLayerFromDatabase()),
-          Effect.provide(Database.layer(db)),
-          Effect.provide(resolver.layer),
+          Effect.provide(
+            GoogleCredentials.fromConnection(Ref.make(connection)).pipe(
+              Layer.provideMerge(credentialsLayerFromDatabase()),
+              Layer.provideMerge(Database.layer(db)),
+              Layer.provideMerge(resolver.layer),
+            ),
+          ),
         ),
       );
 
@@ -117,10 +119,13 @@ const runFromAccessToken = (
 ) =>
   EffectEx.runPromise(
     GoogleCredentials.get().pipe(
-      Effect.provide(GoogleCredentials.fromAccessToken(ref)),
-      Effect.provide(credentialsLayerFromDatabase()),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(resolverLayer),
+      Effect.provide(
+        GoogleCredentials.fromAccessToken(ref).pipe(
+          Layer.provideMerge(credentialsLayerFromDatabase()),
+          Layer.provideMerge(Database.layer(db)),
+          Layer.provideMerge(resolverLayer),
+        ),
+      ),
     ),
   );
 
@@ -131,9 +136,12 @@ const runFromConnection = (
 ) =>
   EffectEx.runPromise(
     GoogleCredentials.get().pipe(
-      Effect.provide(GoogleCredentials.fromConnection(ref)),
-      Effect.provide(credentialsLayerFromDatabase()),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(resolverLayer),
+      Effect.provide(
+        GoogleCredentials.fromConnection(ref).pipe(
+          Layer.provideMerge(credentialsLayerFromDatabase()),
+          Layer.provideMerge(Database.layer(db)),
+          Layer.provideMerge(resolverLayer),
+        ),
+      ),
     ),
   );

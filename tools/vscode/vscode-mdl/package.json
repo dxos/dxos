@@ -1,0 +1,70 @@
+{
+  "name": "vscode-mdl",
+  "displayName": "DEUS MDL",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Syntax highlighting for DEUS `.mdl` specifications and their ```mdl fenced blocks.",
+  "categories": [
+    "Programming Languages"
+  ],
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "publisher": "dxos",
+  "scripts": {
+    "build": "mkdir -p dist && npx --yes @vscode/vsce@latest package --no-dependencies --out dist/vscode-mdl.vsix"
+  },
+  "contributes": {
+    "grammars": [
+      {
+        "language": "mdl",
+        "scopeName": "text.html.markdown.mdl",
+        "path": "./syntaxes/mdl.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.mdl.codeblock",
+        "path": "./syntaxes/mdl-codeblock.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown",
+          "text.html.markdown.mdl"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.mdl": "mdl-block"
+        }
+      },
+      {
+        "language": "mdl-block",
+        "scopeName": "source.mdl-block",
+        "path": "./syntaxes/mdl-block.tmLanguage.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "mdl",
+        "aliases": [
+          "DEUS MDL",
+          "mdl"
+        ],
+        "extensions": [
+          ".mdl"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "mdl-block",
+        "aliases": [
+          "DEUS MDL block"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ]
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  }
+}

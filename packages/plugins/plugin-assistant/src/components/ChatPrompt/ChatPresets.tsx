@@ -4,21 +4,22 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
 
-import * as AssistantPreset from '../../types/AssistantPreset';
+import { AssistantPreset } from '#types';
 
 export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset.ChatPresetProps) => {
   return (
-    <Select.Root value={preset} onValueChange={onPresetChange}>
-      <Select.TriggerButton classNames='text-sm' />
+    <Select.Root
+      value={preset ? [preset] : []}
+      onValueChange={({ value: [value] }) => value && onPresetChange?.(value)}
+      items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
+    >
+      <Select.Trigger classNames='text-sm' />
       <Select.Content>
         {presets?.map(({ id, label }) => (
-          <Select.Option key={id} value={id} classNames='text-sm'>
-            {label}
-          </Select.Option>
+          <Select.Item key={id} classNames='text-sm' item={{ value: id, label: label }} />
         ))}
-        <Select.Arrow />
       </Select.Content>
     </Select.Root>
   );

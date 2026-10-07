@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as FileCapabilities from '../types/FileCapabilities';
+import { FileCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -23,7 +23,7 @@ export default Capability.makeModule(
     }
 
     return Capability.contribute(FileCapabilities.Backend, {
-      name: 'Edge',
+      name: 'Blob Service',
       description: 'Store files on the DXOS edge network. Scales beyond the inline size cap.',
       storage: Blob.Storage.edge,
     });

@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import * as Sequence from '../../types/Sequence';
-import { Sound } from './Sound';
+import { Sequence } from '#types';
+
+import { Sound } from './Sound.tsx';
 
 const SampleStory = () => {
   const [sequence, setSequence] = useState(Sequence.makeSampleSequence('rain'));

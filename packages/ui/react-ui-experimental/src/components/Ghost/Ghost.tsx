@@ -6,7 +6,7 @@ import React, { type CSSProperties, forwardRef, useImperativeHandle, useState } 
 
 import { mx } from '@dxos/ui-theme';
 
-import { type GhostController, type GhostProps, useGhost, useGhostController } from './ghost-renderer';
+import { type GhostController, type GhostProps, useGhost, useGhostController } from './ghost-renderer.tsx';
 
 export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
   ({ classNames, frame, ...props }, forwardedRef) => {
@@ -41,6 +41,6 @@ export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
         }
       : undefined;
 
-    return <canvas ref={setCanvas} className={mx('h-full w-full', classNames)} style={frameStyle} />;
+    return <canvas ref={setCanvas} className={mx('dx-fill', classNames)} style={frameStyle} />;
   },
 );

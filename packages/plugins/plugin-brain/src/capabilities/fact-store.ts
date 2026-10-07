@@ -11,7 +11,7 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { invariant } from '@dxos/invariant';
 import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
 
-import * as BrainCapabilities from '../types/BrainCapabilities';
+import { BrainCapabilities } from '#types';
 
 /**
  * Per-space in-memory registry: the shared {@link FactStore}, used as both the operation-injected

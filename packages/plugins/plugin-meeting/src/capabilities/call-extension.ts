@@ -9,7 +9,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import { log } from '@dxos/log';
+import type * as CallManager from '@dxos/plugin-calls/CallManager';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
@@ -17,9 +18,7 @@ import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Channel } from '@dxos/types';
 
-import * as Meeting from '../types/Meeting';
-import * as MeetingCapabilities from '../types/MeetingCapabilities';
-import * as MeetingOperation from '../types/MeetingOperation';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -49,7 +48,7 @@ export default Capability.makeModule(
         await transcriptionManager?.close();
         store.updateState(() => ({}));
       },
-      onCallStateUpdated: async (callState: CallState) => {
+      onCallStateUpdated: async (callState: CallManager.CallState) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
@@ -60,9 +59,11 @@ export default Capability.makeModule(
         const payload: MeetingPayload = activity.payload;
         await invokePromise(MeetingOperation.HandlePayload, payload);
       },
-      onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+      onMediaStateUpdated: async ([mediaState, isSpeaking]: [CallManager.MediaState, boolean]) => {
         const { transcriptionManager } = store.state;
-        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
+        // transcription endpoint configured — has to be logged rather than left unhandled.
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack).catch((err) => log.catch(err));
         void transcriptionManager?.setRecording(isSpeaking);
       },
     });

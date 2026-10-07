@@ -5,27 +5,24 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
+import * as Exit from 'effect/Exit';
+import * as Result from 'effect/Result';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { FeedStore } from './feed-store';
-import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher';
+import { FeedStore } from './feed-store.ts';
+import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher.ts';
 
 const Block = FeedProtocol.Block;
 type Block = FeedProtocol.Block;
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+});
 
 // ActorIds.
 const ALICE = 'alice';
@@ -185,6 +182,72 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('append notifies on committed blocks even when the cursor token write fails', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      // The cursor token is written after the blocks commit, so its failure must not silence them.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DROP TABLE cursor_tokens`;
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      const exit = yield* Effect.exit(
+        feed.append({
+          spaceId,
+          feedNamespace: WellKnownNamespaces.data,
+          blocks: [
+            {
+              feedId,
+              actorId: ALICE,
+              sequence: 0,
+              prevActorId: null,
+              prevSequence: null,
+              position: null,
+              timestamp: 0,
+              data: new Uint8Array([1]),
+            },
+          ],
+        }),
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(notified).toEqual([spaceId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('assigning a position announces a block change, not only a sync state change', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const [block] = yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+      ]);
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      yield* feed.setPosition({
+        spaceId,
+        blocks: [
+          {
+            feedId,
+            actorId: block.actorId,
+            sequence: block.sequence,
+            position: 0,
+            feedNamespace: WellKnownNamespaces.data,
+          },
+        ],
+      });
+
+      // A feed subscription serves the position, so a push that assigns one has to wake it.
+      expect(notified).toEqual([spaceId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should assign monotonic insertionId', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });
@@ -306,20 +369,9 @@ describe('Feed V2', () => {
         .pipe(Effect.exit);
 
       expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const cause: any = result.cause;
-
-        // Handling Effect Cause structure which might be diff in this version
-        // Ideally we use Cause.isDie(cause) -> error
-        // But for quick check:
-        let error = cause.value || cause.defect || cause;
-        if (cause._tag === 'Die') {
-          error = cause.value || cause.defect;
-        }
-
-        expect(error).toBeDefined();
-        expect(error.message).toBe('Cursor token mismatch');
-      }
+      const defect = Exit.findDefect(result);
+      expect(Result.isSuccess(defect)).toBe(true);
+      expect(Result.isSuccess(defect) && (defect.success as Error).message).toBe('Cursor token mismatch');
 
       // Test Query with VALID cursor
       // Use the cursor from the first block of feed-1 to get the second block
@@ -773,6 +825,164 @@ describe('Feed V2', () => {
   );
 });
 
+describe('FeedStore server token', () => {
+  it.effect('reports its own token from a position authority', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const token = yield* feed.getServerToken(spaceId);
+      const response = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(response.serverToken).toBe(token);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // A replica's own token says nothing about the ordering it caches, and reporting it would make a
+  // client treat its peer as the position authority.
+  it.effect('reports no token from a store that does not assign positions', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+
+      const response = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(response.serverToken).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('serves a space token from memory after its first read', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      const token = yield* feed.getServerToken(spaceId);
+
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM cursor_tokens WHERE spaceId = ${spaceId}`;
+      expect(yield* feed.getServerToken(spaceId)).toBe(token);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('honours position for a client that sends a matching token or none', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* seed(feed, spaceId, feedId, 5);
+      const token = yield* feed.getServerToken(spaceId);
+
+      const legacyClient = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      expect(legacyClient.blocks.map((block) => block.position)).toEqual([3, 4]);
+
+      const currentClient = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        position: 2,
+        expectedServerToken: token,
+      });
+      expect(currentClient.blocks.map((block) => block.position)).toEqual([3, 4]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('ignores position when the client expected a different server', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* seed(feed, spaceId, feedId, 5);
+
+      const response = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        position: 2,
+        expectedServerToken: 'token-of-a-server-that-is-gone',
+      });
+      expect(response.blocks.map((block) => block.position)).toEqual([0, 1, 2, 3, 4]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('resetSyncState strips positions and restarts progress under the new token', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* seed(feed, spaceId, feedId, 3);
+      yield* feed.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 2,
+        serverToken: 'old',
+        blocksToPull: 5,
+      });
+
+      const changed: string[] = [];
+      const blocksChanged: string[] = [];
+      feed.onSyncStateChanged.on((event) => void changed.push(event.spaceId));
+      feed.onNewBlocks.on((event) => void blocksChanged.push(event.spaceId));
+
+      yield* feed.resetSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, serverToken: 'new' });
+
+      expect(changed).toEqual([spaceId]);
+      // Stripping positions changes what a feed subscription serves, not just the sync state.
+      expect(blocksChanged).toEqual([spaceId]);
+      expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: -1,
+        serverToken: 'new',
+        // The estimate belonged to the server whose positions were just discarded.
+        blocksToPull: 0,
+      });
+      const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the backlog estimate survives a restart', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 1,
+        blocksToPull: 7,
+      });
+
+      // A second store over the same database stands in for a restart: the estimate is a row, not
+      // process state, so a cold start no longer reports a drained namespace.
+      const restarted = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const syncState = yield* restarted.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data });
+
+      expect(syncState.blocksToPull).toBe(7);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  const replicatedBlock = (feedId: string, actorId: string, sequence: number, position: number): Block => ({
+    feedId,
+    actorId,
+    sequence,
+    prevActorId: null,
+    prevSequence: null,
+    position,
+    timestamp: 0,
+    data: new Uint8Array([sequence]),
+  });
+
+  const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
+    feed.appendLocal(
+      Array.from({ length: count }, (_unused, index) => ({
+        spaceId,
+        feedId,
+        feedNamespace: WellKnownNamespaces.data,
+        data: new Uint8Array([index]),
+      })),
+    );
+});
+
 describe('FeedStore encryption', () => {
   const PLAINTEXT = new Uint8Array([9, 8, 7, 6, 5]);
   const makeCypher = () => createInMemoryKeyProvider().then((keyProvider) => createWebCryptoCypher({ keyProvider }));
@@ -885,6 +1095,111 @@ describe('FeedStore encryption', () => {
         WHERE feeds.feedId = ${plaintextFeed}
       `;
       expect(plain[0].encryptionKeyId).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('FeedStore caught-up cursors', () => {
+  /** Hides the blocks table, so any read of it fails the test rather than going unnoticed. */
+  const withoutBlocks = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.acquireUseRelease(
+      Effect.flatMap(SqlClient.SqlClient, (sql) => sql`ALTER TABLE blocks RENAME TO blocks_hidden`),
+      () => effect,
+      () => Effect.orDie(Effect.flatMap(SqlClient.SqlClient, (sql) => sql`ALTER TABLE blocks_hidden RENAME TO blocks`)),
+    );
+
+  const message = (spaceId: SpaceId, feedId: string, feedNamespace: string) => ({
+    spaceId,
+    feedId,
+    feedNamespace,
+    data: new Uint8Array([1]),
+  });
+
+  it.effect('answers a caught-up cursor without reading blocks, and sees the next append', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+
+      const read = (cursor?: FeedProtocol.FeedCursor) =>
+        feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.data, cursor });
+      const first = yield* read();
+      expect(first.blocks).toHaveLength(1);
+
+      const idle = yield* withoutBlocks(read(first.nextCursor));
+      expect(idle.blocks).toEqual([]);
+      expect(idle.nextCursor).toBe(first.nextCursor);
+      expect(idle.hasMore).toBe(false);
+
+      // Another namespace moving its head leaves this cursor caught up.
+      yield* feed.appendLocal([message(spaceId, EntityId.random(), WellKnownNamespaces.trace)]);
+      expect((yield* withoutBlocks(read(first.nextCursor))).blocks).toEqual([]);
+
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+      const next = yield* read(first.nextCursor);
+      expect(next.blocks).toHaveLength(1);
+      expect(next.nextCursor).not.toBe(first.nextCursor);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // A feed row keeps the namespace it was created with, so a block appended under another one lands there.
+  it.effect('moves the head of the namespace the feed belongs to, not the one the append named', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+      const { nextCursor } = yield* feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.data });
+
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.trace)]);
+      const result = yield* feed.query({
+        requestId: 'r',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        cursor: nextCursor,
+      });
+      expect(result.blocks).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('answers an empty namespace without reading blocks', () =>
+    Effect.gen(function* () {
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const spaceId = SpaceId.random();
+      // The first read of a namespace learns its head from the table; after that it is held in memory.
+      yield* feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.trace });
+
+      const result = yield* withoutBlocks(
+        feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.trace }),
+      );
+      expect(result.blocks).toEqual([]);
+      expect(result.hasMore).toBe(false);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('learns the head of blocks written before it opened', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const writer = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* writer.migrate();
+      yield* writer.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+      const { nextCursor } = yield* writer.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.data });
+      yield* writer.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+
+      // A store reopened over the same database holds no head yet, so it must not mistake the cursor for caught up.
+      const reopened = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const result = yield* reopened.query({
+        requestId: 'r',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        cursor: nextCursor,
+      });
+      expect(result.blocks).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

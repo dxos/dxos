@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -13,7 +13,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { buildViewIndex, checkPendingMigration } from './shared';
+import { buildViewIndex, checkPendingMigration } from './shared.ts';
 
 const TestContact = Type.makeObject(DXN.make('com.example.type.contact', '0.1.0'))(
   Schema.Struct({
@@ -31,13 +31,13 @@ const TestViewWrapper = Type.makeObject(DXN.make('com.example.type.viewWrapper',
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;
   let db: EchoDatabase;
-  let registry: Registry.Registry;
+  let registry: AtomRegistry.AtomRegistry;
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
     const result = await testBuilder.createDatabase({ types: [TestContact, TestViewWrapper, View.View] });
     db = result.db;
-    registry = Registry.make();
+    registry = AtomRegistry.make();
   });
 
   afterEach(async () => {

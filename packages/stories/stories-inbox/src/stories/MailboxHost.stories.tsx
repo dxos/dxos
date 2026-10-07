@@ -6,21 +6,31 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useClient } from '@dxos/react-client';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
+import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 const HOST_STORY_TYPES = [
@@ -50,16 +60,19 @@ const HOST_STORY_CLIENT_SERVICES = persistentClientServices(
     version: 1,
     runtime: {
       client: {
-        edgeFeatures: { signaling: true, echoReplicator: true, feedReplicator: true, agents: true },
+        edgeFeatures: { signaling: true, subductionReplicator: true, feedReplicator: true, agents: true },
       },
       services: {
-        edge: { url: 'https://edge.dxos.workers.dev' },
+        edge: { url: 'https://dev.dxos.network' },
       },
     },
   }),
 );
 
-const HostStory = () => {
+/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+const HostRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.mailboxHost');
+
+const HostModule = () => {
   const client = useClient();
   const [invitation, setInvitation] = useState<{ code: string; secret?: string; state: string }>();
   const [recoveryCode, setRecoveryCode] = useState<string>();
@@ -90,14 +103,14 @@ const HostStory = () => {
   const onShare = useCallback(() => {
     // Persistent + shared-secret device invitation: resumable while the code is copied. Note: only
     // usable browser-to-browser / from Composer — the bun CLI cannot complete a p2p device join.
-    const observable = client.halo.share({ authMethod: Invitation.AuthMethod.SHARED_SECRET, persistent: true });
+    const observable = client.halo.share({ authMethod: Invitation_AuthMethod.SHARED_SECRET, persistent: true });
     observable.subscribe(
       (inv) => {
-        if (inv.state >= Invitation.State.CONNECTING) {
+        if (inv.state >= Invitation_State.CONNECTING) {
           setInvitation({
             code: InvitationEncoder.encode(inv),
             secret: inv.authCode,
-            state: Invitation.State[inv.state] ?? String(inv.state),
+            state: Invitation_State[inv.state] ?? String(inv.state),
           });
         }
       },
@@ -109,7 +122,7 @@ const HostStory = () => {
     <div className='flex flex-col gap-4 p-4 max-w-[48rem]' data-testid='mailbox-host'>
       <div className='flex flex-col gap-1'>
         <h1 className='text-lg font-medium'>Live mailbox host</h1>
-        <p className='text-sm text-description'>
+        <p className='text-sm text-fg-muted'>
           A persistent, EDGE-dev space seeded with a mailbox. Connect the CLI to this identity, then read the mailbox
           over EDGE replication:
         </p>
@@ -119,15 +132,15 @@ const HostStory = () => {
       </div>
 
       <dl className='grid grid-cols-[8rem_1fr] gap-1 text-sm'>
-        <dt className='text-description'>Identity</dt>
+        <dt className='text-fg-muted'>Identity</dt>
         <dd className='font-mono break-all' data-testid='identity-did'>
           {identity?.did ?? '<none>'}
         </dd>
-        <dt className='text-description'>Space</dt>
+        <dt className='text-fg-muted'>Space</dt>
         <dd className='font-mono break-all' data-testid='space-id'>
           {space?.id ?? '<none>'}
         </dd>
-        <dt className='text-description'>Seeded senders</dt>
+        <dt className='text-fg-muted'>Seeded senders</dt>
         <dd>{SEED_SENDERS.map((sender) => sender.email).join(', ')}</dd>
       </dl>
 
@@ -143,7 +156,7 @@ const HostStory = () => {
           </button>
         </div>
         {status && (
-          <div className='text-xs text-description' data-testid='recovery-status'>
+          <div className='text-xs text-fg-muted' data-testid='recovery-status'>
             {status}
           </div>
         )}
@@ -167,7 +180,7 @@ const HostStory = () => {
         </div>
         {invitation && (
           <>
-            <div className='text-sm text-description'>State: {invitation.state}</div>
+            <div className='text-sm text-fg-muted'>State: {invitation.state}</div>
             {invitation.code && (
               <textarea
                 className='font-mono text-xs rounded border border-separator p-2'
@@ -192,16 +205,40 @@ const HostStory = () => {
   );
 };
 
+/** Registers the story-local module surface for the `ModuleContainer` layout. */
+const StoryHostPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('story.inbox.mailboxHostModule'), name: 'Mailbox Host Story Module' }),
+).pipe(
+  Plugin.addModule({
+    id: 'mailbox-host-module',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({
+            id: 'inbox.mailboxHost',
+            filter: Surface.makeFilter(HostRole),
+            component: HostModule,
+          }),
+          ...moduleSurfaces,
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => <ModuleContainer layout={[[HostRole], [ModuleRole.Logging]]} />;
+
 const meta = {
   title: 'stories/stories-inbox/MailboxHost',
-  render: HostStory,
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: HOST_STORY_TYPES,
           ...HOST_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>
@@ -230,16 +267,17 @@ const meta = {
         }),
         SpacePlugin({}),
         InboxPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
+        StoryHostPlugin(),
       ],
     })),
   ],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations],
+    translations: [...inboxTranslations, ...debugTranslations],
   },
-} satisfies Meta<typeof HostStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

@@ -8,14 +8,14 @@ import * as Scope from 'effect/Scope';
 
 import { Resource } from '@dxos/context';
 import { EchoClient } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, makeInProcessClient } from '@dxos/protocols';
 import { DataService, QueryService } from '@dxos/protocols/rpc';
 
-import { ServiceContainer } from './internal';
-import { SpaceProxy } from './space-proxy';
+import { ServiceContainer } from './internal/index.ts';
+import { SpaceProxy } from './space-proxy.ts';
 
 type Services = {
   dataService: EdgeFunctionEnv.DataService;
@@ -31,7 +31,7 @@ export class FunctionsClient extends Resource {
   private readonly _serviceContainer;
   private readonly _echoClient;
   private readonly _executionContext: EdgeFunctionEnv.TraceContext = {};
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
 
   private readonly _spaces = new Map<SpaceId, SpaceProxy>();
 

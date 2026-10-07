@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 
-import * as FileCapabilities from '../types/FileCapabilities';
+import { FileCapabilities } from '#types';
 
 /**
  * Inline backend descriptor: file bytes are stored on the ECHO object itself.
  * Exported standalone for direct testing.
  */
 export const inlineBackend: FileCapabilities.Backend = {
-  name: 'Inline (ECHO)',
+  name: 'ECHO',
   description: 'Store the file bytes directly inside the ECHO document. Capped at 4MB; images, videos, and PDFs only.',
   storage: Blob.Storage.inline,
 };

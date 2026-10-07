@@ -25,7 +25,16 @@
       "path": "../debug"
     },
     {
+      "path": "../effect"
+    },
+    {
+      "path": "../errors"
+    },
+    {
       "path": "../invariant"
+    },
+    {
+      "path": "../log"
     },
     {
       "path": "../util"

@@ -15,9 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -179,15 +180,6 @@ op ifElseSelect
 Effectful operations — mutate persistent state or call external services.
 
 ```mdl
-op createComputeGraph
-  desc: Creates a new CanvasBoard with an empty ComputeGraph and adds it to the target space.
-  input:
-    target?: Space | Collection
-  output: string                     # DXN of created CanvasBoard
-  effects: [echo:write]
-```
-
-```mdl
 op appendToQueue
   desc: Appends items to an ECHO queue or collection identified by DXN.
   input:
@@ -323,7 +315,7 @@ feat F-7: Persistence and Collaboration
 ## Acceptance
 
 ```mdl
-test T-1: Create empty graph
+scenario T-1: Create empty graph
   given: user opens the Create Object menu
   when: user selects "Compute Graph"
   then:
@@ -332,7 +324,7 @@ test T-1: Create empty graph
 ```
 
 ```mdl
-test T-2: Add constant node and read value
+scenario T-2: Add constant node and read value
   given: an empty canvas
   when: user adds a constant node, sets value "hello", connects it to a text node
   then:
@@ -341,7 +333,7 @@ test T-2: Add constant node and read value
 ```
 
 ```mdl
-test T-3: Boolean AND gate
+scenario T-3: Boolean AND gate
   given: two switch nodes with values true and false connected to an AND node
   when: graph executes
   then:
@@ -350,7 +342,7 @@ test T-3: Boolean AND gate
 ```
 
 ```mdl
-test T-4: JSONPath transform
+scenario T-4: JSONPath transform
   given: a constant node with value { "a": { "b": 42 } } connected to a json-transform node
   when: expression "$.a.b" is set on the transform node
   then:
@@ -358,7 +350,7 @@ test T-4: JSONPath transform
 ```
 
 ```mdl
-test T-5: GPT node invocation
+scenario T-5: GPT node invocation
   given: a thread node connected to a GPT node with a system prompt
   when: graph executes with AiService available
   then:
@@ -368,7 +360,7 @@ test T-5: GPT node invocation
 ```
 
 ```mdl
-test T-6: Append to queue
+scenario T-6: Append to queue
   given: a make-queue node connected to an append node; constant node provides input items
   when: graph executes
   then:
@@ -377,7 +369,7 @@ test T-6: Append to queue
 ```
 
 ```mdl
-test T-7: Collaborative edit
+scenario T-7: Collaborative edit
   given: two peers have the same CanvasBoard open
   when: peer A moves a node on the canvas
   then:
@@ -386,12 +378,73 @@ test T-7: Collaborative edit
 ```
 
 ```mdl
-test T-8: NotExecuted propagation
+scenario T-8: NotExecuted propagation
   given: an if node whose condition is false, connected to a text node on the true port
   when: graph executes
   then:
     - text node receives a NotExecuted marker
     - text node renders nothing (no error thrown)
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Build and run a small compute graph
+  desc: |
+    The core canvas round-trip — create a graph, wire a constant into a JSON transform, and read
+    the reactive result. None of the node kernels (`evalConstant`, `jsonTransform`, ...) are
+    registered operations: they run inside the graph's own reactive controller when the canvas
+    triggers evaluation, not through the operation invoker, so this test is entirely human — the
+    same gap plugin-chess documents for move-less game creation.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.2, F-3.1, F-3.2, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no CanvasBoard named "QA Graph" exists — ABORT rather than deleting one this test did not
+      create
+  steps:
+    - name: Create the graph
+      do: In the navtree, click + on a collection and choose Compute Graph. Name it "QA Graph".
+      expect: an empty CanvasBoard/ComputeGraph opens on the canvas
+      note: |
+        NO `invoke` — "Create object" for CanvasBoard constructs the object locally and only
+        calls `space.addObject` (see `create-object.ts`); there is no dedicated
+        `createComputeGraph` operation despite F-1.1's phrasing, so this step is human-only.
+    - name: Add a constant node
+      do: Drag "Constant" from the node palette onto the canvas. Set its value to 42 and
+        valueType to "number".
+      expect: a constant node appears on the canvas showing 42
+    - name: Add a JSON transform node
+      do: Drag "JSON Transform" onto the canvas. Set its expression to "$".
+      expect: a JSON transform node appears on the canvas
+    - name: Wire them together
+      do: Drag from the constant node's output port to the JSON transform node's input port.
+      expect: a ComputeEdge connects the two nodes
+    - name: Read the result
+      do: Click the JSON transform node to inspect its output, or connect a text/output node to it.
+      expect: the transform node's output shows 42 (its own re-evaluation, triggered by the
+        upstream constant, per F-3.1's topological order)
+  after:
+    - name: Delete the graph
+      do: Right-click "QA Graph" in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.canvasBoard'))).run()).objects
+            .find((o) => o.name === 'QA Graph')
+            ?? (() => { throw new Error("CanvasBoard QA Graph not found — refusing to remove an unrelated object"); })()],
+          target: $given.collection
+        }
+      expect: the row leaves the navtree and its plank closes
+      note: |
+        No captured id exists — the create step has no `invoke` (see above) — so this resolves
+        "QA Graph" by typename AND name — a name match alone would delete any object carrying it, and throws rather than removing anything when the name does not
+        match, since `given` guarantees no pre-existing board carries it.
 ```
 
 ---
@@ -420,8 +473,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

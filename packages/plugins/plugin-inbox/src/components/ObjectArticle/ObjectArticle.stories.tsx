@@ -5,19 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Header } from '../Header';
-import { ObjectArticle } from './ObjectArticle';
+import { Header } from '../Header/index.ts';
+import { ObjectArticle } from './ObjectArticle.tsx';
 
 // Stub toolbar / header / body slots to show the shared article scaffold (Panel → toolbar · header · body).
 const DefaultStory = () => (
   <ObjectArticle
     role='article'
-    toolbar={<div className='flex items-center px-2 text-sm text-description'>Toolbar</div>}
+    toolbar={<div className='flex items-center px-2 text-sm text-fg-muted'>Toolbar</div>}
     header={
       <Header.Root>
         <Card.Row>
@@ -26,7 +26,7 @@ const DefaultStory = () => (
       </Header.Root>
     }
   >
-    <div className='p-3 text-description'>Article body content.</div>
+    <div className='p-3 text-fg-muted'>Article body content.</div>
   </ObjectArticle>
 );
 

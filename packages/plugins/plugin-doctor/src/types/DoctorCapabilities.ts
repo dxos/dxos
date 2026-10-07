@@ -6,9 +6,8 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
+import { type DiagnosticProvider as DiagnosticProviderType } from '#diagnostics';
 import { meta } from '#meta';
-
-import { type DiagnosticProvider as DiagnosticProviderType } from '../diagnostics';
 
 /**
  * Plugins contribute diagnostic providers via this capability.

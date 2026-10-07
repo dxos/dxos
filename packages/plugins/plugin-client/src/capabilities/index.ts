@@ -8,21 +8,32 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
-import * as ClientEvents from '../types/ClientEvents';
-import * as ClientOptions from '../types/ClientOptions';
+import { translations } from '#translations';
+import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
 export const AccountCache = Capability.lazyModule(
   'AccountCache',
   { provides: [ClientCapabilities.AccountCache] },
-  () => import('./account-cache'),
+  () => import('./account-cache.ts'),
 );
 // Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
 // and a pre-init throw is not re-evaluated when initialization lands).
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   activatesOn: ClientEvents.Initialized,
 });
-export const Commands = AppCapability.commands(() => import('./commands'));
+// `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
+// browser command set omits (`account`, `profile`).
+export const Commands = AppCapability.commands(() => import('#commands'));
+export const ClientServices = Capability.lazyModule(
+  'ClientServices',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ClientCapabilities.Config, ClientCapabilities.EdgeHttpClient, ClientCapabilities.Hypergraph],
+    // `client.config` and `client.edge` are initialized-only.
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./client-services.ts'),
+);
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -31,7 +42,7 @@ export const HubHttpClient = Capability.lazyModule(
     // Reads `client.config` (initialized-only) for the hub URL.
     activatesOn: ClientEvents.Initialized,
   },
-  () => import('./hub-http-client'),
+  () => import('./hub-http-client.ts'),
 );
 export const Client = Capability.lazyModule(
   'Client',
@@ -41,14 +52,34 @@ export const Client = Capability.lazyModule(
     activatesOn: ActivationEvents.Startup,
     provides: [
       ClientCapabilities.Client,
+      ClientCapabilities.InitializeTimeout,
       Capabilities.Layer,
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
+    environments: ['browser', 'node', 'tauri'],
   },
-  () => import('./client'),
+  () => import('./client.ts'),
 );
-export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), { name: 'LayerSpecs' });
+export const IdentityLifecycle = Capability.lazyModule(
+  'IdentityLifecycle',
+  {
+    requires: [
+      ClientCapabilities.Client,
+      ClientCapabilities.AccountCache,
+      Capabilities.AtomRegistry,
+      Capabilities.OperationInvoker,
+      Capabilities.PluginManager,
+    ],
+    provides: [],
+    // Subscribes to `client.halo` (initialized-only).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./identity-lifecycle.ts'),
+);
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
+  name: 'LayerSpecs',
+});
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {
@@ -58,43 +89,56 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
+    environments: ['browser', 'node', 'tauri'],
   },
-  () => import('./migrations'),
+  () => import('./migrations.ts'),
 );
-export { NavigationHandler } from './navigation-handler';
-export type { NavigationHandlerOptions } from './navigation-handler';
+export { NavigationHandler } from './navigation-handler/index.ts';
+export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
 export const NavigationTargetLoader = Capability.lazyModule(
   'NavigationTargetLoader',
   { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
-  () => import('./navigation-target-loader'),
+  () => import('./navigation-target-loader.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.contactPicker',
+    'org.dxos.role.dialog',
+    'org.dxos.role.spaceInvitation',
+  ],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',
     invitationProp = 'deviceInvitationCode',
-    onReset,
+    identityTestActions,
   }: ClientOptions.ClientPluginOptions) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
       baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
-    return { createInvitationUrl, onReset };
+    return { createInvitationUrl, identityTestActions };
   },
 });
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
-  () => import('./schema-defs'),
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
+    provides: [ClientCapabilities.SchemaRegistered],
+    environments: ['browser', 'node', 'tauri'],
+  },
+  () => import('./schema-defs.ts'),
 );
 export const RemoteTraceMonitor = Capability.lazyModule(
   'RemoteTraceMonitor',
-  { provides: [Capabilities.RemoteTraceMonitor] },
-  () => import('./remote-trace-monitor'),
+  // Startup: the process-manager runtime snapshots this capability once, in the Startup pass, and
+  // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
+  // that race, silencing remote traces for every Process.Manager consumer.
+  { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
+  () => import('./remote-trace-monitor.ts'),
 );
 export const SpaceReplicationProgress = Capability.lazyModule(
   'SpaceReplicationProgress',
@@ -104,20 +148,20 @@ export const SpaceReplicationProgress = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./space-replication-progress'),
+  () => import('./space-replication-progress.ts'),
 );
 export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
-    // ProgressRegistry is resolved lazily per trace message, so a host without it degrades to a
-    // no-op sink rather than failing to activate.
-    requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
+    // ProgressRegistry is resolved lazily per message (a host without it degrades to a no-op sink).
+    requires: [Capabilities.ProcessManager, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./trace-progress'),
+  () => import('./trace-progress.ts'),
 );
+export const Translations = AppCapability.translations(translations);

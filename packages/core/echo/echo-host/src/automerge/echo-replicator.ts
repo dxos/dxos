@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Heads } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 
 import { type Context } from '@dxos/context';
@@ -15,7 +13,7 @@ import { type AutomergeProtocolMessage, type SubductionProtocolMessage } from '@
  *
  * @remarks
  * - {@link AutomergeProtocolMessage}: the classical automerge-repo sync frames
- *   (carried by `EchoEdgeReplicator`, mesh, in-memory `TestAdapter`).
+ *   (carried by mesh replication and the in-memory `TestAdapter`).
  * - {@link SubductionProtocolMessage}: the in-process subduction shape
  *   (carried by `EchoEdgeSubductionReplicator` — envelopes are unwrapped to
  *   raw `SubductionConnectionMessage` before they reach the stream).
@@ -42,10 +40,10 @@ export interface AutomergeReplicator {
 /**
  * Effect service tag for {@link AutomergeReplicator}.
  */
-export class AutomergeReplicatorService extends EffectContext.Tag('@dxos/echo-host/AutomergeReplicator')<
+export class AutomergeReplicatorService extends EffectContext.Service<
   AutomergeReplicatorService,
   AutomergeReplicator
->() {}
+>()('@dxos/echo-host/AutomergeReplicator') {}
 
 /**
  * Replicator with explicit per-space wiring (used by edge replicators that maintain one logical
@@ -59,10 +57,10 @@ export interface EdgeAutomergeReplicator extends AutomergeReplicator {
 /**
  * Effect service tag for {@link EdgeAutomergeReplicator}.
  */
-export class EdgeAutomergeReplicatorService extends EffectContext.Tag('@dxos/echo-host/EdgeAutomergeReplicator')<
+export class EdgeAutomergeReplicatorService extends EffectContext.Service<
   EdgeAutomergeReplicatorService,
   EdgeAutomergeReplicator
->() {}
+>()('@dxos/echo-host/EdgeAutomergeReplicator') {}
 
 export interface AutomergeReplicatorContext {
   /**
@@ -84,6 +82,14 @@ export interface AutomergeReplicatorContext {
   onConnectionOpen(connection: AutomergeReplicatorConnection): void;
   onConnectionClosed(connection: AutomergeReplicatorConnection): void;
   onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void;
+
+  /**
+   * Re-run the peer's transport handshake on a connection that stays open, so the peer id and the
+   * sync state keyed by it survive a remote that lost its session but not the link (DX-1275).
+   *
+   * @returns `false` when the peer has no open connection, so the caller can fall back to a restart.
+   */
+  onConnectionTransportReset(connection: AutomergeReplicatorConnection): boolean;
 }
 
 export interface AutomergeReplicatorConnection {
@@ -112,23 +118,6 @@ export interface AutomergeReplicatorConnection {
    * @returns true if the collection should be synced to this peer.
    */
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
-
-  /**
-   * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBatch` and `pullBatch` methods.
-   * @returns true if the batch syncing is enabled.
-   */
-  get bundleSyncEnabled(): boolean;
-
-  /**
-   * Pushes the batch of documents to the remote peer.
-   */
-  pushBundle?(ctx: Context, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
-
-  /**
-   * Pulls the batch of documents from the remote peer.
-   */
-  // TODO(mykola): Use automerge-repo-bundles Bundle type here.
-  pullBundle?(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
 export type ShouldAdvertiseProps = {

@@ -14,9 +14,14 @@ import { createRequire } from 'node:module';
 //  namespace first, which for the remainder means the export-namespace -> module-file refactor.
 const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/app-framework',
+  '@dxos/app-graph',
   '@dxos/app-toolkit',
   '@dxos/assistant-toolkit',
   '@dxos/compute',
+  '@dxos/effect',
+  '@dxos/graph',
+  '@dxos/observability',
+  '@dxos/react-ui',
 ]);
 
 /**
@@ -26,7 +31,7 @@ const DXOS_SUBPATH_PACKAGES = new Set([
  * is a no-op. NOTE: the package must export `./package.json`, or the exports map is unreadable
  * under Node exports encapsulation and the rule silently skips it.
  */
-const isSubpathPackage = (packageName) =>
+export const isSubpathPackage = (packageName) =>
   DXOS_SUBPATH_PACKAGES.has(packageName) || packageName.startsWith('@dxos/plugin-');
 
 /**

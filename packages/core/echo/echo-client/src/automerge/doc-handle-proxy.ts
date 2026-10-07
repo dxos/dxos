@@ -10,18 +10,29 @@ import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import * as Doc from './Doc';
+import { DocumentUnavailableError } from '../errors.ts';
+import * as Doc from './Doc.ts';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
   doc: A.Doc<T>;
   patches: A.Patch[];
-  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' };
+  /**
+   * `change` is a change made on this thread; `host` is bytes the worker delivered on their own;
+   * `bulk` is bytes the worker delivered as part of a large batch, such as a first sync.
+   */
+  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' | 'host' | 'bulk' };
 };
 
 export type ClientDocHandleEvents<T> = {
   change: ChangeEvent<T>;
   delete: { handle: DocHandleProxy<T> };
+  /**
+   * The handle left `'unavailable'` because the document's bytes finally arrived. Emitted only on
+   * that transition: a waiter failed by {@link DocHandleProxy._markUnavailable} holds a rejected
+   * promise and has nothing else to wake it.
+   */
+  available: { handle: DocHandleProxy<T> };
 };
 
 export type DocHandleProxyOptions<T> = {
@@ -38,8 +49,11 @@ export type DocHandleProxyOptions<T> = {
  * - `'requesting'` — worker confirmed the doc is **not** on disk and is
  *                    currently fetching it over the network.
  * - `'ready'`    — doc bytes are loaded and the handle is usable.
+ * - `'unavailable'` — the host reported it cannot produce the doc at all;
+ *                     {@link DocHandleProxy.whenReady} rejects rather than
+ *                     waiting on bytes nothing is fetching.
  */
-export type DocHandleProxyState = 'pending' | 'requesting' | 'ready';
+export type DocHandleProxyState = 'pending' | 'requesting' | 'ready' | 'unavailable';
 
 /**
  * Settled state of the worker-side disk probe.
@@ -61,7 +75,10 @@ export type DiskSettlement = boolean;
  * `'requesting'`). It can later transition `'requesting' → 'ready'` if the
  * network ever delivers the bytes. Disk-only callers wait on
  * {@link whenSettledOnDisk} to learn the outcome of the disk probe without
- * blocking on the network.
+ * blocking on the network. A host that has no bytes and nothing to fetch
+ * them from settles the handle `'unavailable'` instead
+ * ({@link _markUnavailable}), which is terminal only until bytes actually
+ * arrive.
  */
 export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements Doc.Handle<T> {
   private readonly _ready = new Trigger();
@@ -85,6 +102,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Undefined if document is new and still is being created.
    */
   private _documentId?: DocumentId;
+  /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
+  #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
 
   constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
@@ -108,7 +127,13 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * For loaded documents, this is always defined.
    */
   get url(): AutomergeUrl | undefined {
-    return this._documentId ? stringifyAutomergeUrl(this._documentId) : undefined;
+    if (!this._documentId) {
+      return undefined;
+    }
+    if (this.#url?.documentId !== this._documentId) {
+      this.#url = { documentId: this._documentId, url: stringifyAutomergeUrl(this._documentId) };
+    }
+    return this.#url.url;
   }
 
   /**
@@ -131,6 +156,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._doc;
   }
 
+  /**
+   * Resolves once the doc's bytes are loaded.
+   * Rejects with {@link DocumentUnavailableError} if the host reports it cannot produce the doc.
+   */
   async whenReady(): Promise<void> {
     await this._ready.wait();
   }
@@ -209,11 +238,28 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Settles `whenReady` with the error that stopped the document from being created.
+   * @internal
+   */
+  _failReady(error: Error): void {
+    this._ready.throw(error);
+  }
+
+  /**
    * @internal
    */
   _wakeReady(): void {
+    // Bytes arriving after an `unavailable` verdict (replication catching up) supersede it; the
+    // rejected trigger is inert, so it is re-armed before waking or later waiters keep the error.
+    const recovered = this._state === 'unavailable';
+    if (this._ready.state === TriggerState.REJECTED) {
+      this._ready.reset();
+    }
     this._state = 'ready';
     this._ready.wake();
+    if (recovered) {
+      this.emit('available', { handle: this });
+    }
     // A `'ready'` outcome implies the doc was either on disk or arrived via
     // the network. Either way the disk probe is settled (`true` because the
     // handle ends up holding the doc, regardless of the actual source).
@@ -240,6 +286,26 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Mark the handle as `'unavailable'`: the host cannot produce this document and is not fetching
+   * it, so every waiter is failed rather than left parked — a load that cannot complete must say so
+   * at the call site instead of expiring against some caller's timeout. No-op once the handle is
+   * `'ready'`; a later delivery of the bytes takes it back to `'ready'` via {@link _wakeReady}.
+   * @param documentId The id the host reported on, which a handle created locally does not yet have.
+   * @internal
+   */
+  _markUnavailable(documentId: string): void {
+    if (this._state === 'ready') {
+      return;
+    }
+    this._state = 'unavailable';
+    this._ready.throw(new DocumentUnavailableError({ documentId }));
+    // A document the host cannot produce is not on its disk either, so disk-only callers settle too.
+    if (this._settledOnDisk.state !== TriggerState.RESOLVED) {
+      this._settledOnDisk.wake(false);
+    }
+  }
+
+  /**
    * Get pending changes since last write.
    * @internal
    */
@@ -258,6 +324,20 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Whether every local change has been acknowledged by the host — the condition for dropping this
+   * handle from memory. `_getPendingChanges` clears the repo's pending-id set before the mutation is
+   * actually sent, so that set alone cannot answer this: a handle dropped in the window between
+   * would take an unsent write with it.
+   * @internal
+   */
+  _isAcknowledged(): boolean {
+    // `_lastSentHeads` advances only on a confirmed send or on integrating a host update, and a send
+    // in flight leaves it behind the doc's heads — so heads equality alone means the host holds
+    // everything this handle does, with nothing outstanding.
+    return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
+  }
+
+  /**
    * Confirm that the last write was successful.
    * @internal
    */
@@ -269,7 +349,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _integrateHostUpdate(mutation: Uint8Array | undefined): void {
+  _integrateHostUpdate(mutation: Uint8Array | undefined, { bulk = false }: { bulk?: boolean } = {}): void {
     if (!mutation) {
       return;
     }
@@ -284,11 +364,21 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
     this._wakeReady();
 
+    // The host echoes a client's own mutation back over its subscription as a separate change; it
+    // merges cleanly and moves the heads but alters nothing, so emitting for it would report a
+    // change that did not happen — a listener waiting for the *next* remote edit would be woken by
+    // its own. Patches, not heads, are the test: a merge can advance the heads without touching any
+    // value.
+    const patches = A.diff(this._doc, headsBefore, A.getHeads(this._doc));
+    if (patches.length === 0) {
+      return;
+    }
+
     this.emit('change', {
       handle: this,
       doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-      patchInfo: { before, after: this._doc, source: 'change' },
+      patches,
+      patchInfo: { before, after: this._doc, source: bulk ? 'bulk' : 'host' },
     });
   }
 }

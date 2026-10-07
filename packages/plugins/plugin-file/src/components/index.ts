@@ -2,5 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FileInput';
-export * from './FilePreview';
+export * from './FileInput/index.ts';
+export * from './PdfCanvas/index.ts';
+export * from './Preview/index.ts';

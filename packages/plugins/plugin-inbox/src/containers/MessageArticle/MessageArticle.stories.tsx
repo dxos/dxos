@@ -12,16 +12,19 @@ import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { initializeMailbox } from '#testing';
+import { InboxPlugin } from '#plugin';
+import { initializeMailbox, seedSummaries } from '#testing';
+import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as Mailbox from '../../types/Mailbox';
-import { MessageArticle } from './MessageArticle';
+import { MessageArticle } from './MessageArticle.tsx';
+
+const ATTENDABLE_ID = 'story';
 
 type StoryArgs = {
   /** Number of messages seeded into the single fake thread. */
@@ -31,7 +34,8 @@ type StoryArgs = {
 /**
  * Renders the seeded mailbox's one thread from its most recent message, the way the `mailboxMessage`
  * graph connector opens one: the article looks the conversation up itself, so a reply added at the db
- * root (see `MessageArticle`'s `openDraft`) is picked up reactively.
+ * root (see `MessageArticle`'s `openDraft`) is picked up reactively. The article beside the JSON of
+ * the selected message lives in `@dxos/stories-inbox`'s `MessageArticle` story.
  */
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -45,38 +49,40 @@ const DefaultStory = () => {
           .orderBy(Order.property('created', 'asc'))
       : Query.select(Filter.nothing()),
   );
+  const subject = messages[messages.length - 1];
 
-  if (!space?.db || !mailbox || messages.length === 0) {
+  if (!space?.db || !mailbox || !subject) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, messages: messages.length }} />;
   }
 
-  return (
-    <MessageArticle role='article' subject={messages[messages.length - 1]} mailbox={mailbox} attendableId='story' />
-  );
+  return <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={ATTENDABLE_ID} />;
 };
 
 const meta = {
   title: 'plugins/plugin-inbox/containers/MessageArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { length = 8 } }) => ({
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
               // Thread pool of size 1 assigns every seeded message the same threadId — a single
               // conversation of exactly `length` messages, oldest to newest.
-              yield* Effect.promise(() => initializeMailbox(defaultSpace.db, length, 1));
+              const mailbox = yield* Effect.promise(() => initializeMailbox(defaultSpace.db, length, 1));
+              // Half the conversation carries a derived summary, so the summary tile renders from a
+              // realistic mix (the tile shows the newest summarized message, not every one).
+              yield* Effect.promise(() => seedSummaries(defaultSpace.db, mailbox));
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],
@@ -109,6 +115,11 @@ export const Spec: Story = {
     const replyButtons = await canvas.findAllByRole('button', { name: 'Reply All' }, { timeout: 12_000 });
     await expect(replyButtons).toHaveLength(1);
     await waitFor(() => expect(canvas.getAllByTestId('message.expand')).toHaveLength(2), { timeout: 5_000 });
+
+    // The conversation's summary is its own tile at the bottom of the stack (not repeated inside the
+    // expanded message), sourced from the newest summarized message in the thread.
+    const summaryTile = await canvas.findByTestId('conversation.summary', undefined, { timeout: 5_000 });
+    await expect(summaryTile).toHaveTextContent(/waiting on a reply/);
 
     // Reply All on the newest message appends a draft composer inline at the bottom — no navigation.
     await userEvent.click(replyButtons[0]);

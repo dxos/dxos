@@ -8,8 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 
-import { templates } from '../templates';
-import * as ScriptOperation from '../types/ScriptOperation';
+import { ScriptOperation } from '#types';
+
+import { templates } from '../templates/index.ts';
 
 const handler: Operation.WithHandler<typeof ScriptOperation.CreateScript> = ScriptOperation.CreateScript.pipe(
   Operation.withHandler(

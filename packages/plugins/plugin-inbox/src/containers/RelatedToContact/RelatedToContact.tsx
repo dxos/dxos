@@ -4,28 +4,29 @@
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
-import React, { useCallback } from 'react';
+import * as Result from 'effect/Result';
+import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { Event, Message, type Person } from '@dxos/types';
 
-import { RelatedEvents, RelatedMessages } from '#components';
+import { RelatedEvents, RelatedMessages, messageDigest } from '#components';
+import { Calendar, Mailbox } from '#types';
 
-import { getCalendarEventPath, getMailboxMessagePath } from '../../paths';
-import * as Calendar from '../../types/Calendar';
-import * as Mailbox from '../../types/Mailbox';
+import { getCalendarEventPath, getMailboxMessagePath } from '../../paths.ts';
 
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const [cardRef, pivotId] = useCardPivot();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
   const db = Obj.getDatabase(contact);
   const workspace = db ? GraphPath.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
@@ -48,6 +49,14 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
   ) as Event.Event[];
+  // Summaries live on a SECOND feed (`mailbox.annotations`), so they need their own query — the
+  // message feed carries none. Absent pipeline output the rows fall back to the provider snippet.
+  const annotationFeed = mailbox?.annotations?.target;
+  const annotations = useQuery(
+    db,
+    annotationFeed ? Query.select(Filter.type(Message.Message)).from(annotationFeed) : Query.select(Filter.nothing()),
+  ) as Message.Message[];
+  const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
 
   const relatedMessages = messages
     .filter(
@@ -55,7 +64,8 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         contact.emails?.some((email) => email.value === message.sender.email) ||
         message.sender.contact?.target === contact,
     )
-    .filter((message) => message.properties?.subject)
+    // Keep only rows that can say something: a summary, a snippet, or a subject.
+    .filter((message) => messageDigest(message, summaries) !== undefined)
     .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
     .slice(0, 5);
   const now = Date.now();
@@ -66,7 +76,10 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         event.attendees?.some((attendee) => contact.emails?.some((email) => email.value === attendee.email)) ||
         event.attendees?.some((attendee) => attendee.contact?.target === contact),
     ),
-    Array.partition((event) => new Date(event.startDate).getTime() > now),
+    // v4's `partition` takes a `Result`-returning filter; `[excluded, satisfying]` is unchanged.
+    Array.partition((event) =>
+      new Date(event.startDate).getTime() > now ? Result.succeed(event) : Result.fail(event),
+    ),
   );
   const sortedRecentEvents = recentEvents
     .toSorted((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
@@ -119,7 +132,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
 
   return (
     <Card.Body ref={cardRef}>
-      <RelatedMessages messages={relatedMessages} onMessageClick={handleMessageClick} />
+      <RelatedMessages messages={relatedMessages} summaries={summaries} onMessageClick={handleMessageClick} />
       <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />
     </Card.Body>
   );

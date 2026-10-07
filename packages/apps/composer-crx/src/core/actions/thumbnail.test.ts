@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { blobToDataUrl, enrichSnapshotWithThumbnail } from './thumbnail';
+import { blobToDataUrl, enrichSnapshotWithThumbnail } from './thumbnail.ts';
 
 describe('blobToDataUrl', () => {
   test('round-trips a small known payload', async ({ expect }) => {

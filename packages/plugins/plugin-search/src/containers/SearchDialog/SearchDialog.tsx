@@ -4,18 +4,19 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Dialog, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-search';
-import { type SearchResult } from '@dxos/react-ui-search';
+import { SearchList, type SearchResult } from '@dxos/react-ui-search';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
+import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
 import { meta } from '#meta';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
@@ -23,14 +24,16 @@ export type SearchDialogProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { setMatch } = useGlobalSearch();
-  const layout = useLayout();
+  const layout = ToolkitHooks.useLayout();
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 
-  const objects = useQuery(space?.db, buildSearchQuery(query));
+  // Scope the FTS query to user-facing types so results match what the app can render.
+  const typeUris = useSearchableTypeUris(space);
+  const objects = useQuery(space?.db, buildSearchQuery(query, typeUris));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
@@ -63,19 +66,24 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
-        <SearchList.Root onSearch={handleSearch}>
-          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+        <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
+          <SearchList.Input
+            classNames='px-0'
+            autoFocus
+            escapeBehavior='dismiss'
+            placeholder={t('search.placeholder')}
+            {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+          />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {query && allResults.length === 0 && <SearchList.Empty />}
             {allResults.map((result) => (
               <SearchList.Item
                 key={result.id}
-                classNames='flex gap-2 items-center'
                 icon={result.icon}
                 value={result.id}
                 label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}

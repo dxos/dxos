@@ -7,14 +7,15 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import * as SpaceSchema from '../../types/SpaceSchema';
+import { SpaceSchema } from '#types';
+
 import {
   createCollectionExtensions,
   createCompanionExtensions,
   createDatabaseExtensions,
   createSettingsExtensions,
   createSpaceExtensions,
-} from './extensions';
+} from './extensions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpaceSchema.SpacePluginOptions = {}) {

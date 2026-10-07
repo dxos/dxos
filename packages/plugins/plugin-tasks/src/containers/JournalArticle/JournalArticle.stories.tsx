@@ -12,9 +12,9 @@ import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
 import { translations } from '#translations';
+import { Journal } from '#types';
 
-import * as Journal from '../../types/Journal';
-import { JournalArticle } from './JournalArticle';
+import { JournalArticle } from './JournalArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();

@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { makeRoutine } from '@dxos/plugin-routine';
+import * as Templates from '@dxos/plugin-projects/Templates';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 /** Skills for the project's chats: CRM tools plus the research/database/document utilities. */
@@ -51,8 +52,8 @@ const ROUTINE_INSTRUCTIONS = trim`
 /**
  * "Sender research" project template: the CRM research automation reframed as a project — the
  * mailbox as standing context, CRM skills for its chats, and the per-message research routine
- * (feed-triggered, disabled until the user enables it) owned by the project, filing profiles and
- * dossiers into the artifacts collection. Only applies to a Mailbox subject — the feed trigger
+ * (feed-triggered, disabled until the user enables it) scoped to the project, filing profiles and
+ * dossiers into its artifacts. Only applies to a Mailbox subject — the feed trigger
  * needs `mailbox.feed`. The routine-only variant remains available as the CRM automation template.
  */
 export const crmProject: ProjectCapabilities.Template = {
@@ -70,14 +71,14 @@ export const crmProject: ProjectCapabilities.Template = {
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
 
-      const project = scaffoldProject({
+      const project = Templates.scaffoldProject({
         name: name ?? `Sender Research — ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
         objects: [Ref.make(mailbox)],
       });
 
-      const routine = makeRoutine({
+      const routine = Wire.makeRoutine({
         name: 'Sender Research',
         instructions: Instructions.make({
           name: 'Sender Research',
@@ -93,10 +94,7 @@ export const crmProject: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      Project.addRoutine(project, routine);
 
       return project;
     }),

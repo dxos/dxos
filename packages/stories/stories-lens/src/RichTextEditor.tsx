@@ -12,10 +12,10 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { Text } from '@dxos/schema';
 
-import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text';
+import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text.ts';
 
 //
 // A basic ProseMirror editor driven entirely by the lens. It never sees markdown: it reads a block
@@ -254,7 +254,7 @@ export const RichTextEditor = ({ text }: { text: Text.Text }) => {
     }
   }, [signature, reconcile]);
 
-  return <div ref={parentRef} className='min-h-0 overflow-auto' data-testid='rich-text-editor' />;
+  return <div ref={parentRef} className='overflow-auto' data-testid='rich-text-editor' />;
 };
 
 /**
@@ -268,16 +268,16 @@ export const BlockList = ({ text }: { text: Text.Text }) => {
   const [snapshot] = useObject(text);
 
   return (
-    <Card.Root fullWidth border={false}>
+    <Card.Root border={false}>
       <Card.Section title='stored markdown'>
-        <Card.Row fullWidth>
+        <Card.Row>
           <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
             {snapshot?.content ?? ''}
           </Card.Text>
         </Card.Row>
       </Card.Section>
       <Card.Section title='blocks'>
-        <Card.Row fullWidth>
+        <Card.Row>
           <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='block-list'>
             {(view?.blocks ?? [])
               .map(

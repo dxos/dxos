@@ -22,6 +22,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -34,6 +37,12 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -41,6 +50,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/observability"

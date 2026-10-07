@@ -4,20 +4,40 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Alarm } from '@dxos/assistant';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
-import { Matrix } from '@dxos/react-ui-components';
+import { Matrix } from '@dxos/react-ui-experimental';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
-import { type ChatRequestTiming, useChatContext } from '../Chat/context';
+import { type ChatRequestTiming, useChatThreadContext } from '../Chat/context.ts';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
 
-export type ChatStreamStatusProps = ThemedClassName<{
+export type ChatStreamStatusProps = Util.ThemedClassName<{
   icon?: boolean;
 }>;
+
+export type ChatStatusViewProps = ChatStreamStatusProps & {
+  /** Start/end of the most recent request; `endedAt: null` while it runs. */
+  requestTiming?: ChatRequestTiming | null;
+  /** Output tokens of the last completed turn. */
+  lastOutputTokens?: number;
+  /** Cumulative tokens across the session. */
+  sessionTotalTokens?: number;
+  /**
+   * When the agent will next wake itself, if an alarm is pending. Plain values rather than the feed
+   * record: this component only renders, and a live ECHO object cannot survive being passed as a
+   * Storybook arg (its proxy rejects the mutation Storybook's arg handling performs).
+   */
+  alarm?: { wakeAt: number; message?: string };
+  /** Alarms that have woken the agent since the last user prompt, shown against `Alarm.MAX_SELF_WAKES`. */
+  selfWakes?: number;
+};
 
 /**
  * Live status pill rendered at the bottom of the chat thread.
@@ -38,7 +58,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
-  const { messages, requestTiming } = useChatContext(CHAT_STREAM_STATUS_NAME);
+  const { messages, requestTiming, alarms, selfWakes } = useChatThreadContext(CHAT_STREAM_STATUS_NAME);
 
   const { lastOutputTokens, sessionTotalTokens } = useMemo(() => {
     let last: number | undefined;
@@ -51,22 +71,52 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
         }
       }
     }
+
     return { lastOutputTokens: last, sessionTotalTokens: total };
   }, [messages]);
 
+  const nextAlarm = alarms.at(0);
+
+  return (
+    <ChatStatusView
+      classNames={classNames}
+      icon={icon}
+      requestTiming={requestTiming}
+      lastOutputTokens={lastOutputTokens}
+      sessionTotalTokens={sessionTotalTokens}
+      // The earliest pending alarm is the one that wakes the agent next, so it is the one worth a slot.
+      alarm={nextAlarm && { wakeAt: nextAlarm.wakeAt, message: nextAlarm.message }}
+      selfWakes={selfWakes}
+    />
+  );
+};
+
+/**
+ * The pill itself, given resolved values. Split from {@link ChatStatus} so each slot — elapsed,
+ * tokens, the next alarm — can be mounted and asserted in a story without a live processor.
+ */
+export const ChatStatusView = ({
+  classNames,
+  icon,
+  requestTiming,
+  lastOutputTokens,
+  sessionTotalTokens = 0,
+  alarm,
+  selfWakes = 0,
+}: ChatStatusViewProps) => {
   const isRunning = requestTiming != null && requestTiming.endedAt == null;
-  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0;
+  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0 || alarm != null;
   if (!show) {
     return null;
   }
 
   return (
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['p-1.5 gap-2 text-sm', classNames]}>
       {icon && (
         <NaturalChatStatus.Icon>
           <Matrix
-            classNames='w-5 h-5'
-            dotClassNames='bg-primary-500'
+            classNames='size-5'
+            dotClassNames='bg-primary-bg'
             dim={4}
             dotSize={3}
             count={10}
@@ -76,9 +126,9 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
         </NaturalChatStatus.Icon>
       )}
       {show && (
-        <div className='flex items-center'>
+        <Layout.Flex align='center'>
           {requestTiming && (
-            <NaturalChatStatus.Text>
+            <NaturalChatStatus.Text classNames={isRunning && 'text-sky-text'}>
               <Elapsed timing={requestTiming} />
             </NaturalChatStatus.Text>
           )}
@@ -94,7 +144,27 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
               <NaturalChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
-        </div>
+          {alarm && (
+            <>
+              {(requestTiming || lastOutputTokens != null || sessionTotalTokens > 0) && <NaturalChatStatus.Separator />}
+              <NaturalChatStatus.Text>
+                <span
+                  data-testid='assistant.chat-status.alarm'
+                  className='flex items-center gap-1'
+                  title={alarm.message}
+                >
+                  <Icon.Icon icon='ph--alarm--regular' size='md' />
+                  {formatWakeAt(alarm.wakeAt)}
+                  {selfWakes > 0 && (
+                    <span data-testid='assistant.chat-status.self-wakes' className='text-fg-muted'>
+                      {selfWakes}/{Alarm.MAX_SELF_WAKES}
+                    </span>
+                  )}
+                </span>
+              </NaturalChatStatus.Text>
+            </>
+          )}
+        </Layout.Flex>
       )}
     </NaturalChatStatus.Root>
   );
@@ -121,3 +191,10 @@ const Elapsed = ({ timing }: { timing: ChatRequestTiming }) => {
 };
 
 const isStats = (block: ContentBlock.Any): block is ContentBlock.Stats => block._tag === 'stats';
+
+/**
+ * Wall-clock time an alarm fires. The clock is what the reader needs to act on ("it will wake at
+ * 14:20"); a countdown would have to tick, and the alarm can be days out.
+ */
+export const formatWakeAt = (wakeAt: number): string =>
+  new Date(wakeAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-illustrator",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Headless diagramming plugin for DXOS Composer (unifies canvas renderers like tldraw and excalidraw).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,13 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -44,15 +52,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/IllustratorPlugin.workerd.tsx",
-        "node": "./src/IllustratorPlugin.node.tsx",
-        "default": "./src/IllustratorPlugin.tsx"
-      },
-      "types": "./dist/types/src/IllustratorPlugin.d.ts",
-      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
-      "node": "./dist/lib/IllustratorPlugin.node.mjs",
-      "default": "./dist/lib/IllustratorPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -64,7 +66,16 @@
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
     },
-    "#util": "./src/util/index.ts"
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    },
+    "#util": {
+      "source": "./src/util/index.ts",
+      "types": "./dist/types/src/util/index.d.ts",
+      "default": "./dist/lib/util.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -73,47 +84,67 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Drawing": {
       "source": "./src/types/Drawing.ts",
       "types": "./dist/types/src/types/Drawing.d.ts",
       "import": "./dist/lib/Drawing.mjs"
-    },
-    "./LegacySketch": {
-      "source": "./src/types/LegacySketch.ts",
-      "types": "./dist/types/src/types/LegacySketch.d.ts",
-      "import": "./dist/lib/LegacySketch.mjs"
     },
     "./DrawingOperation": {
       "source": "./src/types/DrawingOperation.ts",
       "types": "./dist/types/src/types/DrawingOperation.d.ts",
       "import": "./dist/lib/DrawingOperation.mjs"
     },
+    "./DrawingSkill": {
+      "source": "./src/skills/DrawingSkill.ts",
+      "types": "./dist/types/src/skills/DrawingSkill.d.ts",
+      "import": "./dist/lib/DrawingSkill.mjs"
+    },
     "./IllustratorCapabilities": {
       "source": "./src/types/IllustratorCapabilities.ts",
       "types": "./dist/types/src/types/IllustratorCapabilities.d.ts",
       "import": "./dist/lib/IllustratorCapabilities.mjs"
+    },
+    "./IllustratorError": {
+      "source": "./src/types/IllustratorError.ts",
+      "types": "./dist/types/src/types/IllustratorError.d.ts",
+      "import": "./dist/lib/IllustratorError.mjs"
     },
     "./IllustratorEvents": {
       "source": "./src/types/IllustratorEvents.ts",
       "types": "./dist/types/src/types/IllustratorEvents.d.ts",
       "import": "./dist/lib/IllustratorEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./IllustratorModel": {
+      "source": "./src/IllustratorModel.ts",
+      "types": "./dist/types/src/IllustratorModel.d.ts",
+      "import": "./dist/lib/ns/IllustratorModel.mjs"
+    },
+    "./IllustratorOperationHandlerSet": {
+      "source": "./src/IllustratorOperationHandlerSet.ts",
+      "types": "./dist/types/src/IllustratorOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
+    },
+    "./IllustratorPlugin": {
+      "source": "./src/IllustratorPlugin.ts",
+      "types": "./dist/types/src/IllustratorPlugin.d.ts",
+      "import": "./dist/lib/IllustratorPlugin.mjs"
+    },
+    "./SceneSvg": {
+      "source": "./src/SceneSvg.ts",
+      "types": "./dist/types/src/SceneSvg.d.ts",
+      "import": "./dist/lib/ns/SceneSvg.mjs"
+    },
+    "./LegacySketch": {
+      "source": "./src/types/LegacySketch.ts",
+      "types": "./dist/types/src/types/LegacySketch.d.ts",
+      "import": "./dist/lib/LegacySketch.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -143,26 +174,41 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@codemirror/language": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "codemirror-lang-mermaid": "catalog:",
+    "mermaid": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

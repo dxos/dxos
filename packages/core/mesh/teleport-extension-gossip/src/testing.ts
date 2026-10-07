@@ -7,8 +7,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type TestConnection, TestPeer as TestPeerBase } from '@dxos/teleport/testing';
 
-import { Gossip } from './gossip';
-import { Presence } from './presence';
+import { Gossip } from './gossip.ts';
+import { Presence } from './presence.ts';
 
 export type TestAgentOptions = {
   peerId?: PublicKey;
@@ -44,9 +44,7 @@ export class TestAgent extends TestPeerBase {
     invariant(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
-        const connections = this.presence.getPeersOnline().map((state) => state.identityKey.toHex());
-        const expectedConnections = agents.map((agent) => agent.peerId.toHex());
-        return expectedConnections.every((value) => connections.includes(value));
+        return agents.every((agent) => this.presence.getPeersByIdentityKey(agent.peerId).length > 0);
       }),
       timeout,
     );

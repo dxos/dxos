@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
@@ -13,10 +14,10 @@ import type { Database, Obj } from '@dxos/echo';
 import { meta } from '#meta';
 
 /**
- * Id of the built-in blank template. Declared here (rather than on the template itself) so callers
+ * Id of the built-in default template. Declared here (rather than on the template itself) so callers
  * that create a project without the picker can name it without importing the template module.
  */
-export const BlankTemplateId = 'org.dxos.project.blank';
+export const DefaultTemplateId = 'org.dxos.project.default';
 
 /**
  * A project template contributed by a plugin: instructions text, skills, context objects, and
@@ -25,7 +26,7 @@ export const BlankTemplateId = 'org.dxos.project.blank';
  * run the chosen template's `scaffold`.
  */
 export type Template = {
-  /** Stable id (e.g. 'org.dxos.project.blank'). */
+  /** Stable id (e.g. 'org.dxos.project.default'). */
   id: string;
   /** Human-readable label shown in the picker. */
   label: string;
@@ -47,3 +48,8 @@ export type Template = {
 };
 
 export const Template = Capability.make<Template>()(`${meta.profile.key}.capability.template`);
+
+// Inline import so the `Settings` namespace does not collide with the capability of the same name.
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);

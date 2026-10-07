@@ -6,13 +6,16 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { EventEditor } from './EventEditor';
+import { EventEditor } from './EventEditor.tsx';
 
 // The hub `Meeting` type is owned by plugin-meeting; reference its typename by string so plugin-inbox
 // stays meeting-agnostic (no package dependency). Anchored objects of other types are ignored here.
@@ -56,7 +59,7 @@ export const EventDetails = ({
   starred,
   onToggleStar,
 }: EventDetailsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly — `useObject`
   // requires a live object and throws on a snapshot. Inline draft editing is handled by EventEditor below.
   const data = event;
@@ -80,29 +83,29 @@ export const EventDetails = ({
     <>
       {title === 'heading' && (
         <Card.Row>
-          <Card.Block>
+          <Layout.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Card.Block>
+          </Layout.Block>
           <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
-            <Card.Block end>
-              <IconButton
+            <Layout.Block rail='end'>
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--handshake--regular'
                 label={Obj.getLabel(meeting) ?? 'Meeting'}
                 onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
               />
-            </Card.Block>
+            </Layout.Block>
           )}
         </Card.Row>
       )}
 
       {title === 'text' && (
         <Card.Row>
-          <Card.Block>
+          <Layout.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Card.Block>
+          </Layout.Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}
@@ -111,7 +114,7 @@ export const EventDetails = ({
 
       {description && data.description && (
         <Card.Row>
-          <Card.Text variant='description'>{data.description}</Card.Text>
+          <Card.Text variant='muted'>{data.description}</Card.Text>
         </Card.Row>
       )}
 

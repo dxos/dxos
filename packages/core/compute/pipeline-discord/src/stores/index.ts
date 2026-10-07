@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './extracted-question-store';
-export * from './message-store';
-export * from './question-store';
+export * as ExtractedQuestionStore from './ExtractedQuestionStore.ts';
+export * as MessageStore from './MessageStore.ts';
+export * as QuestionStore from './QuestionStore.ts';

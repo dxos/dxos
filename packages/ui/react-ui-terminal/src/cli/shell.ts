@@ -2,33 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as ValidationError from '@effect/cli/ValidationError';
-import type * as FileSystem from '@effect/platform/FileSystem';
-import type * as Path from '@effect/platform/Path';
-import type * as Terminal from '@effect/platform/Terminal';
 import * as Cause from 'effect/Cause';
+import * as CliError from 'effect/cli/CliError';
+import * as Command from 'effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import type { TerminalBridge } from './bridge';
-import { readLineResult } from './line-editor';
-import { rewriteHelpAliases, tokenize } from './tokenize';
+import type { TerminalBridge } from './bridge.ts';
+import { readLineResult } from './line-editor.ts';
+import { rewriteHelpAliases, tokenize } from './tokenize.ts';
 
 const EXIT_COMMANDS = ['exit', 'quit'];
 
-/**
- * The services `Command.run` itself needs, spelled out because `@effect/cli` only exposes the
- * equivalent alias inside its `CliApp` namespace.
- */
-export type CliEnvironment = FileSystem.FileSystem | Path.Path | Terminal.Terminal;
+/** The services CLI parsing and execution need. */
+export type CliEnvironment = Command.Environment;
 
-export type ShellOptions<Name extends string, R, E, A> = {
-  command: Command.Command<Name, R, E, A>;
-  /**
-   * Executable name, used in help output and as the argv[1] the Effect CLI parser skips.
-   */
+export type ShellOptions<Name extends string, Input, ContextInput, E, R> = {
+  command: Command.Command<Name, Input, ContextInput, E, R>;
+  /** Executable name, used in the prompt. */
   name?: string;
   version?: string;
   prompt?: string;
@@ -36,19 +28,19 @@ export type ShellOptions<Name extends string, R, E, A> = {
 };
 
 /**
- * Runs a read-eval-print loop against an `@effect/cli` command tree.
+ * Runs a read-eval-print loop against an Effect CLI command tree.
  *
- * Each line is tokenized and dispatched through the same `Command.run` the binary uses, with a
- * synthetic argv prefix standing in for the two leading entries the parser discards. The command
- * tree and its layer are built once, so every command reuses the already-activated services.
+ * Each line is tokenized and dispatched through the same `Command.runWith` the binary uses. The
+ * command tree and its layer are built once, so every command reuses the already-activated
+ * services.
  */
-export const runShell = <Name extends string, R, E, A>(
+export const runShell = <Name extends string, Input, ContextInput, E, R>(
   bridge: TerminalBridge,
-  options: ShellOptions<Name, R, E, A>,
+  options: ShellOptions<Name, Input, ContextInput, E, R>,
 ): Effect.Effect<void, never, R | CliEnvironment> =>
   Effect.gen(function* () {
     const { command, name = 'dx', version = '0.0.0', prompt = `${name}> `, banner } = options;
-    const run = Command.run(command, { name, version });
+    const run = Command.runWith(command, { version });
     const history: string[] = [];
 
     if (banner) {
@@ -82,22 +74,32 @@ export const runShell = <Name extends string, R, E, A>(
         continue;
       }
 
+      const writtenBefore = bridge.written;
+
       // Failures are reported rather than propagated so the shell survives to the next prompt.
-      // Validation errors are skipped because the Effect CLI has already rendered them.
-      yield* run([name, name, ...tokens]).pipe(
-        Effect.catchAllCause((cause) => {
-          if (Cause.isInterruptedOnly(cause)) {
+      // CLI errors are skipped because the parser has already rendered them.
+      yield* run(tokens).pipe(
+        Effect.catchCause((cause) => {
+          if (Cause.hasInterruptsOnly(cause)) {
             return Effect.void;
           }
 
-          const failure = Cause.failureOption(cause);
-          if (Option.isSome(failure) && ValidationError.isValidationError(failure.value)) {
+          // A CLI error has already been rendered to stdout by the runner (help, usage), so
+          // repeating it as a stack would only be noise.
+          const error = Cause.findErrorOption(cause);
+          if (Option.isSome(error) && CliError.isCliError(error.value)) {
             return Effect.void;
           }
 
           return Console.error(Cause.pretty(cause));
         }),
       );
+
+      // A blank line after a response sets it apart from the next prompt; a command that printed
+      // nothing gets none, or every silent command would leave a gap.
+      if (bridge.written > writtenBefore) {
+        bridge.write(bridge.atLineStart ? '\n' : '\n\n');
+      }
     }
 
     bridge.write('\n');

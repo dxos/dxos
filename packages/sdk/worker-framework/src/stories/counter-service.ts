@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 
 export class TimingStatsSample extends Schema.Class<TimingStatsSample>('TimingStatsSample')({
@@ -47,6 +47,6 @@ export class CounterRpcs extends RpcGroup.make(
 /**
  * Reverse (worker→client) RPC surface. Empty: the counter demo makes no worker→client calls, but the
  * framework always provisions both directions, so the tab serves this to complete the worker's
- * worker→client protocol handshake (mirrors how the production tab serves BridgeService).
+ * worker→client protocol handshake (mirrors how the production tab serves RTCService).
  */
 export class CounterClientRpcs extends RpcGroup.make() {}

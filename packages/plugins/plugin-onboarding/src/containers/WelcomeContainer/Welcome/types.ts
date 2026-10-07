@@ -3,7 +3,7 @@
 //
 
 import type { Identity } from '@dxos/client/halo';
-import { type PasskeyFailure } from '@dxos/plugin-client';
+import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { type MaybePromise } from '@dxos/util';
 
 /**
@@ -15,9 +15,9 @@ export type WelcomeError =
   | 'account-exists'
   | 'email-check-unavailable'
   | 'oauth'
-  | `passkey-${PasskeyFailure}`;
+  | `passkey-${PasskeyError.Failure}`;
 
-export const passkeyError = (failure: PasskeyFailure): WelcomeError => `passkey-${failure}`;
+export const passkeyError = (failure: PasskeyError.Failure): WelcomeError => `passkey-${failure}`;
 
 export enum WelcomeState {
   INIT = 0,
@@ -62,7 +62,3 @@ export type WelcomeScreenProps = {
 };
 
 export const validEmail = (email: string) => !!email.match(/.+@.+\..+/);
-
-/** Crockford base32 (no I/L/O/U), 8 chars, case-insensitive, optional hyphen. */
-export const validInvitationCode = (code: string) =>
-  /^[0-9A-HJ-KM-NP-TV-Z]{4}-?[0-9A-HJ-KM-NP-TV-Z]{4}$/i.test(code.trim());

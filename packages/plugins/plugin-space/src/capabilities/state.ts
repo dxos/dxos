@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { createKvsStore } from '@dxos/effect';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { SpaceCapabilities } from '#types';
 
 /** Default persisted state. */
 const defaultSpaceState: SpaceCapabilities.SpaceState = {
@@ -26,7 +26,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
 
     // Persisted state using KVS store.
-    const stateAtom = createKvsStore({
+    const stateAtom = KvsStore.make({
       key: `${meta.profile.key}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),
@@ -34,7 +34,6 @@ export default Capability.makeModule(
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-      awaiting: undefined,
       sdkMigrationRunning: {},
       navigableCollections: false,
       viewersByObject: {},
@@ -44,19 +43,25 @@ export default Capability.makeModule(
     }).pipe(Atom.keepAlive);
 
     const manager = yield* Capabilities.PluginManager;
-    // Update navigableCollections based on plugin state.
+    // Layout is optional and lands after this module: no plugin contributes it in standalone
+    // harnesses (Storybook, tests), so hoist the capability atom and let the derivation heal if and
+    // when it arrives.
+    const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
+    const navigableCollectionsAtom = Atom.make((get) => {
+      const [layoutAtom] = get(layoutCapabilityAtom);
+      const isMobile = layoutAtom ? get(layoutAtom).mode === 'mobile' : false;
+      return isMobile || get(manager.enabled).includes('org.dxos.plugin.stack');
+    });
     const updateNavigableCollections = () => {
-      const enabled =
-        manager.getEnabled().includes('org.dxos.plugin.stack') ||
-        manager.getEnabled().includes('org.dxos.plugin.simpleLayout');
+      const navigableCollections = registry.get(navigableCollectionsAtom);
       const current = registry.get(ephemeralAtom);
-      if (enabled !== current.navigableCollections) {
-        registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections: enabled }));
+      if (navigableCollections !== current.navigableCollections) {
+        registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections }));
       }
     };
     // Check initial state and subscribe to changes.
     updateNavigableCollections();
-    const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
+    const unsubscribe = registry.subscribe(navigableCollectionsAtom, updateNavigableCollections);
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

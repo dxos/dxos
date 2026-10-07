@@ -3,11 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-
-import * as Game from './types/Game';
+import { Game } from '#types';
 
 export const translations = [
   {
@@ -28,8 +27,9 @@ export const translations = [
         'create-panel.variant.label': 'Select variant',
         'create-panel.variant.placeholder': 'Search variants...',
         'create-panel.submit.label': 'Create',
+        'create-panel.continue.label': 'Continue',
         'unsupported-variant.label': 'Unsupported game variant',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -6,6 +6,7 @@ import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
 import {
+  EntityKind,
   KindId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -19,8 +20,9 @@ import {
   SnapshotKindId,
   TypeEntityId,
   TypeId,
-} from '../common/types';
-import { MetaId } from '../common/types/model-symbols';
+} from '../common/types/index.ts';
+import { SCALAR_META_FIELDS } from '../common/types/meta.ts';
+import { MetaId } from '../common/types/model-symbols.ts';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.
@@ -96,19 +98,29 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   copySymbolProperty(source, snapshot, ParentId);
 
   // Metadata symbol. Copy arrays/objects so the snapshot is not affected by mutations to the live meta.
-  copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
-    keys: [...(meta?.keys ?? [])],
-    tags: [...(meta?.tags ?? [])],
-    ...(meta?.key != null ? { key: meta.key } : {}),
-    ...(meta?.version != null ? { version: meta.version } : {}),
-    ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
-  }));
+  copySymbolProperty(source, snapshot, MetaId, (meta: any) => {
+    const copy: Record<string, unknown> = {
+      keys: [...(meta?.keys ?? [])],
+      tags: [...(meta?.tags ?? [])],
+      ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
+    };
+    // Enumerated from the schema so a newly added meta field is carried without touching this.
+    for (const field of SCALAR_META_FIELDS) {
+      if (meta?.[field] != null) {
+        copy[field] = meta[field];
+      }
+    }
+    return copy;
+  });
 
-  // Relation endpoint symbols.
-  copySymbolProperty(source, snapshot, RelationSourceDXNId);
-  copySymbolProperty(source, snapshot, RelationTargetDXNId);
-  copySymbolProperty(source, snapshot, RelationSourceId);
-  copySymbolProperty(source, snapshot, RelationTargetId);
+  // Relation endpoint symbols, read only on a relation: on any other object the echo-db getters throw an invariant
+  // violation, so every snapshot of a plain object paid for two caught, stack-traced errors.
+  if (source[KindId] === EntityKind.Relation) {
+    copySymbolProperty(source, snapshot, RelationSourceDXNId);
+    copySymbolProperty(source, snapshot, RelationTargetDXNId);
+    copySymbolProperty(source, snapshot, RelationSourceId);
+    copySymbolProperty(source, snapshot, RelationTargetId);
+  }
 
   return Object.freeze(snapshot) as T;
 };

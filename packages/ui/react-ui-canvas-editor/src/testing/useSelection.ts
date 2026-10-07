@@ -4,13 +4,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { SelectionModel } from '@dxos/graph';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { omit } from '@dxos/util';
 
-import type { CanvasBoard, CanvasGraphModel } from '../types';
+import type { CanvasBoard, CanvasGraphModel } from '../types/index.ts';
 
-export const useSelection = (graph?: CanvasGraphModel): [SelectionModel, CanvasBoard.Shape | undefined] => {
-  const selection = useMemo(() => new SelectionModel(), []);
+export const useSelection = (
+  graph?: CanvasGraphModel,
+): [SelectionModel.SelectionModel, CanvasBoard.Shape | undefined] => {
+  const selection = useMemo(() => new SelectionModel.SelectionModel(), []);
   const [selected, setSelected] = useState<CanvasBoard.Shape | undefined>();
   useEffect(() => {
     if (!graph) {

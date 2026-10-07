@@ -4,13 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading } from '@dxos/react-ui/testing';
 
 /** The companions a review story shows beside the editor, top to bottom. */
@@ -51,16 +52,16 @@ export const ReviewStoryLayout = ({ panels = ['comments', 'history'], attendable
   }
 
   return (
-    <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
+    <Layout.Grid grow cols={[3, 2]} {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-      <div
-        className='grid min-h-0 divide-y divide-subdued-separator'
-        style={{ gridTemplateRows: `repeat(${companionData.length}, minmax(0, 1fr))` }}
+      <Layout.Grid
+        rows={companionData.map(() => 'minmax(0, 1fr)')}
+        classNames='min-h-0 divide-y divide-separator-subtle'
       >
         {companionData.map((data) => (
           <Surface.Surface key={data.subject} type={AppSurface.Article} data={data} limit={1} />
         ))}
-      </div>
-    </div>
+      </Layout.Grid>
+    </Layout.Grid>
   );
 };

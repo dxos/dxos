@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-introspect';
 
@@ -26,7 +26,9 @@ export const translations = [
 
         // ToolsExplorer
         'connection-failed.title': 'MCP Server connection failed',
+        'not-configured.title': 'MCP Server is not configured',
+        'not-configured.message': 'Set the EDGE endpoint (runtime.services.edge.url) to browse tools.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

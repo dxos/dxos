@@ -4,14 +4,15 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Card, type ThemedClassName } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 //
 // Root
 //
 
-type HeaderRootProps = ThemedClassName<
+type HeaderRootProps = Util.ThemedClassName<
   PropsWithChildren<{
     'data-testid'?: string;
   }>
@@ -23,7 +24,7 @@ type HeaderRootProps = ThemedClassName<
  * one header structure.
  */
 const HeaderRoot = ({ classNames, children, ...props }: HeaderRootProps) => (
-  <Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
+  <Card.Root border={false} classNames={mx('p-1 border-b border-separator-subtle', classNames)} {...props}>
     <Card.Body>{children}</Card.Body>
   </Card.Root>
 );

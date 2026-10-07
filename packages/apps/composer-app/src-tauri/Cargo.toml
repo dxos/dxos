@@ -14,6 +14,11 @@ rust-version = "1.77.2"
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+# Embeds a W3C WebDriver server (autocue's `--target tauri` on macOS). Automation builds only: it
+# lets any local process drive the app, so release builds must never enable it.
+webdriver = ["dep:tauri-plugin-wdio-webdriver"]
+
 [build-dependencies]
 tauri-build = { version = "2.5", features = [] }
 
@@ -31,6 +36,9 @@ tauri-plugin-shell = "2"
 tauri-plugin-deep-link = "2.4"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
+# `unsafe-headers` lets the web view set X-Access-Token; `dangerous-settings` lets it accept the
+# LaMetric device's self-signed certificate on the LAN.
+tauri-plugin-http = { version = "2", features = ["unsafe-headers", "dangerous-settings"] }
 
 # Plugin asset cache: shared between desktop and mobile (iOS).
 sha2 = "0.10"
@@ -39,12 +47,21 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 tokio = { version = "1", features = ["rt", "fs", "net", "sync", "macros"] }
 url = "2"
 
+tauri-plugin-wdio-webdriver = { version = "1.4", optional = true }
+
 [target.'cfg(unix)'.dependencies]
 xattr = "1"
 
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tauri-plugin-web-auth = "1"
 tauri-plugin-haptics = "2"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+# Objective-C runtime only: framework crates auto-link against the wrong SDK here, so AVFAudio is
+# linked by the Xcode target instead (see src/audio_input.rs).
+objc2 = "0.5"
+# Runtime lookup of the Obj-C bridge entry points (see src/audio_input.rs).
+libc = "0.2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 # Localhost plugin serves bundled assets via HTTP (needed for SharedWorker in WKWebView on desktop).
@@ -56,7 +73,14 @@ http-body-util = "0.1"
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+# The same versions wry links; see src/webkit_features.rs.
+webkit2gtk = "2.0"
+glib = "0.18"
+
 [target.'cfg(target_os = "macos")'.dependencies]
+# Reads the signed application identifier (src/passkey.rs); already in the graph through Tauri.
+core-foundation = "0.10"
 tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.1" }
 tauri-plugin-macos-passkey = "0.1.0"
 

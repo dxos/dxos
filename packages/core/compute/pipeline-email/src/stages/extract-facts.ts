@@ -20,7 +20,7 @@ export const extractFactsStage = (indexFacts: FactIndexer): Stage.Stage<Message.
   Stage.map('extract-facts', (message) =>
     Effect.tryPromise(() => indexFacts(message)).pipe(
       Effect.tapError((error) => Effect.logWarning('extract-facts failed; degrading to no facts', error)),
-      Effect.orElse(() => Effect.succeed<RDF.Fact[]>([])),
+      Effect.catch(() => Effect.succeed<RDF.Fact[]>([])),
       Effect.as(message),
     ),
   );

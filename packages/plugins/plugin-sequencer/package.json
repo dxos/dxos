@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sequencer",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Music sequencer plugin (Score / Track / Sequence / Note) with a canvas-based step grid.",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -35,20 +43,19 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/SequencerPlugin.workerd.ts",
-        "node": "./src/SequencerPlugin.node.ts",
-        "default": "./src/SequencerPlugin.tsx"
-      },
-      "types": "./dist/types/src/SequencerPlugin.d.ts",
-      "workerd": "./dist/lib/SequencerPlugin.workerd.mjs",
-      "node": "./dist/lib/SequencerPlugin.node.mjs",
-      "default": "./dist/lib/SequencerPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -58,15 +65,21 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Note": {
+      "source": "./src/types/Note.ts",
+      "types": "./dist/types/src/types/Note.d.ts",
+      "import": "./dist/lib/Note.mjs"
+    },
+    "./Patch": {
+      "source": "./src/types/Patch.ts",
+      "types": "./dist/types/src/types/Patch.d.ts",
+      "import": "./dist/lib/Patch.mjs"
     },
     "./Score": {
       "source": "./src/types/Score.ts",
@@ -88,22 +101,16 @@
       "types": "./dist/types/src/types/SequencerEvents.d.ts",
       "import": "./dist/lib/SequencerEvents.mjs"
     },
+    "./SequencerPlugin": {
+      "source": "./src/SequencerPlugin.ts",
+      "types": "./dist/types/src/SequencerPlugin.d.ts",
+      "import": "./dist/lib/SequencerPlugin.mjs"
+    },
     "./Track": {
       "source": "./src/types/Track.ts",
       "types": "./dist/types/src/types/Track.d.ts",
       "import": "./dist/lib/Track.mjs"
-    },
-    "./Note": {
-      "source": "./src/types/Note.ts",
-      "types": "./dist/types/src/types/Note.d.ts",
-      "import": "./dist/lib/Note.mjs"
-    },
-    "./Patch": {
-      "source": "./src/types/Patch.ts",
-      "types": "./dist/types/src/types/Patch.d.ts",
-      "import": "./dist/lib/Patch.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -150,7 +157,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react-resize-detector": "catalog:",
     "tone": "catalog:"

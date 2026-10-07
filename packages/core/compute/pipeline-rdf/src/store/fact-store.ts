@@ -5,9 +5,9 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
-import { type SemanticIndexError } from '../errors';
-import { type SemanticQuery } from '../internal/sparql/query-builder';
-import { type Fact } from '../types';
+import { type SemanticIndexError } from '../errors.ts';
+import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
+import { type Fact } from '../types/index.ts';
 
 //
 // The FactStore service tag and API surface only. Implementations live in `fact-store-live.ts`
@@ -30,4 +30,4 @@ export interface FactStoreApi {
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 
-export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactStore, FactStoreApi>() {}
+export class FactStore extends Context.Service<FactStore, FactStoreApi>()('@dxos/pipeline-rdf/FactStore') {}

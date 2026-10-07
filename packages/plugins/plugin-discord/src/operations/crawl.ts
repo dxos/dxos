@@ -6,14 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { CrawlError } from '@dxos/crawler';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
 
-import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services';
-import * as DiscordOperation from '../types/DiscordOperation';
+import { DiscordOperation } from '#types';
+
+import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services/index.ts';
 
 /**
  * Runs the crawl on the session crawl runtime (which owns the SQLite-backed stores) so state
@@ -29,14 +31,18 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         invariant(db, 'No database for connection ref — invoker did not provide Database.layer.');
 
         const ai = yield* AiService.AiService;
-        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(Layer.provide(Database.layer(db)));
+        // Captured here because the program runs on the crawl runtime, which lacks the operation's services.
+        const credentials = yield* Credential.CredentialsService;
+        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(
+          Layer.provide(Database.layer(db)),
+          Layer.provide(Layer.succeed(Credential.CredentialsService, credentials)),
+        );
 
         const program = Effect.gen(function* () {
-          const store = yield* QuestionStore;
-          const known = new Set((yield* store.list()).map((question) => question.text));
+          const known = new Set((yield* QuestionStore.list()).map((question) => question.text));
           for (const text of questions ?? []) {
             if (!known.has(text)) {
-              yield* store.add(text);
+              yield* QuestionStore.add(text);
               // Track within this batch too, so a repeated text in `questions` is added once.
               known.add(text);
             }

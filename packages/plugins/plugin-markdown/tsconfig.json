@@ -92,6 +92,12 @@
       "path": "../../sdk/versioning"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

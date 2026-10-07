@@ -3,18 +3,19 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
-import { FormatAnnotation, TypeFormat } from './types';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+
+import { FormatAnnotation, TypeFormat } from './types.ts';
 
 /**
  * Email address (RFC 5321)
  * https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
  */
 export const Email = Schema.String.pipe(
-  Schema.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
+  Schema.check(Schema.isPattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/u)),
   FormatAnnotation.set(TypeFormat.Email),
-  Schema.annotations({
+  Schema.annotate({
     title: 'Email',
     description: 'Email address',
   }),
@@ -45,13 +46,20 @@ export const Regex = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex));
  */
 export const Text = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Text));
 
+const URL_PATTERN = /^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
+
 /**
  * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
 export const URL = Schema.String.pipe(
-  Schema.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
+  // JSON Schema patterns take no flags, so the case-sensitive source is exported rather than dropped.
+  Schema.check(
+    Schema.isPattern(URL_PATTERN, {
+      toJsonSchema: () => ({ pattern: URL_PATTERN.source }),
+    }),
+  ),
   FormatAnnotation.set(TypeFormat.URL),
-  Schema.annotations({
+  Schema.annotate({
     title: 'URL',
     description: 'URL',
   }),
@@ -61,9 +69,9 @@ export const URL = Schema.String.pipe(
  * UUID (RFC 4122)
  * https://datatracker.ietf.org/doc/html/rfc4122
  */
-export const UUID = Schema.UUID.pipe(
+export const UUID = Schema.String.check(Schema.isUUID()).pipe(
   FormatAnnotation.set(TypeFormat.UUID),
-  Schema.annotations({
+  Schema.annotate({
     [SchemaAST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
   }),
 );

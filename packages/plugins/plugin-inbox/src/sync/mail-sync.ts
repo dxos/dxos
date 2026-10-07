@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Filter, Obj, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { Database, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
+import type * as EchoError from '@dxos/echo/Error';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -21,10 +21,12 @@ import { EmailStage } from '@dxos/pipeline-email';
 import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { MailSyncError } from '../errors';
-import * as Mailbox from '../types/Mailbox';
-import type * as SyncStreamConfig from '../types/SyncStreamConfig';
-import { readBindingOptions } from './binding';
+import { Mailbox, SyncStreamConfig } from '#types';
+
+import { MailSyncError } from '../errors.ts';
+import { readBindingOptions } from './binding.ts';
+import { diffTags } from './tag-diff.ts';
+import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, tagsFromIndex } from './tag-push.ts';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
@@ -37,7 +39,11 @@ import { readBindingOptions } from './binding';
  * Progress-registry key for a mailbox's mail-sync monitor — the mailbox URI plus `#sync` so distinct
  * monitor types (e.g. `#topics`) can coexist. `MailboxArticle` subscribes to show the sync meter.
  */
-export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
+// Absolute form, matching the other pipeline keys: the producer (this module, running in an
+// operation) and the consumer (`MailboxArticle`) derive the key independently, so a hydration-
+// dependent URI form would silently hide the meter. See `InboxOperation.createProgressKey`.
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) =>
+  Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + '#sync';
 
 /** Options the harness passes to a provider's {@link MailSyncSource.buildSource} for one run. */
 export type MailSyncSourceOptions = {
@@ -103,17 +109,40 @@ export type MailSyncSource = {
    */
   readonly nextToken?: () => string | undefined;
   /**
+   * Whether the provider has more delta beyond the chunk fetched this run. When true the harness requests
+   * a durable `runAgain()` so reconciliation is bounded per run and resumed from the advanced token —
+   * the same budget/re-run treatment additions already get.
+   */
+  readonly hasMoreDelta?: () => boolean;
+  /**
    * The already-committed feed foreign ids this run's reconcile branch targets (JMAP `updated`, Gmail
    * label-change message ids). The harness resolves *only* these to EntityIds (see
    * `Cursor.LayerOptions.reconcileFilter`) rather than scanning the whole feed.
    */
   readonly reconcileForeignIds?: readonly string[];
   /**
-   * Whether the provider has more delta beyond the chunk fetched this run. When true the harness requests
-   * a durable `runAgain()` so reconciliation is bounded per run and resumed from the advanced token —
-   * the same budget/re-run treatment additions already get.
+   * Tag uri → provider label id for every tag this provider can write — its label map inverted. Its
+   * keys are the eligible set for tag reconciliation, so a tag absent here is invisible to the push
+   * (which is what keeps user tags from being pushed as new provider labels).
+   *
+   * Absent, or empty, disables the tag-push phase for the run.
    */
-  readonly hasMoreDelta?: () => boolean;
+  readonly tagBindings?: ReadonlyMap<string, string>;
+};
+
+/**
+ * Per-op outcome of a tag push. The split exists because "the push drained" and "every op succeeded"
+ * are different questions, and only the first may advance the reconciliation base.
+ */
+export type TagPushResult = {
+  /**
+   * Ops that reached a terminal state — applied, or permanently rejected (message deleted, label
+   * gone, insufficient scope). Safe to advance past: no retry can change a permanent rejection, and
+   * refusing to advance would block the base forever.
+   */
+  readonly settled: readonly TagPushOp[];
+  /** Ops that failed transiently (429, 5xx, timeout) and must be retried on a later run. */
+  readonly pending: readonly TagPushOp[];
 };
 
 /** Resolved run context the harness hands a provider's {@link MailSyncProviderService.prepare}. */
@@ -144,16 +173,24 @@ export interface MailSyncProviderService {
   readonly prepare: (
     preparation: MailSyncPreparation,
   ) => Effect.Effect<MailSyncSource | undefined, MailSyncError, never>;
+  /**
+   * Applies local tag changes at the provider. Absent for a provider with no write path, which
+   * degrades the run to pull-only rather than failing it.
+   *
+   * Reports per-op outcomes rather than succeeding or failing as a whole: the harness decides what
+   * each outcome means for the reconciliation base, and only a run with nothing `pending` may advance
+   * it. Retry is between runs — never a loop inside this call, which owns no backoff state.
+   */
+  readonly pushTags?: (ops: readonly TagPushOp[]) => Effect.Effect<TagPushResult, MailSyncError, never>;
 }
 
 /**
  * Effect service carrying the provider a mail-sync run drives. A handler provides a layer whose
  * implementation captures the provider's API + resolver, so the shared harness never names them.
  */
-export class MailSyncProvider extends Context.Tag('@dxos/plugin-inbox/MailSyncProvider')<
-  MailSyncProvider,
-  MailSyncProviderService
->() {}
+export class MailSyncProvider extends Context.Service<MailSyncProvider, MailSyncProviderService>()(
+  '@dxos/plugin-inbox/MailSyncProvider',
+) {}
 
 /**
  * The reconcile branch, shared by both providers: resolves each change's foreignId to its feed message's
@@ -173,7 +210,11 @@ export const reconcileToChanges = (
           return undefined;
         }
         return item._tag === 'delete'
-          ? ({ _tag: 'delete', foreignId: item.foreignId, entityId } satisfies EmailStage.Change)
+          ? ({
+              _tag: 'delete',
+              foreignId: item.foreignId,
+              entityId,
+            } satisfies EmailStage.Change)
           : ({
               _tag: 'retag',
               foreignId: item.foreignId,
@@ -184,6 +225,144 @@ export const reconcileToChanges = (
       }),
     ),
   );
+
+/** What the tag-push phase reports back to the run's state-persistence decision. */
+type TagPushOutcome = {
+  /** Heads to persist as the next base, or undefined when the phase did not run. */
+  readonly nextHeads: readonly string[] | undefined;
+  /** Ops that must be retried on a later run; non-empty blocks the base from advancing. */
+  readonly pending: readonly TagPushOp[];
+};
+
+const NO_TAG_PUSH: TagPushOutcome = { nextHeads: undefined, pending: [] };
+
+/**
+ * Messages per {@link resolveForeignIds} query. Each match is returned in full (bodies included), so an
+ * unbounded id list — an additive reconcile over a whole mailbox — exceeds the 32 MiB RPC cap and the
+ * 128 MB isolate on EDGE.
+ */
+const RESOLVE_FOREIGN_IDS_CHUNK = 100;
+
+/**
+ * Resolves message ids to provider foreign ids for messages the run did not already touch — a user
+ * starring a message synced weeks ago. Bounded by the push diff, not the feed.
+ */
+const resolveForeignIds = Effect.fn('mail-sync.resolveForeignIds')(function* (
+  feed: Feed.Feed,
+  foreignKeySource: string,
+  messageIds: readonly string[],
+) {
+  const resolved = new Map<string, string>();
+  for (let offset = 0; offset < messageIds.length; offset += RESOLVE_FOREIGN_IDS_CHUNK) {
+    const chunk = messageIds.slice(offset, offset + RESOLVE_FOREIGN_IDS_CHUNK);
+    const messages = yield* Feed.query(feed, Query.select(Filter.id(...chunk))).run;
+    for (const message of messages) {
+      for (const key of Obj.getMeta(message).keys) {
+        if (key.source === foreignKeySource) {
+          resolved.set(message.id, key.id);
+        }
+      }
+    }
+  }
+  return resolved;
+});
+
+/**
+ * The local → provider half of tag sync: diff the tag index against the base recorded at the last
+ * completed run, and apply what changed locally at the provider.
+ *
+ * Returns the heads to persist as the next base and any ops that must be retried. Never fails the
+ * run — a provider with no write path, no bindings, or an unreadable base degrades to pull-only.
+ */
+const pushLocalTags = Effect.fn('mail-sync.pushTags')(function* ({
+  provider,
+  source,
+  binding,
+  feed,
+  tagIndex,
+  observed,
+}: {
+  provider: MailSyncProviderService;
+  source: MailSyncSource;
+  binding: Cursor.ExternalCursor;
+  feed: Feed.Feed;
+  tagIndex: TagIndex.TagIndex;
+  observed: ReturnType<typeof createRemoteObserver>;
+}) {
+  const bindings = source.tagBindings;
+  if (!provider.pushTags || !bindings || bindings.size === 0) {
+    return NO_TAG_PUSH;
+  }
+
+  const eligible = new Set(bindings.keys());
+  const savedHeads = Cursor.readTagHeads(binding);
+  // Captured here, between the pull's commit and the push — see the ordering rule in TAG-SYNC.md.
+  const nextHeads = Obj.version(tagIndex).automergeHeads;
+  const local = tagsFromIndex(tagIndex.index ?? {}, eligible);
+
+  // A base is absent for three different reasons, and only one of them justifies pushing nothing.
+  //
+  // A genuinely NEW binding (no heads, no watermark) has no evidence its local tags were ever meant
+  // for the provider, so it records a base and pushes nothing. But a binding that has been syncing
+  // for weeks and is only now gaining tag sync ALSO has no heads — and treating that as a first sync
+  // strands every tag the user already applied: the first run absorbs them into the base, after which
+  // `local ⊖ base` is empty forever and they can never reach the provider. Diagnosed live against a
+  // real mailbox whose four existing stars had become permanently unpushable exactly this way.
+  //
+  // So an existing binding gaining tag sync takes the additive path instead — push what the remote
+  // lacks, remove nothing — which is the same treatment as heads that no longer resolve.
+  let base: ReturnType<typeof tagsFromIndex> | undefined;
+  const newBinding = Cursor.parseKey(binding.max) === 0 && Cursor.readToken(binding) === undefined;
+  let firstSync = savedHeads === undefined && newBinding;
+  if (savedHeads !== undefined) {
+    try {
+      const historical = Obj.getVersion(tagIndex, savedHeads);
+      base = tagsFromIndex(historical.index ?? {}, eligible);
+    } catch (error) {
+      // The replica no longer holds the change those heads name (compaction, epoch, a fresh load on
+      // another runtime). Fall back to the additive reconcile rather than re-baselining silently.
+      log.warn('mail sync: tag base heads did not resolve, falling back to additive reconcile', {
+        provider: provider.name,
+        error,
+      });
+      firstSync = false;
+    }
+  }
+
+  const remote = remoteFromBase(base, observed, eligible);
+  const diff = diffTags({ base, local, remote, eligible, firstSync });
+  if (diff.push.size === 0) {
+    log('mail sync: no local tag changes to push', { provider: provider.name, firstSync, based: base !== undefined });
+    return { nextHeads, pending: [] };
+  }
+
+  // Most ids were captured in flight; only messages untouched by this run need a lookup.
+  const missing = [...diff.push.keys()].filter((id) => !observed.foreignIds.has(id));
+  const looked = yield* resolveForeignIds(feed, provider.foreignKeySource, missing);
+  const foreignIds = new Map([...observed.foreignIds, ...looked]);
+
+  const ops = resolvePushOps({ push: diff.push, foreignIds, bindings });
+  if (ops.length === 0) {
+    log('mail sync: tag changes resolved to no pushable ops', { provider: provider.name, changed: diff.push.size });
+    return { nextHeads, pending: [] };
+  }
+
+  log.info('mail sync: pushing local tag changes', { provider: provider.name, ops: ops.length });
+  const result = yield* provider.pushTags(ops).pipe(
+    Effect.catch((error) => {
+      // A fault that aborted the whole push (auth revoked, network down): every op is unsettled, so
+      // the base must not advance.
+      log.warn('mail sync: tag push failed', { provider: provider.name, error });
+      return Effect.succeed({ settled: [], pending: ops } satisfies TagPushResult);
+    }),
+  );
+  log.info('mail sync: tag push complete', {
+    provider: provider.name,
+    settled: result.settled.length,
+    pending: result.pending.length,
+  });
+  return { nextHeads, pending: result.pending };
+});
 
 export type RunMailSyncOptions = {
   readonly binding: Ref.Ref<Cursor.Cursor>;
@@ -203,7 +382,7 @@ export const runMailSync = (
   options: RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError,
+  MailSyncError | EchoError.EntityNotFoundError,
   MailSyncProvider | Database.Service | Capability.Service | Operation.Service | Trace.TraceService
 > =>
   Effect.gen(function* () {
@@ -305,7 +484,10 @@ export const runMailSync = (
     // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
     const traceWriter = yield* Trace.TraceService;
     const progressKey = createSyncProgressKey(mailbox);
-    const syncLabel = mailbox.name ?? 'Mailbox';
+    // The phase leads, so the meter says what is happening before it says what to: sync and analyze
+    // run against the same mailbox and both meters read `message`, and a name-first label truncated
+    // away the only part that told them apart.
+    const syncLabel = `Syncing ${mailbox.name ?? 'mailbox'}`;
     let progressCurrent = 0;
     let progressTotal: number | undefined;
     type StatusPatch = {
@@ -391,6 +573,16 @@ export const runMailSync = (
 
     // Pass-through stage: collects per-message telemetry into the run counters. Publishing a live
     // snapshot from these is disabled (see the TODO above) until it goes through the trace feed.
+    // Records the provider's reported tag state as changes stream past — the delta is consumed by the
+    // pipeline, so it cannot be asked for after the fact. See `tag-push.ts`.
+    const remoteObserver = createRemoteObserver();
+    const observeTags = Stage.map('observe-tags', (change: EmailStage.Change) =>
+      Effect.sync(() => {
+        remoteObserver.observe(change);
+        return change;
+      }),
+    );
+
     const collectStats = Stage.map('collect-stats', (change: EmailStage.Change) =>
       Effect.sync(() => {
         // Telemetry counts new messages only; retag/delete changes pass through.
@@ -464,6 +656,7 @@ export const runMailSync = (
       // onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
+      observeTags,
       collectStats,
       EmailStage.toCommitUnit({ tagIndex }),
       Stream.grouped(provider.config.commitPageSize),
@@ -496,7 +689,7 @@ export const runMailSync = (
         // emitted here or the meter's key stays suppressed for every later run.
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
-          reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+          reportStatus({ message: Progress.STATUS_CANCELLED });
         }),
       ),
       Effect.tapError((error) =>
@@ -504,7 +697,7 @@ export const runMailSync = (
           // Log the raw error; the meter shows only a short reason (the full exception — provider
           // errors, auth tokens — must not reach the UI).
           log.warn('mail sync failed', { provider: provider.name, error });
-          reportStatus({ message: PROGRESS_STATUS_FAILED });
+          reportStatus({ message: Progress.STATUS_FAILED });
         }),
       ),
     );
@@ -512,6 +705,32 @@ export const runMailSync = (
     // Flush indexes once at end of run so cross-run dedup / contact resolution observe this run's writes
     // (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
+
+    // Local → provider tag reconciliation. Runs AFTER the pull has committed and BEFORE the sync state
+    // is persisted: the heads captured here already contain this run's pulled tags (so they are not
+    // re-pushed next run) while anything the user does after this instant belongs to the next run (so
+    // it is not silently absorbed). See `docs/TAG-SYNC.md` §"Ordering within a run".
+    //
+    // Defects are contained here rather than allowed to fail the run. This phase sits OUTSIDE the
+    // pipeline's `tapError`, so an escaping failure would end the run with no terminal status at all —
+    // leaving the progress key live and the mailbox's Sync button disabled until the user navigates
+    // away. The pull has already committed by this point, so losing the push is a degradation; losing
+    // the run's completion signal is a visible break.
+    const tagPush = yield* pushLocalTags({
+      provider,
+      source,
+      binding,
+      feed,
+      tagIndex,
+      observed: remoteObserver,
+    }).pipe(
+      Effect.catchCause((cause) =>
+        Effect.sync(() => {
+          log.warn('mail sync: tag push phase failed, continuing pull-only', { provider: provider.name, cause });
+          return NO_TAG_PUSH;
+        }),
+      ),
+    );
 
     // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
     // attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
@@ -540,7 +759,7 @@ export const runMailSync = (
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+    reportStatus({ message: Progress.STATUS_COMPLETE });
 
     // Fold the run's observed key extent so the window advances even if every scanned message was
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
@@ -560,22 +779,27 @@ export const runMailSync = (
       newMessages: stats.newMessages,
       action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
     });
-    if (!capped) {
-      // Additions weren't truncated, so this run's chunk fully drained: mark backfill done (the backward
-      // half reached the horizon) and advance the delta token LAST, only after the merged stream
-      // committed. A crash/cap leaves the token unadvanced, so the next run re-fetches the same chunk
-      // (additions dedup-drop, tag ops re-apply idempotently).
-      Cursor.completeBackfill(binding, horizon.getTime());
-      const nextToken = source.nextToken?.();
-      if (nextToken !== undefined) {
-        Cursor.writeToken(binding, nextToken);
+    if (tagPush.pending.length === 0) {
+      // Heads advance on capped runs too: a backfill caps every run, and without a base each run's
+      // additive reconcile re-pushes — and loads in full — every message synced so far until the
+      // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds (see
+      // TAG-SYNC.md for the one concurrent-edit case this does not cover).
+      //
+      // The token and backfill mark advance LAST and only uncapped, after the merged stream committed
+      // and the push returned; a crash/cap leaves them, so the next run re-fetches the same chunk.
+      if (!capped) {
+        Cursor.completeBackfill(binding, horizon.getTime());
+      }
+      const nextToken = capped ? undefined : source.nextToken?.();
+      if (nextToken !== undefined || tagPush.nextHeads !== undefined) {
+        Cursor.writeSyncState(binding, { token: nextToken, tagHeads: tagPush.nextHeads });
       }
     }
-    if (capped || hasMoreDelta) {
+    if (capped || hasMoreDelta || tagPush.pending.length > 0) {
       // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
       // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
       // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
-      yield* Operation.runAgain().pipe(Effect.orDie);
+      return yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
     log('sync complete', {
@@ -584,4 +808,7 @@ export const runMailSync = (
       taken,
     });
     return { newMessages: stats.newMessages };
-  });
+  }).pipe(
+    // Synced mail is the provider's content, not something the user wrote.
+    Effect.provideService(Database.Origin, 'system'),
+  );

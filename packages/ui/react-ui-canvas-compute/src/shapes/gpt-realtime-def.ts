@@ -3,19 +3,19 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-import { GptRealtimeComponent } from './GptRealtime';
+import { createFunctionAnchors } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { GptRealtimeComponent } from './GptRealtime.tsx';
 
 // Kept out of `GptRealtime.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-export const GptRealtimeShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const GptRealtimeShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('gpt-realtime'),
   }),
 );

@@ -4,19 +4,21 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
-import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Treegrid } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';
 
-import { NAV_TREE_ITEM } from '../NavTree';
-import { useNavTreeContext } from '../NavTreeContext';
-import { type NavTreeItemColumnsProps } from '../types';
-import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction';
+import { NAV_TREE_ITEM } from '../NavTree/index.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { type NavTreeItemColumnsProps } from '../types.ts';
+import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction.tsx';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
@@ -28,19 +30,18 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
 
   return (
     // `data-popover-anchor` lets the enclosing row highlight itself while a popover (e.g. rename) is open on it.
+    // The empty div holds the actions track when the item has no actions.
     <div className='contents dx-app-no-drag' {...(anchored && { 'data-popover-anchor': '' })}>
-      <ActionRoot>
-        {allActions.length === 1 ? (
-          <Treegrid.Cell classNames='contents'>
+      <Tree.ItemActions>
+        <ActionRoot>
+          {allActions.length === 1 ? (
             <NavTreeItemMonolithicAction
-              baseLabel={toLocalizedString(allActions[0].properties?.label, t)}
+              baseLabel={Theme.toLocalizedString(allActions[0].properties?.label, t)}
               parent={item}
               path={path}
               {...allActions[0]}
             />
-          </Treegrid.Cell>
-        ) : allActions.length > 1 ? (
-          <Treegrid.Cell classNames='contents'>
+          ) : allActions.length > 1 ? (
             <NavTreeItemActionDropdownMenu
               testId={`navtree.treeItem.actionsLevel${level}`}
               label={t('tree-item-actions.label')}
@@ -50,16 +51,12 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
               menuActions={allActions}
               caller={NAV_TREE_ITEM}
             />
-          </Treegrid.Cell>
-        ) : (
-          <Treegrid.Cell />
-        )}
-      </ActionRoot>
-      {ItemEnd && (
-        <Treegrid.Cell classNames='contents'>
-          <ItemEnd node={item} open={open} />
-        </Treegrid.Cell>
-      )}
+          ) : (
+            <div />
+          )}
+        </ActionRoot>
+      </Tree.ItemActions>
+      {ItemEnd && <ItemEnd node={item} open={open} />}
     </div>
   );
 });

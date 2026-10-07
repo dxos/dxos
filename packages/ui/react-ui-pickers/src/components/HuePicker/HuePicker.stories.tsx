@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { HuePicker, type HuePickerProps } from './HuePicker';
+import { HuePicker, type HuePickerProps } from './HuePicker.tsx';
 
 const DefaultStory = (props: HuePickerProps) => {
   const [hue, setHue] = useState<string | undefined>(props.defaultValue);

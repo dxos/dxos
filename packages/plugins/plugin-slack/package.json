@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-slack",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS plugin that integrates Slack as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -11,13 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -30,14 +38,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SlackPlugin.ts",
-      "types": "./dist/types/src/SlackPlugin.d.ts",
-      "default": "./dist/lib/SlackPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -47,15 +60,16 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./SlackChannel": {
+      "source": "./src/types/SlackChannel.ts",
+      "types": "./dist/types/src/types/SlackChannel.d.ts",
+      "import": "./dist/lib/SlackChannel.mjs"
     },
     "./SlackEvents": {
       "source": "./src/types/SlackEvents.ts",
@@ -67,11 +81,18 @@
       "types": "./dist/types/src/types/SlackOperation.d.ts",
       "import": "./dist/lib/SlackOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./SlackPlugin": {
+      "source": "./src/SlackPlugin.ts",
+      "types": "./dist/types/src/SlackPlugin.d.ts",
+      "import": "./dist/lib/SlackPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "SlackChannel": [
+        "dist/types/src/types/SlackChannel.d.ts"
+      ],
       "SlackEvents": [
         "dist/types/src/types/SlackEvents.d.ts"
       ],
@@ -98,13 +119,14 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "vite": "catalog:"
   },

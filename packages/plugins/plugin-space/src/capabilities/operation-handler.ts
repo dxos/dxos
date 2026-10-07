@@ -9,6 +9,6 @@ import { SpaceOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet.handlers);
   }),
 );

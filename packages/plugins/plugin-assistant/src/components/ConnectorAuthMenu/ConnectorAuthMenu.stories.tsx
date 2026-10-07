@@ -2,40 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { connectorAuthActions } from '@dxos/plugin-connector';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { Graph } from '@dxos/plugin-graph';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Menu, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
+import { ActionToolbar, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { ConnectorAuthMenu } from './ConnectorAuthMenu';
+import { ConnectorAuthMenu } from './ConnectorAuthMenu.tsx';
 
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
  * separator between them. `Default` renders the `ConnectorAuthMenu` component. `Toolbar` feeds the
- * same `connectorAuthActions` atom into an object toolbar the way studio/ibkr/inbox do. */
-const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotations({ title: 'API key' }) });
+ * same `ConnectorAuth.actions` atom into an object toolbar the way studio/ibkr/inbox do. */
+const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotate({ title: 'API key' }) });
 
 const makeCredentialForm = (connectorId: string) => ({
   schema: CredentialSchema,
@@ -87,8 +86,8 @@ const TOOLBAR_NODE_ID = 'story-toolbar-target';
 const ToolbarStory = () => {
   const [space] = useSpaces();
   const registry = useContext(RegistryContext);
-  const runAction = useActionRunner();
-  const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const runAction = GraphHooks.useActionRunner();
+  const allConnectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(space?.db, Filter.type(Connection.Connection));
   const targets = useQuery(space?.db, Filter.type(Expando.Expando));
   const target = targets[0];
@@ -97,7 +96,7 @@ const ToolbarStory = () => {
     if (!space?.db || !target) {
       return undefined;
     }
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: CONNECTOR_IDS,
       db: space.db,
       spaceId: space.db.spaceId,
@@ -105,10 +104,10 @@ const ToolbarStory = () => {
       allConnectors,
       allConnections,
     });
-    const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(
-      Graph.addNodes([{ id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions }]),
-    );
+    const nextGraph = AppGraph.make({ registry });
+    AppGraph.addNodes(nextGraph, [
+      { id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions },
+    ]);
     return nextGraph;
   }, [registry, space, target, allConnectors, allConnections]);
 
@@ -120,11 +119,7 @@ const ToolbarStory = () => {
 
   return (
     <div className='p-4 border border-separator rounded-sm'>
-      <Menu.Root {...menuActions} onAction={runAction} attendableId={TOOLBAR_NODE_ID} alwaysActive>
-        <Menu.Toolbar>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menuActions} onAction={runAction} attendableId={TOOLBAR_NODE_ID} alwaysActive />
     </div>
   );
 };
@@ -137,8 +132,8 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(ConnectorSpec.Connector, testConnectors)],
       plugins: [
-        ...corePlugins(),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

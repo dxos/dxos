@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
-
-import * as CallsCapabilities from '../types/CallsCapabilities';
+import { CallsCapabilities } from '#types';
 
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 

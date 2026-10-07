@@ -16,6 +16,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Stack: 'src/types/Stack.ts',
     StackEvents: 'src/types/StackEvents.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

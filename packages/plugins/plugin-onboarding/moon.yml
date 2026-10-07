@@ -1,16 +1,24 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
 tasks:
-  build-exemplar:
-    script: pnpm run --silent build-exemplar
+  check-module-structure:
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export ./OnboardingPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
     deps:
-      - ^:build
+      - dx-trace-imports:build
+      - build
     inputs:
-      - scripts/build-exemplar-space.ts
-      - src/content/space-tour.md
-      - src/content/about-bramble.md
-    outputs:
-      - src/content/exemplar-space.dx.json
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

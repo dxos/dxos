@@ -2,13 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
 import { translations as introspectTranslations } from '@dxos/react-ui-introspect/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
 export const translations = [
   ...introspectTranslations,
+  // The panels' tables (credentials, feeds, …) read their column menus from react-ui-table.
+  ...tableTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
@@ -25,7 +28,7 @@ export const translations = [
         'config.label': 'Config',
         'storage.label': 'Storage',
         'sqlite.label': 'SQLite',
-        'logging.label': 'Logging',
+        'logging.label': 'Logs',
         'diagnostics.label': 'Diagnostics',
         'tracing.label': 'Tracing',
         'halo.label': 'HALO',
@@ -38,6 +41,7 @@ export const translations = [
         'space.label': 'Space',
         'feeds.label': 'Feeds',
         'objects.label': 'Objects',
+        'queries.label': 'Queries',
         'schema.label': 'Schema',
         'registry.label': 'Registry',
         'automerge.label': 'Automerge',
@@ -64,4 +68,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

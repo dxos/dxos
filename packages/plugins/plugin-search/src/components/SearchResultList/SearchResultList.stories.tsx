@@ -13,7 +13,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Corpus from '@dxos/plugin-testing/Corpus';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
@@ -23,7 +25,7 @@ import { Message } from '@dxos/types';
 import { buildSearchQuery, toSearchResults } from '#hooks';
 import { translations } from '#translations';
 
-import { SearchResultList } from './SearchResultList';
+import { SearchResultList } from './SearchResultList.tsx';
 
 random.seed(0);
 
@@ -87,15 +89,15 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
 
-              for (const { from, subject, body } of SAMPLE_MESSAGES) {
+              for (const { from, subject, body } of Corpus.SAMPLE_MESSAGES) {
                 defaultSpace.db.add(
                   Message.make({
                     sender: { email: from.email, name: from.name },
@@ -104,7 +106,8 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              // The story searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
       ],
@@ -133,7 +136,7 @@ export const Test: Story = {
     // a proper multi-row match set — the end-to-end proof that FTS + ranking + rendering are wired.
     await waitFor(
       async () => {
-        const rows = canvas.queryAllByRole('listitem');
+        const rows = canvas.queryAllByRole('option');
         await expect(rows.length).toBeGreaterThanOrEqual(2);
       },
       { timeout: 15_000 },
@@ -144,8 +147,8 @@ export const Test: Story = {
     await expect(matchingMark).toBeTruthy();
 
     // Each row's metadata cell shows the sender's name (populated by `enrichResult`).
-    const rows = canvas.getAllByRole('listitem');
-    const metadataCells = rows.map((row) => row.querySelector('span.text-description'));
+    const rows = canvas.getAllByRole('option');
+    const metadataCells = rows.map((row) => row.querySelector('span.text-fg-muted'));
     await expect(metadataCells.every((cell) => cell?.textContent)).toBe(true);
   },
 };

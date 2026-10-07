@@ -16,16 +16,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Mic } from '#components';
+import { createStoryDecorators } from '#testing';
 import { translations } from '#translations';
-
-import { createStoryDecorators } from '../testing';
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionCapabilities } from '#types';
 
 // Stable session key for the Mic button; any non-editor id works (the editor driver ignores it).
 const DOC_ID = 'keyword-detection';
@@ -33,7 +33,7 @@ const DOC_ID = 'keyword-detection';
 // Reads the shared recording flag toggled by the `Mic` button (the editor driver stays idle when no
 // editor view is registered for this session).
 const useRecordingSession = (docId: string): boolean => {
-  const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [session] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   return !!session?.recording && session.id === docId;
 };
 
@@ -53,25 +53,23 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Mic docId={DOC_ID} />
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
-        <Listbox.Root value={matched}>
-          <Listbox.Viewport thin padding>
-            <Listbox.Content aria-label='Keywords'>
-              {keywords.map((keyword) => (
-                <Listbox.Item key={keyword} id={keyword}>
-                  <Listbox.ItemLabel>{keyword}</Listbox.ItemLabel>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Viewport>
+      <Panel.Body>
+        <Listbox.Root value={matched} items={keywords.map((keyword) => ({ value: keyword, label: keyword }))}>
+          <Listbox.Content aria-label='Keywords'>
+            {keywords.map((keyword) => (
+              <Listbox.Item key={keyword} id={keyword}>
+                <Listbox.ItemText>{keyword}</Listbox.ItemText>
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
         </Listbox.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

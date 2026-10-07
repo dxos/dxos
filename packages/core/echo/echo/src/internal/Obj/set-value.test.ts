@@ -7,9 +7,9 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../Obj';
-import { TestSchema } from '../../testing';
-import * as Type from '../../Type';
+import * as Obj from '../../Obj.ts';
+import { TestSchema } from '../../testing/index.ts';
+import * as Type from '../../Type.ts';
 
 describe('Obj.setValue', () => {
   test('sets simple nested object property', ({ expect }) => {

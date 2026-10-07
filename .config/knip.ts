@@ -55,17 +55,22 @@ const entryTargets = (target: unknown): string[] => {
 
 /** Reachable from tooling rather than from a package entry point, so knip needs them spelled out. */
 const AUXILIARY_ENTRY = [
-  'src/**/*.{test,spec}.{ts,tsx}',
+  // `tst` is tstyche: a type-level test, run by the `test-types` task, imported by nothing.
+  'src/**/*.{test,spec,tst}.{ts,tsx}',
   // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
   'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',
-  'src/testing/**/*.{ts,tsx}',
+  // `.js` too: a testing helper can be a plain script a package runs by path (`node
+  // ./src/testing/build.js`), which nothing imports.
+  'src/testing/**/*.{ts,tsx,js,mjs,cjs}',
   'src/playwright/**/*.{ts,tsx}',
   'src/vitest-setup.{ts,tsx}',
   // Spawned as their own process, so nothing imports them.
   'src/**/*-subprocess.{ts,tsx}',
   // Loaded via `new Worker(new URL('./x-worker.ts', import.meta.url))`, which knip does not follow.
   'src/**/*-worker.{ts,tsx}',
+  // Audio worklets, loaded via `audioWorklet.addModule(new URL('./x-processor.js', import.meta.url))`.
+  'src/**/*-processor.js',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
   // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
@@ -104,6 +109,9 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
   const sources = globSync([
     `${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`,
     `${dir}/.storybook/*.{ts,mts,mjs}`,
+    // A list too long to inline lives beside the config it feeds (composer-app's generated
+    // `optimizeDeps.include`), and the names in it are load-bearing all the same.
+    `${dir}/src/vite/*.{ts,mts}`,
     // Ambient `declare module` shims: knip skips declaration files, so an `import ... from 'pkg'`
     // inside one is invisible to it even though the types would not resolve without the package.
     `${dir}/src/**/*.d.ts`,
@@ -180,14 +188,53 @@ const lazyImportedEntry = (dir: string): string[] => {
 };
 
 /**
- * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
- * with a browser build declare their entry points and the packages bundled into them there, and
- * neither is visible in the import graph.
+ * Read a workspace's `vite.config.ts`. A library build declares its entry points and the packages
+ * inlined into it there, and neither is visible in the import graph. (These used to be
+ * `--entryPoint=` / `--bundlePackage=` arguments on the moon build task.)
  */
-const moonBuildArgs = (dir: string, flag: string): string[] => {
-  const manifest = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
-  return [...(manifest ?? '').matchAll(new RegExp(`--${flag}=([^'"\\s]+)`, 'g'))].map(([, value]) => value);
+const viteConfig = (dir: string): string =>
+  globSync(`${dir}/vite.config.ts`).map((file) => readFileSync(file, 'utf8'))[0] ?? '';
+
+/**
+ * The balanced `{...}` or quoted string that follows `<key>:`, or '' when the key is absent.
+ * Scanning the whole config instead would sweep in paths that are not entry points — an app's
+ * `src/main.tsx`, a CRX's `src/background.ts` — and silently mark them reachable for knip.
+ */
+const configProperty = (source: string, key: string): string => {
+  const start = source.search(new RegExp(`\\b${key}\\s*:`));
+  if (start === -1) {
+    return '';
+  }
+  const rest = source.slice(source.indexOf(':', start) + 1).trimStart();
+  if (!rest.startsWith('{') && !rest.startsWith('[')) {
+    // A plain `entry: 'src/index.ts'`.
+    return rest.slice(0, rest.indexOf(',') + 1 || rest.indexOf('\n'));
+  }
+  const open = rest[0];
+  const close = open === '{' ? '}' : ']';
+  let depth = 0;
+  for (let index = 0; index < rest.length; index++) {
+    if (rest[index] === open) {
+      depth++;
+    } else if (rest[index] === close && --depth === 0) {
+      return rest.slice(0, index + 1);
+    }
+  }
+  return '';
 };
+
+/** Source paths named as `defineConfig({ entry })` values. */
+const viteEntryPoints = (dir: string): string[] => [
+  ...new Set(
+    [...configProperty(viteConfig(dir), 'entry').matchAll(/'(src\/[\w./-]+\.(?:tsx?|jsx?|mjs|cjs|css))'/g)].map(
+      ([, path]) => path,
+    ),
+  ),
+];
+
+/** Package names listed in `defineConfig({ bundle })`. */
+const viteBundledPackages = (dir: string): string[] =>
+  [...configProperty(viteConfig(dir), 'bundle').matchAll(/'([^']+)'/g)].map(([, name]) => name);
 
 /**
  * Dependencies a moon task runs as a command rather than imports. The command is the package's
@@ -259,15 +306,17 @@ const typeOnlyDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
- * A `--bundlePackage` is inlined into the workspace's own build, so esbuild resolves that package's
- * requires against this workspace. Its dependencies therefore have to be declared here too, even
- * though nothing in the workspace imports them.
+ * A `bundle` entry is inlined into the workspace's own build, so the bundler resolves that
+ * package's requires against this workspace. Its dependencies therefore have to be declared here
+ * too, even though nothing in the workspace imports them.
  */
 const bundledDependencies = (dir: string): string[] =>
-  moonBuildArgs(dir, 'bundlePackage').flatMap((name) => {
+  viteBundledPackages(dir).flatMap((name) => {
     const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
     return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
   });
+
+const DX_PLUGIN_GEN_INPUT = 'src/capabilities/index.{ts,tsx}';
 
 /**
  * Files the shared root configs reach into a workspace for by path — the vitest browser log setup
@@ -320,16 +369,87 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
  * that imports `marked` and declares no dependencies at all, so unlike `--bundlePackage` this
  * cannot be read off a manifest — only an app bundle surfaces it.
  */
+/**
+ * Dependencies knip's traversal does not credit. It stops short of a file whose only route to an
+ * entry point is indirect — a barrel's `export *`, or a dynamic `import()` whose specifier carries
+ * an explicit `.ts`/`.tsx` extension (as `rewriteRelativeImportExtensions` requires) — so a package
+ * whose single use of a dependency sits behind one reads as unused even though the symbol is called
+ * at runtime and the build resolves it. Verified per entry by adding a direct import at the package
+ * entry, which clears the finding.
+ */
+const TRAVERSAL_MISSED: Record<string, string[]> = {
+  // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
+  // as `src/index.ts` -> `./functions` -> `./edge-function`.
+  'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
+  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
+  // an extensioned dynamic import, which knip's traversal does not follow.
+  'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
+};
+
+/**
+ * Resolved from the workspace store by a checked-in developer script rather than declared, so a
+ * package is not made to install a heavy native dependency for a generator that runs only when its
+ * checked-in output changes.
+ */
+const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
+  // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
+  'packages/core/compute/mcp-server': ['sharp'],
+  // `scripts/{generate,judge}-walkthrough.ts` call the model to run the walkthrough evals by hand.
+  // Neither ships with the package nor runs in CI, and the SDK is already in the workspace store.
+  'packages/plugins/plugin-github': ['@anthropic-ai/sdk'],
+};
+
+/**
+ * Dependencies whose types reach the emitted `.d.ts` from a path knip reads as dev-only. A class in
+ * `src/testing/` that extends one still publishes its base type, and TypeScript refuses to name a
+ * devDependency in a declaration file -- it emits `any`, which strips the class's constructor and
+ * statics from every file that then consumes the declaration, including others in the same package.
+ */
+const DECLARED_IN_TYPES: Record<string, string[]> = {
+  // `src/testing/errors.ts` declares `SqliteTestError`; `opfs-in-worker-test-worker.ts` is compiled
+  // by the package build and constructs it, so the base type has to survive declaration emit.
+  'packages/common/sql-sqlite': ['@dxos/errors'],
+};
+
+/**
+ * Dependencies a package uses at runtime, but only from its published `./testing` entry. The
+ * production pass does not traverse `src/testing/`, so the import is invisible there even though the
+ * subpath ships and a consumer resolves the package when it imports the helper. The runtime sibling
+ * of `DECLARED_IN_TYPES`, which covers the same path reaching declaration emit instead.
+ */
+const TESTING_ENTRY_ONLY: Record<string, string[]> = {
+  // `src/testing/decorators/withRegistry.tsx` builds the storybook atom registry with
+  // `AtomEx.makeRegistry` and provides it through `@effect/atom-react`'s context.
+  'packages/ui/react-ui': ['@dxos/effect', '@effect/atom-react'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
+  // The app's import map is built from its direct dependencies, and plugins loaded by URL import
+  // these bare; nothing in the app imports them, but without the declaration they have no entry.
+  'packages/apps/composer-app': [
+    '@dxos/app-graph',
+    '@dxos/echo',
+    '@dxos/echo-react',
+    '@dxos/graph',
+    '@dxos/react-ui-attention',
+    '@dxos/react-ui-geo',
+  ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // `index.html` links these by path rather than importing them, so no module graph reaches them —
+  // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
+  'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
   // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
   // dependency is not reachable from the emitted chunk.
-  'docs': ['sharp'],
+  'docs': [
+    'sharp',
+    // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
+    '@dxos/app-framework',
+  ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
   // cross-compiling the CLI resolves all five at bundle time. pnpm installs them for the host
@@ -394,7 +514,7 @@ for (const manifest of globSync(
 
   // What the package itself declares as its entry points. Only these decide whether the whole-source
   // fallback applies — a supplemental reference must never make a package look fully mapped.
-  const entry = [...declared, ...published, ...substitutes, ...moonBuildArgs(dir, 'entryPoint')];
+  const entry = [...declared, ...published, ...substitutes, ...viteEntryPoints(dir)];
 
   // Reached by path from a build config rather than declared, so they extend the entry set without
   // standing in for it.
@@ -404,6 +524,7 @@ for (const manifest of globSync(
     ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
+    DX_PLUGIN_GEN_INPUT,
   ];
 
   workspaces[dir] = {
@@ -422,7 +543,11 @@ for (const manifest of globSync(
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
+      ...(DECLARED_IN_TYPES[dir] ?? []),
+      ...(TESTING_ENTRY_ONLY[dir] ?? []),
       ...(BUNDLER_RESOLVED[dir] ?? []),
+      ...(TRAVERSAL_MISSED[dir] ?? []),
+      ...(SCRIPT_STORE_RESOLVED[dir] ?? []),
     ],
   };
 }
@@ -463,6 +588,9 @@ const config: KnipConfig = {
     'tailwindcss',
     // Provided by @storybook/test-runner, which the storybook harness installs on demand.
     'test-storybook',
+    // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
+    // applies to; the tag file that invokes it lives at the root, which declares no such dep.
+    'dx-plugin',
   ],
   ignoreDependencies: [
     //
@@ -473,6 +601,9 @@ const config: KnipConfig = {
     '@dxos-theme',
     // Supplied by the editor at runtime to extensions, never installed.
     'vscode',
+    // `cloudflare:test` and `cloudflare:workers` are virtual modules the Workers runtime provides;
+    // knip reads the scheme as a package name.
+    'cloudflare',
     // `dxos:` is a virtual scheme the function runtime resolves for user scripts; the script
     // templates that import it are shipped as text, not compiled.
     'dxos',

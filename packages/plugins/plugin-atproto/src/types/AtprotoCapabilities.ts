@@ -5,11 +5,11 @@
 import type * as Layer from 'effect/Layer';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
 
-import type * as AtprotoRepo from '../services/AtprotoRepo';
+import type * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
 /**
  * Builds an {@link AtprotoRepo.Service} layer for a connection. The default (live) factory resolves

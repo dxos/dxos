@@ -11,6 +11,6 @@ import { JmapOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, JmapOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, JmapOperationHandlerSet.handlers);
   }),
 );

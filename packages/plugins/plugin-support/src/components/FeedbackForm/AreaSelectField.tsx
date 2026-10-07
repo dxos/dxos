@@ -2,22 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
-import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
-import { FormFieldLabel, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
 
-import type { FeedbackPluginOption } from './types';
+import type { FeedbackPluginOption } from './types.ts';
 
 /**
  * Plugin-picker field for the `area` slot of {@link SupportOperation.SupportRequest}.
  *
  * Mirrors the built-in {@link SelectField} (see `packages/ui/react-ui-form/src/components/Form/fields/SelectField.tsx`)
  * but renders the plugin name as the visible label with the id as a dim trailer — the plain
- * SelectField only supports string-keyed options without rich labels. Selection value remains
- * the plugin id so the form payload stays a simple `string`. A "(none)" sentinel clears the
- * selection because Radix Select cannot bind to `undefined`.
+ * SelectField only supports string-keyed options without rich labels.
+ *
+ * Binds `undefined` to Radix's reserved empty string: passing `undefined` itself would flip the
+ * select to uncontrolled and strand its internal state.
  */
+type SelectRootProps = ComponentProps<typeof Select.Root>;
+
 export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
 };
@@ -41,8 +45,16 @@ export const AreaSelectField = ({
   const value = getValue();
 
   const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
-    (next) => onValueChange(type, next === CLEAR_VALUE ? undefined : next),
+    ({ value: [next] }) => onValueChange(type, next === CLEAR_VALUE ? undefined : next),
     [type, onValueChange],
+  );
+
+  const items = useMemo(
+    () => [
+      ...(value != null ? [{ value: CLEAR_VALUE, label: '(none)' }] : []),
+      ...plugins.map((plugin) => ({ value: plugin.id, label: plugin.name })),
+    ],
+    [plugins, value],
   );
 
   // Static (read-only) presentation: render the resolved name + id, or nothing.
@@ -53,34 +65,31 @@ export const AreaSelectField = ({
   const resolved = plugins.find((plugin) => plugin.id === value);
 
   return (
-    <Input.Root validationValence={status}>
-      {presentation !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
+    <Form.Field path={jsonPath} label={label} error={error} readonly={readonly} presentation={presentation}>
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
-        <Select.Root value={value ?? CLEAR_VALUE} onValueChange={handleValueChange}>
-          <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                <Select.Option value={CLEAR_VALUE}>
-                  <span className='text-description italic'>(none)</span>
-                </Select.Option>
-                {plugins.map((plugin) => (
-                  <Select.Option key={plugin.id} value={plugin.id} classNames='flex'>
-                    <div className='flex flex-col w-full text-left'>
-                      <div>{plugin.name}</div>
-                      <div className='text-xs text-description font-mono py-1'>{plugin.id}</div>
-                    </div>
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-              <Select.Arrow />
-            </Select.Content>
-          </Select.Portal>
+        <Select.Root items={items} value={value ? [value] : []} onValueChange={handleValueChange}>
+          <Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
+          <Select.Content>
+            {items.map((item) =>
+              item.value === CLEAR_VALUE ? (
+                <Select.Item key={item.value} item={item}>
+                  <Select.ItemText classNames='text-fg-muted italic' />
+                </Select.Item>
+              ) : (
+                <Select.Item key={item.value} item={item}>
+                  <Layout.Flex column classNames='w-full text-left'>
+                    <Select.ItemText />
+                    <div className='text-xs text-fg-muted font-mono py-1'>{item.value}</div>
+                  </Layout.Flex>
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ),
+            )}
+          </Select.Content>
         </Select.Root>
       )}
-      {presentation === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+    </Form.Field>
   );
 };

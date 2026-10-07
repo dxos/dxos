@@ -1,0 +1,25 @@
+{
+  "name": "@fixture/package-imports",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts"
+    }
+  },
+  "imports": {
+    "#hooks": {
+      "source": "./src/hooks/index.ts"
+    },
+    "#meta": {
+      "source": "./src/meta.ts"
+    },
+    "#plugin": {
+      "source": {
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
+      }
+    }
+  }
+}

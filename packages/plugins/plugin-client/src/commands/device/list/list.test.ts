@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { handler } from './list';
+import { handler } from './list.ts';
 
 describe('device list', () => {
   it('should list devices', () =>

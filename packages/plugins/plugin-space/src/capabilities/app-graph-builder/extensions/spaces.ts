@@ -3,8 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -13,28 +18,29 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import { type Label } from '@dxos/ui-types/translations';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
-import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
-import * as SpaceSchema from '../../../types/SpaceSchema';
-import { getSpaceDisplayName } from '../../../util';
+import { getSpaceDisplayName } from '../../../util/index.ts';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
+  PENDING_SPACE_LABEL,
   RENAME_SPACE_LABEL,
   checkPendingMigration,
   spaceActionsCache,
   spaceRearrangeCache,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory
@@ -44,6 +50,15 @@ import {
 // node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
 // to re-emit the node and remount the Home article on every evaluation.
 const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
+
+const SPACE_OPEN_TIMEOUT = 60_000;
+
+const makeDeadlineAtom = () =>
+  Atom.make((get) => {
+    const timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
+    get.addFinalizer(() => clearTimeout(timeout));
+    return false;
+  });
 
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
@@ -55,9 +70,11 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+  const openDeadlineFamily = Atom.family((_spaceId: string) => makeDeadlineAtom());
+  const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
   return yield* Effect.all([
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
       url: { key: 'home', kind: 'singleton', path: [] },
@@ -72,22 +89,23 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
               iconHue: 'emerald',
+              testId: 'spacePlugin.spaceHome',
               position: Position.first,
               draggable: false,
               droppable: false,
               space,
             },
-          } satisfies Node.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
+          } satisfies AppGraphNode.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
         ]),
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'primaryActions',
       position: Position.first,
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
@@ -97,7 +115,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               disposition: 'menu',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
@@ -107,7 +125,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               disposition: 'menu',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenImportSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
             properties: {
@@ -116,13 +134,16 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.importSpace',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
               const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
-                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+                yield* Operation.invoke(SpaceOperation.ExportSpace, {
+                  space,
+                  format: SpacesService.SpaceArchiveFormat.enums.BINARY,
+                });
               }
             }),
             properties: {
@@ -131,13 +152,16 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.exportSpaceBinary',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
               const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
-                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+                yield* Operation.invoke(SpaceOperation.ExportSpace, {
+                  space,
+                  format: SpacesService.SpaceArchiveFormat.enums.JSON,
+                });
               }
             }),
             properties: {
@@ -146,7 +170,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.exportSpaceJson',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -165,7 +189,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               },
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -186,9 +210,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         ]),
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'spaces',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: (_node, get) => {
         // This reactive connector can recompute once during the teardown window (e.g. when stories
         // swap plugin managers) after the Client capability has been removed; the hoisted atom
@@ -209,10 +233,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        // Cross-space ordering lives in the settings space; until it exists and opens (or before
-        // the migration has run) spaces simply render in their natural order. `spacesAtom` covers
-        // the space appearing; its state is read through an atom so the ordering also appears when
-        // an already-listed settings space finishes opening.
         const settingsSpace = AppSpace.getSettingsSpace(client);
         const settingsSpaceState = settingsSpace ? get(CreateAtom.fromObservable(settingsSpace.state)) : undefined;
         const orderingSpace = settingsSpaceState === SpaceState.SPACE_READY ? settingsSpace : undefined;
@@ -238,6 +258,19 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
+          const lazySpaceOpen = !!client.config.values.runtime?.client?.lazySpaceOpen;
+          const orderSettled = get(orderSettledAtom);
+          const orderResolved =
+            orderSettled ||
+            isOrderResolved({
+              found: !!spacesOrder,
+              settingsSpaceState,
+              lazySpaceOpen,
+              timedOut: () => !!settingsSpace && get(openDeadlineFamily(settingsSpace.id)),
+            });
+          if (!orderSettled && orderResolved && spaces.length > 0) {
+            get.set(orderSettledAtom, true);
+          }
 
           // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
           // positional lookup would test one space's readiness against another's state.
@@ -256,16 +289,24 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space) => spaceStates.get(space.id) === SpaceState.SPACE_READY)
               .filter((space) => AppSpace.isVisibleSpace(space))
-              .map((space) =>
-                constructSpaceNode({
-                  space,
-                  navigable: ephemeralState.navigableCollections,
-                  namesCache: state.spaceNames,
-                  graph,
-                  spacesOrder,
+              .filter((space) =>
+                shouldListSpace({
+                  state: spaceStates.get(space.id),
+                  timedOut: () => get(openDeadlineFamily(space.id)),
+                  lazySpaceOpen,
                 }),
+              )
+              .map((space) =>
+                isPendingSpaceNode({ state: spaceStates.get(space.id), orderResolved })
+                  ? constructPendingSpaceNode({ id: space.id, namesCache: state.spaceNames })
+                  : constructSpaceNode({
+                      space,
+                      navigable: ephemeralState.navigableCollections,
+                      namesCache: state.spaceNames,
+                      graph,
+                      spacesOrder,
+                    }),
               ),
           );
         } catch {
@@ -278,7 +319,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     // group is always present when the space plugin is active. A more specific plugin (e.g. a
     // future plugin-communications) should own this once one exists.
     // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: GraphPath.GroupSegments.communications,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
@@ -287,13 +328,14 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: GraphPath.GroupSegments.communications,
             type: GraphPath.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            icon: 'ph--chats--regular',
             space,
             position: 100,
           }),
         ]),
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'actions',
       match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
@@ -326,8 +368,87 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 // Helpers
 //
 
-/** Builds an app-graph node for a space, including settings children and optional rearrange handler. */
-const constructSpaceNode = ({
+export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = false): boolean =>
+  state === SpaceState.SPACE_INITIALIZING ||
+  (!lazySpaceOpen && (state === SpaceState.SPACE_CLOSED || state === SpaceState.SPACE_CONTROL_ONLY));
+
+export const shouldListSpace = ({
+  state,
+  timedOut,
+  lazySpaceOpen = false,
+}: {
+  state: SpaceState | undefined;
+  timedOut: () => boolean;
+  lazySpaceOpen?: boolean;
+}): boolean => state === SpaceState.SPACE_READY || (isPendingSpace(state, lazySpaceOpen) && !timedOut());
+
+export const isOrderResolved = ({
+  found,
+  settingsSpaceState,
+  lazySpaceOpen = false,
+  timedOut,
+}: {
+  found: boolean;
+  settingsSpaceState: SpaceState | undefined;
+  lazySpaceOpen?: boolean;
+  timedOut: () => boolean;
+}): boolean => {
+  if (found) {
+    return true;
+  }
+  const waiting = settingsSpaceState === SpaceState.SPACE_READY || isPendingSpace(settingsSpaceState, lazySpaceOpen);
+  return !waiting || timedOut();
+};
+
+export const isPendingSpaceNode = ({
+  state,
+  orderResolved,
+}: {
+  state: SpaceState | undefined;
+  orderResolved: boolean;
+}): boolean => !orderResolved || state !== SpaceState.SPACE_READY;
+
+type SpaceNodeProperties = {
+  label: Label;
+  description: string | undefined;
+  hue: string | undefined;
+  icon: string | undefined;
+  iconHue: string | undefined;
+  disabled: boolean;
+  pending: boolean;
+  disposition: 'workspace';
+  testId: 'spacePlugin.space' | 'spacePlugin.space.pending';
+  onRearrange: ((nextOrder: string[]) => void) | undefined;
+  canDrop: typeof CAN_DROP_SPACE | undefined;
+};
+
+export const constructPendingSpaceNode = ({
+  id,
+  namesCache,
+}: {
+  id: string;
+  namesCache?: Record<string, string>;
+}): AppGraphNode.NodeArg<null, SpaceNodeProperties> =>
+  AppGraphNode.make({
+    id,
+    type: SpaceSchema.SPACE_TYPE,
+    data: null,
+    properties: {
+      label: namesCache?.[id] ?? PENDING_SPACE_LABEL,
+      description: undefined,
+      hue: undefined,
+      icon: undefined,
+      iconHue: undefined,
+      disabled: true,
+      pending: true,
+      disposition: 'workspace',
+      testId: 'spacePlugin.space.pending',
+      onRearrange: undefined,
+      canDrop: undefined,
+    },
+  });
+
+export const constructSpaceNode = ({
   space,
   navigable = false,
   namesCache,
@@ -337,46 +458,39 @@ const constructSpaceNode = ({
   space: Space;
   navigable?: boolean;
   namesCache?: Record<string, string>;
-  graph?: Graph.ExpandableGraph;
+  graph?: AppGraph.ExpandableGraph;
   spacesOrder?: Obj.Any;
-}) => {
+}): AppGraphNode.NodeArg<Space, SpaceNodeProperties> => {
+  const ready = space.state.get() === SpaceState.SPACE_READY;
   const hasPendingMigration = checkPendingMigration(space);
 
-  let onRearrange: ((nextOrder: Space[]) => void) | undefined;
+  let onRearrange: ((nextOrder: string[]) => void) | undefined;
   if (graph && spacesOrder) {
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
-      onRearrange = (nextOrder: Space[]) => {
-        Graph.sortEdges(
-          graph,
-          Node.RootId,
-          'outbound',
-          nextOrder.map(({ id }) => id),
-        );
-
+      onRearrange = (nextOrder: string[]) => {
+        AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
         Obj.update(spacesOrder, (spacesOrder: any) => {
-          spacesOrder.order = nextOrder.map(({ id }) => id);
+          spacesOrder.order = nextOrder;
         });
       };
       spaceRearrangeCache.set(space.id, onRearrange);
     }
   }
 
-  return Node.make({
+  return AppGraphNode.make({
     id: space.id,
     type: SpaceSchema.SPACE_TYPE,
     cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {
       label: getSpaceDisplayName(space, { namesCache }),
-      description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
-      hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
-      icon:
-        space.state.get() === SpaceState.SPACE_READY && space.properties.icon
-          ? `ph--${space.properties.icon}--regular`
-          : undefined,
-      iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
-      disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      description: ready ? space.properties.description : undefined,
+      hue: ready ? space.properties.hue : undefined,
+      icon: ready && space.properties.icon ? `ph--${space.properties.icon}--regular` : undefined,
+      iconHue: ready ? space.properties.iconHue : undefined,
+      disabled: !navigable || !ready || hasPendingMigration,
+      pending: false,
       disposition: 'workspace',
       testId: 'spacePlugin.space',
       onRearrange,
@@ -401,13 +515,13 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
     return cached.actions;
   }
 
-  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
+  const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
     actions.push(
-      Node.make({
+      AppGraphNode.make({
         id: SpaceOperation.Migrate.meta.key,
-        type: Node.ActionGroupType,
+        type: AppGraphNode.ActionGroupType,
         data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
         properties: {
           label: MIGRATE_SPACE_LABEL,
@@ -421,9 +535,9 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
 
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
-      Node.makeAction({
-        id: SpaceOperation.OpenCreateObject.meta.key,
-        data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
+      AppGraphNode.makeAction({
+        id: SpaceOperation.OpenObjectForm.meta.key,
+        data: () => Operation.invoke(SpaceOperation.OpenObjectForm, { target: space.db }),
         properties: {
           label: CREATE_OBJECT_IN_SPACE_LABEL,
           icon: 'ph--plus--regular',
@@ -431,9 +545,9 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
           testId: 'spacePlugin.createObject',
         },
       }),
-      Node.makeAction({
+      AppGraphNode.makeAction({
         id: SpaceOperation.Rename.meta.key,
-        data: (params?: Node.InvokeProps) =>
+        data: (params?: AppGraphNode.InvokeProps) =>
           Operation.invoke(SpaceOperation.Rename, { space, caller: `${params?.caller}:${params?.parent?.id}` }),
         properties: {
           label: RENAME_SPACE_LABEL,

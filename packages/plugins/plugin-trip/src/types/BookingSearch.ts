@@ -7,8 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 
-import * as Segment from './Segment';
+import * as Segment from './Segment.ts';
 
 /**
  * Transient search/offer types shared by plugin-trip and booking-service
@@ -23,25 +24,23 @@ import * as Segment from './Segment';
 
 /** Shared query fields (parallels `Segment.TransportFields`). Used directly as the input-form schema. */
 export const FlightSearchFields = Schema.Struct({
-  origin: Schema.optional(Schema.String.annotations({ title: 'Origin', description: 'IATA code', examples: ['JFK'] })),
+  origin: Schema.optional(Schema.String.annotate({ title: 'Origin', description: 'IATA code', examples: ['JFK'] })),
   destination: Schema.optional(
-    Schema.String.annotations({ title: 'Destination', description: 'IATA code', examples: ['LHR'] }),
+    Schema.String.annotate({ title: 'Destination', description: 'IATA code', examples: ['LHR'] }),
   ),
-  departureDate: Schema.optional(Format.DateTime.annotations({ title: 'Departure' })),
-  returnDate: Schema.optional(Format.DateTime.annotations({ title: 'Return' })),
+  departureDate: Schema.optional(Format.DateTime.annotate({ title: 'Departure' })),
+  returnDate: Schema.optional(Format.DateTime.annotate({ title: 'Return' })),
   serviceClass: Schema.optional(Segment.ServiceClass),
-  operator: Schema.optional(
-    Schema.String.annotations({ title: 'Operator', description: 'Preferred operator IATA code' }),
-  ),
-  passengers: Schema.optional(Schema.Number.annotations({ title: 'Passengers' })),
+  operator: Schema.optional(Schema.String.annotate({ title: 'Operator', description: 'Preferred operator IATA code' })),
+  passengers: Schema.optional(Schema.Number.annotate({ title: 'Passengers' })),
 });
 export interface FlightSearchFields extends Schema.Schema.Type<typeof FlightSearchFields> {}
 
-export const FlightSearchQuery = Schema.extend(FlightSearchFields, Schema.TaggedStruct('flight', {}));
+export const FlightSearchQuery = FlightSearchFields.pipe(Schema.fieldsAssign(Schema.TaggedStruct('flight', {}).fields));
 export interface FlightSearchQuery extends Schema.Schema.Type<typeof FlightSearchQuery> {}
 
 /** Discriminated union of all query kinds. Today only `flight` is populated. */
-export const SearchQuery = Schema.Union(FlightSearchQuery);
+export const SearchQuery = Schema.Union([FlightSearchQuery]);
 export type SearchQuery = Schema.Schema.Type<typeof SearchQuery>;
 
 /** A single leg within an offer. */
@@ -72,7 +71,7 @@ export const FlightOffer = Schema.TaggedStruct('flight', {
 export interface FlightOffer extends Schema.Schema.Type<typeof FlightOffer> {}
 
 /** Discriminated union of all offer kinds. Today only `flight` is populated. */
-export const Offer = Schema.Union(FlightOffer);
+export const Offer = Schema.Union([FlightOffer]);
 export type Offer = Schema.Schema.Type<typeof Offer>;
 
 /**
@@ -87,10 +86,9 @@ export interface BookingService {
 }
 
 /** Thrown by a `BookingService` when its credentials are not configured. */
-export class MissingApiKeyError extends Error {
+export class MissingApiKeyError extends BaseError.extend('BookingSearchMissingApiKeyError') {
   constructor(public readonly serviceId: string) {
-    super(`Missing API key for booking service: ${serviceId}`);
-    this.name = 'MissingApiKeyError';
+    super({ message: `Missing API key for booking service: ${serviceId}` });
   }
 }
 
@@ -98,15 +96,25 @@ export class MissingApiKeyError extends Error {
  * Thrown by a `BookingService` when the provider rejects an otherwise well-formed
  * request (e.g. a Duffel 422 for a past departure date). The `message` carries the
  * provider's human-readable explanation so the UI can surface it directly rather
- * than a generic fallback. Matched by `name` since class identity does not survive
- * the operation/process boundary.
+ * than a generic fallback. Matched by `_tag`, which survives the operation/process
+ * boundary even though class identity does not.
  */
-export class BookingProviderError extends Error {
+export class BookingProviderError extends BaseError.extend('BookingProviderError') {
   constructor(
     public readonly serviceId: string,
     message: string,
   ) {
-    super(message);
-    this.name = 'BookingProviderError';
+    super({ message });
   }
 }
+
+/** Any failure a `BookingService` raises. */
+export type Failure = MissingApiKeyError | BookingProviderError;
+
+/**
+ * Every booking failure, for a boundary that passes them through. Matched by name rather than
+ * `instanceof`: an error that crossed an operation boundary is rebuilt by `decodeError` as a plain
+ * `BaseError` carrying the name, so the prototype is gone by the time a handler sees it.
+ */
+export const isFailure = (error: unknown): error is Failure =>
+  MissingApiKeyError.is(error) || BookingProviderError.is(error);

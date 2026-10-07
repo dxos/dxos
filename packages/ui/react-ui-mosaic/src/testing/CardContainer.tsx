@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, Popover } from '@dxos/react-ui';
+import { useControllableState } from '@dxos/react-hooks';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 
 const DEFAULT_BLOCK_SIZE = 22;
 const MIN_BLOCK_SIZE = 8;
@@ -15,7 +18,10 @@ const MIN_BLOCK_SIZE = 8;
 // Card container.
 //
 
-export type CardContainerProps = PropsWithChildren<{ role?: 'popover' | 'intrinsic'; icon?: string }>;
+export type CardContainerProps = PropsWithChildren<{
+  icon?: string;
+  role?: 'popover' | 'intrinsic';
+}>;
 
 export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--regular' }: CardContainerProps) => {
   switch (role) {
@@ -25,6 +31,7 @@ export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--reg
           <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>
         </div>
       );
+
     case 'intrinsic':
     default:
       return <IntrinsicCardContainer>{children}</IntrinsicCardContainer>;
@@ -35,23 +42,34 @@ export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--reg
 // Popover
 //
 
-export type PopoverCardContainerProps = PropsWithChildren<{ icon?: string }>;
+export type PopoverCardContainerProps = PropsWithChildren<{
+  icon?: string;
+}>;
 
 export const PopoverCardContainer = ({
   children,
   icon = 'ph--arrow-line-down--regular',
 }: PopoverCardContainerProps) => {
   return (
-    <Popover.Root open>
+    <Popover.Root open autoFocus={false}>
       <Popover.Trigger asChild>
-        <Icon icon={icon} />
+        <Icon.Icon icon={icon} />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-          <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content>
+        <Popover.Body>
+          {/* Mirrors the deck's popover card host (plugin-deck Overlays/Popover.tsx) so card
+                stories exercise the real composition: Card.Root grid + header + content. */}
+          <Card.Root border={false} classNames='dx-card-popover'>
+            <Card.Header>
+              <Layout.Block>
+                <Icon.Icon icon={icon} />
+              </Layout.Block>
+              <Card.Title>Popover</Card.Title>
+            </Card.Header>
+            {children}
+          </Card.Root>
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -84,7 +102,7 @@ export const IntrinsicCardContainer = ({
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <div className='dx-container flex flex-col'>{children}</div>
+      <div className='dx-expand flex flex-col'>{children}</div>
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}

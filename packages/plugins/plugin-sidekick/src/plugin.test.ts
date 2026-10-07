@@ -1,0 +1,24 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as Harness from '@dxos/plugin-testing/Harness';
+
+import { meta } from '#meta';
+import { SidekickPlugin } from '#plugin';
+
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+
+describe('SidekickPlugin', () => {
+  test('modules activate on the expected events', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [ClientPlugin.make({}), SidekickPlugin()],
+    });
+
+    // SkillDefinition is a dependency-mode root, so it activates immediately too.
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
+  });
+});

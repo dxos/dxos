@@ -7,7 +7,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Metrics, type MetricsSnapshot, type MetricValue, makeMetrics } from './metrics';
+import { Metrics, type MetricsSnapshot, type MetricValue, makeMetrics } from './metrics.ts';
 
 /** A named configuration to benchmark (e.g. a model). */
 export type BenchmarkVariant<Config> = {
@@ -73,10 +73,10 @@ export const runBenchmark = <Config, Output, E, R>(
         } satisfies MetricsSnapshot;
       }).pipe(
         Effect.provide(layer),
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           // A cancelled benchmark must abort, not be recorded as an `error` row and iterated past;
           // only genuine failures/defects degrade to a metrics row.
-          Cause.isInterruptedOnly(cause)
+          Cause.hasInterruptsOnly(cause)
             ? Effect.failCause(cause)
             : metrics.snapshot.pipe(
                 Effect.map(

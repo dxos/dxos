@@ -1,0 +1,18 @@
+// tsconfig for the type-level tests tstyche runs (see tstyche.json).
+//
+// Type tests assert what the compiler accepts and rejects, which a runtime runner cannot
+// do. `@ts-expect-error` asserts only that *some* error occurs on a line; `toRaiseError`
+// pins which one.
+//
+// tstyche drives the JavaScript TypeScript API, so it runs on @typescript/typescript6
+// rather than the TypeScript 7 Go compiler the repo builds with. The Effect project
+// splits the same way, tstyche beside check:tsgo.
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["packages/**/*.tst.ts"]
+}

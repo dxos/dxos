@@ -7,8 +7,7 @@ import { useMemo } from 'react';
 import type { DndContainerHandler, DndTileData } from '@dxos/react-ui-dnd';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 
-import * as KanbanConstants from '../types/KanbanConstants';
-import * as KanbanLayout from '../types/KanbanLayout';
+import { KanbanConstants, KanbanLayout } from '#types';
 
 function findColumn<T extends KanbanLayout.BaseKanbanItem>(
   id: string,

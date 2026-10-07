@@ -6,21 +6,24 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Format } from '@dxos/echo';
-import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 // Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
 export const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
 
 const QueryOptions = Schema.Struct({
-  question: Schema.String.annotations({ title: 'Query' }),
+  question: Schema.String.annotate({ title: 'Query' }),
   query: Schema.String.pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ title: 'SPARQL' }),
+    Schema.annotate({ title: 'SPARQL' }),
   ),
 });
 
-export type QueryPanelProps = ThemedClassName<{
+export type QueryPanelProps = Util.ThemedClassName<{
   /** Natural-language question; Generate translates it into the SPARQL field. */
   question: string;
   query: string;
@@ -51,18 +54,18 @@ export const QueryPanel = ({
   classNames,
 }: QueryPanelProps) => (
   <Panel.Root classNames={classNames}>
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <Toolbar.Root>
         <Toolbar.Separator />
-        <IconButton
+        <Button.Root
           icon='ph--sparkle--regular'
           iconOnly
           label='Generate SPARQL'
           disabled={!!busy || !question}
           onClick={onGenerate}
         />
-        <IconButton icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
-        <IconButton
+        <Button.Root icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
+        <Button.Root
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset query'
@@ -70,8 +73,8 @@ export const QueryPanel = ({
           onClick={onReset}
         />
       </Toolbar.Root>
-    </Panel.Toolbar>
-    <Panel.Content classNames='dx-container'>
+    </Panel.Header>
+    <Panel.Body>
       <Form.Root
         schema={QueryOptions}
         values={{ question, query }}
@@ -82,10 +85,10 @@ export const QueryPanel = ({
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );

@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, type Ref } from '@dxos/echo';
 
-import * as CodeOperation from '../types/CodeOperation';
-import type * as SourceFile from '../types/SourceFile';
+import { CodeOperation, SourceFile } from '#types';
 
 const handler: Operation.WithHandler<typeof CodeOperation.DeleteFile> = CodeOperation.DeleteFile.pipe(
   Operation.withHandler(

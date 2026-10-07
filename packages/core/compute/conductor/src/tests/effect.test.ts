@@ -6,14 +6,19 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 describe('effect-basics', () => {
   describe('streams', () => {
     test('stream', async ({ expect }) => {
       const stream = Stream.range(1, 10);
-      const sum = stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
+      const sum = stream.pipe(
+        Stream.runFold(
+          () => 0,
+          (acc: number, x: number) => acc + x,
+        ),
+      );
       await expect(EffectEx.runAndForwardErrors(sum)).resolves.toBe(55);
     });
 

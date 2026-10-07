@@ -4,8 +4,20 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { Connector, MailSend, OperationHandler, Translations } from '#capabilities';
+import { meta } from '#meta';
 
-export const JmapPlugin = Plugin.lazy(meta, () => import('#plugin'));
+/**
+ * Headless mail provider: contributes the JMAP connector, its send-routing entry, and the sync/send/
+ * materialize handlers. Every UI surface, the `Mailbox` type, and the sync harness these handlers run
+ * against belong to `@dxos/plugin-inbox`.
+ */
+export const JmapPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(Connector),
+  Plugin.addModule(MailSend),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Translations),
+  Plugin.make,
+);
 
-export { JmapOperationHandlerSet } from './operations';
+export default JmapPlugin;

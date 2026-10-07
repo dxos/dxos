@@ -4,28 +4,30 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
-
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
+import { FeedOperation, Subscription } from '#types';
 
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const layout = useLayout();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const layout = ToolkitHooks.useLayout();
 
   const feeds = useQuery(space.db, Filter.type(Subscription.Subscription));
   const currentId = useSelection(attendableId, 'single');
@@ -41,7 +43,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
           });
 
           const companion = Attention.linkedSegment('feed');
-          if (layout.mode === 'simple') {
+          if (layout.mode === 'mobile') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,
               state: 'expanded',
@@ -79,7 +81,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   );
 
   const handleCreate = useCallback(() => {
-    void invokePromise(SpaceOperation.OpenCreateObject, {
+    void invokePromise(SpaceOperation.OpenObjectForm, {
       target: space.db,
       typename: Type.getTypename(Subscription.Subscription),
     });
@@ -87,14 +89,14 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.IconButton label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+          <Button.Root label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <SubscriptionStack id={attendableId} feeds={feeds} currentId={currentId} onAction={handleAction} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

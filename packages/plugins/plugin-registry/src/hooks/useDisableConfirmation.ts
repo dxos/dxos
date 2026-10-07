@@ -4,11 +4,11 @@
 
 import { useCallback } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
-import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
+import { DISABLE_DEPENDENTS_DIALOG } from '../constants.ts';
 
 /**
  * Returns `requestDisable(pluginId)` that gates `manager.disable` on a
@@ -27,7 +27,7 @@ import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
  * available regardless of enabled state.
  */
 export const useDisableConfirmation = (manager: PluginManager.PluginManager, dispatch: (id: string) => void) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   return useCallback(
     (pluginId: string): void => {

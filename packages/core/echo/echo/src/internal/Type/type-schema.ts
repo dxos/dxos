@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IconAnnotation, LabelAnnotation } from '../Annotation';
-import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
-import { EchoTypeKindSchema, TypeMetaSchemaDXN } from '../Entity';
-import { JsonSchemaType } from '../JsonSchema';
+import { IconAnnotation, LabelAnnotation } from '../Annotation/index.ts';
+import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types/index.ts';
+import { EchoTypeKindSchema, TypeMetaSchemaDXN } from '../Entity/index.ts';
+import { JsonSchemaType } from '../JsonSchema/index.ts';
 
 /**
  * Raw struct backing {@link TypeSchema}. Exposed only so `TypeSchema`
@@ -56,5 +56,5 @@ export type TypeSchema = Schema.Schema.Type<typeof TypeSchemaStruct> & {
   /** Kind of schema described by this meta-instance — always `EntityKind.Type` for `Type.Type` itself. */
   readonly [SchemaKindId]: EntityKind.Type;
   /** Effect Schema rebuilt lazily from `jsonSchema`; satisfies `Type.getSchema(...)` without an extra cast. */
-  readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 };

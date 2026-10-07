@@ -9,6 +9,7 @@ export default defineConfig({
     data: 'src/data.ts',
     index: 'src/index.ts',
     translations: 'src/translations.ts',
+    types: 'src/types.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

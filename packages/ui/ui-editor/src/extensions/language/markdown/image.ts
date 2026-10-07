@@ -3,17 +3,11 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import {
-  type EditorState,
-  type Extension,
-  type Range,
-  StateEffect,
-  StateField,
-  type Transaction,
-} from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { type EditorState, type Extension, type Range, StateField, type Transaction } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
-import { focusField } from '../../state/focus';
+import { focusField } from '../../state/focus.ts';
+import { isWidgetLink } from '../../widgets/link-widgets.ts';
 
 export type ImageNodeData = { name: 'Image'; url: string };
 
@@ -36,23 +30,32 @@ export const image = (options: ImageOptions = {}): Extension => {
         return Decoration.set(buildDecorations(state, 0, state.doc.length, options));
       },
       update: (value: DecorationSet, tr: Transaction) => {
-        // Full rebuild when the viewport extended (lazy parse now covers more of the doc).
-        if (tr.effects.some((effect) => effect.is(rebuildEffect))) {
-          return Decoration.set(buildDecorations(tr.state, 0, tr.state.doc.length, options));
-        }
-        if (!tr.docChanged && !tr.selection) {
-          return value;
+        let from = Number.POSITIVE_INFINITY;
+        let to = Number.NEGATIVE_INFINITY;
+        if (tr.docChanged || tr.selection) {
+          // The changed ranges and both cursor positions, since an image's source is shown only under the cursor.
+          const cursor = tr.state.selection.main.head;
+          const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
+          from = Math.min(cursor, oldCursor);
+          to = Math.max(cursor, oldCursor);
+          tr.changes.iterChangedRanges((_fromA, _toA, fromB, toB) => {
+            from = Math.min(from, fromB);
+            to = Math.max(to, toB);
+          });
         }
 
-        // Find range of changes and cursor changes.
-        const cursor = tr.state.selection.main.head;
-        const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
-        let from = Math.min(cursor, oldCursor);
-        let to = Math.max(cursor, oldCursor);
-        tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
-          from = Math.min(from, fromB);
-          to = Math.max(to, toB);
-        });
+        // The parser extends the tree in transactions of its own as the viewport reaches unparsed content, so images
+        // there are decorated as they are parsed rather than by rebuilding the whole document on every scroll.
+        const parsedBefore = tr.changes.mapPos(syntaxTree(tr.startState).length);
+        const parsedAfter = syntaxTree(tr.state).length;
+        if (parsedAfter > parsedBefore) {
+          from = Math.min(from, parsedBefore);
+          to = Math.max(to, parsedAfter);
+        }
+
+        if (from > to) {
+          return value.map(tr.changes);
+        }
 
         // Expand to cover lines.
         from = tr.state.doc.lineAt(from).from;
@@ -67,23 +70,8 @@ export const image = (options: ImageOptions = {}): Extension => {
       },
       provide: (field) => EditorView.decorations.from(field),
     }),
-    // Block-replace decorations have to live in a state field, but viewport changes are only
-    // observable from a view plugin. Bridge the two by dispatching a rebuild effect whenever
-    // the viewport extends so newly-parsed image nodes get widgetized without requiring focus.
-    ViewPlugin.define((view) => ({
-      update: (update) => {
-        if (update.viewportChanged) {
-          queueMicrotask(() => view.dispatch({ effects: rebuildEffect.of(undefined) }));
-        }
-      },
-    })),
   ];
 };
-
-// Effect dispatched when the viewport extends (e.g., scrolling reveals new content). The state
-// field listens for this and rebuilds decorations across the full doc so images outside the
-// initial parse range get widgetized.
-const rebuildEffect = StateEffect.define<void>();
 
 const buildDecorations = (state: EditorState, from: number, to: number, options: ImageOptions = {}) => {
   const decorations: Range<Decoration>[] = [];
@@ -101,8 +89,9 @@ const buildDecorations = (state: EditorState, from: number, to: number, options:
             return;
           }
 
-          // Consumer-supplied filter (e.g., disable remote-image rendering by setting).
-          if (options.skip?.({ name: 'Image', url })) {
+          // A registered link widget's image is the widget's to render; otherwise the consumer's
+          // filter (e.g., disable remote-image rendering by setting).
+          if (isWidgetLink(state, url) || options.skip?.({ name: 'Image', url })) {
             return;
           }
 

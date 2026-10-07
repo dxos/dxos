@@ -9,7 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
-import * as VideoOperation from '../types/VideoOperation';
+import { VideoOperation } from '#types';
+
 import {
   extractVideoId,
   fetchResource,
@@ -18,7 +19,7 @@ import {
   parseCaptionTracks,
   parseTimedText,
   selectCaptionTrack,
-} from '../util';
+} from '../util/index.ts';
 
 const DEFAULT_LANG = 'en';
 

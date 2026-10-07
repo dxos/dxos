@@ -7,12 +7,12 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import { EmailPipelineCtx, emptyStats } from './context';
-import { statsStage } from './stats';
+import { EmailPipelineCtx, emptyStats } from './context.ts';
+import { statsStage } from './stats.ts';
 
 describe('statsStage', () => {
   test('tallies senders and spam across the stream', async ({ expect }) => {

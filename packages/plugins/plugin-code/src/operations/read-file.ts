@@ -7,7 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import * as CodeOperation from '../types/CodeOperation';
+import { CodeOperation } from '#types';
+
+import { CodeOperationError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof CodeOperation.ReadFile> = CodeOperation.ReadFile.pipe(
   Operation.withHandler(
@@ -21,7 +23,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ReadFile> = CodeOperat
           return { path: file.path, content: text.content };
         }
       }
-      return yield* Effect.fail(new Error(`File not found: ${path}`));
+      return yield* Effect.fail(new CodeOperationError({ message: `File not found: ${path}` }));
     }),
   ),
 );

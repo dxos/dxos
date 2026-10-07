@@ -2,7 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './errors';
-export * from './events';
-export * from './meta';
-export * from './types';
+export * as FreeqEvents from './FreeqEvents.ts';
+export * as FreeqPlugin from './FreeqPlugin.ts';

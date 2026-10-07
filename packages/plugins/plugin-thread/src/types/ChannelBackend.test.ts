@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 
 import { Feed } from '@dxos/echo';
 
-import { buildChannelFormSchema, resolveProvider } from './ChannelBackend';
-import * as ThreadCapabilities from './ThreadCapabilities';
+import { buildChannelFormSchema, resolveProvider } from './ChannelBackend.ts';
+import * as ThreadCapabilities from './ThreadCapabilities.ts';
 
 describe('channel-backend helpers', () => {
   test('resolveProvider finds by kind', ({ expect }) => {
@@ -38,7 +38,7 @@ describe('channel-backend helpers', () => {
   });
 });
 
-const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ThreadCapabilities.ChannelBackendProvider => ({
+const fakeProvider = (kind: string, fields: Schema.Codec<any, any>): ThreadCapabilities.ChannelBackendProvider => ({
   kind,
   label: kind,
   createFields: fields,

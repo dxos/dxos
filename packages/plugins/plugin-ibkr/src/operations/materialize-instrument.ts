@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
-import { TRADINGVIEW_SOURCE } from '../constants';
-import { foreignKeyEquals, mergeForeignKeys } from '../services';
-import * as Ibkr from '../types/Ibkr';
-import * as IbkrOperation from '../types/IbkrOperation';
+import { Ibkr, IbkrOperation } from '#types';
+
+import { TRADINGVIEW_SOURCE } from '../constants.ts';
+import { foreignKeyEquals, mergeForeignKeys } from '../services/index.ts';
 
 const defaultForeignKeys = ({
   key,

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './load-game';
+export * from './load-game.ts';

@@ -5,12 +5,17 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { IconButton, Message, Status, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import { formatForDisplay } from '@dxos/schema';
 
-import { meta } from '../../meta';
-import * as Ibkr from '../../types/Ibkr';
+import { Ibkr } from '#types';
+
+import { meta } from '../../meta.ts';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;
@@ -53,7 +58,7 @@ const formatFundamentalValue = (
 
 /** Read-only panel for SEC EDGAR fundamentals returned by {@link IbkrOperation.GetInstrumentFundamentals}. */
 export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: FundamentalsPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const fieldProvider = useCallback<FormFieldProvider>(
     ({ prop, fieldProps: { label, description, getValue, format, jsonPath } }) => {
@@ -68,9 +73,9 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         return (
           <>
             {entries.map(([concept, factValue]) => (
-              <Form.Row key={concept} label={formatConceptLabel(concept)}>
+              <Form.Field standalone key={concept} label={formatConceptLabel(concept)}>
                 {formatFundamentalValue(Format.TypeFormat.Currency, concept, factValue)}
-              </Form.Row>
+              </Form.Field>
             ))}
           </>
         );
@@ -79,9 +84,9 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         return null;
       }
       return (
-        <Form.Row label={label} description={description}>
+        <Form.Field standalone label={label} description={description}>
           {formatFundamentalValue(format, jsonPath, value)}
-        </Form.Row>
+        </Form.Field>
       );
     },
     [],
@@ -97,14 +102,14 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
   return (
     <Form.Root layout='static' readonly schema={Ibkr.FundamentalsSnapshot} values={snapshot}>
       <Form.Content>
-        <Form.Section>
-          <div className='flex items-start justify-between gap-trim-md pb-form-section-gap'>
-            <div className='flex min-w-0 flex-col gap-0.5'>
+        <Form.FieldSet>
+          <Layout.Flex align='start' justify='between' gap='md' classNames='pb-form-section-gap'>
+            <Layout.Flex column classNames='min-w-0 gap-0.5'>
               <h2 className='text-lg'>{t('fundamentals.heading')}</h2>
-              {asOfDescription && <p className='text-description'>{asOfDescription}</p>}
-            </div>
+              {asOfDescription && <p className='text-fg-muted'>{asOfDescription}</p>}
+            </Layout.Flex>
             {onRefresh ? (
-              <IconButton
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -113,32 +118,28 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
                 disabled={loading}
               />
             ) : null}
-          </div>
+          </Layout.Flex>
 
           {loading ? (
-            <Status indeterminate aria-label={t('fundamentals.heading')} />
+            <Status.Progress indeterminate label={t('fundamentals.heading')} />
           ) : error ? (
-            <Message.Root valence='error'>
-              <Message.Content>
-                <Message.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Message.Title>
-                <Message.Body>{error}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='error'>
+              <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{error}</Banner.Body>
+            </Banner.Root>
           ) : empty ? (
-            <Message.Root valence='neutral'>
-              <Message.Content>
-                <Message.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Message.Title>
-                <Message.Body>{t('fundamentals.empty.label')}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='neutral'>
+              <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
+            </Banner.Root>
           ) : (
-            <Form.FieldSet readonly fieldProvider={fieldProvider} />
+            <Form.Fields readonly fieldProvider={fieldProvider} />
           )}
-        </Form.Section>
+        </Form.FieldSet>
 
-        <Form.Section>
-          <Form.Row label={t('fundamentals.source.label')} />
-        </Form.Section>
+        <Form.FieldSet>
+          <Form.Field label={t('fundamentals.source.label')} />
+        </Form.FieldSet>
       </Form.Content>
     </Form.Root>
   );

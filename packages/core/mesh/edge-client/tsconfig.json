@@ -2,6 +2,7 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
+    "package.json",
     "src"
   ],
   "references": [
@@ -34,6 +35,9 @@
     },
     {
       "path": "../../../common/test-utils"
+    },
+    {
+      "path": "../../../common/tracing"
     },
     {
       "path": "../../../common/util"

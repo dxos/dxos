@@ -2,21 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import type * as Kanban from '../types/Kanban';
-import * as KanbanLayout from '../types/KanbanLayout';
+import { Kanban, KanbanLayout } from '#types';
+
 import {
   computeColumnStructure,
   getOrderByColumnFromArrangement,
   getOrderFromArrangement,
   orderItemsInColumn,
-} from '../util';
+} from '../util/index.ts';
 
 /**
  * Builds a board model that maps kanban arrangement and projection onto columns and per-column items.
@@ -32,7 +33,7 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
   kanban: Kanban.Kanban,
   projection: ProjectionModel,
   itemsAtom: Atom.Atom<T[]>,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): BoardModel<KanbanLayout.ColumnStructure, T> {
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
   const arrangementAtom = useMemo(() => Obj.atomProperty(kanban, 'arrangement'), [kanban]);

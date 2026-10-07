@@ -2,25 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Blob, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
-import { AccessToken, Cursor } from '@dxos/link';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { captureSink } from '@dxos/pipeline/testing';
-import * as Connection from '@dxos/plugin-connector/Connection';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
-import { seedMailboxBinding } from '../testing/sync-fixture';
-import type * as Mailbox from '../types/Mailbox';
+import { Mailbox } from '#types';
+
+import { seedMailboxBinding } from '../testing/sync-fixture.ts';
+import { InboxOperationError } from './errors.ts';
 
 const TEST_SOURCE = 'test.mail';
 
@@ -96,20 +97,18 @@ describe('sync pipeline harness', () => {
 
   // Provider-agnostic mapping stage: raw → an `insert` Change (no contact resolution needed here).
   const mapStage: Stage.Stage<Raw, EmailStage.Change, never, never> = Stage.map('map', (raw: Raw) =>
-    Effect.sync(
-      (): EmailStage.Change => ({
-        _tag: 'insert',
-        message: Obj.make(Message.Message, {
-          [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-          created: new Date(raw.key).toISOString(),
-          sender: { email: raw.email },
-          blocks: [{ _tag: 'text', text: raw.body }],
-        }),
-        foreignId: raw.id,
-        key: raw.key,
-        tagUris: [],
+    Effect.sync((): EmailStage.Change => ({
+      _tag: 'insert',
+      message: Obj.make(Message.Message, {
+        [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+        created: new Date(raw.key).toISOString(),
+        sender: { email: raw.email },
+        blocks: [{ _tag: 'text', text: raw.body }],
       }),
-    ),
+      foreignId: raw.id,
+      key: raw.key,
+      tagUris: [],
+    })),
   );
 
   // Faults after `n` units reach it, simulating a crash mid-run.
@@ -117,7 +116,7 @@ describe('sync pipeline harness', () => {
     let count = 0;
     return Stage.map('fault', (unit: Cursor.CommitUnit) => {
       count += 1;
-      return count > n ? Effect.fail(new Error('injected fault')) : Effect.succeed(unit);
+      return count > n ? Effect.fail(new InboxOperationError({ message: 'injected fault' })) : Effect.succeed(unit);
     });
   };
 
@@ -142,8 +141,7 @@ describe('sync pipeline harness', () => {
     return withFault.pipe(
       Stream.grouped(2),
       Pipeline.run({ sink: Cursor.commit }),
-      Effect.provide(Cursor.layer(options)),
-      Effect.provide(Database.layer(options.db)),
+      Effect.provide(Layer.provideMerge(Cursor.layer(options), Database.layer(options.db))),
     );
   };
 
@@ -212,9 +210,13 @@ describe('sync pipeline harness', () => {
 
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
+      Cursor.commit([makeUnit(RAWS[0]), makeUnit(RAWS[1])]).pipe(
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 
@@ -272,21 +274,19 @@ describe('sync pipeline harness', () => {
     const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Change, never, never> = Stage.map(
       'map',
       (raw: AttachmentRaw) =>
-        Effect.sync(
-          (): EmailStage.Change => ({
-            _tag: 'insert',
-            message: Obj.make(Message.Message, {
-              [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-              created: new Date(raw.key).toISOString(),
-              sender: { email: raw.email },
-              blocks: [{ _tag: 'text', text: raw.body }],
-            }),
-            foreignId: raw.id,
-            key: raw.key,
-            tagUris: [],
-            attachments: raw.attachments,
+        Effect.sync((): EmailStage.Change => ({
+          _tag: 'insert',
+          message: Obj.make(Message.Message, {
+            [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+            created: new Date(raw.key).toISOString(),
+            sender: { email: raw.email },
+            blocks: [{ _tag: 'text', text: raw.body }],
           }),
-        ),
+          foreignId: raw.id,
+          key: raw.key,
+          tagUris: [],
+          attachments: raw.attachments,
+        })),
     );
 
     const stats: Cursor.Stats = { newMessages: 0 };
@@ -298,8 +298,12 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 
@@ -350,21 +354,19 @@ describe('sync pipeline harness', () => {
     const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Change, never, never> = Stage.map(
       'map',
       (item: AttachmentRaw) =>
-        Effect.sync(
-          (): EmailStage.Change => ({
-            _tag: 'insert',
-            message: Obj.make(Message.Message, {
-              [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
-              created: new Date(item.key).toISOString(),
-              sender: { email: item.email },
-              blocks: [{ _tag: 'text', text: item.body }],
-            }),
-            foreignId: item.id,
-            key: item.key,
-            tagUris: [],
-            attachments: item.attachments,
+        Effect.sync((): EmailStage.Change => ({
+          _tag: 'insert',
+          message: Obj.make(Message.Message, {
+            [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
+            created: new Date(item.key).toISOString(),
+            sender: { email: item.email },
+            blocks: [{ _tag: 'text', text: item.body }],
           }),
-        ),
+          foreignId: item.id,
+          key: item.key,
+          tagUris: [],
+          attachments: item.attachments,
+        })),
     );
 
     const stats: Cursor.Stats = { newMessages: 0 };
@@ -378,8 +380,12 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 

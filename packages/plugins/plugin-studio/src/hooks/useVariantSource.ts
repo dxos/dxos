@@ -8,7 +8,7 @@ import { Obj, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { File } from '@dxos/types';
 
-import { useImageUrl } from './useImageUrl';
+import { useImageUrl } from './useImageUrl.ts';
 
 /** The renderable surface of a {@link Variant}: an ephemeral `url` and/or a materialized `content` object. */
 export type VariantSource = {

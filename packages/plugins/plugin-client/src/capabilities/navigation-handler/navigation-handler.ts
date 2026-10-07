@@ -12,9 +12,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
+import { ClientOperation } from '#operations';
+import { ClientCapabilities, CliLogin } from '#types';
 
-import { ClientOperation } from '../../operations';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
+import { CLI_LOGIN_DIALOG } from '../../constants.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -45,6 +46,23 @@ export default Capability.makeModule(
         const tokenType = url.searchParams.get(tokenTypeProp);
         const invitationCode = invitationUrlHandler ? url.searchParams.get(invitationProp) : null;
 
+        // Independent of the identity params below: approving a CLI needs an identity already here.
+        const cliCallback = CliLogin.parseCallback(url.searchParams.get(CliLogin.CALLBACK_PARAM));
+        const cliState = url.searchParams.get(CliLogin.STATE_PARAM);
+        if (cliCallback && CliLogin.isValidState(cliState)) {
+          log('cli login request received via navigation');
+          // Handlers dispatch before the client initializes, and the dialog reads the identity.
+          yield* Effect.promise(() => client.waitUntilInitialized());
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+            subject: CLI_LOGIN_DIALOG,
+            blockAlign: 'start',
+            type: 'alert',
+            props: { callback: cliCallback.href, state: cliState },
+          });
+          removeQueryParam(CliLogin.CALLBACK_PARAM);
+          removeQueryParam(CliLogin.STATE_PARAM);
+        }
+
         // The param is consumed only once the operation has succeeded. Navigation handlers now
         // dispatch before `client.initialize()` resolves, so a pre-init attempt fails against an
         // unopened identity service — stripping first would destroy a one-time credential that the
@@ -61,7 +79,7 @@ export default Capability.makeModule(
           removeQueryParam(invitationProp);
         }
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.gen(function* () {
             log.warn('navigation handler failed', { error });
             // A pre-init failure is expected and recoverable — the credential is still in the URL
@@ -74,9 +92,7 @@ export default Capability.makeModule(
               title: ['navigation-failed-toast.title', { ns: meta.profile.key }],
               description: ['navigation-failed-toast.description', { ns: meta.profile.key }],
               icon: 'ph--warning--regular',
-            }).pipe(
-              Effect.catchAll((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))),
-            );
+            }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
           }),
         ),
         Effect.provideService(Capability.Service, capabilities),

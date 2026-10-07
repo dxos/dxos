@@ -3,19 +3,22 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Graph } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
 /**
  * Base type for all shapes.
  */
-export const Shape = Schema.extend(
-  Graph.Node.pipe(Schema.omit('type')), // TODO(burdon): Breaks graph contract?
-  Schema.Struct({
+export const Shape = GraphNode.GraphNode.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
+  // TODO(burdon): Breaks graph contract?
+  Schema.fieldsAssign({
     type: Schema.String,
     text: Schema.optional(Schema.String),
     guide: Schema.optional(Schema.Boolean),
@@ -28,9 +31,8 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 /**
  * Connections between shapes.
  */
-export const Connection = Schema.extend(
-  Graph.Edge,
-  Schema.Struct({
+export const Connection = GraphEdge.GraphEdge.mapFields(
+  Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
   }),
@@ -55,8 +57,8 @@ export class CanvasBoard extends Type.makeObject<CanvasBoard>(DXN.make('org.dxos
     /**
      * Graph of shapes positioned on the canvas.
      */
-    layout: Graph.Graph,
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' })),
+    layout: GraphModel.Data,
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' }), Annotation.UserType.set()),
 ) {}
 
 /**

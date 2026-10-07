@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#opfs-worker": {
@@ -103,10 +103,12 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -116,6 +118,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -131,16 +134,13 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@dxos/worker-framework": "workspace:*",
-    "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/rpc": "catalog:",
     "effect": "catalog:",
     "jwt-decode": "catalog:",
     "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@effect/sql": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

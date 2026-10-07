@@ -6,14 +6,24 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as KanbanEvents from '../types/KanbanEvents';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { KanbanEvents } from '#types';
 
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.role.article',
     'org.dxos.role.formInput',
@@ -21,6 +31,14 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.section',
   ],
 });
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: KanbanEvents.Start,
+  environments: ['browser', 'node', 'tauri'],
+});
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

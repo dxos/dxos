@@ -20,7 +20,7 @@ import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type Tool, ToolList } from './ToolList';
+import { type Tool, ToolList } from './ToolList.tsx';
 
 // Fixture: representative subset of the @dxos/introspect-mcp tools so the
 // story has realistic content without depending on the actual schemas at
@@ -100,8 +100,8 @@ const Playground = () => {
   return (
     <div className={GRID_LAYOUT}>
       <PaneTools>
-        <ToolList.Root selectedId={selectedId} onSelect={setSelectedId}>
-          <ToolList.Content tools={SAMPLE_TOOLS} />
+        <ToolList.Root tools={SAMPLE_TOOLS} selectedId={selectedId} onSelect={setSelectedId}>
+          <ToolList.Content />
         </ToolList.Root>
       </PaneTools>
 
@@ -110,7 +110,7 @@ const Playground = () => {
           <div className='flex flex-col gap-3'>
             <header>
               <h2 className='text-sm font-semibold'>{selected.title}</h2>
-              {selected.description ? <p className='text-xs text-subdued'>{selected.description}</p> : null}
+              {selected.description ? <p className='text-xs text-fg-subtle'>{selected.description}</p> : null}
             </header>
             {/*
               In production: pass the tool's Effect Schema input here. The
@@ -120,7 +120,7 @@ const Playground = () => {
             <MockToolForm toolId={selected.id} onRun={(args) => setResult({ tool: selected.id, args })} />
           </div>
         ) : (
-          <p className='text-sm text-subdued'>Pick a tool from the list.</p>
+          <p className='text-sm text-fg-subtle'>Pick a tool from the list.</p>
         )}
       </PaneForm>
 
@@ -128,7 +128,7 @@ const Playground = () => {
         {result ? (
           <pre className='whitespace-pre-wrap break-all text-xs'>{JSON.stringify(result, null, 2)}</pre>
         ) : (
-          <p className='text-sm text-subdued'>Run a tool to see results here.</p>
+          <p className='text-sm text-fg-subtle'>Run a tool to see results here.</p>
         )}
       </PaneResults>
     </div>
@@ -190,9 +190,8 @@ export const TitlesOnly: Story = {
   render: () => (
     <div className={GRID_LAYOUT}>
       <PaneTools>
-        <ToolList.Root selectedId={SAMPLE_TOOLS[0].id}>
+        <ToolList.Root tools={SAMPLE_TOOLS} selectedId={SAMPLE_TOOLS[0].id}>
           <ToolList.Content
-            tools={SAMPLE_TOOLS}
             renderItem={(tool) => (
               <ToolList.Item key={tool.id} tool={tool}>
                 <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
@@ -202,10 +201,10 @@ export const TitlesOnly: Story = {
         </ToolList.Root>
       </PaneTools>
       <PaneForm>
-        <p className='text-sm text-subdued'>Form pane.</p>
+        <p className='text-sm text-fg-subtle'>Form pane.</p>
       </PaneForm>
       <PaneResults>
-        <p className='text-sm text-subdued'>Results pane.</p>
+        <p className='text-sm text-fg-subtle'>Results pane.</p>
       </PaneResults>
     </div>
   ),

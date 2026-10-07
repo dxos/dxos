@@ -7,12 +7,12 @@ import { describe, test } from 'vitest';
 import {
   HALO_RING_GAP,
   SWARM_VARIANTS,
-  haloLinks,
   applyOutro,
   createDots,
   defaultSwarmConfig,
   dotFill,
   dotPosition,
+  haloLinks,
   litCount,
   outroFactor,
   pickRandomVariant,
@@ -21,7 +21,7 @@ import {
   slotPosition,
   stepSettle,
   transientLinks,
-} from './swarm';
+} from './swarm.ts';
 
 describe('defaultSwarmConfig', () => {
   test('per-variant dot counts and sizes match the spec', ({ expect }) => {

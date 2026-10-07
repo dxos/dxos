@@ -9,11 +9,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { GithubComponent } from './GithubComponent';
+import { GithubComponent } from './GithubComponent.tsx';
 
 const DefaultStory = () => (
   <GithubComponent.Root>
-    <div className='grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden h-full w-full'>
+    <div className='grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden dx-fill'>
       <GithubComponent.Header />
       <GithubComponent.Content />
       <GithubComponent.StatusBar />

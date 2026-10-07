@@ -4,17 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
-import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
+import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { PublicKey } from '@dxos/keys';
 import { getHostPlatform } from '@dxos/util';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
-import { CreatePasskey } from './definitions';
+import { PasskeyError } from '#types';
+
+import * as ClientOperation from '../types/ClientOperation.ts';
 
 /**
  * Best-effort name for a newly created passkey, so the list is not a column of identical dates.
@@ -33,77 +34,93 @@ const defaultPasskeyLabel = (): string => {
   return platform ? `Passkey on ${platform}` : 'Passkey';
 };
 
-const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.CreatePasskey> = ClientOperation.CreatePasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identity = client.halo.identity.get();
+      const identity = Option.getOrUndefined(yield* Identity.getSnapshot);
       invariant(identity, 'Identity not available');
 
       const lookupKey = PublicKey.random();
 
-      const { recoveryKey, algorithm } = yield* Match.value(NativePasskey.supportsNativePasskeys()).pipe(
-        Match.when(true, () =>
+      const { recoveryKey, algorithm } = yield* Match.value(NativePasskey.getPasskeySupport()).pipe(
+        Match.when('native', () =>
           Effect.gen(function* () {
-            const result = yield* Effect.promise(() =>
-              NativePasskey.createNativePasskey({
-                username: identity.did,
-                userId: lookupKey.asUint8Array(),
-              }),
-            );
-            const { publicKey, algorithm: alg } = NativePasskey.extractPublicKeyFromAttestation(
-              result.attestation_object,
-            );
+            const result = yield* Effect.tryPromise({
+              try: () =>
+                NativePasskey.createNativePasskey({
+                  username: identity.did,
+                  userId: lookupKey.asUint8Array(),
+                }),
+              catch: PasskeyError.fromRegistration,
+            });
+            const { publicKey, algorithm: alg } = yield* Effect.try({
+              try: () => NativePasskey.extractPublicKeyFromAttestation(result.attestation_object),
+              catch: (cause) =>
+                new PasskeyError.RegistrationFailed({ message: 'Unusable attestation from the authenticator.', cause }),
+            });
             return {
               recoveryKey: PublicKey.from(publicKey),
               algorithm: alg === -7 ? 'ES256' : 'ED25519',
             };
           }),
         ),
-        Match.orElse(() =>
+        Match.when('web', () =>
           Effect.gen(function* () {
-            const credential = yield* Effect.promise(() =>
-              navigator.credentials.create({
-                publicKey: {
-                  challenge: new Uint8Array(),
-                  rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
-                  user: {
-                    id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
-                    name: identity.did,
-                    displayName: identity.profile?.displayName ?? '',
+            const credential = yield* Effect.tryPromise({
+              try: () =>
+                navigator.credentials.create({
+                  publicKey: {
+                    challenge: new Uint8Array(),
+                    rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
+                    user: {
+                      id: new Uint8Array(lookupKey.asUint8Array()),
+                      name: identity.did,
+                      displayName: identity.displayName ?? '',
+                    },
+                    pubKeyCredParams: [
+                      { type: 'public-key', alg: -8 },
+                      { type: 'public-key', alg: -7 },
+                    ],
+                    authenticatorSelection: {
+                      residentKey: 'required',
+                      requireResidentKey: true,
+                    },
                   },
-                  pubKeyCredParams: [
-                    { type: 'public-key', alg: -8 },
-                    { type: 'public-key', alg: -7 },
-                  ],
-                  authenticatorSelection: {
-                    residentKey: 'required',
-                    requireResidentKey: true,
-                  },
-                },
-              }),
-            );
-            invariant(credential, 'Credential not available');
+                }),
+              catch: PasskeyError.fromRegistration,
+            });
+            // A null credential means the authenticator resolved without creating one; same signal as a dismissal.
+            if (
+              !(credential instanceof PublicKeyCredential) ||
+              !(credential.response instanceof AuthenticatorAttestationResponse)
+            ) {
+              return yield* Effect.fail(new PasskeyError.Dismissed({ message: 'No passkey was created.' }));
+            }
+            const publicKey = credential.response.getPublicKey();
+            if (!publicKey) {
+              return yield* Effect.fail(
+                new PasskeyError.RegistrationFailed({ message: 'The authenticator returned no public key.' }),
+              );
+            }
             return {
-              recoveryKey: PublicKey.from(new Uint8Array((credential as any).response.getPublicKey())),
-              algorithm: (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519',
+              recoveryKey: PublicKey.from(new Uint8Array(publicKey)),
+              algorithm: credential.response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519',
             };
           }),
         ),
+        Match.when('none', () => Effect.fail(new PasskeyError.Unavailable())),
+        Match.exhaustive,
       );
 
-      invariant(client.services.services.IdentityService, 'IdentityService not available');
-      yield* Effect.promise(() =>
-        client.services.services.IdentityService!.createRecoveryCredential({
-          data: {
-            recoveryKey,
-            algorithm,
-            lookupKey,
-            label: defaultPasskeyLabel(),
-            kind: IdentityRecovery.Kind.PASSKEY,
-          },
-        }),
-      );
+      yield* Identity.createRecoveryCredential({
+        externalKey: {
+          recoveryKey: recoveryKey.toHex(),
+          lookupKey: lookupKey.toHex(),
+          algorithm,
+          label: defaultPasskeyLabel(),
+          kind: 'passkey',
+        },
+      });
     }),
   ),
 );

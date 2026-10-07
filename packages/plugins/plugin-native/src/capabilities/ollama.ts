@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 
@@ -38,12 +39,10 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 
-    const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
+    const runtime = ManagedRuntime.make(OllamaSidecarLive);
 
     // Layer for the sidecar but the lifecycle is managed by the runtime.
-    const sidecarLayer = Layer.effectContext(
-      runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
-    );
+    const sidecarLayer = Layer.effectContext(runtime.contextEffect.pipe(Effect.map(Context.pick(OllamaSidecar))));
 
     const admin = OllamaAdmin.make({ endpoint: OLLAMA_HOST });
     const stateAtom = Atom.make<Ollama.ModelsState>({
@@ -60,7 +59,12 @@ export default Capability.makeModule(
       Effect.sync(() => registry.set(stateAtom, f(registry.get(stateAtom))));
 
     // Connection-level failure (reaching the service); shown at the section, not tied to a model.
-    const fail = (error: string): Effect.Effect<void> => updateState((state) => ({ ...state, kind: 'failed', error }));
+    // Logged as well as rendered, so a bug report's log bundle carries it.
+    const fail = (error: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() => log.warn('ollama unreachable', { error }));
+        yield* updateState((state) => ({ ...state, kind: 'failed', error }));
+      });
 
     // Per-model action error (load/unload/remove/pull); shown inline on that model's row. Pass
     // `undefined` to clear.
@@ -97,25 +101,25 @@ export default Capability.makeModule(
     // callers branch on the result without a typed error channel.
     const runAdmin = <A, E extends { readonly message: string }>(
       effect: Effect.Effect<A, E, HttpClient.HttpClient>,
-    ): Effect.Effect<Either.Either<A, string>> =>
-      effect.pipe(Effect.provide(clientLayer), Effect.either, Effect.map(Either.mapLeft((error) => error.message)));
+    ): Effect.Effect<Result.Result<A, string>> =>
+      effect.pipe(Effect.provide(clientLayer), Effect.result, Effect.map(Result.mapError((error) => error.message)));
 
     // In-flight pull fibers, so a pull can be cancelled via interruption.
-    const pullFibers = new Map<string, Fiber.RuntimeFiber<void>>();
+    const pullFibers = new Map<string, Fiber.Fiber<void>>();
 
     // Refresh only the loaded-into-memory set (cheap; no spawn). Logs load/unload transitions so the
     // console reflects which model is resident when a chat request triggers a load.
     const refreshLoaded: Effect.Effect<void> = Effect.gen(function* () {
       const result = yield* runAdmin(admin.ps);
-      if (Either.isLeft(result)) {
+      if (Result.isFailure(result)) {
         return;
       }
       const before = (yield* getState).loaded.map((model) => model.name);
-      const after = result.right.map((model) => model.name);
+      const after = result.success.map((model) => model.name);
       if (before.join() !== after.join()) {
         yield* Effect.sync(() => log.info('ollama loaded models changed', { loaded: after }));
       }
-      yield* updateState((state) => ({ ...state, loaded: result.right }));
+      yield* updateState((state) => ({ ...state, loaded: result.success }));
     });
 
     const refresh: Effect.Effect<void> = Effect.gen(function* () {
@@ -129,11 +133,11 @@ export default Capability.makeModule(
       const result = yield* runAdmin(
         admin.list.pipe(Effect.retry({ schedule: Schedule.spaced(Duration.millis(300)), times: 29 })),
       );
-      if (Either.isLeft(result)) {
-        return yield* fail(result.left);
+      if (Result.isFailure(result)) {
+        return yield* fail(result.failure);
       }
-      yield* updateState((state) => ({ ...state, kind: 'ready', models: result.right, error: undefined }));
-      yield* Effect.sync(() => log.info('ollama models', { installed: result.right.map((model) => model.name) }));
+      yield* updateState((state) => ({ ...state, kind: 'ready', models: result.success, error: undefined }));
+      yield* Effect.sync(() => log.info('ollama models', { installed: result.success.map((model) => model.name) }));
       yield* refreshLoaded;
     });
 
@@ -173,7 +177,7 @@ export default Capability.makeModule(
           Effect.provide(clientLayer),
           Effect.matchCauseEffect({
             onFailure: (cause) =>
-              Cause.isInterruptedOnly(cause)
+              Cause.hasInterruptsOnly(cause)
                 ? Effect.sync(() => log.info('ollama pull finished', { name, cancelled: true }))
                 : Effect.gen(function* () {
                     const message = formatError(Cause.squash(cause));
@@ -190,7 +194,7 @@ export default Capability.makeModule(
           Effect.ensuring(Effect.sync(() => pullFibers.delete(name))),
         );
 
-        const fiber = yield* Effect.forkDaemon(work);
+        const fiber = yield* Effect.forkDetach(work);
         yield* Effect.sync(() => pullFibers.set(name, fiber));
       });
 
@@ -213,9 +217,9 @@ export default Capability.makeModule(
         }
         yield* Effect.sync(() => log.info('ollama load', { name }));
         const result = yield* runAdmin(admin.load(name));
-        if (Either.isLeft(result)) {
-          yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.left }));
-          return yield* setError(name, result.left);
+        if (Result.isFailure(result)) {
+          yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.failure }));
+          return yield* setError(name, result.failure);
         }
         yield* refreshLoaded;
       });
@@ -229,8 +233,8 @@ export default Capability.makeModule(
         }
         yield* Effect.sync(() => log.info('ollama unload', { name }));
         const result = yield* runAdmin(admin.unload(name));
-        if (Either.isLeft(result)) {
-          return yield* setError(name, result.left);
+        if (Result.isFailure(result)) {
+          return yield* setError(name, result.failure);
         }
         yield* refreshLoaded;
       });
@@ -243,8 +247,8 @@ export default Capability.makeModule(
           return yield* setError(name, formatError(Cause.squash(started.cause)));
         }
         const result = yield* runAdmin(admin.remove(name));
-        if (Either.isLeft(result)) {
-          return yield* setError(name, result.left);
+        if (Result.isFailure(result)) {
+          return yield* setError(name, result.failure);
         }
         yield* refresh;
       });
@@ -264,7 +268,7 @@ export default Capability.makeModule(
     // One disposal path: the resolver and the manager close over the same runtime.
     yield* Effect.addFinalizer(() =>
       Effect.tryPromise(() => runtime.dispose()).pipe(
-        Effect.catchAll((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
+        Effect.catch((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
       ),
     );
     return [
@@ -277,58 +281,81 @@ export default Capability.makeModule(
   }),
 );
 
-class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
+class OllamaSidecar extends Context.Service<
   OllamaSidecar,
   {
     endpoint: string;
   }
->() {
-  static layerLive = Layer.scoped(
-    OllamaSidecar,
-    Effect.gen(function* () {
-      // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
-      // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
-      // `Contents/MacOS/lib/ollama` next to the signed sidecar (see tauri.conf bundle.macOS.files).
-      const command = Command.sidecar('sidecar/ollama', ['serve'], {
-        env: {
-          OLLAMA_HOST,
-          OLLAMA_ORIGINS: '*', // CORS
-        },
-      });
+>()('@dxos/plugin-native/OllamaSidecar') {}
 
-      // Ollama writes nearly all of its output (including normal startup/inference logs) to stderr,
-      // so route by the structured `level=` field rather than the stream to avoid flooding the
-      // console with red errors. Kept on `console.*` for Ollama's own line formatting.
-      command.stdout.on('data', (data) => logSidecar(data.toString()));
-      command.stderr.on('data', (data) => logSidecar(data.toString()));
-      command.on('close', (code) => log.info('Ollama process exited', { code }));
-      command.on('error', (error) => log.error('Ollama error', { error }));
-      const child = yield* Effect.promise(() => command.spawn());
+const OllamaSidecarLive = Layer.effect(
+  OllamaSidecar,
+  Effect.gen(function* () {
+    // Ollama is spawned as a scoped shell command, not a Tauri sidecar. Tauri signs every
+    // `externalBin` with the app's single entitlements file, which claims restricted entitlements
+    // (application-identifier, associated-domains) for passkeys. macOS honours those only for a
+    // binary covered by the app's provisioning profile, and a separate executable is not, so it
+    // kills the sidecar at exec (AMFI error -413). Tauri has no per-binary entitlements, and the
+    // shell plugin spawns only sidecars listed in `externalBin`. So the launcher ships as a plain
+    // bundled file at `$RESOURCE/ollama` (bundle.macOS.files, which Tauri copies but never signs),
+    // and CI signs it with no entitlements. It needs none: it is a local HTTP server.
+    //
+    // The launcher finds `llama-server` and its libraries at `<exe>/lib/ollama/`, ignoring
+    // OLLAMA_LIBRARY_PATH, so the runtime ships at `Contents/Resources/lib/ollama` beside it.
+    const command = Command.create('ollama', ['serve'], {
+      env: {
+        OLLAMA_HOST,
+        OLLAMA_ORIGINS: '*', // CORS
+      },
+    });
+
+    // Ollama writes nearly all of its output (including normal startup/inference logs) to stderr,
+    // so route by the structured `level=` field rather than the stream to avoid flooding the
+    // console with red errors. Kept on `console.*` for Ollama's own line formatting.
+    command.stdout.on('data', (data) => logSidecar(data.toString()));
+    command.stderr.on('data', (data) => logSidecar(data.toString()));
+    // Set before the finalizer's kill, so a warning below means the process died on its own — the
+    // only other trace of that is the connection error the settings panel shows nine seconds later.
+    let stopping = false;
+    command.on('close', ({ code, signal }) => {
+      if (stopping || code === 0) {
+        log.info('Ollama process exited', { code, signal });
+      } else {
+        log.warn('Ollama process exited', { code, signal });
+      }
+    });
+    command.on('error', (error) => log.error('Ollama error', { error }));
+    // Only macOS builds bundle the launcher, and a defect here fails every model resolver materialized beside it.
+    const child = yield* Effect.tryPromise({ try: () => command.spawn(), catch: formatError }).pipe(
+      Effect.tapError((error) => Effect.sync(() => log.warn('ollama not started', { error }))),
+      Effect.option,
+    );
+    if (Option.isSome(child)) {
       yield* Effect.addFinalizer(
         Effect.fn(function* () {
-          yield* Effect.promise(() => child.kill());
+          stopping = true;
+          yield* Effect.promise(() => child.value.kill());
         }),
       );
-      log.info('Running ollama', { pid: child.pid });
+      log.info('Running ollama', { pid: child.value.pid });
+    }
 
-      return {
-        endpoint: OLLAMA_HOST,
-      };
-    }),
-  );
-}
+    return {
+      endpoint: OLLAMA_HOST,
+    };
+  }),
+);
 
-const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, never, OllamaSidecar> =
-  Layer.unwrapEffect(
-    Effect.gen(function* () {
-      const { endpoint } = yield* OllamaSidecar;
-      return OllamaResolver.make({
-        endpoint,
-        provider: Provider.builtIn.id,
-        transformClient: HttpClient.withTracerPropagation(false),
-      });
-    }),
-  ).pipe(Layer.provide(FetchHttpClient.layer));
+const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, never, OllamaSidecar> = Layer.unwrap(
+  Effect.gen(function* () {
+    const { endpoint } = yield* OllamaSidecar;
+    return OllamaResolver.make({
+      endpoint,
+      provider: Provider.builtIn.id,
+      transformClient: HttpClient.transformResponse(Effect.provideService(HttpClient.TracerPropagationEnabled, false)),
+    });
+  }),
+).pipe(Layer.provide(FetchHttpClient.layer));
 
 const formatError = (error: unknown): string =>
   typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);

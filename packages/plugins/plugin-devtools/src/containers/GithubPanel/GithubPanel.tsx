@@ -4,15 +4,17 @@
 
 import React from 'react';
 
-import { GithubComponent } from './GithubComponent';
+import * as Layout from '@dxos/react-ui/Layout';
+
+import { GithubComponent } from './GithubComponent.tsx';
 
 export const GithubPanel = () => (
   <GithubComponent.Root>
-    <div className='h-full grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden h-full w-full'>
+    <Layout.Grid rows={['auto', 'fill', 'auto']} classNames='dx-fill overflow-hidden'>
       <GithubComponent.Header />
       <GithubComponent.Content />
       <GithubComponent.StatusBar />
-    </div>
+    </Layout.Grid>
   </GithubComponent.Root>
 );
 

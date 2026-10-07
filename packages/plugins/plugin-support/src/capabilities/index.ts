@@ -2,36 +2,54 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Operation from '@dxos/compute/Operation';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import type * as ToolkitTour from '@dxos/app-toolkit/Tour';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
-import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
-import * as HelpCapabilities from '../types/HelpCapabilities';
-import * as SupportCapabilities from '../types/SupportCapabilities';
-import * as SupportOperation from '../types/SupportOperation';
-import type * as Tour from '../types/Tour';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { HelpCapabilities, SupportCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [SupportCapabilities.Settings],
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const HelpState = Capability.lazyModule(
   'HelpState',
-  { provides: [HelpCapabilities.State] },
-  () => import('./help-state'),
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.Settings, HelpCapabilities.SeenTours, HelpCapabilities.State],
+  },
+  () => import('./help-state.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
-  /** Maps the plugin's configured tour steps to the body's props. */
-  props: (options: { helpSteps?: Tour.Step[] }) => options.helpSteps,
-});
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
+export const Tour = Capability.lazyModule(
+  'Tour',
+  {
+    provides: [AppCapabilities.Tour],
+    environments: ['browser', 'tauri'],
+    props: (options: { helpSteps?: () => Promise<ToolkitTour.Step[]> }) => options.helpSteps,
+  },
+  () => import('./tour.ts'),
+);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.plugin.support.role.hints',
@@ -44,18 +62,23 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.statusIndicator',
   ],
 });
-export const SupportSettings = AppCapability.settings(() => import('./settings'), {
+export const SupportSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SupportCapabilities.Settings],
 });
-
-// Genuine runtime event: fired imperatively by `plugin-space`'s create-space operation.
-export const OnSpaceCreated = Capability.inlineModule(
-  'on-space-created',
-  { provides: [SpaceCapabilities.OnCreateSpace], activatesOn: SpaceEvents.SpaceCreated },
-  () =>
-    Effect.succeed([
-      Capability.contribute(SpaceCapabilities.OnCreateSpace, (params) =>
-        Operation.invoke(SupportOperation.OnCreateSpace, params),
-      ),
-    ]),
+export const TourAutoStart = Capability.lazyModule(
+  'TourAutoStart',
+  {
+    requires: [
+      AppCapabilities.AppGraph,
+      AttentionCapabilities.Attention,
+      Capabilities.AtomRegistry,
+      Capabilities.OperationInvoker,
+      ClientCapabilities.Client,
+      HelpCapabilities.SeenTours,
+      HelpCapabilities.State,
+    ],
+    provides: [],
+  },
+  () => import('./tour-auto-start.ts'),
 );
+export const Translations = AppCapability.translations(translations);

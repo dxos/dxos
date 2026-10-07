@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { scanIdioms } from '@dxos/introspect/idioms';
 
-import { findMonorepoRoot } from '../util';
+import { findMonorepoRoot } from '../util.ts';
 
 const handler = Effect.fn(function* ({ root }: { root: string }) {
   const { json } = yield* CommandConfig;
@@ -50,7 +50,7 @@ const handler = Effect.fn(function* ({ root }: { root: string }) {
 export const list = Command.make(
   'list',
   {
-    root: Options.text('root').pipe(
+    root: Options.String('root').pipe(
       Options.withDescription('Monorepo root (defaults to nearest pnpm-workspace.yaml ancestor of cwd).'),
       Options.withDefault(process.cwd()),
     ),

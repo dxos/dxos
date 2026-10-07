@@ -4,22 +4,79 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
+import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
-import * as ProjectCapabilities from '../types/ProjectCapabilities';
-import * as ProjectsEvents from '../types/ProjectsEvents';
+import { translations } from '#translations';
+import { ProjectCapabilities, ProjectsEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+// Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
+// `LayoutOperation` actions, which mean nothing without an app shell.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: ['browser', 'tauri'],
+});
+// Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
+// template and collects its name.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['browser', 'tauri'],
+});
+export const NavigationTargetResolver = AppCapability.navigationResolver(
+  () => import('./navigation-target-resolver.ts'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  roles: ['org.dxos.role.article'],
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [ProjectCapabilities.Settings],
 });
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SubjectContext = Capability.lazyModule(
+  'SubjectContext',
+  { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
+  () => import('./subject-context.ts'),
+);
+export const TaskAction = Capability.lazyModule(
+  'TaskAction',
+  // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
+  { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
+  () => import('./task-action.ts'),
+);
+// Its own module, after the client: which EDGE the browser variant builds on and publishes to comes from the client's config.
+export const ComposerPluginTemplate = Capability.lazyModule(
+  'ComposerPluginTemplate',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ProjectCapabilities.Template],
+    activatesOn: ClientEvents.Initialized,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./composer-plugin-template.ts'),
+);
 export const Templates = Capability.lazyModule(
   'Templates',
-  { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-  () => import('./templates'),
+  {
+    provides: [ProjectCapabilities.Template],
+    activatesOn: ProjectsEvents.Start,
+  },
+  () => import('./templates.ts'),
 );
+
+export const Tour = Capability.lazyModule(
+  'Tour',
+  { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
+  () => import('./tour.ts'),
+);
+
+export const Translations = AppCapability.translations(translations);

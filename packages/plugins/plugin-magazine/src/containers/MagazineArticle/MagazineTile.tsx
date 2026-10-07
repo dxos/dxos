@@ -5,14 +5,16 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
+import { Magazine, Subscription } from '#types';
 
-import type * as Magazine from '../../types/Magazine';
-import type * as Subscription from '../../types/Subscription';
-import { formatDate } from '../../util/date';
+import { formatDate } from '../../util/date.ts';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
@@ -44,39 +46,36 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
       <Card.Root
-        fullWidth
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.Block>
-            <SystemIconButton.Star
-              variant='ghost'
-              iconOnly
-              square
-              size={4}
-              active={starred}
-              onClick={handleToggleStar}
-            />
-          </Card.Block>
-          {snapshot.title ? <Card.Title classNames='line-clamp-2'>{snapshot.title}</Card.Title> : <div />}
-          <Card.Block end />
+          <Layout.Block>
+            <SystemButton.Star variant='ghost' iconOnly iconSize='md' pressed={starred} onClick={handleToggleStar} />
+          </Layout.Block>
+          {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
+          <Layout.Block rail='end' />
         </Card.Header>
         <Card.Body>
           {snippet && (
             <Card.Row>
-              <Card.Text variant='description' classNames='line-clamp-3'>
+              <Card.Text variant='muted' classNames='line-clamp-3'>
                 {snippet}
               </Card.Text>
             </Card.Row>
           )}
           <Card.Row>
-            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-1.5 text-sm text-description overflow-hidden'>
+            <Layout.Grid
+              cols={['fill', 'auto']}
+              gap='sm'
+              align='center'
+              classNames='py-trim-xs text-sm text-fg-muted overflow-hidden'
+            >
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
-            </div>
+            </Layout.Grid>
           </Card.Row>
         </Card.Body>
       </Card.Root>

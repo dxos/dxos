@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useState } from 'react';
 
 import { JsonSchema, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
-import type * as Kanban from '../types/Kanban';
+import { Kanban } from '#types';
 
 /**
  * Loads the kanban view and builds a ProjectionModel for field projections and pivot.
@@ -24,11 +24,11 @@ import type * as Kanban from '../types/Kanban';
 export const useProjectionModel = <S extends Type.AnyEntity>(
   schema: S | undefined,
   kanban: Kanban.Kanban | undefined,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ) => {
   const [projection, setProjection] = useState<ProjectionModel | undefined>();
 
-  useAsyncEffect(
+  Hooks.useAsyncEffect(
     async (controller) => {
       if (!schema || !kanban || kanban.spec.kind !== 'view') {
         return;

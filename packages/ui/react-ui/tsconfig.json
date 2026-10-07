@@ -19,6 +19,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/i18n"
     },
     {
@@ -40,10 +43,10 @@
       "path": "../react-primitives/react-error-boundary"
     },
     {
-      "path": "../react-primitives/react-hooks"
+      "path": "../react-primitives/react-focus"
     },
     {
-      "path": "../react-primitives/react-input"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../ui-theme"

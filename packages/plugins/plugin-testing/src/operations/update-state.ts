@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import * as StorybookCapabilities from '../types/StorybookCapabilities';
+import { StorybookCapabilities } from '#types';
 
 export const updateState = (
   fn: (state: StorybookCapabilities.LayoutStateProps) => Partial<StorybookCapabilities.LayoutStateProps>,

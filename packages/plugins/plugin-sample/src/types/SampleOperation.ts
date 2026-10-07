@@ -13,10 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-// Convention: prefix all operation keys with the plugin's meta.id to avoid collisions.
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+// Convention: `<root>.operation.<domain>.<verb>`, written in full so a key can be found by searching for it.
 
 // `Operation.make` creates a typed operation definition.
 // - `meta.key`: globally unique identifier used for routing and invocation.
@@ -25,31 +22,39 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 // - `output`: Effect/Schema defining the return shape.
 export const CreateSampleItem = Operation.make({
   meta: {
-    key: makeKey('createSampleItem'),
+    key: DXN.make('org.dxos.operation.sample.createItem'),
     name: 'Create Sample Item',
     icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
-    name: Schema.optional(Schema.String).annotations({ description: 'Display name for the item.' }),
+    name: Schema.optional(Schema.String).annotate({ description: 'Display name for the item.' }),
   }),
   output: Schema.Struct({
-    object: Schema.Any.annotations({ description: 'The created SampleItem object.' }),
+    object: Schema.Any.annotate({ description: 'The created SampleItem object.' }),
   }),
 });
 
 export const Randomize = Operation.make({
-  meta: { key: makeKey('randomize'), name: 'Randomize Sample Item', icon: 'ph--shuffle--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.sample.randomize'),
+    name: 'Randomize Sample Item',
+    icon: 'ph--shuffle--regular',
+  },
   input: Schema.Struct({
-    item: Schema.Any.annotations({ description: 'The SampleItem to randomize.' }),
+    item: Schema.Any.annotate({ description: 'The SampleItem to randomize.' }),
   }),
   output: Schema.Void,
 });
 
 export const UpdateStatus = Operation.make({
-  meta: { key: makeKey('updateStatus'), name: 'Update Status', icon: 'ph--pencil--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.sample.updateStatus'),
+    name: 'Update Status',
+    icon: 'ph--pencil--regular',
+  },
   input: Schema.Struct({
-    item: Schema.Any.annotations({ description: 'The SampleItem to update.' }),
-    status: Schema.String.annotations({ description: 'The new status value.' }),
+    item: Schema.Any.annotate({ description: 'The SampleItem to update.' }),
+    status: Schema.String.annotate({ description: 'The new status value.' }),
   }),
   output: Schema.Void,
 });

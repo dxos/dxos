@@ -10,8 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 
-import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { MarkdownCapabilities, MarkdownOperation } from '#types';
 
 const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
@@ -31,9 +30,11 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
       }
 
       // When a thread ref is supplied, delegate to the shared editor helper which
-      // scrolls (only if not already visible) and marks the comment current.
+      // scrolls (only if not already visible) and marks the comment current. The helper matches by
+      // the thread's bare entity id (how the comment-sync extension keys its ranges), not its URI.
       if (id) {
-        scrollCommentIntoView(entry.view, id, SCROLL_OPTIONS);
+        const thread = yield* Effect.promise(() => id.load());
+        scrollCommentIntoView(entry.view, thread.id, SCROLL_OPTIONS);
         return;
       }
 

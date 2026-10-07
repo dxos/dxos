@@ -5,36 +5,33 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MapRole from '@dxos/plugin-map/MapRole';
-import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { initHotkeys } from '@dxos/react-focus';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
+import { Booking, Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
-import { TripPlugin } from '../../testing';
-import * as Booking from '../../types/Booking';
-import type * as Place from '../../types/Place';
-import * as Routing from '../../types/Routing';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
-import * as TripCapabilities from '../../types/TripCapabilities';
-import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
-import { TripArticle } from './TripArticle';
+import { TripPlugin } from '../../testing.ts';
+import { SegmentArticle } from '../SegmentArticle/SegmentArticle.tsx';
+import { TripArticle } from './TripArticle.tsx';
 
 /** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
 const RoutingStoryPlugin = (service: Routing.RoutingService) =>
@@ -146,8 +143,8 @@ const ATTENDABLE_ID = 'story';
 // article's 'j'/'k' bindings dispatch in isolation.
 const withKeyboard: Decorator = (Story) => {
   useEffect(() => {
-    Keyboard.singleton.initialize();
-    return () => Keyboard.singleton.destroy();
+    // No teardown: the store is shared, and destroying it would unbind every other story.
+    initHotkeys();
   }, []);
 
   return <Story />;
@@ -170,9 +167,9 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
   // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
   return (
-    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
+    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-expand grid grid-cols-2'>
       <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
-      <div className='min-h-0 overflow-hidden border-is border-separator'>
+      <div className='overflow-hidden border-is border-separator'>
         {selected && (
           <SegmentArticle role='article' subject={selected} companionTo={trip} attendableId={ATTENDABLE_ID} />
         )}
@@ -189,8 +186,8 @@ const baseDecorators = (
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
     plugins: [
-      ...corePlugins(),
-      ClientPlugin({
+      ...CorePlugins.make(),
+      ClientPlugin.make({
         types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -199,11 +196,11 @@ const baseDecorators = (
             yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       TripPlugin(),
-      MapPlugin(),
+      MapPlugin.make(),
       RoutingStoryPlugin(routingService),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
     ],
   })),
 ];
@@ -318,6 +315,13 @@ export const Default: Story = {
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
+  // The seed used to throw before `build()` — `airline.code` is not a `Provider` field — so nothing
+  // was ever added and the article sat on its loading state. Asserting a segment renders is what
+  // catches that; the render-only smoke test did not, because the throw was swallowed by the
+  // client-initialization Effect.
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.textContent).toContain('AF 023'), { timeout: 20_000 });
+  },
 };
 
 // A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake

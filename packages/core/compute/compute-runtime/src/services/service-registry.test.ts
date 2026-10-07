@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { ServiceRegistry } from './service-registry';
+import { ServiceRegistry } from './service-registry.ts';
 
-class MyTag extends Context.Tag('MyTag')<MyTag, { value: string }>() {}
+class MyTag extends Context.Service<MyTag, { value: string }>()('MyTag') {}
 
 const mockRegistry = Layer.succeed(ServiceRegistry, {
   resolve: (tag) => ((tag as any) === MyTag ? Option.some({ value: 'test' } as any) : Option.none()),

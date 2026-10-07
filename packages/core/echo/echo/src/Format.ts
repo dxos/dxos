@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './internal/Format';
+export * from './internal/Format/index.ts';

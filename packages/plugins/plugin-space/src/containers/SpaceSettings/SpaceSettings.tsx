@@ -2,17 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
-import type * as Settings from '../../types/Settings';
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 export type SpaceSettingsProps = {
   spaces?: Space[];
@@ -24,9 +28,12 @@ export type SpaceSettingsProps = {
   /** Spaces that may be designated as the default; defaults to all of `spaces`. */
   eligibleDefaultSpaces?: Space[];
   onDefaultSpaceChange?: (spaceId: string) => void;
+  /** Controls for the panel's heading row. */
+  scope?: ReactNode;
 };
 
 export const SpaceSettings = ({
+  scope,
   spaces,
   onOpenSpaceSettings,
   settings,
@@ -35,55 +42,62 @@ export const SpaceSettings = ({
   eligibleDefaultSpaces = spaces,
   onDefaultSpaceChange,
 }: SpaceSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('plugin.name')}>
-            <Form.Row label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Input.Root>
-                <Input.Switch
-                  disabled={!onSettingsChange}
-                  checked={settings?.showHidden}
-                  onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
-                />
-              </Input.Root>
-            </Form.Row>
-          </Form.Section>
-          <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-            <Form.Row label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
+          <Form.FieldSet label={t('plugin.name')} actions={scope}>
+            <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
+              <Input.Switch
+                disabled={!onSettingsChange}
+                checked={settings?.showHidden}
+                onCheckedChange={({ checked }) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
+              />
+            </Form.Field>
+          </Form.FieldSet>
+          <Form.FieldSet label={t('space-settings.label')} description={t('space-settings.description')}>
+            <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
               <Select.Root
-                value={defaultSpaceId}
-                onValueChange={(value) => onDefaultSpaceChange?.(value)}
+                value={defaultSpaceId ? [defaultSpaceId] : []}
+                onValueChange={({ value: [value] }) => value && onDefaultSpaceChange?.(value)}
                 disabled={!onDefaultSpaceChange}
+                items={(eligibleDefaultSpaces ?? []).map((space) => ({
+                  value: space.id,
+                  label: Theme.toLocalizedString(getSpaceDisplayName(space), t),
+                }))}
               >
-                <Select.TriggerButton placeholder={t('settings.default-space.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {eligibleDefaultSpaces?.map((space) => (
-                        <Select.Option key={space.id} value={space.id}>
-                          {toLocalizedString(getSpaceDisplayName(space), t)}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                    <Select.Arrow />
-                  </Select.Content>
-                </Select.Portal>
+                <Select.Trigger placeholder={t('settings.default-space.placeholder')} />
+                <Select.Content>
+                  {eligibleDefaultSpaces?.map((space) => (
+                    <Select.Item
+                      key={space.id}
+                      item={{ value: space.id, label: Theme.toLocalizedString(getSpaceDisplayName(space), t) }}
+                    />
+                  ))}
+                </Select.Content>
               </Select.Root>
-            </Form.Row>
-            <Form.Row label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
-              <Listbox.Root>
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('settings.space-list.label')}
+              description={t('settings.space-list.description')}
+            >
+              <Listbox.Root
+                items={(spaces ?? []).map((space) => ({
+                  value: space.id,
+                  label: Theme.toLocalizedString(getSpaceDisplayName(space), t),
+                }))}
+              >
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
                   {spaces?.map((space) => (
                     <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
                       {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
-                      <Listbox.ItemLabel classNames='min-h-0!'>
-                        {toLocalizedString(getSpaceDisplayName(space), t)}
-                      </Listbox.ItemLabel>
-                      <IconButton
+                      <Listbox.ItemText classNames='min-h-0!'>
+                        {Theme.toLocalizedString(getSpaceDisplayName(space), t)}
+                      </Listbox.ItemText>
+                      <Button.Root
                         icon='ph--faders--regular'
                         iconOnly
                         label={t('settings.open-settings.label')}
@@ -94,8 +108,8 @@ export const SpaceSettings = ({
                   ))}
                 </Listbox.Content>
               </Listbox.Root>
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

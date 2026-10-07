@@ -4,17 +4,20 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import { Video } from '@dxos/types';
 
 import { Pending, Transcript } from '#components';
 import { meta } from '#meta';
+import { VideoOperation } from '#types';
 
-import * as Video from '../../types/Video';
-import * as VideoOperation from '../../types/VideoOperation';
+import { extractVideoId } from '../../util/index.ts';
 
 // TODO(burdon): Use AppSurface.Section.
 export type TranscriptSectionProps = {
@@ -27,8 +30,8 @@ export type TranscriptSectionProps = {
  * the transcript is generated. The transcript is generated on demand when missing.
  */
 export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
 
@@ -49,8 +52,10 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
   const runningRef = useRef(false);
   const [transcribeError, setTranscribeError] = useState<string | undefined>(undefined);
   const [retryCount, setRetryCount] = useState(0);
+  // The transcription service resolves YouTube video ids only, so any other URL would fail with an error toast.
+  const transcribable = video.url !== undefined && extractVideoId(video.url) !== undefined;
   useEffect(() => {
-    if (!video.url || video.transcript || runningRef.current || !invokePromise) {
+    if (!transcribable || video.transcript || runningRef.current || !invokePromise) {
       return;
     }
     runningRef.current = true;
@@ -70,20 +75,27 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
       .finally(() => {
         runningRef.current = false;
       });
-  }, [video.url, video.transcript, invokePromise, subject, retryCount]);
+  }, [transcribable, video.url, video.transcript, invokePromise, subject, retryCount]);
 
   if (!video.transcript) {
     if (!video.url) {
       return <Pending label={t('no-url.pending.label')} />;
     }
+    if (!transcribable) {
+      return (
+        <Layout.Flex column center classNames='w-full p-4 text-fg-muted'>
+          {t('unsupported-url.message')}
+        </Layout.Flex>
+      );
+    }
     if (transcribeError !== undefined) {
       return (
-        <div className='grid place-items-center w-full p-4 text-description gap-2'>
+        <Layout.Flex column center gap='sm' classNames='w-full p-4 text-fg-muted'>
           <span>{transcribeError}</span>
-          <Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
+          <Button.Root variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}
-          </Button>
-        </div>
+          </Button.Root>
+        </Layout.Flex>
       );
     }
 

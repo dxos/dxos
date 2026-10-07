@@ -1,0 +1,23 @@
+/*
+ * Separator: a 1px rule in the separator colour. Horizontal it spans its track (a popup's width, a stack's content
+ * track); vertical it is control-tall and inset like a control, so a toolbar keeps its three-inset rhythm around it.
+ */
+
+@layer dx-components {
+  .dx-separator {
+    flex-shrink: 0;
+    border: none;
+    background: var(--color-separator);
+  }
+  .dx-separator[data-orientation='horizontal'] {
+    align-self: stretch;
+    height: 1px;
+    margin-block: var(--dx-control-inset);
+  }
+  .dx-separator[data-orientation='vertical'] {
+    align-self: center;
+    width: 1px;
+    height: var(--dx-control-size);
+    margin-inline: var(--dx-control-inset);
+  }
+}

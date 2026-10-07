@@ -2,27 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
-import { schema } from '@dxos/protocols/proto';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
 
-import { SwarmNetworkManager } from '../network-manager';
-import { FullyConnectedTopology } from '../topology';
+import { SwarmNetworkManager } from '../network-manager.ts';
+import { FullyConnectedTopology } from '../topology/index.ts';
 import {
   MemoryTransportFactory,
-  RtcTransportProxyFactory,
-  RtcTransportService,
   type TransportFactory,
   TransportKind,
   createRtcTransportFactory,
-} from '../transport';
-import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
+} from '../transport/index.ts';
+import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol.ts';
 
 export type TestBuilderOptions = {
   transport?: TransportKind;
@@ -63,9 +62,6 @@ export class TestPeer {
    */
   readonly _networkManager: SwarmNetworkManager;
 
-  private _proxy?: ProtoRpcPeer<any>;
-  private _service?: ProtoRpcPeer<any>;
-
   constructor(
     private readonly testBuilder: TestBuilder,
     public readonly peerId: PublicKey,
@@ -73,7 +69,9 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityDid: `did:halo:${peerId.toHex()}`, peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo(
+      create(PeerSchema, { identityDid: `did:halo:${peerId.toHex()}`, peerKey: peerId.toHex() }),
+    );
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -89,37 +87,6 @@ export class TestPeer {
       case TransportKind.WEB_RTC:
         transportFactory = createRtcTransportFactory();
         break;
-      case TransportKind.WEB_RTC_PROXY:
-        {
-          // Simulates bridge to shared worker.
-          const [proxyPort, servicePort] = createLinkedPorts();
-
-          this._proxy = createProtoRpcPeer({
-            port: proxyPort,
-            requested: {
-              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-            },
-            noHandshake: true,
-            encodingOptions: {
-              preserveAny: true,
-            },
-          });
-
-          this._service = createProtoRpcPeer({
-            port: servicePort,
-            exposed: {
-              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-            },
-            handlers: { BridgeService: new RtcTransportService() },
-            noHandshake: true,
-            encodingOptions: {
-              preserveAny: true,
-            },
-          });
-
-          transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
-        }
-        break;
       default:
         throw new Error(`Unsupported transport: ${transport}`);
     }
@@ -132,16 +99,12 @@ export class TestPeer {
 
   async open(): Promise<void> {
     await this._networkManager.open();
-    await this._proxy?.open();
-    await this._service?.open();
   }
 
   async close(): Promise<void> {
     await Promise.all(Array.from(this._swarms.values()).map((swarm) => swarm.leave()));
     this._swarms.clear();
 
-    await this._proxy?.close();
-    await this._service?.close();
     await this._networkManager.close(Context.default());
   }
 
@@ -193,7 +156,10 @@ export class TestSwarmConnection {
   async join(topology = new FullyConnectedTopology()): Promise<this> {
     await this.peer._networkManager.joinSwarm(Context.default(), {
       topic: this.topic,
-      peerInfo: { peerKey: this.peer.peerId.toHex(), identityDid: `did:halo:${this.peer.peerId.toHex()}` },
+      peerInfo: create(PeerSchema, {
+        peerKey: this.peer.peerId.toHex(),
+        identityDid: `did:halo:${this.peer.peerId.toHex()}`,
+      }),
       protocolProvider: this.protocol.factory,
       topology,
     });

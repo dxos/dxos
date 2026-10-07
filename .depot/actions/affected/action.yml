@@ -1,0 +1,22 @@
+name: Affected
+description: >
+  Resolve this run's moon affected scope from the CI trigger and export MOON_AFFECTED/MOON_BASE.
+  Call AFTER the setup action — this needs node on PATH.
+
+inputs:
+  all:
+    description: >
+      Set "true" to force a full run whatever the trigger — a dispatch that asks for the whole suite,
+      or a job whose target set is not meaningfully scopeable. Anything else defers to the trigger.
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    # `moon exec` and `moon run` both read MOON_AFFECTED/MOON_BASE (2.5.2), including through the Trunk
+    # uploader's `run:` input.
+    - name: Resolve affected scope
+      shell: bash
+      env:
+        CI_AFFECTED_ALL: ${{ inputs.all }}
+      run: node ./.depot/actions/affected/resolve-affected.mjs

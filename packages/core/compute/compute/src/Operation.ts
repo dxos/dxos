@@ -7,24 +7,34 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
+import * as Scope from 'effect/Scope';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { assertArgument, invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { type NoHandlerError, RunAgainError } from './errors';
-import type { Operation } from './index';
+import { type NoHandlerError, RunAgainError } from './errors.ts';
+import type { Operation } from './index.ts';
+import type * as Process from './Process.ts';
+import type * as StorageService from './StorageService.ts';
+import type * as Trace from './Trace.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
  */
-type Schema<T> = Schema$.Schema<T, any, never>;
+type Schema<T> = Schema$.Codec<T, any, never, never>;
 
 export const DefinitionTypeId = '~@dxos/operation/OperationDefinition' as const;
 export type DefinitionTypeId = typeof DefinitionTypeId;
@@ -88,7 +98,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<S, unknown>[];
 }
 
 /**
@@ -215,7 +225,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
-  Context.Tag.Identifier<NonNullable<P['services']>[number]>
+  Context.Service.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
     [DefinitionTypeId]: {},
@@ -323,6 +333,355 @@ export const opaqueHandler = <T extends Operation.Definition.Any>(
 ): Operation.WithHandler<Operation.Definition.Any> => handler;
 
 //
+// Durable operations.
+//
+
+/**
+ * Handler of a durable operation: the callbacks of one running process instance.
+ *
+ * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
+ *
+ * - onSpawn -> called once when the process is spawned.
+ * - onInput -> called for every input submitted to the process.
+ * - onAlarm -> called for processes scheduling alarms.
+ * - onChildEvent -> called when child process produces output or exits.
+ */
+export interface DurableHandler<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
+  /**
+   * Called when the process is spawned.
+   * Not called for processes that are resumed from a previously suspended state.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  onSpawn(): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Called when there's input available to process.
+   *
+   * The function can be called in parallel.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  onInput(input: _Input): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Called when the process's alarm is triggered.
+   *
+   * @throws Throwing in the handler will terminate the process with an error.
+   */
+  onAlarm(): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Called when the process's child process produces output or exits.
+   *
+   * This allows the parent process to hibernate while a long-running child process is running.
+   */
+  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Handlers for the RPCs provided by the process.
+   */
+  rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>;
+}
+
+/**
+ * Services that are always available to all processes.
+ * Provided unconditionally by the runtime, so handlers may use them without declaring them
+ * in {@link DurableProps.services}.
+ */
+export type BaseServices = Trace.TraceService | StorageService.StorageService;
+
+export type ChildEvent<T> =
+  | {
+      readonly _tag: 'output';
+      readonly pid: Process.ID;
+      readonly data: T;
+    }
+  | {
+      readonly _tag: 'exited';
+      readonly pid: Process.ID;
+      readonly result: Exit.Exit<void>;
+    };
+
+/**
+ * Runtime context handed to a durable operation's `create`.
+ */
+export interface DurableContext<I, O> {
+  readonly id: Process.ID;
+
+  /**
+   * Parameters assigned during process creation.
+   */
+  readonly params: Process.Params;
+
+  /**
+   * Complete this process with sucessful result.
+   * No additional events will be pushed to the process.
+   */
+  succeed(): void;
+
+  /**
+   * Complete this process with an error.
+   * No additional events will be pushed to the process.
+   */
+  fail(error: Error): void;
+
+  /**
+   * Submit output of the process.
+   */
+  submitOutput(output: O): void;
+
+  /**
+   * Set an alarm for the process to be woken up later. `onAlarm` runs with the process's own
+   * context, not the caller's: an alarm scheduled from inside a handler does not nest under it.
+   *
+   * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
+   */
+  setAlarm(timeout?: number): Effect.Effect<void>;
+}
+
+export const DurableTypeId = '~@dxos/operation/Durable' as const;
+export type DurableTypeId = typeof DurableTypeId;
+
+/**
+ * A durable operation: declaration plus a handler factory, run by a process runtime.
+ * Can be instantiated multiple times to produce new process instances with separate state and handlers.
+ * `create` is used to instantiate a new process.
+ * Can store runtime state in scope of `create` function.
+ */
+export interface Durable<
+  _Input,
+  _Output,
+  _Requirements = never,
+  _Rpcs extends Rpc.Any = never,
+> extends Durable.Variance<_Input, _Output, _Requirements, _Rpcs> {
+  /**
+   * Unique identifier for the executable in the reverse DNS format.
+   */
+  readonly key: string;
+
+  /**
+   * Human-readable label, when provided.
+   */
+  readonly name?: string;
+
+  readonly services: readonly Context.Key<any, any>[];
+
+  /**
+   * Codecs for the process's inputs and outputs, from {@link DurableProps}. Exposed on the
+   * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
+   * with the definition's own schema rather than assuming the value is already JSON.
+   */
+  readonly input: Schema.Codec<_Input, any>;
+  readonly output: Schema.Codec<_Output, any>;
+
+  /** Schemas to register with the process's database; see {@link DurableProps.types}. */
+  readonly types?: readonly Type.AnyEntity[];
+
+  // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
+  // argument (and `DurableHandler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
+  // structural fields would block `Durable<…, never>` from being assignable to `Durable.Any`.
+  // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
+  // See design spec §4.4.
+  readonly rpcs: RpcGroup.RpcGroup<any>;
+
+  /**
+   * Create a new instance of the process.
+   */
+  create(
+    ctx: DurableContext<_Input, _Output>,
+  ): Effect.Effect<
+    DurableHandler<_Input, _Output, _Requirements, any>,
+    never,
+    _Requirements | BaseServices | Scope.Scope
+  >;
+}
+
+export const isDurable = (executable: unknown): executable is Durable.Any =>
+  typeof executable === 'object' && executable !== null && DurableTypeId in executable;
+
+export namespace Durable {
+  export interface Variance<_Input, _Output, _Requirements, _Rpcs> {
+    readonly [DurableTypeId]: {
+      readonly _Input: Types.Contravariant<_Input>;
+      readonly _Output: Types.Covariant<_Output>;
+      readonly _Requirements: Types.Covariant<_Requirements>;
+
+      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Durable.Any` while
+      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
+      readonly _Rpcs: Types.Covariant<_Rpcs>;
+    };
+  }
+
+  export type Any = Durable<any, any, any, any>;
+}
+
+export interface DurableProps {
+  /**
+   * Unique identifier for the process in the reverse DNS format.
+   */
+  readonly key: string;
+
+  readonly input: Schema.Codec<any, any>;
+  readonly output: Schema.Codec<any, any>;
+  readonly services: readonly Context.Key<any, any>[];
+  readonly rpcs?: RpcGroup.RpcGroup<any>;
+
+  /**
+   * Schemas the process's own data model needs, registered with its database at spawn.
+   *
+   * Declared here beside `services` because a host cannot know them: it resolves a process by key
+   * and has no view of the types that process queries. Unregistered, a TYPED query silently matches
+   * nothing — a queue append succeeds and the read back returns empty, which reads as a lost write
+   * rather than a missing schema.
+   */
+  readonly types?: readonly Type.AnyEntity[];
+}
+
+/**
+ * Creates a durable operation from its declaration and a factory for its {@link DurableHandler}.
+ */
+export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableProps, Opts>>(
+  opts: Opts,
+  create: (
+    ctx: DurableContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
+  ) => Effect.Effect<
+    Partial<
+      DurableHandler<
+        Schema.Schema.Type<Opts['input']>,
+        Schema.Schema.Type<Opts['output']>,
+        Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
+        RpcGroup.Rpcs<Opts['rpcs']>
+      >
+    >,
+    never,
+    Context.Service.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
+  >,
+): Durable<
+  Schema.Schema.Type<Opts['input']>,
+  Schema.Schema.Type<Opts['output']>,
+  Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
+  RpcGroup.Rpcs<Opts['rpcs']>
+> => {
+  assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
+  return {
+    [DurableTypeId]: {} as any,
+    ...opts,
+    rpcs: opts.rpcs ?? RpcGroup.make(),
+    create: (ctx) =>
+      create(ctx).pipe(
+        Effect.map((partial) => ({
+          onSpawn: () => Effect.void,
+          onInput: () => Effect.void,
+          onAlarm: () => Effect.void,
+          onChildEvent: () => Effect.void,
+          ...partial,
+          rpcHandlers: sanitizeRpcs(opts.rpcs, partial.rpcHandlers),
+        })),
+      ),
+  };
+};
+
+// Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
+// `DurableHandler.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
+// handler contract is enforced by `makeDurable`'s `create` parameter, not by this internal helper.
+const sanitizeRpcs = <Rpcs extends Rpc.Any>(
+  defined: RpcGroup.RpcGroup<Rpcs> | undefined,
+  provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
+): Context.Context<any> => {
+  // Handlers are required only when a non-empty RPC group is declared.
+  const needsRpcs = defined !== undefined && defined.requests.size > 0;
+  if (!needsRpcs) {
+    // `Context.empty()` is `Context<never>`; `Context`'s requirement parameter is contravariant,
+    // so the empty (no-handler) context needs widening to the untyped bag.
+    return provided ?? (Context.empty() as Context.Context<any>);
+  }
+  if (!provided) {
+    throw new TypeError('Durable operation declared RPCs but did not provide any handlers');
+  }
+  return provided;
+};
+
+//
+// Tool projection
+//
+
+/**
+ * Constant namespace prefix elided from tool names; keys outside it (examples, third-party) keep every segment.
+ */
+const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
+
+/**
+ * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
+ * which is display copy and must stay freely editable without renaming the tool the model calls.
+ * The key's namespace segment prefixes the name, which is what removes the cross-skill collisions
+ * that a bare verb produced (three skills each claimed `create`).
+ *
+ * The mapping is not injective: kebab-casing makes a camelCase segment and an already-hyphenated one
+ * converge, so `webSearch` and `web-search` both yield `web-search`, and hyphenated segments are in
+ * live keys (`plugin-crm`, `web-search`). Registry-key uniqueness therefore does not by itself
+ * guarantee tool-name uniqueness. Two such keys are an authoring error, caught in the two places both
+ * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
+ *
+ * @example `org.dxos.operation.markdown.create` → `markdown-create`
+ * @example `org.dxos.operation.assistantToolkit.addArtifact` → `assistant-toolkit-add-artifact`
+ */
+export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
+
+/**
+ * {@link toolName} for a raw registry key (a DXN or bare NSID), e.g. a persisted record's meta key.
+ */
+export const toolNameFromKey = (key: string): string => {
+  const name = deriveToolName(key);
+  invariant(TOOL_NAME_REGEXP.test(name), `Invalid tool name: ${name}`);
+  return name;
+};
+
+/** Shape every derived tool name must have — the model-facing identifier contract. */
+const TOOL_NAME_REGEXP = /^[a-z][a-z0-9-_]*$/;
+
+const deriveToolName = (key: string): string => {
+  const nsid = DXN.isDXN(key) ? DXN.getName(key) : key;
+  const stripped = nsid.startsWith(TOOL_NAME_KEY_PREFIX) ? nsid.slice(TOOL_NAME_KEY_PREFIX.length) : nsid;
+  return stripped.split('.').map(kebabCase).join('-');
+};
+
+const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+/**
+ * {@link toolNameFromKey} for a key that is not known to be well-formed — a record off the wire, whose
+ * `@meta.key` is untrusted JSON. Returns undefined instead of failing, so one malformed entry costs its
+ * own tool rather than every tool in the projection.
+ */
+export const tryToolNameFromKey = (key: string): string | undefined => {
+  const name = deriveToolName(key);
+  return TOOL_NAME_REGEXP.test(name) ? name : undefined;
+};
+
+/**
+ * Groups a set of operations by derived tool name, returning only the names claimed more than once.
+ *
+ * {@link toolName} is not injective (see its note), so a set of registry-unique keys can still
+ * collide. Call this wherever a complete operation set is assembled — the resolver sees keys one at a
+ * time and can only catch a collision once a colliding name is actually requested.
+ */
+export const findToolNameCollisions = (operations: readonly Definition.Any[]): Map<string, readonly DXN.DXN[]> => {
+  // Keyed by key, not by occurrence: one operation bound by two skills is the same tool, not a clash.
+  const byName = new Map<string, Set<DXN.DXN>>();
+  for (const op of operations) {
+    const name = toolName(op);
+    byName.set(name, (byName.get(name) ?? new Set()).add(op.meta.key));
+  }
+  return new Map([...byName].filter(([, keys]) => keys.size > 1).map(([name, keys]) => [name, [...keys]]));
+};
+
+//
 // Invocation Interfaces
 //
 
@@ -384,7 +743,6 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
@@ -423,6 +781,24 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 };
 
 /**
+ * Serializes each definition, dropping any whose schema cannot render as JSON Schema, so one
+ * unserializable operation (e.g. `space.importSpace`) does not fail registry population for every
+ * other.
+ */
+export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
+  operations.flatMap((operation) => {
+    try {
+      return [serialize(operation)];
+    } catch (error) {
+      log.verbose('operation is not serializable; excluded from the registry', {
+        key: String(operation.meta.key),
+        error: String(error),
+      });
+      return [];
+    }
+  });
+
+/**
  * Deserialize a persistent operation record to an operation definition.
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
@@ -432,7 +808,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
-    services: record.services?.map((service) => Context.GenericTag(service)) ?? [],
+    services: record.services?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {
@@ -477,23 +853,21 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export const Label = Schema.Union(
+export const Label = Schema.Union([
   Schema.String,
   // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
   // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
   Schema.mutable(
-    Schema.Tuple(
+    Schema.Tuple([
       Schema.String,
-      Schema.mutable(
-        Schema.Struct({
-          ns: Schema.String,
-          count: Schema.optional(Schema.Number),
-          defaultValue: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
+      Schema.Struct({
+        ns: Schema.String,
+        count: Schema.optional(Schema.Number),
+        defaultValue: Schema.optional(Schema.String),
+      }).mapFields(Struct.map(Schema.mutableKey)),
+    ]),
   ),
-);
+]);
 export type Label = Schema.Schema.Type<typeof Label>;
 
 /**
@@ -614,13 +988,35 @@ export const annotate =
  * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
  * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
  *
- * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
- * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
+ * Same polarity as the schema-level `Annotation.UserType`: operations are hidden by default, since most
+ * are internal plugin machinery and only a minority are user-facing.
  */
 export const VisibleAnnotation = Annotation.make({
   id: 'org.dxos.operation.visible',
   schema: Schema$.Boolean,
 });
+
+/**
+ * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
+ * irreversible, `destructive` deletes or otherwise cannot be undone. Absent ⇒ unclassified, which
+ * consumers treat conservatively (an MCP client badges the tool as possibly destructive).
+ */
+export const MutationAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mutation',
+  schema: Schema$.Literals(['none', 'write', 'destructive']),
+});
+
+export type Mutation = Schema$.Schema.Type<typeof MutationAnnotation.schema>;
+
+/**
+ * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.
+ * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.mutation('none'))`.
+ */
+export const mutation = (value: Mutation) => annotate(MutationAnnotation, value);
+
+/** The operation's mutation class, or undefined when unclassified. Reads from the persisted record. */
+export const getMutation = (op: PersistentOperation): Mutation | undefined =>
+  Option.getOrUndefined(Annotation.get(op, MutationAnnotation));
 
 /**
  * Pipeable combinator that marks an operation visible. Apply at the definition site:
@@ -634,51 +1030,6 @@ export const visible = annotate(VisibleAnnotation, true);
  */
 export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
-
-/**
- * Projection marker for an operation exposed as an MCP tool to external agents.
- * See plugin-projects `MILESTONE-5.md` §7.4 for the full contract.
- */
-export const McpTool = Schema$.Struct({
-  /** Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`). */
-  name: Schema$.String,
-  /** Model-facing description; falls back to the operation's own description when absent. */
-  description: Schema$.optional(Schema$.String),
-  /**
-   * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
-   * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
-   */
-  safety: Schema$.Literal('read', 'write', 'destructive'),
-  /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
-  aspect: Schema$.optional(Schema$.String),
-});
-export type McpTool = Schema$.Schema.Type<typeof McpTool>;
-
-/**
- * Annotation that opts an operation into MCP projection. The annotation rides through
- * {@link serialize} into the persisted record, so a remote projector (edge mcp-space-service)
- * discovers tools from the operation registry rather than a hand-maintained table.
- *
- * Projected operations must be remotely invocable: refs (not live objects) in, JSON snapshots
- * out, schemas that survive serialization, and worker-safe handlers — MILESTONE-5.md §7.4.
- */
-export const McpToolAnnotation = Annotation.make({
-  id: 'org.dxos.operation.mcp-tool',
-  schema: McpTool,
-});
-
-/**
- * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
- * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
- */
-export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
-
-/**
- * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.
- * Reads from the persisted operation — the form the projector holds.
- */
-export const getMcpTool = (op: PersistentOperation): McpTool | undefined =>
-  Option.getOrUndefined(Annotation.get(op, McpToolAnnotation));
 
 /**
  * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at
@@ -736,7 +1087,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Service<Service, OperationService>()('@dxos/operation/Service') {}
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.
@@ -841,7 +1192,7 @@ const _migration = Migration.define({
     name: from.name,
     description: from.description,
     updated: from.updated,
-    source: from.source as any,
+    source: from.source,
     inputSchema: from.inputSchema,
     outputSchema: from.outputSchema,
     services: from.services,
@@ -854,3 +1205,12 @@ const _migration = Migration.define({
  * Exported as an array for extensibility — append future versions here.
  */
 export const migrations = [_migration];
+
+export {
+  FunctionError,
+  FunctionNotFoundError,
+  InvalidOperationInputError,
+  InvalidOperationOutputError,
+  InvokerNotInitializedError,
+  NoHandlerError,
+} from './errors.ts';

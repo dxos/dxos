@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { Select } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {
@@ -23,29 +23,24 @@ export const PublicKeySelector = ({
   value,
   onChange,
 }: PublicKeySelectorProps) => {
+  const items = removeDuplicates(keys).map((key) => ({
+    value: key.toHex(),
+    label: `${key.truncate()} ${getLabel(key)}`,
+  }));
   return (
     <Select.Root
-      value={value?.toHex()}
-      onValueChange={(id) => {
+      items={items}
+      value={value ? [value.toHex()] : []}
+      onValueChange={({ value: [id] }) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      <Select.TriggerButton placeholder={placeholder} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {removeDuplicates(keys).map((key) => (
-              <Select.Option key={key.toHex()} value={key.toHex()}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{key.truncate()}</span>
-                  {getLabel(key)}
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
+      <Select.Trigger placeholder={placeholder} />
+      <Select.Content>
+        {items.map((item) => (
+          <Select.Item key={item.value} item={item} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

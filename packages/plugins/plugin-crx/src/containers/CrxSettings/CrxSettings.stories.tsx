@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Proxy } from '@dxos/crx-protocol';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { meta as pluginMeta } from '../../meta';
-import { translations } from '../../translations';
-import * as Settings from '../../types/Settings';
-import { CrxSettings } from './CrxSettings';
+import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
+import { Settings } from '#types';
+
+import { CrxSettings } from './CrxSettings.tsx';
 
 /**
  * Stand in for the extension's content relay so the connection test succeeds: set the readiness
@@ -62,7 +64,7 @@ const DefaultStory = ({ initial, readonly }: { initial?: Settings.Settings; read
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-crx/containers/CrxSettings',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
     translations,
   },

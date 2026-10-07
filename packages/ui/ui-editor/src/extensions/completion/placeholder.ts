@@ -6,8 +6,8 @@
 import { type Extension } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { clientRectsFor, flattenRect } from '../../util';
-import { isBusy } from '../state/busy';
+import { clientRectsFor, flattenRect } from '../../util/index.ts';
+import { isBusy } from '../state/busy.ts';
 
 type Content = string | HTMLElement | ((view: EditorView) => HTMLElement);
 
@@ -107,6 +107,9 @@ export class PlaceholderWidget extends WidgetType {
     const wrap = document.createElement('span');
     wrap.className = 'cm-placeholder';
     wrap.style.pointerEvents = 'none';
+    // An inline-block starts a line box of its own, which would inherit the host line's hanging
+    // indent (a list item's negative `text-indent`) and paint the text under the marker.
+    wrap.style.textIndent = '0';
     wrap.setAttribute('aria-hidden', 'true');
     wrap.appendChild(
       typeof this.content === 'string'

@@ -2,26 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type IBlobEvent, type IMediaRecorder } from 'extendable-media-recorder';
-import { WaveFile } from 'wavefile';
-
 import { synchronized } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type AudioChunk, type AudioRecorder, type WavConfig } from '@dxos/pipeline-transcription';
 
-// `extendable-media-recorder` references browser-only globals (Worker/AudioWorklet) at module load,
-// so it is imported lazily — keeping this package importable in non-browser contexts (node tests,
-// Cloudflare Workers) where the recorder is never started.
-let MediaRecorderClass: typeof import('extendable-media-recorder').MediaRecorder | undefined;
-let initializingPromise: Promise<void> | undefined;
+/** Name the worklet registers itself under; must match `pcm-processor.js`. */
+const PROCESSOR_NAME = 'dxos-pcm-processor';
 
-const initializeExtendableMediaRecorder = async () => {
-  const { MediaRecorder, register } = await import('extendable-media-recorder');
-  const { connect } = await import('extendable-media-recorder-wav-encoder');
-  await register(await connect());
-  MediaRecorderClass = MediaRecorder;
-};
+/** Fallback buffer size (frames) when `ScriptProcessorNode` stands in for the worklet. */
+const SCRIPT_PROCESSOR_BUFFER_SIZE = 4096;
+
+/** Full-scale value for the 16-bit PCM the transcription pipeline expects. */
+const INT16_SCALE = 0x7fff;
 
 export type MediaStreamRecorderProps = {
   mediaStreamTrack: MediaStreamTrack;
@@ -31,31 +23,44 @@ export type MediaStreamRecorderProps = {
 };
 
 /**
- * Recorder that uses the MediaContext API and AudioNode API to record audio.
+ * Records a microphone track to 16-bit PCM chunks.
  *
- * It records MediaStream using https://www.npmjs.com/package/extendable-media-recorder.
+ * Capture is done directly against the Web Audio graph rather than through a `MediaRecorder` WAV
+ * polyfill. The polyfill produced empty buffers under WebKit — Safari, and therefore the Tauri
+ * webview on both macOS and iOS — while working in Chromium, which made transcription look like a
+ * service failure: audio was captured, uploaded and answered, but the upload was a bare WAV header.
+ * Owning the graph also means owning the {@link AudioContext}, which is what lets us resume it:
+ * WebKit starts every context suspended, and a suspended context feeds an audio node nothing.
  */
 export class MediaStreamRecorder implements AudioRecorder {
   private readonly _mediaStreamTrack: MediaStreamTrack;
-  /**
-   * Default MediaRecorder implementation do not support wav encoding.
-   */
   private readonly _config: MediaStreamRecorderProps['config'];
-  private _mediaRecorder?: IMediaRecorder = undefined;
-  private _header?: Uint8Array = undefined;
   private _onChunk?: (chunk: AudioChunk) => void;
+
+  private _context?: AudioContext = undefined;
+  private _source?: MediaStreamAudioSourceNode = undefined;
+  private _node?: AudioWorkletNode | ScriptProcessorNode = undefined;
+  private _flushTimer?: ReturnType<typeof setInterval> = undefined;
+
+  /** Frames captured since the last flush, in render-quantum sized pieces. */
+  private _pending: Float32Array[] = [];
+  private _pendingLength = 0;
+  private _chunkStartedAt = 0;
 
   constructor({ mediaStreamTrack, config }: MediaStreamRecorderProps) {
     this._mediaStreamTrack = mediaStreamTrack;
     this._config = config;
   }
 
+  /**
+   * Reported from the {@link AudioContext}, not the track: the context is what actually resamples
+   * the input, so its rate is the one the captured samples are at.
+   */
   get wavConfig(): WavConfig {
-    const settings = this._mediaStreamTrack.getSettings();
     return {
-      channels: settings.channelCount ?? 1,
-      sampleRate: settings.sampleRate ?? 16000,
-      bitDepthCode: settings.sampleSize ? String(settings.sampleSize) : '16',
+      channels: 1,
+      sampleRate: this._context?.sampleRate ?? this._mediaStreamTrack.getSettings().sampleRate ?? 48_000,
+      bitDepthCode: '16',
     };
   }
 
@@ -67,69 +72,129 @@ export class MediaStreamRecorder implements AudioRecorder {
     this._onChunk = onChunk;
   }
 
-  // `@synchronized` serializes start/stop (they share the instance lock) so a rapid stop→start cycle
-  // (e.g. React StrictMode double-mount) cannot initiate a new WAV encoding before the previous one
-  // has flushed — which throws "Another request was made to initiate an encoding" and kills capture.
+  // `@synchronized` serializes start/stop so a rapid stop→start cycle (e.g. React StrictMode's
+  // double-mount) cannot build a second graph over a context that is still tearing down.
   @synchronized
   async start(): Promise<void> {
-    await (initializingPromise ??= initializeExtendableMediaRecorder()).catch((err) =>
-      log.info('initializeExtendableMediaRecorder', { err }),
-    );
-
-    if (this._mediaRecorder?.state === 'recording') {
+    if (this._context) {
       return;
     }
-    invariant(this._onChunk, 'MediaStreamRecorder: onChunk is not set');
-    invariant(MediaRecorderClass, 'MediaStreamRecorder: extendable-media-recorder not initialized');
-    // Fresh recorder per session so a previously-stopped (encoder-flushed) instance is never reused.
-    const stream = new MediaStream([this._mediaStreamTrack]);
-    const recorder = new MediaRecorderClass(stream, { mimeType: 'audio/wav' });
-    recorder.ondataavailable = (event) => this._ondataavailable(event);
-    this._mediaRecorder = recorder;
-    recorder.start(this._config.interval);
+
+    const context = new AudioContext();
+    let source: MediaStreamAudioSourceNode;
+    let node: AudioWorkletNode | ScriptProcessorNode;
+    try {
+      // WebKit hands back a suspended context and only a user gesture may resume it. Recording always
+      // begins from a tap, so this resolves — but without it every downstream node receives silence,
+      // which is indistinguishable from a muted microphone.
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+
+      source = context.createMediaStreamSource(new MediaStream([this._mediaStreamTrack]));
+      node = await this.#createCaptureNode(context);
+      source.connect(node);
+      // The worklet emits nothing, but Chromium only pulls a graph that reaches a destination; a zeroed
+      // gain keeps the microphone from being played back to the user.
+      const sink = context.createGain();
+      sink.gain.value = 0;
+      node.connect(sink);
+      sink.connect(context.destination);
+    } catch (err) {
+      // The context is not held on the instance until setup succeeds, so close it here or it leaks.
+      await context.close().catch(() => {});
+      throw err;
+    }
+
+    this._context = context;
+    this._source = source;
+    this._node = node;
+    this._pending = [];
+    this._pendingLength = 0;
+    this._chunkStartedAt = Date.now();
+    this._flushTimer = setInterval(() => this.#flush(), this._config.interval);
   }
 
   @synchronized
   async stop(): Promise<void> {
-    const recorder = this._mediaRecorder;
-    if (!recorder || recorder.state !== 'recording') {
+    if (!this._context) {
       return;
     }
-    // Await the actual stop (final dataavailable + encoder flush) before releasing the recorder, so a
-    // subsequent start() does not collide with an in-progress encoding.
-    await new Promise<void>((resolve) => {
-      recorder.addEventListener('stop', () => resolve(), { once: true });
-      recorder.stop();
-    });
-    this._mediaRecorder = undefined;
+
+    if (this._flushTimer !== undefined) {
+      clearInterval(this._flushTimer);
+      this._flushTimer = undefined;
+    }
+    // Emit whatever the final interval captured before tearing the graph down, so the tail of an
+    // utterance is not dropped on stop.
+    this.#flush();
+
+    this._node?.disconnect();
+    this._source?.disconnect();
+    const context = this._context;
+    this._node = undefined;
+    this._source = undefined;
+    this._context = undefined;
+    await context.close();
   }
 
-  @synchronized
-  private async _ondataavailable(event: IBlobEvent): Promise<void> {
-    const blob = event.data;
-    const uint8Array = new Uint8Array(await blob.arrayBuffer());
+  /**
+   * Prefers an {@link AudioWorkletNode}, whose processing runs off the main thread. Falls back to the
+   * deprecated `ScriptProcessorNode` when the worklet module cannot be loaded — a bundler that does
+   * not emit it, or a page whose CSP refuses the fetch — because a deprecated capture path is worth
+   * more than none, and the previous silent failure is exactly what this replaces.
+   */
+  async #createCaptureNode(context: AudioContext): Promise<AudioWorkletNode | ScriptProcessorNode> {
+    try {
+      await context.audioWorklet.addModule(new URL('./pcm-processor.js', import.meta.url));
+      const node = new AudioWorkletNode(context, PROCESSOR_NAME, {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        channelCount: 1,
+      });
+      node.port.onmessage = (event: MessageEvent<Float32Array>) => this.#collect(event.data);
+      return node;
+    } catch (err) {
+      log.warn('audio worklet unavailable; falling back to ScriptProcessorNode', { err });
+      const node = context.createScriptProcessor(SCRIPT_PROCESSOR_BUFFER_SIZE, 1, 1);
+      node.onaudioprocess = (event) => this.#collect(new Float32Array(event.inputBuffer.getChannelData(0)));
+      return node;
+    }
+  }
 
-    // First chunk from the MediaRecorder has a header.
-    const isHeader =
-      uint8Array[0] === 0x52 && // R
-      uint8Array[1] === 0x49 && // I
-      uint8Array[2] === 0x46 && // F
-      uint8Array[3] === 0x46; // F
-    let wav: WaveFile;
+  #collect(frames: Float32Array): void {
+    this._pending.push(frames);
+    this._pendingLength += frames.length;
+  }
 
-    if (isHeader) {
-      wav = new WaveFile(uint8Array);
-      this._header = uint8Array.slice(0, 44);
-    } else if (this._header) {
-      wav = new WaveFile(new Uint8Array([...this._header, ...uint8Array]));
-    } else {
-      log.warn('MediaStreamRecorder: no header');
+  /**
+   * Emits the frames captured since the last flush as one chunk, converted to the 16-bit PCM the
+   * pipeline merges with `wavefile`. Values are integers held in a `Float64Array` because that is
+   * what {@link AudioChunk} carries.
+   */
+  #flush(): void {
+    if (this._pendingLength === 0 || !this._onChunk) {
       return;
     }
 
-    this._onChunk!({
-      timestamp: Date.now(),
-      data: wav.getSamples(),
-    });
+    const frames = this._pending;
+    const length = this._pendingLength;
+    this._pending = [];
+    this._pendingLength = 0;
+
+    const samples = new Float64Array(length);
+    let offset = 0;
+    for (const frame of frames) {
+      for (let index = 0; index < frame.length; index++) {
+        // Clamped before scaling: a sample slightly outside [-1, 1] would wrap when written as int16.
+        const value = Math.max(-1, Math.min(1, frame[index]));
+        samples[offset + index] = Math.round(value * INT16_SCALE);
+      }
+      offset += frame.length;
+    }
+
+    const timestamp = this._chunkStartedAt;
+    this._chunkStartedAt = Date.now();
+    this._onChunk({ timestamp, data: samples });
   }
 }

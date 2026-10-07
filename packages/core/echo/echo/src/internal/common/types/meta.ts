@@ -9,14 +9,14 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
-import type * as Tag from '../../../Tag';
-import { Dictionary } from '../../Annotation/dictionary';
+import type * as Tag from '../../../Tag.ts';
+import { Dictionary } from '../../Annotation/dictionary.ts';
 // `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
 // Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
-import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
-import { type AnyProperties } from './base';
-import { MetaId } from './model-symbols';
-import { TagTypeDXN } from './well-known-types';
+import { type Ref, createEchoReferenceSchema } from '../../Ref/ref.ts';
+import { type AnyProperties } from './base.ts';
+import { MetaId } from './model-symbols.ts';
+import { TagTypeDXN } from './well-known-types.ts';
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -36,9 +36,9 @@ export const ATTR_META = '@meta';
  * first use, and `Tag` is referenced type-only, so no `Tag` value import is needed.
  */
 const TagRefSchema = Schema.suspend(
-  (): Schema.Schema<Ref<Tag.Tag>, EncodedReference> =>
+  (): Schema.Codec<Ref<Tag.Tag>, EncodedReference> =>
     // The factory yields a loosely-typed `Ref<any>` schema; narrow it to the Tag-typed ref.
-    createEchoReferenceSchema(undefined, DXN.getName(TagTypeDXN), DXN.getVersion(TagTypeDXN)) as Schema.Schema<
+    createEchoReferenceSchema(undefined, DXN.getName(TagTypeDXN), DXN.getVersion(TagTypeDXN)) as Schema.Codec<
       Ref<Tag.Tag>,
       EncodedReference
     >,
@@ -53,7 +53,7 @@ export const EntityMetaSchema = Schema.Struct({
   tags: Schema.Array(TagRefSchema),
 
   /**
-   * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
+   * Fully-qualified registry key for the object (FQN format, e.g. `com.example.type.foo`).
    * Identifies the canonical registry entry the object instance was created from.
    */
   key: Schema.optional(Schema.String),
@@ -63,6 +63,24 @@ export const EntityMetaSchema = Schema.Struct({
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version: Schema.optional(Schema.String),
+
+  /**
+   * Caller-supplied domain identity, unique within a space: two entities carrying the same
+   * convergence key are the same entity and are merged into one. Declared by assigning this
+   * field inside an update callback — `Entity.update(x, (x) => { Entity.getMeta(x).convergenceKey = '…' })`
+   * — so it batches with the caller's other writes; there is deliberately no dedicated setter.
+   *
+   * Objects only: the merge engine ignores the field on relations and types (not merge subjects
+   * yet), and treats the empty string as no key — both are verified at detection, in the worker,
+   * and in the client executor rather than at write time, since the field replicates from peers
+   * that cannot be trusted to have validated it.
+   *
+   * Opaque to the storage engine — callers that need generations encode them in the string
+   * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
+   * Distinct from `key`/`version` above, which record the registry entry an instance was
+   * created from (provenance, not identity).
+   */
+  convergenceKey: Schema.optional(Schema.String),
 
   /**
    * Dictionary of annotations to this entity.
@@ -83,6 +101,24 @@ export const EntityMetaSchema = Schema.Struct({
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;
+
+/** Copied element-wise rather than by value, so that a snapshot is not aliased to the live meta. */
+const CONTAINER_META_FIELDS: readonly string[] = ['keys', 'tags', 'annotations'];
+
+/** Derived at read time from the system section and the change graph; never stored in meta. */
+const VIRTUAL_META_FIELDS: readonly string[] = ['createdAt', 'updatedAt'];
+
+/**
+ * Stored meta fields holding a single scalar value.
+ *
+ * Derived from the schema rather than listed by hand: several places enumerate meta fields —
+ * snapshotting copies them, and persistence decides from them whether the meta section is worth
+ * writing at all — and a hand-maintained list silently drops any field added later, so the field
+ * appears to work until it crosses one of those boundaries.
+ */
+export const SCALAR_META_FIELDS: readonly string[] = Object.keys(EntityMetaSchema.fields).filter(
+  (field) => !CONTAINER_META_FIELDS.includes(field) && !VIRTUAL_META_FIELDS.includes(field),
+);
 
 /*
  * Get metadata from object.

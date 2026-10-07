@@ -11,9 +11,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Chess } from '#types';
 
-import * as Chess from '../../types/Chess';
-import { ChessArticle } from './ChessArticle';
+import { ChessArticle } from './ChessArticle.tsx';
 
 type StoryArgs = {
   pgn?: string;

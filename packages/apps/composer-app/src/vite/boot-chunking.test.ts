@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type ModuleGraph, bootChunking, computeBootPartition, toBootModuleId } from './boot-chunking';
+import { type ModuleGraph, bootChunking, computeBootPartition, toBootModuleId } from './boot-chunking.ts';
 
 const ENTRY = '/repo/packages/apps/app/src/main.tsx';
 
@@ -67,6 +67,22 @@ describe('computeBootPartition', () => {
     });
 
     expect([...partition.keys()].sort()).toEqual(['/repo/node_modules/a/index.js', '/repo/node_modules/b/index.js']);
+  });
+
+  test('leaves excluded modules out of the boot set', ({ expect }) => {
+    const partition = computeBootPartition(
+      makeGraph({
+        [ENTRY]: { imports: ['/repo/node_modules/ui/index.js'] },
+        '/repo/node_modules/ui/index.js': {
+          imports: ['/repo/node_modules/ui/menu.js', '/repo/node_modules/ui/qr-code.js'],
+        },
+        '/repo/node_modules/ui/menu.js': {},
+        '/repo/node_modules/ui/qr-code.js': {},
+      }),
+      { entry: ENTRY, log: silent, exclude: /qr-code/ },
+    );
+
+    expect([...partition.keys()].sort()).toEqual(['/repo/node_modules/ui/index.js', '/repo/node_modules/ui/menu.js']);
   });
 
   test('emits dependencies before their dependents', ({ expect }) => {

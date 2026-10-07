@@ -2,27 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
-import { Harness } from '@dxos/assistant';
-import { ServiceNotAvailableError } from '@dxos/compute';
+import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
+import { Alarm, Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import {
   FeedTraceSink,
   ProcessManager,
-  ProcessMonitor,
   RemoteProcessManager,
   RemoteTraceMonitor,
   TriggerDispatcher,
   TriggerStateStore,
+  UnifiedProcessManager,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
@@ -36,16 +36,16 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Hypergraph, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AgentService as AgentServiceRuntime } from '../agent-service';
-import { traceSinkPrettyLayer } from './trace-pretty-print';
+import { AgentService as AgentServiceRuntime } from '../agent-service/index.ts';
+import { traceSinkPrettyLayer } from './trace-pretty-print.ts';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+  aiServicePreset?: AiServicePreset;
 
   /**
    * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
@@ -80,13 +80,14 @@ interface TestLayerOptions {
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
-  agent?: AgentServiceRuntime.AgentServiceOptions;
+  agent?: AgentServiceRuntime.Options;
 
   /**
    * Extra services to make available in the service resolver.
-   * Operations can depend on those services.
+   * Operations can depend on those services. They may themselves require the {@link AgentService.AgentService}
+   * (e.g. a service that wakes other conversations), which is served to them once it is built.
    */
-  extraServices?: Layer.Layer<never, never, never>;
+  extraServices?: Layer.Layer<never, never, AgentService.AgentService>;
 }
 
 export type AssistantTestServices =
@@ -99,8 +100,9 @@ export type AssistantTestServices =
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
+  | RemoteProcessManager.Service
   | ProcessManager.ProcessOperationInvoker.Service
-  | Process.ProcessMonitorService
+  | Process.ManagerService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
@@ -116,15 +118,15 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.
   const resolvedProvider: DXN.DXN =
     options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
-  const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
-  agentOptions.model ??= resolvedModel;
+  const agentOptions: AgentServiceRuntime.Options = { ...options.agent };
+  agentOptions.defaultModel ??= resolvedModel;
   agentOptions.provider ??= resolvedProvider;
 
   // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
@@ -138,10 +140,12 @@ export const AssistantTestLayer = (
     // Captures must sit above the layers they read (a provideMerge chain feeds upward).
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(ProcessMonitor.layer),
+    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
+    Layer.provideMerge(UnifiedProcessManager.layer),
+    // A local test stack has no EDGE, so both the manager's remote half and `location: 'edge'` see
+    // nothing.
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by
     // layers added later (whose outputs feed it). `captureProcessManager` needs the manager, the
@@ -150,7 +154,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder, agentServiceHolder)),
-    Layer.provideMerge(AiService.model(DXN.getName(resolvedModel), { provider: resolvedProvider })),
+    Layer.provideMerge(AiService.languageModel(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??
@@ -167,13 +171,27 @@ export const AssistantTestLayer = (
 
 /** Late-bound reference to the {@link ProcessManager.Service}, filled once the manager is built. */
 interface ProcessManagerHolder {
-  current?: Context.Tag.Service<ProcessManager.Service>;
+  current?: Context.Service.Shape<typeof ProcessManager.Service>;
 }
 
 /** Late-bound reference to the {@link AgentService.AgentService}, filled once the service is built. */
 interface AgentServiceHolder {
-  current?: Context.Tag.Service<AgentService.AgentService>;
+  current?: Context.Service.Shape<typeof AgentService.AgentService>;
 }
+
+/** An {@link AgentService.AgentService} that forwards to the holder's, so it can be handed out before that exists. */
+const lateAgentService = (holder: AgentServiceHolder): Context.Service.Shape<typeof AgentService.AgentService> => ({
+  getSession: (chat, options) =>
+    Effect.suspend(() =>
+      holder.current
+        ? holder.current.getSession(chat, options)
+        : Effect.die(new Error('AgentService is not built yet.')),
+    ),
+  hydrate: () =>
+    Effect.suspend(() =>
+      holder.current ? holder.current.hydrate() : Effect.die(new Error('AgentService is not built yet.')),
+    ),
+});
 
 /** Fills the {@link AgentServiceHolder}, letting the resolver serve operations that relay into agent sessions. */
 const captureAgentService = (holder: AgentServiceHolder): Layer.Layer<never, never, AgentService.AgentService> =>
@@ -199,7 +217,7 @@ export const AssistantTestServiceResolverLayer = (
   processManagerHolder: ProcessManagerHolder,
   agentServiceHolder: AgentServiceHolder = {},
 ) =>
-  Layer.scoped(
+  Layer.effect(
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
       const services = yield* Effect.context<Database.Service>().pipe(
@@ -207,31 +225,41 @@ export const AssistantTestServiceResolverLayer = (
         Effect.map(Layer.succeedContext),
       );
 
-      const extraServicesRt = yield* Layer.toRuntime(extraServices);
+      const { db } = yield* Database.Service;
+
+      // v4 dropped `Layer.toRuntime`; a built layer is its service context. The agent service is built
+      // after the resolver (it needs it), so extra services reach it through the same late-bound holder.
+      const extraServicesContext = yield* Layer.build(
+        extraServices.pipe(
+          Layer.provide(Layer.succeed(AgentService.AgentService, lateAgentService(agentServiceHolder))),
+        ),
+      );
 
       return ServiceResolver.compose(
         ServiceResolver.succeed(Harness.HarnessService, (context) =>
           Effect.gen(function* () {
             if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(Harness.HarnessService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(Harness.HarnessService.key));
             }
             // Read the manager lazily: the resolver is invoked at spawn time, by which point the
             // holder has been filled (see the construction-cycle note in `AssistantTestLayer`).
             const processManager = processManagerHolder.current;
             if (!processManager) {
-              return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(ProcessManager.Service.key));
             }
-            const runtime = yield* Effect.runtime<Database.Service>();
+            const runtime = yield* Effect.context<Database.Service>();
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
         ),
+        // As the app's client contributes it: operations that look an object up across spaces need it.
+        ServiceResolver.succeed(Hypergraph.Service, () => Effect.succeed(Hypergraph.makeService(db.graph))),
         ServiceResolver.succeed(AgentService.AgentService, () =>
           Effect.gen(function* () {
             // Read lazily (like the process manager): filled by `captureAgentService` before any
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.AgentService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(AgentService.key));
             }
             return agentService;
           }),
@@ -243,7 +271,7 @@ export const AssistantTestServiceResolverLayer = (
           Registry.Service,
           Credential.CredentialsService,
         ),
-        ServiceResolver.fromContext(extraServicesRt.context),
+        ServiceResolver.fromContext(extraServicesContext),
       );
     }),
   );
@@ -267,12 +295,20 @@ export const AssistantTestBaseLayer = ({
     Instructions.Instructions,
     Operation.PersistentOperation,
     Feed.Feed,
+    // The agent process runs on a chat, so every session — bare ones included — persists one.
+    Chat.Chat,
     Trigger.Trigger,
     Tag.Tag,
+    Alarm.Alarm,
   );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    // A skill referenced by its registry URI resolves through the DATABASE's registry (production
+    // wires that up via plugin-instructions' `RegistrySync`), which is not the `Registry.Service`
+    // seeded below — so a seeded skill has to land in both, or such a ref silently resolves to
+    // nothing and the conversation loses the skill.
+    Layer.provideMerge(seedDatabaseRegistry(skills)),
     Layer.provideMerge(
       TestDatabaseLayer({
         spaceKey: 'fixed',
@@ -287,7 +323,7 @@ export const AssistantTestBaseLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),
@@ -300,6 +336,18 @@ export const AssistantTestBaseLayer = ({
     Layer.orDie,
   );
 };
+
+/** Registers the seeded skills with the database's registry, so their registry-URI refs resolve. */
+const seedDatabaseRegistry = (skills: readonly Skill.Skill[]): Layer.Layer<never, never, Database.Service> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      if (skills.length === 0) {
+        return;
+      }
+      const { db } = yield* Database.Service;
+      db.registry.add(skills);
+    }),
+  );
 
 const AssistantTestTracingLayer = (
   mode: 'noop' | 'console' | 'pretty' | 'feed',
@@ -319,10 +367,11 @@ export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerD
 export const AssistantTestLayerWithTriggers = (
   options: TestLayerWithTriggersOptions,
 ): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
-  Layer.mergeAll(
-    AssistantTestLayer(options),
-    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(AtomRegistry.layer),
-    ),
-    TriggerStateStore.layerMemory,
-  ) as any;
+  // `Layer.provideMerge` (not `Layer.mergeAll`) at each step: `mergeAll` unions requirements without
+  // letting sibling layers discharge one another, so `TriggerDispatcher`'s own dependency on
+  // `TriggerStateStore`/`ProcessManager.Service`/`Database.Service` needs threading explicitly.
+  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
+    Layer.provide(AtomRegistry.layer),
+    Layer.provideMerge(TriggerStateStore.layerMemory),
+    Layer.provideMerge(AssistantTestLayer(options)),
+  );
