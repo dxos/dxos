@@ -11,12 +11,14 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { DxSvg } from '@dxos/diagram';
-import { Database, Obj } from '@dxos/echo';
+import { DxSvg, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { EntityId } from '@dxos/keys';
 
 import { Drawing } from '#types';
+
+import { SvgBuilder } from './builder.ts';
 
 /** The diagram source the scene was compiled from, kept so it can be laid out again. */
 export type Source = { readonly language: 'mermaid' | 'uml' | 'dsl'; readonly text: string };
@@ -33,23 +35,56 @@ export const Payload = Schema.Struct({
 
 export type Payload = Schema.Schema.Type<typeof Payload>;
 
-/** The payload for a drawing: its canvas first, so the drawing's ref resolves when they are added in order. */
+/**
+ * The payload for a drawing: its canvas first, so the drawing's ref resolves when they are added in order.
+ * `timestamp` is written only when given, so the same drawing can export to the same bytes.
+ */
 export const toPayload = ({
   drawing,
   canvas,
   source,
+  timestamp,
 }: {
   drawing: Drawing.Drawing;
   canvas: Drawing.Canvas;
   source?: Source;
+  timestamp?: Date;
 }): Payload => ({
   format: DxSvg.FORMAT,
   version: 1,
-  timestamp: new Date().toISOString(),
+  ...(timestamp ? { timestamp: timestamp.toISOString() } : {}),
   root: drawing.id,
   objects: [Obj.toJSON(canvas), Obj.toJSON(drawing)],
   ...(source ? { source } : {}),
 });
+
+/**
+ * An SVG drawing of compiled scene commands, with ids derived from its content rather than drawn at random,
+ * so rendering the same diagram twice exports the same bytes; `importDxSvg` gives them fresh ids anyway.
+ */
+export const makeDrawing = ({
+  name,
+  commands,
+  source,
+}: {
+  name: string;
+  commands: readonly Scene.Command[];
+  source?: Source;
+}): { drawing: Drawing.Drawing; canvas: Drawing.Canvas } => {
+  const seed = JSON.stringify({ name, commands, source });
+  const canvas = Obj.make(Drawing.Canvas, {
+    id: EntityId.deterministic('canvas', seed),
+    schema: SVG_SCHEMA,
+    content: {},
+  });
+  SvgBuilder.apply(canvas, commands);
+  const drawing = Obj.make(Drawing.Drawing, {
+    id: EntityId.deterministic('drawing', seed),
+    name,
+    canvas: Ref.make(canvas),
+  });
+  return { drawing, canvas };
+};
 
 /** A standalone SVG of the drawing with its objects embedded. */
 export const toDxSvg = (svg: string, payload: Payload): string => DxSvg.embed(svg, payload);

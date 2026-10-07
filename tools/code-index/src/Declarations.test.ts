@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Declarations from './Declarations.ts';
 import { indexUsageFixture } from './mcp/fixture.ts';

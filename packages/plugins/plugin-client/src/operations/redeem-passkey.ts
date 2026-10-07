@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { PasskeyError } from '#types';
 
-import { RedeemPasskey } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
 /** Signed challenge presented to EDGE in exchange for admitting this device. */
 type Assertion = {
@@ -77,7 +77,7 @@ const webAssertion = Effect.fnUntraced(function* (challenge: string) {
   };
 });
 
-const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.RedeemPasskey> = ClientOperation.RedeemPasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const support = NativePasskey.getPasskeySupport();

@@ -6,11 +6,16 @@ import { describe, test } from 'vitest';
 
 import { SceneBuilder } from './builder.ts';
 import { isMultiline, partKey, partText, partValues } from './parts.ts';
-import { frameClasses } from './style.ts';
+import { frameClasses, hueClasses, resolveStyle } from './style.ts';
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
-  const { nodes } = SceneBuilder.create('s').rect('r', box).class('c', box, 'Person', ['name: string']).build();
+  const {
+    scenes: [{ nodes }],
+  } = SceneBuilder.scene('s', [
+    SceneBuilder.rect('r', box),
+    SceneBuilder.class('c', box).properties({ name: 'Person', attributes: ['name: string'], methods: [] }),
+  ]).build();
   const rect = nodes.r;
   const cls = nodes.c;
 
@@ -43,5 +48,38 @@ describe('parts', () => {
     // A guide is dashed and unfilled whatever fill and border say; the host's class comes last.
     const guide = { ...rect, style: { guide: true, border: false, className: 'shadow' } };
     expect(frameClasses(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm', 'shadow']);
+  });
+
+  test('every tone keeps the hue border; tone 0 drops the fill, unset is tone 2', ({ expect }) => {
+    expect(hueClasses('blue', 0)).toEqual({
+      surface: 'bg-transparent',
+      text: '',
+      border: 'border-blue-border',
+    });
+    expect(hueClasses('blue', 1)).toEqual({
+      surface: 'bg-blue-200',
+      text: 'text-blue-900',
+      border: 'border-blue-border',
+    });
+    expect(hueClasses('blue')).toEqual(hueClasses('blue', 2));
+    expect(hueClasses('blue', 2)).toEqual({
+      surface: 'bg-blue-surface',
+      text: 'text-blue-fg',
+      border: 'border-blue-border',
+    });
+    expect(hueClasses('blue', 3)).toEqual({
+      surface: 'bg-blue-bg',
+      text: 'text-neutral-50',
+      border: 'border-blue-border',
+    });
+    // A hue the picker does not offer draws its stronger tones as medium; no hue ignores the tone.
+    expect(hueClasses('lime', 3)).toEqual(hueClasses('lime'));
+    expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
+  });
+
+  test('an unset fill or border resolves to drawn', ({ expect }) => {
+    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true });
+    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true });
+    expect(resolveStyle({ fill: false, border: false })).toEqual({ fill: false, border: false });
   });
 });

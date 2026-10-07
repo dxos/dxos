@@ -7,6 +7,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Rpc from 'effect/rpc/Rpc';
@@ -57,8 +58,16 @@ export interface Snapshot extends Process.Process {
  * read advances over, so a client that reconnects resumes where it left off.
  */
 export type Event =
-  | { readonly _tag: 'output'; readonly seq: number; readonly data: unknown }
-  | { readonly _tag: 'trace'; readonly seq: number; readonly message: Trace.Message }
+  | {
+      readonly _tag: 'output';
+      readonly seq: number;
+      readonly data: unknown;
+    }
+  | {
+      readonly _tag: 'trace';
+      readonly seq: number;
+      readonly message: Trace.Message;
+    }
   | {
       readonly _tag: 'exited';
       readonly seq: number;
@@ -347,10 +356,19 @@ export const makeControlVerbs = (
         .pipe(
           Effect.flatMap((processes) =>
             Effect.forEach(
+              // Re-applied here because a host may ignore any of them (EDGE filters only by key): a
+              // `target` the host dropped would hand one chat's session another chat's process.
               processes.filter(
-                // `parentProcessId` has no server-side filter (the host indexes by key/target/state),
-                // so it is applied here rather than silently ignored.
-                (info) => parentProcessId === undefined || info.parentPid === parentProcessId,
+                (info) =>
+                  Process.matchesFilter(info, {
+                    ...(key !== undefined ? { key } : {}),
+                    ...(state !== undefined ? { state } : {}),
+                    ...(parentProcessId !== undefined ? { parentPid: parentProcessId } : {}),
+                  }) &&
+                  (target === undefined ||
+                    Option.getOrUndefined(
+                      Annotation.getDictionary(info.params.annotations, Process.TargetAnnotation),
+                    ) === target),
               ),
               (info) => makeHandle(spaceId, info),
             ),

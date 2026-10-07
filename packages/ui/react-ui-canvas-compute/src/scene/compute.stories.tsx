@@ -10,7 +10,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
@@ -22,7 +21,9 @@ import {
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DiagnosticOverlay } from '../components/index.ts';
 import { type ComputeGraphController, createComputeGraphController } from '../graph/index.ts';

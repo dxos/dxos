@@ -5,8 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useDebugMode } from '#hooks';
 import { CallsCapabilities } from '#types';
@@ -45,7 +45,7 @@ type CallRootProps = PropsWithChildren<{ fullscreen?: boolean }>;
  * flags) with the composable parts below; renders no DOM of its own.
  */
 const CallRoot = ({ children, fullscreen }: CallRootProps) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const debug = useDebugMode();
   return <CallContext.Provider value={{ call, debug, fullscreen }}>{children}</CallContext.Provider>;
 };
@@ -59,8 +59,8 @@ CallRoot.displayName = CALL_ROOT_NAME;
 const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
-const CallViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: 'relative dx-expand flex flex-col' })} ref={forwardedRef}>
+const CallViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
+  <div {...Util.composableProps(props, { classNames: 'relative dx-expand flex flex-col' })} ref={forwardedRef}>
     {children}
   </div>
 ));
@@ -76,7 +76,7 @@ CallViewport.displayName = CALL_VIEWPORT_NAME;
 // event and this root mounts eagerly, so read it optionally and render nothing until it exists
 // (an empty audio sink is correct while there is no call).
 const CallAudio = () => {
-  const call = useOptionalCapability(CallsCapabilities.Manager);
+  const call = Hooks.useOptionalCapability(CallsCapabilities.Manager);
   return call ? <CallAudioStream call={call} /> : null;
 };
 

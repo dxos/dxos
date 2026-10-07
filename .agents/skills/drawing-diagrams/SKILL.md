@@ -86,18 +86,29 @@ edge PM -> RPM:top "spawn on EDGE"
 
 - **Placement:** `right-of X`, `left-of X`, `above X`, `below X`, `same-row X`, `same-col X`. These are
   rules; prefix one with `~` to make it a preference. Exact positions are `@cell(c,r)` or `@ x,y`.
-  Groups take the same relations to other groups, plus `gap=N` (pixels).
+  Groups take the same relations to other groups, plus `gap=N`.
+- **Group shape:** `group G … compact` keeps the frame near-square; `max-width=N` caps it at N
+  columns. `diagram aspect=W:H` leans the whole drawing toward that shape.
 - **Routing:**
-  - sides: `A:left -> B:top|left`;
-  - waypoints: `via x,_`, `via _,y`, or `via cell(1.5,_)` for the gutter between columns 1 and 2;
-  - shared trunks: `bus` on a fan-out from one source (`edge A -> B, C bus`), or `bus=<name>` across
-    edges.
+  - sides: `A:left -> B:top|left`; `A:~left` (or `A:~left|top`) is a preference that gives way to a
+    route with fewer bends;
+  - waypoints: `via x,_`, `via _,y`, `via cell(1.5,_)` for the gutter between columns 1 and 2, or
+    `via cell(_,1.5)` for the gutter between rows 1 and 2;
+  - shared trunks: `edge A -> B, C bus` fans out of A; `edge B, C -> A bus` gathers into A with one
+    arrowhead; `bus=<name>` joins separate edges. A bus the engine cannot draw is drawn as separate
+    edges with a warning.
+- **Units:** `gap`, `grid`, `box`, `@ x,y` and `via x,_` are pixels; `cell(…)` and `max-width` are grid
+  cells.
+- **Precedence:** pins, then hard relations, then `~` relations and `~` sides. A relation between
+  members of different groups drags the frames too: `node A below X` with X in another group widens
+  A's frame to reach X's column, leaving empty cells inside (the report says
+  `Group "…" is stretched`). Relate the groups instead (`group B below A`).
 - **≲ 14 nodes, ≤ 3 groups, no nested groups.** Past that, crossings climb fast; split into two
   diagrams.
 - **Labels ≤ 17 chars.** Boxes are a fixed width and a label is drawn on one line. The node id can
   stay long; shorten only the quoted label.
 - Label only the edges that say something (`"invokes handlers"`); unlabelled edges route more cleanly.
-- `diagram group node edge cell via bus` are reserved; quote them to use them as ids.
+- `diagram group node edge cell via bus compact` are reserved; quote them to use them as ids.
 - Give every node `ref="<repo-relative path>"` so the diagram can be checked against the code.
 
 The full reference the in-app agent reads is the `uml` skill text in
@@ -152,9 +163,13 @@ border, that a frame is stretched with empty cells, or that the whole thing came
 When something is wrong, fix it in the DSL with the smallest hint that addresses it. For example:
 
 - `same-row`/`below` to line boxes up;
-- a side (`A:right ->`) for an arrow that wraps around a box;
+- a side (`A:right ->`, or `A:~right` to only prefer it) for an arrow that wraps around a box;
 - `via cell(…)` to move a route into a clearer gutter;
+- `compact` or `max-width=N` on a group that came out as a strip;
 - a shorter label.
+
+If a hint makes the render worse, or a warning says it was relaxed, remove it rather than adding a
+second hint to fight it.
 
 Then render and look again. Stop after about four rounds. If it still looks wrong, say what is wrong
 when you show it rather than hiding it.

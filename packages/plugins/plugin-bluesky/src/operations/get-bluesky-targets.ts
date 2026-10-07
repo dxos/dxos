@@ -7,7 +7,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       const config = yield* Capability.get(ClientCapabilities.Config);
       const connection = yield* Database.load(connectionRef);
       if (!Obj.getDatabase(connection)) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
+        return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
       }
 
       // Saved feeds are best-effort. Credentials construction (PDS resolve,

@@ -402,3 +402,50 @@ export const fetchHistory = (
     } while (cursor);
     return all;
   });
+
+const SlackPostMessageResponseSchema = Schema.Struct({
+  ok: Schema.Boolean,
+  error: Schema.String.pipe(Schema.optional),
+  /** The conversation the message landed in (a DM's `D…` id when posting to a user). */
+  channel: Schema.String.pipe(Schema.optional),
+  /** The posted message's timestamp; its id within the conversation. */
+  ts: Schema.String.pipe(Schema.optional),
+});
+
+export type SlackPostMessageResponse = Schema.Schema.Type<typeof SlackPostMessageResponseSchema>;
+
+/**
+ * Posts a message into a conversation (`chat.postMessage`), as a reply when `threadTs` is given.
+ * Needs `chat:write`; Slack answers `missing_scope` without it and `not_in_channel` when the bot
+ * was never invited to the conversation.
+ */
+export const postMessage = (
+  channelId: string,
+  text: string,
+  options: { threadTs?: string } = {},
+): SlackEffect<SlackPostMessageResponse> =>
+  slackRequest(
+    (creds) =>
+      authedPost(creds, 'chat.postMessage', {
+        channel: channelId,
+        text,
+        ...(options.threadTs ? { thread_ts: options.threadTs } : {}),
+      }),
+    SlackPostMessageResponseSchema,
+  );
+
+const SlackConversationsOpenResponseSchema = Schema.Struct({
+  ok: Schema.Boolean,
+  error: Schema.String.pipe(Schema.optional),
+  channel: Schema.Struct({ id: Schema.String }).pipe(Schema.optional),
+});
+
+/** Opens (or returns) the token's direct-message conversation with a user (`conversations.open`); needs `im:write`. */
+export const openConversation = (userId: string): SlackEffect<string | undefined> =>
+  Effect.map(
+    slackRequest(
+      (creds) => authedPost(creds, 'conversations.open', { users: userId }),
+      SlackConversationsOpenResponseSchema,
+    ),
+    (response) => response.channel?.id,
+  );

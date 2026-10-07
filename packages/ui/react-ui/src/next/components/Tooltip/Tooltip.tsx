@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Portal } from '@ark-ui/react/portal';
 import { Tooltip as TooltipPrimitive, useTooltipContext } from '@ark-ui/react/tooltip';
 import React, {
@@ -30,7 +32,7 @@ const POPUP_GUTTER = 2;
 /** Short enough to feel responsive, long enough that sweeping the pointer across a toolbar shows nothing. */
 const OPEN_DELAY = 600;
 
-export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
+type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
 
 /** The Root's `openDelay`, read by the Trigger, which runs the hover delay itself (DESIGN.md follow-up 33). */
 const OpenDelayContext = createContext(OPEN_DELAY);
@@ -231,13 +233,6 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
 );
 
 TooltipContent.displayName = 'Tooltip.Content';
-
-export const Tooltip = {
-  Root: TooltipRoot,
-  Trigger: TooltipTrigger,
-  Content: TooltipContent,
-};
-
 //
 // TextTooltip
 //
@@ -283,4 +278,12 @@ export const TextTooltip = forwardRef<HTMLSpanElement, TextTooltipProps>(
 
 TextTooltip.displayName = 'TextTooltip';
 
-export type { TextTooltipProps, TooltipContentProps, TooltipRootProps, TooltipTriggerProps };
+export type {
+  TooltipContentProps as ContentProps,
+  TooltipRootProps as RootProps,
+  TextTooltipProps,
+  TooltipTriggerProps as TriggerProps,
+};
+
+export { TooltipContent as Content, TooltipRoot as Root, TooltipTrigger as Trigger };
+export type { TooltipSide as Side };

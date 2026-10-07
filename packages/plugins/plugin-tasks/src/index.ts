@@ -3,5 +3,5 @@
 //
 
 export * as TasksPlugin from './TasksPlugin.ts';
-export * from '#meta';
+export * from '#operations';
 export * from '#types';

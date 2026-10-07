@@ -32,3 +32,6 @@ export const CREDENTIAL_PAGE_LIMIT = 100;
 
 /** Prefix for the per-session vault holding the credentials bound to that run. */
 export const SESSION_VAULT_PREFIX = 'composer-session';
+
+/** Harness id of Claude Code run on this machine (`chat.session.harness`), and its helper agent directory. */
+export const CLAUDE_CODE_AGENT = 'claude-code';

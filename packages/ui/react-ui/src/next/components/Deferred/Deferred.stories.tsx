@@ -11,7 +11,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Deferred, type DeferredProps, Switch, Typography } from '../index.ts';
+import { Switch } from '../Switch/Switch.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Deferred, type DeferredProps } from './Deferred.tsx';
 
 type StoryArgs = SizeArgs & Pick<DeferredProps, 'delay' | 'minDuration'>;
 
@@ -24,9 +26,9 @@ const DefaultStory = ({ delay, minDuration }: StoryArgs) => {
         pending={pending}
         delay={delay}
         minDuration={minDuration}
-        fallback={() => <Typography data-testid='fallback'>No messages yet.</Typography>}
+        fallback={() => <Typography.Text data-testid='fallback'>No messages yet.</Typography.Text>}
       >
-        <Typography data-testid='content'>3 messages</Typography>
+        <Typography.Text data-testid='content'>3 messages</Typography.Text>
       </Deferred>
     </>
   );

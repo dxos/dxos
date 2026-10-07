@@ -12,24 +12,27 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, Typography } from '../index.ts';
+import { Container } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Block } from './Block.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Container gutter='rail' layout='row' data-testid={`row-${size}`}>
       <Block rail='start' data-testid={`start-${size}`}>
-        <Icon icon='ph--circle--regular' />
+        <Icon.Icon icon='ph--circle--regular' />
       </Block>
-      <Typography>Block</Typography>
+      <Typography.Text>Block</Typography.Text>
       <Block rail='end' data-testid={`end-${size}`}>
-        <Icon icon='ph--dots-three--regular' />
+        <Icon.Icon icon='ph--dots-three--regular' />
       </Block>
     </Container>
     <Container gutter='rail' layout='row'>
       <Block rail='start' compact data-testid={`compact-${size}`}>
-        <Icon icon='ph--star--regular' />
+        <Icon.Icon icon='ph--star--regular' />
       </Block>
-      <Typography>Compact</Typography>
+      <Typography.Text>Compact</Typography.Text>
     </Container>
   </>
 );

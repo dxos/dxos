@@ -17,7 +17,7 @@ import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 import { ActivationEvents, Capabilities } from '../common/index.ts';
 import { ActivationEvent, Capability, Plugin, PluginManager } from '../core/index.ts';
 import { makeDynamicTraceSink } from './process-manager-capability.ts';
-import { ProcessManagerPlugin } from './ProcessManagerPlugin.ts';
+import * as ProcessManagerPlugin from './ProcessManagerPlugin.ts';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
 
@@ -37,7 +37,7 @@ const otherMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.otherLayerSpec'
 const makeManager = (opts: { plugins: Plugin.Plugin[]; enabled: string[] }) => {
   const manager = PluginManager.make({
     pluginLoader: () => Effect.die(new Error('not implemented')),
-    plugins: [ProcessManagerPlugin(), ...opts.plugins],
+    plugins: [ProcessManagerPlugin.make(), ...opts.plugins],
     enabled: opts.enabled,
   });
   manager.capabilities.contribute({

@@ -12,7 +12,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
-import { toEffectSchema } from '@dxos/echo/JsonSchema';
+import * as JsonSchema from '@dxos/echo/JsonSchema';
 import {
   type FreehandProjectionOptions,
   type Intent,
@@ -233,8 +233,8 @@ const withRuntimePorts = (controller: ComputeGraphSource, node: Node): Node => {
   if (!computeNode?.inputSchema && !computeNode?.outputSchema) {
     return node;
   }
-  const inputSchema = computeNode.inputSchema ? toEffectSchema(computeNode.inputSchema) : DefaultInput;
-  const outputSchema = computeNode.outputSchema ? toEffectSchema(computeNode.outputSchema) : DefaultOutput;
+  const inputSchema = computeNode.inputSchema ? JsonSchema.toEffectSchema(computeNode.inputSchema) : DefaultInput;
+  const outputSchema = computeNode.outputSchema ? JsonSchema.toEffectSchema(computeNode.outputSchema) : DefaultOutput;
   return { ...node, ports: anchorsToPorts(createFunctionAnchors(node, inputSchema, outputSchema), node.size) };
 };
 

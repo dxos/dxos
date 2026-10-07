@@ -10,7 +10,8 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { expectTooltip, realHover } from '../../testing.ts';
-import { Timestamp, Typography } from '../index.ts';
+import * as Typography from '../Typography/Typography.tsx';
+import { Timestamp } from './Timestamp.tsx';
 
 const NOW = new Date('2026-06-15T12:00:00Z');
 
@@ -37,7 +38,7 @@ const DefaultStory = ({ live }: StoryArgs) => {
     <div className='grid grid-cols-[1fr_min-content] gap-x-4 gap-y-1'>
       {LADDER.map(({ label, minutes }) => (
         <Fragment key={label}>
-          <Typography>{label}</Typography>
+          <Typography.Text>{label}</Typography.Text>
           <Timestamp
             date={minutesBefore(minutes, now)}
             now={live ? undefined : NOW}

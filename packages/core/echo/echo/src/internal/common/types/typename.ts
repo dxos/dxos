@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type SchemaAST } from '@dxos/effect';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
 
 /**
  * Property name for typename when object is serialized to JSON.

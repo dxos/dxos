@@ -4,16 +4,18 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useActions } from '@dxos/plugin-graph/hooks';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
-import { Button, Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -26,10 +28,10 @@ export type CommandsDialogContentProps = {
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    const { invokePromise } = useOperationInvoker();
-    const runAction = useActionRunner();
-    const { graph } = useAppGraph();
+    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const runAction = GraphHooks.useActionRunner();
+    const { graph } = ToolkitHooks.useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
     // Traverse graph.
@@ -53,21 +55,21 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       });
 
       actions.sort((a, b) => {
-        return toLocalizedString(a.properties.label, t)
+        return Theme.toLocalizedString(a.properties.label, t)
           ?.toLowerCase()
-          .localeCompare(toLocalizedString(b.properties.label, t)?.toLowerCase());
+          .localeCompare(Theme.toLocalizedString(b.properties.label, t)?.toLowerCase());
       });
 
       return actions;
     }, [graph]);
 
     const group = allActions.find(({ id }) => id === selected);
-    const groupActions = useActions(graph, group?.id);
+    const groupActions = GraphHooks.useActions(graph, group?.id);
     const actions = AppGraphNode.isActionGroup(group) ? groupActions : allActions;
 
     const { results, handleSearch } = useSearchListResults({
       items: actions,
-      extract: (action) => toLocalizedString(action.properties.label, t),
+      extract: (action) => Theme.toLocalizedString(action.properties.label, t),
     });
 
     return (
@@ -82,7 +84,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
               autoFocus
               placeholder={t('command-list-input.placeholder')}
               escapeBehavior='dismiss'
-              {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+              {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
             />
             <SearchList.Viewport>
               {results.map((action) => {
@@ -92,7 +94,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                   <SearchList.Item
                     value={action.id}
                     key={action.id}
-                    label={toLocalizedString(action.properties.label, t)}
+                    label={Theme.toLocalizedString(action.properties.label, t)}
                     icon={action.properties.icon}
                     suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
                     onSelect={() => {
@@ -131,7 +133,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         </Dialog.Body>
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild>
-            <Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button>
+            <Button.Root classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button.Root>
           </Dialog.CloseTrigger>
         </Dialog.Footer>
       </Dialog.Content>

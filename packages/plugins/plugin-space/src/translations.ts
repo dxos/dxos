@@ -3,7 +3,7 @@
 //
 
 import { Collection, Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -270,6 +270,11 @@ export const translations = [
         'add-known-people.label': 'Add from contacts',
         'add-members-failed-toast.title': 'Some people could not be added',
         'add-members-failed-toast.description': 'Could not add: {{names}}',
+        'add-members-not-notified-toast.title': 'Added, but not notified',
+        'add-members-not-notified-toast.description':
+          '{{names}} was added but couldn’t be notified; share the space link instead.',
+        'add-members-not-notified-account-toast.description':
+          '{{names}} was added but couldn’t be notified: notifications need an account on this deployment. Share the space link instead.',
         'space-invitation.description': 'Manage invitations to the space.',
         'qr-code.description': 'Share this QR code, or copy the URL and share it with the person you want to invite.',
         'locked-space.description': 'This space is locked, unlock it to invite new members.',
@@ -393,4 +398,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

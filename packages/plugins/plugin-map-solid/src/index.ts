@@ -3,5 +3,4 @@
 //
 
 export * as MapPlugin from './MapPlugin.ts';
-export * from './events.ts';
-export * from '#meta';
+export * as MapSolidEvents from './MapSolidEvents.ts';

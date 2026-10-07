@@ -4,12 +4,14 @@
 
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Button, FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as FloatingPanel from '@dxos/react-ui/FloatingPanel';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -22,9 +24,9 @@ import {
 } from '../DebugPanel/index.ts';
 
 /** Room for the log table to breathe; the console fits itself to whatever it is given. */
-const DEFAULT_SIZE: FloatingPanelSize = { width: 1024, height: 384 };
+const DEFAULT_SIZE: FloatingPanel.Size = { width: 1024, height: 384 };
 
-const MIN_SIZE: FloatingPanelSize = { width: 480, height: 240 };
+const MIN_SIZE: FloatingPanel.Size = { width: 480, height: 240 };
 
 /** Clear of the status bar the panel opens from. */
 const MARGIN = 8;
@@ -41,11 +43,11 @@ export type DebugPanelStatusProps = {
  * port — an agent can evaluate code in this page — so it must be visible without opening settings.
  */
 export const DebugPanelStatus = ({ controller = getDebugPortController() }: DebugPanelStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const { position, size = DEFAULT_SIZE, mode = 'docked' } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
   const { update } = useViewStateActions(debugPanelAspect, DEBUG_PANEL_CONTEXT);
@@ -78,12 +80,12 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
     [update, invokePromise],
   );
   const handlePositionChangeEnd = useCallback(
-    ({ position }: { position: FloatingPanelPoint }) => update((prev) => ({ ...prev, position })),
+    ({ position }: { position: FloatingPanel.Point }) => update((prev) => ({ ...prev, position })),
     [update],
   );
 
   const handleSizeChangeEnd = useCallback(
-    ({ size }: { size: FloatingPanelSize }) => update((prev) => ({ ...prev, size })),
+    ({ size }: { size: FloatingPanel.Size }) => update((prev) => ({ ...prev, size })),
     [update],
   );
   // First opening: centred above the status bar, where the popover it replaces used to sit. A
@@ -119,10 +121,10 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       <StatusBar.Item classNames='relative'>
         {mode === 'floating' ? (
           <FloatingPanel.Trigger asChild>
-            <Button variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
+            <Button.Root variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
           </FloatingPanel.Trigger>
         ) : (
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly

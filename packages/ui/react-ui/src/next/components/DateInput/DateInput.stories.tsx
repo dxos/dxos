@@ -22,10 +22,11 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { type FieldRootProps } from '../Field/index.ts';
-import { DateInput, type DateInputProps, Field, Input } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { DateInput, type DateInputProps } from './DateInput.tsx';
 
-type ValueFieldProps = DateInputProps & { label: string; testId: string; fieldProps?: FieldRootProps };
+type ValueFieldProps = DateInputProps & { label: string; testId: string; fieldProps?: Field.RootProps };
 
 /** A labelled DateInput whose value string is shown beside it, so a test can read what the field reports. */
 const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: ValueFieldProps) => {

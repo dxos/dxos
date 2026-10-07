@@ -1,0 +1,85 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as DateTime from 'effect/DateTime';
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { Organization, Person } from '@dxos/types';
+
+import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
+
+import { AgentOperationError } from './errors.ts';
+
+const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({
+      agent: agentRef,
+      requester: requesterRef,
+      request,
+      outcome,
+      goal: goalRef,
+      when,
+      message,
+      recipient,
+      ongoing,
+    }) {
+      const brain = yield* BrainService.BrainService;
+      const agent = yield* Database.load(agentRef);
+      if ((yield* brain.listTriggers(agent.id)).length >= BrainService.MAX_TRIGGERS) {
+        return yield* Effect.fail(registryFull());
+      }
+      const requester = yield* Database.load(requesterRef);
+      // The schema cannot express a Person | Organization ref, so the constraint is checked here.
+      if (!Obj.instanceOf(Person.Person, requester) && !Obj.instanceOf(Organization.Organization, requester)) {
+        return yield* Effect.fail(
+          new AgentOperationError({ message: 'The requester must be a person or organization; resolve them first.' }),
+        );
+      }
+
+      const goal = goalRef
+        ? yield* Database.load(goalRef)
+        : outcome
+          ? // Asked for by its owner, so it is live at once rather than proposed.
+            yield* Database.add(
+              Goal.make({
+                title: outcome,
+                horizon: 'now',
+                status: 'active',
+                owners: [Ref.make<Obj.Unknown>(requester)],
+              }),
+            )
+          : undefined;
+      if (!goal) {
+        return yield* Effect.fail(
+          new AgentOperationError({ message: 'Pass the outcome the requester wants, or the goal it serves.' }),
+        );
+      }
+
+      const trigger: Trigger.Trigger = {
+        id: Trigger.makeId(agent.id),
+        agent: agent.id,
+        goal: Ref.make(goal),
+        ...(request ? { request } : {}),
+        when,
+        then: { _tag: 'notify', recipient: recipient ?? requesterRef, message },
+        ...(ongoing ? { ongoing } : {}),
+        createdAt: DateTime.formatIso(yield* DateTime.now),
+      };
+      if (!(yield* brain.putTrigger(trigger))) {
+        return yield* Effect.fail(registryFull());
+      }
+      yield* Database.flush();
+      return { trigger: trigger.id, goal: Ref.make(goal) };
+    }),
+  ),
+);
+
+export default handler;
+
+const registryFull = () =>
+  new AgentOperationError({
+    message: `Already watching for ${BrainService.MAX_TRIGGERS} things; cancel a watch before adding another.`,
+  });

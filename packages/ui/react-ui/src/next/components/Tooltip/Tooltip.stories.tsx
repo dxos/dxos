@@ -11,7 +11,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { GEOMETRY, byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, Input, TextTooltip, Tooltip } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Tooltip from './Tooltip.tsx';
 
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
@@ -42,8 +45,8 @@ const DefaultStory = ({ size }: SizeArgs) => (
         <Button data-testid={`side-${size}`}>Details</Button>
       </Tooltip.Trigger>
     </Group>
-    <TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
-    <TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
+    <Tooltip.TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
+    <Tooltip.TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
   </>
 );
 

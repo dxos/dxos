@@ -9,9 +9,9 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { WorkerRuntimeStartError } from '@dxos/protocols';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { MIGRATIONS_TABLE } from '../../migrations/metadata/index.ts';
 import { makeWorkerRuntime } from './worker-runtime.ts';

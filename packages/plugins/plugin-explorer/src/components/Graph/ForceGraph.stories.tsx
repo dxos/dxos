@@ -8,20 +8,19 @@ import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type, View } from '@dxos/echo';
-import { SelectionModel } from '@dxos/graph';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { DxAnchorActivate } from '@dxos/react-ui';
 import { type GraphProps } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SpaceGraphEdge, type SpaceGraphNode, ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
+import { DxAnchorActivate } from '@dxos/ui-types';
 
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
@@ -36,7 +35,7 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const model = useGraphModel(space?.db);
 
-  const selection = useMemo(() => new SelectionModel({ mode: 'single' }), []);
+  const selection = useMemo(() => new SelectionModel.SelectionModel({ mode: 'single' }), []);
 
   const handleInspect = useCallback<NonNullable<GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect']>>(
     (node, event) => {
@@ -81,7 +80,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [

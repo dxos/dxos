@@ -4,7 +4,7 @@
 
 import { type FocusEvent } from 'react';
 
-import { type SchemaAST } from '@dxos/effect';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
 import { createContext } from '@dxos/react-hooks';
 
 import { type FormFieldStatus, type FormPresentation } from '#types';
@@ -22,6 +22,8 @@ export type FormFieldBinding<T = any> = {
   onBlur: (event?: FocusEvent<HTMLElement>) => void;
   status: FormFieldStatus['status'];
   error?: string;
+  /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
+  indeterminate?: boolean;
   required?: boolean;
   readonly?: boolean;
   presentation?: FormPresentation;

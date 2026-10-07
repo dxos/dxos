@@ -22,7 +22,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,6 +41,8 @@ import { createToolkit } from './toolkit.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
+  /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
+  sender?: Message.Message['sender'];
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
@@ -269,6 +271,7 @@ export class Session extends Resource {
         objects,
         instructions: this.#instructions,
         prompt: params.prompt,
+        sender: params.sender,
         system: params.system,
         systemPrompt: yield* formatSystem(skills, objects),
       });

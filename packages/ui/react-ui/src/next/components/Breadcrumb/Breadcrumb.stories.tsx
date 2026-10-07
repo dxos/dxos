@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Breadcrumb } from '../index.ts';
+import * as Breadcrumb from './Breadcrumb.tsx';
 
 const TRAIL = ['Home', 'Projects', 'Composer', 'Design review', 'Breadcrumbs'];
 
@@ -86,6 +86,10 @@ export const Test: Story = {
     // Links are subdued next to the current page.
     const link = canvas.getByRole('button', { name: 'Projects' });
     await expect(getComputedStyle(link).color).not.toBe(getComputedStyle(canvas.getByText('Breadcrumbs')).color);
+    // Separators read as clearly as the links: the same colour, not faded further.
+    const separator = row.querySelector<HTMLElement>('[data-part="separator"]');
+    await expect(separator && getComputedStyle(separator).color).toBe(getComputedStyle(link).color);
+    await expect(separator && getComputedStyle(separator).opacity).toBe('1');
 
     await userEvent.click(link);
     await expect(within(list).getAllByRole('listitem')).toHaveLength(2);

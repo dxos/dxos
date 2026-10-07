@@ -12,11 +12,10 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Tracer from 'effect/Tracer';
 
-import { ServiceNotAvailableError } from '@dxos/compute';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
 
@@ -645,7 +644,9 @@ describe('LayerStack', () => {
             ServiceA,
             Effect.suspend(() =>
               attempts++ === 0
-                ? Effect.die(new ServiceNotAvailableError('test/ServiceA', { message: 'first build fails' }))
+                ? Effect.die(
+                    new ServiceResolver.ServiceNotAvailableError('test/ServiceA', { message: 'first build fails' }),
+                  )
                 : Effect.succeed({ value: 'a' }),
             ),
           ),
@@ -824,7 +825,7 @@ describe('LayerStack', () => {
                 conversationSpecConstructions++;
                 if (!context.conversation) {
                   return yield* Effect.die(
-                    new ServiceNotAvailableError('test/ServiceB', {
+                    new ServiceResolver.ServiceNotAvailableError('test/ServiceB', {
                       message: 'conversation-scoped spec materialised without conversation',
                     }),
                   );

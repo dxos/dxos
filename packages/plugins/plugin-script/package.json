@@ -84,27 +84,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./package.json": "./package.json",
-    "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Notebook": {
       "source": "./src/types/Notebook.ts",
       "types": "./dist/types/src/types/Notebook.d.ts",
       "import": "./dist/lib/Notebook.mjs"
     },
+    "./package.json": "./package.json",
     "./ScriptCapabilities": {
       "source": "./src/types/ScriptCapabilities.ts",
       "types": "./dist/types/src/types/ScriptCapabilities.d.ts",
@@ -115,30 +100,45 @@
       "types": "./dist/types/src/types/ScriptEvents.d.ts",
       "import": "./dist/lib/ScriptEvents.mjs"
     },
+    "./ScriptFunction": {
+      "source": "./src/ScriptFunction.ts",
+      "types": "./dist/types/src/ScriptFunction.d.ts",
+      "import": "./dist/lib/ns/ScriptFunction.mjs"
+    },
     "./ScriptOperation": {
       "source": "./src/types/ScriptOperation.ts",
       "types": "./dist/types/src/types/ScriptOperation.d.ts",
       "import": "./dist/lib/ScriptOperation.mjs"
-    },
-    "./ScriptPlugin": {
-      "source": "./src/ScriptPlugin.ts",
-      "types": "./dist/types/src/ScriptPlugin.d.ts",
-      "import": "./dist/lib/ScriptPlugin.mjs"
-    },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
     },
     "./ScriptOperationHandlerSet": {
       "source": "./src/operations/ScriptOperationHandlerSet.ts",
       "types": "./dist/types/src/operations/ScriptOperationHandlerSet.d.ts",
       "import": "./dist/lib/ScriptOperationHandlerSet.mjs"
     },
+    "./ScriptPlugin": {
+      "source": "./src/ScriptPlugin.ts",
+      "types": "./dist/types/src/ScriptPlugin.d.ts",
+      "import": "./dist/lib/ScriptPlugin.mjs"
+    },
     "./ScriptSkill": {
       "source": "./src/skills/ScriptSkill.ts",
       "types": "./dist/types/src/skills/ScriptSkill.d.ts",
       "import": "./dist/lib/ScriptSkill.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Templates": {
+      "source": "./src/Templates.ts",
+      "types": "./dist/types/src/Templates.d.ts",
+      "import": "./dist/lib/ns/Templates.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -223,6 +223,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@lezer/common": "catalog:",

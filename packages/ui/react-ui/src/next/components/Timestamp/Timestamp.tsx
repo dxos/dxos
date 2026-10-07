@@ -7,9 +7,9 @@ import React, { type ComponentPropsWithoutRef, forwardRef, useEffect, useId, use
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type DateLike, compactInterval, formatCompact, toDate } from '../../../util/index.ts';
+import { type DateLike, compactInterval, formatCompact, toDate } from '../../../util/format-time.ts';
 import { recipes } from '../../recipes.ts';
-import { Tooltip } from '../Tooltip/index.ts';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
 
 export type TimestampProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'time'>, 'children' | 'dateTime'>> & {
   /** The instant shown, as an ISO string, a Unix timestamp in milliseconds, or a Date. */
@@ -85,3 +85,5 @@ export const Timestamp = forwardRef<HTMLTimeElement, TimestampProps>(
 );
 
 Timestamp.displayName = 'Timestamp';
+
+export * from '../../../util/format-time.ts';

@@ -256,6 +256,9 @@ const counterColumns = (row: StageRow): Record<string, number | boolean> => {
       reactRenderers: row.react.renderers,
     });
   }
+  if (row.submitToQueuedVisibleMs !== undefined) {
+    columns.submitToQueuedVisibleMs = row.submitToQueuedVisibleMs;
+  }
   if (row.latency) {
     const submit = latencySummary(row.latency.submitToRequestMs);
     const turn = latencySummary(row.latency.turnToRequestMs);

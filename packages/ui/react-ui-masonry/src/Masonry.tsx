@@ -19,7 +19,9 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, ThemedClassName, composable, composableProps, useMergeRefs, usePx } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';
@@ -108,7 +110,7 @@ MasonryRoot.displayName = 'Masonry.Root';
 // content box, so the gutter and the thumb are accounted for whatever is configured here.
 //
 
-type MasonryContentProps = ThemedClassName<
+type MasonryContentProps = Util.ThemedClassName<
   PropsWithChildren<
     Pick<ScrollAreaRootProps, 'scrollbars'> & {
       /** Inline gutter equal to the grid gap, so the perimeter matches the inter-column gap. */
@@ -117,14 +119,14 @@ type MasonryContentProps = ThemedClassName<
   >
 >;
 
-const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
+const MasonryContentInner = Util.composable<HTMLDivElement, MasonryContentProps>(
   ({ children, scrollbars, padding = true, ...props }, forwardedRef) => {
     const { gap } = useMasonryContext('Masonry.Content');
     const style: CSSProperties & Record<'--gutter', string> = { '--gutter': padding ? `${gap}rem` : '0px' };
     return (
       <ScrollArea.Root
         // `size-full`: the grid is a pane of its own and fills its host, as a Panel does, whatever the host's display.
-        {...composableProps(props, { classNames: 'size-full', style })}
+        {...Util.composableProps(props, { classNames: 'size-full', style })}
         scrollbars={scrollbars}
         ref={forwardedRef}
       >
@@ -151,7 +153,7 @@ const MasonryContent = MasonryContentInner as (
 // this layer separately from Content to control the tile grid.
 //
 
-type MasonryViewportProps<Item> = ThemedClassName<{
+type MasonryViewportProps<Item> = Util.ThemedClassName<{
   /** Items to render in the masonry grid. */
   items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
@@ -182,11 +184,11 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   scroll?: boolean;
 }>;
 
-const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
+const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, cacheKey, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
-    const remInPx = usePx(1);
+    const remInPx = Hooks.usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
     // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
@@ -260,7 +262,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       tabbable: true,
       cyclic: true,
     });
-    const gridRef = useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
+    const gridRef = Hooks.useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
 
     // The viewport is the full-width scroll container, padded inline by `--gutter`
     // (the gap, set by Masonry.Content). The grid fills the content box and the layout centres capped columns,
@@ -270,7 +272,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       <>
         {contentWidth > 0 && (
           <div
-            {...composableProps(props, {
+            {...Util.composableProps(props, {
               classNames: 'relative',
               style: {
                 width: `${contentWidth}px`,
@@ -364,7 +366,7 @@ const useColumnCount = (
   maxColumnWidth: number,
   gap: number,
 ) => {
-  const remInPx = usePx(1);
+  const remInPx = Hooks.usePx(1);
   return useMemo(() => {
     if (columns != null) {
       return columns;

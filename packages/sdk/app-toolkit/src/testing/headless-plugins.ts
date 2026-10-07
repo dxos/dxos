@@ -10,7 +10,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import * as AppActivationEvents from '../app-framework/AppActivationEvents.ts';

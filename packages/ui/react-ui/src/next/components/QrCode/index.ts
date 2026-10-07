@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './QrCode.tsx';
+export * as QrCode from './QrCode.tsx';

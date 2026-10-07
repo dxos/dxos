@@ -21,6 +21,8 @@ import type { SerializedError } from '@dxos/protocols';
 import * as Operation from './Operation.ts';
 import * as Trace from './Trace.ts';
 
+export { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE, RunAgainError } from './errors.ts';
+
 //
 // Process.
 //
@@ -57,6 +59,19 @@ export interface Environment {
   /** URI of the conversation feed (queue) the process is serving; absent outside a conversation. */
   readonly conversation?: URI.URI;
 }
+
+/**
+ * The environment the running process was spawned with, for a handler that hands its work to another
+ * runtime (e.g. EDGE dispatching an operation to its operation worker), which must carry the conversation along.
+ */
+export class EnvironmentService extends Context.Service<EnvironmentService, Environment>()(
+  '@dxos/compute/Process.EnvironmentService',
+) {}
+
+/** The running process's environment; empty outside a process, so a handler can read it wherever it runs. */
+export const currentEnvironment: Effect.Effect<Environment> = Effect.serviceOption(EnvironmentService).pipe(
+  Effect.map(Option.getOrElse((): Environment => ({}))),
+);
 
 /**
  * Attaches the process to a target object.

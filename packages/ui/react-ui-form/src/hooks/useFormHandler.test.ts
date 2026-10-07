@@ -82,3 +82,22 @@ describe('useFormHandler reactive buffering', () => {
     expect(result.current.getValue(['city'])).toBe('SF');
   });
 });
+
+describe('useFormHandler field overrides', () => {
+  test('an indeterminate path reads as unset until it is edited', ({ expect }) => {
+    const fieldOverrides = { city: { indeterminate: true }, name: { label: 'Display name' } };
+    const { result } = renderHook(() =>
+      useFormHandler<Values>({ schema, values: { name: 'Alice', city: 'NYC' }, fieldOverrides }),
+    );
+    expect(result.current.getValue(['city'])).toBeUndefined();
+    expect(result.current.getStatus(['city']).indeterminate).toBe(true);
+    expect(result.current.getStatus(['name']).indeterminate).toBe(false);
+    expect(result.current.getOverride(['name'])?.label).toBe('Display name');
+
+    // The source still holds a valid value at the indeterminate path, so the form validates.
+    act(() => result.current.onValueChange(['city'], stringAst, 'LA'));
+    expect(result.current.getValue(['city'])).toBe('LA');
+    expect(result.current.getStatus(['city']).indeterminate).toBe(false);
+    expect(result.current.isValid).toBe(true);
+  });
+});

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-form';
 
@@ -27,6 +27,7 @@ export const translations = [
         'add-property-button.label': 'Add property',
         'boolean-input-true.value': 'Yes',
         'boolean-input-false.value': 'No',
+        'indeterminate.placeholder': 'Mixed',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
         'delete-field.label': 'Delete field',
@@ -97,4 +98,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

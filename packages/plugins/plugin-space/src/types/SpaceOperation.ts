@@ -110,6 +110,13 @@ export const Share = Operation.make({
   output: Schema.instanceOf(CancellableInvitationObservable),
 });
 
+/**
+ * Why an admitted member was not sent an invitation message: `account-required` when EDGE relays
+ * inbox messages only for identities linked to an account and this one is not.
+ */
+export const NoticeFailureReason = Schema.Literals(['account-required', 'send-failed']);
+export type NoticeFailureReason = Schema.Schema.Type<typeof NoticeFailureReason>;
+
 export const AddMembers = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.addMembers'),
@@ -127,6 +134,8 @@ export const AddMembers = Operation.make({
     joinUrl: Schema.String,
     admitted: Schema.Array(Schema.String),
     failed: Schema.Array(Schema.Struct({ key: Schema.String, error: Schema.String })),
+    /** Admitted, but not told: they can still join from the space link. */
+    notNotified: Schema.Array(Schema.Struct({ key: Schema.String, reason: NoticeFailureReason })),
   }),
 });
 

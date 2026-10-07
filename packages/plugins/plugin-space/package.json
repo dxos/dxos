@@ -84,47 +84,37 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./constants": {
-      "source": "./src/constants.ts",
-      "types": "./dist/types/src/constants.d.ts",
-      "import": "./dist/lib/constants.mjs"
-    },
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
-    },
-    "./package.json": "./package.json",
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./DatabaseSkill": {
-      "source": "./src/skills/DatabaseSkill.ts",
-      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
-      "import": "./dist/lib/DatabaseSkill.mjs"
+    "./CardMasonry": {
+      "source": "./src/CardMasonry.ts",
+      "types": "./dist/types/src/CardMasonry.d.ts",
+      "import": "./dist/lib/ns/CardMasonry.mjs"
     },
     "./CollectionOperation": {
       "source": "./src/types/CollectionOperation.ts",
       "types": "./dist/types/src/types/CollectionOperation.d.ts",
       "import": "./dist/lib/CollectionOperation.mjs"
     },
+    "./Containers": {
+      "source": "./src/Containers.ts",
+      "types": "./dist/types/src/Containers.d.ts",
+      "import": "./dist/lib/ns/Containers.mjs"
+    },
+    "./Dashboard": {
+      "source": "./src/Dashboard.ts",
+      "types": "./dist/types/src/Dashboard.d.ts",
+      "import": "./dist/lib/ns/Dashboard.mjs"
+    },
+    "./DatabaseSkill": {
+      "source": "./src/skills/DatabaseSkill.ts",
+      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
+      "import": "./dist/lib/DatabaseSkill.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -150,15 +140,15 @@
       "types": "./dist/types/src/types/SpaceForm.d.ts",
       "import": "./dist/lib/SpaceForm.mjs"
     },
-    "./SpaceOperationHandlerSet": {
-      "source": "./src/operations/SpaceOperationHandlerSet.ts",
-      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
-      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
-    },
     "./SpaceOperation": {
       "source": "./src/types/SpaceOperation.ts",
       "types": "./dist/types/src/types/SpaceOperation.d.ts",
       "import": "./dist/lib/SpaceOperation.mjs"
+    },
+    "./SpaceOperationHandlerSet": {
+      "source": "./src/operations/SpaceOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
+      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
     },
     "./SpacePlugin": {
       "source": "./src/SpacePlugin.ts",
@@ -175,10 +165,15 @@
       "types": "./dist/types/src/types/SpaceSurface.d.ts",
       "import": "./dist/lib/SpaceSurface.mjs"
     },
-    "./dashboard": {
-      "source": "./src/dashboard/index.ts",
-      "types": "./dist/types/src/dashboard/index.d.ts",
-      "import": "./dist/lib/dashboard.mjs"
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

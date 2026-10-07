@@ -1,0 +1,336 @@
+{
+  "name": "@dxos/plugin-agent",
+  "version": "0.11.1",
+  "description": "Autonomous agents that converse in channels (Discord, freeq, local feeds) and Composer chats.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/components.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
+    "#plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./AgentChannels": {
+      "source": "./src/types/AgentChannels.ts",
+      "types": "./dist/types/src/types/AgentChannels.d.ts",
+      "import": "./dist/lib/AgentChannels.mjs"
+    },
+    "./AgentKnowledge": {
+      "source": "./src/AgentKnowledge.ts",
+      "types": "./dist/types/src/AgentKnowledge.d.ts",
+      "import": "./dist/lib/AgentKnowledge.mjs"
+    },
+    "./AgentOperation": {
+      "source": "./src/types/AgentOperation.ts",
+      "types": "./dist/types/src/types/AgentOperation.d.ts",
+      "import": "./dist/lib/AgentOperation.mjs"
+    },
+    "./AgentPlugin": {
+      "source": "./src/AgentPlugin.ts",
+      "types": "./dist/types/src/AgentPlugin.d.ts",
+      "import": "./dist/lib/AgentPlugin.mjs"
+    },
+    "./AgentState": {
+      "source": "./src/AgentState.ts",
+      "types": "./dist/types/src/AgentState.d.ts",
+      "import": "./dist/lib/AgentState.mjs"
+    },
+    "./AgentCompanion": {
+      "source": "./src/types/AgentCompanion.ts",
+      "types": "./dist/types/src/types/AgentCompanion.d.ts",
+      "import": "./dist/lib/AgentCompanion.mjs"
+    },
+    "./BrainService": {
+      "source": "./src/types/BrainService.ts",
+      "types": "./dist/types/src/types/BrainService.d.ts",
+      "import": "./dist/lib/BrainService.mjs"
+    },
+    "./BrainSkill": {
+      "source": "./src/skills/BrainSkill.ts",
+      "types": "./dist/types/src/skills/BrainSkill.d.ts",
+      "import": "./dist/lib/BrainSkill.mjs"
+    },
+    "./ChatParticipant": {
+      "source": "./src/types/ChatParticipant.ts",
+      "types": "./dist/types/src/types/ChatParticipant.d.ts",
+      "import": "./dist/lib/ChatParticipant.mjs"
+    },
+    "./ConversationSkill": {
+      "source": "./src/skills/ConversationSkill.ts",
+      "types": "./dist/types/src/skills/ConversationSkill.d.ts",
+      "import": "./dist/lib/ConversationSkill.mjs"
+    },
+    "./FactEntry": {
+      "source": "./src/types/FactEntry.ts",
+      "types": "./dist/types/src/types/FactEntry.d.ts",
+      "import": "./dist/lib/FactEntry.mjs"
+    },
+    "./Goal": {
+      "source": "./src/types/Goal.ts",
+      "types": "./dist/types/src/types/Goal.d.ts",
+      "import": "./dist/lib/Goal.mjs"
+    },
+    "./GoalsSkill": {
+      "source": "./src/skills/GoalsSkill.ts",
+      "types": "./dist/types/src/skills/GoalsSkill.d.ts",
+      "import": "./dist/lib/GoalsSkill.mjs"
+    },
+    "./InterviewSkill": {
+      "source": "./src/skills/InterviewSkill.ts",
+      "types": "./dist/types/src/skills/InterviewSkill.d.ts",
+      "import": "./dist/lib/InterviewSkill.mjs"
+    },
+    "./Memory": {
+      "source": "./src/types/Memory.ts",
+      "types": "./dist/types/src/types/Memory.d.ts",
+      "import": "./dist/lib/Memory.mjs"
+    },
+    "./MemoryOperation": {
+      "source": "./src/types/MemoryOperation.ts",
+      "types": "./dist/types/src/types/MemoryOperation.d.ts",
+      "import": "./dist/lib/MemoryOperation.mjs"
+    },
+    "./Mode": {
+      "source": "./src/types/Mode.ts",
+      "types": "./dist/types/src/types/Mode.d.ts",
+      "import": "./dist/lib/Mode.mjs"
+    },
+    "./ModeOperation": {
+      "source": "./src/types/ModeOperation.ts",
+      "types": "./dist/types/src/types/ModeOperation.d.ts",
+      "import": "./dist/lib/ModeOperation.mjs"
+    },
+    "./ModesSkill": {
+      "source": "./src/skills/ModesSkill.ts",
+      "types": "./dist/types/src/skills/ModesSkill.d.ts",
+      "import": "./dist/lib/ModesSkill.mjs"
+    },
+    "./NoteTakerSkill": {
+      "source": "./src/skills/NoteTakerSkill.ts",
+      "types": "./dist/types/src/skills/NoteTakerSkill.d.ts",
+      "import": "./dist/lib/NoteTakerSkill.mjs"
+    },
+    "./Profile": {
+      "source": "./src/types/Profile.ts",
+      "types": "./dist/types/src/types/Profile.d.ts",
+      "import": "./dist/lib/Profile.mjs"
+    },
+    "./Relay": {
+      "source": "./src/types/Relay.ts",
+      "types": "./dist/types/src/types/Relay.d.ts",
+      "import": "./dist/lib/Relay.mjs"
+    },
+    "./RelayOperation": {
+      "source": "./src/types/RelayOperation.ts",
+      "types": "./dist/types/src/types/RelayOperation.d.ts",
+      "import": "./dist/lib/RelayOperation.mjs"
+    },
+    "./RelaySkill": {
+      "source": "./src/skills/RelaySkill.ts",
+      "types": "./dist/types/src/skills/RelaySkill.d.ts",
+      "import": "./dist/lib/RelaySkill.mjs"
+    },
+    "./Trigger": {
+      "source": "./src/types/Trigger.ts",
+      "types": "./dist/types/src/types/Trigger.d.ts",
+      "import": "./dist/lib/Trigger.mjs"
+    },
+    "./TriggerOperation": {
+      "source": "./src/types/TriggerOperation.ts",
+      "types": "./dist/types/src/types/TriggerOperation.d.ts",
+      "import": "./dist/lib/TriggerOperation.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "AgentChannels": [
+        "dist/types/src/types/AgentChannels.d.ts"
+      ],
+      "AgentKnowledge": [
+        "dist/types/src/AgentKnowledge.d.ts"
+      ],
+      "AgentOperation": [
+        "dist/types/src/types/AgentOperation.d.ts"
+      ],
+      "AgentState": [
+        "dist/types/src/AgentState.d.ts"
+      ],
+      "ChatParticipant": [
+        "dist/types/src/types/ChatParticipant.d.ts"
+      ],
+      "ConversationSkill": [
+        "dist/types/src/skills/ConversationSkill.d.ts"
+      ],
+      "FactEntry": [
+        "dist/types/src/types/FactEntry.d.ts"
+      ],
+      "Goal": [
+        "dist/types/src/types/Goal.d.ts"
+      ],
+      "GoalsSkill": [
+        "dist/types/src/skills/GoalsSkill.d.ts"
+      ],
+      "InterviewSkill": [
+        "dist/types/src/skills/InterviewSkill.d.ts"
+      ],
+      "Memory": [
+        "dist/types/src/types/Memory.d.ts"
+      ],
+      "MemoryOperation": [
+        "dist/types/src/types/MemoryOperation.d.ts"
+      ],
+      "Mode": [
+        "dist/types/src/types/Mode.d.ts"
+      ],
+      "ModeOperation": [
+        "dist/types/src/types/ModeOperation.d.ts"
+      ],
+      "ModesSkill": [
+        "dist/types/src/skills/ModesSkill.d.ts"
+      ],
+      "NoteTakerSkill": [
+        "dist/types/src/skills/NoteTakerSkill.d.ts"
+      ],
+      "Profile": [
+        "dist/types/src/types/Profile.d.ts"
+      ],
+      "Relay": [
+        "dist/types/src/types/Relay.d.ts"
+      ],
+      "RelayOperation": [
+        "dist/types/src/types/RelayOperation.d.ts"
+      ],
+      "RelaySkill": [
+        "dist/types/src/skills/RelaySkill.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-explorer": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "@effect/atom-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -19,6 +19,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
@@ -479,7 +480,8 @@ const constructObjectActions = ({
                   log.warn('object has no URL representation; cannot copy link', { nodeId });
                   return;
                 }
-                const url = new URL(path.value, shareableLinkOrigin);
+                // The title lets the Composer Worker give the link a named preview in messengers.
+                const url = UrlPath.withTitle(new URL(path.value, shareableLinkOrigin), Obj.getLabel(object));
                 yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Two panes and the seam between them on Ark's splitter machine, which owns the drag, the keyboard resize, the
 // `separator` role and its `aria-value*`, and the panes' lower bound. DXOS owns the vocabulary the app speaks: sizes in
 // rem rather than percent, an `anchor` naming the pane the size measures, a `mode` that collapses to one pane, and a
@@ -25,7 +27,7 @@ import { createContext, useControllableState } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 
 type SplitterOrientation = 'horizontal' | 'vertical';
@@ -449,19 +451,18 @@ const useSplitterPublicContext = (): SplitterContext => {
 //
 // Splitter
 //
-
-export const Splitter = {
-  Root: SplitterRoot,
-  Panel: SplitterPanel,
-  ResizeTrigger: SplitterResizeTrigger,
-  useContext: useSplitterPublicContext,
+export type {
+  SplitterContext as Context,
+  SplitterMode as Mode,
+  SplitterOrientation as Orientation,
+  SplitterPanelProps as PanelProps,
+  SplitterResizeTriggerProps as ResizeTriggerProps,
+  SplitterRootProps as RootProps,
 };
 
-export type {
-  SplitterContext,
-  SplitterMode,
-  SplitterOrientation,
-  SplitterPanelProps,
-  SplitterResizeTriggerProps,
-  SplitterRootProps,
+export {
+  SplitterPanel as Panel,
+  SplitterResizeTrigger as ResizeTrigger,
+  SplitterRoot as Root,
+  useSplitterPublicContext as useContext,
 };

@@ -8,18 +8,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Flex } from '../../../layout/index.ts';
+import { Flex } from '../../../layout/Flex/Flex.tsx';
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Splitter, type SplitterRootProps, Typography } from '../index.ts';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Splitter from './Splitter.tsx';
 
 type StoryArgs = Pick<
-  SplitterRootProps,
+  Splitter.RootProps,
   'orientation' | 'anchor' | 'mode' | 'resizable' | 'defaultSize' | 'minSize' | 'transition'
 >;
 
 const Pane = ({ label }: { label: string }) => (
   <div className='grid place-items-center' data-testid={`pane-${label}`}>
-    <Typography>{label}</Typography>
+    <Typography.Text>{label}</Typography.Text>
   </div>
 );
 
@@ -37,9 +38,9 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
           <Pane label='End' />
         </Splitter.Panel>
       </Splitter.Root>
-      <Typography data-testid='size' classNames='p-1 tabular-nums'>
+      <Typography.Text data-testid='size' classNames='p-1 tabular-nums'>
         {size.toFixed(2)}rem
-      </Typography>
+      </Typography.Text>
     </Flex>
   );
 };

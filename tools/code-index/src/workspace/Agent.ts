@@ -13,6 +13,7 @@ import * as Toolkit from 'effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -22,6 +23,7 @@ import * as Events from './Events.ts';
 import * as Fold from './Fold.ts';
 import * as Log from './Log.ts';
 import * as Models from './Models.ts';
+import * as Review from './Review.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /**
@@ -153,6 +155,8 @@ const make = Effect.gen(function* () {
   // The model is captured from the layer's own context rather than left in `turn`'s requirements:
   // a turn is driven by an RPC handler that has no idea which provider was selected at startup.
   const models = yield* Effect.context<LanguageModel.LanguageModel>();
+  // Optional so a workspace with no reporting credentials, and every test, runs turns unreviewed.
+  const reviewer = yield* Effect.serviceOption(Review.Reviewer);
 
   /**
    * The tool handler is where the log is written from: the call is appended before the run and the
@@ -321,6 +325,13 @@ const make = Effect.gen(function* () {
         log
           .append(projectId, new Events.TurnFailed({ message: 'Interrupted before the turn finished.', turnId }))
           .pipe(Effect.ignore),
+      ),
+      // Reviewed once closed, apart from the turn so the user never waits on it; an interrupted turn
+      // is the server stopping, which says nothing about how the agent did.
+      Effect.onExit((exit) =>
+        reviewer._tag === 'Some' && !Exit.hasInterrupts(exit)
+          ? reviewer.value.schedule({ projectId, turnId, system: system ?? Docs.systemPrompt() })
+          : Effect.void,
       ),
     );
 

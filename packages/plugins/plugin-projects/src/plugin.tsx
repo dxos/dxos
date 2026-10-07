@@ -32,7 +32,7 @@ export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Settings),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SubjectContext),
-  // Injects `Assign to agent`, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
+  // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
   Plugin.addModule(TaskAction),
   Plugin.addModule(ComposerPluginTemplate),
   Plugin.addModule(Templates),

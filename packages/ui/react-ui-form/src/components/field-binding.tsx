@@ -8,8 +8,9 @@ import * as Str from 'effect/String';
 import React, { Component, type PropsWithChildren, useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Banner } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Banner from '@dxos/react-ui/Banner';
 
 import { type FormPresentation } from '#types';
 
@@ -78,7 +79,7 @@ export const useFormFieldBindingAt = <T,>(
   const { readonly: formReadonly, layout } = useFormContext(componentName);
   const segments = useMemo(() => (SchemaEx.isJsonPath(path) ? SchemaEx.splitJsonPath(path) : []), [path]);
   const { getStatus, getValue, onBlur, onValueChange } = useFormFieldState(componentName, segments);
-  const { status, error } = getStatus();
+  const { status, error, indeterminate } = getStatus();
   const value = getValue() as T | undefined;
   const type = property?.type ?? SchemaAST.unknownKeyword;
   return useMemo(
@@ -90,6 +91,7 @@ export const useFormFieldBindingAt = <T,>(
       onBlur,
       status,
       error,
+      indeterminate,
       required: required ?? property?.required,
       readonly: readonly ?? formReadonly,
       presentation: presentation ?? layout,
@@ -102,6 +104,7 @@ export const useFormFieldBindingAt = <T,>(
       onBlur,
       status,
       error,
+      indeterminate,
       required,
       property?.required,
       readonly,

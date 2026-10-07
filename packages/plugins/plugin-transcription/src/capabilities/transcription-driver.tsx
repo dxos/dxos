@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
@@ -30,15 +30,15 @@ const RECORDER_INTERVAL_MS = 200;
  * inline affordances. Mounted once, app-wide, via `Capabilities.ReactContext`.
  */
 const TranscriptionDriver = () => {
-  const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [session, setSession] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   // `useCapabilities` (not `useCapability`) so the driver does not throw when plugin-markdown is absent.
-  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const [editorViews] = Hooks.useCapabilities(MarkdownCapabilities.EditorViews);
   // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
-  const [lookup] = useCapabilities(TranscriptionCapabilities.EntityLookup);
-  const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const [lookup] = Hooks.useCapabilities(TranscriptionCapabilities.EntityLookup);
+  const settings = Hooks.useAtomCapability(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
-  const [, setStatus] = useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
+  const [, setStatus] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
 
   const recording = session?.recording ?? false;
   const liveSessionId = session?.id;

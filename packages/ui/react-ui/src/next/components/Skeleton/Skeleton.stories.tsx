@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Skeleton } from '../index.ts';
+import { Skeleton } from './Skeleton.tsx';
 
 /** A placeholder for a contact row: avatar, name and a line of description, then a block-tall action. */
 const DefaultStory = () => (

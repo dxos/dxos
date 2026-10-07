@@ -5,9 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Button, Field, Input, Panel, ScrollArea, Select, Toolbar, composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { PostContent } from '#components';
 import { translations } from '#translations';
@@ -60,7 +67,7 @@ const DefaultStory = () => {
       <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Input
+            <Input.Root
               placeholder='Article URL'
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -87,14 +94,14 @@ const DefaultStory = () => {
               ))}
             </Select.Content>
           </Select.Root>
-          <Button
+          <Button.Root
             icon='ph--arrow-clockwise--regular'
             iconOnly
             label='Fetch'
             onClick={() => void handleFetch()}
             disabled={state.status === 'loading'}
           />
-          <Button
+          <Button.Root
             label={showMarkdown ? 'Show preview' : 'Show Markdown'}
             icon={showMarkdown ? 'ph--article--regular' : 'ph--code--regular'}
             iconOnly
@@ -128,7 +135,7 @@ type ResultViewProps = {
   showMarkdown: boolean;
 };
 
-const ResultView = composable<HTMLDivElement, ResultViewProps>(
+const ResultView = Util.composable<HTMLDivElement, ResultViewProps>(
   ({ article, sourceLength, showMarkdown, ...props }, forwardedRef) => {
     const post = useMemo(
       () =>

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 import { asyncTimeout } from '@dxos/async';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { log } from '@dxos/log';
 
 /**

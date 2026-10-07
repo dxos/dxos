@@ -40,7 +40,7 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ContentBlock, Message } from '@dxos/types';
+import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
@@ -86,6 +86,40 @@ export interface AgentProcessOptions {
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
 
+const AgentPrompt = Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]);
+
+/**
+ * Who sent a prompt: the plain-data subset of `Actor`, since the input crosses a JSON boundary
+ * (EDGE decodes it with the schema's type side) where a `Ref` cannot be supplied.
+ */
+const AgentInputSender = Actor.Actor.mapFields(Struct.pick(['role', 'name', 'identityDid', 'email']));
+
+/**
+ * Input accepted by {@link AgentProcess}: a bare prompt, or a prompt attributed to a sender (e.g. a
+ * relayed Discord author) whose identity the appended `Message` records.
+ */
+export const AgentInput = Schema.Union([
+  AgentPrompt,
+  Schema.Struct({
+    prompt: AgentPrompt,
+    sender: Schema.optional(AgentInputSender),
+    /** Foreign identity and other source metadata copied onto the message (e.g. `{ discord: { userId } }`). */
+    properties: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  }),
+]);
+
+export type AgentInput = Schema.Schema.Type<typeof AgentInput>;
+
+/** Builds the feed message for an input; the sender defaults to the plain user role. */
+export const makeInputMessage = (input: AgentInput): Message.Message => {
+  const { prompt, sender, properties } =
+    typeof input === 'object' && 'prompt' in input
+      ? input
+      : { prompt: input, sender: undefined, properties: undefined };
+  const blocks = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
+  return Message.make({ sender: { role: 'user', ...sender }, blocks, properties });
+};
+
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and
  * how many times. A hosted runtime serves the read from an eventually-consistent index, and the lag
@@ -128,8 +162,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
   Operation.makeDurable(
     {
       key: AGENT_PROCESS_KEY,
-      // Accepts plain text or content blocks.
-      input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
+      input: AgentInput,
       output: Schema.Void,
       // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
       // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
@@ -183,7 +216,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const runtime = yield* Effect.context<Database.Service>();
         const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
         // Scoped acquisition: the producer's teardown registers with this process's scope.
-        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
+        const session = yield* makeTurnProducer({
+          chat,
+          feed,
+          runtime,
+          instructions: instructions ? [instructions] : [],
+        });
         const sessionStore = new SessionStore();
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
@@ -390,10 +428,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               yield* ctx.setAlarm(0);
             }),
           }),
-          onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
+          onInput: Effect.fnUntraced(function* (input: AgentInput) {
             log('agent onInput received', { backlog: toolResults.length });
-            const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
-            const message = Message.make({ sender: { role: 'user' }, blocks: content });
+            const message = makeInputMessage(input);
             yield* sessionStore.enqueueMessage(feed, message);
             markWork('agent.prompt-queued');
             unseenWriteIds.add(message.id);
@@ -541,6 +578,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               yield* session
                 .runTurn({
                   prompt,
+                  // The turn rewrites the queued message as its own, so the sender has to travel with it.
+                  sender:
+                    dequeued !== undefined && Obj.instanceOf(Message.Message, dequeued) ? dequeued.sender : undefined,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
@@ -957,7 +997,7 @@ export const wakeUpPrompt = (
   message: string | null,
   budget?: { wake: number; max: number },
 ): string => {
-  const fired = `Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
+  const fired = `Scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
   const body = message ?? 'Continue with whatever you intended to do when you scheduled this wake-up.';
   const limit =
     budget == null
