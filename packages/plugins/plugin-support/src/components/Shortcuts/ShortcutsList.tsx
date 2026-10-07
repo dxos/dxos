@@ -4,12 +4,14 @@
 
 import React, { Fragment } from 'react';
 
-import { keySymbols, useActiveHotkeys } from '@dxos/react-focus';
+import { useActiveHotkeys } from '@dxos/react-focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
+import { Key } from './Key.tsx';
 
 export const ShortcutsList = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -32,18 +34,5 @@ export const ShortcutsList = () => {
         </Fragment>
       ))}
     </dl>
-  );
-};
-
-// TODO(burdon): Use https://ark-ui.com/docs/utilities/hotkeys
-export const Key = ({ binding }: { binding: string }) => {
-  return (
-    <kbd role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
-      {keySymbols(binding).map((c, i) => (
-        <span key={i} className='flex size-6 justify-center items-center rounded-sm bg-input-surface text-fg'>
-          {c}
-        </span>
-      ))}
-    </kbd>
   );
 };

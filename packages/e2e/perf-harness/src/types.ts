@@ -476,6 +476,11 @@ export type StageRow = {
   react?: ReactCounters;
   /** The app's data-layer counters: automerge, ECHO, SQLite statements. */
   data?: DataCounters;
+  /**
+   * Submit (the keydown) to the first frame showing the submitted prompt in the thread, read by the
+   * flow's in-page probe. Absent unless the flow measured it in this stage.
+   */
+  submitToQueuedVisibleMs?: number;
   /** Prompt-to-model latency. Absent when the stage made no model request. */
   latency?: RequestLatency;
   responsiveness: ResponsivenessMetrics;

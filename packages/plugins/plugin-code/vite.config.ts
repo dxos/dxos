@@ -19,6 +19,7 @@ export default defineConfig({
     AcpAgent: 'src/agents/AcpAgent.ts',
     CodeAgent: 'src/agents/CodeAgent.ts',
     EdgeAgent: 'src/agents/EdgeAgent.ts',
+    ComposerMcp: 'src/agents/ComposerMcp.ts',
     CodeCapabilities: 'src/types/CodeCapabilities.ts',
     CodeEvents: 'src/types/CodeEvents.ts',
     CodeOperation: 'src/types/CodeOperation.ts',

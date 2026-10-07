@@ -127,7 +127,6 @@ const ChatModuleContainer = ({
           <Chat.Content>
             <Chat.Thread viewType={view} userHue={hue} />
             <div className='flex flex-col gap-1 p-1'>
-              <Chat.Queue />
               <Chat.Activity />
               <Chat.Prompt {...chatProps} outline preset={preset?.id} />
             </div>

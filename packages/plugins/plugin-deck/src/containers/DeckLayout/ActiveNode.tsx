@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useAttended } from '@dxos/react-ui-attention';
 
-import { useNodeActionExpander } from '#hooks';
+import { useNodeActionExpander, useUrlTitle } from '#hooks';
 
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {
@@ -18,6 +18,7 @@ export const ActiveNode = () => {
   const { graph } = Hooks.useAppGraph();
   const activeNode = GraphHooks.useNode(graph, id);
   useNodeActionExpander(activeNode);
+  useUrlTitle(activeNode);
 
   return (
     <div className='sr-only'>
