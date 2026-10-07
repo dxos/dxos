@@ -21,6 +21,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostCard } from '#components';
@@ -204,8 +205,8 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
         <Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
         </Panel.Header>
-        <Panel.Body>
-          <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
+        <Panel.Body asChild>
+          <Layout.Grid rows={['auto', 'fill']} gap='md' classNames='overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
             <div className='dx-expand'>
               {mode === 'gallery' ? (
@@ -218,7 +219,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
                 instructionsData && <Surface.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
               )}
             </div>
-          </div>
+          </Layout.Grid>
         </Panel.Body>
       </Panel.Root>
 

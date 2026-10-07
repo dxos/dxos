@@ -152,7 +152,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             const isActive = activeSkills.has(skillId);
             return (
               <SearchList.Item
-                classNames='flex items-center overflow-hidden'
+                classNames='overflow-hidden'
                 key={skillId}
                 value={skillId}
                 label={skill.name}
@@ -608,7 +608,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                 const styles = hue ? getStyles(hue) : undefined;
                 return (
                   <SearchList.Item
-                    classNames='flex items-center overflow-hidden'
+                    classNames='overflow-hidden'
                     key={object.id}
                     value={object.id}
                     icon={icon}
