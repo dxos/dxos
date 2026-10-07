@@ -763,14 +763,14 @@ class TestSocket {
   /** Left unset, as workerd's is. */
   bufferedAmount?: number;
   sendError?: Error;
-  onFrame?: () => void;
+  onFrame?: (frame: Uint8Array) => void;
 
   send(frame: Uint8Array): void {
     if (this.sendError) {
       throw this.sendError;
     }
     this.frames.push(frame);
-    this.onFrame?.();
+    this.onFrame?.(frame);
   }
 }
 
@@ -865,10 +865,13 @@ const connectedPair = ({
   const socket = new TestSocket();
   const reverse = new TestSocket();
   const sender = new WebSocketMuxer(socket, { flowControl: createFlowControlConfig() });
-  let receiver: WebSocketMuxer;
+  let receiver: WebSocketMuxer | undefined;
   let consuming = consume;
-  socket.onFrame = () => {
-    const frame: ReceivedFrame = receiver.receiveFrame(socket.frames.at(-1)!);
+  socket.onFrame = (data) => {
+    if (!receiver) {
+      return;
+    }
+    const frame: ReceivedFrame = receiver.receiveFrame(data);
     if (frame.message) {
       delivered.push(frame.message);
     }
@@ -876,19 +879,21 @@ const connectedPair = ({
       receiver.consumed(frame);
     }
   };
-  const attachReceiver = (options: { consume?: boolean; requestSync?: boolean } = {}) => {
+  const attachReceiver = (options: { consume?: boolean; requestSync?: boolean } = {}): WebSocketMuxer => {
     consuming = options.consume ?? consuming;
     reverse.onFrame = undefined;
     const sent = reverse.frames.length;
-    receiver = new WebSocketMuxer(reverse, { flowControl: createFlowControlConfig(onOverdraft) });
-    reverse.onFrame = () => sender.receiveFrame(reverse.frames.at(-1)!);
+    const attached = new WebSocketMuxer(reverse, { flowControl: createFlowControlConfig(onOverdraft) });
+    receiver = attached;
+    reverse.onFrame = (data) => sender.receiveFrame(data);
     if (options.requestSync ?? true) {
       reverse.frames.slice(sent).forEach((frame) => sender.receiveFrame(frame));
     }
+    return attached;
   };
-  attachReceiver();
+  const first = attachReceiver();
   // The sender's sync request went out before the receiver existed.
-  receiver!.receiveFrame(socket.frames[0]);
+  [...socket.frames].forEach((frame) => first.receiveFrame(frame));
   return { sender, socket, delivered, attachReceiver };
 };
 
