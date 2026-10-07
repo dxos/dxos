@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Tool } from 'effect/ai/McpSchema';
 import React from 'react';
 
 import type * as CompilePrompt from '@dxos/brain/CompilePrompt';
@@ -88,7 +87,7 @@ export const GoalPanel = ({
                 onValueChange={({ value }) => value[0] && onExampleChange(value[0])}
               >
                 <Select.Label>Example</Select.Label>
-                <Select.Trigger placeholder='Example' data-testid='goal-compiler.example' />
+                <Select.Trigger placeholder='Pick an example goal' data-testid='goal-compiler.example' />
                 <Select.Content>
                   {examples.map((item) => (
                     <Select.Item key={item.value} item={item} />
@@ -100,7 +99,7 @@ export const GoalPanel = ({
               <Field.Label>Goal</Field.Label>
               <Input.Root
                 value={goal}
-                placeholder='Get Dima to help me with the agent plugin'
+                placeholder='The outcome or condition the agent should pursue'
                 onChange={(event) => onGoalChange(event.target.value)}
                 data-testid='goal-compiler.goal'
               />
@@ -109,7 +108,7 @@ export const GoalPanel = ({
               <Field.Label>Instructions</Field.Label>
               <Input.Textarea
                 value={instructions}
-                placeholder='Optional guidance, e.g. follow up after 2 days.'
+                placeholder='How the agent should act on the goal (optional)'
                 autoResize
                 onChange={(event) => onInstructionsChange(event.target.value)}
               />

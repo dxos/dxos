@@ -12,7 +12,7 @@ export type StepTableProps = Omit<ComponentPropsWithoutRef<'div'>, 'className'> 
 };
 
 /**
- * A compact bordered table for a step card, on a fixed grid (an 8rem key column, then equal value columns) rather than an
+ * A compact bordered table for a step card, on a fixed grid (a 5rem key column, then equal value columns) rather than an
  * auto-sized `<table>`, so its columns line up across every card; react-ui has no table primitive short of the data
  * grid.
  */
@@ -22,7 +22,7 @@ export const StepTable = ({ columns, children, ...props }: StepTableProps) => (
     role='table'
     className={mx(
       'mt-2 grid w-full rounded-sm border border-separator text-sm',
-      columns ? 'grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]' : 'grid-cols-[8rem_minmax(0,1fr)]',
+      columns ? 'grid-cols-[5rem_minmax(0,1fr)_minmax(0,1fr)]' : 'grid-cols-[5rem_minmax(0,1fr)]',
     )}
   >
     {columns && (

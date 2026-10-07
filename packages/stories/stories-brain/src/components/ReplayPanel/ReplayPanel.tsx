@@ -12,6 +12,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
@@ -32,6 +33,8 @@ export type ReplayPanelProps = Util.ThemedClassName<{
   /** False when the goal matches no example scenario, which leaves only custom mode. */
   scenarioAvailable: boolean;
   replay: Replay;
+  /** False while the rules are empty: there is nothing to replay against, so no steps are shown. */
+  hasRules: boolean;
   /** Number of scenario steps revealed so far. */
   cursor: number;
   onModeChange: (mode: ReplayMode) => void;
@@ -51,6 +54,7 @@ export const ReplayPanel = ({
   mode,
   scenarioAvailable,
   replay,
+  hasRules,
   cursor,
   onModeChange,
   onStep,
@@ -60,8 +64,9 @@ export const ReplayPanel = ({
   onAdvance,
 }: ReplayPanelProps) => {
   const scenario = mode === 'scenario';
-  const steps = scenario ? replay.steps.slice(0, cursor) : replay.steps;
-  const done = scenario && replay.steps.length > 0 && cursor >= replay.steps.length;
+  const ready = hasRules && !replay.error;
+  const steps = !ready ? [] : scenario ? replay.steps.slice(0, cursor) : replay.steps;
+  const done = ready && scenario && replay.steps.length > 0 && cursor >= replay.steps.length;
 
   return (
     <Panel.Root classNames={classNames}>
@@ -85,7 +90,7 @@ export const ReplayPanel = ({
                 icon='ph--skip-forward--regular'
                 label='Step'
                 iconOnly
-                disabled={!!replay.error || cursor >= replay.steps.length}
+                disabled={!ready || cursor >= replay.steps.length}
                 onClick={onStep}
                 data-testid='goal-compiler.step-next'
               />
@@ -93,7 +98,7 @@ export const ReplayPanel = ({
                 icon='ph--fast-forward--regular'
                 label='Run all'
                 iconOnly
-                disabled={!!replay.error || cursor >= replay.steps.length}
+                disabled={!ready || cursor >= replay.steps.length}
                 onClick={onRunAll}
                 data-testid='goal-compiler.run-all'
               />
@@ -112,8 +117,15 @@ export const ReplayPanel = ({
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
             <Layout.Container gap='md' padBlock>
-              {!scenario && <FactForm disabled={!!replay.error} onAddFact={onAddFact} onAdvance={onAdvance} />}
-              {replay.error && (
+              {!scenario && ready && <FactForm onAddFact={onAddFact} onAdvance={onAdvance} />}
+              {!hasRules && (
+                <Status.Empty data-testid='goal-compiler.replay-empty'>
+                  {scenario
+                    ? 'Compile the goal, or load the reference rules, to replay this scenario.'
+                    : 'Add rules to replay facts against them.'}
+                </Status.Empty>
+              )}
+              {hasRules && replay.error && (
                 <Banner.Root valence='error'>
                   <Banner.Title>Rules do not compile</Banner.Title>
                   <Banner.Body>{replay.error}</Banner.Body>

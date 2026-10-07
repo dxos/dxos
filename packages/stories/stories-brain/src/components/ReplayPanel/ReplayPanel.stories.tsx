@@ -31,6 +31,7 @@ export const Default: Story = {
     mode: 'scenario',
     scenarioAvailable: true,
     replay,
+    hasRules: true,
     cursor: replay.steps.length,
     onModeChange: () => {},
     onStep: () => {},
@@ -45,6 +46,7 @@ export const Custom: Story = {
   args: {
     ...Default.args,
     mode: 'custom',
+    hasRules: true,
     replay: replayCustom(REFERENCE[scenario.n], scenario.createdAt, [
       {
         type: 'fact',
@@ -61,4 +63,9 @@ export const Custom: Story = {
       { type: 'advance', duration: '2d' },
     ]),
   },
+};
+
+/** Scenario mode before any rules exist: an empty state, and Step / Run all are disabled. */
+export const NoRules: Story = {
+  args: { ...Default.args, hasRules: false, cursor: 0 },
 };

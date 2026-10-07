@@ -160,6 +160,7 @@ const DefaultStory = ({ ai, example: initialExample }: StoryArgs) => {
         mode={scenario ? mode : 'custom'}
         scenarioAvailable={scenario !== undefined}
         replay={replay}
+        hasRules={source.trim().length > 0}
         cursor={cursor}
         onModeChange={setMode}
         onStep={() => setCursor((previous) => previous + 1)}

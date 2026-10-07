@@ -29,7 +29,11 @@ export const RulesPanel = ({ classNames, source, diagnostics, onSourceChange, on
   const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
-      createBasicExtensions({ lineNumbers: true, lineWrapping: true, placeholder: 'wake(label) :- …' }),
+      createBasicExtensions({
+        lineNumbers: true,
+        lineWrapping: true,
+        placeholder: 'Datalog rules — compile the goal or load the reference',
+      }),
       createThemeExtensions({ themeMode, monospace: true, syntaxHighlighting: true }),
       datalog(),
     ],

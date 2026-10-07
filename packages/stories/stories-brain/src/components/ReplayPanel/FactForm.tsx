@@ -12,25 +12,36 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type ReplayFact } from './replay.ts';
 
+// Descriptions double as the fields' placeholders, so they say what goes in each rather than giving an example.
 const FactSchema = Schema.Struct({
-  speaker: Schema.String.annotate({ title: 'Speaker' }),
-  quote: Schema.String.annotate({ title: 'Quote' }),
-  subject: Schema.String.annotate({ title: 'Subject' }),
-  predicate: Schema.String.annotate({ title: 'Predicate' }),
-  object: Schema.String.annotate({ title: 'Object' }),
-  force: Schema.Literals(['assertive', 'directive', 'commissive', 'expressive']).annotate({ title: 'Force' }),
-  polarity: Schema.Literals(['+', '-', '?']).annotate({ title: 'Polarity' }),
+  speaker: Schema.String.annotate({ title: 'Speaker', description: 'Who said it' }),
+  quote: Schema.String.annotate({ title: 'Quote', description: 'What was said' }),
+  subject: Schema.String.annotate({ title: 'Subject', description: 'Entity the fact is about' }),
+  predicate: Schema.String.annotate({ title: 'Predicate', description: 'Relation' }),
+  object: Schema.String.annotate({ title: 'Object', description: 'Entity or value' }),
+  force: Schema.optional(
+    Schema.Literals(['assertive', 'directive', 'commissive', 'expressive']).annotate({
+      title: 'Force',
+      description: 'Kind of speech act',
+    }),
+  ),
+  polarity: Schema.optional(
+    Schema.Literals(['+', '-', '?']).annotate({
+      title: 'Polarity',
+      description: 'Affirmed (+), denied (-) or uncertain (?)',
+    }),
+  ),
 });
 
-const DEFAULT_FACT: ReplayFact = {
-  speaker: 'dima',
-  quote: "OK, I'll start on the agent plugin",
-  subject: 'dima',
-  predicate: 'helps-with',
-  object: 'agent plugin',
-  force: 'commissive',
-  polarity: '+',
-};
+type FactDraft = Schema.Schema.Type<typeof FactSchema>;
+
+const EMPTY_FACT: FactDraft = { speaker: '', quote: '', subject: '', predicate: '', object: '' };
+
+/** The draft as a fact once every field the replay needs is set. */
+const toFact = ({ force, polarity, ...fields }: FactDraft): ReplayFact | undefined =>
+  force && polarity && fields.speaker.trim() && fields.subject.trim() && fields.predicate.trim() && fields.object.trim()
+    ? { ...fields, force, polarity }
+    : undefined;
 
 const DURATIONS: Select.Option[] = ['1h', '12h', '1d', '2d', '1w'].map((value) => ({ value, label: value }));
 
@@ -42,9 +53,9 @@ export type FactFormProps = {
 
 /** Custom replay input: a fact to append, or a duration to advance the clock by. */
 export const FactForm = ({ disabled, onAddFact, onAdvance }: FactFormProps) => {
-  const [fact, setFact] = useState<ReplayFact>(DEFAULT_FACT);
+  const [draft, setDraft] = useState<FactDraft>(EMPTY_FACT);
   const [duration, setDuration] = useState('1d');
-  const complete = fact.speaker.trim() && fact.subject.trim() && fact.predicate.trim() && fact.object.trim();
+  const fact = toFact(draft);
 
   return (
     <>
@@ -52,8 +63,8 @@ export const FactForm = ({ disabled, onAddFact, onAdvance }: FactFormProps) => {
         <Button.Root
           icon='ph--plus--regular'
           label='Add fact'
-          disabled={disabled || !complete}
-          onClick={() => onAddFact(fact)}
+          disabled={disabled || !fact}
+          onClick={() => fact && onAddFact(fact)}
           data-testid='goal-compiler.add-fact'
         />
         <Toolbar.Separator />
@@ -79,8 +90,8 @@ export const FactForm = ({ disabled, onAddFact, onAdvance }: FactFormProps) => {
       </Toolbar.Root>
       <Form.Root
         schema={FactSchema}
-        values={fact}
-        onValuesChanged={(values) => setFact((previous) => ({ ...previous, ...values }))}
+        values={draft}
+        onValuesChanged={(values) => setDraft((previous) => ({ ...previous, ...values }))}
       >
         <Form.Content>
           <Form.Fields />
