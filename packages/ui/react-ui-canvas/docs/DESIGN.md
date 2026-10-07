@@ -140,7 +140,7 @@ Portal   = NodeBase & { type: 'scene', scene: SceneId }
 BuiltinNode = Rect | Ellipse | Class | Note | Portal            // the engine's own; a host type is NodeBase & its fields
 Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   // phase 2: Surface + derived props
 
-LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, directed? /* = ends: { end: 'arrow' } */, ends?: { start?: Marker, end?: Marker } }
+LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, ends?: { start?: Marker, end?: Marker } }
 Line     = LinkBase & { type: 'line' }
 Curve    = LinkBase & { type: 'curve' }                       // cubic, tangent along each port's normal
 Spline   = LinkBase & { type: 'spline', points: Point[] }     // rounded polyline bending around the points
@@ -159,12 +159,12 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
   palette groups types by `NodeDef.group`. A type the registry does not know renders as a frame with its name.
 - **Port direction** (decision 2): `Port.accepts` (`in`, `out`, default either) filters `pairPorts` and the drop
   target (a link leaves an `out` port and lands on an `in` port; a node with no acceptable port takes no drop),
-  and `Link.directed` draws the arrowhead; a link created between ports that declare a direction is directed.
+  and a link created between ports that declare a direction gets an arrow at its end (`ends: { end: 'arrow' }`).
 - **Free endpoints and markers** (decision 3, M2): an end may be a scene `point` instead of a node, so a link can
   be a standalone arrow or path. A node end facing a free point takes its port nearest that point; two free ends
   face each other. A link tool dragged on empty canvas draws a free-ended link (attaching whichever end lands on
   a node), and dragging a link end onto empty canvas frees it. `ends` names the marker at each end (`arrow`,
-  `circle`) and replaces what `directed` implies; the layer defines one marker set in scene units.
+  `circle`, `triangle`); the layer defines one marker set in nominal units.
 - `shapes.ts` is the pure geometry of the types: `nodeBounds(node)` (the box, or the radii for an ellipse),
   `resizeNode(node, bounds)` (writes `size` or `rx`/`ry`), `createNode(type, …)` / `createLink(type, …)` defaults.
   The registry only renders and declares ports and flags; the projection never depends on it.

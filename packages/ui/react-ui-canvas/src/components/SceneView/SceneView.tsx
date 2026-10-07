@@ -82,7 +82,7 @@ import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
-const DEFAULT_MARGIN = 1;
+const DEFAULT_MARGIN = 2;
 /** Quiet time after the camera's last move before `onCameraChange` reports it. */
 const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
@@ -107,7 +107,7 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   onCameraChange?: (camera: Camera) => void;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
-  /** Least gap between the scene's frame and each viewport edge when fitting, in whole major cells. */
+  /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
   margin?: number;
   /**
    * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
@@ -905,6 +905,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             handlers={handlers}
             // Routes follow the gutters in lattice mode, whether or not snap is on.
             lattice={latticeOn ? projection.lattice : undefined}
+            cell={grid * MAJOR_GRID_RATIO}
           />
         </div>
         <ControlFrame
@@ -1008,10 +1009,10 @@ const barFrame = 'absolute w-max max-w-[50%]';
 
 /** Where the view is in the scene tree. */
 const SceneViewNavigation = ({ classNames = 'top-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions, path } = useSceneViewContext('SceneView.Navigation');
+  const { toolbarActions } = useSceneViewContext('SceneView.Navigation');
   return (
     <div className={mx(barFrame, classNames)}>
-      <NavigationToolbar actions={toolbarActions}>depth {path.length - 1}</NavigationToolbar>
+      <NavigationToolbar actions={toolbarActions} />
     </div>
   );
 };

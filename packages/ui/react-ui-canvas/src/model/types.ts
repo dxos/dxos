@@ -83,7 +83,12 @@ export type Port = Schema.Schema.Type<typeof Port>;
 // Nodes
 //
 
-/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are lighter to stronger fills. */
+/** The hues the style pickers offer, neutral first, then in hue order; any theme hue still renders on a node. */
+export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet'] as const;
+export const StyleHue = Schema.Literals(STYLE_HUES);
+export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
+
+/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are stronger to lighter fills. */
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
@@ -221,16 +226,22 @@ export const LinkEnds = Schema.Struct({
 }).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
 export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 
+/** How a link's line is drawn; unset draws it neutral and solid. */
+export const LinkLine = Schema.Struct({
+  hue: Schema.optional(StyleHue.annotate({ title: 'Color' })),
+  dash: Schema.optional(Schema.Literals(['solid', 'dashed', 'dotted']).annotate({ title: 'Pattern' })),
+});
+export type LinkLine = Schema.Schema.Type<typeof LinkLine>;
+
 const linkBase = {
   id: Schema.String,
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
-  /** Shorthand for `ends: { end: 'arrow' }`; ports with `accepts` constrain which end lands where. */
-  directed: Schema.optional(Schema.Boolean),
-  /** Explicit end markers; when present they replace what `directed` implies. */
+  /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
+  line: Schema.optional(LinkLine.annotate({ title: 'Line' })),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -262,8 +273,8 @@ export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline', 'smar
 
 export type Element = Node | Link;
 
-/** The markers a link draws: its explicit `ends`, else an arrowhead at the target when it is `directed`. */
-export const linkMarkers = (link: Link): LinkEnds => link.ends ?? (link.directed ? { end: 'arrow' } : {});
+/** The markers a link draws. */
+export const linkMarkers = (link: Link): LinkEnds => link.ends ?? {};
 
 export const isNode = (element: Element): element is Node => 'center' in element;
 export const isLink = (element: Element): element is Link => 'source' in element;
@@ -301,7 +312,9 @@ export const getElement = (scene: Scene, id: ElementId): Element | undefined => 
 
 /** Property edits: the shared fields typed, a type's own fields by name. */
 export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };
-export type LinkValues = Partial<Omit<Link, 'id' | 'type'>>;
+/** Per link type, so a spline's `points` are among the values an `update` may set. */
+type ValuesOf<T> = T extends unknown ? Partial<Omit<T, 'id' | 'type'>> : never;
+export type LinkValues = ValuesOf<Link>;
 
 /**
  * What the surface asks of a projection (§3). The surface never writes coordinates itself: a

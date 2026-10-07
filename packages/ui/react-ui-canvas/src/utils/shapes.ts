@@ -17,6 +17,7 @@ import {
   type Link,
   type LinkEnds,
   type LinkType,
+  type LinkValues,
   MAJOR_GRID_RATIO,
   type Node,
   type Point,
@@ -55,7 +56,7 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
  * new shape scales with the drawing's grid.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 4, height: 2 },
+  rect: { width: 2, height: 1 },
   ellipse: { width: 2, height: 2 },
   note: { width: 2, height: 2 },
   scene: { width: 4, height: 2 },
@@ -127,13 +128,12 @@ export type CreateLinkProps = {
   target: Endpoint;
   /** Where a new spline gets its first control point; ignored by the other types. */
   midpoint?: Point;
-  directed?: boolean;
   ends?: LinkEnds;
 };
 
 /** A new link of `type`; a spline starts with one control point so it is editable at once. */
-export const createLink = ({ type, id, z, source, target, midpoint, directed, ends }: CreateLinkProps): Link => {
-  const base = { id, z, source, target, ...(directed ? { directed } : {}), ...(ends ? { ends } : {}) };
+export const createLink = ({ type, id, z, source, target, midpoint, ends }: CreateLinkProps): Link => {
+  const base = { id, z, source, target, ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
     case 'curve':
@@ -143,3 +143,14 @@ export const createLink = ({ type, id, z, source, target, midpoint, directed, en
       return { type, ...base, points: midpoint ? [midpoint] : [] };
   }
 };
+
+/**
+ * The `update` values that reverse a link: source and target swap while the markers stay at the start and
+ * end, so an arrow comes to point the other way; a spline's control points run the other way, so the drawn
+ * path keeps its shape.
+ */
+export const flipLink = (link: Link): LinkValues => ({
+  source: link.target,
+  target: link.source,
+  ...(link.type === 'spline' ? { points: [...link.points].reverse() } : {}),
+});

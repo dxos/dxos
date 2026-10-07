@@ -8,7 +8,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type CSSProperties, memo, useId, useMemo } from 'react';
+import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -19,10 +19,12 @@ import { type SceneStore } from '../../model/store.ts';
 import {
   type ElementId,
   type Link,
+  type LinkLine,
   type Marker,
   type Node,
   type NodeId,
   type Scene,
+  type StyleHue,
   isBoxNode,
   isEllipseNode,
   isNoteNode,
@@ -36,8 +38,8 @@ import { type LatticeSpec } from '../../utils/lattice.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
-import { nodeBounds } from '../../utils/shapes.ts';
-import { frameClasses } from '../../utils/style.ts';
+import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
+import { frameClasses, lineClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
@@ -96,6 +98,8 @@ export type SceneLayerProps = {
   handlers?: ElementHandlers;
   /** The scene's lattice, when it has one: smart links route through its gutters. */
   lattice?: LatticeSpec;
+  /** Scene px of one nominal unit (the drawing's major grid cell); a nested layer inherits its parent's. */
+  cell?: number;
 };
 
 export const SceneLayer = memo(
@@ -115,7 +119,10 @@ export const SceneLayer = memo(
     debug,
     handlers,
     lattice,
+    cell: cellProp,
   }: SceneLayerProps) => {
+    const inherited = useContext(CellContext);
+    const cell = cellProp ?? inherited;
     // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
     // hide under a neighbour, while the model's z stays what the user arranged.
     const nodes = useMemo(() => {
@@ -131,16 +138,19 @@ export const SceneLayer = memo(
     const unit = 1 / Math.max(zoom, 0.05);
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
-    // One set of end markers per layer, sized in scene units so they scale with the nodes they join.
+    // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
-    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end') =>
-      marker ? `url(#${markerId}-${marker}-${end})` : undefined;
+    const lineHues = useMemo(() => [...new Set(links.map(({ link }) => link.line?.hue))], [links]);
+    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: StyleHue | undefined) =>
+      marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
 
     return (
-      <>
+      <CellContext.Provider value={cell}>
         <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           <defs>
-            <Markers id={markerId} />
+            {lineHues.map((hue) => (
+              <Markers key={hue ?? 'default'} id={`${markerId}-${hue ?? 'default'}`} cell={cell} hue={hue} />
+            ))}
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -158,8 +168,13 @@ export const SceneLayer = memo(
               )}
               <path
                 d={path}
-                className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
+                className={mx(
+                  'fill-none',
+                  selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(link.line?.hue).stroke,
+                )}
                 strokeWidth={LINK_WIDTH}
+                strokeDasharray={dashArray(link.line?.dash)}
+                strokeLinecap={link.line?.dash === 'dotted' ? 'round' : undefined}
                 data-link-id={link.id}
               />
             </g>
@@ -193,12 +208,12 @@ export const SceneLayer = memo(
               key={link.id}
               d={path}
               className='fill-none stroke-none'
-              markerStart={markerUrl(linkMarkers(link).start, 'start')}
-              markerEnd={markerUrl(linkMarkers(link).end, 'end')}
+              markerStart={markerUrl(linkMarkers(link).start, 'start', link.line?.hue)}
+              markerEnd={markerUrl(linkMarkers(link).end, 'end', link.line?.hue)}
             />
           ))}
         </svg>
-      </>
+      </CellContext.Provider>
     );
   },
 );
@@ -208,19 +223,28 @@ SceneLayer.displayName = 'SceneLayer';
 /** The width of a node frame's border, which a nested scene drawn inside it steps out over. */
 const FRAME_BORDER = '--scene-frame-border' as const;
 
-/** A link's stroke, in scene units like a node's 4px border, so a link keeps its weight beside the shapes at any zoom. */
+/** A link's stroke, in scene units like a node's 2px border, so a link keeps its weight beside the shapes at any zoom. */
 const LINK_WIDTH = 2;
 
-/** Bounding box of every end, in scene units. */
-const END_BOX = 32;
+/** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
+const CellContext = createContext(DEFAULT_CELL);
+
+/** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
+const dashArray = (dash: LinkLine['dash']): string | undefined =>
+  dash === 'dashed' ? `${4 * LINK_WIDTH} ${3 * LINK_WIDTH}` : dash === 'dotted' ? `0 ${2.5 * LINK_WIDTH}` : undefined;
+
+/** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
+const END_BOX = 0.25;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id }: { id: string }) => {
-  // Each end fills a 32×32 box in scene units, so it scales with the shapes it joins: the arrow and the
-  // triangle 10 of their 12 view units, the circle 8 of its 10.
-  const arrow = END_BOX;
-  const triangle = (END_BOX * 12) / 10;
-  const circle = (END_BOX * 10) / 8;
+const Markers = ({ id, cell, hue }: { id: string; cell: number; hue: StyleHue | undefined }) => {
+  const line = lineClasses(hue);
+  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
+  // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
+  const box = END_BOX * cell;
+  const arrow = box;
+  const triangle = (box * 12) / 10;
+  const circle = (box * 10) / 8;
   // An outline matches the line's width, in its marker's view units.
   const outline = (size: number, view: number) => (LINK_WIDTH * view) / size;
   const ends = ['start', 'end'] as const;
@@ -241,7 +265,7 @@ const Markers = ({ id }: { id: string }) => {
           {/* An open arrowhead: two strokes, not a filled head. */}
           <path
             d='M 0 0 L 10 5 L 0 10'
-            className='fill-none stroke-neutral-500'
+            className={mx('fill-none', line.stroke)}
             strokeWidth={outline((arrow * 12) / 10, 12)}
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -263,7 +287,7 @@ const Markers = ({ id }: { id: string }) => {
         >
           <path
             d='M 0 0 L 10 5 L 0 10 z'
-            className='fill-base-surface stroke-neutral-500'
+            className={mx('fill-base-surface', line.stroke)}
             strokeWidth={outline(triangle, 12)}
           />
         </marker>
@@ -284,7 +308,7 @@ const Markers = ({ id }: { id: string }) => {
             cx={5}
             cy={5}
             r={4}
-            className='fill-base-surface stroke-neutral-500'
+            className={mx('fill-base-surface', line.stroke)}
             strokeWidth={outline(circle, 10)}
           />
         </marker>
@@ -338,7 +362,7 @@ const NodeFrame = memo(
       width: bounds.width,
       height: bounds.height,
       fontSize: node.style?.fontSize,
-      [FRAME_BORDER]: chromeFade ? '0px' : '4px',
+      [FRAME_BORDER]: chromeFade ? '0px' : '2px',
       ...fade,
     };
     const frameLook = props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered);
@@ -347,7 +371,7 @@ const NodeFrame = memo(
         className={mx(
           'absolute box-border overflow-hidden',
           // Fading, the border becomes padding of the same width so the contents stay put.
-          ...(chromeFade ? ['p-1 isolate'] : ['border-4', ...frameLook]),
+          ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
           interactive && !node.locked && 'cursor-grab',
           ghost && 'opacity-50 border-dashed pointer-events-none',
         )}
@@ -360,7 +384,7 @@ const NodeFrame = memo(
         {chromeFade && (
           <div
             aria-hidden
-            className={mx('dx-cover -z-10 border-4 pointer-events-none', ...frameLook)}
+            className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
             style={chromeFade}
           />
         )}
@@ -396,7 +420,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
     editing={editing}
     classNames={mx(
       'dx-cover flex items-center justify-center text-center whitespace-pre-wrap',
-      sizeClass(node, 'text-2xl'),
+      sizeClass(node, 'text-lg'),
     )}
   >
     {label}
@@ -451,7 +475,7 @@ export const PortalNodeView = (props: NodeViewProps) => {
     <div className='dx-cover'>
       {tier === 'preview' && child && (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
-          <span className='text-2xl'>{title}</span>
+          <span className='text-lg'>{title}</span>
           <span>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links
           </span>
@@ -468,8 +492,8 @@ export const PortalNodeView = (props: NodeViewProps) => {
           <div
             className='absolute pointer-events-none'
             style={{
-              top: `calc(-1 * var(${FRAME_BORDER}, 4px))`,
-              left: `calc(-1 * var(${FRAME_BORDER}, 4px))`,
+              top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+              left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
               transform: portalTransform(node, bounds),
               transformOrigin: '0 0',
             }}

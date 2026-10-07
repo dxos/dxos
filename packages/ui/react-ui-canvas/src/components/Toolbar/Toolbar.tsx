@@ -77,12 +77,13 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
     <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
       <Button.Root
         variant='ghost'
+        iconOnly
+        icon='ph--arrow-up--regular'
+        label='Up'
         disabled={path.length < 2}
         data-testid='toolbar-up'
         onClick={() => actions.onPath(path.length - 2)}
-      >
-        Up
-      </Button.Root>
+      />
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>

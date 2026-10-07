@@ -193,6 +193,19 @@ export const rootOf = (content: ContentMap): SceneId | undefined => {
   return isCanvasRecord(canvas) ? canvas.root : undefined;
 };
 
+/**
+ * A link saved with the retired `directed: true` reads as an arrow at its end; the next write stores it as
+ * `ends`, since the record then differs from the link. Takes a fresh clone, which it edits in place.
+ */
+const withLegacyDirection = (link: Link): Link => {
+  const legacy: unknown = Reflect.get(link, 'directed');
+  if (legacy === undefined) {
+    return link;
+  }
+  Reflect.deleteProperty(link, 'directed');
+  return legacy === true && !link.ends ? { ...link, ends: { end: 'arrow' } } : link;
+};
+
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
@@ -209,7 +222,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
     if (isNodeRecord(record) && nodes[record.scene]) {
       nodes[record.scene][record.node.id] = clone(record.node);
     } else if (isLinkRecord(record) && links[record.scene]) {
-      links[record.scene][record.link.id] = clone(record.link);
+      links[record.scene][record.link.id] = withLegacyDirection(clone(record.link));
     }
   }
   const scenes: Record<SceneId, Scene> = {};

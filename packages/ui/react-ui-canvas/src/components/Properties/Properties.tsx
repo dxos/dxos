@@ -22,7 +22,9 @@ import {
   type FormUpdateMeta,
   type RefFieldDataProps,
 } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -41,11 +43,14 @@ import {
   SplineLink,
   getElement,
   isLink,
+  isPortalNode,
+  showsContents,
 } from '../../model/types.ts';
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
+import { flipLink } from '../../utils/shapes.ts';
 import { resolveStyle } from '../../utils/style.ts';
-import { StyleGridField } from './StyleGrid.tsx';
+import { LineHueField, StyleGridField } from './StyleGrid.tsx';
 
 /** Identity, ordering, geometry lists and a scene shape's child-scene id are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'scene'];
@@ -80,6 +85,7 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 /** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
+  'line.hue': LineHueField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -97,10 +103,16 @@ const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any>
  * What the form shows for an element: what the frame draws, so an unset fill or border reads as on and an
  * unset port count as the type's.
  */
+/** An element's values as the panel shows them: defaults the view draws are spelled out, so a toggle matches the look. */
 const formValues = (nodes: NodeRegistry, element: Element): Record<string, unknown> =>
   isLink(element)
     ? element
-    : { ...element, style: resolveStyle(element.style), portsPerSide: portsPerSideOf(nodes, element) };
+    : {
+        ...element,
+        style: resolveStyle(element.style),
+        portsPerSide: portsPerSideOf(nodes, element),
+        ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
+      };
 
 /**
  * How the panel presents fields. Ranges are the editor's, not the model's: a check on the stored schema would
@@ -184,6 +196,15 @@ export const Properties = ({
     [projection, elements, nodes],
   );
 
+  // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
+  const links = useMemo(() => elements.filter(isLink), [elements]);
+  const onFlip = useCallback(() => {
+    projection.apply({
+      kind: 'batch',
+      intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
+    });
+  }, [projection, links]);
+
   // The selected node types' own renderers over the panel's; a host's `fields` win over both.
   const fieldMap = useMemo(
     () => ({
@@ -217,6 +238,19 @@ export const Properties = ({
       data-testid='properties'
       {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
     >
+      <Toolbar.Root data-testid='properties-toolbar'>
+        {links.length > 0 && links.length === elements.length && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--arrows-left-right--regular'
+            label='Flip direction'
+            disabled={readonly}
+            data-testid='properties-flip'
+            onClick={onFlip}
+          />
+        )}
+      </Toolbar.Root>
       {schema ? (
         <Form.Root
           key={[...selection].join()}

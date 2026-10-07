@@ -95,7 +95,7 @@ const fromMermaid = async (source: string): Promise<Seed> => {
     ...graph.edges.map(({ from, to }, index) =>
       SceneBuilder.link('smart', nodeId(from), nodeId(to))
         .id(nodeId(`${from}-${to}-${index}`))
-        .properties({ directed: true }),
+        .properties({ ends: { end: 'arrow' } }),
     ),
   ]).build();
   return { scenes, root: ROOT, engine: result.chosen.evaluation };
