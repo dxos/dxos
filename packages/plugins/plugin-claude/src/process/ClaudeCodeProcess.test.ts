@@ -13,7 +13,7 @@ import { expect } from 'vitest';
 import { type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer, waitForMessage } from '@dxos/agent-runtime/testing';
 import * as Chat from '@dxos/assistant/Chat';
-import * as NodeSubprocess from '@dxos/compute-runtime/node-subprocess';
+import * as NodeShell from '@dxos/compute-runtime/node-shell';
 import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -32,7 +32,7 @@ let definition: AgentProcessDefinition | undefined;
 const TestLayer = AssistantTestLayer({
   types: [Feed.Feed, AccessToken.AccessToken],
   agent: { processes: () => (definition ? [definition] : []) },
-  extraServices: NodeSubprocess.layer,
+  extraServices: NodeShell.layer,
 });
 
 const setup = Effect.fnUntraced(function* (command: ClaudeCodeProcess.Command, env?: Record<string, string>) {

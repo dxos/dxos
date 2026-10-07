@@ -19,8 +19,8 @@ import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/as
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import * as ShellService from '@dxos/compute/ShellService';
 import * as StorageService from '@dxos/compute/StorageService';
-import * as Subprocess from '@dxos/compute/Subprocess';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
@@ -38,16 +38,16 @@ export const KEY = 'org.dxos.plugin.claude.process.claude-code';
 export const DEFAULT_COMMAND: Command = { command: 'claude-agent-acp' };
 
 /** What starts the agent; it runs in the chat's workspace and speaks ACP on its standard streams. */
-export type Command = Pick<Subprocess.SpawnOptions, 'command' | 'args' | 'env'>;
+export type Command = Pick<ShellService.SpawnOptions, 'command' | 'args' | 'env'>;
 
-/** How the agent runs, less how it is started: the process starts it through {@link Subprocess}. */
+/** How the agent runs, less how it is started: the process starts it through {@link ShellService}. */
 export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
   command?: Command;
 };
 
 /**
  * Runs a chat on Claude Code: a durable process that starts the agent as an operating-system process
- * through {@link Subprocess} and drives one turn per prompt over ACP. The agent runs on the space's
+ * through {@link ShellService} and drives one turn per prompt over ACP. The agent runs on the space's
  * Claude subscription token (`claude setup-token`) when one is connected, as `CLAUDE_CODE_OAUTH_TOKEN`. Prompts and wake-ups queue on
  * the chat's feed exactly as they do for the assistant's own agent, so a prompt that arrives
  * mid-turn waits its turn and one left by a process that died is redelivered. The agent stays
@@ -62,7 +62,7 @@ export const make = (options: Options): AgentProcessDefinition =>
       // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
       // and the agent's subscription token is found with one.
       types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
-      services: [Database.Service, Subprocess.Subprocess],
+      services: [Database.Service, ShellService.ShellService],
       rpcs: HarnessControl,
     },
     (ctx) =>
@@ -75,21 +75,20 @@ export const make = (options: Options): AgentProcessDefinition =>
         }
         const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
         const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-        const subprocess = yield* Subprocess.Subprocess;
+        const shell = yield* ShellService.ShellService;
         const database = yield* Database.Service;
         const processScope = yield* Effect.scope;
         const clock = yield* Clock.Clock;
         const store = new SessionStore();
         const command = options.command ?? DEFAULT_COMMAND;
 
-        // Each agent gets a scope of its own, so one that exits is cleaned up without waiting for the
-        // process, and one still running when the process ends is killed with it.
+        // Each agent gets a scope of its own, so one that exits is cleaned up without waiting for the process.
         const connect: AcpAgent.AgentOptions['connect'] = (cwd, toolsToken) =>
           Effect.gen(function* () {
             const scope = yield* Scope.fork(processScope);
             // Read per start, so a token connected or replaced since the last agent is the one it gets.
             const subscription = yield* claudeCodeToken.pipe(Effect.provideService(Database.Service, database));
-            const child = yield* subprocess
+            const child = yield* shell
               .spawn({
                 ...command,
                 cwd,

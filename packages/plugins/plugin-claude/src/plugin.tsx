@@ -11,8 +11,8 @@ import {
   OperationHandler,
   PluginAsset,
   Schema,
+  ShellService,
   SkillDefinition,
-  Subprocess,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -24,8 +24,8 @@ export const ClaudePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(PluginAsset),
   Plugin.addModule(Schema),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(ShellService),
   Plugin.addModule(SkillDefinition),
-  Plugin.addModule(Subprocess),
   Plugin.addModule(Translations),
   Plugin.make,
 );

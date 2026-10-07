@@ -7,7 +7,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'node-subprocess': 'src/node-subprocess.ts',
+    'node-shell': 'src/node-shell.ts',
     'remote-process': 'src/remote-process.ts',
     'testing': 'src/testing/index.ts',
   },

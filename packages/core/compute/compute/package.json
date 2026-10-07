@@ -114,15 +114,15 @@
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
     },
+    "./ShellService": {
+      "source": "./src/ShellService.ts",
+      "types": "./dist/types/src/ShellService.d.ts",
+      "import": "./dist/lib/ShellService.mjs"
+    },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
       "import": "./dist/lib/StorageService.mjs"
-    },
-    "./Subprocess": {
-      "source": "./src/Subprocess.ts",
-      "types": "./dist/types/src/Subprocess.d.ts",
-      "import": "./dist/lib/Subprocess.mjs"
     },
     "./Template": {
       "source": "./src/types/Template.ts",

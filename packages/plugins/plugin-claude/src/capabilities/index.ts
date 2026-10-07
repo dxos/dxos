@@ -24,8 +24,8 @@ export const ClaudeCodeAgent = Capability.lazyModule(
   () => import('./claude-code-agent.ts'),
 );
 
-export const Subprocess = AppCapability.layerSpec(() => import('./subprocess.ts'), {
-  name: 'Subprocess',
+export const ShellService = AppCapability.layerSpec(() => import('./shell-service.ts'), {
+  name: 'ShellService',
   environments: ['node'],
 });
 
