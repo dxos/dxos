@@ -22,7 +22,9 @@ import {
   type FormUpdateMeta,
   type RefFieldDataProps,
 } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -44,6 +46,7 @@ import {
 } from '../../model/types.ts';
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
+import { flipLink } from '../../utils/shapes.ts';
 import { resolveStyle } from '../../utils/style.ts';
 import { StyleGridField } from './StyleGrid.tsx';
 
@@ -184,6 +187,15 @@ export const Properties = ({
     [projection, elements, nodes],
   );
 
+  // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
+  const links = useMemo(() => elements.filter(isLink), [elements]);
+  const onFlip = useCallback(() => {
+    projection.apply({
+      kind: 'batch',
+      intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
+    });
+  }, [projection, links]);
+
   // The selected node types' own renderers over the panel's; a host's `fields` win over both.
   const fieldMap = useMemo(
     () => ({
@@ -217,6 +229,23 @@ export const Properties = ({
       data-testid='properties'
       {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
     >
+      <Toolbar.Root
+        size='sm'
+        classNames='shrink-0 gap-1 px-2 py-1 border-b border-separator'
+        data-testid='properties-toolbar'
+      >
+        {links.length > 0 && links.length === elements.length && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--arrows-left-right--regular'
+            label='Flip direction'
+            disabled={readonly}
+            data-testid='properties-flip'
+            onClick={onFlip}
+          />
+        )}
+      </Toolbar.Root>
       {schema ? (
         <Form.Root
           key={[...selection].join()}

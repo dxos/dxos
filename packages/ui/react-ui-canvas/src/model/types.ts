@@ -299,7 +299,9 @@ export const getElement = (scene: Scene, id: ElementId): Element | undefined => 
 
 /** Property edits: the shared fields typed, a type's own fields by name. */
 export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };
-export type LinkValues = Partial<Omit<Link, 'id' | 'type'>>;
+/** Per link type, so a spline's `points` are among the values an `update` may set. */
+type ValuesOf<T> = T extends unknown ? Partial<Omit<T, 'id' | 'type'>> : never;
+export type LinkValues = ValuesOf<Link>;
 
 /**
  * What the surface asks of a projection (§3). The surface never writes coordinates itself: a

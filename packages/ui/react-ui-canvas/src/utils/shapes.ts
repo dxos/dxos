@@ -17,6 +17,7 @@ import {
   type Link,
   type LinkEnds,
   type LinkType,
+  type LinkValues,
   MAJOR_GRID_RATIO,
   type Node,
   type Point,
@@ -142,3 +143,14 @@ export const createLink = ({ type, id, z, source, target, midpoint, ends }: Crea
       return { type, ...base, points: midpoint ? [midpoint] : [] };
   }
 };
+
+/**
+ * The `update` values that reverse a link: source and target swap while the markers stay at the start and
+ * end, so an arrow comes to point the other way; a spline's control points run the other way, so the drawn
+ * path keeps its shape.
+ */
+export const flipLink = (link: Link): LinkValues => ({
+  source: link.target,
+  target: link.source,
+  ...(link.type === 'spline' ? { points: [...link.points].reverse() } : {}),
+});
