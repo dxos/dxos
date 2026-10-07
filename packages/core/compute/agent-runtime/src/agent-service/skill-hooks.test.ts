@@ -35,6 +35,12 @@ const BackgroundHook = Operation.make({
   output: Schema.Void,
 });
 
+const QuickHook = Operation.make({
+  meta: { key: DXN.make('com.example.operation.quickHook'), name: 'Quick hook' },
+  input: Schema.Struct({}),
+  output: Schema.Void,
+});
+
 const FailingHook = Operation.make({
   meta: { key: DXN.make('com.example.operation.failingHook'), name: 'Failing hook' },
   input: Schema.Struct({}),
@@ -66,6 +72,7 @@ const handlers = OperationHandlerSet.make(
     ),
   ),
   FailingHook.pipe(Operation.withHandler(() => Effect.die(new Error('hook failed')))),
+  QuickHook.pipe(Operation.withHandler(() => Effect.sync(() => void hookLog.events.push('quick')))),
 );
 
 const hook = (operation: Operation.Definition.Any, async: boolean): Skill.Hook => ({
@@ -86,10 +93,17 @@ const FailingHookSkill = Skill.make({
   hooks: [hook(FailingHook, true)],
 });
 
+// Finishes at once, so its exit can race the agent registering it.
+const QuickHookSkill = Skill.make({
+  key: 'com.example.skill.quickHooks',
+  name: 'Quick hooks',
+  hooks: [hook(QuickHook, true)],
+});
+
 const TestLayer = AssistantTestLayer({
   operationHandlers: handlers,
   types: [Skill.Skill, Feed.Feed, Message.Message],
-  skills: [HookSkill, FailingHookSkill],
+  skills: [HookSkill, FailingHookSkill, QuickHookSkill],
   aiService: ScriptedLanguageModel.scriptedAiService(() => ({ parts: [ScriptedLanguageModel.text('Done.')] })),
 });
 
@@ -123,6 +137,25 @@ describe('end-request skill hooks', () => {
           await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
         });
         expect(hookLog.events).toEqual(['inline', 'background:start', 'background:end']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a background hook that finishes at once still lets the process finish',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession({ skills: [QuickHookSkill] });
+        yield* session.submitPrompt('Hello.');
+        yield* session.waitForCompletion();
+
+        const handle = yield* agentProcess(session);
+        yield* Effect.promise(async () => {
+          await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+        });
+        expect(hookLog.events).toEqual(['quick']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

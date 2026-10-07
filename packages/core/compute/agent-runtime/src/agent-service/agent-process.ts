@@ -285,6 +285,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // Background end-request hooks still running as children; persisted so a rehydrated process
         // still waits for them, and so it knows the request they belong to has already ended.
         let asyncHooks: Process.ID[] = [...(yield* AsyncHooksCell.get)];
+        // Exits of children this process did not recognise yet: child events run concurrently with
+        // the handler, so a background hook can exit before its pid is registered below.
+        const untrackedExits = new Set<Process.ID>();
 
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
@@ -310,6 +313,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   traceMeta: { conversation: Ref.make(feed) },
                 });
                 if (hook.async) {
+                  if (untrackedExits.delete(fiber.pid)) {
+                    return;
+                  }
                   // Not awaited, so the request settles now; the child is linked, so its exit wakes
                   // `onChildEvent`, which completes the process once every background hook is done.
                   asyncHooks.push(fiber.pid);
@@ -774,6 +780,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 log('agent onChildEvent alarm scheduled', { depth: toolResults.length });
               } else {
                 log.verbose('childEvent ignored non-tool call and not a delegation', { pid: event.pid });
+                untrackedExits.add(event.pid);
               }
             }
           }),
