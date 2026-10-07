@@ -38,7 +38,7 @@ catalog:
   '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.48
   '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.48
   '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.48
-  '@automerge/automerge-subduction': 0.17.2
+  '@automerge/automerge-subduction': 0.19.0
   '@aws-sdk/client-s3': ^3.995.0
   '@babel/core': ^7.18.13
   '@babel/parser': ^7.29.0
@@ -776,7 +776,7 @@ overrides:
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.48': patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
-  '@automerge/automerge-subduction@0.17.2': patches/@automerge__automerge-subduction@0.17.2.patch
+  '@automerge/automerge-subduction@0.19.0': patches/@automerge__automerge-subduction@0.19.0.patch
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
   dfx@1.0.15: patches/dfx@1.0.15.patch
