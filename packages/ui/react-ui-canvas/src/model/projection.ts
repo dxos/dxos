@@ -156,6 +156,11 @@ export type FreehandProjectionOptions = {
   registry: Registry.AtomRegistry;
   store: SceneStore;
   sceneId: SceneId;
+  /**
+   * Whether a constraining projection (the lattice) applies its constraint now; the view passes its snap
+   * toggle. Read per intent, so turning it off frees the next gesture without rebuilding the projection.
+   */
+  constrained?: () => boolean;
 };
 
 export const freehandCapabilities: Capabilities = {

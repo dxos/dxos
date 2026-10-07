@@ -139,7 +139,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid`}
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, and to the lattice in lattice mode`}
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}

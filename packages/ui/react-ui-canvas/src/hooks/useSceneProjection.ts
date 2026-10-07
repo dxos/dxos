@@ -36,7 +36,14 @@ export const useSceneProjection = ({
   const path = useAtomValue(atoms.path);
   const sceneId = path[path.length - 1];
   return useMemo(
-    () => projection ?? withUndo(createProjection({ registry, store, sceneId }), registry, atoms.undo, sceneId),
-    [projection, createProjection, registry, store, sceneId, atoms.undo],
+    () =>
+      projection ??
+      withUndo(
+        createProjection({ registry, store, sceneId, constrained: () => registry.get(atoms.snap) }),
+        registry,
+        atoms.undo,
+        sceneId,
+      ),
+    [projection, createProjection, registry, store, sceneId, atoms.undo, atoms.snap],
   );
 };

@@ -96,4 +96,19 @@ describe('lattice projection', () => {
     expect(Object.keys(registry.get(projection.scene).nodes)).toEqual(['a', 'b']);
     expect(projection.capabilities.layout).toBe(false);
   });
+
+  test('while not constrained, intents pass through as freehand', ({ expect }) => {
+    const registry = Registry.make();
+    const store = createMemoryStore([sceneOf(cellNode('a', 0, 0))]);
+    let constrained = false;
+    const projection = createLatticeProjection({ registry, store, sceneId: 's', constrained: () => constrained });
+    // Onto an occupied cell and off the lattice: both refused or snapped when constrained, kept as given here.
+    projection.apply({ kind: 'move', ids: ['a'], delta: { x: 10, y: 7 } });
+    expect(registry.get(projection.scene).nodes.a.center).toEqual({ x: 10, y: 7 });
+    expect(projection.constrain?.({ kind: 'create', node: cellNode('b', 0, 0) })).toBeDefined();
+    // Back on, the next move of the shape snaps it onto the lattice.
+    constrained = true;
+    projection.apply({ kind: 'move', ids: ['a'], delta: { x: 0, y: 0 } });
+    expect(registry.get(projection.scene).nodes.a.center).toEqual({ x: 0, y: 0 });
+  });
 });

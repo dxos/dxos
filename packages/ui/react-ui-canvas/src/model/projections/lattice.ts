@@ -8,7 +8,6 @@
 // pixels, so a lattice scene is stored exactly as a freehand one; the rule lives here, not in the data.
 //
 
-import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
   DEFAULT_LATTICE,
@@ -22,8 +21,13 @@ import {
   toCell,
 } from '../../utils/lattice.ts';
 import { nodeBounds, resizeNode } from '../../utils/shapes.ts';
-import { type Projection, createFreehandProjection, freehandCapabilities, reduceIntent } from '../projection.ts';
-import { type SceneStore } from '../store.ts';
+import {
+  type FreehandProjectionOptions,
+  type Projection,
+  createFreehandProjection,
+  freehandCapabilities,
+  reduceIntent,
+} from '../projection.ts';
 import {
   type Bounds,
   type Capabilities,
@@ -31,7 +35,6 @@ import {
   type Intent,
   type Node,
   type Scene,
-  type SceneId,
 } from '../types.ts';
 
 /** Freehand, without auto layout: arranging by a layout engine would not respect the lattice. */
@@ -142,22 +145,25 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
   }
 };
 
-export type LatticeProjectionOptions = {
-  registry: Registry.AtomRegistry;
-  store: SceneStore;
-  sceneId: SceneId;
+export type LatticeProjectionOptions = FreehandProjectionOptions & {
   spec?: LatticeSpec;
 };
 
-/** Freehand over the store, with geometry kept on the lattice; an intent that would overlap is refused. */
+/**
+ * Freehand over the store, with geometry kept on the lattice; an intent that would overlap is refused. While
+ * `constrained` says no (the view's snap is off) intents pass through as freehand, and a shape left off the
+ * lattice snaps onto it the next time it is moved.
+ */
 export const createLatticeProjection = ({
   registry,
   store,
   sceneId,
+  constrained = () => true,
   spec = DEFAULT_LATTICE,
 }: LatticeProjectionOptions): Projection => {
   const freehand = createFreehandProjection({ registry, store, sceneId });
-  const constrain = (intent: Intent) => constrainIntent(registry.get(freehand.scene), intent, spec);
+  const constrain = (intent: Intent) =>
+    constrained() ? constrainIntent(registry.get(freehand.scene), intent, spec) : intent;
   return {
     ...freehand,
     capabilities: latticeCapabilities,

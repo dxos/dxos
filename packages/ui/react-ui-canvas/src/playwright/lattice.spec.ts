@@ -73,6 +73,21 @@ test.describe('SceneView lattice', () => {
     expect(moved.width).toBeCloseTo(a.width, 0);
   });
 
+  test('with snap off a drag lands where it is dropped and nothing is refused', async () => {
+    await scene.focus();
+    await page.keyboard.press('g');
+    const a = await scene.box(scene.node('a'));
+    const column = (384 * (await scene.zoom())) / 100;
+    await scene.drag(
+      { x: a.x + a.width / 2, y: a.y + a.height / 2 },
+      { x: a.x + a.width / 2 + column * 0.4, y: a.y + a.height / 2 },
+    );
+    const moved = await scene.box(scene.node('a'));
+    // Part of a column, not snapped back or onto the next cell.
+    expect(moved.x - a.x).toBeGreaterThan(column * 0.2);
+    expect(moved.x - a.x).toBeLessThan(column * 0.8);
+  });
+
   test('dragging a face steps it one cell and leaves the opposite face where it was', async () => {
     await scene.clickNode('e');
     const before = await scene.box(scene.node('e'));
