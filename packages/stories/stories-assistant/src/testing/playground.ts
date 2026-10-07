@@ -10,6 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
+import * as BrainSkill from '@dxos/plugin-agent/BrainSkill';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as RelayOperation from '@dxos/plugin-agent/RelayOperation';
@@ -121,6 +122,11 @@ export type SetupPlaygroundProps = {
   read?: boolean;
   /** Receives the refs once the objects exist. */
   refs?: PlaygroundRefs;
+  /**
+   * Runs every chat on EDGE (`Chat.remote`): turns, tools and the end-of-turn hook execute there and the
+   * agent's brain is EDGE's, so a relay wakes the recipient's chat even with the story closed.
+   */
+  remote?: boolean;
 };
 
 /** Throws the operation's error, so a failed step stops the setup instead of leaving a half-built story. */
@@ -129,8 +135,9 @@ const invoke = async <I, O>(
   db: Database.Database,
   operation: Operation.Definition<I, O>,
   input: I,
+  on?: Operation.InvokeOptions['on'],
 ): Promise<O> => {
-  const { data, error } = await invoker.invokePromise(operation, input, { spaceId: db.spaceId });
+  const { data, error } = await invoker.invokePromise(operation, input, { spaceId: db.spaceId, ...(on ? { on } : {}) });
   if (error || data === undefined) {
     throw error ?? new Error(`${operation.meta.key} returned nothing.`);
   }
@@ -141,7 +148,7 @@ const invoke = async <I, O>(
  * Creates the agent through plugin-agent's operations (so it has its base skills and modes), gives
  * each person their own chat with it, and optionally starts reading the transcript.
  */
-export const setupPlayground = async ({ db, invoker, model, read, refs }: SetupPlaygroundProps) => {
+export const setupPlayground = async ({ db, invoker, model, read, refs, remote }: SetupPlaygroundProps) => {
   const { people, team, document } = await seedPlayground(db);
   const { agent: agentRef } = await invoke(invoker, db, AgentOperation.CreateAgent, { name: AGENT_NAME });
   const agent = await agentRef.load();
@@ -155,6 +162,11 @@ export const setupPlayground = async ({ db, invoker, model, read, refs }: SetupP
       primary.session = { ...primary.session, model };
     });
   }
+  if (remote) {
+    Obj.update(primary, (primary) => {
+      primary.remote = true;
+    });
+  }
 
   // Rich speaks in the agent's own chat; Dima and Josiah each get one.
   await invoke(invoker, db, RelayOperation.AssignChatParticipant, {
@@ -166,6 +178,7 @@ export const setupPlayground = async ({ db, invoker, model, read, refs }: SetupP
     const { chat } = await invoke(invoker, db, AgentOperation.EnsureParticipantChat, {
       agent: agentRef,
       person: Ref.make<Obj.Unknown>(people[name]),
+      ...(remote ? { remote } : {}),
     });
     chats[name] = chat.uri;
   }
@@ -185,10 +198,14 @@ export const setupPlayground = async ({ db, invoker, model, read, refs }: SetupP
 
   if (read) {
     // Not awaited: extraction takes as long as the model does, and the story should render meanwhile.
-    void invoke(invoker, db, AgentOperation.ReadSource, {
-      agent: agentRef,
-      source: Ref.make<Obj.Unknown>(document),
-    });
+    // On EDGE when the chats are, so the transcript's facts land in the same brain as theirs.
+    void invoke(
+      invoker,
+      db,
+      AgentOperation.ReadSource,
+      { agent: agentRef, source: Ref.make<Obj.Unknown>(document) },
+      remote ? 'edge' : undefined,
+    );
   }
 };
 
@@ -401,6 +418,11 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
     const last = request.prompt.content.at(-1);
     const lastUser = [...request.prompt.content].reverse().find((message) => message.role === 'user');
     const said = lastUser ? messageText(lastUser) : '';
+    // A chat the brain woke passes its update on as the reply.
+    const woken = last?.role === 'tool' ? undefined : BrainSkill.wakeText(said);
+    if (woken !== undefined) {
+      return { parts: [text(woken)] };
+    }
 
     if (last?.role === 'tool') {
       switch (lastToolName(request)) {

@@ -22,9 +22,10 @@ import { Text } from '@dxos/schema';
 import { Channel, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
+import { BrainSkill, ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentChannels, AgentOperation, ChatParticipant, MemoryOperation, Mode, Relay, RelayOperation } from '#types';
 
+import { makeTestBrain } from '../brain/testing.ts';
 import { TEST_HANDLE_LABEL, makeChannelCapabilities, makeTestChannel, makeTestChannelBackend } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -34,10 +35,16 @@ const CLOSED_DMS = '300';
 
 const backend = makeTestChannelBackend({ refuse: [CLOSED_DMS] });
 
+// Deliveries into a Composer chat wake it; this suite checks where they go, not the turn that follows.
+const brain = makeTestBrain({ wake: 'record' });
+
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.merge(AgentOperationHandlerSet, ThreadOperationHandlerSet.handlers),
   // plugin-thread's channel operations resolve the backend from the capability registry.
-  extraServices: Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider)),
+  extraServices: Layer.mergeAll(
+    Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider)),
+    brain.layer,
+  ),
   types: [
     Agent.Agent,
     Chat.Chat,
@@ -89,7 +96,11 @@ const chatMessages = (chat: Chat.Chat) =>
 describe('Relay', () => {
   beforeEach(() => {
     backend.posts.length = 0;
+    brain.wakes.length = 0;
   });
+
+  /** What each woken chat was asked to pass on, by chat id. */
+  const woken = () => brain.wakes.map(({ chat, prompt }) => ({ chat: chat.id, prompt }));
 
   it.effect(
     'is delivered into the recipient chat and reported into the requester chat',
@@ -139,8 +150,11 @@ describe('Relay', () => {
         expect(relay.status).toBe('delivered');
         expect(relay.deliveredAt).toBeDefined();
         expect(task.status).toBe('started');
-        expect((yield* chatMessages(dimaChat)).map(Message.extractText)).toEqual([
-          'Hi Dima, Rich asked me to tell you the demo moved to Friday.',
+        expect(woken()).toEqual([
+          {
+            chat: dimaChat.id,
+            prompt: BrainSkill.wakePrompt('Dima', 'Hi Dima, Rich asked me to tell you the demo moved to Friday.'),
+          },
         ]);
 
         const reported = yield* Operation.invoke(RelayOperation.SendMessage, {
@@ -152,7 +166,10 @@ describe('Relay', () => {
         expect(reported).toMatchObject({ delivered: true, via: 'chat' });
         expect(relay.status).toBe('reported');
         expect(task.status).toBe('done');
-        expect((yield* chatMessages(richChat)).map(Message.extractText)).toEqual(['Dima says Friday works.']);
+        expect(woken().at(-1)).toEqual({
+          chat: richChat.id,
+          prompt: BrainSkill.wakePrompt('Rich', 'Dima says Friday works.'),
+        });
         expect(backend.posts).toHaveLength(0);
 
         const { relays } = yield* Operation.invoke(RelayOperation.ListRelays, { agent: agentRef });

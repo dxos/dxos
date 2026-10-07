@@ -7,7 +7,7 @@
 // part is named by the node property it edits; list properties read and write as one entry per line.
 //
 
-import { type Node, type NodeValues, isClassNode, isEllipseNode, isNoteNode, isRectNode } from '../model/types.ts';
+import { type Node, type NodeValues, isBoxNode, isClassNode, isEllipseNode, isNoteNode } from '../model/types.ts';
 
 export type PartKey = 'label' | 'text' | 'name' | 'attributes' | 'methods';
 
@@ -38,7 +38,7 @@ const lines = (text: string): string[] =>
 export const partText = (node: Node, part: PartKey): string | undefined => {
   switch (part) {
     case 'label':
-      return isRectNode(node) || isEllipseNode(node) ? (node.label ?? '') : undefined;
+      return isBoxNode(node) || isEllipseNode(node) ? (node.label ?? '') : undefined;
     case 'text':
       return isNoteNode(node) ? node.text : undefined;
     case 'name':
@@ -54,7 +54,7 @@ export const partText = (node: Node, part: PartKey): string | undefined => {
 export const partValues = (node: Node, part: PartKey, text: string): NodeValues | undefined => {
   switch (part) {
     case 'label':
-      return isRectNode(node) || isEllipseNode(node) ? { label: text } : undefined;
+      return isBoxNode(node) || isEllipseNode(node) ? { label: text } : undefined;
     case 'text':
       return isNoteNode(node) ? { text } : undefined;
     case 'name':

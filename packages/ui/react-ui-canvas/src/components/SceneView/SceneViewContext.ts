@@ -45,6 +45,8 @@ export type SceneViewContextValue = {
   /** The scene as stored, and as it is drawn while a gesture is in flight. */
   scene: Scene;
   displayScene: Scene;
+  /** The gesture in flight would be refused by the projection (e.g. an overlap on the lattice). */
+  blocked: boolean;
   /** The current scene's frame. */
   bounds: Bounds;
   path: SceneId[];
@@ -60,6 +62,9 @@ export type SceneViewContextValue = {
   /** Minor grid spacing in scene px. */
   grid: number;
   snapEnabled: boolean;
+  guides: boolean;
+  /** On a lattice scene, snap lands on the lattice rather than the basic grid. */
+  latticeOn: boolean;
 
   selection: ReadonlySet<ElementId>;
   hover: ElementId | undefined;

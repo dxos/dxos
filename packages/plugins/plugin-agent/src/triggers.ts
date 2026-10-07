@@ -5,16 +5,9 @@
 import { type Trigger } from '#types';
 
 /**
- * The agents' active triggers, held in process memory (docs/ONTOLOGY.md §5): they are lost when the
- * process restarts, and on EDGE they are only seen by agent processes in the same isolate. Promote
- * them to ECHO objects once their shape settles.
+ * Triggers held in process memory, the store behind the in-memory brain (`BrainMemory`): lost when the
+ * process restarts. Subscribable, so the UI lists them live.
  */
-/**
- * Most triggers the process holds at once: ongoing triggers never fire away, so without a cap the
- * registry (and the end-of-turn scan over it) would grow with every watch an agent is asked for.
- */
-export const MAX_TRIGGERS = 256;
-
 export class TriggerRegistry {
   #triggers: readonly Trigger.Trigger[] = [];
   readonly #listeners = new Set<() => void>();
@@ -33,19 +26,9 @@ export class TriggerRegistry {
     return this.#triggers.find((trigger) => trigger.id === id);
   }
 
-  /** Whether a new trigger would exceed {@link MAX_TRIGGERS}. */
-  get isFull(): boolean {
-    return this.#triggers.length >= MAX_TRIGGERS;
-  }
-
-  /** Adds or replaces the trigger; false (and unchanged) when it is new and the registry is full. */
-  add(trigger: Trigger.Trigger): boolean {
-    const others = this.#triggers.filter(({ id }) => id !== trigger.id);
-    if (others.length >= MAX_TRIGGERS) {
-      return false;
-    }
-    this.#set([...others, trigger]);
-    return true;
+  /** Adds or replaces the trigger. */
+  add(trigger: Trigger.Trigger): void {
+    this.#set([...this.#triggers.filter(({ id }) => id !== trigger.id), trigger]);
   }
 
   /** Removes the trigger; false when there was none. */
@@ -72,5 +55,5 @@ export class TriggerRegistry {
   }
 }
 
-/** The process's registry, shared by the operations that write it and the UI that lists it. */
+/** The app's registry: the plugin's in-memory brain writes it and the UI lists it. */
 export const triggerRegistry = new TriggerRegistry();
