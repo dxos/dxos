@@ -5,22 +5,34 @@
 /** A scripted fact; `concerns` stubs entity resolution and defaults to the subject. */
 export type ScenarioFact = {
   readonly id: string;
+  /** Handle of who said it, or `agent` for the agent's own actions. */
   readonly speaker: string;
+  /** The words as said. */
   readonly quote: string;
+  /** Subject entity handle. */
   readonly s: string;
+  /** Predicate, before vocabulary canonicalization. */
   readonly p: string;
+  /** Object entity handle or literal. */
   readonly o: string;
+  /** Speech-act force of the utterance. */
   readonly force: 'assertive' | 'directive' | 'commissive' | 'expressive';
+  /** `+` affirmed, `-` negated or refused, `?` open question or unknown. */
   readonly polarity: '+' | '-' | '?';
   readonly mood: 'declarative' | 'interrogative' | 'imperative';
+  /** Conversation or message the fact came from, e.g. `chat:general`. */
   readonly source: string;
+  /** FactBank factuality: certainty (CT/PR/PS/U) and polarity (+/-/u). */
   readonly factuality: 'CT+' | 'CT-' | 'PR+' | 'PR-' | 'PS+' | 'PS-' | 'CTu' | 'Uu';
+  /** Entity handles the fact is about; defaults to the subject. */
   readonly concerns?: ReadonlyArray<string>;
 };
 
 export type ScenarioAction = {
   readonly id: string;
+  /** Action name, e.g. `send_email`. */
   readonly kind: string;
+  /** Named action arguments, e.g. `{ to: 'dima' }`. */
   readonly args: Readonly<Record<string, string>>;
 };
 
@@ -34,22 +46,31 @@ export type Expectation = {
 
 export type Step = {
   readonly id: string;
+  /** Simulated clock time (ISO) the step runs at. */
   readonly at: string;
+  /** Human-readable description of what happens in the step. */
   readonly note: string;
   readonly facts?: ReadonlyArray<ScenarioFact>;
   readonly actions?: ReadonlyArray<ScenarioAction>;
+  /** Subgoal ids that become `active` from this step on. */
   readonly subgoals?: ReadonlyArray<string>;
+  /** Subgoal status overrides by subgoal id, e.g. `{ g_w2: 'achieved' }`. */
   readonly status?: Readonly<Record<string, string>>;
   readonly expect: Expectation;
 };
 
 /** A timeline for one of the BRAIN.md example goals. */
 export type Scenario = {
+  /** Number of the example goal in BRAIN.md. */
   readonly n: number;
+  /** Natural-language goal text. */
   readonly goal: string;
+  /** Handle of the actor who owns the goal. */
   readonly owner: string;
+  /** Source id of the conversation a session goal is scoped to. */
   readonly session?: string;
   readonly createdAt: string;
+  /** Owner-written guidance passed to the compiler as the goal's instructions. */
   readonly context?: string;
   readonly steps: ReadonlyArray<Step>;
   /** At least one step of each group must wake (a time-driven wake with a tolerant schedule). */

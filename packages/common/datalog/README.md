@@ -1,6 +1,6 @@
 # @dxos/datalog
 
-A small, dependency-free Datalog engine: a parser for a Soufflé-like dialect, static checks, and an
+A small Datalog engine with no third-party dependencies: a parser for a Soufflé-like dialect, static checks, and an
 incremental stratified semi-naive evaluator with provenance and pluggable built-ins. It is plain
 TypeScript with no Node built-ins, `eval` or threads, so it runs unchanged in the browser, in a
 workerd Durable Object and in Node.
@@ -57,4 +57,4 @@ engine.provenance('path', ['a', 'b']); // the base tuples one derivation rests o
 
 The engine is a pure function of its inputs with no I/O, so it exposes plain synchronous calls rather
 than Effects; callers that need Effect wrap a call where it is used. This keeps the hot path (one
-evaluation per appended fact) free of fiber overhead and the package free of runtime dependencies.
+evaluation per appended fact) free of fiber overhead and the package free of third-party runtime dependencies.

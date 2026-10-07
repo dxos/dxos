@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BaseError } from '@dxos/errors';
 import { trim } from '@dxos/util';
 
 import * as Compiler from './Compiler.ts';
@@ -55,13 +56,12 @@ export type ReplyErrorCode =
   | 'invalid-achievement';
 
 /** Thrown by `parseReply` when the model's reply does not follow the output format. */
-export class ReplyError extends Error {
+export class ReplyError extends BaseError.extend('ReplyError', 'Reply does not follow the output format') {
   constructor(
     readonly code: ReplyErrorCode,
     readonly reason: string,
   ) {
-    super(`${code}: ${reason}`);
-    this.name = 'ReplyError';
+    super({ message: reason, context: { code } });
   }
 }
 

@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { BaseError } from '@dxos/errors';
+
 import * as Ast from './Ast.ts';
 import type * as Builtin from './Builtin.ts';
 import { Slots, planBody } from './internal/plan.ts';
@@ -30,10 +32,13 @@ export type Options = {
 };
 
 /** Thrown when a program with diagnostics is evaluated. */
-export class CheckError extends Error {
-  constructor(readonly diagnostics: ReadonlyArray<Diagnostic>) {
-    super(`Invalid program:\n${diagnostics.map(formatDiagnostic).join('\n')}`);
-    this.name = 'CheckError';
+export class CheckError extends BaseError.extend('CheckError', 'Invalid program') {
+  // A typed field rather than `context`, which would repeat every diagnostic in the message as JSON.
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+
+  constructor(diagnostics: ReadonlyArray<Diagnostic>) {
+    super({ message: `Invalid program:\n${diagnostics.map(formatDiagnostic).join('\n')}` });
+    this.diagnostics = diagnostics;
   }
 }
 

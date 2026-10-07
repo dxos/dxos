@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
+
 import type * as Ast from '../Ast.ts';
 
 export type TokenType =
@@ -27,12 +29,13 @@ export type Token = {
   readonly position: Ast.Position;
 };
 
-export class LexError extends Error {
+/** A malformed token with the 1-based position where it starts. */
+export class LexError extends BaseError.extend('LexError', 'Invalid token') {
   constructor(
-    message: string,
+    readonly reason: string,
     readonly position: Ast.Position,
   ) {
-    super(`${message} at ${position.line}:${position.column}`);
+    super({ message: reason, context: { line: position.line, column: position.column } });
   }
 }
 

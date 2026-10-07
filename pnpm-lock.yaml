@@ -3311,6 +3311,10 @@ importers:
         version: link:../../../vendor/hypercore
 
   packages/common/datalog:
+    dependencies:
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../errors
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -4744,6 +4748,9 @@ importers:
       '@dxos/datalog':
         specifier: workspace:*
         version: link:../../../common/datalog
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../pipeline-rdf

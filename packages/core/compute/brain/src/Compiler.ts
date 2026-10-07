@@ -8,6 +8,7 @@ import * as Ast from '@dxos/datalog/Ast';
 import type * as Builtin from '@dxos/datalog/Builtin';
 import * as Checker from '@dxos/datalog/Checker';
 import * as Parser from '@dxos/datalog/Parser';
+import { BaseError } from '@dxos/errors';
 
 import * as Builtins from './Builtins.ts';
 import * as Encoding from './Encoding.ts';
@@ -45,10 +46,13 @@ export type Options = {
 };
 
 /** Thrown by `compileOrThrow` and `GoalRules` when compilation reports diagnostics. */
-export class CompileError extends Error {
-  constructor(readonly diagnostics: ReadonlyArray<Diagnostic>) {
-    super(`Goal rules do not compile:\n${diagnostics.map(formatDiagnostic).join('\n')}`);
-    this.name = 'CompileError';
+export class CompileError extends BaseError.extend('CompileError', 'Goal rules do not compile') {
+  // A typed field rather than `context`, which would repeat every diagnostic in the message as JSON.
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+
+  constructor(diagnostics: ReadonlyArray<Diagnostic>) {
+    super({ message: `Goal rules do not compile:\n${diagnostics.map(formatDiagnostic).join('\n')}` });
+    this.diagnostics = diagnostics;
   }
 }
 

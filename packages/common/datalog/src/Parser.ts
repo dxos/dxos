@@ -4,17 +4,18 @@
 
 // @import-as-namespace
 
+import { BaseError } from '@dxos/errors';
+
 import type * as Ast from './Ast.ts';
 import { LexError, type Token, tokenize } from './internal/lexer.ts';
 
 /** A syntax error with the 1-based position of the offending token. */
-export class ParseError extends Error {
+export class ParseError extends BaseError.extend('ParseError', 'Syntax error') {
   constructor(
     readonly reason: string,
     readonly position: Ast.Position,
   ) {
-    super(`${reason} at ${position.line}:${position.column}`);
-    this.name = 'ParseError';
+    super({ message: reason, context: { line: position.line, column: position.column } });
   }
 }
 
@@ -37,7 +38,7 @@ export const parse = (source: string): Ast.Program => {
     tokens = tokenize(source);
   } catch (error) {
     if (error instanceof LexError) {
-      throw new ParseError(error.message.replace(/ at \d+:\d+$/, ''), error.position);
+      throw new ParseError(error.reason, error.position);
     }
     throw error;
   }
