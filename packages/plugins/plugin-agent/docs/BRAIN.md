@@ -34,6 +34,62 @@ asked.
 - **Judgment runs in private threads:** a session goal in the current session's feed, a durable goal
   in a background session per owning actor.
 
+## The brain stack
+
+Five layers, from extracted propositions up to goals and the threads that judge them. Each layer's
+types are defined once and the layers above reuse them.
+
+| Layer          | Package                        | Types                                                                                                                                                                                            |
+| -------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Facts       | `@dxos/pipeline-rdf`           | `RDF.Fact` = `Assertion` (subject/object `Term`, predicate, validity, quote) + `Factuality` + `Illocution` + `Attribution`; `RDF.Entity`                                                         |
+| 2. RDF form    | `@dxos/pipeline-rdf`           | The vocabulary (`sx:` = `https://dxos.org/semantic#`, `prov:`, entity and fact IRIs) and the `Fact` ↔ triples mapping; `FactStore` (SQLite: `triples`, `entities`, per-source `cursors`; SPARQL) |
+| 3. Feed record | `@dxos/brain`                  | `FactTuple`: a flattened `Fact` (with `StoredTerm`, `pass`, `supersedes`), one ECHO feed item, one feed per source                                                                               |
+| 4. Rules       | `@dxos/datalog`, `@dxos/brain` | Relations `fact(F, S, P, O)` + metadata keyed by `F`; canonical `Vocabulary`; built-ins `about`, `concerns`, `elapsed`, … ; compiled programs                                                    |
+| 5. Goals       | `@dxos/brain`, plugin-agent    | `Goal` directive (text, owner `Actor`, status, priority, budget, situation, drivers, compiled rules) with its own fact feed; sub-goals; `Task`s for concrete work                                |
+
+**Facts flow (ingest).**
+
+1. A source — a chat turn, a document, a web page — is read by pipeline-rdf's extraction stages into
+   `RDF.Fact`s, attributed to the speaker, message and time; predicates are normalized
+   (`normalizePredicate`).
+2. Each `Fact` becomes a `FactTuple` (lossless, `FactTuple.fromFact`) appended to the source's fact
+   feed — the record, append-only; corrections are new tuples.
+3. The brain follows each feed from its cursor, writes the facts to its index (pipeline-rdf's SQLite
+   schema: triples, entities for `concerns`, full-text for `about`) and encodes them as Datalog
+   relations (`Encoding`), mapping surface predicates onto the canonical `Vocabulary`.
+
+**Goals flow (compile).**
+
+1. A user states a goal in text; the agent proposes priority, budget and instructions.
+2. A Sonnet-class model compiles the text (`CompilePrompt`) into Datalog: `achieved` or `holds`,
+   conditions, `wake` rules, and `blocks` for constraints. `Compiler` checks it against the vocabulary
+   and built-ins.
+3. Independent test facts are replayed through `GoalRules`; only a passing program goes active. The
+   text stays the authority.
+
+**Evaluation flow (wake → judge → act).**
+
+1. On every new fact (and every clock tick), `GoalRules` evaluates incrementally and reports wakes —
+   a new binding of a `wake` rule, `achieved` first becoming true, or a sub-goal changing status —
+   with the facts behind each.
+2. A woken goal is judged by the model in its **private thread**: given the goal, its instructions,
+   situation, the triggering facts and the context, it decides to do nothing, act, mark the goal
+   achieved, or ask its owner.
+3. Actions go out through the agent's skills and channel backends; before each, `checkAction`
+   evaluates the owner's constraint goals (`blocks`).
+4. The judgment, the action and the new status are appended to the goal's own feed as `FactTuple`s
+   and the situation is rewritten — so they are facts other goals can match, and the loop continues.
+
+**Threads.** A private thread is a child feed of a session (THREADS.md): the session's history merged
+by feed position with the thread's own, hidden from every reader of the chat by construction. A
+session goal's thread lives under the session; a durable goal's thread lives under the background
+session of its owning actor, which the EDGE Durable Object maintains. Promoting a goal re-parents its
+thread feed.
+
+**Where it runs.** One brain per agent, authoritative in an EDGE Durable Object (feeds, index, rules,
+alarms for time drivers, background sessions); an in-process copy in the browser for tests, stories
+and offline work. Every layer runs unchanged in the browser, on Workers and in Node.
+
 ## Decisions
 
 ### 1. One brain per agent, authoritative on EDGE
