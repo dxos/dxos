@@ -10,6 +10,7 @@ export * as AiSummarizer from './AiSummarizer.ts';
 export * as AiTelemetry from './AiTelemetry.ts';
 export * as Model from './Model.ts';
 export * as Provider from './Provider.ts';
+export * as SessionConfig from './SessionConfig.ts';
 export * as ToolFormatter from './ToolFormatter.ts';
 export * as OpaqueToolkit from './OpaqueToolkit.ts';
 

@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { createProgressRegistry } from './progress-registry.ts';
+import { makeRegistry } from './progress-registry.ts';
 import {
-  PROGRESS_STATUS_CANCELLED,
-  PROGRESS_STATUS_COMPLETE,
-  PROGRESS_STATUS_FAILED,
-  PROGRESS_STATUS_STALLED,
-  createProgressTraceSink,
+  STATUS_CANCELLED,
+  STATUS_COMPLETE,
+  STATUS_FAILED,
+  STATUS_STALLED,
+  makeTraceSink,
   resolveTriggerId,
 } from './progress-trace-sink.ts';
 
@@ -26,11 +26,11 @@ const statusMessage = (data: Trace.PayloadType<typeof Trace.StatusUpdate>, meta:
     events: [{ type: Trace.StatusUpdate.key, timestamp: Date.now(), data }],
   }) as unknown as Trace.Message;
 
-describe('createProgressTraceSink', () => {
+describe('makeTraceSink', () => {
   test('registers a monitor and advances progress for status.update events', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(
@@ -57,8 +57,8 @@ describe('createProgressTraceSink', () => {
   // so the meter is briefly indeterminate and must become determinate the moment a total arrives.
   test('a total that arrives mid-run makes the task determinate', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
@@ -76,8 +76,8 @@ describe('createProgressTraceSink', () => {
   // the total it already reported has to survive that, or the meter falls back to a sweep mid-run.
   test('a total survives the monitor being re-registered by another pid', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 4, total: 468 } }, { pid: 'run-1' }));
@@ -90,12 +90,12 @@ describe('createProgressTraceSink', () => {
 
   test('completes and removes the monitor on progress.complete', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 0, total: 2 } }));
-    sink.write(statusMessage({ message: PROGRESS_STATUS_COMPLETE, progress: { key } }));
+    sink.write(statusMessage({ message: STATUS_COMPLETE, progress: { key } }));
 
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
@@ -103,35 +103,52 @@ describe('createProgressTraceSink', () => {
 
   test('marks failed monitors visible and leaves them registered', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }));
-    sink.write(statusMessage({ message: PROGRESS_STATUS_FAILED, progress: { key } }));
+    sink.write(statusMessage({ message: STATUS_FAILED, progress: { key } }));
 
     const task = registry.get(progress.monitorAtom(key));
     expect(task?.status).toBe('error');
-    expect(task?.error).toBe(PROGRESS_STATUS_FAILED);
+    expect(task?.error).toBe(STATUS_FAILED);
     expect(task?.current).toBe(1);
+  });
+
+  test('a later run clears the failed run state', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'pull-request#walkthrough';
+
+    sink.write(statusMessage({ message: 'Walkthrough', progress: { key, current: 2, total: 5 } }));
+    sink.write(statusMessage({ message: STATUS_FAILED, progress: { key, current: 5, total: 5 } }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+
+    sink.write(statusMessage({ message: 'Walkthrough', progress: { key, current: 0, total: 5 } }));
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('running');
+    expect(task?.current).toBe(0);
+    expect(task?.error).toBeUndefined();
   });
 
   test('notes and removes the monitor on Cancelled', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }));
-    sink.write(statusMessage({ message: PROGRESS_STATUS_CANCELLED, progress: { key } }));
+    sink.write(statusMessage({ message: STATUS_CANCELLED, progress: { key } }));
 
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
   });
 
   test('ignores status updates without a progress key', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
 
     sink.write(statusMessage({ message: 'Thinking about the plan' }));
 
@@ -140,9 +157,9 @@ describe('createProgressTraceSink', () => {
 
   test('lazy registry getter drops events until the registry is available', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    let resolved: ReturnType<typeof createProgressRegistry> | undefined;
-    const sink = createProgressTraceSink(() => resolved);
+    const progress = makeRegistry(registry);
+    let resolved: ReturnType<typeof makeRegistry> | undefined;
+    const sink = makeTraceSink(() => resolved);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }));
@@ -158,9 +175,9 @@ describe('createProgressTraceSink', () => {
 
   test('registers a cancellable monitor and cancels the emitting process on cancel', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
+    const progress = makeRegistry(registry);
     const cancelled: Array<{ pid?: string; space?: string; runtimeName?: string }> = [];
-    const sink = createProgressTraceSink(progress, {
+    const sink = makeTraceSink(progress, {
       cancelProcess: (entry) => cancelled.push({ pid: entry.pid, space: entry.space, runtimeName: entry.runtimeName }),
     });
     const key = 'mailbox-uri#sync';
@@ -179,9 +196,9 @@ describe('createProgressTraceSink', () => {
 
   test('captures edge routing metadata (space, runtimeName, trigger) for cancel', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
+    const progress = makeRegistry(registry);
     const cancelled: Array<{ pid?: string; space?: string; runtimeName?: string; trigger?: unknown }> = [];
-    const sink = createProgressTraceSink(progress, {
+    const sink = makeTraceSink(progress, {
       cancelProcess: (entry) => cancelled.push(entry),
     });
     const key = 'mailbox-uri#sync';
@@ -215,8 +232,8 @@ describe('createProgressTraceSink', () => {
 describe('phase counts', () => {
   test('entering a phase clears the count the previous one reported', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'magazine-uri#curate';
 
     sink.write(
@@ -233,8 +250,8 @@ describe('phase counts', () => {
 
   test('a phase that declares its own total keeps it', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'magazine-uri#curate';
 
     sink.write(statusMessage({ progress: { key, phases: 3, phase: 1, current: 0 } }));
@@ -249,8 +266,8 @@ describe('phase counts', () => {
   // count would be wiped on every tick.
   test('progress within a phase keeps its count', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'magazine-uri#curate';
 
     sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 0, total: 7 } }));
@@ -281,8 +298,8 @@ describe('stall bound', () => {
   test('fails a monitor that stops reporting, and says only that it stopped', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
@@ -295,7 +312,7 @@ describe('stall bound', () => {
     const task = registry.get(progress.monitorAtom(key));
     expect(task?.status).toBe('error');
     // Not "failed": the run may have finished or still be going — what is known is that it went quiet.
-    expect(task?.error).toBe(PROGRESS_STATUS_STALLED);
+    expect(task?.error).toBe(STATUS_STALLED);
   });
 
   // The clock measures the gap between updates, not the run's length: a long sync that keeps
@@ -303,8 +320,8 @@ describe('stall bound', () => {
   test('a run that keeps reporting is never stalled, however long it takes', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 500 } }));
@@ -323,8 +340,8 @@ describe('stall bound', () => {
   test('a continuation under a new pid keeps the run bounded', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1, total: 9 } }, { pid: 'run-1' }));
@@ -338,12 +355,12 @@ describe('stall bound', () => {
   test('a completed run is not failed afterwards', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 2 } }));
-    sink.write(statusMessage({ message: PROGRESS_STATUS_COMPLETE, progress: { key } }));
+    sink.write(statusMessage({ message: STATUS_COMPLETE, progress: { key } }));
 
     vi.advanceTimersByTime(STALL * 2);
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
@@ -353,15 +370,15 @@ describe('stall bound', () => {
   test('a reported failure keeps its own reason', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1, total: 5 } }));
-    sink.write(statusMessage({ message: PROGRESS_STATUS_FAILED, progress: { key } }));
+    sink.write(statusMessage({ message: STATUS_FAILED, progress: { key } }));
 
     vi.advanceTimersByTime(STALL * 2);
-    expect(registry.get(progress.monitorAtom(key))?.error).toBe(PROGRESS_STATUS_FAILED);
+    expect(registry.get(progress.monitorAtom(key))?.error).toBe(STATUS_FAILED);
   });
 
   // The stall is a giving-up, not a verdict on the key: the next run gets a clean meter, and starts
@@ -369,8 +386,8 @@ describe('stall bound', () => {
   test('a later run recovers the meter and does not inherit the stalled run count', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress);
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 40, total: 468 } }, { pid: 'run-1' }));
@@ -390,8 +407,8 @@ describe('stall bound', () => {
   test('a stalled monitor can still be dismissed', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress, { cancelProcess: () => {} });
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { cancelProcess: () => {} });
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1 } }, { pid: 'run-1' }));
@@ -405,8 +422,8 @@ describe('stall bound', () => {
   test('the bound can be disabled for a producer whose terminal cannot be lost', () => {
     withFakeTimers();
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress, { stallTimeout: 0 });
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { stallTimeout: 0 });
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
@@ -421,8 +438,8 @@ describe('cancel tombstone (pid scope, default)', () => {
   // still register, so a failed cancel stays visible.
   test('events from the cancelled pid do not resurrect the monitor; a new run does', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress, { cancelProcess: () => {} });
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { cancelProcess: () => {} });
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'run-1' }));
@@ -448,8 +465,8 @@ describe('cancel tombstone (run scope)', () => {
   // later run re-shows — matching the local, single-pid cancel behaviour.
   test('suppresses the whole cancelled chain (any pid) until a terminal status; a later run re-shows', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
@@ -465,7 +482,7 @@ describe('cancel tombstone (run scope)', () => {
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
     // The run ends (edge abort emits a terminal Cancelled) — releases the tombstone, still hidden.
-    sink.write(statusMessage({ message: PROGRESS_STATUS_CANCELLED, progress: { key } }, { pid: 'link-2' }));
+    sink.write(statusMessage({ message: STATUS_CANCELLED, progress: { key } }, { pid: 'link-2' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
     // A genuinely later run (next cron fire) re-shows.
@@ -482,8 +499,8 @@ describe('cancel tombstone (run scope)', () => {
     });
 
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
@@ -502,15 +519,15 @@ describe('cancel tombstone (run scope)', () => {
 
   test('a COMPLETE terminal after cancel also releases the tombstone', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const sink = createProgressTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
     const key = 'mailbox-uri#sync';
 
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
     progress.cancel(key);
 
     // The run drains and completes naturally before the abort lands — suppressed, but released.
-    sink.write(statusMessage({ message: PROGRESS_STATUS_COMPLETE, progress: { key } }, { pid: 'link-2' }));
+    sink.write(statusMessage({ message: STATUS_COMPLETE, progress: { key } }, { pid: 'link-2' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
     // Later run re-shows.

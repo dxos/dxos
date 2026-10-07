@@ -13,16 +13,15 @@ import * as Fiber from 'effect/Fiber';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { NoHandlerError, RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -39,11 +38,13 @@ import {
   QueryResult,
   Ref,
 } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as DurableOperation from '../DurableOperation.ts';
 import * as ProcessManager from '../ProcessManager.ts';
 import { filterReadyFeedItems } from './feed-position.ts';
 import { createInvocationPayload } from './input-builder.ts';
@@ -339,7 +340,7 @@ const DEFAULT_STALE_REFERENCE_RETRY_INTERVAL = Duration.minutes(15);
  */
 const STALE_REFERENCE_ERROR_NAMES: ReadonlySet<string> = new Set([
   EchoError.EntityNotFoundError.name,
-  NoHandlerError.name,
+  Operation.NoHandlerError.name,
 ]);
 
 /** Walks the `cause` chain, since the process boundary wraps the originating error. */
@@ -675,7 +676,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const inputData = this._prepareInputData(trigger, event);
 
         const manager = yield* ProcessManager.Service;
-        const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        const executable = DurableOperation.fromOperation(functionDef, manager.operationHandlerSet);
         // Thread the dispatcher's space through `ProcessManager.spawn` so the
         // spawned process resolves space-affinity services (e.g.
         // `Database.Service`) for the same space the dispatcher is bound to.
@@ -685,6 +686,8 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
           environment: { space: db.spaceId },
+          // A trigger fires on its own, so what it writes is not a person's action.
+          origin: 'system',
           traceMeta: { trigger: Ref.make(trigger) },
         });
 
@@ -757,7 +760,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * failure cause propagates intact, surfacing the error as a defect (`Exit.die(RunAgainError)`).
    */
   private _isRunAgainRequest = (result: Exit.Exit<unknown>): boolean =>
-    Exit.isFailure(result) && RunAgainError.is(Cause.squash(result.cause));
+    Exit.isFailure(result) && Process.RunAgainError.is(Cause.squash(result.cause));
 
   invokeScheduledTriggers = ({
     kinds = ['timer', 'feed', 'subscription'],
@@ -914,7 +917,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               // `Obj.isDeleted` branch below: the database emits a real tombstone, and a feed
               // removal (`Feed.remove`) now also produces a queryable tombstone that retains the
               // object's type/body (the index merges the `{ id, '@deleted': true }` block onto the
-              // prior snapshot — see `FtsIndex.update` / `EntityMetaIndex.update`).
+              // prior snapshot — see `ObjectSnapshotIndex.update` / `EntityMetaIndex.update`).
               const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(

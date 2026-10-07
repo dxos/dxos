@@ -3,7 +3,15 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { type Command, Decoration, EditorView, WidgetType, keymap } from '@codemirror/view';
+import {
+  type Command,
+  Decoration,
+  EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+  WidgetType,
+  keymap,
+} from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
@@ -230,18 +238,39 @@ const pendingAttributes = EditorView.contentAttributes.compute([pendingTextState
 });
 
 // Flag the editor busy while a pending session is active so other extensions (e.g. the command-hint
-// placeholder) suppress themselves. Deferred to a microtask to avoid dispatching mid-update.
-const busyListener = EditorView.updateListener.of((update) => {
-  const active = update.state.field(pendingTextState) != null;
-  if (active === (update.startState.field(pendingTextState) != null)) {
-    return;
-  }
-  queueMicrotask(() => {
-    if ((update.view.state.field(pendingTextState) != null) === active) {
-      update.view.dispatch({ effects: setBusy.of(active) });
+// placeholder) suppress themselves. Deferred to a microtask to avoid dispatching mid-update, and
+// carried by a ViewPlugin so the deferred work is bound to the extension's lifetime: a bare
+// updateListener's microtask outlives a reconfigure that drops the extension and would then read a
+// StateField the configuration no longer has.
+const busyReporter = ViewPlugin.fromClass(
+  class {
+    /** Set once the plugin leaves the configuration, so queued microtasks abandon their dispatch. */
+    #destroyed = false;
+
+    update(update: ViewUpdate): void {
+      // The previous configuration need not have included the field (this may be the update that
+      // introduced the extension), so the prior value is read defensively.
+      const wasActive = update.startState.field(pendingTextState, false) != null;
+      const active = update.state.field(pendingTextState) != null;
+      if (active === wasActive) {
+        return;
+      }
+
+      queueMicrotask(() => {
+        if (this.#destroyed) {
+          return;
+        }
+        if ((update.view.state.field(pendingTextState) != null) === active) {
+          update.view.dispatch({ effects: setBusy.of(active) });
+        }
+      });
     }
-  });
-});
+
+    destroy(): void {
+      this.#destroyed = true;
+    }
+  },
+);
 
 //
 // Extension.
@@ -260,7 +289,7 @@ export const pendingText = (): Extension => [
   busy(),
   pendingDecorations,
   pendingAttributes,
-  busyListener,
+  busyReporter,
   markerTheme(),
   styles,
   keymap.of([

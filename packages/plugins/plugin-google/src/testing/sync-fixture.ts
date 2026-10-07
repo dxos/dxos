@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
@@ -12,10 +12,10 @@ import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Trace from '@dxos/compute/Trace';
 import { Database, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { Connection } from '@dxos/link';
-import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
@@ -27,13 +27,13 @@ import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider.ts
  * the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
  */
 export const runGoogleSync = (
-  options: RunMailSyncOptions,
+  options: MailSync.RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError,
+  MailSync.MailSyncError | EchoError.EntityNotFoundError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | GoogleMailApi | Resolver
 > =>
-  runMailSync(options).pipe(
+  MailSync.runMailSync(options).pipe(
     Effect.provide(googleMailSyncProvider({ userId: 'me', label: 'all' })),
     Effect.withSpan('google-sync'),
   );
@@ -57,7 +57,7 @@ export const googleSyncLiveServices = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<
   GoogleMailApi | Database.Service | Resolver | Capability.Service | Trace.TraceService | Operation.Service,
-  EntityNotFoundError
+  EchoError.EntityNotFoundError
 > => {
   // The fixture connection carries a real token on the object, so no credential resolves through EDGE.
   const credentials = credentialsLayerFromDatabase().pipe(

@@ -4,15 +4,16 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { TemplateEditor } from '@dxos/plugin-routine/components';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -44,15 +45,15 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+
+  const source = useResolveRef(cell.source);
+  const prompt = useResolveRef(cell.prompt);
+  const explorerGraph = useResolveRef(cell.graph);
 
   const extensions = useMemo(() => {
-    return cell.source?.target
-      ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(cell.source.target, ['content']) })]
-      : [];
-  }, [cell.source?.target]);
-
-  const explorerGraph = cell.graph?.target;
+    return source ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(source, ['content']) })] : [];
+  }, [source]);
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
@@ -66,7 +67,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
   switch (cell.type) {
     case 'markdown':
-      if (!cell.source?.target) {
+      if (!source) {
         return null;
       }
 
@@ -74,23 +75,23 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <NotebookTextEditor
           id={cell.id}
           classNames={editorStyles}
-          initialValue={cell.source.target.content}
+          initialValue={source.content}
           extensions={extensions}
         />
       );
 
     case 'script':
-      if (!cell.source?.target) {
+      if (!source) {
         return null;
       }
 
       return (
-        <div className='flex flex-col divide-y divide-subdued-separator'>
+        <div className='flex flex-col divide-y divide-separator-subtle'>
           <TypescriptEditor
             id={cell.id}
             role='section'
             classNames={editorStyles}
-            initialValue={cell.source.target.content}
+            initialValue={source.content}
             extensions={extensions}
             env={env}
             options={{
@@ -104,7 +105,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       );
 
     case 'query':
-      if (!cell.source?.target) {
+      if (!source) {
         return null;
       }
 
@@ -115,7 +116,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             id={cell.id}
             classNames={editorStyles}
             db={db}
-            value={cell.source.target.content}
+            value={source.content}
             onChange={handleQueryChange}
           />
           {explorerGraph && !dragging && (
@@ -130,13 +131,18 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
     // TODO(burdon): Use streaming response from Chat.
     case 'prompt':
-      if (!cell.prompt?.target) {
+      if (!prompt) {
         return null;
       }
 
       return (
         <>
-          <TemplateEditor id={cell.id} source={cell.prompt.target.text} lineNumbers={false} classNames={editorStyles} />
+          <TemplateEditor.TemplateEditor
+            id={cell.id}
+            source={prompt.text}
+            lineNumbers={false}
+            classNames={editorStyles}
+          />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
       );
@@ -154,11 +160,11 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-description font-mono', valueStyles)}>
+    <div className={mx('flex w-full bg-group-surface text-fg-muted font-mono', valueStyles)}>
       {name && (
         <>
           <span className='text-success-text'>{name}</span>
-          <span className='text-description'>&nbsp;=&nbsp;</span>
+          <span className='text-fg-muted'>&nbsp;=&nbsp;</span>
         </>
       )}
       <span>{value}</span>
@@ -177,7 +183,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full dx-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full dx-group-surface text-fg-muted border-y border-separator-subtle', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );
@@ -189,8 +195,8 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { themeMode } = useThemeContext();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(() => {
     return [
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),

@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types/index.ts';
 import { Editor } from '../Editor/index.ts';
@@ -102,7 +101,7 @@ const DefaultStory = (props: GraphCanvasProps) => {
   }
 
   return (
-    <div className='dx-fullscreen flex'>
+    <div className='dx-cover flex'>
       <Editor.Root id='story' graph={graph}>
         <GraphCanvas {...props} />
       </Editor.Root>

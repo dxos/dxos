@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** One namespace's two-way link between a local value and the synced store. */
 export type Binding = {
@@ -45,14 +45,22 @@ export const pluginSettings = (entry: AppCapabilities.Settings, registry: AtomRe
 /**
  * Which plugins are enabled, keyed by plugin id.
  *
- * Core plugins are left out: the host force-enables them, so they are not the user's to toggle.
+ * Core plugins are left out: the host force-enables them, so they are not the user's to toggle. So are a
+ * dev plugin and what it depends on while it is loaded: it is this session's, and a synced decision that
+ * turned a dependency off would take the dev plugin down with it.
  */
 export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRegistry.AtomRegistry): Binding => {
-  const toggleable = () =>
-    manager
+  const toggleable = () => {
+    const devPlugins = manager.getDevPluginIds();
+    const held = new Set([
+      ...devPlugins,
+      ...devPlugins.flatMap((id) => manager.getDependencies(id, { transitive: true })),
+    ]);
+    return manager
       .getPlugins()
       .map((plugin) => plugin.meta.profile.key)
-      .filter((id) => !manager.getCore().includes(id));
+      .filter((id) => !manager.getCore().includes(id) && !held.has(id));
+  };
 
   return {
     namespace: AppSettings.PLUGINS_NAMESPACE,
@@ -77,6 +85,7 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
       const unsubscribe = [
         registry.subscribe(manager.enabled, onChange),
         registry.subscribe(manager.plugins, onChange),
+        registry.subscribe(manager.devPluginIds, onChange),
       ];
       return () => unsubscribe.forEach((fn) => fn());
     },

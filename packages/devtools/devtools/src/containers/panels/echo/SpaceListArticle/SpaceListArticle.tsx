@@ -13,8 +13,9 @@ import { toDate } from '@dxos/protocols/buf';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Panel, useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { useDevtoolsDispatch } from '../../../../hooks/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -44,7 +45,7 @@ export const SpaceListArticle = ({
   const client = useClient();
   const spaces = useSpaces({ all: true });
   const setState = useDevtoolsDispatch();
-  const download = useFileDownload();
+  const download = Hooks.useFileDownload();
   const [importTargetSpaceId, setImportTargetSpaceId] = useState<string | null>(null);
 
   const importTargetSpace = useMemo(() => {
@@ -181,7 +182,7 @@ export const SpaceListArticle = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='flex-1'>
+      <Panel.Body classNames='flex-1'>
         {/* TODO(burdon): This should not be a dialog. */}
         <DialogRestoreSpace
           {...(importTargetSpaceId !== null
@@ -209,7 +210,7 @@ export const SpaceListArticle = ({
           onRowClick={handleRowClicked}
           onRowAction={handleRowAction}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

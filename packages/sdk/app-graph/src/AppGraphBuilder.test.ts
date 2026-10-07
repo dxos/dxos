@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -94,6 +94,41 @@ describe('GraphBuilder', () => {
       expect(count).to.equal(3);
     });
 
+    test('flushBeforePaint flushes a connector an exhausted budget left dirty', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const state = Atom.make(0);
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
+        }),
+      );
+      const graph = builder.graph;
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+      const data = () => registry.get(graph.connections(GraphNode.RootId, 'child'))[0]?.data;
+      expect(data()).to.equal(0);
+
+      let granted = false;
+      builder._frameBudget = () => ({
+        hasTime: () => granted,
+        spend: () => {},
+        flushBeforePaint: () => (granted = true),
+      });
+      builder._schedule = () => new Promise(() => {});
+      registry.set(state, 1);
+      await Promise.resolve();
+      registry.set(state, 2);
+      await Promise.resolve();
+      expect(data()).to.equal(0);
+
+      GraphBuilder.flushBeforePaint(builder);
+      await Promise.resolve();
+      expect(data()).to.equal(2);
+    });
+
     test('updates with new extensions', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
@@ -159,30 +194,34 @@ describe('GraphBuilder', () => {
 
       let count = 0;
       let exists = false;
-      const cancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (node) => {
-        count++;
-        exists = Option.isSome(node);
-      });
+      const cancel = registry.subscribe(
+        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)),
+        (node) => {
+          count++;
+          exists = Option.isSome(node);
+        },
+        { immediate: true },
+      );
       onTestFinished(() => cancel());
 
       Graph.expandSync(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
-      expect(count).to.equal(0);
+      expect(count).to.equal(1);
       expect(exists).to.be.false;
 
       registry.set(name, 'default');
       await GraphBuilder.flush(builder);
-      expect(count).to.equal(1);
+      expect(count).to.equal(2);
       expect(exists).to.be.true;
 
       registry.set(name, 'removed');
       await GraphBuilder.flush(builder);
-      expect(count).to.equal(2);
+      expect(count).to.equal(3);
       expect(exists).to.be.false;
 
       registry.set(name, 'added');
       await GraphBuilder.flush(builder);
-      expect(count).to.equal(3);
+      expect(count).to.equal(4);
       expect(exists).to.be.true;
     });
 
@@ -524,57 +563,66 @@ describe('GraphBuilder', () => {
 
       const graph = builder.graph;
 
+      const parent = graph.node(GraphNode.qualifyId('root', EXAMPLE_ID));
+      const independent = graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(2)));
+      const dependent = graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(3)));
       let parentCount = 0;
-      const parentCancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (_) => {
-        parentCount++;
-      });
+      const parentCancel = registry.subscribe(
+        parent,
+        (_) => {
+          parentCount++;
+        },
+        { immediate: true },
+      );
       onTestFinished(() => parentCancel());
 
       let independentCount = 0;
       const independentCancel = registry.subscribe(
-        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(2))),
+        independent,
         (_) => {
           independentCount++;
         },
+        { immediate: true },
       );
       onTestFinished(() => independentCancel());
 
       let dependentCount = 0;
       const dependentCancel = registry.subscribe(
-        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(3))),
+        dependent,
         (_) => {
           dependentCount++;
         },
+        { immediate: true },
       );
       onTestFinished(() => dependentCancel());
 
       // Counts should not increment until the node is expanded.
       Graph.expandSync(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(1);
-      expect(independentCount).to.equal(0);
-      expect(dependentCount).to.equal(0);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(1);
 
       // Counts should increment when the node is expanded.
       Graph.expandSync(graph, GraphNode.qualifyId('root', EXAMPLE_ID), 'child');
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(1);
-      expect(independentCount).to.equal(1);
-      expect(dependentCount).to.equal(1);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(2);
 
       // Only dependent count should increment when the parent changes.
       registry.set(name, 'updated');
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(2);
-      expect(independentCount).to.equal(1);
-      expect(dependentCount).to.equal(2);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(3);
 
       // Only independent count should increment when its state changes.
       registry.set(sub, 'updated');
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(2);
-      expect(independentCount).to.equal(2);
-      expect(dependentCount).to.equal(2);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(3);
 
       // Independent count should update if its state changes even if the parent is removed.
       Atom.batch(() => {
@@ -582,23 +630,23 @@ describe('GraphBuilder', () => {
         registry.set(sub, 'batch');
       });
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(2);
-      expect(independentCount).to.equal(3);
-      expect(dependentCount).to.equal(2);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(3);
 
       // Dependent count should increment when the node is added back.
       registry.set(name, 'added');
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(3);
-      expect(independentCount).to.equal(3);
-      expect(dependentCount).to.equal(3);
+      expect(parentCount).to.equal(4);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(4);
 
       // Counts should not increment when the node is expanded again.
       Graph.expandSync(graph, GraphNode.qualifyId('root', EXAMPLE_ID), 'child');
       await GraphBuilder.flush(builder);
-      expect(parentCount).to.equal(3);
-      expect(independentCount).to.equal(3);
-      expect(dependentCount).to.equal(3);
+      expect(parentCount).to.equal(4);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(4);
     });
 
     test('eager graph expansion', async () => {

@@ -5,10 +5,10 @@
 
 import React, { useEffect, useReducer, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type FPSProps = ThemedClassName<{
+export type FPSProps = Util.ThemedClassName<{
   width?: number;
   height?: number;
   bar?: string;
@@ -73,7 +73,7 @@ export const FPS = ({ classNames, width = 60, height = 30, bar = 'bg-cyan-500' }
       style={{ width: width + 6 }}
       className={mx(
         'relative flex flex-col p-0.5',
-        'bg-base-surface text-xs text-subdued font-thin pointer-events-none border border-separator',
+        'bg-base-surface text-xs text-fg-subtle font-thin pointer-events-none border border-separator',
         classNames,
       )}
     >

@@ -29,6 +29,7 @@ type SpaceForm
     icon?: string               # phosphor icon identifier
     hue?: string                # colour token
     edgeReplication?: boolean   # enable EDGE-based replication
+    origin?: string             # overrides the invoker's write origin (user | system | unknown)
 ```
 
 ```mdl

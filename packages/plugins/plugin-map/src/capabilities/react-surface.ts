@@ -6,17 +6,17 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
-import { Position } from '@dxos/util';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Position from '@dxos/util/Position';
 
-import { MapSurface, MapViewEditor } from '#containers';
+import { MapSurface, MapViewEditor, WorldMapSurface } from '#containers';
 import { Map } from '#types';
 
 import { LocationAnnotationId } from '../types/MapCapabilities.ts';
-import { MapInline } from '../types/MapRole.ts';
+import { MapInline, World } from '../types/MapRole.ts';
 import { LocationField } from './LocationField.tsx';
 
 export default Capability.makeModule(() =>
@@ -38,6 +38,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.subject(MapInline, Obj.isObject),
         component: MapSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'surface.worldMap',
+        filter: Surface.makeFilter(World),
+        component: WorldMapSurface,
+        props: ({ data: { markers, subject, view } }) => ({ markers, subject, view }),
       }),
       // Companion surface for any object that has markers (gated by app-graph-builder, which only
       // emits the `map` companion node when a MarkerProvider matches the primary object).

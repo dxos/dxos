@@ -7,13 +7,11 @@
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
-import type { OpaqueToolkit } from '@dxos/ai';
+import type { OpaqueToolkit, AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
-import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
@@ -21,14 +19,16 @@ import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import type { Database, Type } from '@dxos/echo';
-import type * as Retention$ from '@dxos/graph/Retention';
+import type { Database, Obj, Type } from '@dxos/echo';
+import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
-import type { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as AppUpdate$ from '../app/AppUpdate.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
@@ -160,12 +160,12 @@ export const AppGraph = Capability$.makeSingleton<AppGraph>()('org.dxos.app-fram
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
+export const AppGraphBuilder = Capability$.make<AppGraphBuilder$.BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
 /** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
-export type AppGraphRetention = Retention$.Retention<AppGraphNode$.RelationInput>;
+export type AppGraphRetention = Retention.Retention<AppGraphNode$.RelationInput>;
 
 /**
  * @category Capability
@@ -277,27 +277,31 @@ export type PluginAsset = Readonly<{
 export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
 
 /**
- * A themed sample space a plugin offers, for filling a space with demonstrable content.
+ * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
+ * the content to write once the space exists.
  *
- * `apply` is a bound closure rather than the definition itself: a consumer needs only "put this
- * content in that space", and handing it the definition would drag the builder, its phase map and
- * Effect into every picker that lists one. Build the entry with `SampleSpace.preset`.
+ * Build one with `SampleSpace.makeTemplate`.
  */
-export type SampleSpace = Readonly<{
-  /** Stable id, namespaced by the owning plugin. */
+export type SpaceTemplate = Readonly<{
+  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
   id: string;
-  /** Name for the picker. */
+  /** Name for the picker, and the default space name when the template is chosen. */
   label: string;
-  /** One line on what the space contains. */
+  /** One line on what the template creates. */
   description?: string;
-  /** Registers the content's types on the client, then writes it into `space`. */
+  /** An `iconValues` name, as space properties carry. */
+  icon?: string;
+  hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  hidden?: boolean;
+  /** Registers the content's types on the client, then writes it into the new space. */
   apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
 }>;
 
 /**
  * @category Capability
  */
-export const SampleSpace = Capability$.make<SampleSpace>()('org.dxos.app-framework.capability.sampleSpace');
+export const SpaceTemplate = Capability$.make<SpaceTemplate>()('org.dxos.app-framework.capability.spaceTemplate');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
@@ -360,6 +364,22 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/**
+ * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
+ * type's `Annotation.UserType`; see `DefaultParent.resolve`, which asks the matching rules in `position`
+ * order and takes the first parent one returns.
+ * @category Capability
+ */
+export type DefaultParent = {
+  /** The `Annotation.UserType` tag this rule applies to. */
+  readonly tag: string;
+  /** The parent for the object; undefined passes to the next rule, as does a failure (which is logged). */
+  readonly resolve: (object: Obj.Unknown) => Effect$.Effect<Obj.Unknown | undefined, Error, Database.Service>;
+  readonly position?: Position.Position;
+};
+
+export const DefaultParent = Capability$.make<DefaultParent>()('org.dxos.app-framework.capability.defaultParent');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
@@ -454,7 +474,7 @@ export type ProgressMonitor = Progress.TaskHandle;
  */
 export type ProgressRegistry = Readonly<{
   /** Aggregate snapshot of all active providers. */
-  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  snapshotAtom: Atom.Atom<Progress.Snapshot>;
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
   /**
@@ -465,7 +485,7 @@ export type ProgressRegistry = Readonly<{
   /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
   cancel: (name: string) => void;
   /** Non-reactive read of the current snapshot. */
-  snapshot: () => Progress.ProgressSnapshot;
+  snapshot: () => Progress.Snapshot;
 }>;
 
 /**
@@ -473,6 +493,16 @@ export type ProgressRegistry = Readonly<{
  */
 export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
   'org.dxos.app-toolkit.capability.progressRegistry',
+);
+
+/**
+ * The app's update channel, contributed by whichever plugin owns updates on this platform —
+ * `plugin-native` for the desktop OTA updater, `plugin-pwa` for the service worker. Exactly one
+ * contributes at a time, so a settings surface can render either without knowing which it got.
+ * @category Capability
+ */
+export const UpdateManager = Capability$.makeSingleton<AppUpdate$.Manager>()(
+  'org.dxos.app-toolkit.capability.updateManager',
 );
 
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;

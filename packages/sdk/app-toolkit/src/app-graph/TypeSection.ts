@@ -6,7 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -15,11 +15,14 @@ import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo'
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Position, inferObjectOrder } from '@dxos/util';
+import { ArchivedAnnotation } from '@dxos/schema';
+import { inferObjectOrder } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
+import * as ContainerModel from '../types/ContainerModel.ts';
 
 /** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
 export const makeSectionRearrangeCallback = AppNode.createFactory(
@@ -43,9 +46,14 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
-/** The objects a type section lists: those without a parent, an owned object being reached through its owner. */
+/**
+ * The objects a type section lists: unarchived ones without a parent, an owned object being reached
+ * through its owner.
+ */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
-  Query.select(Filter.and(Filter.type(type), Filter.hasParent(false)));
+  Query.select(
+    Filter.and(Filter.type(type), Filter.hasParent(false), Filter.not(Filter.annotation(ArchivedAnnotation, true))),
+  );
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under
@@ -76,8 +84,8 @@ export const isSectionObjectsExtension = (extensionId: string, typename: string)
   return id === objectsId || id.endsWith(`.${objectsId}`);
 };
 
-export const createTypeSectionExtension = (
-  type: Type.AnyEntity,
+export const createTypeSectionExtension = <T extends Type.AnyObj>(
+  type: T,
   options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
@@ -115,6 +123,11 @@ export const createTypeSectionExtension = (
      * then materialized on expand rather than inline.
      */
     sectionUrlKey?: string;
+    /**
+     * The container an object dropped onto a section object's row joins. Without it a section object
+     * only accepts objects of its own type, as reorders.
+     */
+    dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -140,8 +153,8 @@ export const createTypeSectionExtension = (
   const sectionSegments = [...groupSegments, sectionSegment];
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
-  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
-    const objects = get(space.db.query(query).atom) as Obj.Unknown[];
+  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Type.InstanceType<T>[] => {
+    const objects = get(space.db.query(query).atom) as Type.InstanceType<T>[];
     if (objects.length === 0) {
       return [];
     }
@@ -155,17 +168,27 @@ export const createTypeSectionExtension = (
       .filter((id): id is string => id !== undefined);
     // Objects not in the stored order follow in query order.
     return inferObjectOrder(
-      Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
+      Object.fromEntries(objects.map((object): [string, Type.InstanceType<T>] => [object.id, object])),
       order,
     );
   };
 
-  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
-    const onRearrange = makeSectionRearrangeCallback(space, typename);
-    return orderedObjects
-      .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
+  const { dropInto } = options;
+  // A row takes other types onto itself and reorders among its own type.
+  const blockInstruction = (source: TreeData, instruction: AppNode.Instruction): boolean =>
+    canDropSameType(source) === (instruction.type === 'make-child');
+
+  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) =>
+    orderedObjects
+      .map((object) =>
+        AppNode.makeObject({
+          get,
+          db: space.db,
+          object,
+          ...(dropInto ? { dropInto: dropInto(object), blockInstruction } : {}),
+        }),
+      )
       .filter((node): node is NonNullable<typeof node> => node !== null);
-  };
 
   /** Matches this type's section node (the parent the objects and the create action hang off). */
   const whenSection = (node: AppGraphNode.Node): Option.Option<Space> => {
@@ -213,6 +236,8 @@ export const createTypeSectionExtension = (
             role: 'branch',
             draggable: false,
             droppable: false,
+            canDrop: canDropSameType,
+            onRearrange: makeSectionRearrangeCallback(space, typename),
             space,
             testId,
             ...(options.position ? { position: options.position } : {}),

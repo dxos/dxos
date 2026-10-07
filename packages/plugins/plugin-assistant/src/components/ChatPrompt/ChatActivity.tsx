@@ -5,8 +5,9 @@
 import React, { useEffect, useState } from 'react';
 
 import type * as Trace from '@dxos/compute/Trace';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -24,7 +25,7 @@ const activityLabelKey = (phase: Trace.RequestPhaseName): string => `activity.${
  */
 const INLINE_DETAIL_PHASES: ReadonlySet<Trace.RequestPhaseName> = new Set<Trace.RequestPhaseName>(['calling-tool']);
 
-export type ChatActivityProps = ThemedClassName<{
+export type ChatActivityProps = Util.ThemedClassName<{
   activity?: Trace.PayloadType<typeof Trace.RequestPhase>;
   /**
    * Epoch milliseconds the agent is scheduled to wake at, when an alarm is pending. Rendered as a
@@ -46,7 +47,7 @@ export type ChatActivityProps = ThemedClassName<{
  * state can be mounted in a story without a live agent process; `Chat.Activity` is the bound form.
  */
 export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // `sleeping` is the agent saying the turn is over and only the alarm is left, so the countdown
   // replaces it rather than competing with it.
   const waking = !activity || activity.phase === 'sleeping';
@@ -66,17 +67,21 @@ export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps
 
   return (
     // `font-body` overrides the pill root's `font-mono`, which suits the status pill's token counts
-    // and elapsed clock but renders a sentence as debug output.
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-1 px-2 gap-2 text-sm font-body', classNames]}>
-      <NaturalChatStatus.Icon />
-      <NaturalChatStatus.Text>
+    // and elapsed clock but renders a sentence as debug output. One line: a long tool detail truncates
+    // rather than wrapping, so the prompt below does not jump as the phase changes.
+    <NaturalChatStatus.Root
+      defaultRunning={false}
+      classNames={['py-1 px-2 gap-2 text-sm font-body max-w-full min-w-0 whitespace-nowrap', classNames]}
+    >
+      <NaturalChatStatus.Icon classNames='shrink-0' />
+      <NaturalChatStatus.Text classNames='min-w-0 truncate'>
         <span data-testid='assistant.chat-activity'>{label}</span>
       </NaturalChatStatus.Text>
       {/* Only a re-issued request has an attempt worth naming; the first one is just the request. */}
       {activity?.attempt != null && activity.attempt > 1 && (
         <>
-          <NaturalChatStatus.Separator />
-          <NaturalChatStatus.Text>
+          <NaturalChatStatus.Separator classNames='shrink-0' />
+          <NaturalChatStatus.Text classNames='shrink-0'>
             <span data-testid='assistant.chat-activity.attempt'>
               {t('activity.attempt', { attempt: activity.attempt })}
             </span>
@@ -85,8 +90,8 @@ export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps
       )}
       {activity?.detail && !INLINE_DETAIL_PHASES.has(activity.phase) && (
         <>
-          <NaturalChatStatus.Separator />
-          <NaturalChatStatus.Text>{activity.detail}</NaturalChatStatus.Text>
+          <NaturalChatStatus.Separator classNames='shrink-0' />
+          <NaturalChatStatus.Text classNames='min-w-0 truncate'>{activity.detail}</NaturalChatStatus.Text>
         </>
       )}
     </NaturalChatStatus.Root>

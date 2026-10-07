@@ -7,7 +7,7 @@
 // owned by the view, never in the model, so two views of one scene stay independent.
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { type Clipboard } from '../utils/clipboard.ts';
 import { type PartKey } from '../utils/parts.ts';
@@ -29,22 +29,33 @@ import {
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
+/**
+ * The pointer machine's state. A node gesture (move, resize, create, a spline point) shows its geometry
+ * snapped as it goes; a link band follows the pointer exactly and snaps once, as it lands.
+ */
 export type Drag =
   /** Screen-space pan; `last` is the previous pointer position. */
   | { kind: 'pan'; last: Point }
-  /** Marquee in scene coordinates. */
-  | { kind: 'marquee'; from: Point; to: Point; additive: boolean }
+  /** Marquee in scene coordinates; shift adds the hits to the selection, alt subtracts them. */
+  | { kind: 'marquee'; from: Point; to: Point; mode: 'replace' | 'add' | 'subtract' }
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
-   * and `delta` the resulting scene-space offset applied transiently to every selected node.
+   * and `delta` the resulting scene-space offset applied transiently to every selected node. With
+   * `copy` (⌘ held) the originals stay and copies land at `delta` instead.
    */
-  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
+  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; copy?: boolean }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
-  /** Rubber band from a port; `target` is set while hovering a valid drop, and the link is then previewed as created. */
+  /**
+   * Rubber band from a port, or from a free point under a link tool; `target` is set while hovering a
+   * valid drop, and the link is then previewed as created.
+   */
   | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
-  /** Drawing a new node with a tool. */
-  | { kind: 'create'; type: NodeType; from: Point; to: Point }
+  /**
+   * Drawing a new node with a tool. `dropped` marks one dragged in from the palette or a host's
+   * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
+   */
+  | { kind: 'create'; type: NodeType; from: Point; to: Point; dropped?: boolean }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
@@ -69,6 +80,10 @@ export type SceneViewAtoms = {
   linkType: Atom.Writable<LinkType>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
+  /** Guides shown: the scene's page frame and, on a lattice, its cells. */
+  guides: Atom.Writable<boolean>;
+  /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
+  lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** Projection snapshots for undo and redo (`undo.ts`). */
@@ -76,6 +91,8 @@ export type SceneViewAtoms = {
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
   editing: Atom.Writable<EditingPart | undefined>;
+  /** Frames show their id, type and geometry. */
+  debug: Atom.Writable<boolean>;
 };
 
 /**
@@ -91,9 +108,12 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
+  guides: Atom.keepAlive(Atom.make<boolean>(true)),
+  lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
+  debug: Atom.keepAlive(Atom.make<boolean>(false)),
 });

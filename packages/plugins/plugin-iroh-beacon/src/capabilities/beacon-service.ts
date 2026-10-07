@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Identity } from '@dxos/halo';
-import { HaloServicesLayer } from '@dxos/plugin-client';
+import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
 import { meta } from '#meta';
 import { type BeaconState } from '#types';
@@ -34,8 +34,8 @@ export default Capability.makeModule(
 
     const stateAtom = Atom.make<BeaconState>(INITIAL_STATE).pipe(Atom.keepAlive);
 
-    const identity = Option.getOrUndefined(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServicesLayer)));
-    const currentDevice = (yield* Identity.getDevicesSnapshot.pipe(Effect.provide(HaloServicesLayer))).find(
+    const identity = Option.getOrUndefined(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServices.layer)));
+    const currentDevice = (yield* Identity.getDevicesSnapshot.pipe(Effect.provide(HaloServices.layer))).find(
       (device) => device.current,
     );
 

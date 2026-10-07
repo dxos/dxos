@@ -12,12 +12,13 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
+import type * as Change from './Change.ts';
 import type * as Database from './Database.ts';
 import * as Entity from './Entity.ts';
 import * as Error from './Error.ts';
@@ -169,6 +170,9 @@ export type MakeProps<S extends Type.AnyObj> = {
  *
  * Note: Only accepts object schemas / object-kind types, not relation schemas.
  * Use `Relation.make` for relations.
+ *
+ * @performance O(n) in props size; validates props against the schema and allocates a reactive proxy, with no database
+ * I/O.
  */
 export function make<T extends Type.AnyObj>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
 export function make(input: Type.AnyObj, props: any): OfShape<any> {
@@ -217,12 +221,19 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
 
 /**
  * Determine if object is an ECHO object.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isObject = (obj: unknown): obj is Unknown => {
   assumeType<internal.InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
 
+/**
+ * Determine if a value is an ECHO object snapshot.
+ *
+ * @performance O(1) brand check; no allocation.
+ */
 export const isSnapshot = (obj: unknown): obj is Snapshot => {
   assumeType<internal.InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && (obj as any)[Entity.SnapshotKindId] === Entity.Kind.Object;
@@ -233,6 +244,8 @@ export const isSnapshot = (obj: unknown): obj is Snapshot => {
  * The callback is called synchronously when the object is modified.
  * Only accepts reactive objects (not snapshots).
  * @returns Unsubscribe function.
+ *
+ * @performance O(1) listener registration; the callback runs synchronously after every committed change.
  */
 export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
   return internal.subscribe(obj, callback);
@@ -246,6 +259,9 @@ export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
  * Returns an immutable snapshot of an object.
  * The snapshot is branded with SnapshotKindId instead of KindId,
  * making it distinguishable from the reactive object at the type level.
+ *
+ * @performance O(n) in entity size; deep-copies plain data (refs are shared, not resolved) into a frozen object per
+ * call.
  */
 export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objInternal.getSnapshot as any;
 
@@ -265,6 +281,8 @@ export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objIntern
  *   Effect.runSync
  * );
  * ```
+ *
+ * @performance O(1) working-set lookup by id; never loads from disk.
  */
 export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Error.GetReactiveError> =>
   Effect.gen(function* () {
@@ -285,6 +303,8 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
  *
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
  * @returns Effect that succeeds with `Option.some(reactive)` or `Option.none()`.
+ *
+ * @performance O(1) working-set lookup by id; never loads from disk.
  */
 export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
@@ -299,6 +319,8 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
  * @returns The reactive object.
  * @throws {Error.GetReactiveError} When the object cannot be resolved.
+ *
+ * @performance O(1) working-set lookup by id; never loads from disk.
  */
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));
@@ -309,6 +331,8 @@ export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T 
  *
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot` or `useObject`), or `undefined`.
  * @returns The reactive object, or `undefined` if the snapshot is `undefined` or unresolvable.
+ *
+ * @performance O(1) working-set lookup by id; never loads from disk.
  */
 export const getReactiveOrUndefined = <T extends Unknown>(snapshot: Snapshot<T> | undefined): T | undefined => {
   if (snapshot === undefined) {
@@ -340,6 +364,9 @@ export type CloneOptions = {
  * Clones an object or relation.
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
+ *
+ * @performance O(n) in object size; with `deep`, also clones each qualifying ref target that resolves synchronously
+ * (O(reachable subgraph)).
  */
 export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = objInternal.clone;
 
@@ -382,6 +409,9 @@ export type Mutable<T> = internal.Mutable<T>;
  * ```
  *
  * Note: Only accepts objects. Use `Relation.update` for relations.
+ *
+ * @performance Synchronous; costs the mutations made in the callback plus one batched notification and an O(owning
+ * fields) parent pass.
  */
 export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
   internal.change(obj, callback);
@@ -410,6 +440,8 @@ export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallb
  * Obj.getValue(person, ['addresses', 0, 'street']); // '123 Main St'
  * Obj.getValue(person, ['addresses', 1, 'street']); // undefined
  * ```
+ *
+ * @performance O(path length) property walk; no schema lookup.
  */
 export const getValue = (obj: Unknown | Snapshot, path: readonly (string | number)[]): any => {
   return SchemaEx.getValue(obj, SchemaEx.createJsonPath(path));
@@ -439,6 +471,8 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * });
  * // Creates: person.addresses = [{ street: '123 Main St' }]
  * ```
+ *
+ * @performance O(path length) schema-guided walk; each missing level scans its schema properties once.
  */
 // TODO(wittjosiah): Compute possible path values + type value based on generic object type.
 export const setValue: (obj: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
@@ -465,6 +499,8 @@ export type ID = EntityId;
  *
  * Only accepts `Type.AnyObj` — use `Relation.instanceOf` for relations and
  * `Type.isType(value)` to test for `Type.Type` meta-schema entities.
+ *
+ * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
  */
 export const instanceOf: {
   // Reject `Type.Type` at the type level — those are meta-schema entities, not
@@ -504,6 +540,8 @@ export const instanceOf: {
  *   // snapshot is Obj.Snapshot<Person>
  * }
  * ```
+ *
+ * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
  */
 export const snapshotOf: {
   <S extends Type.AnyObj>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S>>;
@@ -530,6 +568,9 @@ export type { GetURIOptions } from './internal/index.ts';
  * Accepts both reactive objects and snapshots.
  *
  * @param options.prefer - Controls the URI form (see {@link GetURIOptions}).
+ *
+ * @performance O(1); returns the stored URI, constructing (and allocating) one only when `options.prefer` asks for
+ * another form.
  */
 export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
@@ -546,6 +587,8 @@ export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOpti
  * ```ts
  * Obj.getMnemonic(task); // '7QK2ZB'
  * ```
+ *
+ * @performance O(1) slice of the id; no allocation beyond the result string.
  */
 export const getMnemonic = (entity: Unknown | Snapshot): string => EntityId.getMnemonic(entity.id);
 
@@ -553,6 +596,8 @@ export const getMnemonic = (entity: Unknown | Snapshot): string => EntityId.getM
  * @returns The DXN of the object's type.
  * @example dxn:com.example.type.person:1.0.0
  * @throws If the object is missing its type (corrupted object).
+ *
+ * @performance O(1) read of the stored type URI.
  */
 export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
   const type = internal.getTypeURI(obj);
@@ -567,6 +612,8 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
  * (e.g. a freshly deserialized snapshot whose type entity hasn't been wired
  * up yet, or an object loaded from storage before its schema is known). To
  * get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
+ *
+ * @performance O(1) read of the type back-reference.
  */
 export const getType = (obj: Unknown | Snapshot): Type.AnyObj | undefined =>
   internal.getType(obj) as Type.AnyObj | undefined;
@@ -575,6 +622,8 @@ export const getType = (obj: Unknown | Snapshot): Type.AnyObj | undefined =>
  * @returns The typename of the object's type.
  * Accepts both reactive objects and snapshots.
  * @example `com.example.type.person`
+ *
+ * @performance O(1); reads the schema type annotation (database objects resolve the schema by registry URI lookup).
  */
 export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
 
@@ -590,6 +639,8 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
  *   applies: Reaching an object's database — to query, add, or remove — when the surrounding Space is not otherwise needed
  *   instead-of: `getSpace(obj)?.db` (resolving the whole Space just to read its `.db`)
  *   uses: {@link getDatabase}
+ *
+ * @performance O(1) slot read.
  */
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);
@@ -598,6 +649,8 @@ export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.
  * Get the branch this object instance is bound to: `'main'` for the canonical object, or the branch of
  * a `db.branch()` independent instance. The branch is a property of the instance — two instances of the
  * same object id on different branches each report their own branch.
+ *
+ * @performance O(1) slot read.
  */
 export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
 
@@ -605,12 +658,52 @@ export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
  * Get an immutable snapshot of the object at the given historical heads — a detached instance, not a
  * pin on the live object. Only the surface that asks for it sees the historical value; the live
  * object and every other surface are unaffected. The functional alternative to a read-time-travel pin.
+ *
+ * @performance O(object size) plus the Automerge cost of viewing the document at `heads`; nothing is cached.
  */
 export const getVersion = <T extends Unknown>(obj: T, heads: readonly string[]): Snapshot<T> => {
   const db = getDatabase(obj);
   invariant(db, 'object is not bound to a database');
   return db.getVersion(obj, heads);
 };
+
+/**
+ * Options for {@link getChanges}.
+ */
+export type GetChangesOptions<K extends string = string> = {
+  /** Narrow the history to the changes that touched this property; `before`/`after` then hold its value. */
+  property?: K;
+};
+
+/**
+ * The object's edit history, oldest first: one {@link Change.Change} per document change that
+ * touched the object, carrying its snapshot before and after. Given `property`, only the changes that
+ * touched that property, carrying its value. Pass an entry's `heads` to {@link getVersion} to read the
+ * whole object as that change left it.
+ *
+ * Changes belong to the object's Automerge document, so `time`, `actor` and `ops` describe the whole
+ * change, which may also have written other objects in the same document. Edits to the content of a
+ * referenced object (e.g. a `Ref<Text>`) are that object's history, not this one's.
+ *
+ * @example
+ * ```ts
+ * for (const { time, before, after } of Obj.getChanges(task, { property: 'status' })) {
+ *   console.log(new Date(time), before, '→', after);
+ * }
+ * ```
+ *
+ * @performance O(document history): diffs every change of the Automerge document and snapshots each match; not cached.
+ */
+export function getChanges<T extends Unknown>(obj: T): Change.Change<Snapshot<T>>[];
+export function getChanges<T extends Unknown, K extends Exclude<keyof Snapshot<T> & string, 'id'>>(
+  obj: T,
+  opts: GetChangesOptions<K> & { property: K },
+): Change.Change<Snapshot<T>[K]>[];
+export function getChanges<T extends Unknown>(obj: T, opts?: GetChangesOptions): Change.ValueChange<unknown>[] {
+  const db = getDatabase(obj);
+  invariant(db, 'object is not bound to a database');
+  return db.getChanges(obj, opts);
+}
 
 //
 // Meta
@@ -652,6 +745,8 @@ export type Meta = internal.Meta;
  *   meta.tags.push(Ref.make(tag));     // tags are refs to Tag objects
  * });
  * ```
+ *
+ * @performance O(1); returns the live (memoized) meta proxy, not a copy.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
 export function getMeta(entity: Mutable<Unknown>): Meta;
@@ -663,6 +758,8 @@ export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | R
 /**
  * @returns Foreign keys for the object from the specified source.
  * Accepts both reactive objects and snapshots.
+ *
+ * @performance O(k) in the foreign-key count; allocates a filtered array.
  */
 export const getKeys: {
   (entity: Unknown | Snapshot, source: string): ForeignKey[];
@@ -675,6 +772,8 @@ export const getKeys: {
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(k) in the foreign-key count.
  */
 export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => internal.deleteKeys(entity, source);
 
@@ -684,6 +783,8 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(t) in the tag count; dedupes by ref URI before appending.
  */
 export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
@@ -693,12 +794,16 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(t) in the tag count.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the object is deleted.
  * Accepts both reactive objects and snapshots.
+ *
+ * @performance O(1) slot read.
  */
 // TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (entity: Unknown | Snapshot): boolean => objInternal.isDeleted(entity);
@@ -713,6 +818,8 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => objInternal.is
  *
  * @param options.fallback `'typename'` returns the object's typename when no
  *   label is set (e.g. `org.dxos.type.table`).
+ *
+ * @performance O(label accessors); reads the fields named by the schema `LabelAnnotation`.
  */
 export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
   internal.getLabel(entity, options);
@@ -723,12 +830,16 @@ export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabel
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(1); writes the first `LabelAnnotation` accessor, a no-op without a schema.
  */
 export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @performance O(1); reads the field named by the schema `DescriptionAnnotation`.
  */
 export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
@@ -739,6 +850,8 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  *
  * Returns the full `{ icon, hue }` annotation; callers wanting just the icon name typically
  * write `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
+ *
+ * @performance O(1) schema annotation lookup, but decodes the annotation value on every call (not cached).
  */
 export const getIcon = (entity: Entity.Unknown | Entity.Snapshot): internal.IconAnnotation | undefined =>
   internal.getIcon(entity);
@@ -749,6 +862,8 @@ export const getIcon = (entity: Entity.Unknown | Entity.Snapshot): internal.Icon
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(1); writes the field named by the schema `DescriptionAnnotation`.
  */
 export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
   internal.setDescription(entity, description);
@@ -770,6 +885,8 @@ export const Parent: unique symbol = internal.ParentId as any;
  * The parent is always loaded together with the object.
  * Only objects are allowed to have a parent
  * @returns The parent object, or undefined if the object has no parent.
+ *
+ * @performance O(1); reads the parent slot (a working-set lookup for database objects, never a load).
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
   assertArgument(isObject(entity) || isSnapshot(entity), 'Expected an object');
@@ -811,6 +928,8 @@ const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
  *
  * The parent must hold a ref to the child (in its data, or in an object annotation — e.g.
  * `Chat.CompanionChatAnnotation`); a ref-less edge currently only warns while call sites are swept.
+ *
+ * @performance O(n) in parent size: scans the parent data and annotations for a ref to the child before the O(1) write.
  */
 // TODO(burdon): Promote the ref-less-edge warning to an invariant once call sites are swept.
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
@@ -909,6 +1028,8 @@ const prepareAssignValue = (value: unknown): unknown =>
  * Must be called within an `Obj.update` callback.
  *
  * @returns Whether any property was updated.
+ *
+ * @performance O(n) in source size; deep-compares every selected property and assigns only the changed ones.
  */
 export const updateFrom = <T extends Unknown>(
   target: Mutable<T>,
@@ -961,6 +1082,8 @@ export type JSON = internal.ObjectJSON;
  * A database-backed object carries its own `toJSON`, which reads the document rather than the target
  * and still differs in two ways: it omits `@uri`, and it leaves `Uint8Array` values unencoded.
  * Prefer this function where the two must agree.
+ *
+ * @performance O(n) in entity size; serializes the whole entity on every call.
  */
 // TODO(dmaretskyi): Unify with the echo-handler serializer (`echo-prototypes.ts`) so the divergence
 //   above goes away; changes what `JSON.stringify` emits for every database object.
@@ -976,6 +1099,8 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  * @param options.uri - Override object URI. Changes the result of `Obj.getURI`.
  * @param options.database - Database to associate with the object.
  * @param options.parent - Parent entity to associate with the object (used when the JSON has no `@parent`). Changes the result of `Obj.getParent`.
+ *
+ * @performance Async; O(n) schema decode plus resolver round trips for the type, relation endpoints and parent.
  */
 export const fromJSON: (
   json: unknown,
@@ -988,8 +1113,24 @@ export const fromJSON: (
  */
 export type Comparator = internal.Comparator<Unknown | Snapshot>;
 
+/**
+ * Comparator that orders objects by label.
+ *
+ * @performance O(label accessors) per comparison; labels are recomputed, not cached, so a sort costs O(n log n) label
+ * reads.
+ */
 export const sortByLabel: Comparator = internal.sortByLabel as Comparator;
+/**
+ * Comparator that orders objects by typename.
+ *
+ * @performance O(1) per comparison.
+ */
 export const sortByTypename: Comparator = internal.sortByTypename as Comparator;
+/**
+ * Compose comparators, applying each in order until one returns non-zero.
+ *
+ * @performance O(c) per comparison in the number of composed comparators.
+ */
 export const sort = (...comparators: Comparator[]): Comparator => internal.sort(...comparators) as Comparator;
 
 //
@@ -1006,15 +1147,42 @@ export type VersionCompareResult = internal.VersionCompareResult;
  */
 export type Version = internal.EntityVersion;
 
+/**
+ * Checks that a value is a version object.
+ *
+ * @performance O(1) brand check.
+ */
 export const isVersion = internal.isVersion;
+/**
+ * Checks that a version object is versioned.
+ *
+ * @performance O(1).
+ */
 export const versionValid = internal.versionValid;
+/**
+ * Compares two versions.
+ *
+ * @performance O(h²) in the number of Automerge heads, which is typically small.
+ */
 export const compareVersions = internal.compareVersions;
+/**
+ * Encodes a version as a string.
+ *
+ * @performance O(h) JSON serialization of the heads.
+ */
 export const encodeVersion = internal.encodeVersion;
+/**
+ * Decodes a version from its string encoding.
+ *
+ * @performance O(h) JSON parse of the heads.
+ */
 export const decodeVersion = internal.decodeVersion;
 
 /**
  * Returns the version of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @performance O(h) in Automerge heads: database entities copy the current heads into a fresh array per call.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
 
@@ -1032,9 +1200,40 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
  *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never notifies when it becomes available
  *   uses: {@link atom}
  *   related: org.dxos.echo-react.useObjectReactive
+ *
+ * @performance O(1) memoized atom-family lookup; every emission takes an O(n) `getSnapshot` of the entity.
  */
 export const atom = objInternal.makeAtom;
+/**
+ * Create a reactive atom that yields the live object (or the loaded targets of a ref or ref array).
+ *
+ * @performance O(1) memoized atom-family lookup (O(r) key copy for a ref array); emits live objects without
+ * snapshotting.
+ */
 export const atomReactive = objInternal.makeWithReactive;
+/**
+ * Create a reactive atom for a single property of an object or of a ref target.
+ *
+ * @performance O(1) memoized atom-family lookup; re-reads and shallow-compares the property on every object change.
+ */
 export const atomProperty = objInternal.makeProperty;
+/**
+ * Create a reactive atom for the label of an object.
+ *
+ * @performance O(1) memoized atom-family lookup; recomputes the label on every entity change, emitting only on
+ * difference.
+ */
 export const labelAtom = objInternal.makeLabelAtom;
+/**
+ * Get the name of the property that holds the label of an object.
+ *
+ * @performance O(1); reads the first accessor of the schema `LabelAnnotation`.
+ */
 export const labelProperty = internal.getLabelProperty;
+/**
+ * Create a reactive atom for the parent of an object.
+ *
+ * @performance O(1) memoized atom-family lookup; re-reads the parent slot on every object change, emitting only on
+ * difference.
+ */
+export const parentAtom = objInternal.makeParentAtom;

@@ -8,17 +8,19 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Ref } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Card, Icon } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { Question, Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -28,24 +30,21 @@ import { QuestionCard } from './QuestionCard.tsx';
 
 const QUESTION_TEXT = 'How long is our refund window?';
 
-/** The shape `ask-question` leaves behind: a blocked task with the question filed on it. */
+/** The shape `ask-question` leaves behind: a blocked task with the question in its history. */
 const seed = (space: Space) => {
   const task = space.db.add(Task.make({ title: 'Draft the refund reply to Acme', status: 'blocked' }));
-  const question = space.db.add(
-    Question.make({
-      text: QUESTION_TEXT,
-      context: trim`
-        Acme's order #4471 is 45 days old. Nothing in this project records the published window, or
-        whether enterprise accounts get an exception.
-      `,
-      options: [
-        { title: '30 days — no exception', description: 'Decline the refund, offer store credit.' },
-        { title: '60 days for enterprise', description: 'Acme qualifies; approve the refund.' },
-      ],
-      task: Ref.make(task),
-    }),
-  );
-  return question;
+  Task.ask(task, {
+    text: QUESTION_TEXT,
+    context: trim`
+      Acme's order #4471 is 45 days old. Nothing in this project records the published window, or
+      whether enterprise accounts get an exception.
+    `,
+    options: [
+      { title: '30 days — no exception', description: 'Decline the refund, offer store credit.' },
+      { title: '60 days for enterprise', description: 'Acme qualifies; approve the refund.' },
+    ],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
 };
 
 /**
@@ -55,8 +54,9 @@ const seed = (space: Space) => {
  */
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const [question] = useQuery(space?.db, Filter.type(Question.Question));
-  if (!question) {
+  const [task] = useQuery(space?.db, Filter.type(Task.Task));
+  const [question] = Task.getQuestions(task?.history);
+  if (!task || !question) {
     return <Loading data={{ db: !!space?.db, question: false }} />;
   }
 
@@ -67,17 +67,16 @@ const DefaultStory = () => {
       {roles.map((role) => (
         <div key={role} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>
-            <span className='text-sm text-description'>{role}</span>
+            <span className='text-sm text-fg-muted'>{role}</span>
             <CardContainer role={role} icon='ph--question--regular'>
               <Card.Root border={false}>
                 <Card.Header>
-                  <Card.Block>
-                    <Icon icon='ph--question--regular' />
-                  </Card.Block>
-                  <Card.Title>{question.text}</Card.Title>
-                  <Card.Menu />
+                  <Layout.Block>
+                    <Icon.Icon icon='ph--question--regular' />
+                  </Layout.Block>
+                  <Card.Title>{task.title}</Card.Title>
                 </Card.Header>
-                <QuestionCard role='card--content' subject={question} />
+                <QuestionCard task={task} questionId={question.question.id} />
               </Card.Root>
             </CardContainer>
           </div>
@@ -97,9 +96,9 @@ const meta = {
     // `useOperationInvoker`, which throws without PluginManagerContext.
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [Question.Question, Task.Task],
+          types: [Task.Task],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
@@ -142,8 +141,8 @@ export const AnswerWithOption: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findAllByText(QUESTION_TEXT, undefined, { timeout: 10_000 });
-    await userEvent.click(firstCard(canvas, 'question-card.option'));
-    await waitFor(async () => await expect(canvas.getAllByTestId('question-card.answer').length).toBeGreaterThan(0), {
+    await userEvent.click(firstCard(canvas, 'task-question.option'));
+    await waitFor(async () => await expect(canvas.getAllByTestId('task-question.answer').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
   },
@@ -154,9 +153,9 @@ export const AnswerFreeForm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findAllByText(QUESTION_TEXT, undefined, { timeout: 10_000 });
-    await userEvent.type(firstCard(canvas, 'question-card.input'), 'Ask legal first');
-    await userEvent.click(firstCard(canvas, 'question-card.submit'));
-    await waitFor(async () => await expect(canvas.getAllByTestId('question-card.answer').length).toBeGreaterThan(0), {
+    await userEvent.type(firstCard(canvas, 'task-question.input'), 'Ask legal first');
+    await userEvent.click(firstCard(canvas, 'task-question.submit'));
+    await waitFor(async () => await expect(canvas.getAllByTestId('task-question.answer').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
   },

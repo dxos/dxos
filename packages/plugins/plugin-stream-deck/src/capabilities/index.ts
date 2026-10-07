@@ -15,10 +15,10 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const BridgeDriver = Capability.lazyModule(
   'BridgeDriver',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, SpaceCapabilities.Dashboard],
     provides: [StreamDeckCapabilities.BridgeStatus],
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./bridge-driver.ts'),
 );

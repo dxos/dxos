@@ -3,13 +3,21 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const ClaudeCodeAgent = Capability.lazyModule(
+  'ClaudeCodeAgent',
+  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  () => import('./claude-code-agent.ts'),
+);
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

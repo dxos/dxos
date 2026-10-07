@@ -150,7 +150,9 @@ describe('Spaces/invitations', () => {
         }
       } else if (msg.action === QueryInvitationsResponse_Action.REMOVED) {
         msg.invitations?.forEach((inv) => invitationIds.delete(inv.invitationId));
-        if (invitationIds.size > 0) {
+        // `waitEmpty()` awaits emptiness, so the wake must fire when the set drains — the inverse
+        // condition hung the waiter whenever the last invitation was removed after the call.
+        if (invitationIds.size === 0) {
           invitationsEmpty.wake();
         }
       }

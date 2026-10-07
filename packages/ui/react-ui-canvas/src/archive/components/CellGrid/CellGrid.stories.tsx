@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -171,7 +171,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
   };
 
   return (
-    <div className='dx-fullscreen'>
+    <div className='dx-cover'>
       <CellGrid
         atoms={atoms as any}
         rows={rows}

@@ -5,7 +5,7 @@ the path an out-of-process agent (Claude in a cloud sandbox, Claude Desktop) wou
 
 ## 1. Why `FileOperation.Create` cannot simply be exposed
 
-The File skill (`src/skills/file-skill.ts`) lists exactly one tool:
+The File skill (`src/skills/FileSkill.ts`) lists exactly one tool:
 
 ```ts
 tools: Skill.toolDefinitions({ operations: [FileOperation.Read] }),
@@ -75,8 +75,8 @@ The two arms have genuinely different cost profiles:
   context. This is the only viable arm past a few hundred kilobytes.
 
 `mediaType` is required on the base64 arm and taken from the response `Content-Type` on the http
-arm, because `isAcceptedMimeType` gates on it and inferring from a file extension is how an
-executable gets stored as `image/png`.
+arm, because `toStoredMimeType` decides from it whether the file renders or downloads, and
+inferring from a file extension is how an executable gets stored as `image/png`.
 
 **The database is a service, not an input field.** `Create` takes `db: Database.Database` inline,
 which is fine for a UI caller holding a live handle and fatal over MCP. Declaring
@@ -90,7 +90,7 @@ exactly that (`mcp-server/src/internal/view.ts:183-184`), and there is **no ambi
 Reuses `create.ts` wholesale; only byte acquisition differs:
 
 1. Resolve bytes — decode base64, or fetch the URL.
-2. `isAcceptedMimeType(type)` → `UnsupportedFileTypeError`.
+2. `toStoredMimeType(type)` — absent or executable types become `application/octet-stream`.
 3. `resolveActiveStorage` — the exported helper in `create.ts`, unchanged. This is what makes an
    assistant upload land in S3/R2 when that backend is selected, with no S3-specific code here.
 4. `File.fromBytes(bytes, { name, type, storage })` → `Database.add`.
@@ -131,9 +131,9 @@ for base64 every time — it is the arm needing no external setup.
 
 ## 4. Accepted types
 
-`isAcceptedMimeType` allows images, video and PDF only (`src/types/FileLimits.ts`). An assistant
-writing a CSV or Markdown attachment is rejected today. Widening it is a separate decision; noted so
-it is not discovered as a surprise.
+Every type is accepted (`src/types/FileLimits.ts`). A type that is absent, or that a browser
+executes (`text/html`, `application/xhtml+xml`, `text/xml`, `application/xml`), is stored as
+`application/octet-stream`, so the file downloads rather than rendering on the app's origin.
 
 ## 5. Reaching it from a Claude cloud session
 

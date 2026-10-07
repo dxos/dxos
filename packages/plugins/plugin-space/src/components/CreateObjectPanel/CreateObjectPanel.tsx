@@ -3,15 +3,20 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
-import { type Collection, type Database, Obj, type Type } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, ObjectForm, omitId } from '@dxos/react-ui-form';
+import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
@@ -39,7 +44,7 @@ export type CreateObjectPanelProps = {
   options: CreateObjectOption[];
   spaces: Space[];
   typename?: string;
-  target?: Database.Database | Collection.Collection;
+  target?: Database.Database | Obj.Unknown;
   /** Whether the object is built from the form's values on submit (`draft`) or already exists (`live`). */
   mode?: 'draft' | 'live';
   initialFormValues?: Partial<AnyProperties>;
@@ -59,6 +64,13 @@ export type CreateObjectPanelProps = {
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
+  /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
+  onCancel?: () => void;
+  /**
+   * Where the draft form's Cancel and Create go, e.g. a dialog's footer; inline under the fields when absent. A portal
+   * rather than a lifted form, since only the schema-form step of the panel has actions.
+   */
+  actionsContainer?: HTMLElement | null;
 };
 
 export const CreateObjectPanel = ({
@@ -75,8 +87,10 @@ export const CreateObjectPanel = ({
   onTargetChange,
   onTypenameChange,
   onCreateObject,
+  onCancel,
+  actionsContainer,
 }: CreateObjectPanelProps) => {
-  const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
+  const initialFormValues = Hooks.useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
 
   const sortedOptions = useMemo(() => [...options].sort((a, b) => a.label.localeCompare(b.label)), [options]);
@@ -97,12 +111,13 @@ export const CreateObjectPanel = ({
       // A live create always has a form to show — the object's own — so only a draft can skip
       // straight to creating from an entry that declares no inputs.
       if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
-        await onCreateObject?.({ metadata });
+        // No form to show, so the caller's defaults (a name typed into a link, say) are the data.
+        await onCreateObject?.({ metadata, data: initialFormValues });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [mode, schema, resolve, onCreateObject, onTypenameChange],
+    [mode, schema, resolve, initialFormValues, onCreateObject, onTypenameChange],
   );
 
   const inputSchema = useMemo(() => {
@@ -148,6 +163,7 @@ export const CreateObjectPanel = ({
         target={target}
         initialFormValues={initialFormValues}
         onCreateObject={(data) => handleCreateObject(data)}
+        onCancel={onCancel}
       />
     );
   }
@@ -164,10 +180,7 @@ export const CreateObjectPanel = ({
         testId='create-object-form'
       >
         <Form.Viewport>
-          <Form.Content>
-            <Form.Fields />
-            <Form.Submit />
-          </Form.Content>
+          <CreateObjectFormContent onCancel={onCancel} actionsContainer={actionsContainer} />
         </Form.Viewport>
       </Form.Root>
     );
@@ -178,12 +191,57 @@ export const CreateObjectPanel = ({
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
 
+type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel' | 'actionsContainer'>;
+
+/** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
+const CreateObjectFormContent = ({ onCancel, actionsContainer }: CreateObjectFormContentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const {
+    form: { canSave, onSave },
+  } = useFormContext(CreateObjectFormContent.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const handleSubmit = useCallback(() => {
+    if (canSave) {
+      void onSave();
+    }
+  }, [canSave, onSave]);
+  useSubmitOnEnter(contentRef, handleSubmit);
+
+  const actions = (
+    <>
+      {onCancel && (
+        <Button.Root onClick={onCancel} data-testid='cancel-button'>
+          {t('object-form-cancel.label')}
+        </Button.Root>
+      )}
+      <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        {t('object-form-confirm.label')}
+      </Button.Root>
+    </>
+  );
+
+  return (
+    <Form.Content ref={contentRef}>
+      <Form.Fields />
+      {actionsContainer ? (
+        createPortal(actions, actionsContainer)
+      ) : (
+        <Layout.Flex gap='sm' justify='end' classNames='pt-form-padding'>
+          {actions}
+        </Layout.Flex>
+      )}
+    </Form.Content>
+  );
+};
+
+CreateObjectFormContent.displayName = 'CreateObjectPanel.FormContent';
+
 type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
   onChange: (id: string) => void;
 };
 
 const SelectType = ({ options, onChange }: SelectTypeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
@@ -193,7 +251,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -210,15 +269,15 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             // Keyed by typename, since the label is localized and, for database types, user-authored.
             data-testid={`create-object-form.type.${option.id}`}
           >
-            <Icon
+            <Icon.Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
-              size={8}
+              size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
+                <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
@@ -235,13 +294,13 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
 };
 
 const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = toLocalizedString(getSpaceDisplayName(a), t);
-        const labelB = toLocalizedString(getSpaceDisplayName(b), t);
+        const labelA = Theme.toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = Theme.toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
     [spaces, t],
@@ -249,12 +308,13 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
+    extract: (space) => Theme.toLocalizedString(getSpaceDisplayName(space), t),
   });
 
   // TODO(burdon): Change to Masonry.
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -266,7 +326,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
           <SearchList.Item
             key={space.id}
             value={space.id}
-            label={toLocalizedString(getSpaceDisplayName(space), t)}
+            label={Theme.toLocalizedString(getSpaceDisplayName(space), t)}
             onSelect={() => onChange?.(space.db)}
           />
         ))}

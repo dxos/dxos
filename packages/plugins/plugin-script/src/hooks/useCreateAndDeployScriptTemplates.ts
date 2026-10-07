@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Script from '@dxos/compute/Script';
 import { type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -26,7 +26,7 @@ type DeploymentStatus = 'idle' | 'pending' | 'success' | 'error';
  * All creation / deployment operations run concurrently for improved performance.
  */
 export const useCreateAndDeployScriptTemplates = (db: Database.Database | undefined, scriptTemplates: Template[]) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const [status, setStatus] = useState<DeploymentStatus>('idle');
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -45,7 +45,12 @@ export const useCreateAndDeployScriptTemplates = (db: Database.Database | undefi
         invariant(Obj.instanceOf(Script.Script, createResult.data?.object));
         await invokePromise(SpaceOperation.AddObject, { object: createResult.data.object }, { spaceId: db.spaceId });
 
-        return deployScript({ db, client, script: createResult.data.object });
+        return deployScript({
+          db,
+          getEdgeHttpClient: () => client.edge.http,
+          ownerDid: client.halo.identity.get()?.did,
+          script: createResult.data.object,
+        });
       }),
     );
 

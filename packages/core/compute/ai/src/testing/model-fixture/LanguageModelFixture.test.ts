@@ -3,16 +3,16 @@
 //
 
 import { describe, expect, it, test } from '@effect/vitest';
+import * as Chat from 'effect/ai/Chat';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Chat from 'effect/unstable/ai/Chat';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -51,7 +51,7 @@ const layerTest = DateToolkit.toLayer({
 const TestLayer = Layer.mergeAll(
   testingLayer,
   layerTest,
-  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+  AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
 
 class TestObjectReadToolkit extends Toolkit.make(
@@ -364,7 +364,7 @@ describe('dynamic value matching', () => {
       Effect.provide(
         Layer.mergeAll(
           TestObjectReadToolkit.layer,
-          AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
         ).pipe(
           Layer.provideMerge(
             LanguageModelFixture.layerTest({

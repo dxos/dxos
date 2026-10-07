@@ -3,6 +3,6 @@
 //
 
 export * as SandboxPlugin from './SandboxPlugin.ts';
-export * from '#meta';
+export * from './services/index.ts';
 export * from '#skills';
 export * from '#types';

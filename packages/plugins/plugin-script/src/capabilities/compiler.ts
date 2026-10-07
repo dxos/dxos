@@ -4,10 +4,10 @@
 
 import * as ts from '@typescript/typescript6';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import * as Capability from '@dxos/app-framework/Capability';

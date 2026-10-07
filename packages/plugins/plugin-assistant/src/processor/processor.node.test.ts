@@ -3,10 +3,11 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as AiError from 'effect/unstable/ai/AiError';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -16,13 +17,15 @@ import { AiSession } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
+import { Message } from '@dxos/types';
 
 import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor.ts';
+import { type ThreadProjection } from './thread.ts';
 
-const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed, Message.Message] });
 
 describe('Chat processor', () => {
   it.effect(
@@ -34,9 +37,42 @@ describe('Chat processor', () => {
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
-        const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any);
+        const registry = AtomRegistry.make();
+        const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any, {
+          observableRegistry: registry,
+        });
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
+
+        // The thread is the processor's one view: a feed append and a sent prompt both arrive through it.
+        const rows = (predicate: (thread: ThreadProjection) => boolean) =>
+          Effect.promise(
+            () =>
+              new Promise<ThreadProjection>((resolve) => {
+                const unsubscribe = registry.subscribe(
+                  processor.thread,
+                  (thread) => {
+                    if (predicate(thread)) {
+                      queueMicrotask(() => unsubscribe());
+                      resolve(thread);
+                    }
+                  },
+                  { immediate: true },
+                );
+              }),
+          );
+
+        yield* Feed.append(feed, [
+          Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: 'hi' }] }),
+        ]);
+        const appended = yield* rows((thread) => thread.messages.length === 1);
+        expect(appended.tail).toBe(0);
+
+        const id = processor.send({ message: 'hello' });
+        const sent = registry.get(processor.thread);
+        expect(sent.messages.map((message) => message.id)).toEqual([appended.messages[0].id, id]);
+        expect(sent.delivery.get(id)?.outboxId).toBe(id);
+        expect(sent.tail).toBe(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

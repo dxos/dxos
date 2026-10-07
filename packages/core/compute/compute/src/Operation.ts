@@ -7,21 +7,28 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
+import * as Scope from 'effect/Scope';
 import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type NoHandlerError, RunAgainError } from './errors.ts';
 import type { Operation } from './index.ts';
+import type * as Process from './Process.ts';
+import type * as StorageService from './StorageService.ts';
+import type * as Trace from './Trace.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -326,6 +333,282 @@ export const opaqueHandler = <T extends Operation.Definition.Any>(
 ): Operation.WithHandler<Operation.Definition.Any> => handler;
 
 //
+// Durable operations.
+//
+
+/**
+ * Handler of a durable operation: the callbacks of one running process instance.
+ *
+ * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
+ *
+ * - onSpawn -> called once when the process is spawned.
+ * - onInput -> called for every input submitted to the process.
+ * - onAlarm -> called for processes scheduling alarms.
+ * - onChildEvent -> called when child process produces output or exits.
+ */
+export interface DurableHandler<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
+  /**
+   * Called when the process is spawned.
+   * Not called for processes that are resumed from a previously suspended state.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  onSpawn(): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Called when there's input available to process.
+   *
+   * The function can be called in parallel.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  onInput(input: _Input): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Called when the process's alarm is triggered.
+   *
+   * @throws Throwing in the handler will terminate the process with an error.
+   */
+  onAlarm(): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Called when the process's child process produces output or exits.
+   *
+   * This allows the parent process to hibernate while a long-running child process is running.
+   */
+  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Handlers for the RPCs provided by the process.
+   */
+  rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>;
+}
+
+/**
+ * Services that are always available to all processes.
+ * Provided unconditionally by the runtime, so handlers may use them without declaring them
+ * in {@link DurableProps.services}.
+ */
+export type BaseServices = Trace.TraceService | StorageService.StorageService;
+
+export type ChildEvent<T> =
+  | {
+      readonly _tag: 'output';
+      readonly pid: Process.ID;
+      readonly data: T;
+    }
+  | {
+      readonly _tag: 'exited';
+      readonly pid: Process.ID;
+      readonly result: Exit.Exit<void>;
+    };
+
+/**
+ * Runtime context handed to a durable operation's `create`.
+ */
+export interface DurableContext<I, O> {
+  readonly id: Process.ID;
+
+  /**
+   * Parameters assigned during process creation.
+   */
+  readonly params: Process.Params;
+
+  /**
+   * Complete this process with sucessful result.
+   * No additional events will be pushed to the process.
+   */
+  succeed(): void;
+
+  /**
+   * Complete this process with an error.
+   * No additional events will be pushed to the process.
+   */
+  fail(error: Error): void;
+
+  /**
+   * Submit output of the process.
+   */
+  submitOutput(output: O): void;
+
+  /**
+   * Set an alarm for the process to be woken up later. `onAlarm` runs with the process's own
+   * context, not the caller's: an alarm scheduled from inside a handler does not nest under it.
+   *
+   * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
+   */
+  setAlarm(timeout?: number): Effect.Effect<void>;
+}
+
+export const DurableTypeId = '~@dxos/operation/Durable' as const;
+export type DurableTypeId = typeof DurableTypeId;
+
+/**
+ * A durable operation: declaration plus a handler factory, run by a process runtime.
+ * Can be instantiated multiple times to produce new process instances with separate state and handlers.
+ * `create` is used to instantiate a new process.
+ * Can store runtime state in scope of `create` function.
+ */
+export interface Durable<
+  _Input,
+  _Output,
+  _Requirements = never,
+  _Rpcs extends Rpc.Any = never,
+> extends Durable.Variance<_Input, _Output, _Requirements, _Rpcs> {
+  /**
+   * Unique identifier for the executable in the reverse DNS format.
+   */
+  readonly key: string;
+
+  /**
+   * Human-readable label, when provided.
+   */
+  readonly name?: string;
+
+  readonly services: readonly Context.Key<any, any>[];
+
+  /**
+   * Codecs for the process's inputs and outputs, from {@link DurableProps}. Exposed on the
+   * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
+   * with the definition's own schema rather than assuming the value is already JSON.
+   */
+  readonly input: Schema.Codec<_Input, any>;
+  readonly output: Schema.Codec<_Output, any>;
+
+  /** Schemas to register with the process's database; see {@link DurableProps.types}. */
+  readonly types?: readonly Type.AnyEntity[];
+
+  // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
+  // argument (and `DurableHandler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
+  // structural fields would block `Durable<…, never>` from being assignable to `Durable.Any`.
+  // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
+  // See design spec §4.4.
+  readonly rpcs: RpcGroup.RpcGroup<any>;
+
+  /**
+   * Create a new instance of the process.
+   */
+  create(
+    ctx: DurableContext<_Input, _Output>,
+  ): Effect.Effect<
+    DurableHandler<_Input, _Output, _Requirements, any>,
+    never,
+    _Requirements | BaseServices | Scope.Scope
+  >;
+}
+
+export const isDurable = (executable: unknown): executable is Durable.Any =>
+  typeof executable === 'object' && executable !== null && DurableTypeId in executable;
+
+export namespace Durable {
+  export interface Variance<_Input, _Output, _Requirements, _Rpcs> {
+    readonly [DurableTypeId]: {
+      readonly _Input: Types.Contravariant<_Input>;
+      readonly _Output: Types.Covariant<_Output>;
+      readonly _Requirements: Types.Covariant<_Requirements>;
+
+      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Durable.Any` while
+      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
+      readonly _Rpcs: Types.Covariant<_Rpcs>;
+    };
+  }
+
+  export type Any = Durable<any, any, any, any>;
+}
+
+export interface DurableProps {
+  /**
+   * Unique identifier for the process in the reverse DNS format.
+   */
+  readonly key: string;
+
+  readonly input: Schema.Codec<any, any>;
+  readonly output: Schema.Codec<any, any>;
+  readonly services: readonly Context.Key<any, any>[];
+  readonly rpcs?: RpcGroup.RpcGroup<any>;
+
+  /**
+   * Schemas the process's own data model needs, registered with its database at spawn.
+   *
+   * Declared here beside `services` because a host cannot know them: it resolves a process by key
+   * and has no view of the types that process queries. Unregistered, a TYPED query silently matches
+   * nothing — a queue append succeeds and the read back returns empty, which reads as a lost write
+   * rather than a missing schema.
+   */
+  readonly types?: readonly Type.AnyEntity[];
+}
+
+/**
+ * Creates a durable operation from its declaration and a factory for its {@link DurableHandler}.
+ */
+export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableProps, Opts>>(
+  opts: Opts,
+  create: (
+    ctx: DurableContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
+  ) => Effect.Effect<
+    Partial<
+      DurableHandler<
+        Schema.Schema.Type<Opts['input']>,
+        Schema.Schema.Type<Opts['output']>,
+        Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
+        RpcGroup.Rpcs<Opts['rpcs']>
+      >
+    >,
+    never,
+    Context.Service.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
+  >,
+): Durable<
+  Schema.Schema.Type<Opts['input']>,
+  Schema.Schema.Type<Opts['output']>,
+  Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
+  RpcGroup.Rpcs<Opts['rpcs']>
+> => {
+  assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
+  return {
+    [DurableTypeId]: {} as any,
+    ...opts,
+    rpcs: opts.rpcs ?? RpcGroup.make(),
+    create: (ctx) =>
+      create(ctx).pipe(
+        Effect.map((partial) => ({
+          onSpawn: () => Effect.void,
+          onInput: () => Effect.void,
+          onAlarm: () => Effect.void,
+          onChildEvent: () => Effect.void,
+          ...partial,
+          rpcHandlers: sanitizeRpcs(opts.rpcs, partial.rpcHandlers),
+        })),
+      ),
+  };
+};
+
+// Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
+// `DurableHandler.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
+// handler contract is enforced by `makeDurable`'s `create` parameter, not by this internal helper.
+const sanitizeRpcs = <Rpcs extends Rpc.Any>(
+  defined: RpcGroup.RpcGroup<Rpcs> | undefined,
+  provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
+): Context.Context<any> => {
+  // Handlers are required only when a non-empty RPC group is declared.
+  const needsRpcs = defined !== undefined && defined.requests.size > 0;
+  if (!needsRpcs) {
+    // `Context.empty()` is `Context<never>`; `Context`'s requirement parameter is contravariant,
+    // so the empty (no-handler) context needs widening to the untyped bag.
+    return provided ?? (Context.empty() as Context.Context<any>);
+  }
+  if (!provided) {
+    throw new TypeError('Durable operation declared RPCs but did not provide any handlers');
+  }
+  return provided;
+};
+
+//
 // Tool projection
 //
 
@@ -460,7 +743,6 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
@@ -706,8 +988,8 @@ export const annotate =
  * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
  * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
  *
- * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
- * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
+ * Same polarity as the schema-level `Annotation.UserType`: operations are hidden by default, since most
+ * are internal plugin machinery and only a minority are user-facing.
  */
 export const VisibleAnnotation = Annotation.make({
   id: 'org.dxos.operation.visible',
@@ -923,3 +1205,12 @@ const _migration = Migration.define({
  * Exported as an array for extensibility — append future versions here.
  */
 export const migrations = [_migration];
+
+export {
+  FunctionError,
+  FunctionNotFoundError,
+  InvalidOperationInputError,
+  InvalidOperationOutputError,
+  InvokerNotInitializedError,
+  NoHandlerError,
+} from './errors.ts';

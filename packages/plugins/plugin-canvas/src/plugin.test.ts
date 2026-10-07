@@ -4,8 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { CanvasPlugin } from '#plugin';
@@ -13,13 +15,20 @@ import { CanvasPlugin } from '#plugin';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('CanvasPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin.make({}), CanvasPlugin()],
+  // The plugin declares `dependsOn` the illustrator, so the harness boots it too: without it nothing
+  // here activates at all, which is the point of the declaration.
+  test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), CanvasPlugin()],
     });
 
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('translations')]));
     // The drawing variant is browser-only and waits for the illustrator's start event.
     expect(harness.manager.getActive()).not.toContain(moduleId('drawing-variant'));
-  }, 20_000);
+
+    // Idle-gated. Fired explicitly: the harness awaits Startup only, so reading `getActive()`
+    // without this races the host's idle trickle and the set differs run to run.
+    await harness.fire(ActivationEvents.Idle);
+    expect(harness.manager.getActive()).toContain(moduleId('Settings'));
+  });
 });

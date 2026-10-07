@@ -2,25 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Client } from '@dxos/client';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
-import { type ComplexMap, type Position } from '@dxos/util';
+import { type ComplexMap } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
 
 import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
 import * as Settings from './Settings.ts';
+import * as SpaceEvents from './SpaceEvents.ts';
 import * as SpaceSchema from './SpaceSchema.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
@@ -99,27 +102,6 @@ export type OnCreateSpace = (params: {
 }) => Effect.Effect<void, Error, Operation.Service>;
 export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${meta.profile.key}.capability.onSpaceCreated`);
 
-/**
- * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
- * the content to write once the space exists.
- *
- * `apply` is a bound closure rather than a definition, so a consumer needs only "put this content in
- * that space" without dragging the builder and its schema into the dialog that lists it.
- */
-export type SpaceTemplate = Readonly<{
-  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
-  id: string;
-  /** Name for the picker, and the default space name when the template is chosen. */
-  label: string;
-  /** One line on what the template creates. */
-  description?: string;
-  icon?: string;
-  hue?: string;
-  /** Registers the content's types on the client, then writes it into the new space. */
-  apply: (params: { readonly client: Client; readonly space: Space }) => Promise<void>;
-}>;
-export const SpaceTemplate = Capability.make<SpaceTemplate>()(`${meta.profile.key}.capability.spaceTemplate`);
-
 export type OnTypeAdded = (params: {
   db: Database.Database;
   type: Type.AnyEntity;
@@ -127,6 +109,22 @@ export type OnTypeAdded = (params: {
   show?: boolean;
 }) => Effect.Effect<void, Error, Operation.Service>;
 export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${meta.profile.key}.capability.onTypeAdded`);
+
+/**
+ * Tells the plugins a type was added (plugin-table makes a table for it). Activation first, since it is
+ * what makes a lazy module contribute its `OnTypeAdded` callback.
+ */
+export const notifyTypeAdded = Effect.fnUntraced(function* (
+  managers: { plugins: PluginManager.PluginManager; capabilities: CapabilityManager.CapabilityManager },
+  params: Parameters<OnTypeAdded>[0],
+) {
+  yield* managers.plugins.activate(SpaceEvents.TypeAdded);
+  const callbacks = managers.capabilities.getAll(OnTypeAdded);
+  yield* Effect.all(
+    callbacks.map((callback) => callback(params)),
+    { concurrency: 'unbounded' },
+  );
+});
 
 // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
 export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
@@ -161,7 +159,9 @@ export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySp
 
 /** Props passed to a `CreateObjectEntry.customPanel`. */
 export type CreateObjectCustomPanelProps = {
-  target: Database.Database | Collection.Collection;
+  target: Database.Database | Obj.Unknown;
   initialFormValues?: Record<string, any>;
   onCreateObject: (data: Record<string, any>) => void | Promise<void>;
+  /** Abandons the create (closes the dialog); panels render it as their Cancel action. */
+  onCancel?: () => void;
 };

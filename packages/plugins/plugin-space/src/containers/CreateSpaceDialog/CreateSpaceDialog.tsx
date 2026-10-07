@@ -5,20 +5,28 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+import { SpaceOperation, SpaceSchema } from '#types';
+
+import { getTemplateIcon, getTemplateIconGlyph } from '../../util/index.ts';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
@@ -27,13 +35,26 @@ const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(meta.profile.key);
-  const { invoke } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invoke } = Hooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
   const [error, setError] = useState<string | undefined>(undefined);
-  const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
+  const manager = PluginManagerProvider.usePluginManager();
+  const contributed = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
+  const templates = useMemo(
+    () =>
+      contributed
+        .filter(({ hidden }) => !hidden)
+        // `icon` seeds the form, which stores a bare name on the space; `glyph` renders the row.
+        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) })),
+    [contributed],
+  );
   const [template, setTemplate] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
+  }, [manager]);
 
   const handleCancel = useCallback(
     () => invoke(LayoutOperation.UpdateDialog, { state: false }).pipe(EffectEx.runAndForwardErrors),
@@ -92,17 +113,17 @@ export const CreateSpaceDialog = () => {
       >
         <Dialog.Header>
           <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
-          <Dialog.Close asChild>
-            <Dialog.ActionIconButton action='close' ref={closeRef} />
-          </Dialog.Close>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close ref={closeRef} />
+          </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
           {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
               gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
-          <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.Fields />
+                <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
                 <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
                   <Form.FieldSet
@@ -110,17 +131,19 @@ export const CreateSpaceDialog = () => {
                     label={t('create-space-dialog.templates.label')}
                     description={t('create-space-dialog.templates.description')}
                   >
-                    <Listbox.Root value={template} onValueChange={setTemplate}>
+                    <Listbox.Root
+                      value={template}
+                      onValueChange={setTemplate}
+                      items={templates.map(({ id, label, description, glyph }) => ({
+                        value: id,
+                        label,
+                        description,
+                        icon: glyph,
+                      }))}
+                    >
                       <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
-                        {templates.map(({ id, label, description, icon }) => (
-                          <Listbox.Item key={id} id={id}>
-                            <Listbox.ItemContent
-                              // Templates carry a bare `iconValues` name, as space properties do.
-                              icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
-                              title={label}
-                              description={description}
-                            />
-                          </Listbox.Item>
+                        {templates.map(({ id }) => (
+                          <Listbox.Item key={id} id={id} />
                         ))}
                       </Listbox.Content>
                     </Listbox.Root>
@@ -130,7 +153,9 @@ export const CreateSpaceDialog = () => {
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Dialog.Body>
-        <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        <Dialog.Footer>
+          <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        </Dialog.Footer>
       </Form.Root>
     </Dialog.Content>
   );

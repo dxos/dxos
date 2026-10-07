@@ -13,7 +13,7 @@ import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
-import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from 'vite';
+import { type Plugin, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -22,6 +22,7 @@ import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 // NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
 // would force every package's `:test`/`:test-browser`/`:test-storybook` task to
@@ -108,7 +109,9 @@ const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 // Default Workers runtime compatibility for the opt-in `workerd` vitest project. `nodejs_compat`
 // exposes the Node.js built-ins (`node:crypto`, `node:buffer`, …) that @dxos packages resolve to,
 // mirroring what production DXOS functions run against on Cloudflare. Overridable per package.
-const WORKERD_COMPATIBILITY_DATE = '2024-11-01';
+// Pinned to the EDGE operation-service's date: before native `node:os` the pool falls back to a
+// polyfill that crashes workerd on load, and `@dxos/log` (via chalk) imports it.
+const WORKERD_COMPATIBILITY_DATE = '2026-03-17';
 const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
 
 // ---------------------------------------------------------------------------
@@ -481,6 +484,18 @@ export type WorkerdOptions = {
   setupFiles?: string[];
   timeout?: number;
   plugins?: Plugin[];
+  /**
+   * Extra miniflare configuration merged over the defaults, for a binding the runtime only
+   * provides when it is declared — `workerLoaders`, KV, R2. Compatibility date and flags stay
+   * under their own options, so passing them here has no effect.
+   */
+  miniflare?: Record<string, unknown>;
+  /**
+   * Entry module of the worker under test, which `SELF` dispatches to. It runs in the SAME isolate
+   * as the tests, so a test reaches it through ordinary module state — which is what makes `SELF`
+   * usable as an outbound target for code the test itself is driving.
+   */
+  main?: string;
 };
 
 export type StorybookOptions = {
@@ -654,6 +669,8 @@ const createBrowserProject = ({
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so browser tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node project).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      // `?module-url` imports: tests that hand compiled module URLs to a worker to `import()`.
+      ModuleUrlPlugin(),
       // NDJSON log sink: browser realms (page + workers) POST `@dxos/log` entries to the dev-server
       // middleware, which appends them to `<package>/test-browser.log`. Mirrors the node file sink.
       DxosLogPlugin({ logToFile: { enabled: true, filename: BROWSER_LOG_FILE, logFilter: BROWSER_LOG_FILTER } }),
@@ -726,6 +743,24 @@ const createBrowserProject = ({
     },
   });
 
+/**
+ * The vendored hypercore crypto compiles its wasm at module init, which workerd forbids; each module
+ * has a pure-JS fallback that activates when its wasm factory returns null.
+ */
+const WorkerdHypercoreWasmPlugin = (): Plugin => ({
+  name: 'workerd-hypercore-wasm',
+  enforce: 'pre',
+  transform(code, id) {
+    if (!/\/vendor(-|\/)hypercore\/.*\.mjs$/.test(id)) {
+      return;
+    }
+    return code.replaceAll(
+      'var compiled = new WebAssembly.Module(bytes);',
+      'var compiled; try { compiled = new WebAssembly.Module(bytes); } catch { module.exports = () => null; return; }',
+    );
+  },
+});
+
 // Runs tests inside the Cloudflare Workers runtime (`workerd`) via
 // `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) — only
 // `*.workerd.test.{ts,tsx}` files run here, so packages can exercise the same source
@@ -737,6 +772,8 @@ const createWorkerdProject = ({
   setupFiles = [],
   timeout,
   plugins = [],
+  miniflare = {},
+  main,
 }: WorkerdOptions = {}) =>
   defineProject({
     plugins: [
@@ -744,6 +781,7 @@ const createWorkerdProject = ({
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      WorkerdHypercoreWasmPlugin(),
       // Log-meta injection only — no file sink (workerd has no filesystem).
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       // Configures the vitest pool to execute tests in workerd. `@cloudflare/vitest-pool-workers`
@@ -751,12 +789,23 @@ const createWorkerdProject = ({
       // fail for every `vite build`. A dynamic import stays an `import()` the bundler preserves,
       // and vite awaits promise-valued entries in the plugins array.
       import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
-        cloudflareTest({ miniflare: { compatibilityDate, compatibilityFlags } }),
+        cloudflareTest({
+          ...(main !== undefined ? { main } : {}),
+          miniflare: {
+            // Lets the pool hand a dependency's `.wasm` import to workerd as a compiled module;
+            // without a rule vite inlines it as JS glue, which workerd cannot instantiate.
+            modulesRules: [{ type: 'CompiledWasm', include: ['**/*.wasm'] }],
+            ...miniflare,
+            compatibilityDate,
+            compatibilityFlags,
+          },
+        }),
       ),
     ],
     test: {
       name: 'workerd',
-      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 5000),
+      // Matches the node project: a cold plugin activation in workerd alone can take several seconds.
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 15_000),
       include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
       setupFiles,
     },

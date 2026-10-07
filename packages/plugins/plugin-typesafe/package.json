@@ -1,8 +1,8 @@
 {
   "name": "@dxos/plugin-typesafe",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
-  "description": "TypeSafe System One connector and decision-model layer for Composer.",
+  "description": "TypeSafe System One connector and decision-model resolver for Composer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -11,19 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -47,25 +49,25 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./TypeSafePlugin": {
-      "source": "./src/TypeSafePlugin.ts",
-      "types": "./dist/types/src/TypeSafePlugin.d.ts",
-      "import": "./dist/lib/TypeSafePlugin.mjs"
-    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
     "./TypeSafeCapabilities": {
       "source": "./src/types/TypeSafeCapabilities.ts",
       "types": "./dist/types/src/types/TypeSafeCapabilities.d.ts",
       "import": "./dist/lib/TypeSafeCapabilities.mjs"
+    },
+    "./TypeSafeEvents": {
+      "source": "./src/TypeSafeEvents.ts",
+      "types": "./dist/types/src/TypeSafeEvents.d.ts",
+      "import": "./dist/lib/ns/TypeSafeEvents.mjs"
+    },
+    "./TypeSafePlugin": {
+      "source": "./src/TypeSafePlugin.ts",
+      "types": "./dist/types/src/TypeSafePlugin.d.ts",
+      "import": "./dist/lib/TypeSafePlugin.mjs"
     },
     "./TypeSafeSettings": {
       "source": "./src/types/TypeSafeSettings.ts",
@@ -81,15 +83,20 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@dxos/ai-typesafe": "workspace:*",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

@@ -16,10 +16,15 @@ import {
   type Link,
   type Node,
   type NodeStyle,
+  type NoteNode,
   type RectNode,
-  type TextNode,
   between,
   createLink,
+  endpointNode,
+  isClassNode,
+  isEllipseNode,
+  isNoteNode,
+  isRectNode,
   nodeBounds,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
@@ -118,32 +123,30 @@ export const SceneHandler: ContentHandler = {
         }
         case 'ellipse': {
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const rx = (element.w * placement.scale) / 2;
-          const ry = (element.h * placement.scale) / 2;
-          const node: EllipseNode = { type: 'ellipse', id, z: nextZ(), center, rx, ry, label: element.text };
+          const size = { width: element.w * placement.scale, height: element.h * placement.scale };
+          const node: EllipseNode = { type: 'ellipse', id, z: nextZ(), center, size, label: element.text };
           put(element.id, withStyle(node, styleOf(element)));
           break;
         }
         case 'circle': {
-          const radius = element.r * placement.scale;
+          const diameter = element.r * 2 * placement.scale;
           const center = place(element.cx, element.cy);
           const node: EllipseNode = {
             type: 'ellipse',
             id,
             z: nextZ(),
             center,
-            rx: radius,
-            ry: radius,
+            size: { width: diameter, height: diameter },
             label: element.text,
           };
           put(element.id, withStyle(node, styleOf(element)));
           break;
         }
         case 'text': {
-          const width = element.w ?? DEFAULT_SIZES.text.width;
-          const height = DEFAULT_SIZES.text.height;
-          const node: TextNode = {
-            type: 'text',
+          const width = element.w ?? DEFAULT_SIZES.note.width;
+          const height = DEFAULT_SIZES.note.height;
+          const node: NoteNode = {
+            type: 'note',
             id,
             z: nextZ(),
             center: place(element.x + width / 2, element.y + height / 2),
@@ -208,22 +211,27 @@ export const SceneHandler: ContentHandler = {
           const frame = nodeBounds(node);
           const local = { x: frame.x - origin.x, y: frame.y - origin.y, w: frame.width, h: frame.height };
           const text = textOf(node);
-          if (node.type === 'text') {
+          if (isNoteNode(node)) {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
           } else {
             elements.push({
-              kind: node.type === 'ellipse' ? 'ellipse' : 'rect',
+              kind: isEllipseNode(node) ? 'ellipse' : 'rect',
               id: element,
               ...local,
               ...(text ? { text } : {}),
             });
           }
         } else {
-          const from = refTo(content, record.link.source.node, id);
-          const to = refTo(content, record.link.target.node, id);
-          elements.push({ kind: 'arrow', id: element, from, to });
+          const sourceNode = endpointNode(record.link.source);
+          const targetNode = endpointNode(record.link.target);
+          // The DSL's arrows join elements; a link with a free end has no DSL form.
+          if (sourceNode !== undefined && targetNode !== undefined) {
+            const from = refTo(content, sourceNode, id);
+            const to = refTo(content, targetNode, id);
+            elements.push({ kind: 'arrow', id: element, from, to });
+          }
         }
       }
       objects.push({
@@ -249,17 +257,16 @@ export const SceneHandler: ContentHandler = {
 const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : record.link.z);
 
 const textOf = (node: Node): string => {
-  switch (node.type) {
-    case 'rect':
-    case 'ellipse':
-      return node.label ?? '';
-    case 'text':
-      return node.text;
-    case 'class':
-      return node.name;
-    case 'scene':
-      return '';
+  if (isRectNode(node) || isEllipseNode(node)) {
+    return node.label ?? '';
   }
+  if (isNoteNode(node)) {
+    return node.text;
+  }
+  if (isClassNode(node)) {
+    return node.name;
+  }
+  return '';
 };
 
 /** The DSL ref of the node a link end names, relative to `object`. */

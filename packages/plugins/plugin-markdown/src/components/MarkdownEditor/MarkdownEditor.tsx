@@ -4,17 +4,17 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
+import type * as Util from '@dxos/react-ui/Util';
 import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
@@ -215,7 +215,7 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
-type MarkdownEditorToolbarProps = ThemedClassName<
+type MarkdownEditorToolbarProps = Util.ThemedClassName<
   Omit<NaturalMarkdownToolbarProps, 'getView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 

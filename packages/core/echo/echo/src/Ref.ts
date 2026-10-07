@@ -6,7 +6,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity.ts';
@@ -52,6 +52,8 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  *   }),
  * ) {}
  * ```
+ *
+ * @performance O(1) per call at schema-definition time; reads the target type annotation.
  */
 export const Ref: {
   <S extends Type$.AnyObj>(type: S): RefSchema<Type$.InstanceType<S> & Obj.Unknown>;
@@ -71,6 +73,11 @@ export const Ref: {
   <S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> & Obj.Unknown>;
 } = refInternal.Ref as any;
 
+/**
+ * Helpers for arrays of refs.
+ *
+ * @performance O(n) in the number of refs for each helper; `targets` reads each ref target synchronously.
+ */
 export const Array = refInternal.RefArray;
 
 /**
@@ -102,14 +109,57 @@ export type Target<R extends Unknown> = R extends refInternal.Ref<infer T> ? T :
  */
 export type Resolver = refInternal.RefResolver;
 
+/**
+ * Type guard for refs.
+ *
+ * @performance O(1) brand check; no allocation.
+ */
 export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`; generators that must keep refs inline decline exactly these.
+ *
+ * @performance O(1) prefix check.
+ */
+export const isRefIdentifier: (identifier: string | undefined) => boolean = refInternal.isRefIdentifier;
+
+/**
+ * Create a reference to an entity.
+ *
+ * @performance O(1); allocates a ref that inlines the target, with no lookup.
+ */
 export const make = refInternal.Ref.make;
 
 // TODO(dmaretskyi): Consider just allowing `make` to accept URI.
+/**
+ * Create an unresolved reference from a URI.
+ *
+ * @performance O(1); allocates an unresolved ref with no resolver, so it cannot load until bound.
+ */
 export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
 
+/**
+ * Create a predicate that tests whether a ref points to the given entity id.
+ *
+ * @performance O(1) per call of the returned predicate (parses the ref URI).
+ */
 export const hasEntityId = refInternal.Ref.hasEntityId;
+
+/**
+ * Disposition of a deleted target. Defaults to `'exclude'`, matching the query option.
+ */
+export type LoadOptions = refInternal.LoadOptions;
+
+/**
+ * Loads the targets of `refs` in ref order, omitting missing targets and, unless
+ * `{ deleted: 'include' }` asks for them, deleted ones.
+ *
+ * @performance Async; issues every `tryLoad` concurrently, O(n) in refs.
+ */
+export const loadAll: <T>(refs: readonly Ref<T>[], options?: LoadOptions) => Promise<T[]> = refInternal.loadAll;
 
 /**
  * The URI a reference property points at, or `undefined` when the node is not a reference.
@@ -120,6 +170,8 @@ export const hasEntityId = refInternal.Ref.hasEntityId;
  *
  * Typed as `URI` rather than `DXN`: a static schema's target is a typename DXN, but a stored
  * (dynamic) schema is identified by its `echo:` EID, so callers must narrow before assuming either.
+ *
+ * @performance O(1) annotation read, falling back to an O(schema size) encoded-side walk.
  */
 export const getReferenceTarget = (ast: SchemaAST.AST): URI.URI | undefined => {
   const reference = SchemaAST.getAnnotation<{ typename?: string; version?: string }>(ast, ReferenceAnnotationId);
@@ -131,4 +183,9 @@ export const getReferenceTarget = (ast: SchemaAST.AST): URI.URI | undefined => {
 };
 
 // TODO(wittjosiah): Factor out?
+/**
+ * Whether the AST node is a reference.
+ *
+ * @performance O(1) annotation read, falling back to an O(schema size) encoded-side walk.
+ */
 export const isRefType = (ast: SchemaAST.AST): boolean => getReferenceTarget(ast) !== undefined;

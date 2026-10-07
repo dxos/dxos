@@ -11,10 +11,14 @@ import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ComputeSqlService from '@dxos/compute/SqlService';
+import { ConfigService } from '@dxos/config';
 import { Database, Hypergraph } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
+import { SqlService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities } from '#types';
 
@@ -22,7 +26,8 @@ import { ClientCapabilities } from '#types';
 // Capability Module
 //
 // Contributes the core client/space service layer specs:
-//   - {@link ClientService} (application affinity).
+//   - {@link ClientService}, {@link ConfigService}, {@link EdgeHttpClientService} (application affinity).
+//   - {@link ComputeSqlService.SqlService} over the client services RPC (application affinity).
 //   - {@link Database.Service}, {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
@@ -54,6 +59,72 @@ const ClientLayerSpec = LayerSpec.make(
         yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout }));
         return fromClient(client);
       }).pipe(Effect.orDie),
+    ),
+);
+
+/**
+ * {@link ComputeSqlService.SqlService} served by the client services host, which sanitizes every statement.
+ */
+const SqlLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [ComputeSqlService.SqlService],
+  },
+  () =>
+    Layer.effect(
+      ComputeSqlService.SqlService,
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        const rpc = client.services.rpc;
+        return ComputeSqlService.SqlService.of({
+          execute: ({ params, ...request }) =>
+            rpc['SqlService.execute']({ ...request, params: params.map(SqlService.toSqlValue) }).pipe(
+              Effect.map(({ rows }) => rows),
+            ),
+          begin: (request) => rpc['SqlService.begin'](request),
+          commit: (request) => rpc['SqlService.commit'](request),
+          rollback: (request) => rpc['SqlService.rollback'](request),
+        });
+      }),
+    ),
+);
+
+/**
+ * The client's runtime config as {@link ConfigService}, so operations read config values without
+ * depending on the client.
+ */
+const ConfigLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [ConfigService],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(ConfigService, client.config);
+      }),
+    ),
+);
+
+/**
+ * The client's EDGE HTTP client as {@link EdgeHttpClientService}, so operations call EDGE without
+ * depending on the client. Dies when the config names no EDGE URL.
+ */
+const EdgeHttpClientLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [EdgeHttpClientService],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(EdgeHttpClientService, client.edge.http);
+      }),
     ),
 );
 
@@ -174,6 +245,9 @@ export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributeAll(Capabilities.LayerSpec, [
       ClientLayerSpec,
+      ConfigLayerSpec,
+      SqlLayerSpec,
+      EdgeHttpClientLayerSpec,
       DatabaseLayerSpec,
       HypergraphLayerSpec,
       AccessTokenResolverLayerSpec,

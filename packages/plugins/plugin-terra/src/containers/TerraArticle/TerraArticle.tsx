@@ -6,13 +6,16 @@ import { type Observer } from '@babylonjs/core/Misc/observable';
 import { type Scene } from '@babylonjs/core/scene';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Tabs from '@dxos/react-ui/Tabs';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
@@ -76,7 +79,7 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
   // The selected view tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
@@ -106,7 +109,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // The plugin owns the cache so it survives this article's remounts (resize, companion, navigation);
   // rendered without a plugin manager (stories, tests) the mount owns a private one instead.
   const fallbackCache = useMemo(() => new PlanetCache(), []);
-  const planetCache = useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
+  const planetCache = Hooks.useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
   const [isPlaying, setIsPlaying] = useState(true);
   const [gizmosVisible, setGizmosVisible] = useState(false);
   const [view, setView] = useState<ViewMode>('scene');
@@ -347,7 +350,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <div className='grow' />
           {view === 'camera' && (
@@ -359,21 +362,21 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             onValueChange={handleViewChange}
             selectedVariant={hasAttention ? 'primary' : 'default'}
           >
-            <Tabs.Tablist>
-              <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
+            <Tabs.List>
+              <Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
                 {t('scene-view.label')}
-              </Tabs.Button>
-              <Tabs.Button value='map' data-testid='terra.toolbar.view-map'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
                 {t('map-view.label')}
-              </Tabs.Button>
-              <Tabs.Button value='camera' data-testid='terra.toolbar.view-camera'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
                 {t('camera-view.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
           </Tabs.Root>
         </ActionToolbar>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow'>
           {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
@@ -392,7 +395,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -407,25 +410,23 @@ type CameraTargetSelectProps = {
 
 /** Picks which object the chase camera rides. */
 const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
-    <Select.Root value={value} onValueChange={onChange}>
-      <Select.TriggerButton
+    <Select.Root
+      value={value ? [value] : []}
+      onValueChange={({ value: [value] }) => value && onChange(value)}
+      items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
+    >
+      <Select.Trigger
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
         classNames='min-w-32'
       />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {definitions.map((definition) => (
-              <Select.Option key={definition.id} value={definition.id}>
-                {definition.name ?? definition.kind}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Content>
+        {definitions.map((definition) => (
+          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

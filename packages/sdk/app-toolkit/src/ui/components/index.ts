@@ -5,7 +5,10 @@
 export * from './AttentionSigil.tsx';
 export * from './CardIconSlot.tsx';
 export * from './CardMenuSlot.tsx';
+export * from './HomeSection.tsx';
+export * from './NamePopover.tsx';
 export * from './NotFoundArticle.tsx';
+export * from './ObjectCard.tsx';
 export * from './PluginRegistryButton.tsx';
 export * from './SettingsScope.tsx';
 

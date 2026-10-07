@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
@@ -12,10 +14,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
   AiContext,
   Alarm,
@@ -38,11 +38,13 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ContentBlock, Message } from '@dxos/types';
-import { trim } from '@dxos/util';
+import { Actor, ContentBlock, Message } from '@dxos/types';
+import { markWork, trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { loadSpaceMcpServers } from './mcp-servers.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
@@ -80,14 +82,43 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * Provider for space-level MCP server configs, called on each turn.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+
+const AgentPrompt = Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]);
+
+/**
+ * Who sent a prompt: the plain-data subset of `Actor`, since the input crosses a JSON boundary
+ * (EDGE decodes it with the schema's type side) where a `Ref` cannot be supplied.
+ */
+const AgentInputSender = Actor.Actor.mapFields(Struct.pick(['role', 'name', 'identityDid', 'email']));
+
+/**
+ * Input accepted by {@link AgentProcess}: a bare prompt, or a prompt attributed to a sender (e.g. a
+ * relayed Discord author) whose identity the appended `Message` records.
+ */
+export const AgentInput = Schema.Union([
+  AgentPrompt,
+  Schema.Struct({
+    prompt: AgentPrompt,
+    sender: Schema.optional(AgentInputSender),
+    /** Foreign identity and other source metadata copied onto the message (e.g. `{ discord: { userId } }`). */
+    properties: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  }),
+]);
+
+export type AgentInput = Schema.Schema.Type<typeof AgentInput>;
+
+/** Builds the feed message for an input; the sender defaults to the plain user role. */
+export const makeInputMessage = (input: AgentInput): Message.Message => {
+  const { prompt, sender, properties } =
+    typeof input === 'object' && 'prompt' in input
+      ? input
+      : { prompt: input, sender: undefined, properties: undefined };
+  const blocks = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
+  return Message.make({ sender: { role: 'user', ...sender }, blocks, properties });
+};
 
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and
@@ -96,6 +127,31 @@ export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
  * from waking the agent forever.
  */
 const UNSEEN_WRITE_RETRY_MS = 250;
+
+/** How much of a sub-agent's result the trace keeps: enough to read, never the whole payload. */
+const RESULT_PREVIEW_LENGTH = 200;
+
+/**
+ * A short, safe rendering of a sub-agent's result for the trace.
+ *
+ * Guarded because this sits between removing the child from `delegations` and running the strategy's
+ * `onComplete`: a `BigInt` or a cycle would throw here, become a defect, and take the whole return
+ * path with it — the work item would never be updated and work waiting on it never reconciled.
+ * Losing the preview is survivable; losing the return is not.
+ */
+const resultPreview = (value: unknown): string | undefined => {
+  let text: string | undefined;
+  try {
+    text = typeof value === 'string' ? value : JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
+  if (text === undefined) {
+    return undefined;
+  }
+  return text.length > RESULT_PREVIEW_LENGTH ? `${text.slice(0, RESULT_PREVIEW_LENGTH)}…` : text;
+};
+
 const MAX_UNSEEN_WRITE_WAKES = 20;
 
 /**
@@ -103,11 +159,10 @@ const MAX_UNSEEN_WRITE_WAKES = 20;
  * The process target is a queue DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
-  Process.make(
+  Operation.makeDurable(
     {
       key: AGENT_PROCESS_KEY,
-      // Accepts plain text or content blocks.
-      input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
+      input: AgentInput,
       output: Schema.Void,
       // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
       // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
@@ -117,7 +172,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // registers exactly these with the process's database, and a typed query for a type it does
       // not know matches nothing. Without them a hosted agent reads its own skill bindings back
       // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AiContext.Binding, Skill.Skill],
+      // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
+      types: [
+        Chat.Chat,
+        Feed.Feed,
+        Message.Message,
+        Alarm.Alarm,
+        AiContext.Binding,
+        Skill.Skill,
+        McpServer.McpServer,
+        AccessToken.AccessToken,
+      ],
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
@@ -151,12 +216,18 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const runtime = yield* Effect.context<Database.Service>();
         const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
         // Scoped acquisition: the producer's teardown registers with this process's scope.
-        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
+        const session = yield* makeTurnProducer({
+          chat,
+          feed,
+          runtime,
+          instructions: instructions ? [instructions] : [],
+        });
         const sessionStore = new SessionStore();
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
         let ackedEntries: string[] = [...(yield* AckedEntriesCell.get)];
+        let selfWakes = yield* SelfWakesCell.get;
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -214,13 +285,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
-        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
-        const requestModelLayer = AiService.model(
-          model ? DXN.getName(model) : 'com.anthropic.model.claude-opus-5.default',
-          {
-            provider: options.provider,
-          },
-        );
+        const model = chat.session?.model ?? options.defaultModel;
+        const requestModelLayer = AiService.languageModel(DXN.getName(model ?? Model.claudeSonnet5.id), {
+          provider: options.provider,
+        });
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 
@@ -360,11 +428,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               yield* ctx.setAlarm(0);
             }),
           }),
-          onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
+          onInput: Effect.fnUntraced(function* (input: AgentInput) {
             log('agent onInput received', { backlog: toolResults.length });
-            const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
-            const message = Message.make({ sender: { role: 'user' }, blocks: content });
+            const message = makeInputMessage(input);
             yield* sessionStore.enqueueMessage(feed, message);
+            markWork('agent.prompt-queued');
             unseenWriteIds.add(message.id);
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
@@ -372,6 +440,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onAlarm: Effect.fnUntraced(
             function* () {
               log('agent onAlarm fired', { backlog: toolResults.length });
+              markWork('agent.wake');
 
               // Earliest point the agent can report to a reader who is already waiting: draining the
               // queue below reads the feed, which is itself part of the wait. An empty wake emits it
@@ -391,6 +460,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 prompt = toolResultPrompt(toolResult);
               } else {
                 const state = yield* sessionStore.loadPending(feed);
+                markWork('agent.pending-loaded');
                 // An id still in the pending set has not caught up yet; one that has left it is
                 // durably acked and no longer needs remembering.
                 const stillPending = new Set([
@@ -421,15 +491,35 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
                   unseenWriteIds.delete(message.id);
                   unseenWriteWakes = 0;
+                  if (isUserPrompt(message) && selfWakes > 0) {
+                    selfWakes = 0;
+                    yield* SelfWakesCell.set(selfWakes);
+                  }
                   dequeued = message;
                   prompt = [...message.blocks];
                 } else if (dueAlarm !== undefined) {
-                  log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt });
                   unseenAlarms.delete(dueAlarm.id);
+                  if (selfWakes >= Alarm.MAX_SELF_WAKES) {
+                    // Spent: acked without a turn, so the loop ends here until the user prompts again.
+                    log.warn('agent self-wake budget spent, dropping alarm', { wakes: selfWakes });
+                    yield* sessionStore.ack(feed, dueAlarm);
+                    ackedEntries = [...ackedEntries, dueAlarm.id];
+                    yield* AckedEntriesCell.set(ackedEntries);
+                    const after = yield* sessionStore.loadPending(feed);
+                    yield* reconcileAlarmWith(after);
+                    yield* maybeCompleteWith(after);
+                    return;
+                  }
+                  selfWakes++;
+                  yield* SelfWakesCell.set(selfWakes);
+                  log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt, wakes: selfWakes });
                   dequeued = dueAlarm;
                   prompt = [
                     ContentBlock.Text.make({
-                      text: wakeUpPrompt(dueAlarm.wakeAt, dueAlarm.message ?? null),
+                      text: wakeUpPrompt(dueAlarm.wakeAt, dueAlarm.message ?? null, {
+                        wake: selfWakes,
+                        max: Alarm.MAX_SELF_WAKES,
+                      }),
                       disposition: 'synthetic',
                     }),
                   ];
@@ -439,6 +529,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // the queue is drained. Bounded, so a write that never materialises degrades to the
                   // idle path instead of waking forever.
                   unseenWriteWakes++;
+                  markWork('agent.unseen-write-retry');
                   log('agent onAlarm empty queue with an unread write, waking again', {
                     unseenWrites: unseenWriteIds.size,
                     attempt: unseenWriteWakes,
@@ -464,29 +555,50 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 }
               }
 
-              // The turn appends its own user message built from `prompt`, so the queue entry that
-              // supplied it must leave the queue view now or the same content shows in both places
-              // until the late ack below.
-              if (dequeued !== undefined) {
-                yield* sessionStore.markInFlight(feed, dequeued);
-              }
-
-              log('begin request', { prompt });
-              log('trace agent request begin');
-              yield* Trace.write(Trace.AgentRequestBegin, {});
+              // The MCP servers are read concurrently with the writes below: neither depends on the
+              // other, and each is a round trip to the database that the turn would otherwise wait on in series.
+              const [mcpServers] = yield* Effect.all(
+                [
+                  loadSpaceMcpServers(),
+                  Effect.gen(function* () {
+                    // The turn appends its own user message built from `prompt`, so the queue entry that
+                    // supplied it must leave the queue view now or the same content shows in both places
+                    // until the late ack below.
+                    if (dequeued !== undefined) {
+                      yield* sessionStore.markInFlight(feed, dequeued);
+                    }
+                    log('begin request', { prompt });
+                    log('trace agent request begin');
+                    yield* Trace.write(Trace.AgentRequestBegin, {});
+                  }),
+                ],
+                { concurrency: 'unbounded' },
+              );
+              markWork('agent.turn-begin');
               yield* session
                 .runTurn({
                   prompt,
+                  // The turn rewrites the queued message as its own, so the sender has to travel with it.
+                  sender:
+                    dequeued !== undefined && Obj.instanceOf(Message.Message, dequeued) ? dequeued.sender : undefined,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
-                  mcpServers: options.getMcpServers?.(),
+                  mcpServers,
                 })
                 .pipe(
                   Effect.onExit((exit) =>
-                    Trace.write(Trace.AgentRequestEnd, {
-                      status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                      error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                    Effect.gen(function* () {
+                      yield* Trace.write(Trace.AgentRequestEnd, {
+                        status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                        error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                      });
+                      // The failure ends the process below, skipping the reconcile, so the strategy
+                      // hears of it here or not at all. A stop the reader asked for is not a failure.
+                      const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;
+                      if (onTurnFailed && Exit.isFailure(exit) && !Cause.hasInterrupts(exit.cause)) {
+                        yield* onTurnFailed(chat, exit.cause);
+                      }
                     }),
                   ),
                 );
@@ -550,6 +662,16 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
+                // Written beside `DelegationSpawned`, and for the same reason: the return is only
+                // observable here. The child's own trace ends with its operation and says nothing
+                // about reporting back, so this is what pairs an exit with the task it answers.
+                const result = Exit.isSuccess(exit) ? resultPreview(exit.value) : undefined;
+                yield* Trace.write(Trace.DelegationCompleted, {
+                  taskId: delegation.id,
+                  pid: String(event.pid),
+                  status: Exit.isSuccess(exit) ? 'success' : 'failure',
+                  ...(result === undefined ? {} : { result }),
+                });
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
@@ -680,6 +802,16 @@ const AckedEntriesCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
   'ackedEntries',
 ).pipe(StorageService.withDefault(() => []));
+
+/** Alarms that have woken the agent since the last user prompt; bounded by {@link Alarm.MAX_SELF_WAKES}. */
+const SelfWakesCell = StorageService.cell(Schema.fromJsonString(Schema.Number), 'selfWakes').pipe(
+  StorageService.withDefault(() => 0),
+);
+
+/** A prompt someone typed, as opposed to one the system wrote (a report, a tool result). */
+const isUserPrompt = (message: Message.Message): boolean =>
+  message.sender.role === 'user' &&
+  message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic');
 
 const ToolCallState = Schema.Struct({
   activeCalls: Schema.Array(
@@ -860,16 +992,21 @@ export const computeAlarmDelay = ({
  * reminder message it is surfaced verbatim, otherwise a generic continuation prompt is used.
  * Exported so the prompt shape stays pinned by tests without spawning an agent.
  */
-export const wakeUpPrompt = (firedAt: number, message: string | null): string =>
-  message != null
-    ? trim`
-      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-      ${message}
-    `
-    : trim`
-      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-      Continue with whatever you intended to do when you scheduled this wake-up.
-    `;
+export const wakeUpPrompt = (
+  firedAt: number,
+  message: string | null,
+  budget?: { wake: number; max: number },
+): string => {
+  const fired = `Scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
+  const body = message ?? 'Continue with whatever you intended to do when you scheduled this wake-up.';
+  const limit =
+    budget == null
+      ? undefined
+      : budget.wake >= budget.max
+        ? `This is self-wake ${budget.wake} of ${budget.max}: further alarms will not wake you until the user writes again, so finish or report where you are now.`
+        : `This is self-wake ${budget.wake} of ${budget.max} before the user must write again.`;
+  return [fired, body, limit].filter((line) => line != null).join('\n');
+};
 
 const ToolExecutionService = ({
   enableBackgrounding,
@@ -893,7 +1030,9 @@ const ToolExecutionService = ({
                 conversation: Ref.make(feed),
               },
             });
+            markWork('tool.spawned');
             yield* toolCallManager.beginCall(fiber.pid);
+            markWork('tool.call-recorded');
             log('invoked operation', { operationDef, input, fiber });
 
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
@@ -905,6 +1044,7 @@ const ToolExecutionService = ({
                   ),
                 )
               : yield* awaitWithReport;
+            markWork('tool.settled');
             log('result', { result });
             return yield* result;
           }),

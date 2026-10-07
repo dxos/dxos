@@ -88,18 +88,20 @@
    */
 
   --color-base-surface: var(--dx-surface-base);
-  --color-base-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  --color-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   --color-attention-surface: var(--dx-surface-base);
   --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
 
-  /* Cards sit on the canvas's own level and dialogs one above it: each a step darker than the
-     level its name suggests, so the ladder's top stays for popups and explicit elevations. */
-  --color-card-surface: var(--dx-surface-base);
-
   /**
    * Level: raised
    */
+
+  /* A card reads as a card by being a step above what it sits on. It shared the base level with the
+     plank behind it, which left an unbordered card invisible — the fill said nothing and only the
+     shadow separated it. Level with a modal: both are "one above the page", and the ladder's top
+     stays for popups and explicit elevations. */
+  --color-card-surface: var(--dx-surface-raised);
 
   --color-modal-surface: var(--dx-surface-raised);
 
@@ -177,7 +179,7 @@
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c
       h
   );
-  --color-subdued-separator: oklch(
+  --color-separator-subtle: oklch(
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c
       h
   );
@@ -198,15 +200,15 @@
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.025) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
   );
 
   /* current (aria-current) */
   --color-current-surface: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.1) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.06) c h
   );
   --color-current-surface-hover: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.12) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
   );
   --color-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 

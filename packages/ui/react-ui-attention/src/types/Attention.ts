@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 export type Attention = {
   hasAttention: boolean;
@@ -189,6 +189,27 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
   }
 
   return [...new Set(acc)];
+};
+
+/**
+ * Attend `element` the way focusing it would, without moving focus. Answers the attended ids, or
+ * undefined when nothing changed: an element outside any attendable leaves attention where it was.
+ */
+export const attendElement = (attention: AttentionManager, element: Element): string[] | undefined => {
+  const selector = [
+    ATTENDABLE_SELECTOR,
+    ...Array.from(document.querySelectorAll('[aria-controls]')).map(
+      (el) => `[id="${el.getAttribute('aria-controls')}"]`,
+    ),
+  ].join(',');
+  const prev = attention.getCurrent();
+  const next = getAttendables(selector, element);
+  if (next.length === 0 || (prev.length === next.length && prev.every((id, index) => next[index] === id))) {
+    return undefined;
+  }
+
+  attention.update(next);
+  return next;
 };
 
 /**

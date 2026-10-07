@@ -4,13 +4,15 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
-import { Clipboard, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = Pick<
@@ -37,48 +39,46 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
   const [selectedObject] = useQuery(db, selectionQuery);
 
   return (
-    <Clipboard.Provider>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
-            {db && (
-              <ScrollArea.Root>
-                <ScrollArea.Viewport>
-                  <ObjectsTree
-                    db={db}
-                    root={companionTo}
-                    onSelect={(entity) => setSelectedId(entity.id)}
-                    onOpen={onOpen}
-                    canOpen={canOpen}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            )}
-            <Syntax.Root
-              data={selectedObject}
-              getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
-            >
-              <Panel.Root>
-                <Panel.Toolbar asChild>
-                  <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
-                    <Syntax.Filter />
-                    <Syntax.Depth />
-                  </Toolbar.Root>
-                </Panel.Toolbar>
-                <Panel.Content asChild>
-                  <Syntax.Viewport>
-                    <Syntax.Code />
-                  </Syntax.Viewport>
-                </Panel.Content>
-              </Panel.Root>
-            </Syntax.Root>
-          </div>
-        </Panel.Content>
-      </Panel.Root>
-    </Clipboard.Provider>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
+      <Panel.Body asChild>
+        <div className={mx('grid divide-y divide-separator-subtle', db && 'grid-rows-[1fr_2fr]')}>
+          {db && (
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                <ObjectsTree
+                  db={db}
+                  root={companionTo}
+                  onSelect={(entity) => setSelectedId(entity.id)}
+                  onOpen={onOpen}
+                  canOpen={canOpen}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          )}
+          <Syntax.Root
+            data={selectedObject}
+            getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
+          >
+            <Panel.Root>
+              <Panel.Header>
+                <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
+                  <Syntax.Filter />
+                  <Syntax.Depth />
+                </Toolbar.Root>
+              </Panel.Header>
+              <Panel.Body asChild>
+                <Syntax.Viewport>
+                  <Syntax.Code />
+                </Syntax.Viewport>
+              </Panel.Body>
+            </Panel.Root>
+          </Syntax.Root>
+        </div>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

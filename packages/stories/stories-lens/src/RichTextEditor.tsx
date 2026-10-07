@@ -12,7 +12,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { Text } from '@dxos/schema';
 
 import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text.ts';
@@ -268,16 +268,16 @@ export const BlockList = ({ text }: { text: Text.Text }) => {
   const [snapshot] = useObject(text);
 
   return (
-    <Card.Root fullWidth border={false}>
+    <Card.Root border={false}>
       <Card.Section title='stored markdown'>
-        <Card.Row fullWidth>
+        <Card.Row>
           <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
             {snapshot?.content ?? ''}
           </Card.Text>
         </Card.Row>
       </Card.Section>
       <Card.Section title='blocks'>
-        <Card.Row fullWidth>
+        <Card.Row>
           <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='block-list'>
             {(view?.blocks ?? [])
               .map(

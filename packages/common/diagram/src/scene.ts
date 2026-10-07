@@ -28,7 +28,8 @@ export const Color = Schema.Literals([
 ]);
 export type Color = Schema.Schema.Type<typeof Color>;
 
-export const Fill = Schema.Literals(['none', 'solid', 'pattern']);
+/** `tint` is a light wash of the element's color, for backdrops such as group frames that text sits on. */
+export const Fill = Schema.Literals(['none', 'solid', 'pattern', 'tint']);
 export type Fill = Schema.Schema.Type<typeof Fill>;
 
 export const Stroke = Schema.Literals(['sketchy', 'solid', 'dashed', 'dotted']);
@@ -55,9 +56,17 @@ const id = Schema.String.annotate({
   description: 'Stable element id, unique within the object (e.g. "left-eye"). Used to edit or delete the element.',
 });
 
+/** The closed-shape kinds {@link Box} covers. */
+export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']);
+export type BoxKind = Schema.Schema.Type<typeof BoxKind>;
+
+/** Which corners a rect rounds. */
+export const Corners = Schema.Literals(['top', 'bottom', 'none']);
+export type Corners = Schema.Schema.Type<typeof Corners>;
+
 /** Closed shape drawn inside a local bounding box. */
 export const Box = Schema.Struct({
-  kind: Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']),
+  kind: BoxKind,
   id,
   x: Schema.Number.annotate({ description: 'Left edge (object-local units).' }),
   y: Schema.Number.annotate({ description: 'Top edge (object-local units).' }),
@@ -65,7 +74,7 @@ export const Box = Schema.Struct({
   h: Schema.Number,
   rotation: Schema.optional(Schema.Number).annotate({ description: 'Clockwise rotation in degrees.' }),
   text: Schema.optional(Schema.String).annotate({ description: 'Centered label.' }),
-  corners: Schema.optional(Schema.Literals(['top', 'bottom', 'none'])).annotate({
+  corners: Schema.optional(Corners).annotate({
     description: 'Rects only: round just these corners (default all); backends without corner control ignore it.',
   }),
   ...styleFields,
@@ -139,6 +148,54 @@ export const ArrowTail = Schema.Literals(['none', 'circle']);
 export type ArrowTail = Schema.Schema.Type<typeof ArrowTail>;
 
 /**
+ * What a connector means, in UML and ER terms; renderers derive its end markers and dash from it.
+ * The source end is the subtype (inheritance, implementation), the whole (composition), the owner
+ * (aggregation), or the one side (one-to-many); the target end is the other.
+ */
+export const Relation = Schema.Literals([
+  'association',
+  'dependency',
+  'inheritance',
+  'implementation',
+  'composition',
+  'aggregation',
+  'one-to-many',
+  'many-to-many',
+]);
+export type Relation = Schema.Schema.Type<typeof Relation>;
+
+/** A marker a renderer draws at a connector end. */
+export type Marker = 'arrow' | 'open' | 'triangle' | 'crowsfoot' | 'one' | 'diamond' | 'diamond-filled' | 'circle';
+
+export type RelationMarkers = { start?: Marker; end?: Marker; dashed: boolean };
+
+const RELATION_MARKERS: Record<Relation, RelationMarkers> = {
+  'association': { end: 'arrow', dashed: false },
+  'dependency': { end: 'open', dashed: true },
+  'inheritance': { end: 'triangle', dashed: false },
+  'implementation': { end: 'triangle', dashed: true },
+  'composition': { start: 'diamond-filled', dashed: false },
+  'aggregation': { start: 'diamond', dashed: false },
+  'one-to-many': { start: 'one', end: 'crowsfoot', dashed: false },
+  'many-to-many': { start: 'crowsfoot', end: 'crowsfoot', dashed: false },
+};
+
+/**
+ * The markers an arrow draws: its relation's, unless `head` or `tail` says otherwise, which keeps
+ * documents written before relations existed drawing as they did.
+ */
+export const markersOf = (arrow: Pick<Arrow, 'relation' | 'head' | 'tail' | 'stroke'>): RelationMarkers => {
+  const derived = arrow.relation ? RELATION_MARKERS[arrow.relation] : { end: 'arrow' as const, dashed: false };
+  const end = arrow.head === undefined ? derived.end : arrow.head === 'none' ? undefined : arrow.head;
+  const start = arrow.tail === undefined ? derived.start : arrow.tail === 'none' ? undefined : arrow.tail;
+  return {
+    ...(start ? { start } : {}),
+    ...(end ? { end } : {}),
+    dashed: arrow.stroke === undefined ? derived.dashed : arrow.stroke === 'dashed',
+  };
+};
+
+/**
  * Connector. Endpoints are element refs — `"<elementId>"` within the same object or
  * `"<objectId>/<elementId>"` across objects, either with an optional `#<port>` naming an
  * attachment point on the element — or explicit local points. Bound endpoints track their
@@ -157,6 +214,10 @@ export const Arrow = Schema.Struct({
   }),
   tail: Schema.optional(ArrowTail).annotate({
     description: 'Marker at the source end (default none): circle for containment.',
+  }),
+  relation: Schema.optional(Relation).annotate({
+    description:
+      'What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow’s foot at the target), many-to-many, dependency (dashed, open arrow), association.',
   }),
   ...styleFields,
 });

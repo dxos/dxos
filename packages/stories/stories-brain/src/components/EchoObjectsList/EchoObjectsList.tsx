@@ -4,8 +4,13 @@
 
 import React from 'react';
 
-import { Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type EchoObjectItem = {
   id: string;
@@ -14,7 +19,7 @@ export type EchoObjectItem = {
   label: string;
 };
 
-export type EchoObjectsListProps = ThemedClassName<{
+export type EchoObjectsListProps = Util.ThemedClassName<{
   objects: EchoObjectItem[];
 }>;
 
@@ -24,23 +29,23 @@ export type EchoObjectsListProps = ThemedClassName<{
  */
 export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) => (
   <Panel.Root classNames={classNames}>
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <Toolbar.Root>
         <Toolbar.Text>Objects{objects.length > 0 ? ` (${objects.length})` : ''}</Toolbar.Text>
       </Toolbar.Root>
-    </Panel.Toolbar>
-    <Panel.Content asChild>
+    </Panel.Header>
+    <Panel.Body asChild>
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           {objects.length === 0 ? (
-            <Empty label='No objects.' />
+            <Status.Empty>No objects.</Status.Empty>
           ) : (
-            <Listbox.Root>
+            <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.label }))}>
               <Listbox.Content aria-label='ECHO objects'>
                 {objects.map((object) => (
                   <Listbox.Item classNames='gap-2' key={object.id} id={object.id}>
-                    <Listbox.ItemLabel>{object.label}</Listbox.ItemLabel>
-                    <Tag hue='neutral'>{object.typename}</Tag>
+                    <Listbox.ItemText>{object.label}</Listbox.ItemText>
+                    <Tag.Tag hue='neutral'>{object.typename}</Tag.Tag>
                   </Listbox.Item>
                 ))}
               </Listbox.Content>
@@ -48,6 +53,6 @@ export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) =
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );

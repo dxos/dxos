@@ -5,19 +5,21 @@
 import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import * as MapRole from '@dxos/plugin-map/MapRole';
-import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
@@ -32,8 +34,8 @@ export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
 const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
 
 export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: TripArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const showItem = useShowItem();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const showItem = ToolkitHooks.useShowItem();
 
   // Subscribe to the `segments` array property so adding/removing a segment re-renders the stack.
   const reactiveSubject = Obj.isObject(subject) ? subject : undefined;
@@ -122,7 +124,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
 
   // The inline map is rendered by plugin-map's `map` surface; only offer the toggle when a marker
   // provider can plot this trip (i.e. plugin-map is active and matches the subject).
-  const mapProviders = useCapabilities(MapCapabilities.MarkerProvider);
+  const mapProviders = Hooks.useCapabilities(MapCapabilities.MarkerProvider);
   const mapAvailable = useMemo(() => mapProviders.some((provider) => provider.match(subject)), [mapProviders, subject]);
 
   const [showGlobe, setShowGlobe] = useState(defaultShowGlobe ?? false);
@@ -268,27 +270,27 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
-            <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
-              <Panel.Toolbar asChild>
+            <Panel.Root classNames='hidden @3xl:block border-r border-separator-subtle'>
+              <Panel.Header>
                 <NaturalCalendar.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <NaturalCalendar.Grid
                   dates={calendarDates.map((startDate) => ({ startDate }))}
                   onSelect={handleDateSelect}
                   onSelectRange={handleDateRangeSelect}
                 />
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </NaturalCalendar.Root>
 
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <ActionToolbar {...menuActions} attendableId={attendableId} />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </div>
 
@@ -296,9 +298,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
             markers via the contributed MarkerProvider and reads the current selection via useSelection. */}
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
-            <Panel.Content>
+            <Panel.Body>
               <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         )}
       </div>

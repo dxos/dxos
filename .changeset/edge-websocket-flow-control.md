@@ -13,5 +13,11 @@ only once their bytes reach the socket, so `writer.ready` reports whether EDGE i
 `pipeTo` slows its source instead of buffering without bound. `EdgeClient.send` is unchanged and
 still returns without waiting.
 
-Breaking: `WebSocketMuxer.receiveData` returns a `ReceivedFrame`
-(`{ message?, channelId?, byteLength }`) rather than `Message | undefined`; callers read `.message`.
+Credit is counted in bytes and in messages: `EDGE_FLOW_CONTROL_MAX_MESSAGES` bounds how many messages
+one channel may have unacknowledged, since a byte window alone admits thousands of small replication
+frames and each is its own request downstream. A receiver rebuilt mid-connection (the router after
+hibernation or a reset) asks for the sender's totals and rebases onto them, so a channel never stalls
+on grants counted from zero.
+
+`WebSocketMuxer.receiveFrame` and `consumed` expose the credit loop to a muxer's owner;
+`receiveData` keeps its signature for callers without flow control.

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { FactStore, type SemanticIndexError, type SemanticQuery, type RDF as SemanticType } from '@dxos/pipeline-rdf';
+import { FactStore, type SemanticIndexError, type SemanticQuery, RDF as SemanticType } from '@dxos/pipeline-rdf';
 
 /** A topic discussed across the corpus, ranked by reach (distinct agents) then volume. */
 export type Topic = {
@@ -34,7 +34,7 @@ export type TopicOptions = {
 
 const humanize = (slug: string) => slug.replace(/-/g, ' ');
 
-const entityId = (term: SemanticType.Term): string | undefined => ('entity' in term ? term.entity : undefined);
+const entityId = (term: SemanticType.Term): string | undefined => (term.kind === 'entity' ? term.entity : undefined);
 
 /**
  * Aggregate the fact graph into a ranked list of topics. Entities that are themselves agents
@@ -97,17 +97,15 @@ export type FactLine = {
   readonly source: string;
 };
 
-const termValue = (term: SemanticType.Term): string => ('entity' in term ? term.entity : term.literal);
-
 /** List the stored facts (optionally filtered) as flat display lines — for inspection / demos. */
 export const listFacts = (query: SemanticQuery = {}): Effect.Effect<FactLine[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
     const store = yield* FactStore;
     const facts = yield* store.query(query);
     return facts.map((fact) => ({
-      subject: termValue(fact.assertion.subject),
+      subject: SemanticType.termValue(fact.assertion.subject),
       predicate: fact.assertion.predicate,
-      object: termValue(fact.assertion.object),
+      object: SemanticType.termValue(fact.assertion.object),
       ...(fact.attribution.agent ? { agent: fact.attribution.agent } : {}),
       source: fact.attribution.source,
     }));

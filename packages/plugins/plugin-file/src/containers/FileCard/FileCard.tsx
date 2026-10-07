@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, useTranslation } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Media from '@dxos/react-ui/Media';
 import { type File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,7 +23,10 @@ export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
  * it holds rather than a form of its properties.
  */
 export const FileCard = ({ subject: file }: FileCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+
+  const [fit, setFit] = useState<Media.ImageProps['fit']>('contain');
+
   const rendered = useFileUrl(file);
   if (!rendered) {
     return null;
@@ -31,12 +36,17 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
   return (
     <Card.Body>
       {type.startsWith('image/') ? (
-        <Card.Poster alt={file.name ?? ''} image={url} fit='contain' />
+        <Card.Poster
+          alt={file.name ?? ''}
+          src={url}
+          fit={fit}
+          onClick={() => setFit(fit === 'contain' ? 'cover' : 'contain')}
+        />
       ) : type.startsWith('video/') ? (
         <video src={url} muted playsInline preload='metadata' className='block w-full aspect-video object-contain' />
       ) : (
         <Card.Row>
-          <Card.Text variant='description'>
+          <Card.Text variant='muted'>
             {type}
             {size !== undefined && ` · ${t('file-size.label', { size: formatSize(size) })}`}
           </Card.Text>

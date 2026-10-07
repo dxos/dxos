@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { JsonView, Placeholder, Searchbar } from '@dxos/devtools';
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 type RegistryRow = {
@@ -131,12 +132,12 @@ export const RegistryArticle = ({ role }: { role?: string }) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className={mx('h-full grid grid-cols-[2fr_1fr] overflow-hidden')}>
           <div className={mx('flex flex-col dx-grow overflow-hidden')}>
             <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />
@@ -145,7 +146,7 @@ export const RegistryArticle = ({ role }: { role?: string }) => {
             {detailJson ? <JsonView data={detailJson} /> : <Placeholder label='Details' />}
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

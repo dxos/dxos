@@ -5,35 +5,43 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation, ProjectView } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { getProjectChatPath } from '../../paths.ts';
 
@@ -60,13 +68,13 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
-  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const { invokePromise } = invoker;
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
@@ -86,25 +94,31 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
+  const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
   // wraps the whole panel.
   const tabs = useMemo(
     () => (
-      <Tabs.Tablist>
-        <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
+      <Tabs.List>
+        <Tabs.Trigger value='overview' data-testid='projectsPlugin.tab.overview'>
           {t('overview.label')}
-        </Tabs.Button>
-        <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
+        </Tabs.Trigger>
+        <Tabs.Trigger value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
-        </Tabs.Button>
-      </Tabs.Tablist>
+        </Tabs.Trigger>
+      </Tabs.List>
     ),
     [t],
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
+  const setAxis = useCallback((axis: ProjectView.Axis) => updateView((prev) => ({ ...prev, axis })), [updateView]);
+  const setLegend = useCallback(
+    (legend: ProjectView.Legend) => updateView((prev) => ({ ...prev, legend })),
+    [updateView],
+  );
   const togglePipeline = useCallback(
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
@@ -150,6 +164,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // A session lane on the chart is the way into its chat. The project's own path helper, not the
   // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
   // unparented chats, so that path names a node the deck cannot render.
+  // The same navigation the task ledger's rows use, under the same context, so a lane picked in the
+  // chart selects its row and opens the task where a row click would.
+  const openTask = ToolkitHooks.useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+  });
+
   const handleSelectChat = useCallback(
     (chat: Chat.Chat) => {
       if (!db) {
@@ -158,6 +179,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       void invokePromise(LayoutOperation.Open, {
         subject: [getProjectChatPath(db.spaceId, subject.id, chat.id)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
@@ -175,6 +197,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       void invokePromise(LayoutOperation.Open, {
         subject: [GraphPath.getObjectPathFromObject(object)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
@@ -193,15 +216,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject, db],
   );
 
-  // The create dialog places the object in the space; the ref array is what makes it this project's,
-  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
   const handleAddArtifact = useCallback(async () => {
     if (!db) {
       return;
     }
 
     const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
-      target: db,
+      target: subject,
       targetNodeId: attendableId,
       navigable: false,
     });
@@ -212,7 +233,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     updateProject((project) => {
       project.artifacts = [...project.artifacts, ref];
     });
-  }, [db, attendableId, invokePromise, updateProject]);
+  }, [db, subject, attendableId, invokePromise, updateProject]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {
@@ -236,10 +257,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       onValueChange={(value) => setTab(Schema.decodeUnknownSync(ProjectView.Tab)(value))}
     >
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
               hidden for a frame, and the artifact gallery's masonry measures zero there and
               never recovers. The tablist still owns the switching. */}
@@ -249,13 +270,17 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 <Form.Content>
                   <Form.Fields />
 
-                  {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+                  {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
 
                   {/* Standing context (inputs bound into every project session) — deliberately a
                       separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
                     <Form.FieldSet label={t('context.label')}>
-                      <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                      <InstructionsEditor.InstructionsEditor
+                        db={db}
+                        instructions={instructions}
+                        fields={CONTEXT_FIELDS}
+                      />
                     </Form.FieldSet>
                   )}
 
@@ -263,11 +288,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.FieldSet
-                      label={t('outline.label')}
-                      description={t('outline.description')}
-                      descriptionPlacement='tooltip'
-                    >
+                    <Form.FieldSet label={t('outline.label')} description={t('outline.description')}>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}
@@ -285,17 +306,16 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
                     <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
+
+                  {/* Settings other plugins keep for this project, such as its folder on this device. */}
+                  <Surface.Surface type={ProjectView.Settings} data={{ project: subject }} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
           )}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' && !taskSet && (
-            <Flex justify='center' classNames='p-4 text-subdued'>
-              {t('no-task-set.message')}
-            </Flex>
-          )}
+          {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
           {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
               section lays out in, so its add row stays below the list rather than past the panel. */}
           {tab === 'tasks' && taskSet && (
@@ -308,19 +328,39 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             >
               <Splitter.Panel position='start'>
                 {/* TODO(burdon): Inline component for more control? */}
-                <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+                <Surface.Surface
+                  type={AppSurface.Section}
+                  data={{
+                    subject: taskSet,
+                    attendableId,
+                    // Unset means shown: settings saved before the preference existed hold no key.
+                    showDescription: settings.showTaskDescriptions ?? true,
+                  }}
+                  limit={1}
+                />
               </Splitter.Panel>
-              <Splitter.Handle />
+              <Splitter.ResizeTrigger />
               <Splitter.Panel position='end'>
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
+                {/* The chart fills the panel and scrolls both ways itself, so its horizontal bar sits at the panel's foot. */}
                 {showPipeline && space && (
-                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                  <ProjectPipeline
+                    space={space}
+                    project={subject}
+                    tasks={tasks}
+                    axis={axis}
+                    onAxisChange={setAxis}
+                    legend={legend}
+                    onLegendChange={setLegend}
+                    onSelectTask={openTask}
+                    onSelectChat={handleSelectChat}
+                  />
                 )}
               </Splitter.Panel>
             </Splitter.Root>
           )}
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Tabs.Root>
   );
@@ -330,11 +370,11 @@ ProjectArticle.displayName = 'ProjectArticle';
 
 /** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
 const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
-  <Flex role='list' column gap='xs'>
+  <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
       <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
     ))}
-  </Flex>
+  </Layout.Container>
 );
 
 /** One row, holding its own subscription so a rename re-renders just that row. */
@@ -345,11 +385,11 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
   }
 
   return (
-    <Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
-      <Icon icon='ph--flag--regular' classNames='text-info-text' />
+    <Layout.Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
+      <Icon.Icon icon='ph--flag--regular' valence='info' />
       <span className='truncate'>{milestone.name}</span>
-      {milestone.targetDate && <span className='text-subdued shrink-0'>{milestone.targetDate}</span>}
-    </Flex>
+      {milestone.targetDate && <span className='text-fg-subtle shrink-0'>{milestone.targetDate}</span>}
+    </Layout.Flex>
   );
 };
 
@@ -365,8 +405,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   const ids = useSelection(taskSet?.id, 'multi');
   const { clear } = useSelectionActions(taskSet?.id);
 
-  // Same query the article's own list runs: membership is the ECHO parent edge, and the canonical
-  // array carries sibling order, which the forest walk turns into the order rows appear in.
+  // Same query the article's own list runs: membership is the ECHO parent edge, and the `tasks` and
+  // `subtasks` lists carry sibling order, which the tree walk turns into the order rows appear in.
   const atom = useMemo(() => {
     const query = taskSet
       ? Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)))
@@ -378,13 +418,13 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
       const tasks: readonly Task.Task[] = get(query.atom);
       tasks.forEach((task) => {
-        get(Obj.atomProperty(task, 'parentTask'));
+        get(Obj.atomProperty(task, 'subtasks'));
         // The delegate action arms on whether the agent already holds a checked row, and delegation
         // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
       });
-      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
   const tasks = useAtomValue(atom);
@@ -428,7 +468,7 @@ const useToolbarActions = ({
   onDelegated,
   onTogglePipeline,
 }: ToolbarActionsProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
@@ -447,6 +487,7 @@ const useToolbarActions = ({
     }
 
     Chat.linkCompanion({ chat, subject: project });
+    Chat.seedSession(chat, project.session);
     await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);

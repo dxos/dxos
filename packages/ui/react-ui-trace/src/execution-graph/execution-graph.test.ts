@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
@@ -189,8 +188,8 @@ const MESSAGE_ID = '01HQ0000000000000000000000';
 const SHIMMER_EFFECT_TAG = 'effect:shimmer';
 
 const makeActiveProcess = (
-  overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'key' | 'state'>,
-): Process.Info => ({
+  overrides: Partial<Process.Process> & Pick<Process.Process, 'pid' | 'key' | 'state'>,
+): Process.Process => ({
   parentPid: null,
   params: { name: null, annotations: {} },
   environment: {},
@@ -930,7 +929,7 @@ describe('buildExecutionGraph scenarios', () => {
             name: 'Sync Google Mail',
             outcome: 'failure',
             error: 'Run again',
-            errorCode: RUN_AGAIN_ERROR_CODE,
+            errorCode: Process.RUN_AGAIN_ERROR_CODE,
           });
         }),
       ),
@@ -956,7 +955,7 @@ describe('buildExecutionGraph scenarios', () => {
             key: 'sync',
             name: 'Sync Google Mail',
             outcome: 'failure',
-            error: RUN_AGAIN_MESSAGE,
+            error: Process.RUN_AGAIN_MESSAGE,
           });
         }),
       ),

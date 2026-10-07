@@ -4,7 +4,8 @@
 
 import React, { forwardRef, useId, useMemo } from 'react';
 
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type Point } from '../../model/types.ts';
@@ -17,7 +18,16 @@ const defaultRange = [defaultGridSize, 128] as const;
 
 const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${grid}`;
 
-export type GridProps = ThemedClassName<{
+/**
+ * A level's line opacity from its on-screen spacing alone: faint at the finest drawn spacing, a step
+ * darker per fourfold. A level then fades in as the view zooms rather than popping, and a scene swap
+ * that keeps every spacing (drilling through a grid-aligned portal) keeps every line as it was. The
+ * step is small and the ceiling low: the grid is a guide under the diagram, so the coarse levels in
+ * particular must not read as content.
+ */
+const levelOpacity = (size: number, min: number) => Math.min(0.12, 0.04 + (0.02 * Math.log(size / min)) / Math.log(4));
+
+export type GridProps = Util.ThemedClassName<{
   size?: number;
   scale?: number;
   offset?: Point;
@@ -42,7 +52,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
     },
     forwardedRef,
   ) => {
-    const svgRef = useForwardedRef(forwardedRef);
+    const svgRef = Hooks.useForwardedRef(forwardedRef);
     const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
 
     const instanceId = useId();
@@ -59,10 +69,10 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       <svg
         data-testid='dx-canvas-grid'
         ref={svgRef}
-        // `dx-fullscreen` (absolute inset-0) does not stretch a replaced <svg> element — without an explicit
+        // `dx-cover` (absolute inset-0) does not stretch a replaced <svg> element — without an explicit
         // size it falls back to the intrinsic 300x150, clipping the 100%-sized grid rects. Force full size.
         className={mx(
-          'dx-fullscreen w-full h-full pointer-events-none touch-none select-none',
+          'dx-cover w-full h-full pointer-events-none touch-none select-none',
           'stroke-neutral-500',
           classNames,
         )}
@@ -80,10 +90,10 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
           </>
         )}
         <g>
-          {grids.map(({ id }, i) => (
+          {grids.map(({ id, size }) => (
             <rect
               key={id}
-              opacity={0.1 + i * 0.05}
+              opacity={levelOpacity(size, min)}
               fill={`url(#${createId(instanceId, id)})`}
               width='100%'
               height='100%'

@@ -1,5 +1,100 @@
 # @dxos/app-solid
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [69a4a85]
+- Updated dependencies [e99ee70]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [246ee3c]
+- Updated dependencies [6ea9d4d]
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/effect-atom-solid@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/web-context-solid@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [4ececc6]
+- Updated dependencies [3c7b013]
+- Updated dependencies [1a8043c]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [28b7621]
+- Updated dependencies [9714c75]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [2d4107f]
+- Updated dependencies [5305365]
+- Updated dependencies [9a36b1e]
+- Updated dependencies [dd17e57]
+- Updated dependencies [6d28380]
+- Updated dependencies [329faa0]
+- Updated dependencies [318d610]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [2643a00]
+- Updated dependencies [362fd0f]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [497caab]
+- Updated dependencies [b02fe16]
+- Updated dependencies [f0d3620]
+- Updated dependencies [548e82c]
+- Updated dependencies [cafa240]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [4e4c25d]
+- Updated dependencies [9c86066]
+- Updated dependencies [3294b3d]
+- Updated dependencies [cc45381]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [8efc4f1]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [b72c1a2]
+- Updated dependencies [d308bf8]
+- Updated dependencies [07514c2]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [8f372ce]
+- Updated dependencies [dea5df9]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [7263241]
+- Updated dependencies [0a27bde]
+- Updated dependencies [886453b]
+- Updated dependencies [582fc22]
+- Updated dependencies [892b718]
+- Updated dependencies [63629c5]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [5dedae9]
+- Updated dependencies [d205e96]
+- Updated dependencies [bb94124]
+- Updated dependencies [1a3de22]
+- Updated dependencies [a20d4d9]
+- Updated dependencies [a1d42c4]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [11de244]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/effect-atom-solid@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/web-context-solid@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

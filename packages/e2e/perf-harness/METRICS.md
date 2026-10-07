@@ -140,36 +140,96 @@ One entry per attached realm (page, each worker), each from `Runtime.getHeapUsag
 **three-pass forced GC** — one pass leaves `FinalizationRegistry` callbacks and `WeakRef` clears
 pending, so a single collection under-reports what is actually garbage.
 
-| Field           | Source                 | Meaning                                                                                                                             |
-| --------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                                                   |
-| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                                                     |
-| `backingBytes`  | `backingStorageSize`   | External backing stores — `ArrayBuffer`s and friends. **This is where wasm memory and automerge buffers become visible per realm.** |
-| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                                                            |
+| Field           | Source                 | Meaning                                                                                                    |
+| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                          |
+| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                            |
+| `backingBytes`  | `backingStorageSize`   | External backing stores — `ArrayBuffer`s and friends, which is where automerge's buffers sit.              |
+| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                                   |
+| `wasmBytes`     | `@dxos/util` probe     | Wasm linear memory this realm holds — automerge, subduction and SQLite. Counted by nothing else per realm. |
+| `wasmInstances` | `@dxos/util` probe     | Memories counted. The integrity column: absent fields mean an uninstrumented realm, `0` means no wasm.     |
 
 The gap between the two matters. At `open-tasks` the dedicated worker holds **29 MB `usedBytes`
 against 135 MB `backingBytes`** — the JS heap is small, the buffers are not.
 
+`wasmBytes` comes from `installWasmMemoryProbe()` (`@dxos/util`), which wraps
+`WebAssembly.instantiate`/`instantiateStreaming` and keeps a weak set of every memory an instance
+exports or imports. The app calls it at the top of `initAutomergeWasm()`, which every realm that
+runs wasm awaits before its first module — including the dedicated worker, where it precedes the
+runtime that opens SQLite. **A module compiled before the probe is installed is invisible to it**,
+which is what `wasmInstances` exists to make visible: a realm that reports fewer memories than it
+should has had its initialization reordered.
+
+`wasmBytesTotal` sums the EXCLUSIVE bytes only. A `SharedArrayBuffer`-backed memory is visible in
+every realm it was posted to and nothing in the readings identifies one allocation across realms,
+so a deduplicated cross-realm total cannot be computed from them — `wasmSharedBytesSum` is the
+shared subtotal summed over realms, an upper bound rather than a union. Read it beside the total
+rather than adding the two.
+
 `kind` is `page`, `worker` or `shared_worker`; `name` carries the script name, which is how you tell
 the coordinator worker from the observability worker.
+
+### The disjoint set, and what not to stack
+
+Four per-realm columns partition a realm's memory and can be stacked without double counting:
+
+| column                     | what it holds                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `heapUsedBytes*`           | live JS objects                                                                |
+| `wasmBytes*`               | wasm linear memory, committed                                                  |
+| `heapBackingNonWasmBytes*` | external backing stores that are NOT wasm — `ArrayBuffer`s and friends         |
+| `embedderBytes*`           | Blink-side objects attributed to the realm: DOM nodes, listeners, the document |
+
+`heapBackingBytes*` is the RAW reading and is **not** in that set: `backingStorageSize` counts wasm
+linear memory and `ArrayBuffer`s alike, so stacking it beside `wasmBytes` draws every wasm byte
+twice. It is published because it is the cross-check that validated the probe — on a real boot the
+worker read 31,949,677 backing against 23,396,352 wasm, and the difference is its non-wasm buffers.
+
+`wasmBytes*` is split by library into `wasmAutomergeBytes*`, `wasmSubductionBytes*`,
+`wasmSqliteBytes*` and `wasmOtherBytes*`, which partition it exactly. The classifier keys on the
+`.wasm` module's own filename rather than the chunk that created it, because a chunk name carries a
+content hash and changes on every build. **It tests subduction before automerge**: subduction ships
+as `automerge_subduction_wasm_bg.wasm`, so the other order reports all of it as automerge.
 
 ### `heapUsedTotalBytes`
 
 Sum of `usedBytes` across realms. Convenient, and lossy: it hides which realm grew, and still
-excludes wasm. Use `heap[]` when a number moves.
+excludes wasm — `wasmBytesTotal` is the companion column. Use `heap[]` when a number moves.
 
-### `peakRssBytes` — the trended one
+### `appFootprintBytes` — the trended one
 
-Peak resident set size over the browser **process tree**, sampled through the stage with `ps` so a
-spike that is freed before the boundary still counts.
+`footprintProcesses` is its integrity column, the role `sqliteRealms` plays for disk: the dump can
+fail or be pre-empted by another trace, and a failed read yields no processes — which sums to zero
+bytes and is otherwise indistinguishable from an app holding no memory. Zero processes means the
+row's footprints are ABSENT, not measured.
 
-This is the trended memory figure for two reasons: it is what a user's machine actually feels, and
-it is **the only number that counts wasm linear memory** — where automerge documents live, outside
-every JS-heap reading and never returned to the OS.
+Private footprint of the **renderer** processes at the stage's end, from a `light` memory-infra
+dump. It counts wasm linear memory, where automerge documents live, outside every JS-heap reading
+and never returned to the OS.
 
-Expect it to dwarf the heap. Our run: 1.2–2.3 GB RSS against an 87–323 MB JS heap.
+It replaced a peak of `ps` RSS summed over the browser's process tree, which was not a quantity.
+Every process's RSS counts the shared pages it maps, so the sum multi-counts: an empty headless
+Chromium sums to 1,335 MB that way against 408 MB of actual footprint. Private footprints are
+disjoint per process, which is what makes adding the renderers legitimate.
 
-**Linux/macOS only** (it shells out to `ps`).
+It is the figure closest to what a user's machine feels, and it counts wasm linear memory, which no
+JS-heap column does. It cannot ATTRIBUTE that memory: a dedicated worker is allocated in its
+creating context's renderer and a shared worker takes the creator's `SiteInstance`, so no
+process-level reading can separate ECHO's worker from the tab that spawned it. `wasmBytes` and
+`heapBackingBytes` are the per-realm answers; this is the whole-app one.
+
+Renderers only, by Chrome's own process name. The browser, GPU and service processes measured
+218 MB in a probe — Chrome's cost, not the app's — and they are reported separately as
+`chromeFootprintBytes` rather than hidden in the total. `Extension Renderer` and
+`WebUI Top Renderer` carry their own names and are excluded with them.
+
+A boundary read rather than a sampler: memory-infra delivers through the tracing stream, so each
+reading starts and ends a short trace around one dump, measured at 93-131 ms. A `light` dump costs
+19-24 ms against `detailed`'s 122 ms and carries `process_totals`, which is all this reads.
+
+`boot` is the exception. CDP records one trace at a time and the CPU trace is still running when
+boot's boundary arrives, so boot's reading is backfilled once that trace ends — a few seconds late,
+by the same offset every run.
 
 ### `domNodes`, `domListeners`, `domDocuments`
 
@@ -261,8 +321,71 @@ attributable: page and worker samples in one distribution let whichever realm sa
 the other, so a wedged worker could hide behind a calm page. `count: 0` means the realm stayed
 responsive, not that the probe was missing.
 
-Read this rather than `lagP95Ms` when a stall needs an owner. In the reference run every stall was
-the page's: 298 page samples, worst p95 2,943 ms, and zero samples over the floor in any worker.
+Read this rather than `lagP95Ms` when a stall needs an owner. A measured run shows the dedicated
+worker stalling 2.0 s in `await-replication` and 344 ms in `edit-document`, neither of which any
+page-side metric sees.
+
+**`boot` reports no worker samples and cannot.** The worker realms are created BY that stage, so
+nothing exists to probe at its opening boundary; catching them would need browser-level
+`Target.setAutoAttach` with `waitForDebuggerOnStart`. Every later stage is covered.
+
+**Read `count` before believing a zero.** Every worker lag column read zero for weeks on rows that
+also showed the dedicated workers burning 1,464 ms of CPU in `edit-document`, and nothing published
+said whether the probe had produced anything. It was the probe: the drain expression defines
+`globalThis.__perfLag`, and the installer's idempotence guard tested that same array, so a realm
+first drained at the closing boundary of the stage that created it answered `present` for the rest
+of the run with no interval ever armed. The guard is now a separate `__perfLagArmed` marker. Those
+zeros were an instrument reading its own absence, which is why `lagSamples{Tab,Worker,…}` is
+trended — it is to the drift probe what `sqliteRealms` is to the disk counters.
+
+### `rpc[]` — lag measured from real traffic
+
+One entry per realm, from the app's own RPC timing middleware
+(`RpcTiming` in `@dxos/worker-framework`) rather than from a probe the harness installs. The
+middleware stamps a send timestamp on every outbound call and the server derives two quantities
+from it; the client records a third.
+
+| Field                              | Measured in           | Meaning                                                                                                                                                    |
+| ---------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `calls`                            | the realm that SERVED | Requests dispatched here during the stage, from the running total's difference.                                                                            |
+| `queueWaitP95Ms`, `queueWaitMaxMs` | the realm that SERVED | How long a request sat before this event loop picked it up. **This is the realm's responsiveness**, measured by the traffic a user is actually waiting on. |
+| `serviceMaxMs`                     | the realm that SERVED | Worst handler duration.                                                                                                                                    |
+| `clientCalls`                      | the realm that ISSUED | Requests this realm sent.                                                                                                                                  |
+| `roundTripP95Ms`, `roundTripMaxMs` | the realm that ISSUED | Send to settle, including the transport in both directions.                                                                                                |
+| `samples`, `clientSamples`         | both                  | How many samples the percentiles cover.                                                                                                                    |
+
+**Round trip is not the other two added up**, and the gap is the point: a worker reporting 2 ms of
+queue wait and 3 ms of service while the tab waited 400 ms says the time went somewhere neither
+column covers. Queue wait is the complement to `lagByRealm` — same quantity, different instrument,
+and this one cannot silently produce nothing while the app is working, because it is driven by the
+app's own calls.
+
+`samples` is the integrity column. The middleware keeps a bounded ring (100 entries), so a stage
+serving more calls than it holds reports a percentile over the stage's TAIL; `rpcCallsTotal` above
+`rpcSamples` in the trended columns is what says so. A realm that published no counters at all is
+absent from the array entirely, which `rpcRealms` counts.
+
+### `latency` — prompt to model request
+
+How long the app holds a chat turn's input before asking the model, joined from every realm's
+work marks (`markWork` in `@dxos/util`): User Timing marks named `dxos:<name>`, which also show on the
+DevTools Timings track. The harness reads each realm's marks with `performance.getEntriesByType` and
+places them at `performance.timeOrigin + startTime`, so a mark taken in a worker compares with one
+taken in the tab, which `startTime` alone does not allow. `chat.submit` is taken by the chat UI;
+`ai.request` and `ai.response` by `@dxos/ai` around every model call, for the scripted model and
+HTTP providers alike. The calls offering a toolkit are the agent's turns.
+
+| Field               | Trended as                         | Meaning                                                                                       |
+| ------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `submitToRequestMs` | `submitToRequest{P50,Max,Count}Ms` | A user submit to the first agent request it caused.                                           |
+| `turnToRequestMs`   | `turnToRequest{P50,Max,Count}Ms`   | The end of one agent response to the next request: tool calls, their writes, context rebuild. |
+| `submitPath`        | NDJSON only                        | Every mark between the first submit and its request, in ms since the submit.                  |
+| `turnPath`          | NDJSON only                        | Each mark's median offset into the later turns.                                               |
+| `realms`            | `markRealms`                       | Realms that wrote any work mark; `0` means nothing was instrumented.                          |
+
+The paths are how a regression is attributed: the marks name the hops from the UI handler through
+the agent process waking, history and context assembly, to the request. The row is absent from a
+stage that made no model request.
 
 ### `stillFrameMaxMs`, `stillFrameCount` — `diagnose` only
 
@@ -320,6 +443,117 @@ The separation is not fastidiousness, it is a measured effect:
 `writePosthogBatch` drops every non-`measure` row rather than trusting a caller to remember, and
 `toPosthogEvent` throws on one.
 
+## Work counters
+
+Counts of work done, for budgets that sit within a few percent of the measured value. Wall time and
+CPU move 10–30% between runs with the runner's load; a count moves only when the code does more
+or less work. Each is a delta over the stage unless marked a level. The costed ones run per
+`DX_PERF_COUNTERS` (`trace`, `calls`, `react`; recorded as `comparability.counters`), and a counter
+that did not run leaves its fields absent rather than zero.
+
+### `thread.layoutCount`, `recalcStyleCount`, `layoutObjects` — free
+
+The counts `Performance.getMetrics` was already returning, now published. `layoutObjects` is a
+level, the size of the render tree at the stage's end. `devToolsCommandMs` is the time the tab
+spent answering CDP: the harness's own cost, published so a jump in it is attributable.
+
+### `traceCounters` — a trace per stage (`trace`)
+
+Chrome records one trace at a time. The boot trace (`startTracing`, `counters: true`) carries
+`devtools.timeline` so `boot` gets the counts from it; every other stage gets its own short trace,
+started before the opening boundary and stopped before the footprint read (which needs the tracing
+slot itself). Only events between the stage's `perf-stage:` marks count, so the harness's own
+boundary reads do not.
+
+- `render.styleRecalcs` / `styleRecalcElements` — `UpdateLayoutTree` events and the summed
+  `elementCount`: how much styling the stage invalidated.
+- `render.layouts` / `layoutDirtyObjects` — `Layout` events and the summed `dirtyObjects`.
+- `render.forcedLayouts` — `Layout` events nested inside a script event (`FunctionCall`,
+  `EventDispatch`, `TimerFire`, `FireAnimationFrame`, `RunMicrotasks`, …) on the same thread:
+  script read geometry it had invalidated. A virtualized list that measures its rows in a scroll
+  handler shows up here as one forced layout per scroll step.
+- `instructions[]` — instructions retired per realm kind, summed over the OUTERMOST `toplevel`
+  tasks' `tidelta` (nested ones carry their own delta and would double count). `threads` is the
+  integrity column.
+- `events`, `dataLoss` — how many events the pass read, and whether Chrome reported dropping any;
+  with `dataLoss` every count is a lower bound.
+
+Task time from the same pass (`tracedCpuMsByRealm`) counts only `toplevel` events, so adding
+`devtools.timeline` to the boot trace does not inflate it.
+
+### `jsCalls[]` — V8 precise coverage (`calls`)
+
+`Profiler.startPreciseCoverage({ callCount: true, detailed: false })` in every attached realm,
+left on across stages; `takePreciseCoverage` zeroes the counters as it reads them, so each stage
+reads once at its start (discarded) and once at its end. `calls` is the sum of every function's
+invocation count, exact rather than sampled; `functions` is how many distinct functions ran.
+`<stage>-calls.json` lists the top 50 per realm with script and offset. A realm that appears
+mid-stage is not counted until the next stage, which is why `boot` has the page alone.
+
+### `react` — the devtools global hook (`react`)
+
+`installReactProbe` defines `__REACT_DEVTOOLS_GLOBAL_HOOK__` from an init script, before React
+loads; `react-dom` injects into it and calls `onCommitFiberRoot` after every commit. Per commit
+the probe visits only the fibers that rendered: React sets `PerformedWork` on a component whose
+render ran and bubbles it into `subtreeFlags` only along paths that were not bailed out.
+
+- `commits` — React commits. `renders` — component renders (function, class, `forwardRef`, `memo`).
+- `mounts` — renders with no previous fiber.
+- `wastedRenders` — re-renders whose props were shallow-equal to the previous ones and whose
+  stateful hooks and context values were identical: renders `memo` would have skipped. Effects and
+  memos rebuild their cells every render, so only hooks with an update queue are compared.
+
+`<stage>-react.json` lists the top 50 components by renders. Production bundles minify component
+names, so `projects-tasks` (`vite preview`) names fewer components than `assistant-chat`
+(storybook dev); the totals are unaffected.
+
+### `data` — the app's probes (free)
+
+`countWork(name, by)` in `@dxos/util` adds to a running total published as `__dxosWorkCounters`;
+the SQLite counters extend `__dxosSqliteIo`. Both are read in every realm at the boundaries the
+harness already crosses and summed over realms, keyed by name:
+
+- `sqlite.*` — statements by leading keyword, rows returned, rows changed (`sqlite3_changes`, read
+  after writes only), statement errors, and page-cache hits and misses sampled from
+  `sqlite3_db_status` when the counters are read rather than per statement.
+- `automerge.*` — storage-adapter chunk saves by automerge-repo kind (snapshot, incremental,
+  sync-state) and bytes, chunk and range loads and bytes, removes; documents leased into and
+  evicted from the host's repo; mutations applied from and sent to clients by the documents
+  synchronizer, with bytes.
+- `echo.*` — host query executions and the result batches and rows sent; client one-shot runs,
+  reactive recomputes, the objects they presented, and the subscriber callbacks fired; index
+  passes and the objects indexed.
+
+`rpcCallsByMethod` is the served-call count per Effect RPC method (`rpc._tag`), from the timing
+middleware. It has no byte counts: page↔worker messages are structured-cloned with no
+serialization step to measure, and walking every payload to estimate one would cost more than the
+call. `network.byEndpoint` groups requests, bytes and socket frames by host and first path segment.
+
+### Scoring them
+
+`src/score/stages.ts` scores a counter per stage as `<counter> > <stage>` (`reactRenders >
+assistant-turns`), the shape `wall > <stage>` has, so the heatmap splits the stage and the counter
+from the id without knowing about counters. They roll up into a `work` group (`busy work` for the
+chat flow's busy space), so a work regression moves the suite score as one group rather than being
+diluted into the timings.
+
+- `DEFAULT_WORK_METRICS` — what the nightly rows already carry: React commits, renders and wasted
+  renders; `recalcStyleCount` and `layoutCount`; SQLite statements by kind and rows changed;
+  Automerge saves (all kinds summed) and bytes; ECHO index passes, query runs and recomputes. Scored
+  in each flow's own suite.
+- `COSTED_WORK_METRICS` — the trace and coverage counts. The nightly runs them in jobs of their own
+  (`perf-counters`, `chat-counters`) with `DX_PERF_COUNTERS=trace,calls,react`, scores only them as
+  the `composer-work` and `chat-work` suites, and publishes none of that pass's stage rows: no
+  `ci.perf-stage` tile pins `ciCounters`, so a row inflated 7–29% would read there as a regression.
+
+Budgets are opt-in per stage: a counter with no budget is not measured, rather than warned about,
+since a zero or a network-paced stage (`seed`, `await-replication`) has no budget on purpose.
+`score-perf.ts calibrate --run <dir> --run <dir> …` proposes them from several nights' artifacts
+(`proposeWorkBudgets`): the target is the median of each night's median; the limit three spreads
+above it, at least 5% and one count, where the spread is the larger of the night-to-night CV and the
+per-iteration CV over √n. A counter noisier than 5% per iteration is left out — it is not counting
+deterministic work.
+
 ## Instrument cost, measured
 
 One sample per configuration of the same flow, whole-flow wall time:
@@ -350,6 +584,34 @@ On this evidence the profiler runs in **both** modes, which makes `cpuMsByRealm`
 rather than a diagnose artifact, and its profiles are kept in both (a whole run's artifacts come to
 ~19 MB, including one screenshot per stage — not the "hundreds of MB" an earlier revision of this
 file guessed at).
+
+### The work counters' cost
+
+Three iterations per configuration, interleaved (`none`, `trace`, `react`, `calls`, then again) so
+drift lands on all four alike, in the Claude Code cloud sandbox (4 cores). Medians of the flow's
+summed stages; `assistant-chat` (`blank`) excludes `seed`, whose cold storybook compile dominates
+it. `none` already includes the free counters (getMetrics, data probes, the instruction-count
+flag), so these are each costed counter's own increment.
+
+| counters | projects-tasks wall | CPU, all processes | tab task time | assistant-chat wall | CPU, all processes | tab task time |
+| -------- | ------------------- | ------------------ | ------------- | ------------------- | ------------------ | ------------- |
+| `none`   | 57.1 s              | 103.3 s            | 28.4 s        | 67.1 s              | 98.1 s             | 38.1 s        |
+| `react`  | +5.3%               | +4.2%              | +3.5%         | +3.1%               | +4.6%              | +4.8%         |
+| `trace`  | +7.2%               | +10.5%             | +8.2%         | +6.7%               | +14.5%             | +10.4%        |
+| `calls`  | +29.3%              | +26.0%             | +66.3%        | +11.7%              | +8.9%              | +22.5%        |
+
+So the default is `react` alone: a few percent, the same order as the profiler. `trace` costs
+past that in CPU — `devtools.timeline` records an event per script entry in every realm — and
+`calls` far past it, since precise coverage keeps every function's invocation counter live; both
+run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) and in the nightly's separate
+counters-on jobs, never inside the trended one.
+
+Across the same three iterations, the counts held where the stage is user-driven: on
+`assistant-turns`, `scroll-*`, `open-*` and `reopen-project` the coefficient of variation of
+`recalcStyleCount`, `styleRecalcElements`, `layoutDirtyObjects`, `reactRenders` and `jsCalls` was
+0–5% and mostly under 1%, against 1–5% for wall time and 2–8% for CPU on the same stages. Stages
+paced by the network (`await-replication`, `seed`) vary in counts too, because how much work they
+do depends on what arrived.
 
 ## Known gaps
 
@@ -396,9 +658,19 @@ Recorded here so nobody rediscovers them as bugs.
 
 4. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
-5. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
-   would be visible per realm.
-6. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
+5. ~~`backingBytes` is recorded but not surfaced.~~ Done, and wasm no longer depends on it:
+   `heapBackingBytes{realm}` is trended, and `wasmBytes{realm}` measures linear memory directly
+   from an instantiation probe rather than inferring it from a backing-store total that also counts
+   every `Uint8Array` automerge passes around.
+
+6. ~~Worker timer drift has never produced a sample.~~ Done: the installer's idempotence guard
+   tested `globalThis.__perfLag`, which the drain expression itself defines, so every worker realm
+   — first drained at the closing boundary of the stage that created it — answered `present`
+   forever and never armed an interval. Instrumenting a full flow showed 40 installs, all
+   `present`, none `installed`. The guard is a separate `__perfLagArmed` marker now, and
+   `lagSamples{realm}` is what made the failure visible rather than plausible; `rpc[]`'s queue wait
+   measures the same responsiveness from traffic the app generates itself.
+7. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
    first ten-iteration run corrected the premise. WITHIN a run the spread is tiny (CV 1.6% on total
    wall time, 0.11% on DOM nodes); the ~20% figure below came from comparing separate RUNS, which
    also differ by machine cell and cache state. Ten iterations therefore pin down one job very
@@ -412,8 +684,27 @@ Recorded here so nobody rediscovers them as bugs.
    different questions: one slow but SUCCESSFUL iteration moves the mean and not the median. A
    failed stage is not that case and never was — `writePosthogBatch` filters on `row.ok`, so an
    expired stage lowers the sample count instead of dragging anything.
-7. **`boot` carries no profile** in either mode: there is no target to attach to until the page
+8. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
+9. **Instruction counts need a hardware PMU, and the machines measured so far have none.**
+   `--enable-thread-instruction-count` reads per-thread instruction counters through
+   `perf_event_open`, which needs a kernel PMU driver. The Claude Code cloud sandbox is a
+   Firecracker VM whose kernel logs `Performance Events: … no PMU driver, software events only`
+   (`perf_event_paranoid` is 2, which would otherwise allow user-space counting), and Chrome then
+   emits no `tidelta` at all. The flag stays on because it costs nothing without a PMU, and
+   `instructionThreads` says per row whether the counts exist — so the first nightly on the Depot
+   runner answers whether it has one. If it reads `0` there too, the runner is virtualized without
+   PMU passthrough and instructions need a bare-metal runner.
+10. **No valgrind instruction counts for the node ECHO benchmarks.** `cachegrind` on
+    `node --predictable --single-threaded` would give deterministic instruction counts with no PMU,
+    but it runs the benchmark 20–50x slower and needs valgrind on the runner; it was left out of
+    this change as optional.
+11. **RPC has call counts per method, not bytes.** See `rpcCallsByMethod` above: the transport is
+    structured clone, so there is no serialized size to read without walking every payload.
+12. **`calls` and `react` skip what happened before they could attach.** Coverage starts in a
+    realm at the first stage boundary that sees it, so a worker created during `boot` is counted
+    from the next stage; the React probe only sees commits after `react-dom` loads, which is all of
+    them only because the init script runs before the bundle.
 
 ## Where the numbers go
 

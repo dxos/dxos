@@ -3,16 +3,17 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type ReactNode } from 'react';
+import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
-import { Entity, Obj, Type } from '@dxos/echo';
-import type { SchemaAST } from '@dxos/effect';
+import * as Surface from '@dxos/app-framework/Surface';
+import { Entity, Obj, type Ref, Type } from '@dxos/echo';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
-import { type MenuActions } from '@dxos/react-ui-menu';
+import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
+import type { MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
+import { type Actor, SpaceInvitationMessage } from '@dxos/types';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
 
@@ -493,6 +494,54 @@ export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subje
   role?: string;
 };
 
+/**
+ * Role token for the `cardMasonry` role: several objects laid out as cards.
+ *
+ * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
+ * surface deriving them from a subject, which is what separates this from {@link Related}: the
+ * caller already knows what belongs in the grid and only wants it rendered.
+ */
+export const CardMasonry: Role.Role<CardMasonryData> = Role.make('org.dxos.role.cardMasonry');
+
+/** Surface data for the card-masonry role. */
+export type CardMasonryData = {
+  /**
+   * What to show, in reading order. Refs rather than objects: a stack renders what a host holds a
+   * link to, and resolving them is the surface's job, so a cold load fills in rather than reading
+   * empty.
+   */
+  objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+  /** The plank the grid renders in, so a card's actions resolve against the right node. */
+  attendableId?: string;
+  /** Clicking a card opens its object as this plank's detail rather than as a plank beside it. */
+  detailOf?: string;
+  /**
+   * `compact` renders the cards at three quarters of their size, so a companion-width host fits two
+   * columns where full-size cards would stack in one.
+   */
+  size?: 'default' | 'compact';
+  /**
+   * In the host's flow rather than in a scroller of its own: for a host that already scrolls, such
+   * as a section of an article, where a nested scroller would also pad and centre the grid.
+   */
+  inline?: boolean;
+  /**
+   * The host's items for each card's menu, alongside the object's own: rendered once per card, it
+   * renders nothing and registers its items with the card's `menu` via `useMenuContribution` — the
+   * same contract as a type's {@link CardMenu} surface, so a host adds actions such as removing the
+   * object from its list without the card knowing what they mean.
+   */
+  CardMenu?: ComponentType<CardMenuData<Obj.Unknown>>;
+  /** Placeholder cards, after the resolved ones, for objects the host is still adding. */
+  pending?: ReadonlyArray<CardMasonryPending>;
+};
+
+/** A card-masonry placeholder: a card header with a spinner, titled with what is being added. */
+export type CardMasonryPending = {
+  id: string;
+  label: string;
+};
+
 /** Surface data for card-role ECHO object. */
 export type ObjectCardData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = CardData<
   Subject,
@@ -629,6 +678,24 @@ export type NavtreeItemEndData<Subject = unknown> = {
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
 export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
 
+/** Data for the contact-picker slot on a space's members article. */
+export type ContactPickerData = {
+  space: Space;
+  onAdd: (
+    identityKeys: string[],
+    role: SpaceMember_Role,
+  ) => Promise<{ joinUrl: string; failed: readonly { key: string; error: string }[] }>;
+};
+
+/** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
+export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
+
+/** Data for the space-invitation slot: the invitation block's data plus who sent the message. */
+export type SpaceInvitationData = SpaceInvitationMessage.Data & { sender?: Actor.Actor };
+
+/** Slot for a space invitation carried by a message (see `SpaceInvitationMessage`); filled by the client plugin. */
+export const SpaceInvitation: Role.Role<SpaceInvitationData> = Role.make(SpaceInvitationMessage.SPACE_INVITATION_ROLE);
+
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');
 
@@ -639,8 +706,9 @@ export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dx
  * must call this factory with the same variant id so they agree on the dispatch NSID.
  *
  * Variant ids must be camelCase alphanumeric (DXN rule: no hyphens in the final segment).
+ * The deck passes the companion's graph node `id`, which is the surface's attendable id.
  */
-export const deckCompanion = (variant: string): Role.Role<{ subject?: any }> => {
+export const deckCompanion = (variant: string): Role.Role<{ id?: string; subject?: any }> => {
   if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(variant)) {
     throw new Error(
       `Invalid deck companion variant id: "${variant}". Must be camelCase alphanumeric (no hyphens or underscores).`,

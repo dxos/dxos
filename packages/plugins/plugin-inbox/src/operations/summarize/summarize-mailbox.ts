@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -183,7 +183,7 @@ const summarize = Effect.fnUntraced(function* (
   });
   reportStatus({ current: 0, total: batch.length });
 
-  const modelLayer = AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
+  const modelLayer = AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
   let summarized_ = 0;
   for (const thread of batch) {
     if (signal.aborted) {
@@ -213,7 +213,9 @@ const summarize = Effect.fnUntraced(function* (
     );
     if (text.length > 0) {
       const target = Mailbox.findOrCreateAnnotations(mailbox, db);
-      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]);
+      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]).pipe(
+        Effect.provideService(Database.Origin, 'system'),
+      );
       summarized_ += 1;
     }
     reportStatus({ current: summarized_, message: stringProperty(subject, 'subject') });
@@ -226,7 +228,7 @@ const summarize = Effect.fnUntraced(function* (
     remaining,
   });
   reportStatus({
-    message: summarized_ === 0 && batch.length > 0 ? PROGRESS_STATUS_FAILED : PROGRESS_STATUS_COMPLETE,
+    message: summarized_ === 0 && batch.length > 0 ? Progress.STATUS_FAILED : Progress.STATUS_COMPLETE,
   });
 
   return { pending: candidates.length, summarized: summarized_, remaining };

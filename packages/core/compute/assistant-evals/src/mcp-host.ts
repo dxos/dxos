@@ -14,9 +14,10 @@ import { type IncomingMessage, type ServerResponse } from 'node:http';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
+import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
 
 import { listenLoopback, loopbackUrl } from './loopback-server.ts';
 
@@ -56,6 +57,15 @@ export type StartMcpHostOptions = {
    * "cannot read properties of undefined (reading 'encoding')".
    */
   readonly registry: () => Registry.Registry;
+  /**
+   * Serves `createUpload` over this stage, as `dx mcp serve` does. Omitted, the surface has no
+   * upload tool at all — which is what the deployed worker's own tool, not this one, is for.
+   */
+  readonly uploads?: LocalUpload.Stage;
+  /** Secret the skill tokens derive from; omitted, a random one for this host's lifetime. */
+  readonly skillSecret?: string;
+  /** Serves `runScript` too, evaluated in process, as `dx mcp serve --code-mode` does. */
+  readonly codeMode?: boolean;
 };
 
 /**
@@ -80,13 +90,31 @@ export const startMcpHost = ({
   spaceIds,
   context,
   registry,
+  uploads,
+  skillSecret = crypto.randomUUID(),
+  codeMode = false,
 }: StartMcpHostOptions): Effect.Effect<McpHost, never, Scope.Scope> =>
   Effect.gen(function* () {
+    // Host-wide rather than per `connect`, which runs per request: a token one request hands out must
+    // unlock the next.
+    const gate = McpServer.skillGate(skillSecret);
     const connect = async () => {
       const server = new Server({ name: McpServer.identity.name, version: VERSION }, { capabilities: { tools: {} } });
-      server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
+      server.setRequestHandler(ListToolsRequestSchema, async () => ({
+        tools: [...TOOLS, ...(uploads ? [CREATE_UPLOAD_TOOL] : []), ...(codeMode ? [RUN_SCRIPT_TOOL] : [])],
+      }));
       server.setRequestHandler(CallToolRequestSchema, async (request) =>
-        dispatch(registry(), skills, spaceIds, context, request.params.name, request.params.arguments ?? {}),
+        dispatch(
+          registry(),
+          gate,
+          skills,
+          spaceIds,
+          context,
+          uploads,
+          codeMode,
+          request.params.name,
+          request.params.arguments ?? {},
+        ),
       );
       // Stateless, and therefore one server and transport per request: a transport with no session
       // id rejects the second request it sees, since it has no session to attribute it to.
@@ -149,6 +177,10 @@ const TOOLS = [
         key: { type: 'string', description: 'Operation key, as given in a queryOperations row.' },
         input: { type: 'object', description: "Arguments matching the operation's input schema." },
         spaceId: { type: 'string', description: 'The space the call acts on.' },
+        skillToken: {
+          type: 'string',
+          description: 'The skillToken loadSkill returned for a skill this operation belongs to.',
+        },
       },
       required: ['key'],
     },
@@ -165,6 +197,45 @@ const TOOLS = [
   },
 ];
 
+/** `createUpload`, written out for the same reason as {@link TOOLS}; offered only with a stage. */
+const CREATE_UPLOAD_TOOL = {
+  name: 'createUpload',
+  // The effect tool's own description, so the model reads the text `dx mcp serve` sends.
+  description: LocalUpload.CreateUpload.description,
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      name: { type: 'string', description: 'Filename to record on the resulting file object, e.g. capture.png.' },
+      size: {
+        type: 'number',
+        description: 'Size of the file in bytes, if known. Used only to fail fast when it exceeds the limit.',
+      },
+    },
+  },
+};
+
+/** `runScript`, written out for the same reason as {@link TOOLS}; offered only in code mode. */
+const RUN_SCRIPT_TOOL = {
+  name: McpServer.RunScript.name,
+  description: McpServer.RunScript.description,
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      code: {
+        type: 'string',
+        description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
+      },
+      spaceId: { type: 'string', description: 'The space invoke uses when a call names none.' },
+      skillTokens: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script invokes.',
+      },
+    },
+    required: ['code'],
+  },
+};
+
 type ToolResponse = {
   content: { type: 'text'; text: string }[];
   structuredContent?: Record<string, unknown>;
@@ -174,23 +245,63 @@ type ToolResponse = {
 /** Runs one tool call through the server's own dispatch, in the caller's runtime context. */
 const dispatch = async (
   registry: Registry.Registry,
+  gate: McpServer.SkillGate,
   skills: readonly Skill.Definition[],
   spaceIds: readonly SpaceId[] | undefined,
   context: () => Context.Context<Operation.Service>,
+  uploads: LocalUpload.Stage | undefined,
+  codeMode: boolean,
   name: string,
   args: Record<string, unknown>,
 ): Promise<ToolResponse> => {
   const program = Effect.gen(function* () {
     switch (name) {
+      case CREATE_UPLOAD_TOOL.name: {
+        if (!uploads) {
+          return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));
+        }
+        if (typeof args.size === 'number' && args.size > LocalUpload.MAX_UPLOAD_BYTES) {
+          return yield* Effect.fail(
+            McpServer.failure(
+              'invalid_request',
+              `File is ${args.size} bytes; the limit is ${LocalUpload.MAX_UPLOAD_BYTES}.`,
+            ),
+          );
+        }
+        return yield* Effect.tryPromise({
+          try: () => uploads.mint(typeof args.name === 'string' ? args.name : undefined),
+          catch: (error) =>
+            McpServer.failure('operation_failed', error instanceof Error ? error.message : String(error)),
+        });
+      }
       case McpServer.QueryOperations.name:
         return yield* McpServer.queryOperations(registry, args);
       case McpServer.LoadSkill.name:
-        return yield* McpServer.loadSkillByName(registry, args.skill as string | undefined);
+        return yield* McpServer.loadSkill(registry, gate, args.skill as string | undefined);
       case McpServer.InvokeOperation.name: {
         // Built per call, because the invoker it closes over is the harness's — which exists only
         // once the eval's harness has booted.
         const host = yield* McpServer.host({ skills, spaceIds });
-        return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2]);
+        return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2], gate);
+      }
+      case RUN_SCRIPT_TOOL.name: {
+        if (!codeMode || typeof args.code !== 'string') {
+          return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string.`));
+        }
+        const host = yield* McpServer.host({ skills, spaceIds });
+        return yield* McpServer.runScript(
+          registry,
+          host,
+          gate,
+          {
+            code: args.code,
+            spaceId: SpaceId.isValid(args.spaceId) ? args.spaceId : undefined,
+            skillTokens: Array.isArray(args.skillTokens)
+              ? args.skillTokens.filter((token): token is string => typeof token === 'string')
+              : [],
+          },
+          { sandbox: McpServer.inProcessScriptSandbox },
+        );
       }
       default:
         return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));

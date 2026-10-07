@@ -1,15 +1,16 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Button, IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import '@dxos/react-ui/theme.css';
+import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
@@ -41,10 +42,8 @@ const createBaseActionsAtom = (count = 3) => {
 
 const openDropdown = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
-  const trigger = canvas.getByRole('button', { name: /options/i });
-  await userEvent.click(trigger);
-  const body = within(document.body);
-  return body;
+  await userEvent.click(canvas.getByRole('button', { name: /options/i }));
+  return within(document.body);
 };
 
 /** A contributor: registers items with a menu it does not own, for as long as it is mounted. */
@@ -78,8 +77,8 @@ export const StaticItems: Story = {
     return (
       <>
         <Contributor menu={menu} id='static-items' items={staticItems} />
-        <ActionMenu {...menu}>
-          <IconButton icon='ph--list-checks--regular' label='Options' />
+        <ActionMenu {...menu} iconSize='lg'>
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
         </ActionMenu>
       </>
     );
@@ -90,6 +89,9 @@ export const StaticItems: Story = {
     const labels = items.map((el) => el.textContent);
     await expect(labels).toContain('Static Action 1');
     await expect(labels).toContain('Static Action 2');
+    // `iconSize` 5 (1.25rem) is Next's `lg` icon step.
+    const static1 = items.find((el) => el.textContent === 'Static Action 1');
+    await expect(static1?.querySelector('svg')).toHaveAttribute('data-icon-size', 'lg');
   },
 };
 
@@ -110,17 +112,15 @@ export const ReactiveItems: Story = {
     const menu = useMenuActions(actionsAtom);
 
     return (
-      <div className='flex flex-col gap-4'>
+      <Layout.Container gap='md'>
         <Contributor menu={menu} id='reactive-items' priority={50} items={reactiveItems} />
-        <div>
-          <ActionMenu {...menu}>
-            <IconButton icon='ph--list-checks--regular' label='Options' />
-          </ActionMenu>
-        </div>
-        <Button data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
+        <ActionMenu {...menu}>
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
+        </ActionMenu>
+        <Button.Root data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
           Update Reactive Item ({count})
-        </Button>
-      </div>
+        </Button.Root>
+      </Layout.Container>
     );
   },
   play: async ({ canvasElement }) => {
@@ -131,8 +131,8 @@ export const ReactiveItems: Story = {
     await expect(items.map((el) => el.textContent)).toContain('Reactive Action (1)');
 
     await userEvent.keyboard('{Escape}');
-    const updateButton = canvas.getByTestId('update-button');
-    await userEvent.click(updateButton);
+    await waitFor(() => expect(body.queryByRole('menu')).toBeNull());
+    await userEvent.click(canvas.getByTestId('update-button'));
 
     const body2 = await openDropdown(canvasElement);
     const updatedItems = await body2.findAllByRole('menuitem');
@@ -153,7 +153,7 @@ export const ReplacementMode: Story = {
       <>
         <Contributor menu={menu} id='replacement-items' mode='replacement' items={replacementItems} />
         <ActionMenu {...menu}>
-          <IconButton icon='ph--list-checks--regular' label='Options (replaced)' />
+          <Button.Root icon='ph--list-checks--regular' label='Options (replaced)' iconOnly />
         </ActionMenu>
       </>
     );
@@ -184,7 +184,7 @@ export const PriorityOrdering: Story = {
         <Contributor menu={menu} id='low-priority-items' priority={150} items={lowPriorityItems} />
         <Contributor menu={menu} id='high-priority-items' priority={50} items={highPriorityItems} />
         <ActionMenu {...menu}>
-          <IconButton icon='ph--list-checks--regular' label='Options (priority ordered)' />
+          <Button.Root icon='ph--list-checks--regular' label='Options (priority ordered)' iconOnly />
         </ActionMenu>
       </>
     );
@@ -195,5 +195,27 @@ export const PriorityOrdering: Story = {
     await expect(items).toHaveLength(2);
     await expect(items[0].textContent).toBe('High Priority (50)');
     await expect(items[1].textContent).toBe('Low Priority (150)');
+  },
+};
+
+/** A menu that builds its machine on the trigger's first click; the click both builds and opens it. */
+export const DeferUntilOpen: Story = {
+  render: () => {
+    const menu = useMenuActions();
+    return (
+      <>
+        <Contributor menu={menu} id='static-items' items={staticItems} />
+        <ActionMenu {...menu} deferUntilOpen>
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
+        </ActionMenu>
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: /options/i })).toHaveAttribute('aria-expanded', 'false');
+    const body = await openDropdown(canvasElement);
+    const items = await body.findAllByRole('menuitem');
+    await expect(items.map((el) => el.textContent)).toContain('Static Action 1');
   },
 };

@@ -12,7 +12,10 @@ import { Space_PipelineStateSchema } from '@dxos/protocols/buf/dxos/client/servi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState, useSpacesInfo } from '../../../../hooks/index.ts';
@@ -61,21 +64,16 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
     () => (
       <Toolbar.Root>
         {!props.space && <DataSpaceSelector />}
-        <Toolbar.IconButton
-          icon='ph--arrow-clockwise--regular'
-          iconOnly
-          label='Refresh'
-          onClick={() => forceUpdate({})}
-        />
+        <Button.Root icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={() => forceUpdate({})} />
         <div className='grow' />
-        <Toolbar.Button onClick={toggleActive}>
+        <Button.Root onClick={toggleActive}>
           {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
-        </Toolbar.Button>
-        <Toolbar.Button onClick={toggleEdgeReplication}>
+        </Button.Root>
+        <Button.Root onClick={toggleEdgeReplication}>
           {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
             ? 'Disable backup to EDGE'
             : 'Enable backup to EDGE'}
-        </Toolbar.Button>
+        </Button.Root>
       </Toolbar.Root>
     ),
     [props.space, space?.state, space?.internal.data.edgeReplication],
@@ -83,10 +81,10 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Header>{toolbar}</Panel.Header>
+      <Panel.Body>
         {space && metadata && (
-          <ScrollArea.Root thin>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               <SpaceProperties space={space} metadata={metadata} />
               <div className='h-24'>
@@ -108,7 +106,7 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

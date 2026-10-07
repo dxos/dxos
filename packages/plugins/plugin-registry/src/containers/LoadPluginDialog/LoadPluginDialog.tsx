@@ -2,24 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
-import { Button, Dialog, Field, Flex, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
+import { RegistryOperation, describeLoadError } from '#operations';
 
 export const LoadPluginDialog = () => {
-  const manager = usePluginManager();
-  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
-  const handleLoad = useCallback(() => {
+  const handleLoad = useCallback(async () => {
     const trimmed = url.trim();
     if (!trimmed) {
       return;
@@ -27,36 +32,30 @@ export const LoadPluginDialog = () => {
 
     setLoading(true);
     setError(null);
-
-    void Effect.gen(function* () {
-      const plugin = yield* manager.add(trimmed);
-      yield* manager.enable(plugin.meta.profile.key);
+    // `invokePromise` reports a handler failure as `{ error }` rather than rejecting.
+    const { error } = await invokePromise(RegistryOperation.LoadPlugin, { url: trimmed });
+    setLoading(false);
+    if (error) {
+      setError(describeLoadError(error));
+    } else {
       closeRef.current?.click();
-    }).pipe(
-      Effect.catch((err) =>
-        Effect.sync(() => {
-          setError(String(err));
-        }),
-      ),
-      Effect.tap(() => Effect.sync(() => setLoading(false))),
-      EffectEx.runAndForwardErrors,
-    );
-  }, [url, manager]);
+    }
+  }, [url, invokePromise]);
 
   return (
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('load-by-url-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' ref={closeRef} />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         {/* TODO(burdon): Form section. */}
-        <Flex column gap='lg'>
+        <Layout.Flex column gap='lg'>
           <Field.Root validationValence={error ? 'error' : undefined}>
             <Field.Label>{t('plugin-url.label')}</Field.Label>
-            <Field.Input
+            <Input.Root
               placeholder='https://example.com/manifest.json'
               value={url}
               onChange={(event) => {
@@ -65,7 +64,7 @@ export const LoadPluginDialog = () => {
               }}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  handleLoad();
+                  void handleLoad();
                 }
               }}
               disabled={loading}
@@ -73,12 +72,12 @@ export const LoadPluginDialog = () => {
             />
             {error && <Field.HelperText>{error}</Field.HelperText>}
           </Field.Root>
-          <Flex justify='end'>
-            <Button variant='primary' disabled={!url.trim() || loading} onClick={handleLoad}>
+          <Layout.Flex justify='end'>
+            <Button.Root variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
               {loading ? t('loading.label') : t('load-plugin.label')}
-            </Button>
-          </Flex>
-        </Flex>
+            </Button.Root>
+          </Layout.Flex>
+        </Layout.Flex>
       </Dialog.Body>
     </Dialog.Content>
   );

@@ -4,9 +4,11 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 import * as Struct from 'effect/Struct';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
@@ -79,7 +81,7 @@ export const getSchemaURI = (schema: Schema.Top): URI.URI | undefined => {
 export const TypenameSchema = Schema.String.pipe(
   Schema.check(
     Schema.isPattern(
-      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/u,
     ),
   ),
 ).annotate({
@@ -91,7 +93,7 @@ export const TypenameSchema = Schema.String.pipe(
  * Semantic version format: `major.minor.patch`
  * Example: `1.0.0`
  */
-export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/))).annotate({
+export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/u))).annotate({
   description: 'Semantic version format: `major.minor.patch`',
   example: '1.0.0',
 });
@@ -285,14 +287,6 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
- */
-// TODO(wittjosiah): Invert the default? Hide every type unless it opts in, so a new type is
-//   invisible until someone marks it as user-facing rather than visible until someone hides it.
-export const HiddenAnnotationId = '@dxos/schema/annotation/Hidden';
-export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
-
-/**
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
@@ -433,6 +427,27 @@ export const FormOrderedAnnotationId = '@dxos/schema/annotation/FormOrdered';
 export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
 
 /**
+ * How a form presents an array of references; the two options are independent.
+ */
+export type ArrayPresentation = {
+  /** Rows (or chips) reorder by drag and keyboard, and the order is persisted; `false` by default. */
+  ordered?: boolean;
+  /**
+   * `tag`: removable chips in the targets' hues (the default for arrays of `Tag` refs). `title`: a row per target with
+   * its type's icon, its label and an optional description (the default otherwise).
+   */
+  display?: 'tag' | 'title';
+  /** A property of the target whose value is the `title` row's description line. */
+  description?: string;
+};
+
+/**
+ * When set on an array-of-`Ref` property, sets how the form presents it ({@link ArrayPresentation}).
+ */
+export const ArrayPresentationAnnotationId = '@dxos/schema/annotation/ArrayPresentation';
+export const ArrayPresentationAnnotation = createAnnotationHelper<ArrayPresentation>(ArrayPresentationAnnotationId);
+
+/**
  * Annotation carrying one or more named layout DSL templates that control how a
  * form arranges a schema's fields (consumed by `@dxos/react-ui-form`'s
  * `Form.Layout` / `Form.FieldSet`). Callers select a variant by name; the
@@ -527,7 +542,7 @@ const IconAnnotationSchema = Schema.Struct({
    * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
    * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/u))),
 
   /**
    * Color name.
@@ -574,9 +589,20 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
   schema: Schema.String,
 });
 
+/** Value of {@link SetParentAnnotation}. */
+export type SetParentAnnotationValue = {
+  /** Whether the field owns its targets at all. */
+  readonly value: boolean;
+  /** Whether a write takes a target that already has a parent. */
+  readonly override: boolean;
+};
+
 /**
  * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
  * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * `{ override: false }` claims only a target that has no parent, so the first field to reference an
+ * object becomes its parent and later fields only reference it.
  *
  * This is NOT an invariant: it does not guarantee that a target held here has this object as its
  * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
@@ -588,14 +614,70 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
  * @example
  * ```ts
  * Schema.Struct({
- *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
+ *   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.SetParent.set({ override: false })),
  * })
  * ```
  */
-export const SetParentAnnotation = makeUserAnnotation<boolean>({
+const SetParentValueSchema = Schema.Struct({ value: Schema.Boolean, override: Schema.Boolean });
+
+const setParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
   id: 'org.dxos.annotation.setParent',
-  schema: Schema.Boolean,
+  // Schemas persisted before the value was structured store a bare boolean.
+  schema: Schema.Union([
+    SetParentValueSchema,
+    Schema.Boolean.pipe(
+      Schema.decodeTo(
+        SetParentValueSchema,
+        SchemaTransformation.transform({
+          decode: (value: boolean): SetParentAnnotationValue => ({ value, override: true }),
+          encode: ({ value }: SetParentAnnotationValue) => value,
+        }),
+      ),
+    ),
+  ]),
 });
+
+export type SetParentAnnotationOptions = {
+  readonly override?: boolean;
+};
+
+/** {@link setParentAnnotation}, with a `set` that owns by default. */
+export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotationValue>, 'set'> & {
+  set: (options?: SetParentAnnotationOptions) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...setParentAnnotation,
+  set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
+};
+
+/** Value of {@link UserTypeAnnotation}. */
+export type UserTypeAnnotationValue = {
+  /** Keys a surface filters on (e.g. which types a collection's create dialog offers); opaque to ECHO. */
+  readonly tags?: readonly string[];
+};
+
+const userTypeAnnotation = makeUserAnnotation<UserTypeAnnotationValue>({
+  id: 'org.dxos.annotation.userType',
+  schema: Schema.Struct({ tags: Schema.optional(Schema.Array(Schema.String)) }),
+});
+
+/**
+ * Marks a static type as user-facing, so it shows in pickers, the nav tree, and collections. Absent, the
+ * type is internal (like a dotfile, visible only via an advanced setting); a new type stays out of sight
+ * until someone opts it in. Stored as property meta, so it survives persisting the schema.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set());
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set({ tags: [Collection.ItemTag] }));
+ * ```
+ */
+export const UserTypeAnnotation: Omit<Annotation.Annotation<UserTypeAnnotationValue>, 'set'> & {
+  set: (value?: UserTypeAnnotationValue) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...userTypeAnnotation,
+  set: (value: UserTypeAnnotationValue = {}) => userTypeAnnotation.set(value),
+};
 
 /**
  * Options for {@link getLabel}.
@@ -699,7 +781,10 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
 
 export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
-export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+export const getFromAst = <T>(
+  ast: SchemaAST.AST,
+  annotation: Pick<Annotation.Annotation<T>, 'key' | 'schema'>,
+): Option.Option<T> => {
   const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);
   return Option.fromNullishOr(meta?.[annotation.key]).pipe(Option.map(Schema.decodeUnknownSync(annotation.schema)));
 };

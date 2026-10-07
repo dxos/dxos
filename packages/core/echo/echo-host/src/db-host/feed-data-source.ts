@@ -3,12 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { type Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type FeedStore } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { failedInvariant } from '@dxos/invariant';
@@ -45,6 +45,13 @@ export class FeedDataSource implements IndexDataSource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _getSpaceIds: () => SpaceId[];
 
+  /**
+   * Reads made during the current pass, keyed by their request. The snapshot and reverse-ref legs of
+   * one pass usually hold the same cursors, and a trace block can be over 100 KB, so the second leg
+   * reuses the first leg's read instead of fetching the same blocks again.
+   */
+  #passReads: Map<string, FeedProtocol.QueryResponse> | undefined;
+
   constructor(options: FeedDataSourceOptions) {
     this._feedStore = options.feedStore;
     this._runtime = options.runtime;
@@ -55,11 +62,25 @@ export class FeedDataSource implements IndexDataSource {
     ];
   }
 
+  beginPass(): void {
+    this.#passReads = new Map();
+  }
+
+  endPass(): void {
+    this.#passReads = undefined;
+  }
+
   getChangedObjects(
     _ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+    opts?: { limit?: number; objects?: boolean },
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more: boolean }> {
+    // Feed blocks carry no document activity, so an activity-only read would fetch every new block
+    // just to discard it; returning no cursors also spares the activity leg its cursor write.
+    if (opts?.objects === false) {
+      return Effect.succeed({ objects: [], cursors: [], more: false });
+    }
+
     // For queue, the cursor is assumed to have:
     // spaceId = set
     // resourceId = null
@@ -120,19 +141,23 @@ export class FeedDataSource implements IndexDataSource {
             : undefined;
 
         try {
-          const result = yield* this._feedStore.query({
-            spaceId: cursor.spaceId,
-            feedNamespace: cursor.resourceId,
-            cursor: currentCursor,
-            limit: remainingLimit,
-          });
+          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor ?? null, remainingLimit]);
+          const result =
+            this.#passReads?.get(readKey) ??
+            (yield* this._feedStore.query({
+              spaceId: cursor.spaceId,
+              feedNamespace: cursor.resourceId,
+              cursor: currentCursor,
+              limit: remainingLimit,
+            }));
+          this.#passReads?.set(readKey, result);
 
           // Process blocks
           for (const block of result.blocks) {
             try {
-              // Inject the block's queue position so indexed feed items carry a KEY_QUEUE_POSITION
-              // foreign key (mirrors the local feed-service read path); the index snapshot persists it.
-              const data = EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON;
+              // Stamp the block's id and position (mirrors the local feed-service read path); the index
+              // snapshot persists them, which is how a reader recognises a block it already applied.
+              const data = EchoFeedCodec.decodeBlock(block) as ObjectJSON;
 
               objects.push({
                 spaceId: cursor.spaceId,
@@ -161,7 +186,9 @@ export class FeedDataSource implements IndexDataSource {
         }
       }
 
-      return { objects, cursors: updatedCursors };
+      // A spent limit may have stopped mid-feed or skipped feeds; the store cannot say which, so the
+      // next pass finds out, and reads empty if there was nothing left.
+      return { objects, cursors: updatedCursors, more: remainingLimit <= 0 };
     }).pipe(RuntimeProvider.provide(this._runtime), Effect.withSpan('FeedDataSource.getChangedObjects'), Effect.orDie);
   }
 }

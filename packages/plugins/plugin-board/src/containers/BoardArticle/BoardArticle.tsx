@@ -3,17 +3,16 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -23,7 +22,11 @@ import {
   resizeToFit,
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
-import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
+import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { isNonNullable } from '@dxos/util';
 
 import { Board } from '#types';
@@ -49,7 +52,7 @@ const normalizeCells = (cells: Board.Board['layout']['cells']): Layout['items'] 
 export type BoardArticleProps = AppSurface.ObjectArticleProps<Board.Board>;
 
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');
@@ -70,8 +73,6 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const items = useAtomValue(itemsAtom);
 
   const controller = useRef<BoardController>(null);
-  const addTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const [pickerState, setPickerState] = useState<{ position: Position } | null>(null);
   const [zoom, setZoom] = useState(1);
 
   const layout = useMemo<Layout>(() => ({ items: normalizeCells(board.layout.cells) }), [board.layout.cells]);
@@ -82,7 +83,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
 
   // TODO(burdon): Use search.
   const objects = useQuery(db, Filter.everything());
-  const options = useMemo<ObjectPickerContentProps['options']>(
+  const options = useMemo<ObjectPickerProps['options']>(
     () =>
       objects
         .filter((obj) => obj.id !== board.id)
@@ -137,9 +138,9 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   );
 
   // Toolbar "+" adds an existing object via the picker.
-  const handleSelect = useCallback<NonNullable<ObjectPickerContentProps['onSelect']>>(
-    (id) => {
-      const position = pickerState?.position ?? DEFAULT_POSITION;
+  const handleSelect = useCallback(
+    (id: string | undefined) => {
+      const position = DEFAULT_POSITION;
       const selected = objects.find((obj) => obj.id === id);
       if (!Obj.isObject(selected)) {
         return;
@@ -148,85 +149,79 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
         board.items.push(Ref.make(selected));
         board.layout.cells[selected.id.toString()] = position;
       });
-      setPickerState(null);
     },
-    [pickerState, objects, board],
+    [objects, board],
   );
 
   return (
-    <ObjectPicker.Root
-      open={!!pickerState}
-      onOpenChange={(next: boolean) => setPickerState(next ? { position: DEFAULT_POSITION } : null)}
+    <BoardComponent.Root
+      ref={controller}
+      layout={layout}
+      bounds={bounds}
+      mode='float'
+      resolver={resizeToFit}
+      zoom={zoom}
+      onChange={handleChange}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
     >
-      <BoardComponent.Root
-        ref={controller}
-        layout={layout}
-        bounds={bounds}
-        mode='float'
-        resolver={resizeToFit}
-        zoom={zoom}
-        onChange={handleChange}
-        onAdd={handleAdd}
-        onDelete={handleDelete}
-      >
-        <Panel.Root role={role}>
-          {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              <Toolbar.IconButton
-                icon='ph--crosshair--regular'
-                iconOnly
-                label={t('move-to-center.button')}
-                disabled={!hasAttention}
-                onClick={() => controller.current?.center()}
-              />
-              <Toolbar.IconButton
-                icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
-                iconOnly
-                label={t('toggle-zoom.button')}
-                disabled={!hasAttention}
-                onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
-              />
-              <Toolbar.IconButton
-                icon='ph--plus--regular'
-                iconOnly
-                label={t('add-object.button')}
-                disabled={!hasAttention}
-                onClick={(event) => {
-                  addTriggerRef.current = event.currentTarget as HTMLButtonElement;
-                  setPickerState({ position: DEFAULT_POSITION });
-                }}
-              />
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <BoardComponent.Container classNames='dx-fullscreen'>
-              <BoardComponent.Viewport>
-                <BoardComponent.Backdrop />
-                <BoardComponent.Content>
-                  {items?.map((item) => {
-                    const itemLayout = layout.items[item.id];
-                    return itemLayout ? (
-                      <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
-                        <Surface.Surface
-                          type={AppSurface.CardContent}
-                          data={{ subject: item, editable: true }}
-                          limit={1}
-                        />
-                      </BoardComponent.Cell>
-                    ) : null;
-                  })}
-                </BoardComponent.Content>
-              </BoardComponent.Viewport>
-              {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
-              <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
-            </BoardComponent.Container>
-          </Panel.Content>
-        </Panel.Root>
-      </BoardComponent.Root>
-      <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
-      <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
-    </ObjectPicker.Root>
+      <Panel.Root role={role}>
+        {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
+        <Panel.Header>
+          <Toolbar.Root>
+            <Button.Root
+              icon='ph--crosshair--regular'
+              iconOnly
+              label={t('move-to-center.button')}
+              disabled={!hasAttention}
+              onClick={() => controller.current?.center()}
+            />
+            <Button.Root
+              icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+              iconOnly
+              label={t('toggle-zoom.button')}
+              disabled={!hasAttention}
+              onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
+            />
+            <ObjectPicker
+              options={options}
+              onSelect={handleSelect}
+              trigger={
+                <Button.Root
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label={t('add-object.button')}
+                  disabled={!hasAttention}
+                />
+              }
+            />
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <BoardComponent.Container classNames='dx-cover'>
+            <BoardComponent.Viewport>
+              <BoardComponent.Backdrop />
+              <BoardComponent.Content>
+                {items?.map((item) => {
+                  const itemLayout = layout.items[item.id];
+                  return itemLayout ? (
+                    <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
+                      <Surface.Surface
+                        type={AppSurface.CardContent}
+                        data={{ subject: item, editable: true }}
+                        limit={1}
+                      />
+                    </BoardComponent.Cell>
+                  ) : null;
+                })}
+              </BoardComponent.Content>
+            </BoardComponent.Viewport>
+            {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
+            <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
+          </BoardComponent.Container>
+        </Panel.Body>
+      </Panel.Root>
+    </BoardComponent.Root>
   );
 };
 

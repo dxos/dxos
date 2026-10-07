@@ -1,0 +1,20 @@
+# The name an external importer writes. Two facts have to meet for it, and they live in different
+# files: the identifier is declared in its own module, while the namespace it is published under
+# (`export * as Ontology from './Ontology.ts'`) is a fact of the barrel. Neither parse can see the
+# other, which is why this is a rule rather than something the analyzer emits.
+#
+# Only the qualified form is concluded, and only for a namespaced module's identifiers: anything else
+# is imported by the name it is declared with, so its canonical name is its `deus:name` and a query
+# reads `COALESCE(?canonical, ?name)`. Restating that name for every exported symbol cost 30k quads.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+# Published whole under a name: `Ontology.symbolIri`.
+{
+  ?module deus:declares ?symbol.
+  ?symbol deus:name ?identifier; deus:exported true.
+  ?namespace deus:namespaceOf ?module.
+  ?namespace deus:name ?namespaceName.
+  (?namespaceName "." ?identifier) string:concatenation ?canonical.
+} => { ?symbol deus:canonicalName ?canonical }.

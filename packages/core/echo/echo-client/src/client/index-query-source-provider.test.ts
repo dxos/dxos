@@ -12,7 +12,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
@@ -165,10 +165,10 @@ describe('IndexQuerySource', () => {
     expect(results).toEqual([]);
     expect(calls).toHaveLength(0);
 
-    // Reactive: no remote stream is opened either.
+    // Reactive: no remote stream is opened either. A registry-only query never targets spaces/feeds,
+    // so `update()` returns before scheduling anything async — the assertion needs no wait.
     source.open();
     source.update(registryOnlyQuery);
-    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(calls).toHaveLength(0);
 
     // A mixed-scope query (space + registry) still queries the index for the space part.

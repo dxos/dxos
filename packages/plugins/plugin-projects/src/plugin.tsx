@@ -6,10 +6,13 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AppGraphBuilder,
+  ComposerPluginTemplate,
   CreateObject,
+  NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
   Schema,
+  Settings,
   SkillDefinition,
   SubjectContext,
   TaskAction,
@@ -22,13 +25,16 @@ import { meta } from '#meta';
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
+  Plugin.addModule(Settings),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SubjectContext),
-  // Injects `Assign to agent` into plugin-tasks' task rows.
+  // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
   Plugin.addModule(TaskAction),
+  Plugin.addModule(ComposerPluginTemplate),
   Plugin.addModule(Templates),
   Plugin.addModule(Tour),
   Plugin.addModule(Translations),

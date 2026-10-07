@@ -10,16 +10,20 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -27,7 +31,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveMigrationOperation } from '../../util.ts';
+import { filterItems, getParent, getRearrangeIndex, resolveDropKind } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -47,6 +51,44 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   );
 };
 
+/** What a row opens. A section node groups rows without standing for anything itself. */
+const hasSubject = (node: AppGraphNode.Node) => !!node.data;
+
+const isSelectable = (node: AppGraphNode.Node) => hasSubject(node) && (node.properties.selectable ?? true);
+
+const resolveDrop = (
+  graph: AppGraph.ReadableGraph,
+  { source, target, instruction }: { source: TreeData; target: TreeData; instruction: Instruction },
+): {
+  operation: 'rearrange' | DropKind;
+  /** What the drop leaves behind, which the indicator shows: `link` when the item ends up only listed. */
+  kind: DropKind;
+  sourceParent?: NavTreeNode.NavTreeItemGraphNode;
+  destination?: NavTreeNode.NavTreeItemGraphNode;
+} => {
+  const sourceNode = source.item as NavTreeNode.NavTreeItemGraphNode;
+  const targetNode = target.item as NavTreeNode.NavTreeItemGraphNode;
+  const sourceParent = getParent(graph, sourceNode, source.path);
+  if (source.path.slice(0, -1).join() === target.path.slice(0, -1).join() && instruction.type !== 'make-child') {
+    const reorders = sourceParent?.properties.onRearrange && sourceParent.properties.canDrop?.(source);
+    return reorders
+      ? { operation: 'rearrange', kind: 'move', sourceParent, destination: sourceParent }
+      : { operation: 'reject', kind: 'reject', sourceParent, destination: sourceParent };
+  }
+
+  const destination = instruction.type === 'make-child' ? targetNode : getParent(graph, targetNode, target.path);
+  const operation = destination?.properties.canDrop?.(source)
+    ? resolveDropKind({ source: sourceNode, sourceParent, destination })
+    : 'reject';
+  if (operation === 'reject') {
+    return { operation, kind: 'reject', sourceParent, destination };
+  }
+  const isLink =
+    destination?.properties.isLink?.(sourceNode, operation === 'move' ? sourceParent : undefined) ??
+    operation === 'link';
+  return { operation, kind: isLink ? 'link' : 'move', sourceParent, destination };
+};
+
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   tab: string;
@@ -54,19 +96,22 @@ export type NavTreeContainerProps = {
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
-    const [isLg] = useMediaQuery('lg');
-    const { invokePromise } = useOperationInvoker();
-    const runAction = useActionRunner();
-    const { graph } = useAppGraph();
+    const [isLg] = UiHooks.useMediaQuery('lg');
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const runAction = GraphHooks.useActionRunner();
+    const builder = ToolkitHooks.useAppGraph();
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
     // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
     // the message and the sidebar is never blank.
-    const tabPresence = useNavigationPresence(graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
+    const tabPresence = ToolkitHooks.useNavigationPresence(
+      builder.graph,
+      tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab,
+    );
     const tabUnavailable = tab !== DeckSchema.DEFAULT_DECK_ID && tabPresence !== 'exists';
     const { getItem, setItem } = useNavTreeState();
-    const layout = useLayout();
+    const layout = ToolkitHooks.useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
-    const { navigationSidebarState } = useSidebars(meta.profile.key);
+    const { navigationSidebarState } = Main.useMainSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,
@@ -87,14 +132,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: AppGraphNode.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        AppGraph.expandSync(graph, id, 'child');
+        AppGraph.expandSync(builder.graph, id, 'child');
       },
-      [graph, setItem],
+      [builder, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeNode.NavTreeItemGraphNode) => {
-        AppGraph.expandSync(graph, node.id, 'child');
+        AppGraph.expandSync(builder.graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -117,29 +162,33 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         // Open the first item if the workspace is empty.
         if (activeItems.length === 0) {
-          const [item] = getItems(graph, node).filter((node) => !AppGraphNode.isActionLike(node));
+          const [item] = getItems(builder.graph, node).filter((node) => !AppGraphNode.isActionLike(node));
           if (item && item.data) {
             void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, graph],
+      [invokePromise, builder],
     );
 
-    const blockInstruction = useCallback(
-      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }) => {
-        return target.item.properties.blockInstruction?.(source, instruction) ?? false;
+    const canDrop = useCallback(
+      ({ source, target }: { source: TreeData; target: TreeData }) =>
+        !!target.item.properties.canDrop?.(source) ||
+        !!getParent(builder.graph, target.item, target.path)?.properties.canDrop?.(source),
+      [builder],
+    );
+
+    const getDropKind = useCallback(
+      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }): DropKind => {
+        if (target.item.properties.blockInstruction?.(source, instruction)) {
+          return 'reject';
+        }
+        return resolveDrop(builder.graph, { source, target, instruction }).kind;
       },
-      [],
+      [builder],
     );
 
-    const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-      return target.item.properties.canDrop?.(source) ?? false;
-    }, []);
-
-    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
-      return item.properties.selectable ?? true;
-    }, []);
+    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => isSelectable(item), []);
 
     const handleSelect = useCallback(
       ({
@@ -155,20 +204,22 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         shift: boolean;
         keyboard?: boolean;
       }) => {
-        if (!node.data) {
+        if (!isSelectable(node)) {
           return;
         }
 
         if (AppGraphNode.isAction(node)) {
-          const [parent] = AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child));
+          const [parent] = AppGraph.getConnections(
+            builder.graph,
+            node.id,
+            AppGraph.inverseRelation(AppGraphNode.child),
+          );
           if (parent) {
             void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
           return;
         }
 
-        // A click leaves focus on the row, so the arrows keep walking the tree; Enter is the reader
-        // committing to the item, so focus goes on into its content and they can type at once.
         const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
         if (!current) {
@@ -186,7 +237,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
         }
 
-        const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>
+        const defaultAction = AppGraph.getActions(builder.graph, node.id).find((action) =>
           AppGraphNode.hasDisposition(action, 'default'),
         );
         if (AppGraphNode.isAction(defaultAction)) {
@@ -197,7 +248,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg],
+      [builder, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
@@ -216,66 +267,57 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
+            AppGraphBuilder.flushBeforePaint(builder);
             const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
-            const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
-            const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();
-            const operation =
-              sameParent && instruction.type !== 'make-child'
-                ? 'rearrange'
-                : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
-            const sourceParent = getParent(graph, sourceNode, sourcePath);
-            const targetParent = getParent(graph, targetNode, targetPath);
-            const sourceItems = getItems(graph, sourceParent);
-            const targetItems = getItems(graph, targetParent);
+            const { operation, sourceParent, destination } = resolveDrop(builder.graph, {
+              source: source.data as TreeData,
+              target: target.data as TreeData,
+              instruction,
+            });
+            const sourceItems = getItems(builder.graph, sourceParent);
+            const targetItems = getItems(builder.graph, getParent(builder.graph, targetNode, targetPath));
             const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
-            const migrationIndex =
-              instruction.type === 'make-child'
-                ? undefined
-                : instruction.type === 'reorder-below'
-                  ? targetIndex + 1
-                  : targetIndex;
+            const insertIndex = instruction.type === 'reorder-below' ? targetIndex + 1 : targetIndex;
+            const migrationIndex = instruction.type === 'make-child' ? undefined : insertIndex;
             switch (operation) {
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
-                arrayMove(nextItems, sourceIndex, targetIndex);
-                void sourceNode.properties.onRearrange?.(nextItems);
+                arrayMove(nextItems, sourceIndex, getRearrangeIndex(sourceIndex, insertIndex));
+                void sourceParent?.properties.onRearrange?.(nextItems);
                 break;
               }
-              case 'copy': {
-                const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                void target?.properties.onCopy?.(sourceNode, migrationIndex);
-                break;
-              }
-              case 'transfer': {
-                const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                if (!target?.properties.onTransferStart || target?.id === sourceParent?.id) {
-                  break;
+              case 'move': {
+                if (destination) {
+                  void sourceParent?.properties.onMoveOut?.(sourceNode, destination);
+                  void destination.properties.onMoveIn?.(sourceNode, migrationIndex);
                 }
-                void target?.properties.onTransferStart(sourceNode, migrationIndex);
-                void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
+                break;
+              }
+              case 'link': {
+                void destination?.properties.onLink?.(sourceNode, migrationIndex);
                 break;
               }
             }
           }
         },
       });
-    }, [graph]);
+    }, [builder]);
 
     // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open
     // so the state machinery treats them consistently with regular open nodes (including on next load).
-    const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
+    const workspaceChildren = useAtomValue(builder.graph.connections(tab, 'child'));
     useEffect(() => {
       for (const child of workspaceChildren) {
         if (AppGraphNode.hasDisposition(child, 'group')) {
           setItem([GraphNode.RootId, tab, child.id], 'open', true);
-          AppGraph.expandSync(graph, child.id, 'child');
+          AppGraph.expandSync(builder.graph, child.id, 'child');
         }
       }
-    }, [workspaceChildren, tab, setItem, graph]);
+    }, [workspaceChildren, tab, setItem, builder]);
 
     // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: a sweep
     // should only pay for the row the cursor stops on.
@@ -291,10 +333,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item }: { item: AppGraphNode.Node }) => {
         interruptHoverExpand();
         hoverExpandRef.current = Effect.runFork(
-          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(AppGraph.expand(graph, item.id, 'child'))),
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(AppGraph.expand(builder.graph, item.id, 'child'))),
         );
       },
-      [graph, interruptHoverExpand],
+      [builder, interruptHoverExpand],
     );
 
     const navTreeContextValue = useMemo(
@@ -302,9 +344,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         model,
         popoverAnchorId,
         renderItemEnd: NavTreeItemEnd,
-        blockInstruction,
         canDrop,
         canSelect,
+        getDropKind,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
         onSelect: handleSelect,
@@ -314,9 +356,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [
         model,
         popoverAnchorId,
-        blockInstruction,
         canDrop,
         canSelect,
+        getDropKind,
         handleBack,
         handleOpenChange,
         handleSelect,
@@ -329,7 +371,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       <NavTreeContext.Provider value={navTreeContextValue}>
         <NavTree
           id={GraphNode.RootId}
-          root={AppGraph.getRoot(graph)}
+          root={AppGraph.getRoot(builder.graph)}
           tab={tab}
           unavailable={tabUnavailable}
           open={layout.sidebarOpen}

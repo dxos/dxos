@@ -3,11 +3,11 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { log } from '@dxos/log';
 
@@ -23,7 +23,7 @@ const ResolverLayer = OllamaResolver.make().pipe(Layer.provide(FetchHttpClient.l
 
 // The catalog's shared model ids are served by several providers, so the provider must accompany the
 // request — `(provider, id)` is the resolver key.
-const ModelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(
+const ModelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
   Layer.provide(AiModelResolver.buildAiService),
   Layer.provide(ResolverLayer),
 );

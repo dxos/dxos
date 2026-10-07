@@ -4,25 +4,31 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Field, Focus, IconButton, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Input from '@dxos/react-ui/Input';
+import * as Main from '@dxos/react-ui/Main';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
@@ -43,16 +49,16 @@ const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
-    <Panel.Toolbar classNames='border-b border-separator'>
-      <IconButton
-        density='lg'
+    <Panel.Header classNames='border-b border-separator'>
+      <Button.Root
+        size='lg'
         icon='ph--circle--regular'
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
         classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 
@@ -87,9 +93,9 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
         classNames='w-[30rem] shrink-0 h-full dx-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
-        <Panel.Content classNames='grid'>
-          <Toolbar.Root classNames='border-b border-subdued-separator'>
-            <Toolbar.Button>Test</Toolbar.Button>
+        <Panel.Body classNames='grid'>
+          <Toolbar.Root classNames='border-b border-separator-subtle'>
+            <Button.Root>Test</Button.Root>
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
@@ -99,22 +105,22 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <div className={mx(container, 'dx-base-surface')}>
               <Field.Root>
                 <Field.Label>Level 2 (base)</Field.Label>
-                <Field.Textarea placeholder='Enter text' />
+                <Input.Textarea placeholder='Enter text' />
               </Field.Root>
             </div>
           </div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Focus.Item>
   );
 };
 
 const DefaultStory = () => {
-  const state = useAtomCapability(StoryState);
+  const state = Hooks.useAtomCapability(StoryState);
 
   return (
     <Main.Root navigationSidebarState='expanded'>
-      <Main.NavigationSidebar label='Navigation' classNames='grid'>
+      <Main.NavigationSidebar label='Navigation' landmark={false} classNames='grid'>
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>
       <Main.Content bounce handlesFocus>
@@ -131,7 +137,7 @@ const DefaultStory = () => {
 const MISSING_WORKSPACE = 'root/B4NRQGGJ7XSDT4WMGXCTZNBLTDYIWGXNQIB6JW3AVLW3G';
 
 const UnavailableWorkspaceStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   useEffect(() => {
     void invokePromise(LayoutOperation.SwitchWorkspace, { subject: MISSING_WORKSPACE });
   }, [invokePromise]);
@@ -143,7 +149,7 @@ const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({
         initialState: { sidebarState: 'expanded' },
       }),
@@ -208,8 +214,8 @@ export const Default: Story = {
     // Press Escape
     await userEvent.keyboard('{Escape}');
 
-    // Confirm that focus is on an element with attribute data-main-landmark="0"
-    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0');
+    // Confirm that focus is on the panel, the focus area beside the rail.
+    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0.5');
 
     // Press Tab
     await userEvent.keyboard('{Tab}');
@@ -220,7 +226,7 @@ export const Default: Story = {
     // Press Tab
     await userEvent.keyboard('{Tab}');
 
-    // Confirm that focus is now on an element with data-main-landmark="0"
+    // Confirm that focus has cycled to the rail.
     await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0');
 
     // Press Shift-Tab

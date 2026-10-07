@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
@@ -17,7 +17,7 @@ import { type Space } from '@dxos/client/echo';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -67,7 +67,7 @@ export class ChatProcessor {
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
+        Layer.mergeAll(AiService.languageModel(DXN.getName(model)), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
           Layer.provideMerge(OperationHandlerSet.provide(this._functions)),
         ),

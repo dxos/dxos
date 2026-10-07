@@ -5,7 +5,12 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Carousel, Flex, Grid, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -20,33 +25,28 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result: subject, starred = false, onToggleStar, onClose }: ResultDetailProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
-
   if (!result) {
-    return (
-      <Flex center classNames='h-full text-subdued text-sm'>
-        {t('no-result-selected.message')}
-      </Flex>
-    );
+    return <Status.Empty>{t('no-result-selected.message')}</Status.Empty>;
   }
 
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <Flex column gap='md' classNames='p-3 overflow-y-auto'>
-      <Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
+    <Layout.Flex column gap='md' classNames='p-3 overflow-y-auto'>
+      <Layout.Grid cols={['fill', 'min', 'min']} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
-        <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
+        <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={onToggleStar} />
         {onClose && (
-          <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
+          <Button.Root iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
-      </Grid>
+      </Layout.Grid>
 
       {result.price != null && (
         // Match ResultCard: currency-first, locale-grouped.
-        <div className='text-sm text-description'>
+        <div className='text-sm text-fg-muted'>
           {[result.currency, result.price.toLocaleString()].filter(Boolean).join(' ')}
         </div>
       )}
@@ -59,16 +59,14 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
 
       {result.images.length > 0 && (
         <Carousel.Root count={result.images.length}>
-          <Carousel.Content classNames='rounded-xs overflow-hidden'>
-            <Carousel.Previous />
-            <Carousel.Viewport>
-              {result.images.map((image, index) => (
-                <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
-              ))}
-            </Carousel.Viewport>
-            <Carousel.Next />
-            <Carousel.Indicators />
-          </Carousel.Content>
+          <Carousel.PrevTrigger />
+          <Carousel.ItemGroup>
+            {result.images.map((image, index) => (
+              <Carousel.Item key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
+            ))}
+          </Carousel.ItemGroup>
+          <Carousel.NextTrigger />
+          <Carousel.IndicatorGroup />
         </Carousel.Root>
       )}
 
@@ -76,13 +74,13 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
         <dl className='grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm'>
           {properties.map(([key, value]) => (
             <Fragment key={key}>
-              <dt className='text-description'>{key}</dt>
+              <dt className='text-fg-muted'>{key}</dt>
               <dd className='truncate'>{String(value)}</dd>
             </Fragment>
           ))}
         </dl>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 

@@ -4,12 +4,13 @@
 
 import React from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { Word } from '#types';
 
-export type WordListProps = ThemedClassName<{
+export type WordListProps = Util.ThemedClassName<{
   words: Word.Word[];
   /** Highlighted row (e.g. the card currently being drilled). */
   selected?: string;
@@ -57,9 +58,9 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
         >
           <span className='truncate'>
             {word.term}
-            {word.reading && <span className='pl-2 text-description text-sm'>{word.reading}</span>}
+            {word.reading && <span className='pl-2 text-fg-muted text-sm'>{word.reading}</span>}
           </span>
-          <span className='truncate text-description'>{word.translation}</span>
+          <span className='truncate text-fg-muted'>{word.translation}</span>
           <ProgressPips word={word} />
         </div>
       ))}
@@ -75,11 +76,11 @@ const ProgressPips = ({ word }: { word: Word.Word }) => {
   return (
     <span className='flex items-center gap-1' title={`${box}/${Word.BOX_COUNT}`}>
       {Array.from({ length: Word.BOX_COUNT }, (_, index) => (
-        <Icon
+        <Icon.Icon
           key={index}
           icon={index < box ? 'ph--circle--fill' : 'ph--circle--regular'}
-          size={2}
-          classNames={index < box ? 'text-accent-text' : 'text-subdued'}
+          size='xs'
+          classNames={index < box ? 'text-accent-text' : 'text-fg-subtle'}
         />
       ))}
     </span>

@@ -18,6 +18,7 @@ export const Create = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.create'),
     name: 'Create Drawing',
+    description: 'Creates an empty drawing in the space and returns it; pass it to Generate, Draw or Edit.',
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
@@ -75,6 +76,53 @@ export const Edit = Operation.make({
   services: [Capability.Service, Database.Service],
 });
 
+export const Draw = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.draw'),
+    name: 'Draw Diagram',
+    description:
+      'Applies a diagram written in the native text DSL: either semantic statements (`node`, `edge`, `group`) that state intent and are laid out for you, or scene statements where you choose every coordinate, or both. Use semantic statements for boxes-and-arrows diagrams, scene statements for precise figures or to hand-edit a drawing.',
+    icon: 'ph--code--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to draw into.' }),
+    source: Schema.String.annotate({
+      description: [
+        'Diagram DSL. Semantic statements: `node <id> ["label"] [right-of|left-of|above|below|same-row|same-col <node>]* [@cell(c,r)] [ref=]`,',
+        '`group <id> ["label"] [right-of|below… <group>] { node… edge… }`, `edge <a>[:side|side] -> <b>[:side] ["label"] [via x,_ | _,y] [bus]`',
+        '(`~` before a relation makes it soft; `<->` two arrows; `a -> b, c bus` one trunk), `diagram [flow=down|right]`; the engine places and routes the rest.',
+        'In place of `->` an edge may name its relationship, left end being the child/whole/owner/one side: `extends`, `implements`, `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on`.',
+        'Scene statements are `object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { <element>* }`,',
+        '`elements <objectId> { … }`, `move <id> @ <x>,<y>`, `remove object <id>`, `remove elements <id> <ids…>`.',
+        'An element is `<kind> <id> <geometry> ["label"] <name=value>*` where kind is rect/ellipse/diamond/triangle',
+        '(`x,y WxH`), circle (`cx,cy r`), line/curve (two or more `x,y`), arc (`cx,cy r a0..a1`), text (`x,y "s"`),',
+        'arrow (`<end> -> <end>`, each end a ref like `Obj/elem#port`, a point, or `_`), or portal (`x,y WxH ref="<dxn>"`).',
+      ].join(' '),
+    }),
+  }),
+  output: Schema.Struct({
+    ...SceneOutput,
+    upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
+    removed: Schema.Number.annotate({ description: 'Number of shapes removed.' }),
+    problems: Schema.Array(
+      Schema.Struct({
+        severity: Schema.Literals(['error', 'warning']),
+        message: Schema.String,
+        line: Schema.Number,
+        column: Schema.Number,
+      }),
+    ).annotate({
+      description:
+        'Syntax and schema problems in the source, with 1-based line/column. A single `error` leaves the drawing untouched — fix it and draw again.',
+    }),
+    diagnostics: Schema.Array(Diagnostics.Diagnostic).annotate({
+      description:
+        'Layout report over the resulting scene. Fix every `error` (overlap, connector through a node, label overflow) by moving or resizing the offending elements and drawing again.',
+    }),
+  }),
+  services: [Capability.Service, Database.Service],
+});
+
 export const Generate = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.generate'),
@@ -97,6 +145,36 @@ export const Generate = Operation.make({
       description:
         'Layout report. Fix every `error` (overlap, connector through a node, label overflow) by simplifying or splitting the diagram and regenerating; `warning`s (crossings, bends) are quality hints.',
     }),
+  }),
+  services: [Capability.Service, Database.Service],
+});
+
+export const Score = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.analyze'),
+    name: 'Score Drawing',
+    description:
+      'Grades the drawing as laid out, on one 0–1 scale (1 is good): each layout constraint (pass 1 / fail 0) and cost ' +
+      'term (crossings, overlapping arrows, overlapping labels, bends, length, gaps, compactness), their overall score, ' +
+      'and the diagnostics behind them. Call after Generate to decide what to change before regenerating.',
+    icon: 'ph--gauge--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to score.' }),
+  }),
+  output: Schema.Struct({
+    overall: Schema.optional(Schema.Number).annotate({
+      description: 'The worst constraint gating the mean of the cost scores; absent when nothing could be scored.',
+    }),
+    scores: Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        kind: Schema.String,
+        score: Schema.Number,
+        detail: Schema.optional(Schema.String),
+      }),
+    ),
+    diagnostics: Schema.Array(Diagnostics.Diagnostic),
   }),
   services: [Capability.Service, Database.Service],
 });

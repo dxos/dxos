@@ -1,6 +1,6 @@
 # plugin-canvas — Design
 
-Status: spec for review (2026-09-20, rev 7: text parts with in-place editing and node style (§4), grid-aligned portal frame and navigation shield (§5), always-on grid (§7); rev 6: typed nodes and links (§4, decision 9), palette and spline editing (§8), `MIGRATION.md`; rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
+Status: spec for review (2026-09-20, rev 8: open node types, port direction, free endpoints and markers (§4), toolbar, marquee modes, symmetric resize, ghost and palette drops (§8), e2e (§9); rev 7: text parts with in-place editing and node style (§4), grid-aligned portal frame and navigation shield (§5), always-on grid (§7); rev 6: typed nodes and links (§4, decision 9), palette and spline editing (§8), `MIGRATION.md`; rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
 navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and a throwaway spike (deleted once the engine's `Nested` story covered it; its findings are folded
 into §5). Engine: `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`; barrel `src/scene.ts`), stories `ui/react-ui-canvas/scene/SceneView`.
@@ -95,7 +95,7 @@ each one gives the new engine:
 | `types/Drawing.ts`                                                                                                                                  | `Drawing {name, canvas: Ref(Canvas)}`; `Canvas {schema, content: Record<id, any>}`, a hidden, opaque, CRDT-merged record map claimed by a renderer via `schema`                                                                                                                                             | **The Scene ECHO type.** A scene _is_ a `Canvas` with `schema = 'dxos.org/scene/1'` whose `content` is the cell map (§4). No new ECHO type; name, graph node, create flow, card/article scaffolding and the shared selection model come from the plugin. A portal references a `Drawing` (`Ref`), so nested scenes are first-class documents and Muse "linked cards" are just two portals to one drawing.                                 |
 | `model/scene.ts`                                                                                                                                    | Renderer-neutral DSL: `WorldObject {id, origin, scale, ref, elements}` in object-local units; elements rect/ellipse/diamond/triangle/circle/line/curve/arc/text/arrow; `Arrow {from, to}` bound to `"object/element"` refs; edit `Command`s (`upsert-object`, `upsert-elements`, `remove-*`, `move-object`) | **The write language behind the projection seam.** Intents compile to commands: move → `move-object`, create → `upsert-object`, delete → `remove-object`, link → `upsert-elements` with an `arrow`, resize → `upsert-elements` with the resized box. Bound arrow endpoints that "track their target" are the automatic links of §4.                                                                                                       |
 | `model/content.ts`                                                                                                                                  | `ContentHandler {identify, render, read, translate, scaffold?, merge?, prune?}` + `applyCommands(content, commands, handler)`: command semantics over any record map, identity stamped per record                                                                                                           | **`SceneHandler`**: identity = `{object: cell.group ?? cell.id, element: cell.id}`; `render` compiles an object's elements into cells (box → rect/text, text → text, arrow → link, `ref` → object cell) with the placement folded into cell centres and a `group` tag; `read` rebuilds world objects from the tag with origin = bbox top-left; `translate` shifts centres. `svg-handler.ts` (DSL as persistence) is the closest template. |
-| `model/builder.ts`                                                                                                                                  | `makeBuilder({schema, handler})` → `{read(canvas), apply(canvas, commands)}` under `Obj.update`                                                                                                                                                                                                             | The phase 3 ECHO store: `SceneBuilder = makeBuilder({schema: 'dxos.org/scene/1', handler: SceneHandler})`. The only file in `model/` that imports `@dxos/echo`.                                                                                                                                                                                                                                                                           |
+| `model/builder.ts`                                                                                                                                  | `makeBuilder({schema, handler})` → `{read(canvas), apply(canvas, commands)}` under `Obj.update`                                                                                                                                                                                                             | The phase 3 ECHO store: `CanvasBuilder = makeBuilder({schema: 'dxos.org/scene/1', handler: SceneHandler})`. The only file in `model/` that imports `@dxos/echo`.                                                                                                                                                                                                                                                                          |
 | `model/dialect.ts`                                                                                                                                  | `Dialect {id, input, compile → Command[]}` + registry; mermaid, UML class, UML grid and MOSAIC UI dialects own their layout                                                                                                                                                                                 | **Variant 2 (constrained)** is a dialect whose input is the constraint DSL; a `move` intent rewrites the source and recompiles. **Variant 3 (dynamic)** is a dialect whose input is an ECHO graph query. Every existing dialect renders on the new canvas the moment `SceneHandler` exists, and so do the agent operations `DrawingOperation.Edit/Generate`.                                                                              |
 | `model/layout.ts`, `uml-grid.ts`, `ortho-router.ts`, `uml-rules.ts`, `uml-search.ts`, `uml-engine.ts` (dagre/ELK), `objective.ts`, `diagnostics.ts` | Ranking, uniform-cell grids with ports/channels, A* orthogonal routing, rule-based grouping, scored search, engine adapters, constraint/cost objective                                                                                                                                                      | The layout engines for variants 2 and 3, and the `ortho` link route of §7. Illustrator's ports (`uml-grid` spreads terminals along a side) are the same idea as `Port {side, offset}`.                                                                                                                                                                                                                                                    |
 | `types/IllustratorCapabilities.ts`                                                                                                                  | `VariantProvider {id, builder, card, article, createCanvas}`; surface props carry `selection` / `onSelectionChange` / `onActivate` in scene object ids                                                                                                                                                      | `plugin-canvas` contributes one `DrawingVariant`; the host owns selection and activation, which matches the per-view atoms in §4.                                                                                                                                                                                                                                                                                                         |
@@ -130,26 +130,41 @@ Camera = { x, y, zoom }      // screen = (scene + {x, y}) * zoom
 
 Scene = { id, name?, nodes: Record<NodeId, Node>, links: Record<LinkId, Link> }   // positioned; the surface's input
 
-NodeBase = { id, type, z: string /* fractional index */, locked?, center: Point, ports?: Port[], style?: NodeStyle }
-NodeStyle = { hue?: Hue /* theme hue: fill, text and border */, rounded?, fill?, border? }   // frame look; absent = default
-Rect     = NodeBase & { type: 'rect', size: Size, label? }
-Ellipse  = NodeBase & { type: 'ellipse', rx, ry, label? }
-Class    = NodeBase & { type: 'class', size: Size, name, attributes: string[], methods: string[] }   // UML
-Text     = NodeBase & { type: 'text', size: Size, text }
-Portal   = NodeBase & { type: 'scene', size: Size, scene: SceneId }
+NodeBase = { id, type: string, z: string /* fractional index */, locked?, center: Point, size: Size, ports?: Port[], style?: NodeStyle }
+NodeStyle = { hue?: Hue /* theme hue: fill, text and border */, rounded?, fill?, border?, guide? /* dashed, unfilled */, className? }   // frame look; absent = default
+Rect     = NodeBase & { type: 'rect', label? }
+Ellipse  = NodeBase & { type: 'ellipse', label? }                // inscribed in the frame
+Class    = NodeBase & { type: 'class', name, attributes: string[], methods: string[] }   // UML
+Note     = NodeBase & { type: 'note', text }
+Portal   = NodeBase & { type: 'scene', scene: SceneId }
+BuiltinNode = Rect | Ellipse | Class | Note | Portal            // the engine's own; a host type is NodeBase & its fields
 Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   // phase 2: Surface + derived props
 
-LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint }
+LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, directed? /* = ends: { end: 'arrow' } */, ends?: { start?: Marker, end?: Marker } }
 Line     = LinkBase & { type: 'line' }
 Curve    = LinkBase & { type: 'curve' }                       // cubic, tangent along each port's normal
-Spline   = LinkBase & { type: 'spline', points: Point[] }     // Catmull-Rom through the control points
-Endpoint = { node: NodeId, port?: PortId }                    // no port = automatic (closest appropriate pair)
+Spline   = LinkBase & { type: 'spline', points: Point[] }     // rounded polyline bending around the points
+Endpoint = { node: NodeId, port?: PortId } | { point: Point } // no port = automatic (closest appropriate pair); a point = free end
+Marker   = 'arrow' | 'circle'
 
-NodeDef  = { type, name, icon, key, component, portsPerSide?, ports?(node): Port[], resizable?, minSize?, openable? }   // registry
+NodeDef  = { type, name, icon, key, group?, schema, component, create(props), defaultSize, portsPerSide?, ports?(node), resizable?, minSize?, openable? }   // registry
 LinkDef  = { type, name, icon, key }
-Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; drawn at the nearest major grid line */ }
+Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; drawn at the nearest major grid line */, accepts?: 'in'|'out'|'any' }
 ```
 
+- **Open node types** (decision 1, M1): the engine works on `NodeBase` (every node has a centre and a size, so
+  placing, hit testing, ports and routes need no registry) and narrows to its built-ins with guards
+  (`isRectNode`, …). A host registers its own types with their schema, view, `create` and ports, and builds its
+  scene schema with `createSceneSchema(defs.map((def) => def.schema))`, so validation stays exact per type; the
+  palette groups types by `NodeDef.group`. A type the registry does not know renders as a frame with its name.
+- **Port direction** (decision 2): `Port.accepts` (`in`, `out`, default either) filters `pairPorts` and the drop
+  target (a link leaves an `out` port and lands on an `in` port; a node with no acceptable port takes no drop),
+  and `Link.directed` draws the arrowhead; a link created between ports that declare a direction is directed.
+- **Free endpoints and markers** (decision 3, M2): an end may be a scene `point` instead of a node, so a link can
+  be a standalone arrow or path. A node end facing a free point takes its port nearest that point; two free ends
+  face each other. A link tool dragged on empty canvas draws a free-ended link (attaching whichever end lands on
+  a node), and dragging a link end onto empty canvas frees it. `ends` names the marker at each end (`arrow`,
+  `circle`) and replaces what `directed` implies; the layer defines one marker set in scene units.
 - `shapes.ts` is the pure geometry of the types: `nodeBounds(node)` (the box, or the radii for an ellipse),
   `resizeNode(node, bounds)` (writes `size` or `rx`/`ry`), `createNode(type, …)` / `createLink(type, …)` defaults.
   The registry only renders and declares ports and flags; the projection never depends on it.
@@ -166,7 +181,8 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
   while typing. Which part was hit is asked of the DOM (`data-part`), the node comes from the model, so a part of
   a nested live scene never matches the portal over it.
 - **Style** (`style.ts`): `NodeStyle` picks a theme hue (fill `bg-<hue>-surface`, text `text-<hue>-fg`, border
-  `border-<hue>-border`), and toggles rounded corners, fill and border; the frame resolves the classes, the views
+  `border-<hue>-border`), and toggles rounded corners, fill and border; `guide` draws the frame dashed and
+  unfilled (an annotation), `className` appends a host's own classes. The frame resolves the classes, the views
   draw no background of their own. The properties panel renders it as a group with the hue picker.
 - **Ports** come from the node's own `ports` when it carries them (how compute nodes with schema-derived
   inputs/outputs will express them, see `MIGRATION.md`), else the type's `NodeDef.ports(node)`, else
@@ -178,9 +194,12 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
   distance; it is recomputed whenever the projection re-emits, so re-arranging the diagram re-attaches links. A
   user who drags a link end onto a specific port pins it (`port` set); dragging it onto the node body unpins it.
 - **Link routes** by type (`route.ts`): `line` straight, `curve` cubic leaving each port along its normal, `spline`
-  Catmull-Rom through `[source, ...points, target]` emitted as cubic segments; `ortho` (phase 2) from
-  `@dxos/diagram`'s router. A selected spline shows its control points as handles: drag moves one, double-click
-  on the spline inserts one at the nearest segment, alt-click removes one; each is an `update` of `points`.
+  the polyline through `[source, ...points, target]` with each interior point rounded by a quadratic whose
+  control it is, so the route bends around a control point rather than through it and the radius shrinks on a
+  short segment; `ortho` (phase 2) from `@dxos/diagram`'s router. A selected spline shows its control points as
+  diamond handles and the midpoint of every span as a dot: drag a diamond to move a point, drag a dot to add
+  one there and move it in the same gesture, double-click on the spline inserts one at the nearest segment,
+  alt-click removes one; each is an `update` of `points`.
 - A scene referenced from two portals is a Muse "linked card"; nothing forbids it.
 - Ephemeral state (selection, hover, drag offset, camera, scene path, tool, last link type) lives in per-view
   atoms, never in the model.
@@ -210,40 +229,79 @@ Four layers, each one an Effect atom the next one subscribes to; nothing below a
 
 The model on the wire between the layers is the positioned `Scene` of §4: `{ id, name?, nodes, links }` with typed `Node`s (centre plus per-type properties) and typed `Link`s (endpoints plus, for a spline, control points), every element carrying `{ id, type, z, locked? }`. Scene bounds, hit tests, port positions and link routes are all derived from it (`hit.ts`, `ports.ts`, `route.ts`, `camera.ts`) and never stored; `order.ts` supplies the fractional `z` keys.
 
-Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped) and the surface renders the scene with `reduceIntent` applied locally for preview → pointer-up emits one `Intent` → the projection applies, rewrites or rejects it and writes its model (the store, a constraint set, an overlay) → the projection's `scene` atom re-emits → the surface re-renders. The undo unit is the intent.
+Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped for a node gesture; a link band follows the pointer and snaps on release) and the surface renders the scene with `reduceIntent` applied locally for preview → pointer-up emits one `Intent` → the projection applies, rewrites or rejects it and writes its model (the store, a constraint set, an overlay) → the projection's `scene` atom re-emits → the surface re-renders. The undo unit is the intent.
+
+## 4c. Prototypes (designed 2026-10-07; type prototypes built)
+
+Shapes that look and behave alike should share one definition and differ only where they say so. There is
+one rule, applied at two levels: **a value left unset is taken from the prototype, recursively.**
+
+**Type prototypes (built).** A node type may be declared on a prototype: `NodeDefSpec = Partial<NodeDef> &
+{ extends?: string }`. `createNodeRegistry(types, prototypes)` resolves each type once, its own fields over
+its prototype chain's, and throws on an unknown prototype, a cycle, or a type left without a required field
+(`name`, `icon`, `schema`, `component`, `create`, `defaultSize`). A prototype is not a type: it is not in the
+registry, the palette or the scene schema, so lookups stay one record read. Schemas compose the same way by
+spreading the prototype's field set (`boxFields`) into each type's struct.
+
+| Prototype / type | Declares                                                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                       |
+| `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                          |
+| `scene`          | `extends: 'box'`; its schema adds `scene` and `contents`, its view adds the child scene and an open control, `openable`, 512x256. |
+
+The scene shape is a box: a centred label, the type's ports, and a zoom-in control (react-ui `Button`,
+top-right) that drills in like a double-click. `contents` chooses the body: the child scene (preview, then
+live, decision 10) or the label. Unset, it shows the child while there is no label, so an unnamed portal
+still reads as its contents and naming one turns it into a plain box.
+
+**Instance prototypes (designed, not built; TASKS "Object classes and prototypes").** A node may name a
+prototype node: `prototype?: NodeId` (same scene first; a canvas-level class library later). Its unset
+properties resolve from the prototype's at read time — `resolveNode(scene, node)`, cycle-guarded, before
+rendering, hit-testing and the properties form — so editing the prototype restyles every node built on it.
+The resolution is shallow per field (`style` merges per key); identity, place, text parts and the child
+scene are never inherited (`cloneShape`'s `OWN_FIELDS`). The properties form shows an inherited value as
+the field's placeholder and a "reset to prototype" action clears an override, reusing the multi-select
+indeterminate machinery. Applying a prototype once without the link is `cloneShape`; detaching copies the
+resolved values in.
 
 ## 5. Coordinate system and camera
 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to
   `[1/32, 32]`.
 - **Portal frame**: the child-space region that maps exactly onto the portal, `portalFrame(portal, bounds)`: the
-  portal's box scaled by the smallest whole factor that contains the child's derived bounds, placed on the major
-  grid as near their centre as containing them allows. A whole factor keeps the frame's edges, and the child's
-  grid seen through the portal, on the parent's grid, so the frame drawn once drilled in (dashed, orange) is the
-  portal's own outline and sits on grid lines; the root shows its derived bounds. `s = 1 / factor`; child point
-  `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
+  portal's box scaled by the smallest power of `MAJOR_GRID_RATIO` (4, 16, 64, …; never 1) that contains the
+  child's derived bounds, placed on the major grid **scaled by that factor** as near their centre as containing
+  them allows. A power of the ratio maps every child grid level onto a parent level: the parent's minor grid is
+  the child's major grid one level down. Placing the frame on the scaled grid then puts the child's lines on the
+  parent's own lines rather than merely at their spacing (on the plain major grid the phase can be off by up to
+  `ratio - 1` minor cells), so the grids stay aligned through a drill-in and the frame's edges sit on the lines.
+  The frame drawn once drilled in (dashed, orange) is the portal's own outline; the root shows its derived
+  bounds. `s = 1 / factor`; child point `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
 - **While the camera moves on its own** (wheel zoom or pan, an animation) the canvas ignores the pointer: a shield
   takes presses and hover is cleared, since nothing under the pointer is where it will be.
-- **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), then swap the root scene
+- **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), stopping where the child
+  would pass 1:1 so its text lands at natural size rather than magnified to fill the view, then swap the root scene
   and re-express the camera in child space (`enterPortal`); **drill-out** is the inverse (`exitPortal`) followed
   by a fit of the parent. Both verified seamless in the spike.
 - **Auto drill**: after a zoom gesture settles (150 ms), a portal covering ≥ 85% of the viewport becomes the root;
-  a root covering < 30% yields to its parent. The swap preserves coverage, so the two rules cannot oscillate.
+  a root covering < 30% of what it covered on arrival (the history entry for the path) yields to its parent, so a
+  child capped at 1:1, or a frame that shrinks as its first node is drawn, is never thrown out on arrival. The
+  swap preserves coverage, so the two rules cannot oscillate.
 - **Tiers** for a portal by on-screen size (`min(size) × composed zoom`): `< 40px` tile, `< 260px` title +
   cell count (later: rasterised thumbnail), else live child scene, only while `depth < 2`. Hysteresis of ±10% at
   the boundaries.
 
 ## 6. Navigation
 
-| Gesture                                                                | Effect                                                                         |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Double-click a portal, or Enter with a portal selected                 | Animated drill-in                                                              |
-| Pinch/ctrl+wheel until a portal fills the view                         | Auto drill-in (no animation, camera preserved)                                 |
-| Escape, breadcrumb click, "Up", or zooming the root below 30% coverage | Drill-out (breadcrumb jumps several levels)                                    |
-| Alt+← / Alt+→                                                          | Back / forward through a history of `{path, camera}` entries                   |
-| Shift+1 / Shift+2 / Shift+0                                            | Fit scene / fit selection / reset zoom                                         |
-| Double-click a text part of a node                                     | Edits it in place (§4 text parts); other openable nodes open (the ECHO object) |
-| URL / deep link (phase 3)                                              | `{path, camera}` serialised so a location inside a nested scene is shareable   |
+| Gesture                                                                               | Effect                                                                         |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Double-click a portal, or Enter with a portal selected                                | Animated drill-in                                                              |
+| Pinch/ctrl+wheel until a portal fills the view                                        | Auto drill-in (no animation, camera preserved)                                 |
+| Escape, breadcrumb click, "Up", or zooming the root below 30% of its arrival coverage | Drill-out (breadcrumb jumps several levels)                                    |
+| Alt+← / Alt+→                                                                         | Back / forward through a history of `{path, camera}` entries                   |
+| Shift+1 / Shift+2 / Shift+0                                                           | Fit scene / fit selection / reset zoom                                         |
+| Double-click a text part of a node                                                    | Edits it in place (§4 text parts); other openable nodes open (the ECHO object) |
+| URL / deep link (phase 3)                                                             | `{path, camera}` serialised so a location inside a nested scene is shareable   |
 
 ## 6b. Mobile navigation mode
 
@@ -312,11 +370,17 @@ Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to to
 
 1. **Grid**: the existing multi-resolution SVG `GridComponent` fed `{scale: zoom, offset: camera × zoom}`,
    always shown. It draws a minor grid (`DEFAULT_GRID`, 16 px at zoom 1), a major grid every
-   `MAJOR_GRID_RATIO` (4) minor lines and a coarse level 4 major cells wide, dropping a level once its cells
-   fall under 6 screen px as the view zooms out. `g` and the Snap button toggle snapping only. **Snapping
-   is to the major grid** (`MAJOR_GRID`, 64 scene px): moves and resizes snap edges to it, arrow nudges step by
-   it, the derived scene bounds grow outward to it, and the fixture and the solver / layout defaults (pitch,
-   size, origin) are multiples of it, so an untouched layout is already snapped and the frame sits on lines.
+   `MAJOR_GRID_RATIO` (4) minor lines, plus levels a fourfold apart below and above (a quarter cell up to 64
+   major cells), drawing every level whose cells are between 6 and 2048 screen px. A line's opacity comes from
+   its on-screen spacing alone (a step darker per fourfold), so a level fades in as the view zooms rather than
+   popping, and drilling through a grid-aligned portal (a quarter scale) draws the same lines at the same weight
+   on both sides of the swap: the major grid is preserved across levels. `g` and the Snap button toggle snapping only. **Creation snaps to the major grid**
+   (`MAJOR_GRID`, 64 scene px), the derived scene bounds grow outward to it, and the fixture and the solver /
+   layout defaults (pitch, size, origin) are multiples of it, so an untouched layout is already snapped and the
+   frame sits on lines. **Moving and resizing snap to the minor grid** (a drag, a resize handle, a spline's
+   control point, or an arrow nudge; shift nudges by a major cell): a node arrives on the major grid, and neither its position nor
+   its size is coarse thereafter. Ports are exempt: each sits exactly at its offset along its side, so a short side still
+   spreads them.
 2. **Scene layer**: one `div` whose transform is `scale(zoom) translate(x, y)`, set **imperatively from the
    camera atom** (no React re-render on pan/zoom). Inside, one `div` per placed cell positioned at its bounds, and
    one `svg` (overflow visible) per scene holding link paths in scene coordinates. Portals in the live tier mount
@@ -335,18 +399,75 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 | Gesture                    | Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Wheel                      | Pan. Ctrl/cmd+wheel (trackpad pinch) zooms about the cursor. Touch pinch zooms about the midpoint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Space+drag, hand tool      | Pan. Drag on background in `select` = marquee (intersection); shift adds.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Space+drag, hand tool      | Pan. Drag on background in `select` = marquee (intersection); shift adds, alt subtracts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Click / shift-click        | Select / toggle; cmd+A selects all. Hit testing from the model in scene coordinates, never `getClientRects`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Drag selected nodes        | Transient offset atom, snapped in scene coordinates; on pointer-up one `move` intent (the undo unit). The projection decides what that means (§3).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **Control frame**          | Shown for the selection: outline, eight resize handles (`resize` intent, respects `NodeDef.minSize`). Ports show on the hovered and selected nodes, and on every node with a link tool. Hover is a model hit test with a port-sized margin, not the node element's enter/leave, so it survives the pointer crossing onto a port on the frame edge.                                                                                                                                                                                                                                                                                                                                                                |
-| Drag from a port           | Rubber band; drop on a node pins the target to the port nearest the pointer (the candidate port fills while hovering; ports also fill on hover as drag sources), drop on empty canvas creates a rectangle and links to it (canvas-editor behaviour). The link's type is the active link tool's, or the last one picked under `select`. Emits a `link` intent carrying the whole link.                                                                                                                                                                                                                                                                                                                             |
-| Drag a link end            | Re-attach; onto a port pins, onto a body unpins.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Palette                    | Two groups generated from the registries: node types (R rectangle, E ellipse, C class, T text, S scene) and link types (L line, K curve, P spline). A node tool then click or drag on the canvas emits `create` (a click places the type's default size at the click). A link tool shows every port; dragging one creates that type.                                                                                                                                                                                                                                                                                                                                                                              |
-| Click a link / its handles | Links are selectable (a wide transparent twin of the stroke takes the press) and deletable. A selected link shows its two end handles: dragging one re-attaches that end: over a node the link is drawn re-attached to the port nearest the pointer, over free space only the rubber band shows, and dropping on nothing leaves the link unchanged. A selected spline also shows diamond handles on its control points: click selects one (Delete or the right-click menu's "Remove control point" removes it), drag moves it, double-click on the stroke inserts one at the nearest segment, alt-click removes; all `update` intents. A spline leaves and enters its ports along the side normals, like a curve. |
-| Keys                       | Arrows nudge (shift ×10), Delete, Escape, navigation keys from §6; via the attention-scoped hotkeys used by canvas-editor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| External drag-in           | pragmatic-dnd drop target only; internal gestures are pointer-driven.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Control frame**          | Shown for the selection: outline, eight resize handles (`resize` intent through `resize.ts`: the moving edge snaps, `minSize` / `maxSize` clamp, shift keeps the centre; handles draw above ports so a handle wins at a side centre). Ports stay out of the way: they show on the hovered node, on the node under a link drag, and on every node with a link tool. Hover is a model hit test with a port-sized margin, not the node element's enter/leave, so it survives the pointer crossing onto a port on the frame edge; the hovered frame shows a faint border and selected nodes paint above their neighbours (paint order only, `z` is untouched).                                                        |
+| Drag from a port           | Rubber band; drop on a node pins the target to the port nearest the pointer (the candidate port fills while hovering; ports also fill on hover as drag sources), drop on empty canvas creates a copy of the source shape (type, size, style, port count; not its text, identity or child scene) and links to it. The link's type is the active link tool's, or the last one picked under `select`. Emits a `link` intent carrying the whole link.                                                                                                                                                                                                                                                                 |
+| Drag a link end            | Re-attach; onto a port pins, onto a body unpins, onto empty canvas frees the end at that (snapped) point.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Link tool on empty canvas  | Draws a free-ended link from the press to the release, previewed as it will land; an end that reaches a node attaches there. A click without a drag draws nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Palette                    | Two groups generated from the registries: node types (R rectangle, E ellipse, C class, T text, S scene) and link types (L line, K curve, P spline). A node tool then click or drag on the canvas emits `create` (a click places the type's default size at the click); while drawing, the type's own view shows as a translucent ghost of the node that will land. A node entry can also be dragged onto the canvas (pragmatic-dnd; any source carrying `nodeDragData(type)` drops the same way), previewed by the same ghost. A link tool shows every port; dragging one creates that type.                                                                                                                      |
+| Toolbar                    | Optional `Toolbar` component (decision 5) over actions the view exposes: Up / breadcrumbs, Fit, zoom in / out, Snap, Undo / Redo, Cut / Copy / Paste / Delete, a Create menu (a default-sized node at the centre of the view), Layout (disabled until a projection offers it, M4), Debug, and a zoom / pointer / depth readout. `showToolbar={false}` hides it; a host may render its own over the same actions.                                                                                                                                                                                                                                                                                                  |
+| Read-only                  | `readonly` on `SceneView` replaces the projection's capabilities with none: selection, hover, pan, zoom and drill still work, but no handle, port, palette tool, toolbar edit, key or in-place editor reaches the model, and `Properties readonly` shows the fields without letting them change. The `Readonly` story is the fixture.                                                                                                                                                                                                                                                                                                                                                                             |
+| Click a link / its handles | Links are selectable (a wide transparent twin of the stroke takes the press) and deletable. A selected link shows its two end handles: dragging one re-attaches that end: over a node the link is drawn re-attached to the port nearest the pointer, over free space it is drawn free-ended at the pointer, and dropping writes whichever it shows. A selected spline also shows diamond handles on its control points: click selects one (Delete or the right-click menu's "Remove control point" removes it), drag moves it, double-click on the stroke inserts one at the nearest segment, alt-click removes; all `update` intents. A spline leaves and enters its ports along the side normals, like a curve. |
+| Keys                       | One table, `model/keys.ts`: every chord is a `KeyBinding` under a `KeyAction`, the view maps the action to what it means in the current state, and the toolbar prints its labels from the same table. Arrows nudge (shift ×4), Delete, Escape, Home (fit), G (snap), D (debug: every frame labelled with id, type, geometry and z), navigation keys from §6; tool letters stay on the registry entries. Attention scoping is the host's (M4).                                                                                                                                                                                                                                                                     |
+| External drag-in           | pragmatic-dnd drop target on the root (`utils/dnd.ts`); internal gestures are pointer-driven.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Cut / copy / paste         | Per-view clipboard (`clipboard.ts`) of the selected nodes and the links between them. Paste mints fresh ids, rewires the links, offsets one grid step further per paste (or lands at the pointer from the canvas menu) and applies as one `batch` intent, so it is one undo step. ⌘X / ⌘C / ⌘V, toolbar buttons, and a right-click menu: Cut / Copy / Delete on an element, Paste on the canvas, Remove control point on a spline point.                                                                                                                                                                                                                                                                          |
 | Undo                       | Per-view log of projection snapshots (`undo.ts`): every `apply` that changes the model pushes the snapshot taken before it, so the undo unit is the intent whatever the projection made of it; each projection takes and restores its own opaque snapshot (freehand: the scene, constrained: the constraint model, dynamic: graph plus overlay). ⌘Z / ⇧⌘Z and the Undo / Redo toolbar buttons; a log belongs to one scene and empties on drill. ECHO history later.                                                                                                                                                                                                                                               |
+
+## 8b. Lattice mode (designed 2026-10-06; steps 1-4 and 6 built)
+
+A per-scene constraint in which every shape occupies whole cells of a lattice coarser than the snap grid,
+separated by fixed gutters, so the scene reads as a regular board with gutter channels between shapes.
+
+**Rule.** The lattice is parameterized by the size of a one-cell shape and the gutter (channel) between
+shapes: `LatticeSpec { width, height, gutterX, gutterY }`, by default 256x128 and 128x64, set per scene
+(`scene.layout = { kind: 'lattice', ...spec }`; absent is freehand) and edited in the properties panel when
+nothing is selected. The pitch is a shape plus a gutter (384 x 192 by default). A shape spans any whole
+number of cells on each axis and covers the gutters between them, so its frame is
+`n x width + (n - 1) x gutterX` by `m x height + (m - 1) x gutterY` (a 3x1 shape is 1024 x 128): a shape is
+its first cell and spans `(col, row, spanX, spanY)`. Every channel between shapes is exactly one gutter
+wide. Resizing snaps the dragged face to the nearest cell edge and leaves the opposite face where it was,
+so a face steps one cell at a time. Shapes may not share a cell.
+
+**Where it lives.** Nodes stay in scene pixels: the lattice is a rule a projection enforces, not a second
+coordinate system, so persistence, the DSL bridge and freehand are untouched. (Storing cell units and
+deriving pixels, as the constrained and dynamic projections do, was rejected: it forks the stored shape of
+a scene by mode.)
+
+| Piece                           | Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quantize(bounds, spec)`        | Pure: nearest whole span at the nearest cells per axis, then the frame its cells and inner gutters cover.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Occupancy                       | The cells each shape covers; an intent that would overlap another shape's cells is rejected.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Lattice projection              | Wraps the freehand reducer; every `create`, `move`, `resize` and geometry `update` is quantized, then checked for occupancy, so no path (gesture, properties panel, DSL) can break the rule.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `Projection.constrain?(bounds)` | New optional hook the pointer machine's `settle` calls, so the ghost and resize previews show where the shape will land, and draw red when it would collide.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Grid layer                      | Draws cell boundaries, and the cells a dragged shape would occupy.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Gutter routing                  | `smart` links on a lattice scene route through the gutters (`utils/gutter-route.ts`): each end leaves its port straight out to the centre line of the adjacent gutter, and the route runs at right angles with the fewest bends along gutter centre lines and the lines through its ports; a port line runs straight through free cells, so a route detours into the gutters only around occupied ones (a shortest-path search where a turn costs far more than distance). A gutter inside a multi-cell shape is covered by it, so it is not a track. Lattice-specific rather than `@dxos/diagram`'s general router: the tracks are a regular grid, so the search is small. Line, curve and spline keep their routes. |
+| Properties                      | Geometry reads as Column / Row and Span X / Span Y (whole cells, step 1) via `fieldOverrides`; the scene's spec when nothing is selected.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Switching on                    | Every node is quantized once; a shape landing on occupied cells moves to the nearest free cells, in z-order, as one undoable batch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Snap and lattice toggles        | Snap (G) on with the lattice toggle (Shift+G, shown only on a lattice scene) on is lattice mode; snap on with the lattice off snaps to the basic grid; snap off is free. The projection reads both per intent (`constrained`), so outside lattice mode intents apply as freehand. Smart links route through the gutters whenever the lattice toggle is on, snap or not. A shape left off the lattice snaps onto it the next time it is moved. The guides toggle only hides the page frame and the cells, and the cells show only while the lattice is on.                                                                                                                                                             |
+
+**Lanes and crossings.** Routing each link on its own puts parallel links on the same gutter centre line,
+drawn on top of each other. The standard answer, from VLSI routing and orthogonal connector routing
+(libavoid: Wybrow, Marriott and Stuckey), splits the work in two:
+
+1. _Global routing_ — each link's path through the gutter network. `gutterRoute` is this step: a maze
+   search over gutter centre lines with a bend cost. Later: route a scene's links together with a
+   congestion cost per gutter segment (PathFinder's negotiated congestion: route all, raise the cost of
+   overused segments, rip up and reroute) and a cost for crossing another link, so links spread over
+   the gutters and cross less.
+2. _Detailed routing_ — giving each link its own lane in each gutter it uses. Links sharing a collinear
+   run are separated across the gutter, ordered so that their turn-offs do not cross (the
+   metro-line crossing problem), with ports sliding along their shape's side. `@dxos/diagram`'s
+   `Nudge.nudge` does exactly this over a set of orthogonal polylines, with shapes as obstacles.
+
+Since a link's lanes depend on the other links, routing becomes a per-scene pass: `sceneLinkGeometry`
+routes every smart link of a lattice scene, nudges the routes together (one minor grid unit apart), and
+each layer reads its links' geometry from that pass, memoized on the scene. Lanes per gutter are
+bounded by the gutter width over the spacing (64 / 16 gives three either side of the centre line), so a
+congested gutter is a signal for the global step, not something nudging can fix.
+
+**Later.** Reflow: an overlapping drop pushes the other shapes aside instead of being rejected.
 
 ## 9. Package layout
 
@@ -364,26 +485,29 @@ packages/ui/react-ui-canvas/src/
   archive/                 old Canvas, CellGrid, FPS, hooks and svg utils, untouched; `Grid` wraps the engine's GridComponent
   (the engine, phase 2+ files marked †)
     model/                 what a scene is and how it changes
-      types.ts             Schema: Scene {nodes, links}, Node (rect/ellipse/class/text/scene), NodeStyle, Link (line/curve/spline), Endpoint, Port, Camera, Intent, Tool
-      registry.ts          NodeDef / LinkDef registries (name, icon, key, component, portsPerSide, ports, resizable, minSize, openable) + defaults
+      types.ts             Schema: Scene {nodes, links}, NodeBase + built-ins (rect/ellipse/class/text/scene) with guards, NodeStyle, Link (line/curve/spline) with ends markers, Endpoint (node | point), Port, Camera, Intent, Tool
+      registry.ts          NodeDef / LinkDef registries (name, icon, key, group, schema, component, create, defaultSize, portsPerSide, ports, resizable, minSize, maxSize, openable) + defaults
       projection.ts        Projection seam, reduceIntent (freehand reducer), createFreehandProjection
       projections/
         constrained.ts     cardinal constraints → longest-path ranks per axis (Layout.rank); a move rewrites them
         dynamic.ts         GraphModel → ranked rows + Overlay position overrides; link adds an edge
       store.ts             SceneStore seam, createMemoryStore, updateScene / putScene
-      atoms.ts             per-view atoms: camera, path, selection, hover, point, tool, snap, drag, history, undo, clipboard, editing
+      atoms.ts             per-view atoms: camera, path, selection, hover, point, tool, snap, drag, history, undo, clipboard, editing, debug
+      keys.ts              the key bindings: KEY_BINDINGS by action, keyAction(event), shortcutFor(action) for labels
     utils/                 pure functions over the model
       shapes.ts            per-type geometry: nodeBounds, resizeNode, DEFAULT_SIZES, createNode, createLink
+      resize.ts            resizeBounds by handle: snapped moving edge, min / max size, shift-symmetric
       camera.ts            zoomAt, panBy, fitBounds, portalFrame, enterPortal / exitPortal, coverage, animateCamera
       hit.ts               derived sceneBounds, hitTest, nodesIntersecting, bounds helpers
-      ports.ts             sidePorts, nodePorts, portPoint (grid-snapped), sideNormal, pairPorts (automatic pairing)
-      route.ts             linePath, curvePath, splinePath (Catmull-Rom), linkPath by type, insertIndex; ortho later †
+      ports.ts             sidePorts, nodePorts, portPoint (exact offset), sideNormal, pairPorts (automatic pairing), nearestPort
+      route.ts             linePath, curvePath, splinePath (rounded polyline), linkPath by type, linkGeometry (free ends face the other end), insertIndex; ortho later †
+      dnd.ts               nodeDragData / nodeDragType: the pragmatic-dnd payload a node type drops onto the canvas as
       order.ts             fractional z keys: between, sortByZ, topZ, initialKeys
       parts.ts             text parts of a node: partText, partValues, isMultiline
       style.ts             NodeStyle → frame classes (hue fill / text / border, rounded)
       clipboard.ts         copySelection, pasteFragment (fresh ids, rewired links, one batch intent)
       undo.ts              per-view snapshot log over the projection: withUndo, undo, redo
-      builder.ts           SceneBuilder: chainable scene DSL (rect / ellipse / class / text / portal, line / curve / spline, `a#e2` port refs)
+      builder.ts           SceneBuilder: declarative fixtures, a tree of element values (`scene([...])`, `node`/`rect`/…, `link`, `.properties()`, nested `scene().at()`), `a#e2` port refs; unrelated to illustrator's `DrawingBuilder`
       testing.ts           createSceneTree fixture: root diagram plus flow / model / cycle / note child scenes (not exported)
     hooks/                 useRegistry, useSceneProjection, useViewport, useWheel
     components/            one folder per component, with its stories
@@ -392,7 +516,9 @@ packages/ui/react-ui-canvas/src/
       ControlFrame/        selection outline, resize handles, ports, link end and spline handles, marquee, rubber band
       PartEditor/          TextPart: static text or the in-place react-ui-editor over a node's text part
       Properties/          schema-driven form over the selected node or link (update intent)
+      Toolbar/             optional editor toolbar over the view's actions (decision 5), with its story
       Palette/, Breadcrumbs/, Grid/
+    playwright/            e2e: playwright.config.ts (storybook on 9006), SceneManager, scene.spec.ts over the Freehand story
     *.test.ts              beside every pure module and projection
   MIGRATION.md (docs)      feature map of canvas-editor / canvas-compute against the engine, decisions, migration plan
   aspects.ts †             Aspect projections + reading order (§6b)

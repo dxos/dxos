@@ -32,31 +32,84 @@ envelope (`ciCommitSha`, `ciBranch`, `ciRunId`, …), so the harness emits `wall
 
 ### Comparability — pinned in every `WHERE`
 
-`ciServingMode`, `ciPluginSet`, `ciProfileState`, `ciSettleMs`, `ciInstruments`. A trend that mixes
+`ciServingMode`, `ciPluginSet`, `ciProfileState`, `ciSettleMs`, `ciInstruments`, and `ciCounters`
+(the costed work counters that ran, e.g. `trace+react`; absent on rows from before it existed). A trend that mixes
 `vite preview` with `vite serve` moves ~2.5x on main-thread cost alone, which reads exactly like a
 regression. Filter on them rather than trusting them to be constant.
 
 ### Measures
 
-| property                                                  | unit          | realm columns                                                                   |
-| --------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
-| `ciWallMs`                                                | ms            | —                                                                               |
-| `ciCpuMsTotal`                                            | ms            | — (every Chrome process, GPU included)                                          |
-| `ciCpuMs*`                                                | ms            | `…Tab` `…Worker` `…SharedWorker` `…ServiceWorker`, plus `ciCpuMsWorkers` rollup |
-| `ciHeapUsedBytes*`                                        | bytes         | same four suffixes, plus `ciHeapUsedTotalBytes`                                 |
-| `ciLagP95Ms*` / `ciLagMaxMs*`                             | ms            | same four suffixes, plus the pooled `ciLagP95Ms` / `ciLagMaxMs`                 |
-| `ciPeakRssBytes`                                          | bytes         | — (browser process tree)                                                        |
-| `ciDomNodes`, `ciDomListeners`                            | count         | —                                                                               |
-| `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                       |
-| `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                     |
-| `ciCodeBytes`, `ciApiBytes`, `ciApiRequests`              | bytes / count | —                                                                               |
-| `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                     |
-| `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                           |
-| `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable  |
-| `ciSqliteReadBytes`, `ciSqliteWriteBytes`                 | bytes         | SQLite's own VFS I/O, browser only                                              |
-| `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                   |
-| `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero  |
-| `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent             |
+| property                                                  | unit          | realm columns                                                                       |
+| --------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------- |
+| `ciWallMs`                                                | ms            | —                                                                                   |
+| `ciCpuMsTotal`                                            | ms            | — (every Chrome process, GPU included)                                              |
+| `ciCpuMs*`                                                | ms            | `…Tab` `…Worker` `…SharedWorker` `…ServiceWorker`, plus `ciCpuMsWorkers` rollup     |
+| `ciHeapUsedBytes*`                                        | bytes         | same four suffixes, plus `ciHeapUsedTotalBytes`                                     |
+| `ciLagP95Ms*` / `ciLagMaxMs*`                             | ms            | same four suffixes, plus the pooled `ciLagP95Ms` / `ciLagMaxMs`                     |
+| `ciLagSamples*`                                           | count         | **read this before a zero above**: `0` means the drift probe produced nothing       |
+| `ciHeapBackingBytes*`                                     | bytes         | RAW backing: wasm AND `ArrayBuffer`s. **Do not stack beside `ciWasmBytes*`**        |
+| `ciHeapBackingNonWasmBytes*`                              | bytes         | backing with wasm removed — the disjoint column, safe to stack                      |
+| `ciEmbedderBytes*`                                        | bytes         | Blink-side objects for the realm: DOM, listeners, the document                      |
+| `ciWasmAutomergeBytes*` / `ciWasmSubductionBytes*`        | bytes         | wasm by library; subduction is matched first, its module is `automerge_subduction…` |
+| `ciWasmSqliteBytes*` / `ciWasmOtherBytes*`                | bytes         | the other two libraries; the four partition `ciWasmBytes*` exactly                  |
+| `ciWasmBytes*`                                            | bytes         | same four suffixes, plus `ciWasmBytesTotal`; counted by no heap column              |
+| `ciWasmRealms`                                            | count         | realms that published the wasm probe; `0` means uninstrumented, not "no wasm"       |
+| `ciRpcQueueWaitP95Ms*` / `ciRpcQueueWaitMaxMs*`           | ms            | same four suffixes — time a request waited for that realm's event loop              |
+| `ciRpcServiceMaxMs*`                                      | ms            | same four suffixes — worst handler duration in the realm that served it             |
+| `ciRpcRoundTripP95Ms*` / `ciRpcRoundTripMaxMs*`           | ms            | same four suffixes, attributed to the realm that ISSUED the call                    |
+| `ciRpcCalls*`                                             | count         | same four suffixes, plus `ciRpcCallsTotal`                                          |
+| `ciRpcSamples`, `ciRpcRealms`                             | count         | `ciRpcCallsTotal` above `ciRpcSamples` means the percentiles cover the stage's tail |
+| `ciAppFootprintBytes`                                     | bytes         | — private footprint of the RENDERER processes: the app, wasm included               |
+| `ciChromeFootprintBytes`                                  | bytes         | — browser, GPU and service processes: Chrome's own cost, beside the app's           |
+| `ciDomNodes`, `ciDomListeners`                            | count         | —                                                                                   |
+| `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                           |
+| `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                         |
+| `ciCodeBytes`, `ciApiBytes`, `ciApiRequests`              | bytes / count | —                                                                                   |
+| `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                         |
+| `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                               |
+| `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable      |
+| `ciSqliteReadBytes`, `ciSqliteWriteBytes`                 | bytes         | SQLite's own VFS I/O, browser only                                                  |
+| `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                       |
+| `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero      |
+| `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent                 |
+
+#### Work counters — deterministic, for tight budgets
+
+Counts of work rather than time: they do not move with runner load. The costed ones are present
+only when their counter ran (`ciCounters`, from `DX_PERF_COUNTERS`); **filter on the column
+existing**, since a missing column is "not measured", not zero.
+
+| property                                                                                        | unit          | note                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `ciLayoutCount`, `ciRecalcStyleCount`                                                           | count         | tab main thread, `Performance.getMetrics`; always present                                |
+| `ciLayoutObjects`                                                                               | count         | a LEVEL: layout objects alive at the stage's end — the render tree's size                |
+| `ciTaskOtherMs`, `ciV8CompileMs`, `ciDevToolsCommandMs`                                         | ms            | the rest of the getMetrics split; `DevToolsCommand` is the harness's own cost to the tab |
+| `ciStyleRecalcs`, `ciStyleRecalcElements`                                                       | count         | `trace` — `UpdateLayoutTree` events and the elements they restyled                       |
+| `ciLayouts`, `ciLayoutDirtyObjects`                                                             | count         | `trace` — `Layout` events and the objects each had to lay out                            |
+| `ciForcedLayouts`                                                                               | count         | `trace` — layouts run synchronously inside script (layout thrash)                        |
+| `ciTraceCounterEvents`, `ciTraceDataLoss`                                                       | —             | `trace` integrity: events parsed, and whether Chrome dropped any                         |
+| `ciInstructions*`                                                                               | count         | `trace` — instructions retired, `…Tab` `…Worker` `…SharedWorker` `…ServiceWorker`        |
+| `ciInstructionThreads`                                                                          | count         | **read this before `ciInstructions*`**: `0` means no PMU on the runner, not zero work    |
+| `ciJsCalls*`, `ciJsCallsTotal`, `ciJsCallRealms`                                                | count         | `calls` — exact JS function calls per realm, V8 precise coverage                         |
+| `ciReactCommits`, `ciReactRenders`, `ciReactMounts`                                             | count         | `react` — commits, component renders, and the renders that were first mounts             |
+| `ciReactWastedRenders`                                                                          | count         | `react` — re-renders with shallow-equal props and unchanged state and context            |
+| `ciSqliteSelects` … `ciSqliteOtherStatements`, `ciSqliteStatementErrors`                        | count         | statements by leading keyword, from the OPFS client                                      |
+| `ciSqliteRowsRead`, `ciSqliteRowsChanged`                                                       | count         | rows returned; rows changed by writes (`sqlite3_changes`)                                |
+| `ciSqliteCacheHits`, `ciSqliteCacheMisses`                                                      | count         | page-cache lookups (`sqlite3_db_status`)                                                 |
+| `ciAutomergeSnapshotSaves`, `…IncrementalSaves`, `…SyncStateSaves`, `…OtherSaves`, `…SaveBytes` | count / bytes | chunks the storage adapter wrote, by automerge-repo kind                                 |
+| `ciAutomergeChunkLoads`, `…RangeLoads`, `…LoadBytes`, `…ChunkRemoves`                           | count / bytes | storage adapter reads and deletes                                                        |
+| `ciAutomergeDocLoads`, `ciAutomergeEvictions`                                                   | count         | documents leased into, and evicted from, the host's repo                                 |
+| `ciAutomergeMutationsApplied` / `…Sent`, `…MutationAppliedBytes` / `…SentBytes`                 | count / bytes | client↔host document mutations through the documents synchronizer                        |
+| `ciEchoQueryExecutions`, `ciEchoQueryResultsSent`, `ciEchoQueryResultRows`                      | count         | host-side query runs and the result batches sent to clients                              |
+| `ciEchoQueryRuns`, `ciEchoQueryRecomputes`, `ciEchoQueryResultObjects`                          | count         | client-side one-shot runs and reactive recomputes, and the objects they presented        |
+| `ciEchoQuerySubscriberCallbacks`                                                                | count         | subscriber callbacks fired by reactive query updates                                     |
+| `ciEchoIndexPasses`, `ciEchoIndexedObjects`                                                     | count         | index-engine passes and the objects they indexed                                         |
+| `ciDataRealms`                                                                                  | count         | realms that published a data probe; `0` means uninstrumented                             |
+| `ciRequests`, `ciSocketFrames`                                                                  | count         | every response, and every WebSocket frame to any host                                    |
+
+`rpcCallsByMethod`, `network.byEndpoint`, and the per-stage `counters/<stage>-calls.json` /
+`<stage>-react.json` breakdowns stay in the NDJSON row and artifacts: a column per method,
+endpoint, function or component would mint a series per name.
 
 **The realm columns are keyed by KIND, not by script name.** A name-keyed column
 (`cpuMs_shared_worker_client_js`) minted a new permanent property on every bundle rename and left
@@ -94,20 +147,49 @@ elsewhere. See "The two stacked tiles" below.
 | `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                                |
 | `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing eleven peaks reports memory never simultaneously resident, and summing eleven p95s is a number with no interpretation. |
 
-| #   | tile                                  | measure              | reducer |
-| --- | ------------------------------------- | -------------------- | ------- |
-| 1   | Total wall time per run               | `ciWallMs`           | sum     |
-| 2   | Total CPU per run — all processes     | `ciCpuMsTotal`       | sum     |
-| 3   | Total CPU per run — tab               | `ciCpuMsTab`         | sum     |
-| 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`      | sum     |
-| 5   | Peak RSS per run                      | `ciPeakRssBytes`     | max     |
-| 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`      | max     |
-| 7   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
-| 8   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
-| 9   | Total blocking time per run           | `ciTbtMs`            | sum     |
-| 10  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
-| 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`  | sum     |
-| 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes` | sum     |
+| #   | tile                                  | measure                   | reducer |
+| --- | ------------------------------------- | ------------------------- | ------- |
+| 1   | Total wall time per run               | `ciWallMs`                | sum     |
+| 2   | Total CPU per run — all processes     | `ciCpuMsTotal`            | sum     |
+| 3   | Total CPU per run — tab               | `ciCpuMsTab`              | sum     |
+| 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`           | sum     |
+| 5   | Peak app footprint per run            | `ciAppFootprintBytes`     | max     |
+| 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`           | max     |
+| 7   | Peak realm memory per run — tab       | tab heap+embedder+wasm    | max     |
+| 8   | Total app code transferred per run    | `ciCodeBytes`             | sum     |
+| 9   | Total blocking time per run           | `ciTbtMs`                 | sum     |
+| 10  | Total edge traffic per run            | `ciEdgeBytes`             | sum     |
+| 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`       | sum     |
+| 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes`      | sum     |
+| 13  | Worst-phase lag p95 per run — worker  | `ciLagP95MsWorker`        | max     |
+| 14  | Peak realm memory per run — worker    | worker heap+embedder+wasm | max     |
+
+### The realm memory tiles sum three allocators, and exclude a fourth
+
+Tiles 7 and 14 report `ciHeapUsedBytes{realm} + ciEmbedderBytes{realm} + ciWasmBytes{realm}`, not
+JS heap alone. `usedSize` counts live JS objects only, and almost nothing this app holds is a JS
+object: the worker read ~32 MB of heap against ~186 MB of realm memory, which is why a heap-only
+tile made the realm running ECHO look like the cheapest one in the browser.
+
+`ciHeapBackingBytes{realm}` is deliberately NOT a fourth term. It counts wasm memories and ordinary
+ArrayBuffers in one number, so adding it double-counts wasm — and it does not reproduce across
+machines: on one commit and one flow the tab read 14.0 MB in CI against 65.2 MB locally, and the
+worker 17.4 MB against 127.3 MB, while `used` and `wasm` agreed to within 3%. A term that changes by
+5-7x with the machine cannot be trended, and `max(0, backing - wasm)` inherits that by changing
+sign. The cost of the exclusion is that a non-wasm ArrayBuffer goes uncounted.
+
+Both tiles filter on `ciWasmRealms > 0`, the wasm probe's integrity column: rows before 2026-09-22
+carry no wasm term, and without the predicate the series steps ~120 MB on the day the probe landed
+and reads as a regression rather than as the metric widening.
+
+### Tile 13 filters on `ciLagSamplesWorker > 0`, and must
+
+Unlike its tab twin, the worker lag tile carries a predicate on the probe's integrity column. Every
+row written before 2026-09-22 reports `ciLagP95MsWorker` as zero because the probe never armed —
+the drain expression defined the global the installer's guard tested — so 671 historical stage rows
+say `0` meaning "not measured". Averaging those in would read as a worker that used to be perfectly
+responsive and has since regressed. The predicate also drops genuinely idle phases, which is the
+same judgement the tile already makes by taking a max.
 
 ### `open-space` is not yet trustworthy
 
@@ -116,6 +198,21 @@ Worth knowing before reading any tile that includes it. Across four runs its wal
 most phases. Every other phase is stable both within and across runs, so this is the stage and not
 the harness. Until it is understood, a movement in a run total is more likely to be `open-space`
 than anything else in the flow, and the phase-stacked tile is where to check.
+
+### The footprint tiles MUST filter on `ciFootprintProcesses > 0` — and do not yet
+
+Not a description of the dashboard, but a requirement on it. The memory-infra dump can fail or be
+pre-empted by another trace, and a failed read yields no processes — which sums to zero bytes and
+is indistinguishable from an app holding no memory once it is a point on a chart. `report.ts`
+publishes `footprintProcesses` so the two are separable, but **separable is not separated**: no
+tile currently carries the filter, so a failed collection would plot as a floor of zero and read
+as a dramatic improvement, exactly as a pre-VFS run did before the SQLite tiles were gated.
+
+Anything trending `ciAppFootprintBytes` or `ciChromeFootprintBytes` — tile 5 and the memory
+composition tile — needs `AND properties.ciFootprintProcesses > 0` in its `WHERE`, for the same
+reason and by the same precedent as the section below. Until someone makes that dashboard edit,
+this section describes a gap rather than a safeguard, in the spirit of the completeness-filter
+defect recorded further down.
 
 ### The SQLite tiles filter on `ciSqliteRealms > 0`
 
@@ -152,13 +249,16 @@ elsewhere on the same dashboard is worse than no chart.
 **Peak memory composition (mean, stacked)** is the memory counterpart, and it stacks by
 **composition, not by phase** — deliberately. Time is additive, so phases stack; memory is a level,
 so stacking eleven phases' peaks would draw ~40 GB that never existed at any instant. What
-genuinely sums is JS heap plus everything else = peak RSS, which puts the finding on the page: ~250 MB of heap
-inside ~4 GB of RSS, so ~15x of this app's memory is wasm linear memory and native allocation and
-optimizing the JS heap cannot move the memory number.
+genuinely sums is the realms' JS heaps plus everything else = `ciAppFootprintBytes`, the private
+footprint of the renderer processes. The gap is the finding: most of this app's memory is wasm
+linear memory and native allocation, so optimizing a JS heap cannot move the memory number.
 
-One honest caveat, recorded in the tile's SQL: the RSS peak and the heap peak need not occur at the
-same instant within a phase, so the total is exact and the boundary between the two segments is
-approximate.
+Two caveats, both recorded in the tile's SQL. The footprint is read at each phase boundary while a
+heap peak is that phase's maximum, so the total is exact and the boundary between the segments is
+approximate. And the size of the gap is NOT what this file claimed before `ciPeakRssBytes` was
+retired: that figure divided the heap into a sum of RSS over Chrome's whole process tree, which
+multi-counts shared pages and included the browser, GPU and service processes. Read the ratio off
+the tile rather than from any number written here.
 
 ### Edge traffic, and what it took to measure it
 
@@ -238,6 +338,28 @@ fixture's writes were still replicating through whichever stage happened to be r
 columns are therefore setup's cost rather than the app's, and it is the one phase to read as an
 absorber rather than a measurement — it is nonetheless summed into the run totals, so a run
 compared across the change it was added in moves on every total.
+
+## Scores and budget lines
+
+Every metric the nightly scores has a budget — a target and a limit — in
+[`composer-app/src/playwright/perf/budgets.json`](../../apps/composer-app/src/playwright/perf/budgets.json),
+listed with its rationale in [`composer-app/spec/PERF-BUDGETS.md`](../../apps/composer-app/spec/PERF-BUDGETS.md).
+The ECHO benchmarks carry the same in
+[`echo-client-e2e/BUDGETS.md`](../../core/echo/echo-client-e2e/BUDGETS.md) and score on their own
+dashboard, **[ECHO benchmarks (nightly)](https://eu.posthog.com/project/126171/dashboard/991193)**.
+
+- **Goal lines on every distribution tile mirror `budgets.json`** in each tile's own unit; a run-total tile's lines
+  are the sum of its stages' budgets. They are copied, not derived, so a budget change must be
+  re-applied to the tile. The two stacked tiles carry none: they include the backing store, which no
+  budget covers.
+- **`ci.perf-score`** is written once a night by `scripts/score-perf.ts` (and `bench-score` for
+  ECHO), one row per metric, group and overall, each carrying the target and limit it was scored
+  against. Scores run 0-1: 1 at or under target, 0.5 at the limit, floored at 0.01; the curve and the
+  geometric-mean roll-up are in `src/score/score.ts`. Work counters score as `<counter> > <stage>`
+  in a `work` group of the same suite; the counters-on pass scores its costed counts alone, as the
+  `composer-work` and `chat-work` suites (METRICS.md §"Scoring them").
+- **Budget-position tiles** plot `ln(value/target) / ln(limit/target)` per metric, so every metric
+  shares one axis: 0 is the target, 1 the limit.
 
 ## Two things to know before reading a tile
 

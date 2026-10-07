@@ -47,7 +47,9 @@ export const Create = Operation.make({
     description: 'Creates a new markdown document and adds it to the space.',
     icon: 'ph--file-text--regular',
   },
-  services: [Database.Service],
+  // The capability manager carries the `DefaultParent` rule that files the document into the root
+  // collection; an undeclared service is not provided, so without it the document is never filed.
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.String,
     content: Schema.String,

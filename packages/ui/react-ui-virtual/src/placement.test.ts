@@ -80,6 +80,20 @@ describe('placement', () => {
     expect(visible).to.deep.eq({ first: 10, last: 17 });
   });
 
+  test('a budget bounds the mounted rows down from the first visible one, and overscan can be narrowed', () => {
+    const { placement } = create();
+    placement.scrollTo(5_000);
+    expect(placement.range()).toEqual({ first: 48, last: 59, visible: { first: 50, last: 57 } });
+
+    placement.setOverscan(0);
+    placement.setBudget(3);
+    expect(placement.range()).toEqual({ first: 50, last: 52, visible: { first: 50, last: 57 } });
+    expect(placement.layout().offset).to.equal(5_000);
+
+    placement.setBudget(Infinity);
+    expect(placement.range()).toEqual({ first: 50, last: 57, visible: { first: 50, last: 57 } });
+  });
+
   test('the sizer spans the whole model', () => {
     const { placement } = create({ count: 10, extent: () => 100, exact: true });
 
@@ -127,6 +141,25 @@ describe('placement', () => {
 
     expect(placement.anchor.index).to.eq(anchor.index + 10);
     expect([0, 1, 2, 3].map((step) => placement.positionOf(placement.anchor.index + step))).to.deep.eq(positions);
+  });
+
+  test('a model that shrinks below the anchor still mounts its rows', () => {
+    const ids = Array.from({ length: 1_000 }, (_, index) => `row-${index}`);
+    const placement = new Placement({
+      count: ids.length,
+      getId: (index) => ids[index],
+      extents: { of: () => 100 },
+      viewport: VIEWPORT,
+      overscan: 2,
+    });
+    placement.scrollTo(50_000);
+
+    ids.splice(10);
+    placement.setCount(ids.length);
+    const { first, last, sizerExtent } = placement.layout();
+    expect(first).to.be.at.most(last);
+    expect(last).to.eq(9);
+    expect(sizerExtent).to.eq(1_000);
   });
 
   test('appending moves nothing at all', () => {

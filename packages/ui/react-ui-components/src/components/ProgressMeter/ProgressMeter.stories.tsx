@@ -7,8 +7,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type Progress } from '@dxos/progress';
 import { random } from '@dxos/random';
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -19,12 +21,6 @@ const TICK_MS = 200;
 const ITEMS = 40;
 /** How long an uncounted phase runs before the run moves on. */
 const HOLD_MS = 2_500;
-/**
- * Items completed per tick. Uneven, because real work is: a fixed step glides so smoothly that the
- * transition has nothing to smooth.
- */
-const step = () => random.number.int({ min: 1, max: 4 });
-
 /** Phase names, so the crawl has somewhere to go. */
 const NOTES = ['Syncing feeds', 'Selecting articles', 'Adding to magazine'];
 
@@ -88,7 +84,7 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
         return;
       }
 
-      count += indeterminate ? TICK_MS : step();
+      count += indeterminate ? TICK_MS : random.number.int({ min: 1, max: 4 });
       patch({
         status: 'running',
         phase: stages ? phase : undefined,
@@ -133,18 +129,18 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <IconButton icon='ph--play--regular' label='Start' onClick={handleStart} />
-          <IconButton icon='ph--warning--regular' label='Fail' onClick={handleFail} />
-          <IconButton icon='ph--x--regular' label='Reset' onClick={handleCancel} />
+          <Button.Root icon='ph--play--regular' label='Start' onClick={handleStart} />
+          <Button.Root icon='ph--warning--regular' label='Fail' onClick={handleFail} />
+          <Button.Root icon='ph--x--regular' label='Reset' onClick={handleCancel} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content />
-      <Panel.Statusbar asChild>
+      </Panel.Header>
+      <Panel.Body />
+      <Panel.Footer>
         {/* The meter's own control cancels a run in flight, and clears one that failed. */}
         <ProgressMeter {...args} state={state} onCancel={handleCancel} />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

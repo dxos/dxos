@@ -35,6 +35,10 @@ export enum EdgeService {
   SWARM = 'swarm',
   SIGNAL = 'signal',
   STATUS = 'status',
+  /**
+   * User-to-user notices held for an identity until acknowledged (e.g., space invitation notices).
+   */
+  INBOX = 'inbox',
 }
 
 export type EdgeSuccess<T> = {
@@ -432,15 +436,26 @@ export enum EdgeWebsocketProtocol {
 /**
  * Per-channel credit window in payload bytes, by service.
  *
- * Sized from the bandwidth-delay product: below `throughput * RTT` the window caps throughput
- * however fast either end is. Replication is throughput-bound; swarm and signal are low-volume and
- * latency-sensitive, so a large window would only delay the backpressure signal.
+ * A window caps one channel at `window / RTT` however fast either end is, so 4 MiB still allows a replicator channel
+ * 20 MB/s at a 200 ms round trip, more than one replicator Durable Object absorbs. Swarm and signal traffic is
+ * low-volume and latency-sensitive, so a large window would only delay the backpressure signal. Receivers derive
+ * their grant threshold from the smallest window and their overdraft bound from the largest, so shrinking one is a
+ * protocol change.
  */
 export const EDGE_FLOW_CONTROL_WINDOWS = {
   replicator: 4 * 1024 * 1024,
   swarm: 256 * 1024,
   default: 1024 * 1024,
 } as const;
+
+/**
+ * Messages one channel may have sent but not yet seen consumed.
+ *
+ * The byte windows alone admit tens of thousands of small subduction frames, and the router dispatches every message
+ * downstream on its own (for a replicator, one RPC into its Durable Object), so request count, not bytes, is what
+ * overloads the object. Caps one channel at `64 / RTT` messages per second, ~320/s at 200 ms.
+ */
+export const EDGE_FLOW_CONTROL_MAX_MESSAGES = 64;
 
 /** Credit window for the channel carrying `serviceId`, per {@link EDGE_FLOW_CONTROL_WINDOWS}. */
 export const edgeFlowControlWindow = (serviceId?: string): number => {
@@ -460,6 +475,12 @@ export const edgeFlowControlWindow = (serviceId?: string): number => {
       return EDGE_FLOW_CONTROL_WINDOWS.default;
   }
 };
+
+/**
+ * Prefix of the `Sec-WebSocket-Protocol` entry carrying the client's SDK version (e.g. `dxos-version.0.12.0`).
+ * A subprotocol entry because browsers cannot set headers on a WebSocket; the router never selects it.
+ */
+export const EDGE_CLIENT_VERSION_PROTOCOL_PREFIX = 'dxos-version.';
 
 // TODO(mykola): Reconcile with type in EDGE repo.
 export type EdgeStatus = {
@@ -489,6 +510,13 @@ export type EdgeStatus = {
     data: Record<SpaceId, { diagnostics?: any & { redFlags: string[] }; fetchError?: string }>;
     fetchError?: string;
   };
+};
+
+/** Heads of every Automerge document in a space as last indexed by the EDGE indexer. */
+export type IndexerHeadsResponse = {
+  spaceId: SpaceId;
+  indexingInProgress: boolean;
+  documents: { documentId: string; heads: string[] }[];
 };
 
 const MAX_ERROR_DEPTH = 3;
@@ -777,8 +805,32 @@ export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
 /** Crockford base32 alphabet (no I, L, O, U). Case-insensitive on the wire. */
 export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
+/**
+ * A vanity code is an admin-chosen prefix, a dash, and random characters from
+ * {@link INVITATION_CODE_ALPHABET}: `SF-MEETUP-7K2Q`. Hub-service matches codes ignoring case and
+ * dashes, so `sfmeetup7k2q` redeems it too.
+ */
+export const VANITY_PREFIX_MIN_LENGTH = 4;
+export const VANITY_PREFIX_MAX_LENGTH = 20;
+export const VANITY_SUFFIX_LENGTH = 4;
+export const VANITY_CODE_MAX_LENGTH = VANITY_PREFIX_MAX_LENGTH + 1 + VANITY_SUFFIX_LENGTH;
+/** 4-20 characters, at least 4 of them letters or digits, with single dashes between them. */
+export const VANITY_PREFIX_PATTERN = new RegExp(
+  `^(?=.{${VANITY_PREFIX_MIN_LENGTH},${VANITY_PREFIX_MAX_LENGTH}}$)(?=(?:-?[A-Za-z0-9]){${VANITY_PREFIX_MIN_LENGTH}})[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`,
+  'u',
+);
+
+export const MAX_CODES_PER_REQUEST = 1000;
+export const MAX_REDEMPTIONS_PER_CODE = 100;
+
+/**
+ * A code as a user types it: generated or vanity, any case, optionally hyphenated. Hub-service
+ * normalizes before lookup. Every issued code has at least {@link INVITATION_CODE_LENGTH} characters.
+ */
 export const InvitationCodeSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`))),
+  Schema.check(
+    Schema.isPattern(new RegExp(`^[A-Za-z0-9-]{${INVITATION_CODE_LENGTH},${2 * VANITY_CODE_MAX_LENGTH}}$`, 'u')),
+  ),
 );
 
 export const CheckEmailExistsRequestSchema = Schema.Struct({
@@ -956,9 +1008,31 @@ export const AdminGrantInvitationsRequestSchema = Schema.Struct({
 export type AdminGrantInvitationsRequest = Schema.Schema.Type<typeof AdminGrantInvitationsRequestSchema>;
 
 export const AdminCreateInvitationCodesRequestSchema = Schema.Struct({
-  count: Schema.Number,
+  count: Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: MAX_CODES_PER_REQUEST })),
   note: Schema.optional(Schema.String),
-});
+  /** Plan the redeemer inherits, overriding the default user plan. Single-use codes only. */
+  planName: Schema.optional(Schema.String),
+  /** How many accounts may sign up with each code (default 1), e.g. for an event code. */
+  maxRedemptions: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: MAX_REDEMPTIONS_PER_CODE })),
+  ),
+  /**
+   * Vanity prefix (requires `count: 1`). The code is the uppercased prefix, a dash, and
+   * {@link VANITY_SUFFIX_LENGTH} random characters, so `sf-meetup` yields e.g. `SF-MEETUP-7K2Q`.
+   */
+  prefix: Schema.optional(Schema.String.check(Schema.isPattern(VANITY_PREFIX_PATTERN))),
+}).check(
+  Schema.makeFilter((request) => {
+    const issues: Schema.FilterIssue[] = [];
+    if (request.prefix !== undefined && request.count !== 1) {
+      issues.push({ path: ['count'], issue: 'A vanity code is created one at a time; count must be 1.' });
+    }
+    if (request.planName && (request.maxRedemptions ?? 1) > 1) {
+      issues.push({ path: ['planName'], issue: 'A code that carries a plan must be single-use.' });
+    }
+    return issues;
+  }),
+);
 export type AdminCreateInvitationCodesRequest = Schema.Schema.Type<typeof AdminCreateInvitationCodesRequestSchema>;
 export type AdminCreateInvitationCodesResponse = { codes: string[] };
 
@@ -969,11 +1043,16 @@ export type AdminListInvitationCodesResponse = {
     createdAt: string;
     note?: string;
     issuedByIdentityDid?: string;
+    /** Set for single-use codes only; see `redemptionCount` for the rest. */
     redeemedByIdentityDid?: string;
-    /** ISO timestamp. */
+    /** ISO timestamp of the most recent redemption. */
     redeemedAt?: string;
     /** ISO timestamp. Set when revoked. */
     revokedAt?: string;
+    /** Absent from hubs that predate code capacity; treat as 1. */
+    maxRedemptions?: number;
+    /** Absent from hubs that predate code capacity. */
+    redemptionCount?: number;
   }>;
 };
 

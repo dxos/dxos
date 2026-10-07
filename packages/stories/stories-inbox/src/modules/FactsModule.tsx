@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as BrainSurface from '@dxos/plugin-brain/BrainSurface';
 
 /** The extracted-facts panel — plugin-brain's standalone per-space facts surface (resolves the active space itself). */

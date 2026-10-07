@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Args from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
+import * as Prompt from 'effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Args from 'effect/unstable/cli/Argument';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
-import * as Prompt from 'effect/unstable/cli/Prompt';
 import React, { useMemo } from 'react';
 import { userEvent } from 'storybook/test';
 
@@ -60,7 +60,23 @@ const colors = Command.make('colors', {}, () =>
   ),
 ).pipe(Command.withDescription('Show that ANSI styling renders.'));
 
-const demo = Command.make('demo').pipe(Command.withSubcommands([greet, ask, colors]));
+// Printed as the string a service returns, which is how a JSON response usually reaches the console.
+const json = Command.make('json', {}, () =>
+  Console.log(
+    JSON.stringify({
+      status: 'ok',
+      count: 2,
+      cached: false,
+      next: null,
+      items: [
+        { id: 'a1', title: 'Roast the beans', done: true, estimate: 1.5 },
+        { id: 'b2', title: 'Ship: the label', done: false, estimate: -1 },
+      ],
+    }),
+  ),
+).pipe(Command.withDescription('Print a JSON response, highlighted by the terminal.'));
+
+const demo = Command.make('demo').pipe(Command.withSubcommands([greet, ask, colors, json]));
 
 const DefaultStory = () => {
   const command = useMemo(() => demo, []);
@@ -70,7 +86,7 @@ const DefaultStory = () => {
       command={command}
       layer={Layer.empty}
       name='demo'
-      banner={`${BOLD}Effect CLI in the browser${RESET}\n${DIM}Try: greet world --loud · ask · colors · help${RESET}`}
+      banner={`${BOLD}Effect CLI in the browser${RESET}\n${DIM}Try: greet world --loud · ask · colors · json · help${RESET}`}
     />
   );
 };
@@ -110,5 +126,10 @@ export const Spec: Story = {
     // The shell survives the failure and keeps accepting commands.
     await runCommand(canvasElement, 'greet again', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'Hello, again.');
+
+    // A JSON response is printed indented, one key per line, rather than as the one-line string.
+    await runCommand(canvasElement, 'json', userEvent.keyboard);
+    await waitForTerminal(canvasElement, '  "status": "ok",');
+    await waitForTerminal(canvasElement, '      "title": "Ship: the label",');
   },
 };

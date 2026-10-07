@@ -90,7 +90,7 @@ failed announce must not read as a failed connection:
 ```js
 const status = { origin: location.origin, spaces: dxos.client.spaces.get().length, hasComposer: !!globalThis.composer };
 try {
-  await composer.invoke('org.dxos.plugin.layout.operation.addToast', {
+  await composer.invoke('org.dxos.operation.appToolkit.addToast', {
     id: 'agent-connected',
     title: 'Agent connected',
     description: 'An agent is running commands via the debug port. Turn the switch off to end it.',

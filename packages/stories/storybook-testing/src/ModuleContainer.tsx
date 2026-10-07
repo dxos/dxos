@@ -3,16 +3,18 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -54,8 +56,19 @@ export type ModuleLayout = ModuleSpec[][];
 export type ModuleContainerProps = {
   /** Static layout; omit when a harness contributes a runtime layout via {@link StoryLayout.Atom}. */
   layout?: ModuleLayout;
+  /**
+   * Column track sizes, underscore-separated as in a Tailwind arbitrary value (e.g. `2fr_1fr`);
+   * defaults to equal columns.
+   */
+  columns?: string;
+  /** Row track sizes per column, in the same form; a column without an entry has equal rows. */
+  rows?: readonly (string | undefined)[];
   compact?: boolean;
 };
+
+/** Grid tracks from an underscore-separated size list, else `count` equal tracks. */
+const tracks = (sizes: string | undefined, count: number): string =>
+  sizes?.replaceAll('_', ' ') ?? `repeat(${count}, minmax(0, 1fr))`;
 
 /** Stable fallback so `useAtomValue` stays unconditional when no {@link StoryLayout.Atom} is contributed. */
 const emptyLayoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
@@ -143,7 +156,7 @@ const describeBinding = (value: unknown): string => {
  * or an unregistered subject type instead of staring at a blank cell.
  */
 const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> }) => (
-  <div className='grid place-items-center p-2 text-xs text-warning'>
+  <div className='grid place-items-center p-2 text-xs text-warning-text'>
     <div className='grid gap-1 rounded-sm border border-dashed border-separator p-2 font-mono'>
       <div className='font-medium'>⚠ No surface matched this binding</div>
       <div>role: {role}</div>
@@ -167,7 +180,7 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
-  const surfaceManager = useSurfaceManager();
+  const surfaceManager = Surface.useSurfaceManager();
   useAtomValue(surfaceManager.candidatesAtom(type.role));
   const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
   const [settled, setSettled] = useState(false);
@@ -196,15 +209,15 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
  * drive its layout with this container. Provide `withAttention()` (from `@dxos/react-ui-attention/testing`)
  * in the story decorators to make attention actually track focus.
  */
-export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProps) => {
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const layoutState = useCapability(StorybookCapabilities.LayoutState);
-  const { graph } = useAppGraph();
+export const ModuleContainer = ({ layout, columns, rows, compact = false }: ModuleContainerProps) => {
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const layoutState = Hooks.useCapability(StorybookCapabilities.LayoutState);
+  const { graph } = ToolkitHooks.useAppGraph();
   const spaces = useSpaces();
   const [space] = spaces;
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
-  const [layoutAtom] = useCapabilities(StoryLayout.Atom);
+  const [layoutAtom] = Hooks.useCapabilities(StoryLayout.Atom);
   const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
 
   // Falls back to the first space only while the workspace names none that exists: a story may own
@@ -237,14 +250,14 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
 
   return (
     <div
-      className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
-      style={{ gridTemplateColumns: `repeat(${resolvedLayout.length}, minmax(0, 1fr))` }}
+      className={mx('dx-fill dx-cover grid', !compact && 'gap-2 p-2')}
+      style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (
         <div
           key={columnIndex}
           className={mx('dx-expand grid', !compact && 'gap-2')}
-          style={{ gridTemplateRows: `repeat(${column.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateRows: tracks(rows?.[columnIndex], column.length) }}
         >
           {column.map((spec, moduleIndex) => {
             const cell = normalizeCell(spec, space.id, `${columnIndex}:${moduleIndex}`);

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -27,17 +27,21 @@ export const firstOpenableChild = (
   timeoutMs: number,
 ): Effect.Effect<string | undefined> =>
   Effect.callback<string>((resume) => {
-    const [present] = openableChildren(graph, id);
-    if (present) {
-      resume(Effect.succeed(present));
-      return;
-    }
-
-    const unsubscribe = registry.subscribe(graph.connections(id, 'child'), () => {
-      const [first] = openableChildren(graph, id);
-      if (first) {
-        resume(Effect.succeed(first));
-      }
-    });
+    const unsubscribe = registry.subscribe(
+      graph.connections(id, 'child'),
+      () => {
+        const [first] = openableChildren(graph, id);
+        if (first) {
+          // The returned cleanup only runs on interruption; this runs after `subscribe` returns.
+          resume(
+            Effect.sync(() => {
+              unsubscribe();
+              return first;
+            }),
+          );
+        }
+      },
+      { immediate: true },
+    );
     return Effect.sync(unsubscribe);
   }).pipe(Effect.timeoutOrElse({ duration: `${timeoutMs} millis`, orElse: () => Effect.succeed(undefined) }));

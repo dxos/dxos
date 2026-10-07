@@ -15,13 +15,16 @@ import { IllustratorCapabilities, IllustratorEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: IllustratorEvents.Start,
 });
 // Browser-only: the entry supplies `CreateDrawingPanel`, the React form that picks the drawing
 // variant and collects its input.
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 // Migration providers stay eager: a migration missing when a space opens is a data hazard.
 export const Migrations = Capability.lazyModule(
@@ -31,19 +34,23 @@ export const Migrations = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 // Browser-only: the variant supplies the React article/card components that render a drawing.
 export const SvgVariant = Capability.lazyModule(
   'IllustratorSvgVariant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
+  {
+    provides: [IllustratorCapabilities.VariantProvider],
+    activatesOn: IllustratorEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./svg-variant.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
@@ -53,5 +60,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations, {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });

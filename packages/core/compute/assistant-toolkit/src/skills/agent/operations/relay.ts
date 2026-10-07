@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
@@ -58,7 +58,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
   Operation.opaqueHandler,

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { DXN } from '@dxos/echo';
@@ -37,4 +37,4 @@ export const correctWithLanguageModel = (
     return response.value.blocks.map((block) => ({ index: block.index, corrected: block.corrected }));
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures stay
     // recoverable so callers can retry.
-  }).pipe(Effect.provide(AiService.model(DXN.getName(model)).pipe(Layer.orDie)));
+  }).pipe(Effect.provide(AiService.languageModel(DXN.getName(model)).pipe(Layer.orDie)));

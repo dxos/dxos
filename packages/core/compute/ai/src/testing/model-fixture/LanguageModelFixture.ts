@@ -5,6 +5,12 @@
 // @import-as-namespace
 
 import { createPatch } from 'diff';
+import * as AiError from 'effect/ai/AiError';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
+import * as Response from 'effect/ai/Response';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -13,15 +19,9 @@ import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Response from 'effect/unstable/ai/Response';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import jsonStableStringify from 'json-stable-stringify';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -358,7 +358,8 @@ export type ServiceOptions = {
 
 /** Wraps an upstream {@link AiService.Service} so every model it builds replays through the fixture store. */
 export const makeService = (options: ServiceOptions): AiService.Service => ({
-  model: (model) =>
+  ...options.upstream,
+  languageModel: (model) =>
     Layer.provide(
       layer({
         modelName: model,
@@ -366,7 +367,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       }),
-      options.upstream.model(model),
+      options.upstream.languageModel(model),
     ),
 });
 

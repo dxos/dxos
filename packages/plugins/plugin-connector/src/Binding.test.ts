@@ -6,9 +6,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -22,14 +22,14 @@ import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Filter, Obj, Ref, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
@@ -353,7 +353,7 @@ describe('Binding.scaffoldRoutine', () => {
   ];
 
   test('wires an account-level trigger to the connector’s sync operation', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -377,7 +377,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -387,7 +387,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('persists nothing until the caller adds the draft', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -417,7 +417,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('names the routine after the account so several connections stay distinguishable', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
     Obj.update(connection, (connection) => Obj.setLabel(connection, 'work@example.com'));
@@ -428,7 +428,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('findRoutine locates the saved routine so deleting the connection takes it too', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -999,11 +999,11 @@ describe('Binding.syncAll', () => {
     EffectEx.runPromise(makeInvoker().invoke(TestSync, { connection: Ref.make(connection), priority }));
 });
 
-const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
+const initSpace = async (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) => {
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return defaultSpace.db;
 };
 

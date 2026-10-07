@@ -3,12 +3,12 @@
 //
 
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
@@ -105,7 +105,7 @@ export const createGraphTreeModel = (
 
 /** {@link createGraphTreeModel} over the app graph capability, memoised on its inputs. */
 export const useGraphTreeModel = (rootId: string, options: GraphTreeState): TreeModel<AppGraphNode.Node> => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const { itemOpen, itemCurrent } = options;
   return useMemo(
     () => createGraphTreeModel(graph, rootId, { itemOpen, itemCurrent }),

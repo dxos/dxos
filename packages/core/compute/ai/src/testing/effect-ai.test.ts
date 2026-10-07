@@ -9,16 +9,16 @@ import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
 import { describe, expect, it } from '@effect/vitest';
+import * as Chat from 'effect/ai/Chat';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
-import * as Chat from 'effect/unstable/ai/Chat';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -340,7 +340,7 @@ describe('LanguageModel', () => {
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+  AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.

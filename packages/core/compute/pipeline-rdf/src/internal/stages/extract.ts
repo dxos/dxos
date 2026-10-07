@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
@@ -41,16 +41,16 @@ const nullableAsAbsent = <A>(schema: Schema.Codec<A, A>) =>
 const OptionalString = nullableAsAbsent(Schema.String);
 
 // Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
-// null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
+// null) to absent. A bad enrichment value must not discard an otherwise-valid fact. The wire side is a
+// nullable string, not `Unknown`: Anthropic's structured output rejects a property schema with no type.
 const softEnum = <const A extends string>(...values: readonly A[]) =>
   Schema.optional(
-    Schema.Unknown.pipe(
+    Schema.NullOr(Schema.String).pipe(
       Schema.decodeTo(
         Schema.UndefinedOr(Schema.Literals(values)),
         SchemaTransformation.transform({
-          decode: (value) =>
-            typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
-          encode: (value) => value,
+          decode: (value) => values.find((known) => known === value),
+          encode: (value) => value ?? null,
         }),
       ),
     ),
@@ -237,9 +237,9 @@ const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.model(options?.model ?? DEFAULT_MODEL);
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL);
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.model(options.model ?? DEFAULT_MODEL, { provider });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider });
 };

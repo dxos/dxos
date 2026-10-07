@@ -6,18 +6,20 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Entity, type Type } from '@dxos/echo';
+// eslint-disable-next-line @dxos/rules/import-as-namespace -- `GraphBuilder` is this file's own class.
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Position, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import { scheduleTask, yieldOrContinue } from '#scheduler';
+import { type FrameBudget, makeFrameBudget, scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './AppGraph.ts';
 import * as Node from './AppGraphNode.ts';
@@ -234,6 +236,8 @@ export class GraphBuilder extends Builder.GraphBuilder<
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
 
+  readonly #frameBudget = makeFrameBudget();
+
   constructor({ registry, urlGrammar, decorateNode, ...graphProps }: GraphBuilderProps = {}) {
     const grammar: UrlGrammar = {
       tailSeparator: DEFAULT_TAIL_SEPARATOR,
@@ -261,6 +265,10 @@ export class GraphBuilder extends Builder.GraphBuilder<
 
   override _yield(): Promise<void> {
     return yieldOrContinue('idle');
+  }
+
+  override _frameBudget(): FrameBudget | undefined {
+    return this.#frameBudget;
   }
 
   override _onReleaseRelation(target: { id: string; relation: string }): void {
@@ -304,6 +312,8 @@ const makeStore = (
     onExpand: (id, relation) => hooks.onExpand(id, Graph.relationKey(relation)),
     onRemoveNode: hooks.onRemoveNode,
   });
+  // Connectors read node atoms between writes, so the builder keeps them pinned for its lifetime.
+  const release = Graph.retain(graph);
 
   return {
     graph,
@@ -321,6 +331,7 @@ const makeStore = (
         ._model.outgoing(id)
         .map(({ source, target, type }) => ({ source, target, relation: type })),
     constructNode: (node) => graph._constructNode(node),
+    dispose: release,
   };
 };
 
@@ -328,6 +339,20 @@ const makeStore = (
  * Creates a new GraphBuilder instance.
  */
 export const make = (params?: GraphBuilderProps): GraphBuilder => new GraphBuilder(params);
+
+/**
+ * Call from the handler of a user action, before its writes: graph updates those writes cause flush
+ * before the next paint instead of waiting out the frame budget.
+ */
+export const flushBeforePaint = (builder: GraphBuilder): void => {
+  const budget = builder._frameBudget();
+  if (!budget) {
+    return;
+  }
+  budget.flushBeforePaint();
+  // A connector an exhausted budget left dirty is not reported dirty again, so flush it under the grant too.
+  builder._scheduleDirtyFlush(true);
+};
 
 /**
  * Creates a GraphBuilder from a serialized pickle string.

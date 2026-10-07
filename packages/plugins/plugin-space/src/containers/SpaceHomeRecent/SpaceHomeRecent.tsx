@@ -2,18 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as HomeSection from '@dxos/app-toolkit/HomeSection';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Annotation, Collection, Entity, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -33,16 +38,15 @@ type SpaceScopedProps = {
  * contributor (plugin-assistant) fills the empty state instead.
  */
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
-  const schemas = useCapabilities(AppCapabilities.Schema);
+  const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
     const collectionTypename = Type.getTypename(Collection.Collection);
     const types = schemas
       .flat()
       .filter(Type.isType)
-      .filter((type) => Annotation.getTypeAnnotation(Type.getSchema(type))?.kind !== Entity.Kind.Relation)
-      .filter((type) => !Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+      .filter((type) => TypeOptions.isUserType(type))
       .filter((type) => Type.getTypename(type) !== collectionTypename);
     return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
   }, [schemas]);
@@ -73,10 +77,10 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
 };
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
-  const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
-  const label = toLocalizedString(
+  const label = Theme.toLocalizedString(
     Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );
@@ -89,11 +93,11 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   }, [invokePromise, data]);
 
   return (
-    <Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Block>
-          <Icon icon={icon} classNames={iconStyles?.text} />
-        </Card.Block>
+        <Layout.Block>
+          <Icon.Icon icon={icon} classNames={iconStyles?.text} />
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

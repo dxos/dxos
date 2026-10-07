@@ -29,6 +29,8 @@ describe('objective', () => {
     expect(evaluation.violations).toEqual([]);
     expect(evaluation.terms.map(({ id }) => id)).toEqual([
       'crossings',
+      'edge-overlaps',
+      'text-overlaps',
       'bends',
       'connector-length',
       'uneven-frame-gaps',

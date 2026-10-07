@@ -1,0 +1,108 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React from 'react';
+
+import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+
+import { meta } from '#meta';
+import { type Goal, type Memory } from '#types';
+
+export type ProfileGoal = Pick<Goal.Goal, 'id' | 'title' | 'description' | 'horizon' | 'status'>;
+export type ProfileMemory = Pick<Memory.Memory, 'id' | 'content' | 'kind' | 'origin' | 'observedAt'>;
+
+export type ProfileGraphProps = {
+  goals: readonly ProfileGoal[];
+  memories: readonly ProfileMemory[];
+};
+
+/** Icon per goal status, shared with the agent state panel. */
+export const GOAL_ICONS: Record<Goal.Status, string> = {
+  proposed: 'ph--circle-dashed--regular',
+  confirmed: 'ph--target--regular',
+  active: 'ph--play-circle--regular',
+  achieved: 'ph--check-circle--regular',
+  dropped: 'ph--x-circle--regular',
+};
+
+/** Icon per memory kind, shared with the agent state panel. */
+export const MEMORY_ICONS: Record<Memory.Kind, string> = {
+  fact: 'ph--info--regular',
+  preference: 'ph--heart--regular',
+  goal: 'ph--flag--regular',
+  commitment: 'ph--handshake--regular',
+  relationship: 'ph--users--regular',
+  event: 'ph--calendar--regular',
+  note: 'ph--note--regular',
+  directive: 'ph--gavel--regular',
+};
+
+/** What an agent knows about a person or team: their goals and the active memories about them. */
+export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  if (goals.length === 0 && memories.length === 0) {
+    return (
+      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
+        {t('profile-graph-empty.message')}
+      </Layout.Flex>
+    );
+  }
+
+  return (
+    <Layout.Flex column gap='sm'>
+      {goals.length > 0 && (
+        <Layout.Flex asChild column>
+          <section aria-label={t('profile-graph-goals.heading')}>
+            <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-goals.heading')}</h3>
+            <Listbox.Root
+              items={goals.map((goal) => ({
+                value: goal.id,
+                label: goal.title,
+                icon: GOAL_ICONS[goal.status],
+                description: [t(`goal-horizon-${goal.horizon}.label`), t(`goal-status-${goal.status}.label`)].join(
+                  ' · ',
+                ),
+              }))}
+            >
+              <Listbox.Content>
+                {goals.map((goal) => (
+                  <Listbox.Item key={goal.id} id={goal.id} />
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
+          </section>
+        </Layout.Flex>
+      )}
+      {memories.length > 0 && (
+        <Layout.Flex asChild column>
+          <section aria-label={t('profile-graph-memories.heading')}>
+            <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-memories.heading')}</h3>
+            <Listbox.Root
+              items={memories.map((memory) => ({
+                value: memory.id,
+                label: memory.content,
+                icon: MEMORY_ICONS[memory.kind],
+                description: [
+                  t(`memory-kind-${memory.kind}.label`),
+                  t(`memory-origin-${memory.origin}.label`),
+                  new Date(memory.observedAt).toLocaleDateString(),
+                ].join(' · '),
+              }))}
+            >
+              <Listbox.Content>
+                {memories.map((memory) => (
+                  <Listbox.Item key={memory.id} id={memory.id} />
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
+          </section>
+        </Layout.Flex>
+      )}
+    </Layout.Flex>
+  );
+};
+
+ProfileGraph.displayName = 'ProfileGraph';

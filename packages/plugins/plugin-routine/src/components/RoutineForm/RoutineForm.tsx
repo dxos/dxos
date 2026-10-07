@@ -11,9 +11,11 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
-import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -107,7 +109,7 @@ export type RoutineFormProps = {
  * Created with `composable()` so it carries the COMPOSABLE marker and can be the child of
  * `Panel.Content asChild` (forwards ref and merges layout props onto the scroll viewport).
  */
-export const RoutineForm = composable<HTMLDivElement, RoutineFormProps>((props, forwardedRef) => {
+export const RoutineForm = Util.composable<HTMLDivElement, RoutineFormProps>((props, forwardedRef) => {
   const { routine } = props;
   // Subscribe to the routine and its primary trigger so kind changes (from this form or externally)
   // recompute the remount key.
@@ -142,7 +144,7 @@ const RoutineFormImpl = ({
   forwardedRef,
   ...props
 }: RoutineFormImplProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
 
@@ -236,8 +238,9 @@ const RoutineFormImpl = ({
       onValuesChanged={handleValuesChanged}
       onSave={onSave}
       onCancel={onCancel}
+      testId='routine-form'
     >
-      <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
+      <Form.Viewport scroll {...Util.composableProps(props)} ref={forwardedRef}>
         <Form.Content>
           <Form.Fields schema={GeneralForm} />
 
@@ -260,10 +263,7 @@ const RoutineFormImpl = ({
 
 /** Lightweight labelled grouping for a section (no `Settings` chrome). */
 const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
-  <div className='flex flex-col mt-4'>
-    <Form.Label standalone label={title} />
-    {children}
-  </div>
+  <Form.FieldSet label={title}>{children}</Form.FieldSet>
 );
 
 //
@@ -301,11 +301,11 @@ const ActionSection = ({
 };
 
 const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
     // other non-kind value so it can't fall through and overwrite the current action.
-    <ToggleGroup
+    <ToggleGroup.Root
       type='single'
       value={value}
       onValueChange={(next) => {
@@ -314,9 +314,9 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
         }
       }}
     >
-      <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
-      <ToggleGroupItem value='runnable'>{t('action-kind.operation.label')}</ToggleGroupItem>
-    </ToggleGroup>
+      <ToggleGroup.Item value='instructions'>{t('action-kind.instructions.label')}</ToggleGroup.Item>
+      <ToggleGroup.Item value='runnable'>{t('action-kind.operation.label')}</ToggleGroup.Item>
+    </ToggleGroup.Root>
   );
 };
 

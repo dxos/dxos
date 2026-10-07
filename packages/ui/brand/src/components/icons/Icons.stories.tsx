@@ -92,7 +92,7 @@ export const Channels: Story = {
             <div style={{ filter: channel && channelMarkFilter(channel) }}>
               <Composer size={180} weight='regular' />
             </div>
-            <span className='text-sm text-description'>{label}</span>
+            <span className='text-sm text-fg-muted'>{label}</span>
           </div>
         ))}
       </div>

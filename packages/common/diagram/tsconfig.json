@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../effect"
+    },
+    {
       "path": "../invariant"
     },
     {

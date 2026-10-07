@@ -13,9 +13,9 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { ClientEvents } from '#types';
 
-import { CreateIdentity } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.CreateIdentity> = ClientOperation.CreateIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (profile) {
       const manager = yield* Capability.get(Capabilities.PluginManager);
@@ -23,7 +23,9 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       // Boot-waterfall milestone: the identity exists from here (first-run path).
       performance.mark('milestone:identity-created');
       const spaceId = yield* Identity.personalSpaceId;
-      yield* manager.activate(ClientEvents.IdentityCreated);
+      // A reset rather than an activate: after an in-place identity deletion the event has already
+      // fired for the previous identity, and a plain activate would not seed this one's spaces.
+      yield* manager.reset(ClientEvents.IdentityCreated);
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
       return {
         identityDid: identity.did,

@@ -17,7 +17,7 @@ import * as Annotation from '@dxos/echo/Annotation';
 import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -75,7 +75,7 @@ const Story = () => {
   if (!space) {
     return <Loading />;
   }
-  return <PdsBrowser space={space} role='article' />;
+  return <PdsBrowser db={space.db} role='article' />;
 };
 
 const meta = {
@@ -95,7 +95,7 @@ const meta = {
         ),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({

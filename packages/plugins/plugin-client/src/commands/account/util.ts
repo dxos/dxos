@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Options from 'effect/cli/Flag';
 import * as Effect from 'effect/Effect';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import * as Account from '@dxos/app-toolkit/Account';
 import { ClientService } from '@dxos/client';

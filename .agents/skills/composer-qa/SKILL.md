@@ -6,7 +6,7 @@ description: >-
   agent debug port, judging every step by the UI snapshot, and writing a per-run report. Use when
   asked to QA Composer, to run a plugin's `## QA` section, to verify a change end to end against
   the real app rather than a test runner, or when `/dxos:qa` is invoked. For ad-hoc probing of a
-  live page use `composer-debug`; to record a walkthrough as video use `recording-demos`.
+  live page use `composer-debug`; to record a walkthrough as video use `autocue`.
 ---
 
 # Composer QA runs
@@ -22,7 +22,7 @@ them and carry the tags a Routine selects by.
 **Sibling skills.** [`composer-debug`](../composer-debug/SKILL.md) is the transport reference —
 the port protocol, what is in scope, snippet rules and the gotchas — with a read-only posture on
 the user's own profile. This skill is the mutating runbook on a disposable profile, so its consent
-model differs (§2) and it starts its own server (§3). [`recording-demos`](../recording-demos/SKILL.md)
+model differs (§2) and it starts its own server (§3). [`autocue`](../autocue/SKILL.md)
 drives the same tests for a video rather than a verdict.
 
 ## 1. Pick what to run

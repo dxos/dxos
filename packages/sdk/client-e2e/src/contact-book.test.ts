@@ -3,18 +3,24 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import type { Space } from '@dxos/client-protocol';
+import { MemoryEdgeInbox } from '@dxos/client-services/testing';
+import { SpaceMember_Role } from '@dxos/client/echo';
 import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '@dxos/client/testing';
 import { Obj } from '@dxos/echo';
-import { type PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { InboxService } from '@dxos/protocols/rpc';
+import { Message, SpaceInvitationMessage } from '@dxos/types';
 import { range } from '@dxos/util';
 
 describe('ContactBook', () => {
@@ -64,6 +70,64 @@ describe('ContactBook', () => {
       await space2.db.flush();
       await expectDocumentReplicated(guestSpace, document);
     });
+
+    test('admits with the requested role', async () => {
+      const [client1, client2] = await createInitializedClients(2);
+      const space1 = await client1.spaces.create();
+      await inviteMember(space1, client2);
+      const [contact] = await waitForContactBookSize(client1, 1);
+      const space2 = await client1.spaces.create();
+      await space2.admitContact(contact, SpaceMember_Role.READER);
+      await joinSpaceAndCheck(space2, client2);
+      expect(memberRole(space2, client2)).to.eq(SpaceMember_Role.READER);
+    });
+
+    test('delivers an invitation message through the inbox relay', async () => {
+      const inboxRelay = new MemoryEdgeInbox();
+      const [client1, client2] = await createInitializedClients(2, { inboxRelay });
+      const space1 = await client1.spaces.create();
+      await inviteMember(space1, client2);
+      const [contact] = await waitForContactBookSize(client1, 1);
+      const space2 = await client1.spaces.create();
+      await space2.admitContact(contact);
+
+      const sender = client1.halo.identity.get();
+      invariant(sender);
+      await client1.halo.inbox.sendMessage({
+        recipientIdentityKey: requirePublicKey(contact.identityKey),
+        type: InboxService.INBOX_MESSAGE_TYPE,
+        payload: Message.encodeJson(
+          SpaceInvitationMessage.make({
+            sender: { identityDid: sender.did },
+            spaceKey: space2.key.toHex(),
+            role: SpaceMember_Role.EDITOR,
+          }),
+        ),
+      });
+
+      await waitForCondition({ condition: () => client2.halo.inbox.messages.get().length === 1 });
+      const [message] = client2.halo.inbox.messages.get();
+      expect(message.senderIdentityKey.toHex()).to.eq(requirePublicKey(sender.identityKey).toHex());
+      const invitation = Option.getOrThrow(
+        SpaceInvitationMessage.match(Option.getOrThrow(Message.decodeJson(message.payload))),
+      );
+      expect(invitation.spaceKey).to.eq(space2.key.toHex());
+
+      // The message is only a pointer: the admission is what lets the recipient join.
+      const joined = await client2.spaces.joinBySpaceKey(PublicKey.from(invitation.spaceKey));
+      expect(joined.key.toHex()).to.eq(space2.key.toHex());
+    });
+
+    test('admits as editor by default', async () => {
+      const [client1, client2] = await createInitializedClients(2);
+      const space1 = await client1.spaces.create();
+      await inviteMember(space1, client2);
+      const [contact] = await waitForContactBookSize(client1, 1);
+      const space2 = await client1.spaces.create();
+      await space2.admitContact(contact);
+      await joinSpaceAndCheck(space2, client2);
+      expect(memberRole(space2, client2)).to.eq(SpaceMember_Role.EDITOR);
+    });
   });
 
   const expectDocumentReplicated = async (space: Space, expected: TestSchema.TextV0Type) => {
@@ -83,7 +147,8 @@ describe('ContactBook', () => {
       expect(client1.halo.contacts.get().length).to.eq(0);
       await inviteMember(space, client2);
       const contacts = await waitForContactBookSize(client1, 1);
-      expectInContactBook(contacts, client2);
+      const contact = expectInContactBook(contacts, client2);
+      expect(contact.did).to.eq(client2.halo.identity.get()?.did);
     });
 
     test('same contact in multiple spaces', async () => {
@@ -125,13 +190,16 @@ describe('ContactBook', () => {
     });
   });
 
-  const createInitializedClients = async (count: number): Promise<Client[]> => {
+  const createInitializedClients = async (
+    count: number,
+    options?: Parameters<TestBuilder['createLocalClientServices']>[0],
+  ): Promise<Client[]> => {
     const testBuilder = new TestBuilder();
     const clients = range(
       count,
       () =>
         new Client({
-          services: testBuilder.createLocalClientServices(),
+          services: testBuilder.createLocalClientServices(options),
         }),
     );
     const initialized = await Promise.all(
@@ -167,6 +235,11 @@ describe('ContactBook', () => {
 
   const findSpace = (client: Client, spaceKey: PublicKey) => {
     return client.spaces.get().find((s) => s.key.equals(spaceKey))!;
+  };
+
+  const memberRole = (space: Space, client: Client) => {
+    const identityKey = requirePublicKey(client.halo.identity.get()?.identityKey);
+    return space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(identityKey))?.role;
   };
 
   const joinSpaceAndCheck = async (host: Space, guest: Client) => {

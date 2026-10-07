@@ -38,8 +38,6 @@ export type RecoveryHelpers = {
   reset: () => Promise<void>;
   log: (message: string) => void;
   status: () => Record<string, unknown>;
-  /** Delete the stored Subduction remote heads (stops the recovery client first, since OPFS access is exclusive). */
-  deleteRemoteHeads: () => Promise<{ deleted: number; elapsedMs: number }>;
   compactDocuments: (options?: {
     spaceId?: string;
     objectIds?: string[];

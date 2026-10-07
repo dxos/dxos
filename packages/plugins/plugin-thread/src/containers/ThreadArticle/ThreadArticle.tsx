@@ -2,21 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Util from '@dxos/react-ui/Util';
 import { Message, type Thread } from '@dxos/types';
-import { isNonNullable } from '@dxos/util';
 
 import { MessageThread } from '#components';
 import { useStatus } from '#hooks';
 
-export type ThreadArticleProps = ThemedClassName<
+export type ThreadArticleProps = Util.ThemedClassName<
   {
     thread: Thread.Thread;
     context?: Obj.Unknown;
@@ -28,7 +29,7 @@ export type ThreadArticleProps = ThemedClassName<
  * Renders an AutoMerge {@link Thread} as a chat: appends new messages by pushing
  * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
  */
-export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
+export const ThreadArticle = Util.composable<HTMLDivElement, ThreadArticleProps>(
   ({ thread, context, autoFocus, current, ...props }, forwardedRef) => {
     // Members and presence are space-scoped; a thread outside a space has nothing to resolve against.
     const space = getSpace(thread);
@@ -37,9 +38,17 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     const members = useMembers(space?.id);
     const activity = useStatus(space, id);
 
-    const messages = useMemo(
-      () => thread.messages.map((message) => message.target).filter(isNonNullable),
-      [thread.messages],
+    const messages = useAtomValue(
+      useMemo(
+        () =>
+          Atom.make((get) =>
+            (get(Obj.atomProperty(thread, 'messages')) ?? []).flatMap((message) => {
+              const value = get(message.atom);
+              return value ? [value] : [];
+            }),
+          ),
+        [thread],
+      ),
     );
 
     const handleSend = (text: string) => {
@@ -64,10 +73,10 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
 
     return (
       <Panel.Root>
-        <Panel.Toolbar></Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Header></Panel.Header>
+        <Panel.Body asChild>
           <MessageThread
-            {...composableProps(props)}
+            {...Util.composableProps(props)}
             id={id}
             identity={identity}
             members={members}
@@ -78,7 +87,7 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
             current={current}
             ref={forwardedRef}
           />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

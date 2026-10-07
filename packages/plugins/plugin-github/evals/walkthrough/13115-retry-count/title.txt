@@ -1,0 +1,1 @@
+client-services: raise the EDGE notarization retry count to 5 (#13115)

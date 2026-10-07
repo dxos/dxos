@@ -4,12 +4,11 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import React, { type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useContext, useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
@@ -53,17 +52,6 @@ const ALL: GraphModel = {
   ],
 };
 
-const RegistryWrapper = ({ children }: { children: ReactNode }) => {
-  const [registry] = useState(() => Registry.make());
-  return <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>;
-};
-
-const withRegistry: Decorator = (Story) => (
-  <RegistryWrapper>
-    <Story />
-  </RegistryWrapper>
-);
-
 const GraphPanel = ({ graph, overlay }: { graph: Atom.Writable<GraphModel>; overlay: Atom.Writable<Overlay> }) => {
   const registry = useContext(RegistryContext);
   const value = useAtomValue(graph);
@@ -89,23 +77,23 @@ const GraphPanel = ({ graph, overlay }: { graph: Atom.Writable<GraphModel>; over
   };
   return (
     <div className='flex flex-col gap-1 p-2 text-sm font-mono overflow-y-auto'>
-      <div className='text-description'>nodes</div>
+      <div className='text-fg-muted'>nodes</div>
       {ALL.nodes.map((node) => (
         <label key={node.id} className='flex items-center gap-2'>
           <input type='checkbox' checked={present.has(node.id)} onChange={() => toggle(node.id)} />
           {node.label}
         </label>
       ))}
-      <div className='text-description mt-2'>edges</div>
+      <div className='text-fg-muted mt-2'>edges</div>
       {value.edges.map((edge) => (
         <div key={edge.id}>
-          {edge.from} <span className='text-subdued'>→</span> {edge.to}
+          {edge.from} <span className='text-fg-subtle'>→</span> {edge.to}
         </div>
       ))}
-      <div className='text-description mt-2'>overrides</div>
+      <div className='text-fg-muted mt-2'>overrides</div>
       {Object.entries(overrides.positions).map(([id, point]) => (
         <div key={id}>
-          {id} <span className='text-subdued'>@</span> {Math.round(point.x)}, {Math.round(point.y)}
+          {id} <span className='text-fg-subtle'>@</span> {Math.round(point.x)}, {Math.round(point.y)}
         </div>
       ))}
     </div>
@@ -124,7 +112,13 @@ const DefaultStory = () => {
   const projection = useSceneProjection({ store, atoms, createProjection });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <SceneView store={store} root={DYNAMIC_SCENE_ID} atoms={atoms} createProjection={createProjection} />
+      <SceneView.Root store={store} root={DYNAMIC_SCENE_ID} atoms={atoms} createProjection={createProjection}>
+        <SceneView.Canvas />
+        <SceneView.Navigation />
+        <SceneView.Actions />
+        <SceneView.Debug />
+        <SceneView.Palette />
+      </SceneView.Root>
       <GraphPanel graph={graph} overlay={overlay} />
       <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>

@@ -3,12 +3,11 @@
 //
 
 import { render, screen } from '@solidjs/testing-library';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, expect, test } from 'vitest';
 
-import { PluginManagerContext } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
 import { useCapabilities, useCapability } from './useCapabilities.ts';
@@ -31,7 +30,7 @@ describe('useCapabilities', () => {
     };
 
     render(() => (
-      <ContextProtocolProvider context={PluginManagerContext} value={mockManager}>
+      <ContextProtocolProvider context={PluginManager.Context} value={mockManager}>
         <TestComponent />
       </ContextProtocolProvider>
     ));
@@ -48,7 +47,7 @@ describe('useCapability', () => {
     };
 
     render(() => (
-      <ContextProtocolProvider context={PluginManagerContext} value={mockManager}>
+      <ContextProtocolProvider context={PluginManager.Context} value={mockManager}>
         <TestComponent />
       </ContextProtocolProvider>
     ));
@@ -71,7 +70,7 @@ describe('useCapability', () => {
 
     expect(() =>
       render(() => (
-        <ContextProtocolProvider context={PluginManagerContext} value={emptyManager}>
+        <ContextProtocolProvider context={PluginManager.Context} value={emptyManager}>
           <TestComponent />
         </ContextProtocolProvider>
       )),

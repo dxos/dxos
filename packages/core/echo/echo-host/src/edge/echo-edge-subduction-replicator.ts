@@ -358,9 +358,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _frameBatching: boolean;
 
   // Outbound batching state. `#pending` holds encoded-size-tracked inner frames awaiting a
-  // flush; `#firstFrameSent` forces the handshake (first frame) to go single so session
-  // establishment is version-independent; `#inFlightFlush` bounds buffering to one flush at a
-  // time so a slow socket cannot grow the buffer without applying write backpressure.
+  // flush; `#firstFrameSent` sends the handshake (first frame) alone, see `_sendMessage`;
+  // `#inFlightFlush` bounds buffering to one flush at a time so a slow socket cannot grow the
+  // buffer without applying write backpressure.
   #pendingFrames: SubductionConnectionMessage[] = [];
   #pendingBytes = 0;
   #flushTimer?: ReturnType<typeof setTimeout>;
@@ -641,15 +641,15 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           });
           return;
         }
-        // The first frame of a connection (the handshake) is sent alone so the edge can
-        // establish the session before any batched data arrives, keeping session setup
-        // independent of whether the peer understands batches.
+        // The handshake goes alone, so the edge starts the session from it, and in a batch envelope,
+        // because the edge relays its replies one router message per frame until this connection has
+        // sent it a batch.
         if (!this.#firstFrameSent) {
           this.#firstFrameSent = true;
           await this.#sendEnveloped({
-            type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+            type: MESSAGE_TYPE_SUBDUCTION_BATCH,
             connectionId: this._connectionId,
-            subductionFrame: message,
+            frames: [message],
           });
           return;
         }

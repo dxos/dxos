@@ -10,8 +10,8 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager.ts';
 import {
+  INITIAL_URL,
   appendBenchmarkRow,
   appendRunSample,
   collectStartupReport,

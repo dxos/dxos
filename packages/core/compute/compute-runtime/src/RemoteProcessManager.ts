@@ -7,12 +7,13 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import type * as RpcGroup from 'effect/rpc/RpcGroup';
 import type * as Scope from 'effect/Scope';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -20,11 +21,10 @@ import type * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-// `Process.Info.error` is already a `SerializedError`, so the snapshot and its exit event speak the
+// `Process.Process.error` is already a `SerializedError`, so the snapshot and its exit event speak the
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager.ts';
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
@@ -40,10 +40,10 @@ export type CancelTarget = {
 };
 
 /**
- * A process on a remote runtime as this client sees it: {@link Process.Info} plus the one thing a
+ * A process on a remote runtime as this client sees it: {@link Process.Process} plus the one thing a
  * remote caller cannot otherwise know.
  */
-export interface Snapshot extends Process.Info {
+export interface Snapshot extends Process.Process {
   /**
    * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
    * Distinguishes hybernation waiting on more queued turn work from hybernation waiting only on
@@ -58,8 +58,16 @@ export interface Snapshot extends Process.Info {
  * read advances over, so a client that reconnects resumes where it left off.
  */
 export type Event =
-  | { readonly _tag: 'output'; readonly seq: number; readonly data: unknown }
-  | { readonly _tag: 'trace'; readonly seq: number; readonly message: Trace.Message }
+  | {
+      readonly _tag: 'output';
+      readonly seq: number;
+      readonly data: unknown;
+    }
+  | {
+      readonly _tag: 'trace';
+      readonly seq: number;
+      readonly message: Trace.Message;
+    }
   | {
       readonly _tag: 'exited';
       readonly seq: number;
@@ -85,15 +93,27 @@ export interface EventPage {
   readonly snapshot: Snapshot;
 }
 
+/**
+ * Deduplication token for a command that may be delivered more than once.
+ *
+ * A queued client (`RemoteCommandQueue`) retries a command whose acknowledgement it never saw, so
+ * without it a redelivered spawn would start a second process and a redelivered input would be
+ * applied twice. A host that does not implement deduplication simply ignores the field, which is why
+ * it is optional: the at-most-once guarantee is the host's to give.
+ */
+export interface Idempotent {
+  readonly idempotencyKey?: string;
+}
+
 /** Addresses one process. Every verb is space-scoped because processes are per-space on the host. */
 export interface ProcessTarget {
   readonly spaceId: SpaceId;
   readonly pid: Process.ID;
 }
 
-export interface SpawnRequest {
+export interface SpawnRequest extends Idempotent {
   readonly spaceId: SpaceId;
-  /** `Process.Process.key` of a process the host hosts; a definition cannot cross the wire. */
+  /** `Operation.Durable.key` of a process the host hosts; a definition cannot cross the wire. */
   readonly key: string;
   readonly name?: string;
   readonly parentPid?: Process.ID;
@@ -101,7 +121,7 @@ export interface SpawnRequest {
   readonly annotations?: Annotation.Dictionary;
 }
 
-/** Filters mirroring `ProcessManager.ListOptions`. */
+/** Filters mirroring `Process.ListOptions`. */
 export interface ListRequest {
   readonly spaceId: SpaceId;
   readonly key?: string;
@@ -111,7 +131,7 @@ export interface ListRequest {
 
 /**
  * Full control surface for processes hosted by a remote runtime, mirroring the local
- * `ProcessManager.Manager`/`ProcessManager.Handle` verbs.
+ * `ProcessManager.Manager`/`Process.Handle` verbs.
  *
  * Stated in domain types, not wire types: the `ProcessProtocol` shapes are the transport's business
  * and decoding them is the implementation's job, so a consumer of this interface never sees them.
@@ -134,7 +154,7 @@ export interface Control {
   status(target: ProcessTarget): Effect.Effect<Snapshot>;
 
   /** Submit an input already encoded via the process definition's input schema. */
-  submitInput(target: ProcessTarget & { readonly input: unknown }): Effect.Effect<void>;
+  submitInput(target: ProcessTarget & Idempotent & { readonly input: unknown }): Effect.Effect<void>;
 
   /**
    * Build a client for the process's declared RPC group. The host serves the group as
@@ -145,7 +165,7 @@ export interface Control {
     target: ProcessTarget & { readonly group: RpcGroup.RpcGroup<Rpcs> },
   ): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope>;
 
-  terminate(target: ProcessTarget): Effect.Effect<void>;
+  terminate(target: ProcessTarget & Idempotent): Effect.Effect<void>;
 
   /**
    * Read the process's outputs and ephemeral trace at or after `cursor`. Cursor-based rather than
@@ -162,12 +182,12 @@ export interface Control {
  * `@dxos/edge-compute`.
  */
 export interface Manager {
-  readonly processTree: Effect.Effect<readonly Process.Info[]>;
+  readonly processTree: Effect.Effect<readonly Process.Process[]>;
   /**
-   * Writable so {@link Manager.spawn} publishes into the same atom the aggregate `ProcessMonitor`
+   * Writable so {@link Manager.spawn} publishes into the same atom the aggregate `Process.Manager`
    * reads — otherwise a remote spawn is invisible in the process tree.
    */
-  readonly processTreeAtom: Atom.Writable<readonly Process.Info[]>;
+  readonly processTreeAtom: Atom.Writable<readonly Process.Process[]>;
 
   /**
    * Cancels the current run of a remote (edge) trigger — its in-flight execution and `runAgain`
@@ -192,25 +212,25 @@ export interface Manager {
    */
   readonly spawn?: <_Input, _Output, _Rpcs extends Rpc.Any = never>(
     options: SpawnOptions<_Input, _Output, _Rpcs>,
-  ) => Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>>;
+  ) => Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>>;
 
   /** Handles on the host's matching processes; metadata views until `Handle.hydrate` supplies a definition. */
-  readonly list?: (options: ListOptions) => Effect.Effect<readonly ProcessManager.Handle.Any[]>;
+  readonly list?: (options: ListOptions) => Effect.Effect<readonly Process.Handle.Any[]>;
 
   /** Handle on one process by id. */
-  readonly attach?: (target: ProcessTarget) => Effect.Effect<ProcessManager.Handle.Any>;
+  readonly attach?: (target: ProcessTarget) => Effect.Effect<Process.Handle.Any>;
 
   /**
    * Re-read the host's processes for a space into {@link processTreeAtom}. Needed at startup: the
    * host's processes outlive the client, so a fresh stack that started from an empty tree would
    * report nothing until the next spawn.
    */
-  readonly refreshProcessTree?: (spaceId: SpaceId) => Effect.Effect<readonly Process.Info[]>;
+  readonly refreshProcessTree?: (spaceId: SpaceId) => Effect.Effect<readonly Process.Process[]>;
 }
 
 /**
  * What {@link Manager.spawn} takes: the space to spawn in, the host's key for the process, and the
- * `ProcessManager.SpawnOptions` a remote host can honour.
+ * `Process.SpawnOptions` a remote host can honour.
  *
  * Only the `key` crosses the wire — the host resolves it against the processes it hosts — so a
  * definition is not what identifies a remote process. It supplies the input/output codecs and the
@@ -220,13 +240,19 @@ export interface Manager {
 export interface SpawnOptions<_Input = unknown, _Output = unknown, _Rpcs extends Rpc.Any = never> {
   readonly spaceId: SpaceId;
   readonly key: string;
-  readonly definition?: Process.Process<_Input, _Output, any, _Rpcs>;
+  readonly definition?: Operation.Durable<_Input, _Output, any, _Rpcs>;
   readonly name?: string;
   readonly parentProcessId?: Process.ID;
   readonly environment?: Process.Environment;
   readonly target?: URI.URI;
   readonly notify?: Operation.NotifyOptions;
   readonly annotations?: Annotation.Dictionary;
+  /**
+   * Deduplication token for this spawn (see {@link Idempotent}). A caller that re-issues the same
+   * spawn under the same key — a retry, a reload, a second click — gets the process already spawned
+   * or already queued rather than a second one.
+   */
+  readonly idempotencyKey?: string;
 }
 
 /** {@link Manager.list} filters — `ListRequest` plus the one filter the host does not index. */
@@ -243,22 +269,22 @@ export interface ListOptions extends ListRequest {
 export const makeControlVerbs = (
   control: Control,
   registry: Registry.AtomRegistry,
-  processTreeAtom: Atom.Writable<readonly Process.Info[]>,
+  processTreeAtom: Atom.Writable<readonly Process.Process[]>,
   /** Live trace source handed to every handle, so `subscribeEphemeral` is pushed rather than polled. */
   remoteTrace?: RemoteTraceMonitor.Monitor,
 ): Required<Pick<Manager, 'spawn' | 'list' | 'attach' | 'refreshProcessTree'>> => {
-  const refreshProcessTree = (spaceId: SpaceId): Effect.Effect<readonly Process.Info[]> =>
+  const refreshProcessTree = (spaceId: SpaceId): Effect.Effect<readonly Process.Process[]> =>
     control.list({ spaceId }).pipe(
-      // A `Snapshot` IS a `Process.Info` (plus `alarmDueAt`), so the tree needs no projection.
-      Effect.map((processes) => processes as readonly Process.Info[]),
+      // A `Snapshot` IS a `Process.Process` (plus `alarmDueAt`), so the tree needs no projection.
+      Effect.map((processes) => processes as readonly Process.Process[]),
       Effect.tap((tree) => Effect.sync(() => registry.update(processTreeAtom, () => tree))),
     );
 
   const makeHandle = <_Input, _Output, _Rpcs extends Rpc.Any>(
     spaceId: SpaceId,
     info: Snapshot,
-    definition?: Process.Process<_Input, _Output, any, _Rpcs>,
-  ): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> =>
+    definition?: Operation.Durable<_Input, _Output, any, _Rpcs>,
+  ): Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>> =>
     RemoteProcessHandle.RemoteProcessHandle.make<_Input, _Output, _Rpcs>({
       info,
       control,
@@ -282,6 +308,7 @@ export const makeControlVerbs = (
       target,
       notify,
       annotations: extraAnnotations,
+      idempotencyKey,
     }: SpawnOptions<_Input, _Output, _Rpcs>) =>
       Effect.gen(function* () {
         const annotations = Annotation.buildDictionary((dictionary) => {
@@ -302,6 +329,7 @@ export const makeControlVerbs = (
           ...(name !== undefined ? { name } : {}),
           ...(parentProcessId !== undefined ? { parentPid: parentProcessId } : {}),
           ...(environment !== undefined ? { environment } : {}),
+          ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
           annotations,
         });
         log('remote process spawned', { pid: info.pid, key: info.key });
@@ -310,7 +338,7 @@ export const makeControlVerbs = (
         const handle = yield* makeHandle<_Input, _Output, _Rpcs>(spaceId, info, definition).pipe(
           Effect.onError(() => control.terminate({ spaceId, pid: info.pid }).pipe(Effect.ignore)),
         );
-        // The aggregate `Process.Monitor` reads the tree atom rather than calling this manager, so
+        // The aggregate `Process.Manager` reads the tree atom rather than calling this manager, so
         // the atom has to be current by the time spawn returns. Failing to read it back does not
         // invalidate the spawn.
         yield* refreshProcessTree(spaceId).pipe(Effect.ignore);
@@ -328,10 +356,19 @@ export const makeControlVerbs = (
         .pipe(
           Effect.flatMap((processes) =>
             Effect.forEach(
+              // Re-applied here because a host may ignore any of them (EDGE filters only by key): a
+              // `target` the host dropped would hand one chat's session another chat's process.
               processes.filter(
-                // `parentProcessId` has no server-side filter (the host indexes by key/target/state),
-                // so it is applied here rather than silently ignored.
-                (info) => parentProcessId === undefined || info.parentPid === parentProcessId,
+                (info) =>
+                  Process.matchesFilter(info, {
+                    ...(key !== undefined ? { key } : {}),
+                    ...(state !== undefined ? { state } : {}),
+                    ...(parentProcessId !== undefined ? { parentPid: parentProcessId } : {}),
+                  }) &&
+                  (target === undefined ||
+                    Option.getOrUndefined(
+                      Annotation.getDictionary(info.params.annotations, Process.TargetAnnotation),
+                    ) === target),
               ),
               (info) => makeHandle(spaceId, info),
             ),
@@ -403,7 +440,7 @@ export const layerNoop: Layer.Layer<Service, never, Registry.AtomRegistry> = Lay
   Service,
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
-    const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+    const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
     registry.mount(processTreeAtom);
     return {
       processTree: Effect.sync(() => registry.get(processTreeAtom)),

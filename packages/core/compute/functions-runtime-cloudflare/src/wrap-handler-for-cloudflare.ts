@@ -7,7 +7,7 @@ import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 
 import type * as JsonSchema from '@dxos/echo/JsonSchema';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -17,6 +17,7 @@ import {
   type Presentation,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type InboxService } from '@dxos/protocols/rpc';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations/index.ts';
 
@@ -31,6 +32,34 @@ export type RecoverIdentityArgs =
   | { external: RecoverIdentityRequest_ExternalSignature };
 
 /**
+ * User-to-user messages relayed through EDGE in signed envelopes.
+ */
+export interface HaloInbox {
+  /**
+   * Pending messages whose signature, sender and recipient have been verified, oldest first.
+   * Not filtered by contact book: callers decide which senders to show.
+   */
+  get messages(): MulticastObservable<readonly InboxService.InboxMessage[]>;
+
+  /**
+   * `account-required` while EDGE refuses this identity's inbox because it is not linked to an
+   * account; `messages` is then empty because nothing can be delivered, not because nothing was sent.
+   */
+  get status(): MulticastObservable<InboxService.Status>;
+
+  /**
+   * Signs and sends a message to a known identity.
+   * Resolves once the relay has accepted it, not once the recipient has received it; rejects with
+   * `InboxPayloadTooLargeError` when the envelope exceeds what EDGE accepts, and with
+   * `InboxAccountRequiredError` when this identity is not linked to an account.
+   */
+  sendMessage(request: InboxService.SendMessageRequest): Promise<void>;
+
+  /** Marks messages handled for this identity, on all of its devices. */
+  ack(ids: readonly string[]): Promise<void>;
+}
+
+/**
  * TODO(burdon): Public API (move comments here).
  */
 export interface Halo {
@@ -40,6 +69,7 @@ export interface Halo {
   get contacts(): MulticastObservable<Contact[]>;
   get invitations(): MulticastObservable<CancellableInvitation[]>;
   get credentials(): MulticastObservable<Credential[]>;
+  get inbox(): HaloInbox;
 
   createIdentity(options?: ProfileDocument, deviceProfile?: DeviceProfileDocument): Promise<Identity>;
   recoverIdentity(args: RecoverIdentityArgs): Promise<Identity>;

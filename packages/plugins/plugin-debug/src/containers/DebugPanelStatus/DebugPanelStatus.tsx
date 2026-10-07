@@ -4,18 +4,14 @@
 
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import {
-  FloatingPanel,
-  type FloatingPanelPoint,
-  type FloatingPanelSize,
-  IconButton,
-  useTranslation,
-} from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as FloatingPanel from '@dxos/react-ui/FloatingPanel';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -28,9 +24,9 @@ import {
 } from '../DebugPanel/index.ts';
 
 /** Room for the log table to breathe; the console fits itself to whatever it is given. */
-const DEFAULT_SIZE: FloatingPanelSize = { width: 1024, height: 384 };
+const DEFAULT_SIZE: FloatingPanel.Size = { width: 1024, height: 384 };
 
-const MIN_SIZE: FloatingPanelSize = { width: 480, height: 240 };
+const MIN_SIZE: FloatingPanel.Size = { width: 480, height: 240 };
 
 /** Clear of the status bar the panel opens from. */
 const MARGIN = 8;
@@ -47,11 +43,11 @@ export type DebugPanelStatusProps = {
  * port — an agent can evaluate code in this page — so it must be visible without opening settings.
  */
 export const DebugPanelStatus = ({ controller = getDebugPortController() }: DebugPanelStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const { position, size = DEFAULT_SIZE, mode = 'docked' } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
   const { update } = useViewStateActions(debugPanelAspect, DEBUG_PANEL_CONTEXT);
@@ -84,12 +80,12 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
     [update, invokePromise],
   );
   const handlePositionChangeEnd = useCallback(
-    (next: FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
+    ({ position }: { position: FloatingPanel.Point }) => update((prev) => ({ ...prev, position })),
     [update],
   );
 
   const handleSizeChangeEnd = useCallback(
-    (next: FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
+    ({ size }: { size: FloatingPanel.Size }) => update((prev) => ({ ...prev, size })),
     [update],
   );
   // First opening: centred above the status bar, where the popover it replaces used to sit. A
@@ -112,7 +108,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
   return (
     <FloatingPanel.Root
       open={mode === 'floating' && floatingOpen}
-      onOpenChange={setFloatingOpen}
+      onOpenChange={({ open }) => setFloatingOpen(open)}
       defaultSize={size}
       minSize={MIN_SIZE}
       getAnchorPosition={getAnchorPosition}
@@ -125,10 +121,10 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       <StatusBar.Item classNames='relative'>
         {mode === 'floating' ? (
           <FloatingPanel.Trigger asChild>
-            <IconButton variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
+            <Button.Root variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
           </FloatingPanel.Trigger>
         ) : (
-          <IconButton
+          <Button.Root
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly
@@ -145,28 +141,25 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
           />
         )}
       </StatusBar.Item>
-      <FloatingPanel.Portal>
-        <FloatingPanel.Content>
-          <DebugPanel.Root>
-            <FloatingPanel.Header classNames='pl-1'>
-              <FloatingPanel.DragTrigger>
-                <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
-              </FloatingPanel.DragTrigger>
-              {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
-              <FloatingPanel.Control>
-                <DebugPanelHeader mode={mode} onModeChange={handleModeChange} density='sm' />
-                <FloatingPanel.StageTrigger stage='minimized' />
-                <FloatingPanel.StageTrigger stage='default' />
-                <FloatingPanel.CloseTrigger />
-              </FloatingPanel.Control>
-            </FloatingPanel.Header>
-            <FloatingPanel.Body classNames='grid'>
-              <DebugPanel.Body />
-            </FloatingPanel.Body>
-          </DebugPanel.Root>
-          <FloatingPanel.Resizers />
-        </FloatingPanel.Content>
-      </FloatingPanel.Portal>
+      <FloatingPanel.Content>
+        <DebugPanel.Root>
+          <FloatingPanel.Header classNames='pl-1'>
+            <FloatingPanel.DragTrigger>
+              <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
+            </FloatingPanel.DragTrigger>
+            {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
+            <FloatingPanel.Control>
+              <DebugPanelHeader mode={mode} onModeChange={handleModeChange} size='sm' />
+              <FloatingPanel.StageTrigger stage='minimized' />
+              <FloatingPanel.StageTrigger stage='default' />
+              <FloatingPanel.CloseTrigger />
+            </FloatingPanel.Control>
+          </FloatingPanel.Header>
+          <FloatingPanel.Body classNames='grid'>
+            <DebugPanel.Body />
+          </FloatingPanel.Body>
+        </DebugPanel.Root>
+      </FloatingPanel.Content>
     </FloatingPanel.Root>
   );
 };

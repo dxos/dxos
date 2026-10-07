@@ -70,6 +70,8 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
       `MarkdownEditor — WithEmbed` + unit tests pin the first-mount path.
 - [ ] Follow-ups tracked in react-ui-list/docs/TREE.md §5 (multi-select, end-of-row keyboard
       access) and DESIGN.md §2 (popover motion promotion to `popoverTheme.content`).
+- [ ] **Card shadow in light mode** — cards read flat against light surfaces; give `Card.Root` a
+      subtle shadow in light mode only (dark mode keeps its border/surface contrast). (user, 2026-09-28)
 - [ ] **Flake (repo-wide, not this project)**: `stories-assistant:test-storybook` intermittently
       fails all CI attempts with `EdgeClient._connect` errors from story decorators (shard 3 red on
       both PRs 2026-08-31; passes locally on retry). Candidate for trunk quarantine or stubbing the

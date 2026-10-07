@@ -6,11 +6,11 @@ import type { Heads } from '@automerge/automerge';
 import type { DocumentId } from '@automerge/automerge-repo';
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { log } from '@dxos/log';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 

@@ -82,4 +82,11 @@ describe('wakeUpPrompt', () => {
   it('falls back to a generic continuation prompt without a reminder', ({ expect }) => {
     expect(wakeUpPrompt(NOW, null)).toContain('Continue with whatever you intended');
   });
+
+  it('states the self-wake budget, and warns on the last wake', ({ expect }) => {
+    expect(wakeUpPrompt(NOW, null, { wake: 3, max: 10 })).toContain(
+      'self-wake 3 of 10 before the user must write again',
+    );
+    expect(wakeUpPrompt(NOW, null, { wake: 10, max: 10 })).toContain('further alarms will not wake you');
+  });
 });

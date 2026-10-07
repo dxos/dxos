@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 import type * as Observability from '@dxos/observability/Observability';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -91,7 +91,7 @@ export const Default: Story = {
   decorators: [
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           config: makeConfig(),
           onClientInitialized: ({ client }) =>
@@ -110,7 +110,7 @@ export const WithDownloadLogs: Story = {
   decorators: [
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           config: makeConfig(),
           onClientInitialized: ({ client }) =>

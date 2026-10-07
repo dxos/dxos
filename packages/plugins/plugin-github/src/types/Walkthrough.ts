@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { PullRequest } from '@dxos/types';
 
 /**
@@ -47,8 +46,9 @@ export class Walkthrough extends Type.makeObject<Walkthrough>(DXN.make('org.dxos
     total: Schema.Number.pipe(Schema.annotate({ title: 'Hunks total' }), Schema.optional),
   }).pipe(
     Schema.annotate({ title: 'Walkthrough', description: 'A narrated reading of a pull request.' }),
-    LabelAnnotation.set(['title', 'commit']),
+    Annotation.LabelAnnotation.set(['title', 'commit']),
     Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -12,5 +12,8 @@ export type { NavigationHandlerOptions } from './navigation-handler.ts';
 
 export const NavigationHandler = AppCapability.navigationHandler(() => import('./navigation-handler.ts'), {
   requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
-  props: (options: SpaceSchema.SpacePluginOptions) => ({ invitationProp: options.invitationProp }),
+  props: (options: SpaceSchema.SpacePluginOptions) => ({
+    invitationProp: options.invitationProp,
+    joinSpaceKeyProp: options.joinSpaceKeyProp,
+  }),
 });

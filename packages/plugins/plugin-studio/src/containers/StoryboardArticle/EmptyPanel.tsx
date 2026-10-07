@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Panel } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 
 export type EmptyPanelProps = {
   label: string;
@@ -19,7 +19,7 @@ export type EmptyPanelProps = {
  * actions (Play) all the same.
  */
 export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const menuActions = useMenuBuilder(
     (get) => {
       const builder = MenuBuilder.make().separator('gap');
@@ -33,12 +33,12 @@ export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='bg-scrim-surface'>
-        <Empty classNames='h-full' label={label} />
-      </Panel.Content>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
+        <Status.Empty classNames='h-full'>{label}</Status.Empty>
+      </Panel.Body>
     </Panel.Root>
   );
 };

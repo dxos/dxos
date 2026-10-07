@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { Provider } from '@dxos/ai';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { ChatView } from '@dxos/react-ui-assistant/types';
 
@@ -67,6 +67,20 @@ export const Settings = Schema.Struct({
     }),
   ),
   modelDefaults: Schema.optional(ModelDefaults.annotate({ title: 'Model defaults' })),
+  codeMode: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Code mode (experimental)',
+      description:
+        'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin, so enable it only for trusted content. Applies to agents started after the change.',
+    }),
+  ),
+  defaultAgent: Schema.optional(
+    Schema.String.annotate({
+      title: 'Default agent',
+      description:
+        'Agent that one-click "Assign to agent" hands tasks to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
+    }),
+  ),
   tracePanelDebug: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Trace panel debug',

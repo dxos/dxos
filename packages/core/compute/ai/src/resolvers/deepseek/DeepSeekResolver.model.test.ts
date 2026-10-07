@@ -3,13 +3,13 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { TestHelpers } from '@dxos/effect/testing';
 
@@ -49,7 +49,7 @@ const WeatherLayer = WeatherToolkit.toLayer({
   }),
 });
 
-const TestLayer = AiService.model(FLASH).pipe(Layer.provide(TestAiService({ preset: 'deepseek' })));
+const TestLayer = AiService.languageModel(FLASH).pipe(Layer.provide(TestAiService({ preset: 'deepseek' })));
 
 /**
  * Replays a recorded DeepSeek turn that calls two tools at once — the shape that crashed the parser

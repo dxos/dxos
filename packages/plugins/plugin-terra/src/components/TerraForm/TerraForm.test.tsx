@@ -6,14 +6,14 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { ThemeProvider } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { Terra } from '#types';
 
 import { TerraForm } from './TerraForm.tsx';
 
 // `Form.Field`'s label/status chrome and the `Slider` primitive read theme tokens via `useThemeContext`.
-const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider>{children}</ThemeProvider>;
+const Wrapper = ({ children }: PropsWithChildren) => <Theme.Provider>{children}</Theme.Provider>;
 
 const config: Terra.TerraConfig = {
   seed: 'terra-1',

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
@@ -19,7 +19,7 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.event'
   Schema.Struct({
     id: Obj.ID,
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
     owner: Actor.Actor,
     attendees: Schema.Array(Actor.Actor),
     startDate: Schema.String, // TODO(burdon): Date.
@@ -41,6 +41,7 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.event'
     Annotation.LabelAnnotation.set(['title']),
     Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

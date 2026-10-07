@@ -77,6 +77,12 @@ const WorkingSetItem = Object.freeze({
           // A core carries no index timestamps; `tryExecute` already declines these plans.
           key[aggregate.name] = null;
           break;
+        case 'time':
+          key[aggregate.name] = GroupBy.truncateTime(
+            WorkingSetItem.getAggregateProperty(item, aggregate.property),
+            aggregate.unit,
+          );
+          break;
       }
     }
     return key;
@@ -88,6 +94,7 @@ export type WorkingSetDataProvider = {
   allCores(): ObjectCore[];
   getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
+  areStrongDepsResolved(core: ObjectCore): boolean;
 };
 
 /**
@@ -197,7 +204,11 @@ export class WorkingSetQueryExecutor {
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
             const core = this._provider.getCoreById(id, true);
-            const item = core && this._provider.areStrongDepsSatisfied(core) ? this._coreToItem(core) : undefined;
+            // Resolved, not satisfied: an id selector names one object the caller already holds an
+            // id for, so a dependency that is settled unreachable must still surface it. Requiring
+            // satisfaction here left an object that `getObjectById` returns unloadable by its own
+            // reference, with `Ref.tryLoad` waiting on a closure that will never complete.
+            const item = core && this._provider.areStrongDepsResolved(core) ? this._coreToItem(core) : undefined;
             if (item) {
               newItems.push(item);
             }
@@ -535,9 +546,9 @@ export class WorkingSetQueryExecutor {
   private _compareByOrder(itemA: WorkingSetItem, itemB: WorkingSetItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        // The working set has no queue/insertion order (that lives in the feed index); fall back
-        // to a stable id ordering so results are deterministic.
-        const comparison = itemA.objectId.localeCompare(itemB.objectId);
+        // Code-unit order, as the host sorts: a locale comparison disagrees with it on a
+        // mixed-case pair of ids, and the two sources' results are merged by position.
+        const comparison = itemA.objectId < itemB.objectId ? -1 : itemA.objectId > itemB.objectId ? 1 : 0;
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'rank':
@@ -596,7 +607,8 @@ export class WorkingSetQueryExecutor {
   }
 }
 
-const MAX_DEPTH_FOR_CHILD_OF_TRACING = 16;
+/** Matches the host executor and `DeletionResolver`, so a child resolves the same on both sides. */
+const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
 
 /** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
 const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;
@@ -615,13 +627,16 @@ const _compareValues = (valueA: unknown, valueB: unknown): number => {
   if (valueB == null) {
     return -1;
   }
+  // Code-unit order, the collation the host's SQLite sort uses.
   if (typeof valueA === 'string' && typeof valueB === 'string') {
-    return valueA.localeCompare(valueB);
+    return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
   }
   if (typeof valueA === 'number' && typeof valueB === 'number') {
     return valueA - valueB;
   }
-  return String(valueA).localeCompare(String(valueB));
+  const stringA = String(valueA);
+  const stringB = String(valueB);
+  return stringA < stringB ? -1 : stringA > stringB ? 1 : 0;
 };
 
 const _filterContainsTimestamp = (filter: QueryAST.Filter): boolean => {

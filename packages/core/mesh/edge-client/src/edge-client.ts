@@ -267,9 +267,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * control negotiated the writes resolve as fast as the socket accepts them, the same as
    * {@link send}.
    *
-   * The stream is bound to the connection live at creation: a reconnect fails subsequent writes
-   * rather than silently resuming on a socket whose credit state is unrelated, so callers recreate
-   * it from `onReconnected`.
+   * Each write goes to the connection live when it is made, and a reconnect starts the new socket
+   * with a fresh window; a write caught by the close rejects, which errors the stream, so callers
+   * recreate it from `onReconnected`.
    */
   public createStream({ serviceId, highWaterMark, signal }: EdgeStreamOptions): WritableStream<Message> {
     return new WritableStream<Message>(
@@ -395,7 +395,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
             this._ready.wake();
             this._notifyReconnected();
           } else {
-            log.verbose('connected callback ignored, because connection is not active');
+            // EDGE's router writes to a device's newest open socket, so a replaced one left open takes every reply.
+            log.verbose('closing a connection that connected after it was replaced');
+            void connection.close().catch((err) => log.catch(err));
           }
         },
         onRestartRequired: (reason) => {
@@ -416,6 +418,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
               from: message.source,
               type: message.payload?.typeUrl,
             });
+            void connection.close().catch((err) => log.catch(err));
           }
         },
       },
@@ -437,6 +440,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
       restartRequired.wait().then(() => false),
     ]);
     if (!becameReady) {
+      // Left dialing, the socket could still be admitted after the retry's, and EDGE writes to the newest.
+      await connection.close();
       throw new EdgeConnectionClosedError();
     }
 

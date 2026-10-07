@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,7 +18,9 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EffectEx, SchemaAST } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import { messageOf } from '@dxos/errors';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -92,7 +93,7 @@ export const wrapFunctionHandler = (
         serviceTags.includes(Database.Service.key) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
-        throw new FunctionError({
+        throw new Operation.FunctionError({
           message: 'Services not provided: dataService, queryService',
         });
       }
@@ -119,9 +120,16 @@ export const wrapFunctionHandler = (
         // instance, and callers send the encoded `{'/': dxn}` form.
         if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(dataWithDecodedRefs);
+            // `reportInput` puts the rejected value in the message, and `errors: 'all'` reports
+            // every bad field at once: a remote caller cannot see its own payload in our logs, so
+            // a message naming only the expected shape leaves it guessing which field it got wrong.
+            Schema.decodeUnknownSync(Schema.toType(func.input), {
+              onExcessProperty: 'error',
+              reportInput: true,
+              errors: 'all',
+            })(dataWithDecodedRefs);
           } catch (error: any) {
-            throw new InvalidOperationInputError({
+            throw new Operation.InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -155,7 +163,7 @@ export const wrapFunctionHandler = (
           try {
             Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
-            throw new InvalidOperationOutputError({
+            throw new Operation.InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -221,12 +229,22 @@ export class FunctionContext extends Resource {
       // that never arrives otherwise holds the invocation until the Workers runtime kills it as
       // hung — ~30s with no error naming the space, inherited by every caller up the chain.
       await EffectEx.runPromise(
-        Effect.tryPromise(() => db.open()).pipe(
+        Effect.tryPromise({
+          try: () => db.open(),
+          // Reported rather than wrapped bare: `Effect.tryPromise` defaults to an `UnknownError`
+          // whose message says only that a promise rejected, and the reason (a root document the
+          // data plane cannot produce) is the whole diagnosis for the caller.
+          catch: (error) =>
+            new Operation.FunctionError({
+              message: `Space ${this.context.spaceId} failed to open: ${messageOf(error) ?? 'unknown error'}`,
+              cause: error,
+            }),
+        }).pipe(
           Effect.timeoutOrElse({
             duration: SPACE_OPEN_TIMEOUT,
             orElse: () =>
               Effect.fail(
-                new FunctionError({
+                new Operation.FunctionError({
                   message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
                 }),
               ),
@@ -491,10 +509,17 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Union': {
-      // Optional values are represented as union with undefined.
-      const nonUndefined = encoded.types.filter((t) => !SchemaAST.isUndefinedKeyword(t));
-      if (nonUndefined.length === 1) {
-        return decodeRefsFromSchema(nonUndefined[0], value, db);
+      // Optional and nullable values are represented as a union with `undefined` and/or `null`.
+      // A null or undefined `value` already returned above, so neither branch can be the one that
+      // matches here and both are safe to discard: without dropping `null`, a
+      // `Schema.optional(Schema.NullOr(Ref))` field keeps two branches, is left undecoded, and the
+      // handler rejects the caller's wire envelope — which is why updating a ref field failed
+      // while creating one with the same envelope succeeded.
+      const candidates = encoded.types.filter(
+        (type) => !SchemaAST.isUndefinedKeyword(type) && !SchemaAST.isNullKeyword(type),
+      );
+      if (candidates.length === 1) {
+        return decodeRefsFromSchema(candidates[0], value, db);
       }
 
       // For other unions we can't safely pick a branch without validating.

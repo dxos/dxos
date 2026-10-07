@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { RunResults, StatusBadge } from '#components';
 import { type TestRun } from '#types';
@@ -19,13 +19,13 @@ export const TestRunArticle = ({ role, subject }: TestRunArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='flex flex-col gap-4 p-4' data-testid='qa.run'>
+      <Panel.Body classNames='flex flex-col gap-4 p-4' data-testid='qa.run'>
         <header className='flex items-center gap-2'>
           <StatusBadge status={run.status} />
           <span className='grow font-mono text-sm'>{run.startedAt.slice(0, 19).replace('T', ' ')}</span>
         </header>
         <RunResults run={subject} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -246,8 +246,8 @@ const toMounted = ({ element, infoRef }: DebugEntry): MountedSurface => ({
 });
 
 /**
- * The surfaces mounted right now, without subscribing. Populated only while the wrapper is enabled
- * (dev builds), which is also the only time the profiler runs.
+ * The surfaces mounted right now, without subscribing. Populated only while the wrapper is rendered
+ * (dev builds, or under a profiler provider).
  */
 export const getMountedSurfaces = (): MountedSurface[] => state.manager.getSnapshot().map(toMounted);
 

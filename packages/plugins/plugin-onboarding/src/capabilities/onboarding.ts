@@ -43,6 +43,11 @@ export default Capability.makeModule(
     void manager.initialize().catch((error) => log.catch(error));
 
     yield* Effect.addFinalizer(() => Effect.promise(() => manager.destroy().catch((error) => log.catch(error))));
-    return Capability.contribute(OnboardingCapabilities.Onboarding, manager);
+    return [
+      Capability.contribute(OnboardingCapabilities.Onboarding, manager),
+      Capability.contribute(ClientCapabilities.OnIdentityDeleted, ({ target }) =>
+        Effect.tryPromise(() => manager.onIdentityDeleted({ target })),
+      ),
+    ];
   }),
 );

@@ -6,9 +6,10 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Stream from 'effect/Stream';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type { SessionConfig } from '@dxos/ai';
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
@@ -24,8 +25,8 @@ import { Instructions } from './types/index.ts';
 export interface Conversation extends Obj.Unknown {
   readonly feed: Ref.Ref<Feed.Feed>;
   readonly instructions?: Ref.Ref<Instructions.Instructions>;
-  /** The selected model, a ref whose URI is the model DXN; unset runs the agent's default. */
-  readonly model?: Ref.Ref<Obj.Unknown>;
+  /** How the conversation runs (its model); an unset model runs the agent's default. */
+  readonly session?: SessionConfig.SessionConfig;
 }
 
 /**
@@ -50,6 +51,21 @@ export class AgentService extends Context.Service<AgentService, Service>()('@dxo
 
 /** Re-exported so callers importing this module as a namespace avoid `AgentService.AgentService.key`. */
 export const key = AgentService.key;
+
+/**
+ * Who a prompt is from, when it is not the session's own reader: the plain-data subset of `Actor`,
+ * because the prompt crosses a JSON boundary (a remote process) where a `Ref` cannot be supplied.
+ */
+export type PromptSender = {
+  readonly name?: string;
+  readonly identityDid?: string;
+  readonly email?: string;
+};
+
+export type SubmitPromptOptions = {
+  /** Recorded on the appended user message; a named sender is shown to the model as the speaker. */
+  readonly sender?: PromptSender;
+};
 
 /**
  * Handle to an agent session.
@@ -78,7 +94,7 @@ export interface Session {
   /**
    * Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt).
    */
-  submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
+  submitPrompt: (prompt: string | ContentBlock.Any[], options?: SubmitPromptOptions) => Effect.Effect<void>;
 
   /**
    * True while the agent is working on a turn (running, or waiting on a tool call or alarm); false
@@ -114,7 +130,7 @@ export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentSe
   AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
-  // The model is read off the chat (see `Conversation.model`), but the catalog's shared model ids are
+  // The model is read off the chat (see `Conversation.session`), but the catalog's shared model ids are
   // served by several providers, so the provider must still accompany it into the agent process —
   // the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;

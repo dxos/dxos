@@ -10,8 +10,9 @@
 import React, { useMemo } from 'react';
 
 import { type PickerKind, getPicker } from '@dxos/introspect-tools';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -19,7 +20,7 @@ import { translationKey } from '#translations';
 import { Picker } from '../Picker/index.ts';
 import type { ToolEntry } from '../types.ts';
 
-export type ToolFormProps = ThemedClassName<{
+export type ToolFormProps = Util.ThemedClassName<{
   /**
    * The tool whose input is being edited. Title + description display above the form.
    */
@@ -47,7 +48,7 @@ export type ToolFormProps = ThemedClassName<{
 }>;
 
 export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, pickerOptions }: ToolFormProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const fieldProvider = useMemo(() => {
     if (!pickerOptions) {
@@ -84,7 +85,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
       <header>
         <h2 className='text-lg font-semibold'>{tool.title}</h2>
         {tool.description && (
-          <p className='text-sm text-description mt-1'>{tool.description.replace(/\n/g, ' ').trim()}</p>
+          <p className='text-sm text-fg-muted mt-1'>{tool.description.replace(/\n/g, ' ').trim()}</p>
         )}
       </header>
       <Form.Root

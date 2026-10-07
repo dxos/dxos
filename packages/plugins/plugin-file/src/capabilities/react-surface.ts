@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { SchemaEx } from '@dxos/effect';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { File } from '@dxos/types';
 
 import { FileArticle, FileCard, FileProperties, FileSettings } from '#containers';
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'createForm',
         filter: AppSurface.formInputBySchema(
-          (ast) => !!SchemaEx.findAnnotation<Record<string, string[]>>(ast, FileAction.UploadAnnotationId),
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, FileAction.UploadAnnotationId),
         ),
         component: FileUploadField,
       }),

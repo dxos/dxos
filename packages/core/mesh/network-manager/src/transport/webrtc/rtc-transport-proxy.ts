@@ -12,7 +12,7 @@ import * as Stream from 'effect/Stream';
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,7 +32,9 @@ import { type Transport, type TransportFactory, type TransportOptions, type Tran
 import { bindDataChannel } from './rtc-data-channel.ts';
 
 const RPC_TIMEOUT = '10 seconds' as const;
-const CLOSE_RPC_TIMEOUT = '3 seconds' as const;
+/** Above {@link RPC_TIMEOUT}, since a close queues behind the host's own peer-connection teardown
+ * in a tab the browser may be throttling as a background page. */
+const CLOSE_RPC_TIMEOUT = '15 seconds' as const;
 
 export type RtcTransportProxyOptions = TransportOptions & {
   rtcService: RTCService.Client;

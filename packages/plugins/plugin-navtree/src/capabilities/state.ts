@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -37,9 +37,9 @@ export default Capability.makeModule(
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
     const viewState = yield* AttentionCapabilities.ViewState;
 
-    // Mirror of the layout's active planks. An item registers its path only on its first render, which
-    // can happen long after the layout change that made it current, so entries derive `current` from
-    // this at creation time rather than waiting for the next layout notification.
+    // Mirror of the current items. An item registers its path only on its first render, which can
+    // happen long after the layout change that made it current, so entries derive `current` from this
+    // at creation time rather than waiting for the next layout notification.
     let activeIds: readonly string[] = registry.get(layoutAtom).active;
 
     /** Item state for a path not seen before: `current` follows the layout, `open` starts closed. */
@@ -99,10 +99,9 @@ export default Capability.makeModule(
       }
     };
 
-    // Subscribe to layout changes to update current state.
-    const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      const removed = activeIds.filter((id) => !layout.active.includes(id));
-      activeIds = layout.active;
+    const updateCurrent = (nextIds: readonly string[]) => {
+      const removed = activeIds.filter((id) => !nextIds.includes(id));
+      activeIds = nextIds;
 
       const handleUpdate = () => {
         // Mark removed items as not current.
@@ -113,8 +112,8 @@ export default Capability.makeModule(
           });
         });
 
-        // Mark active items as current.
-        layout.active.forEach((id: string) => {
+        // Mark current items as current.
+        nextIds.forEach((id: string) => {
           const keys = Array.from(new Set([...backingState.keys(), id])).filter((key) => Path.last(key) === id);
           keys.forEach((key) => {
             setItem(Path.parts(key), 'current', true);
@@ -126,10 +125,13 @@ export default Capability.makeModule(
       // would set state during the tree's render pass). Items whose path is not registered yet no longer
       // need waiting out — they seed `current` from `activeIds` when they register.
       queueMicrotask(handleUpdate);
-    });
+    };
+
+    // Subscribe to layout changes to update current state.
+    const unsubscribe = registry.subscribe(layoutAtom, (layout) => updateCurrent(layout.active));
 
     yield* Effect.gen(function* () {
-      const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      const { graph: appGraph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
       // A workspace the deck left is released, so entering one re-expands it and the items the tree
       // still remembers as open.
       const reexpandWorkspace = (workspace: string | undefined) => {
@@ -137,12 +139,12 @@ export default Capability.makeModule(
           return;
         }
 
-        AppGraph.expandSync(graph, workspace, 'child');
+        AppGraph.expandSync(appGraph, workspace, 'child');
         for (const [pathString, state] of backingState.entries()) {
           const path = Path.parts(pathString);
           const nodeId = path[path.length - 1];
           if (state.open && !isTopLevelPath(path) && nodeId && GraphPath.getWorkspaceFromPath(nodeId) === workspace) {
-            AppGraph.expandSync(graph, nodeId, 'child');
+            AppGraph.expandSync(appGraph, nodeId, 'child');
           }
         }
       };

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
@@ -43,7 +43,7 @@ export const useEmailComposerExtensions = (
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+            AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

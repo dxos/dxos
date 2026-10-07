@@ -1,0 +1,157 @@
+/*
+ * Listbox: a scrolling stack of row Containers. Row states (hover, highlight, selection, drop) are `.dx-row`'s
+ * (row.css); this file lays the rows out.
+ */
+
+@layer dx-components {
+  .dx-listbox {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+  }
+
+  .dx-scroll-root.dx-listbox-scroll {
+    flex: 1 1 auto;
+  }
+
+  /* Content without its own ScrollArea: the Root passes its host's rails through to the rows, as ScrollArea.Root does. */
+  .dx-listbox:has(> .dx-container[data-gutter='inherit']) {
+    grid-column: full;
+    display: grid;
+    grid-template-columns: subgrid;
+    max-height: none;
+  }
+  .dx-listbox:has(> .dx-container[data-gutter='inherit']) > :not(.dx-container) {
+    grid-column: content;
+  }
+
+  .dx-listbox-content:focus {
+    outline: none;
+  }
+
+  /*
+   * Rows place their parts by part, so a composed row lays out like the default one: block-sized leading cells (an
+   * icon, a drag handle, a checkbox: whatever precedes the text), the text over its description in the growing column,
+   * then every other part in its own trailing column.
+   */
+  .dx-listbox-item {
+    --dx-item-columns: minmax(0, 1fr);
+    --dx-item-text-column: 1;
+    grid-template-rows: auto;
+    grid-auto-columns: auto;
+    align-items: center;
+    min-height: var(--dx-block-size);
+  }
+  .dx-listbox-item:has(> .dx-listbox-item-text:nth-child(2)) {
+    --dx-item-columns: var(--dx-block-size) minmax(0, 1fr);
+    --dx-item-text-column: 2;
+  }
+  .dx-listbox-item:has(> .dx-listbox-item-text:nth-child(3)) {
+    --dx-item-columns: repeat(2, var(--dx-block-size)) minmax(0, 1fr);
+    --dx-item-text-column: 3;
+  }
+  .dx-listbox-item:has(> .dx-listbox-item-text:nth-child(4)) {
+    --dx-item-columns: repeat(3, var(--dx-block-size)) minmax(0, 1fr);
+    --dx-item-text-column: 4;
+  }
+  .dx-listbox-item:has(> .dx-listbox-item-description) {
+    grid-template-rows: auto auto;
+  }
+  .dx-listbox-item.dx-container > * {
+    grid-column: auto;
+    grid-row: 1 / -1;
+  }
+  .dx-listbox-item.dx-container > .dx-listbox-item-text {
+    grid-column: var(--dx-item-text-column);
+    grid-row: 1;
+  }
+  .dx-listbox-item.dx-container > .dx-listbox-item-description {
+    grid-column: var(--dx-item-text-column);
+    grid-row: 2;
+  }
+  /* A full-width part (an expanded detail) takes its own row under the others, across every column. */
+  .dx-listbox-item.dx-container > [data-place='full'] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  /*
+   * With a description the other parts sit on the title's line rather than centring across both: each is a block tall
+   * from the row's top, and the title's top padding is half a block less its line, so their centres meet.
+   */
+  .dx-listbox-item.dx-container:has(> .dx-listbox-item-description)
+    > :not(.dx-listbox-item-text, .dx-listbox-item-description, .dx-drop-indicator) {
+    align-self: start;
+  }
+
+  /* Text over description: together they take one block plus a line, not a block each. */
+  .dx-listbox-item:has(> .dx-listbox-item-description) > .dx-listbox-item-text {
+    padding-block-end: 0;
+  }
+  .dx-listbox-item > .dx-listbox-item-description {
+    padding-block-start: 0;
+  }
+  .dx-listbox-item > :is(.dx-listbox-item-text, .dx-listbox-item-description) {
+    padding-inline-end: var(--dx-gap-size);
+  }
+  .dx-listbox-item > .dx-listbox-item-text:first-child,
+  .dx-listbox-item > .dx-listbox-item-text:first-child + .dx-listbox-item-description {
+    padding-inline-start: var(--dx-gap-size);
+  }
+  /* An avatar fills its block where an icon sits inside one, so the text keeps an icon's distance from it. */
+  .dx-listbox-item > .dx-listbox-item-icon:has(.dx-avatar) ~ :is(.dx-listbox-item-text, .dx-listbox-item-description) {
+    padding-inline-start: var(--dx-gap-size);
+  }
+
+  /* Trailing parts are an inset apart, and an icon-only Button pads out to its block like it does in a toolbar. */
+  .dx-listbox-item.dx-container
+    > .dx-listbox-item-text
+    ~ :not(.dx-listbox-item-description, .dx-listbox-item-indicator, .dx-drop-indicator) {
+    margin-inline-end: var(--dx-control-inset);
+  }
+  .dx-listbox-item.dx-container > .dx-button[data-square] {
+    margin: var(--dx-control-inset);
+  }
+  .dx-listbox-item.dx-container > .dx-collapsible-trigger[data-caret-only] {
+    margin-inline-end: 0;
+  }
+
+  .dx-listbox-item-indicator {
+    display: grid;
+    place-items: center;
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
+  }
+
+  /*
+   * Root `columns`: the Content's template holds the tracks and each row is a subgrid of them, placing its children in
+   * order; a description takes the next track like any part.
+   */
+  .dx-listbox-content[data-columns] > .dx-listbox-item.dx-container {
+    grid-column: content;
+    grid-template-columns: subgrid;
+  }
+  .dx-listbox-content[data-columns] > .dx-collapsible > .dx-listbox-item.dx-container {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > * {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  /* A collapsible row: the Collapsible root spans the content track, the row above its detail, both full width. */
+  .dx-listbox-content > .dx-collapsible {
+    display: grid;
+    grid-column: content;
+    grid-template-columns: subgrid;
+  }
+  .dx-listbox-content > .dx-collapsible > * {
+    grid-column: 1 / -1;
+  }
+}

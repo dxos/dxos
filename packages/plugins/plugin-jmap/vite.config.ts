@@ -21,5 +21,5 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
   },
-  test: { node: true },
+  test: { node: true, workerd: true },
 });
