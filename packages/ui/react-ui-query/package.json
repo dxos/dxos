@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-query",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Editors for ECHO queries: a query-language input and a type/tag form.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

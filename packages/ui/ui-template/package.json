@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-template",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Layout template grammar, parser, and pluggable renderer (React implementation).",
   "homepage": "https://dxos.org",
