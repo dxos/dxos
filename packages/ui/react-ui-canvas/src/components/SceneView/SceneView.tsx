@@ -51,7 +51,7 @@ import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { boundsFromPoints, hitTest, unionBounds } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
-import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
+import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { createLink, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
@@ -432,12 +432,12 @@ const SceneViewRoot = ({
   const onPartCommit = useCallback(
     (node: Node, part: PartKey, text: string) => {
       registry.set(atoms.editing, undefined);
-      const values = partValues(node, part, text);
-      if (values && capabilities.update && text !== partText(node, part)) {
+      const values = partValues(nodeRegistry, node, part, text);
+      if (values && capabilities.update && text !== partText(nodeRegistry, node, part)) {
         projection.apply({ kind: 'update', id: node.id, values });
       }
     },
-    [registry, atoms.editing, capabilities.update, projection],
+    [registry, atoms.editing, capabilities.update, projection, nodeRegistry],
   );
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 
@@ -472,9 +472,9 @@ const SceneViewRoot = ({
       const partElement = target.closest('[data-part]');
       const part =
         partElement?.closest('[data-node-id]')?.getAttribute('data-node-id') === node.id
-          ? partKey(partElement?.getAttribute('data-part'))
+          ? (partElement?.getAttribute('data-part') ?? undefined)
           : undefined;
-      if (part && capabilities.update && partText(node, part) !== undefined) {
+      if (part && capabilities.update && partText(nodeRegistry, node, part) !== undefined) {
         select([node.id]);
         registry.set(atoms.editing, { id: node.id, part });
       } else if (nodeDef(nodeRegistry, node)?.openable) {

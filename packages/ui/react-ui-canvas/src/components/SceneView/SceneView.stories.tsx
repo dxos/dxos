@@ -15,7 +15,7 @@ import { type Box, SceneBuilder } from '../../utils/builder.ts';
 import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { TONES } from '../../utils/style.ts';
-import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
+import { createModelSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**
@@ -36,7 +36,7 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'classes' | 'square' | 'lattice';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice';
 };
 
 type EditorProps = {
@@ -125,10 +125,10 @@ const createLatticeTree = () => {
 
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    // The class fixture is a fixed three levels, so `depth` does not apply to it.
+    // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
-      fixture === 'classes'
-        ? createClassSceneTree()
+      fixture === 'model'
+        ? createModelSceneTree()
         : fixture === 'square'
           ? createSquareTree()
           : fixture === 'lattice'
@@ -192,9 +192,9 @@ export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
 };
 
-/** A three-level class model: drill into a subsystem's portal to open its own classes. */
-export const Classes: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'classes' },
+/** A three-level model, a box per class: drill into a subsystem's portal to open its own. */
+export const Model: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'model' },
 };
 
 /**

@@ -19,12 +19,8 @@ import {
   type Node,
   type Point,
   type Size,
-  isClassNode,
-  isEllipseNode,
-  isNoteNode,
-  isRectNode,
 } from '../model/types.ts';
-import { partKey } from './parts.ts';
+import { type PartField } from './parts.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
 export const nodeBounds = (node: Node): Bounds => ({
@@ -49,7 +45,6 @@ export const DEFAULT_SHAPE_SIZE: Size = { width: 256, height: 256 };
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   rect: DEFAULT_SHAPE_SIZE,
   ellipse: DEFAULT_SHAPE_SIZE,
-  class: DEFAULT_SHAPE_SIZE,
   note: { width: 256, height: 128 },
   scene: { width: 512, height: 256 },
 };
@@ -79,8 +74,6 @@ export const createNode = ({
       return { type, id, z, center, size };
     case 'ellipse':
       return { type, id, z, center, size };
-    case 'class':
-      return { type, id, z, center, size, name: 'Class', attributes: ['id: string'], methods: ['save(): void'] };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'scene':
@@ -95,23 +88,12 @@ const OWN_FIELDS = new Set(['id', 'type', 'z', 'center', 'scene']);
  * A new shape like `source` (its size, look and ports) built on `fresh`, the type's own new node at the
  * new place: it keeps its own identity and child scene, and the type's text rather than the source's.
  */
-export const cloneShape = (source: Node, fresh: Node): Node => ({
-  ...fresh,
-  ...Object.fromEntries(Object.entries(source).filter(([key]) => !OWN_FIELDS.has(key) && !partKey(key))),
-});
-
-/** The node's display text, in the field its type uses for it; a type without one is returned as is. */
-export const withLabel = <N extends Node>(node: N, label: string): N => {
-  if (isRectNode(node) || isEllipseNode(node)) {
-    return { ...node, label };
-  }
-  if (isClassNode(node)) {
-    return { ...node, name: label };
-  }
-  if (isNoteNode(node)) {
-    return { ...node, text: label };
-  }
-  return node;
+export const cloneShape = (source: Node, fresh: Node, parts: readonly PartField[] = []): Node => {
+  const text = new Set(parts.map(({ field }) => field));
+  return {
+    ...fresh,
+    ...Object.fromEntries(Object.entries(source).filter(([key]) => !OWN_FIELDS.has(key) && !text.has(key))),
+  };
 };
 
 export type CreateLinkProps = {

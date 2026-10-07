@@ -769,7 +769,10 @@ export const usePointerMachine = ({
               },
               size,
             };
-            const node = source && def ? cloneShape(source, def.create(props)) : createNode({ type: 'rect', ...props });
+            const node =
+              source && def
+                ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
+                : createNode({ type: 'rect', ...props });
             addNode(node);
             target = { node: node.id };
           }

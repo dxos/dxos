@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { getPropertySignatures } from '@dxos/effect/SchemaAST';
 
-import { ClassNode, EllipseNode, LineLink, RectNode } from '../model/types.ts';
+import { EllipseNode, LineLink, NoteNode, RectNode } from '../model/types.ts';
 import { commonSchema, mergeValues, patchValues } from './properties.ts';
 
 const names = (schema: Schema.Codec<any, any> | undefined) =>
@@ -24,9 +24,9 @@ describe('properties', () => {
     expect(rectEllipse).toContain('style');
     expect(rectEllipse).not.toContain('type');
 
-    const rectClass = names(commonSchema([RectNode, ClassNode]));
-    expect(rectClass).toContain('style');
-    expect(rectClass).not.toContain('label');
+    const rectNote = names(commonSchema([RectNode, NoteNode]));
+    expect(rectNote).toContain('style');
+    expect(rectNote).not.toContain('label');
 
     // A node and a link share only what both declare: here `locked` (and the hidden `id`/`z`).
     expect(names(commonSchema([RectNode, LineLink]))).toEqual(['id', 'z', 'locked']);

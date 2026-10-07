@@ -231,7 +231,7 @@ function node(type: string, id: string, box: Box): NodeElement<NodeBase> {
   return new NodeElement<NodeBase>(base);
 }
 
-const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'class', 'note', 'scene'] satisfies BuiltinNodeType[];
+const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'note', 'scene'] satisfies BuiltinNodeType[];
 const isBuiltinType = (type: string): type is BuiltinNodeType => BUILTIN_TYPES.includes(type);
 
 type Ends = Pick<Link, 'source' | 'target'>;
@@ -254,7 +254,6 @@ export const SceneBuilder = {
   node,
   rect: (id: string, box: Box) => node('rect', id, box),
   ellipse: (id: string, box: Box) => node('ellipse', id, box),
-  class: (id: string, box: Box) => node('class', id, box),
   note: (id: string, box: Box) => node('note', id, box),
   link,
 };

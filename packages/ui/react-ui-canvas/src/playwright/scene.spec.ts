@@ -11,7 +11,7 @@ import { SceneManager } from './SceneManager.ts';
 const PORT = 9006;
 const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--freehand', PORT);
 
-// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, class C; links A→B (curve), A→C
+// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
 test.describe('SceneView', () => {
   let page: Page;
@@ -245,7 +245,7 @@ test.describe('SceneView', () => {
     // One step is ×1.25; both readouts round, so they can disagree by a point.
     await expect.poll(async () => Math.abs((await scene.zoom()) - fitted * 1.25)).toBeLessThanOrEqual(1);
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-class').click();
+    await page.getByTestId('create-note').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     await page.getByTestId('toolbar-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
@@ -275,10 +275,10 @@ test.describe('SceneView', () => {
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
-  test('the properties panel edits the selected class', async () => {
+  test('the properties panel edits the selected node', async () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
-    expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Style']));
+    expect(labels).toEqual(expect.arrayContaining(['Label', 'Style']));
     // Geometry is two labelled number fields per row.
     expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });

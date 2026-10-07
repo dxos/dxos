@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { isClassNode, isEllipseNode, isPortalNode, isRectNode } from '../model/types.ts';
+import { isEllipseNode, isNoteNode, isPortalNode, isRectNode } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 
 const box = (x: number, y: number) => ({ x, y, width: 200, height: 100 });
@@ -14,10 +14,7 @@ describe('SceneBuilder', () => {
     const { root, scenes } = SceneBuilder.scene('s', [
       SceneBuilder.rect('a', box(0, 0)).properties({ label: 'A' }),
       SceneBuilder.ellipse('b', box(400, 0)).properties({ label: 'B' }),
-      SceneBuilder.class('c', { x: 0, y: 300, width: 200, height: 150 }).properties({
-        name: 'C',
-        attributes: ['id: string'],
-      }),
+      SceneBuilder.note('c', { x: 0, y: 300, width: 200, height: 150 }).properties({ style: { hue: 'teal' } }),
       SceneBuilder.link('line', 'a#e2', 'b#w2'),
       SceneBuilder.link('spline', 'b', 'c').properties({ points: [{ x: 300, y: 250 }] }),
       SceneBuilder.link('line', '@10,20', 'a')
@@ -33,9 +30,9 @@ describe('SceneBuilder', () => {
     expect(Object.keys(scene.nodes)).toEqual(['a', 'b', 'c']);
     expect(scene.nodes.a.center).toEqual({ x: 100, y: 50 });
     expect(isEllipseNode(scene.nodes.b) && scene.nodes.b.size).toEqual({ width: 200, height: 100 });
-    expect(isClassNode(scene.nodes.c) && scene.nodes.c.attributes).toEqual(['id: string']);
-    // A class keeps its type's default methods where the fixture does not set them.
-    expect(isClassNode(scene.nodes.c) && scene.nodes.c.methods).toEqual(['save(): void']);
+    expect(scene.nodes.c.style).toEqual({ hue: 'teal' });
+    // A note keeps its type's default text where the fixture does not set it.
+    expect(isNoteNode(scene.nodes.c) && scene.nodes.c.text).toEqual('Note');
     expect(scene.links['a-b'].source).toEqual({ node: 'a', port: 'e2' });
     expect(scene.links['a-b'].target).toEqual({ node: 'b', port: 'w2' });
     expect(scene.links['b-c'].type === 'spline' && scene.links['b-c'].points).toEqual([{ x: 300, y: 250 }]);

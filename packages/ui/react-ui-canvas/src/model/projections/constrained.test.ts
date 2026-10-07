@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type ClassNode, type EllipseNode, type Scene, isClassNode, isEllipseNode } from '../types.ts';
+import { type EllipseNode, type NoteNode, type Scene, isEllipseNode, isNoteNode } from '../types.ts';
 import { type ConstrainedModel, createConstrainedProjection, rewriteForDrop, solve } from './constrained.ts';
 
 const model: ConstrainedModel = {
@@ -115,24 +115,22 @@ describe('constrained projection', () => {
       size: { width: 128, height: 64 },
       label: 'Round',
     };
-    const klass: ClassNode = {
-      type: 'class',
+    const note: NoteNode = {
+      type: 'note',
       id: 'K',
       z: 'z',
       center: { x: 0, y: 400 },
       size: { width: 1, height: 1 },
-      name: 'Klass',
-      attributes: [],
-      methods: [],
+      text: 'Klass',
     };
     projection.apply({ kind: 'create', node: ellipse });
-    projection.apply({ kind: 'create', node: klass });
+    projection.apply({ kind: 'create', node: note });
     const scene = registry.get(projection.scene);
     expect(scene.nodes.E.type).toBe('ellipse');
     expect(isEllipseNode(scene.nodes.E) && scene.nodes.E.label).toBe('Round');
-    expect(isClassNode(scene.nodes.K) && scene.nodes.K.name).toBe('Klass');
-    projection.apply({ kind: 'update', id: 'K', values: { name: 'Renamed' } });
+    expect(isNoteNode(scene.nodes.K) && scene.nodes.K.text).toBe('Klass');
+    projection.apply({ kind: 'update', id: 'K', values: { text: 'Renamed' } });
     const after = registry.get(projection.scene).nodes.K;
-    expect(isClassNode(after) && after.name).toBe('Renamed');
+    expect(isNoteNode(after) && after.text).toBe('Renamed');
   });
 });

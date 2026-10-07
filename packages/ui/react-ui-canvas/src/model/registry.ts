@@ -16,18 +16,11 @@
 import type * as Schema from 'effect/Schema';
 import { type ComponentType } from 'react';
 
-import {
-  BoxNodeView,
-  ClassNodeView,
-  EllipseNodeView,
-  NoteNodeView,
-  PortalNodeView,
-} from '../components/SceneLayer/SceneLayer.tsx';
-import { type PartEditing } from '../utils/parts.ts';
+import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
+import { type PartEditing, type PartField } from '../utils/parts.ts';
 import { DEFAULT_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
-  ClassNode,
   EllipseNode,
   type LinkType,
   type Node,
@@ -87,6 +80,8 @@ export type NodeDef = {
   maxSize?: Size;
   /** Double-click opens the node (a portal drills in; a text node edits, later). */
   openable?: boolean;
+  /** The text properties edited in place, in order; the first is the node's main text. */
+  parts?: readonly PartField[];
 };
 
 /**
@@ -152,6 +147,7 @@ const MIN_SIZE: Size = { width: 64, height: 32 };
  */
 export const boxPrototype: NodeDefSpec = {
   component: BoxNodeView,
+  parts: [{ field: 'label' }],
   defaultSize: DEFAULT_SIZES.rect,
   resizable: true,
   minSize: MIN_SIZE,
@@ -178,26 +174,18 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     defaultSize: DEFAULT_SIZES.ellipse,
     // Only the side centres of the frame lie on the curve.
     portsPerSide: 1,
+    parts: [{ field: 'label' }],
     resizable: true,
     minSize: MIN_SIZE,
   },
-  class: {
-    name: 'Class',
-    icon: 'ph--rows--regular',
-    key: 'C',
-    schema: ClassNode,
-    component: ClassNodeView,
-    create: (props) => createNode({ type: 'class', ...props }),
-    defaultSize: DEFAULT_SIZES.class,
-    resizable: true,
-    minSize: { width: 128, height: 96 },
-  },
+
   note: {
     name: 'Note',
     icon: 'ph--text-t--regular',
     key: 'T',
     schema: NoteNode,
     component: NoteNodeView,
+    parts: [{ field: 'text', multiline: true }],
     create: (props) => createNode({ type: 'note', ...props }),
     defaultSize: DEFAULT_SIZES.note,
     resizable: true,

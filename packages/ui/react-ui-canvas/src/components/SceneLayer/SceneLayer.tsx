@@ -24,7 +24,6 @@ import {
   type NodeId,
   type Scene,
   isBoxNode,
-  isClassNode,
   isEllipseNode,
   isNoteNode,
   isPortalNode,
@@ -35,7 +34,7 @@ import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts
 import { contentBounds } from '../../utils/hit.ts';
 import { type LatticeSpec } from '../../utils/lattice.ts';
 import { sortByZ } from '../../utils/order.ts';
-import { type PartEditing, type PartKey } from '../../utils/parts.ts';
+import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { frameClasses } from '../../utils/style.ts';
@@ -216,6 +215,22 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
         </marker>
       ))}
+      {/* Inheritance (UML generalization): a hollow triangle, filled with the canvas so the line stops at its base. */}
+      {ends.map((end) => (
+        <marker
+          key={`triangle-${end}`}
+          id={`${id}-triangle-${end}`}
+          viewBox='-1 -1 12 12'
+          refX={10}
+          refY={5}
+          markerWidth={arrow * 1.2}
+          markerHeight={arrow * 1.2}
+          markerUnits='userSpaceOnUse'
+          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
+        >
+          <path d='M 0 0 L 10 5 L 0 10 z' className='fill-base-surface stroke-neutral-500' strokeWidth={1} />
+        </marker>
+      ))}
       {ends.map((end) => (
         <marker
           key={`circle-${end}`}
@@ -253,11 +268,12 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
       editingPart && handlers
         ? {
             part: editingPart,
+            multiline: nodeParts(registry, node).some((part) => part.field === editingPart && isMultiline(part)),
             commit: (text) => handlers.onPartCommit?.(node, editingPart, text),
             cancel: () => handlers.onPartCancel?.(),
           }
         : undefined,
-    [editingPart, handlers, node],
+    [editingPart, handlers, node, registry],
   );
   const onOpen = useMemo(
     () => (interactive && handlers.onNodeOpen ? () => handlers.onNodeOpen?.(node) : undefined),
@@ -332,34 +348,6 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => (
 export const BoxNodeView = LabelNodeView;
 
 export const EllipseNodeView = LabelNodeView;
-
-export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isClassNode(node)) {
-    return null;
-  }
-  return (
-    <div className={mx('dx-cover flex flex-col font-mono divide-y divide-separator', sizeClass(node, 'text-sm'))}>
-      <TextPart part='name' text={node.name} editing={editing} classNames='px-2 py-1 text-center font-bold'>
-        {node.name}
-      </TextPart>
-      <TextPart
-        part='attributes'
-        text={node.attributes.join('\n')}
-        editing={editing}
-        classNames='px-2 py-1 flex-1 min-h-4'
-      >
-        {node.attributes.map((attribute, index) => (
-          <div key={index}>{attribute}</div>
-        ))}
-      </TextPart>
-      <TextPart part='methods' text={node.methods.join('\n')} editing={editing} classNames='px-2 py-1 flex-1 min-h-4'>
-        {node.methods.map((method, index) => (
-          <div key={index}>{method}</div>
-        ))}
-      </TextPart>
-    </div>
-  );
-};
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: NodeViewProps) => (
