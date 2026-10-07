@@ -676,7 +676,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const inputData = this._prepareInputData(trigger, event);
 
         const manager = yield* ProcessManager.Service;
-        const executable = yield* DurableOperation.resolve(functionDef, manager.operationHandlerSet);
+        const executable = DurableOperation.fromOperation(functionDef, manager.operationHandlerSet);
         // Thread the dispatcher's space through `ProcessManager.spawn` so the
         // spawned process resolves space-affinity services (e.g.
         // `Database.Service`) for the same space the dispatcher is bound to.

@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
@@ -29,9 +28,6 @@ const OperationStartedCell = StorageService.cell(Schema.fromJsonString(Schema.Bo
 
 /**
  * Runs a (non-durable) operation as a durable one: a single-input process that invokes the operation's handler.
- *
- * The handler is looked up when the input arrives, so the process requires the services the definition declares.
- * Prefer {@link resolve} where the handler set may hold an implementation that needs different ones.
  */
 export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
@@ -40,49 +36,13 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
   Operation.Definition.Input<Op>,
   Operation.Definition.Output<Op>,
   Operation.Definition.Services<Op>
-> => make(op, op.services, OperationHandlerSet.getHandler(handlers, op).pipe(Effect.orDie));
-
-/**
- * Runs an already-resolved handler as a durable operation; the process requires the services that
- * implementation declares, which for a body dispatched to another runtime (EDGE's operation-service) are none.
- */
-export const fromHandler = <
-  const Op extends Operation.Definition.Any,
-  const Impl extends Operation.WithHandler<Operation.Definition.Any>,
->(
-  op: Op,
-  handler: Impl,
-): Operation.Durable<
-  Operation.Definition.Input<Op>,
-  Operation.Definition.Output<Op>,
-  Operation.Definition.Services<Impl>
-> => make(op, handler.services, Effect.succeed(handler));
-
-/**
- * Resolves the operation's handler before spawning, so the process requires only what the implementation needs.
- * A missing handler keeps failing inside the process, as {@link fromOperation} does.
- */
-export const resolve = <const Op extends Operation.Definition.Any>(
-  op: Op,
-  handlers: OperationHandlerSet.OperationHandlerSet,
-): Effect.Effect<
-  Operation.Durable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>>
 > =>
-  Effect.promise(() => OperationHandlerSet.findHandler(handlers, op)).pipe(
-    Effect.map((handler) => (handler ? fromHandler(op, handler) : fromOperation(op, handlers))),
-  );
-
-const make = <const Op extends Operation.Definition.Any, R>(
-  op: Op,
-  services: readonly Context.Key<any, any>[],
-  getHandler: Effect.Effect<Operation.WithHandler<Operation.Definition.Any>>,
-): Operation.Durable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, R> =>
   Operation.makeDurable(
     {
       key: DXN.getName(op.meta.key),
       input: op.input,
       output: op.output,
-      services,
+      services: op.services,
     },
     (ctx) =>
       Effect.gen(function* () {
@@ -128,7 +88,7 @@ const make = <const Op extends Operation.Definition.Any, R>(
               // keeps a local invocation and a remote one to one contract.
               yield* validateOperationInput(op, input);
 
-              const opHandler = yield* getHandler;
+              const opHandler = yield* OperationHandlerSet.getHandler(handlers, op).pipe(Effect.orDie);
               const output = yield* opHandler
                 .handler(input)
                 .pipe(Effect.orDie, Effect.withSpan(op.meta.key)) as Effect.Effect<
