@@ -749,6 +749,81 @@ describe('CollectionSynchronizer', () => {
 
       expect(spansFor(collectionId).map((span) => span.endAttributes?.['ctx.outcome'])).toEqual(['synced', undefined]);
     });
+
+    // Every connection reaches EDGE under a new peer id, so `syncPeer` splits one catch-up at each reconnect and its
+    // synced spans time only the last connection's tail. `catchUpWithEdge` spans the whole catch-up.
+    describe('EDGE catch-up', () => {
+      const edgePeer = (connection: number) => `subduction-replicator:${spaceId}-connection-${connection}` as PeerId;
+      const named = (method: string) =>
+        spansFor(collectionId).filter((span) => span.options.name === `CollectionSynchronizer.${method}`);
+
+      test('spans every connection until one finds the collection synced', async ({ expect }) => {
+        const synchronizer = await openSynchronizer();
+        synchronizer.setLocalCollectionState(collectionId, STATE_1);
+        synchronizer.onConnectionOpen(edgePeer(1));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_2));
+        synchronizer.onConnectionClosed(edgePeer(1));
+        synchronizer.onConnectionOpen(edgePeer(2));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_2));
+
+        const [catchUp, ...rest] = named('catchUpWithEdge');
+        expect(rest).toEqual([]);
+        expect(catchUp.options.attributes).toEqual({
+          'ctx.collectionId': collectionId,
+          'ctx.spaceId': spaceId,
+          'ctx.trigger': 'initial',
+          'ctx.missingOnLocal': 0,
+          'ctx.missingOnRemote': 1,
+          'ctx.different': 1,
+        });
+        expect(catchUp.ended).toBe(false);
+
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_1));
+        expect(catchUp.endAttributes).toEqual({ 'ctx.outcome': 'synced', 'ctx.episodes': 2, 'ctx.reconnects': 1 });
+        expect(named('syncPeer').map((span) => span.endAttributes?.['ctx.outcome'])).toEqual([
+          'disconnected',
+          'synced',
+        ]);
+      });
+
+      test('ends when a new connection’s first comparison is already synced', async ({ expect }) => {
+        const synchronizer = await openSynchronizer();
+        synchronizer.setLocalCollectionState(collectionId, STATE_1);
+        synchronizer.onConnectionOpen(edgePeer(1));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_2));
+        synchronizer.onConnectionClosed(edgePeer(1));
+        synchronizer.onConnectionOpen(edgePeer(2));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_1));
+
+        expect(named('catchUpWithEdge').map((span) => span.endAttributes)).toEqual([
+          { 'ctx.outcome': 'synced', 'ctx.episodes': 1, 'ctx.reconnects': 1 },
+        ]);
+      });
+
+      test('ends as closed with its collection, never as disconnected', async ({ expect }) => {
+        const synchronizer = await openSynchronizer();
+        synchronizer.setLocalCollectionState(collectionId, STATE_1);
+        synchronizer.onConnectionOpen(edgePeer(1));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_2));
+        synchronizer.onConnectionClosed(edgePeer(1));
+        expect(named('catchUpWithEdge').map((span) => span.ended)).toEqual([false]);
+
+        synchronizer.clearLocalCollectionState(collectionId);
+        expect(named('catchUpWithEdge').map((span) => span.endAttributes)).toEqual([
+          { 'ctx.outcome': 'closed', 'ctx.episodes': 1, 'ctx.reconnects': 1 },
+        ]);
+      });
+
+      test('opens none for a peer that is not EDGE', async ({ expect }) => {
+        const synchronizer = await openSynchronizer();
+        synchronizer.setLocalCollectionState(collectionId, STATE_1);
+        synchronizer.onConnectionOpen(peerId);
+        synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+
+        expect(named('catchUpWithEdge')).toEqual([]);
+        expect(named('syncPeer')).toHaveLength(1);
+      });
+    });
   });
 });
 
