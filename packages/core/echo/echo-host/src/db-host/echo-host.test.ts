@@ -11,6 +11,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -102,7 +103,7 @@ describe('EchoHost queries', () => {
     vi.spyOn(host, 'updateIndexes').mockReturnValue(new Promise(() => {}));
 
     const query = Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]);
-    const response = await Effect.runPromise(
+    const response = await EffectEx.runPromise(
       host.queryService['QueryService.execQuery']({
         query: JSON.stringify(query.ast),
         queryId: '1',
