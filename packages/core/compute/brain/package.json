@@ -23,6 +23,11 @@
       "types": "./dist/types/src/Builtins.d.ts",
       "import": "./dist/lib/Builtins.mjs"
     },
+    "./CompilePrompt": {
+      "source": "./src/CompilePrompt.ts",
+      "types": "./dist/types/src/CompilePrompt.d.ts",
+      "import": "./dist/lib/CompilePrompt.mjs"
+    },
     "./Compiler": {
       "source": "./src/Compiler.ts",
       "types": "./dist/types/src/Compiler.d.ts",

@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as GoalRules from './GoalRules.ts';
-import { REFERENCE, WRONG, SCENARIOS, simulate, toFactTuple } from './testing/index.ts';
+import { REFERENCE, SCENARIOS, WRONG, simulate, toFactTuple } from './testing/index.ts';
 
 describe('GoalRules', () => {
   describe('example goals replay against their reference compilations', () => {

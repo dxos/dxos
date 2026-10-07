@@ -12,6 +12,9 @@
       "path": "../../../common/datalog"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../pipeline-rdf"
     }
   ]

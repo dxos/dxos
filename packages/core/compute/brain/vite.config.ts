@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     Builtins: 'src/Builtins.ts',
+    CompilePrompt: 'src/CompilePrompt.ts',
     Compiler: 'src/Compiler.ts',
     Encoding: 'src/Encoding.ts',
     FactTuple: 'src/FactTuple.ts',

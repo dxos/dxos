@@ -12,9 +12,13 @@ export type StepResult = {
   readonly id: string;
   readonly wake: boolean;
   readonly labels: ReadonlyArray<string>;
+  /** The wakes, with the fact ids behind each. */
+  readonly wakes: ReadonlyArray<GoalRules.Wake>;
   readonly achieved: boolean;
   readonly holds: boolean;
   readonly blocks: boolean;
+  /** Expectations of this step the result violates. */
+  readonly failures: ReadonlyArray<string>;
 };
 
 export type SimulationResult = {
@@ -86,34 +90,35 @@ export const simulate = (
       subgoals: { ...statuses },
     });
     const blocks = (step.actions ?? []).some((action) => rules.checkAction(action).blocked);
-    return {
-      id: step.id,
+    const observed = {
       wake: evaluation.wakes.length > 0,
       labels: evaluation.wakes.map(({ label }) => label),
       achieved: evaluation.achieved,
       holds: evaluation.holds,
       blocks,
     };
+    return { id: step.id, ...observed, wakes: evaluation.wakes, failures: checkStep(step, observed) };
   });
 
-  const failures = check(scenario, steps);
+  const failures = [...steps.flatMap((step) => step.failures), ...checkGroups(scenario, steps)];
   return { ok: failures.length === 0, steps, failures };
 };
 
 const EXPECTATIONS = ['wake', 'achieved', 'holds', 'blocks'] as const;
 
-const check = (scenario: Scenario, results: ReadonlyArray<StepResult>): string[] => {
-  const failures: string[] = [];
-  scenario.steps.forEach((step: Step, index) => {
-    const result = results[index];
-    for (const key of EXPECTATIONS) {
-      const expected = step.expect[key];
-      if (expected !== undefined && expected !== null && result[key] !== expected) {
-        const labels = key === 'wake' && result.labels.length > 0 ? ` [${result.labels.join(', ')}]` : '';
-        failures.push(`${step.id} (${step.note}): ${key}=${result[key]} expected ${expected}${labels}`);
-      }
+/** The expectations of `step` that `result` violates. */
+const checkStep = (step: Step, result: Pick<StepResult, (typeof EXPECTATIONS)[number] | 'labels'>): string[] =>
+  EXPECTATIONS.flatMap((key) => {
+    const expected = step.expect[key];
+    if (expected === undefined || expected === null || result[key] === expected) {
+      return [];
     }
+    const labels = key === 'wake' && result.labels.length > 0 ? ` [${result.labels.join(', ')}]` : '';
+    return [`${step.id} (${step.note}): ${key}=${result[key]} expected ${expected}${labels}`];
   });
+
+const checkGroups = (scenario: Scenario, results: ReadonlyArray<StepResult>): string[] => {
+  const failures: string[] = [];
   for (const group of scenario.wakeOneOf ?? []) {
     if (!group.some((id) => results[scenario.steps.findIndex((step) => step.id === id)]?.wake)) {
       failures.push(`no wake in any of ${group.join(', ')} (time-driven wake expected)`);
