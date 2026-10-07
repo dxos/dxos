@@ -40,6 +40,8 @@ export type ChatContextValue = {
   onCancel: (item: Message.Message | Alarm.Alarm) => void;
   /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
   processor?: AiChatProcessor;
+  /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
+  started: boolean;
   /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */
   queueSize: number;
   setController: (controller: ChatThreadController | null) => void;

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useState } from 'react';
 
+import { SessionConfig } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
@@ -29,6 +30,19 @@ import { type Assistant, AssistantCapabilities } from '#types';
 
 import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions.tsx';
 
+/** Stands in for an agent another plugin registers: listed in the picker, never run by the story. */
+const stubAgent = (
+  id: string,
+  label: string,
+  availability: AssistantCapabilities.AgentAvailability,
+): AssistantCapabilities.Agent => ({
+  id,
+  label,
+  icon: id === SessionConfig.COMPOSER_HARNESS ? 'ph--sparkle--regular' : 'px--anthropic--regular',
+  availability: Atom.make(availability).pipe(Atom.keepAlive),
+  makeTurnProducer: () => Effect.succeed({ runTurn: () => Effect.succeed([]), getSkills: () => [] }),
+});
+
 const presets = [
   {
     id: 'edge-claude-sonnet',
@@ -44,9 +58,9 @@ const presets = [
   },
 ];
 
-type StoryArgs = Pick<ChatOptionsProps, 'presets'>;
+type StoryArgs = Pick<ChatOptionsProps, 'presets' | 'started'>;
 
-const DefaultStory = ({ presets }: StoryArgs) => {
+const DefaultStory = ({ presets, started }: StoryArgs) => {
   const [space] = useSpaces();
   const [feed] = useQuery(space?.db, Filter.type(Feed.Feed));
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
@@ -63,6 +77,7 @@ const DefaultStory = ({ presets }: StoryArgs) => {
       db={space.db}
       context={binder}
       registry={registry}
+      started={started}
       presets={presets}
       preset={preset}
       onPresetChange={setPreset}
@@ -107,6 +122,18 @@ const meta = {
         ...capabilities,
         // The Models tab's online switch reads the assistant settings; without them it would suspend forever.
         Capability.contribute(AssistantCapabilities.Settings, Atom.make<Assistant.Settings>({}).pipe(Atom.keepAlive)),
+        Capability.contribute(
+          AssistantCapabilities.Agent,
+          stubAgent(SessionConfig.COMPOSER_HARNESS, 'Composer', { available: true }),
+        ),
+        Capability.contribute(
+          AssistantCapabilities.Agent,
+          stubAgent('claude-code', 'Claude Code', { available: false, reason: 'needs the Composer desktop app' }),
+        ),
+        Capability.contribute(
+          AssistantCapabilities.Agent,
+          stubAgent('claude-code-edge', 'Claude Code (cloud)', { available: true }),
+        ),
       ],
     }),
   ],
@@ -123,6 +150,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     presets,
+  },
+};
+
+/** A chat that has begun shows its agent but no longer offers the others. */
+export const Started: Story = {
+  args: {
+    presets,
+    started: true,
   },
 };
 
