@@ -43,6 +43,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",

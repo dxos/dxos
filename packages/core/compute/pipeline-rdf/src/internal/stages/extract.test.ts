@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { parseExtractPayload } from './extract.ts';
+import { ExtractPayload, parseExtractPayload } from './extract.ts';
 
 describe('parseExtractPayload', () => {
   test('salvages the JSON object from reasoning-wrapped model output', ({ expect }) => {
@@ -51,5 +52,30 @@ describe('parseExtractPayload', () => {
 
   test('returns no facts for malformed JSON', ({ expect }) => {
     expect(parseExtractPayload('{"facts": [ {broken').facts).toHaveLength(0);
+  });
+});
+
+/** Paths of JSON-schema nodes that declare no type, which Anthropic's structured output rejects. */
+const untypedPaths = (node: unknown, path: string): string[] => {
+  if (typeof node !== 'object' || node === null) {
+    return [];
+  }
+  const typed = ['type', 'anyOf', '$ref', 'enum', 'const'].some((key) => key in node);
+  const properties = Reflect.get(node, 'properties');
+  const items = Reflect.get(node, 'items');
+  const anyOf = Reflect.get(node, 'anyOf');
+  return [
+    ...(typed ? [] : [path]),
+    ...(typeof properties === 'object' && properties !== null
+      ? Object.entries(properties).flatMap(([name, property]) => untypedPaths(property, `${path}.${name}`))
+      : []),
+    ...(items !== undefined ? untypedPaths(items, `${path}[]`) : []),
+    ...(Array.isArray(anyOf) ? anyOf.flatMap((branch) => untypedPaths(branch, path)) : []),
+  ];
+};
+
+describe('ExtractPayload', () => {
+  test('types every property, as structured output requires', ({ expect }) => {
+    expect(untypedPaths(Schema.toJsonSchemaDocument(ExtractPayload).schema, '$')).toEqual([]);
   });
 });

@@ -9,18 +9,27 @@ import type * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 
-import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import {
+  BrainSkill,
+  ConversationSkill,
+  GoalsSkill,
+  InterviewSkill,
+  ModesSkill,
+  NoteTakerSkill,
+  RelaySkill,
+} from '#skills';
 import { Memory, Mode } from '#types';
 
 import { loadCopies, openBinder } from './agent-skills.ts';
 import { AgentOperationError } from './errors.ts';
 
-/** Bound in every mode: the agent's voice, mode switching, relay and goals (reachable from any mode). */
+/** Bound in every mode: the agent's voice, mode switching, relay, goals and its brain (reachable from any mode). */
 export const BASE_SKILL_KEYS: readonly string[] = [
   ConversationSkill.key,
   ModesSkill.key,
   RelaySkill.key,
   GoalsSkill.key,
+  BrainSkill.key,
 ];
 
 type BuiltinMode = { name: string; description: string; skills: readonly string[]; records?: Memory.Kind[] };

@@ -49,7 +49,11 @@ const trim = (): void => {
   const keep = marks.slice(-CAPACITY);
   clearOwnMarks(marks);
   for (const mark of keep) {
-    performance.mark(mark.name, { startTime: mark.startTime, detail: mark.detail });
+    // workerd rejects a `detail` that is not an object, and a mark without one reads back as `null`.
+    performance.mark(
+      mark.name,
+      mark.detail == null ? { startTime: mark.startTime } : { startTime: mark.startTime, detail: mark.detail },
+    );
   }
   written = keep.length;
 };
@@ -65,11 +69,22 @@ export const absoluteNow = (): number => performance.timeOrigin + performance.no
  * they also show on the DevTools Performance panel's Timings track.
  */
 export const markWork = (name: string, detail?: string): void => {
-  performance.mark(WORK_MARK_PREFIX + name, detail === undefined ? undefined : { detail });
+  // Wrapped in an object: workerd's `performance.mark` rejects a primitive `detail`.
+  if (detail === undefined) {
+    performance.mark(WORK_MARK_PREFIX + name);
+  } else {
+    performance.mark(WORK_MARK_PREFIX + name, { detail: { text: detail } });
+  }
   if (++written > CAPACITY * 2) {
     trim();
   }
 };
+
+/** The text {@link markWork} stored in a mark's `detail`. */
+const markText = (detail: unknown): string | undefined =>
+  typeof detail === 'object' && detail !== null && 'text' in detail && typeof detail.text === 'string'
+    ? detail.text
+    : undefined;
 
 /** This realm's marks at or after `since` (epoch ms), oldest first, without the prefix. */
 export const getWorkMarks = (since = 0): WorkMark[] =>
@@ -77,7 +92,8 @@ export const getWorkMarks = (since = 0): WorkMark[] =>
     .map((mark): WorkMark => {
       const at = performance.timeOrigin + mark.startTime;
       const name = mark.name.slice(WORK_MARK_PREFIX.length);
-      return typeof mark.detail === 'string' ? { name, at, detail: mark.detail } : { name, at };
+      const text = markText(mark.detail);
+      return text === undefined ? { name, at } : { name, at, detail: text };
     })
     .filter((mark) => mark.at >= since);
 

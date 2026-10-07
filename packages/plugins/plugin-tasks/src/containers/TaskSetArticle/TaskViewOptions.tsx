@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
+import { GroupMenu, SortMenu } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
@@ -35,67 +34,26 @@ export type TaskSortMenuProps = {
 };
 
 /**
- * The order-by field and its direction, as one menu beside the filter. `Manual` is the set's own
- * order — the one a drag writes — so it is the only field without a direction to pick.
+ * The order-by field and its direction. `Manual` is the set's own order — the one a drag writes — so
+ * it is the only field without a direction to pick.
  */
 export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const sorted = value.field !== 'manual';
-
-  const group = useMemo(
-    () =>
-      createMenuItemGroup('taskSort', {
-        label: t('sort.label'),
-        icon: 'ph--sort-ascending--regular',
-        variant: 'dropdownMenu',
-        selectCardinality: 'single',
-        value: value.field,
-      }),
-    [t, value.field],
+  const fields = useMemo(
+    () => TaskSetView.SortField.literals.map((id) => ({ id, label: t(`sort-${id}.label`), icon: SORT_ICONS[id] })),
+    [t],
   );
-
-  const actions = useCallback(
-    () => [
-      ...TaskSetView.SortField.literals.map((field) =>
-        createMenuAction(`sort-${field}`, () => onChange({ ...value, field }), {
-          label: t(`sort-${field}.label`),
-          icon: SORT_ICONS[field],
-          checked: value.field === field,
-          testId: `tasks.sort.${field}`,
-        }),
-      ),
-      createLineSeparator('taskSortSeparator').nodes[0],
-      ...TaskSetView.SortDirection.literals.map((direction) =>
-        createMenuAction(`sort-${direction}`, () => onChange({ ...value, direction }), {
-          label: t(`sort-${direction}.label`),
-          icon: direction === 'asc' ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
-          checked: sorted && value.direction === direction,
-          disabled: !sorted,
-          testId: `tasks.sort.${direction}`,
-        }),
-      ),
-    ],
-    [value, sorted, onChange, t],
-  );
-
+  const directionLabels = useMemo(() => ({ asc: t('sort-asc.label'), desc: t('sort-desc.label') }), [t]);
   return (
-    <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <Button.Root
-        // The trigger names the order while it is not the set's own, so a reader can tell why the
-        // rows are not where they dragged them.
-        icon={
-          !sorted
-            ? 'ph--arrows-down-up--regular'
-            : value.direction === 'asc'
-              ? 'ph--sort-ascending--regular'
-              : 'ph--sort-descending--regular'
-        }
-        iconOnly={!sorted}
-        // The field alone: the sort glyph beside it already says this is the order.
-        label={sorted ? t(`sort-${value.field}.label`) : t('sort.label')}
-        data-testid='tasks.sort'
-      />
-    </ActionMenu>
+    <SortMenu
+      fields={fields}
+      value={value}
+      onChange={onChange}
+      label={t('sort.label')}
+      directionLabels={directionLabels}
+      unsorted='manual'
+      testId='tasks.sort'
+    />
   );
 };
 
@@ -109,42 +67,19 @@ export type TaskGroupMenuProps = {
 /** What the list is grouped by, as a single-select menu beside the sort. */
 export const TaskGroupMenu = ({ value, onChange }: TaskGroupMenuProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const grouped = value !== 'none';
-
-  const group = useMemo(
-    () =>
-      createMenuItemGroup('taskGroup', {
-        label: t('group.label'),
-        icon: 'ph--rows--regular',
-        variant: 'dropdownMenu',
-        selectCardinality: 'single',
-        value,
-      }),
-    [t, value],
+  const fields = useMemo(
+    () => TaskSetView.GroupField.literals.map((id) => ({ id, label: t(`group-${id}.label`), icon: GROUP_ICONS[id] })),
+    [t],
   );
-
-  const actions = useCallback(
-    () =>
-      TaskSetView.GroupField.literals.map((field) =>
-        createMenuAction(`group-${field}`, () => onChange(field), {
-          label: t(`group-${field}.label`),
-          icon: GROUP_ICONS[field],
-          checked: value === field,
-          testId: `tasks.group.${field}`,
-        }),
-      ),
-    [value, onChange, t],
-  );
-
   return (
-    <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <Button.Root
-        icon={grouped ? GROUP_ICONS[value] : 'ph--rows--regular'}
-        iconOnly={!grouped}
-        label={grouped ? t(`group-${value}.label`) : t('group.label')}
-        data-testid='tasks.group'
-      />
-    </ActionMenu>
+    <GroupMenu
+      fields={fields}
+      value={value}
+      onChange={onChange}
+      label={t('group.label')}
+      none='none'
+      testId='tasks.group'
+    />
   );
 };
 
