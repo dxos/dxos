@@ -283,6 +283,16 @@ test.describe('SceneView', () => {
     expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });
 
+  test('the hue grid colours the node and none clears it', async () => {
+    await scene.clickNode('scene:root/a');
+    const grid = page.getByTestId('hue-grid');
+    await expect(grid.locator('[data-hue-option="none"]')).toHaveAttribute('aria-checked', 'true');
+    await grid.locator('[data-hue-option="orange"]').click();
+    await expect(grid.locator('[data-hue-option="orange"]')).toHaveAttribute('aria-checked', 'true');
+    await grid.locator('[data-hue-option="none"]').click();
+    await expect(grid.locator('[data-hue-option="none"]')).toHaveAttribute('aria-checked', 'true');
+  });
+
   test('the geometry fields step by the grid and move the node', async () => {
     await scene.clickNode('scene:root/c');
     const node = await scene.box(scene.node('scene:root/c'));

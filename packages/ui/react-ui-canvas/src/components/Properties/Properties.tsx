@@ -42,6 +42,7 @@ import {
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { resolveStyle } from '../../utils/style.ts';
+import { HueGridField } from './HueGrid.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
@@ -73,8 +74,12 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   );
 };
 
-/** Renderers by field name for the built-in types' list fields; a host may pass its own. */
-export const DEFAULT_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
+/** Renderers by field path for the built-in types' list fields and the hue grid; a host may pass its own. */
+export const DEFAULT_FIELDS: FormFieldMap = {
+  'attributes': LinesField,
+  'methods': LinesField,
+  'style.hue': HueGridField,
+};
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
   line: LineLink,
