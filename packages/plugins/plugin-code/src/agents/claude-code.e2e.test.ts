@@ -25,11 +25,13 @@ import * as Protocol from './Protocol.ts';
 //
 // Claude Code on this computer, end to end: the real agent helper, Claude Code's ACP adapter and the
 // `claude` CLI against the real API, driven by the same turn engine the desktop app runs. Runs only where
-// `DX_E2E_CLAUDE=1` is set and `DX_ANTHROPIC_API_KEY` and `claude` are.
+// `DX_E2E_CLAUDE=1` is set, with `claude` and a credential: `DX_CLAUDE_CODE_OAUTH_TOKEN` (from
+// `claude setup-token`) or `DX_ANTHROPIC_API_KEY`.
 //
 
 /** Opt-in: the suite spends API calls and runs a real agent. */
 const ENABLED = process.env.DX_E2E_CLAUDE === '1';
+const OAUTH_TOKEN = process.env.DX_CLAUDE_CODE_OAUTH_TOKEN;
 const API_KEY = process.env.DX_ANTHROPIC_API_KEY;
 /** Small and quick; the tests check the plumbing, not the model. */
 const MODEL = process.env.DX_E2E_CLAUDE_MODEL ?? 'claude-haiku-4-5-20251001';
@@ -95,7 +97,7 @@ const findRequest = (feed: Feed.Feed) =>
     }
   });
 
-describe.runIf(ENABLED && API_KEY && CLAUDE)('Claude Code on this computer, end to end', () => {
+describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on this computer, end to end', () => {
   const TestLayer = Layer.mergeAll(
     TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
     Layer.succeed(Trace.TraceService, { write: () => {} }),
@@ -111,7 +113,8 @@ describe.runIf(ENABLED && API_KEY && CLAUDE)('Claude Code on this computer, end 
     mkdirSync(work, { recursive: true });
     execFileSync('git', ['init', '-q'], { cwd: work });
     Object.assign(process.env, {
-      ANTHROPIC_API_KEY: API_KEY,
+      // Claude Code prefers a key to a token, so only one is set.
+      ...(OAUTH_TOKEN ? { CLAUDE_CODE_OAUTH_TOKEN: OAUTH_TOKEN } : { ANTHROPIC_API_KEY: API_KEY }),
       ANTHROPIC_MODEL: MODEL,
       CLAUDE_CONFIG_DIR: join(root, 'claude'),
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',

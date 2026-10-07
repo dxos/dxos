@@ -51,12 +51,13 @@ which EDGE holds and proxies. Point it at the stack as the container reaches it:
 
 ```bash
 DX_RUN_MANUAL_TESTS=1 DX_E2E_EDGE_URL=http://172.17.0.1:8787 DX_CLAUDE_CODE_OAUTH_TOKEN=<token> \
-  moon run --force plugin-claude:test -- src/e2e/ClaudeCodeEdge
+  moon run plugin-claude:test -- src/e2e/ClaudeCodeEdge
 ```
 
 The stack must run compute-service with `functions.noAuth`. `DX_E2E_EDGE_FAKE_AGENT=1` runs only the
-plumbing test, for a container whose image runs edge's fake ACP agent instead of Claude Code. `--force`
-matters for every manual run: moon caches a test task without regard to these variables.
+plumbing test, for a container whose image runs edge's fake ACP agent instead of Claude Code. The
+task's cache key covers the `DX_E2E_*` variables but not the credentials, so a run that only adds or
+changes a token replays the last result: change any other input, or run vitest in the package directly.
 
 Flows that depend on unfinished work (EDGE sandboxes, registry lookup, `ShellService` on Tauri and
 the vite dev server) are listed as `todo` in the suite and are filled in as that work lands.
