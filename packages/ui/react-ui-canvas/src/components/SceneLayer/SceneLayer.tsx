@@ -19,11 +19,11 @@ import { type SceneStore } from '../../model/store.ts';
 import {
   type ElementId,
   type Link,
+  type LinkLine,
   type Marker,
   type Node,
   type NodeId,
   type Scene,
-  type LinkLine,
   type StyleHue,
   isBoxNode,
   isEllipseNode,
