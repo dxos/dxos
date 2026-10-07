@@ -46,6 +46,11 @@ time-driven evaluation a durable home.
 
 A local stand-in with the same interface runs in-process for tests, stories and offline work.
 
+**Portability is a hard requirement:** everything the brain runs — the rule engine, the fact index,
+the compiler's replay gate — must run both in the browser and on Cloudflare Workers (workerd, inside
+the Durable Object), as well as in Node for tests. That rules out engines that need Node built-ins,
+threads, runtime `eval`, or a bundle beyond Workers' script size limit.
+
 ### 2. Facts live in feeds; the brain's index is derived
 
 ECHO feeds are the record of what the agent believes. The Durable Object follows them and keeps a
