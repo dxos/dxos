@@ -128,6 +128,7 @@ describe('SqlService', () => {
         yield* host`CREATE TABLE host_log (entry TEXT)`;
         yield* exec('a', 'CREATE TABLE scratch (id INTEGER)');
         const inside = yield* Deferred.make<void>();
+        const release = yield* Deferred.make<void>();
         const transaction = yield* inDatabase(
           'a',
           Effect.gen(function* () {
@@ -136,15 +137,19 @@ describe('SqlService', () => {
               Effect.gen(function* () {
                 yield* sql`INSERT INTO scratch VALUES (1)`;
                 yield* Deferred.succeed(inside, undefined);
-                yield* Effect.sleep('20 millis');
+                yield* Deferred.await(release);
                 return yield* Effect.fail('abort');
               }),
             );
           }),
         ).pipe(Effect.exit, Effect.forkChild);
         yield* Deferred.await(inside);
-        yield* host`INSERT INTO host_log VALUES ('kept')`;
+        // Started while the transaction is open; without the lock it would join it and be rolled back.
+        const hostWrite = yield* host`INSERT INTO host_log VALUES ('kept')`.pipe(Effect.forkChild);
+        yield* Effect.yieldNow;
+        yield* Deferred.succeed(release, undefined);
         yield* Fiber.await(transaction);
+        yield* Fiber.join(hostWrite);
         return yield* host<{ entry: string }>`SELECT entry FROM host_log`;
       }),
     );
