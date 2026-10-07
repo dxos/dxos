@@ -104,6 +104,8 @@ test.describe('SceneView lattice', () => {
   });
 
   test('dragging a face steps it one cell and leaves the opposite face where it was', async () => {
+    // Fit frames the shapes tightly, so step out to leave room below E for the drag.
+    await scene.zoomOut();
     await scene.clickNode('e');
     const before = await scene.box(scene.node('e'));
     // E's east neighbour is F, so grow downwards: the south face most of a row down.
