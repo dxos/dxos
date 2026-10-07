@@ -312,6 +312,26 @@ conditional and has none of a goal's kinds. Earlier drafts conflated the two; th
 | 7   | "Never book meetings on Fridays"                 | Constraint           | action                       | Blocks or rewrites the action                                          | Checked before every action, not on facts                 |
 | 8   | "Help me draft this PR description"              | Outcome (session)    | fact (the conversation)      | Normal chat work                                                       | Whether a session goal is a goal or just the task at hand |
 
+### Packages, dialect and fact encoding
+
+- **`@dxos/datalog`** (`packages/common/datalog`) — a generic, dependency-free Datalog engine: parser,
+  static checks (arity, safety, stratification), incremental semi-naive evaluation, provenance (which
+  facts derived a conclusion) and a registry for built-ins. Pure TypeScript, so it runs unchanged in
+  the browser, in a workerd Durable Object and in Node.
+- **`@dxos/brain`** (`packages/core/compute/brain`) — the agent-specific layer on top: the `FactTuple`
+  ↔ predicate mapping, the `about` / `concerns` / `elapsed` built-ins, goal compilation and the replay
+  gate, and the example scenarios as evals. Used in-process by plugin-agent (M2) and by the EDGE
+  Durable Object (M3). Its relation to plugin-brain's per-space fact store is settled in M2.
+- **Dialect:** stratified negation, aggregates (`count`, `min`, `max`, `sum`) and built-ins,
+  Soufflé-like syntax, evaluated incrementally. No probabilistic, answer-set or existential rules:
+  every program terminates and is cheap enough to evaluate per fact.
+- **Fact encoding:** storage is generic — `fact(F, S, P, O)` plus metadata relations keyed by `F`
+  (`speaker`, `force`, `polarity`, `saidAt`, …), lossless with `FactTuple` and RDF. Rules may use
+  shorthand for canonical predicates — `helps_with(dima, X)` expands to `fact(_, dima, helps_with, X)`,
+  and `helps_with(F, dima, X)` exposes the id — and the extractor maps surface predicates to a canonical
+  vocabulary, keeping the original as `surface(F, "will-work-on")`, so a misspelled predicate is a
+  compile error rather than a silent miss.
+
 ## Implementation
 
 Milestones, each ending in a demo that can be watched.
