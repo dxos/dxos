@@ -290,6 +290,7 @@ const TestLayer = brain.layer.pipe(
         Relay.Relay,
         Message.Message,
         FactEntry.FactEntry,
+        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       extraServices: brain.layer,
@@ -380,10 +381,7 @@ describe('end-of-turn triggers', () => {
           ),
         ).run;
         const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.quote))).toEqual([
-          PROMPTS.distractor,
-          PROMPTS.up,
-        ]);
+        expect(entries.map(({ fact }) => fact.assertion.quote)).toEqual([PROMPTS.distractor, PROMPTS.up]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -561,6 +559,7 @@ const PostedTestLayer = brain.layer.pipe(
         Relay.Relay,
         Message.Message,
         FactEntry.FactEntry,
+        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       extraServices: brain.layer,
@@ -579,7 +578,7 @@ const recordedQuotes = (chat: Chat.Chat) =>
       ),
     ).run;
     const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-    return entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.quote));
+    return entries.map(({ fact }) => fact.assertion.quote);
   });
 
 describe('keep me posted', () => {

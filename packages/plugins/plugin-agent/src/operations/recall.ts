@@ -10,7 +10,7 @@ import { HasSubject } from '@dxos/types';
 
 import { FactEntry, Goal, Memory, MemoryOperation, Profile } from '#types';
 
-import { queryFactEntries } from './annotations.ts';
+import { queryFacts } from './annotations.ts';
 
 /** pipeline-rdf's entity id for a surface form (`normalizeEntityId`), restated to keep its query engine out of this module. */
 const slug = (label: string): string =>
@@ -55,8 +55,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
       // Expired facts stay in the feed as history; recall leaves them out.
       const now = new Date().toISOString();
       const ids = entity ? entityIds(entity) : undefined;
-      const facts = (yield* queryFactEntries)
-        .flatMap((entry) => entry.facts.map((fact) => ({ entry, fact })))
+      const facts = (yield* queryFacts)
         .filter(({ fact }) => !fact.assertion.validTo || fact.assertion.validTo > now)
         .filter(({ fact }) => {
           if (!ids) {
@@ -87,12 +86,12 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
           origin: memory.origin,
           observedAt: memory.observedAt,
         })),
-        facts: facts.map(({ entry, fact }) => ({
+        facts: facts.map(({ pass, fact }) => ({
           fact: FactEntry.factText(fact),
           ...(fact.assertion.quote ? { quote: fact.assertion.quote } : {}),
           ...(fact.attribution.agent ? { speaker: fact.attribution.agent } : {}),
           source: fact.attribution.source,
-          ...(entry.name ? { sourceName: entry.name } : {}),
+          ...(pass.name ? { sourceName: pass.name } : {}),
           saidAt: fact.attribution.generatedAtTime,
         })),
         goals: goals.map((goal) => ({

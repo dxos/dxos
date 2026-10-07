@@ -70,6 +70,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
         Relay.Relay,
         Message.Message,
         FactEntry.FactEntry,
+        FactEntry.ExtractionPass,
       ],
     }).initialize();
     await client.halo.createIdentity();
