@@ -9254,6 +9254,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/edge-compute':
+        specifier: workspace:*
+        version: link:../../core/compute/edge-compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

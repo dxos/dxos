@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type * as Chat from '@dxos/assistant/Chat';
+import type * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Filter, Obj, type Registry } from '@dxos/echo';
@@ -293,3 +294,52 @@ export const answerPermissions = ({
 const pick = (block: ContentBlock.Request, decision: Decision) =>
   block.options.find((option) => option.kind === `${decision}_once`) ??
   block.options.find((option) => option.kind?.startsWith(decision));
+
+/** Per turn: a real agent with tools is slow, and the reply is all a turn waits on. */
+export const TURN_TIMEOUT = 240_000;
+
+/** Sends `prompt` and waits for the turn it starts to end, returning everything the agent said in it. */
+export const turn = Effect.fnUntraced(function* (session: AgentService.Session, prompt: string) {
+  const before = yield* messages(session.feed);
+  const seen = new Set(before.map((message) => message.id));
+  const ended = before.filter(endsTurn).length;
+  yield* session.submitPrompt(prompt);
+  let latest = before;
+  const after = yield* eventually(
+    messages(session.feed).pipe(
+      Effect.tap((all) => Effect.sync(() => (latest = all))),
+      Effect.map((all) => (all.filter(endsTurn).length > ended ? all : undefined)),
+    ),
+    () => `the turn did not end: ${prompt}\nthe chat ends with:\n${summarize(latest.slice(-5))}`,
+    TURN_TIMEOUT,
+  );
+  return after
+    .filter((message) => message.sender.role === 'assistant' && !seen.has(message.id))
+    .map((message) => Message.extractText(message))
+    .filter((text) => text.length > 0)
+    .join('\n');
+});
+
+export const messages = Effect.fnUntraced(function* (feed: Feed.Feed) {
+  return (yield* Feed.query(feed, Filter.type(Message.Message)).run).filter(Obj.instanceOf(Message.Message));
+});
+
+/** One line per message, naming its blocks, so a turn that stalls says where. */
+const summarize = (tail: readonly Message.Message[]): string =>
+  tail
+    .map(
+      (message) =>
+        `${message.sender.role}: ${message.blocks.map((block) => block._tag).join(', ')} ${Message.extractText(message).slice(0, 200)}`,
+    )
+    .join('\n');
+
+/** An ACP turn closes with its usage, so a stats block marks a turn that ended rather than one still talking. */
+const endsTurn = (message: Message.Message): boolean => message.blocks.some((block) => block._tag === 'stats');
+
+/** The assistant's text, in the order the turns produced it. */
+export const transcript = Effect.fnUntraced(function* (feed: Feed.Feed) {
+  return (yield* messages(feed))
+    .filter((message) => message.sender.role === 'assistant')
+    .map((message) => Message.extractText(message))
+    .filter((text) => text.length > 0);
+});

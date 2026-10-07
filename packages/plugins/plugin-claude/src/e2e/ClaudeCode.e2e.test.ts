@@ -35,6 +35,7 @@ import {
   type Decision,
   HAS_CREDENTIAL,
   OAUTH_TOKEN,
+  TURN_TIMEOUT,
   adapterCommand,
   answerPermissions,
   eventually,
@@ -42,6 +43,8 @@ import {
   isolateEnvironment,
   processesUnder,
   serveComposerMcp,
+  transcript,
+  turn,
 } from './harness.ts';
 
 /**
@@ -55,9 +58,6 @@ import {
  * Tagged `manual`: it spends real tokens, so `DX_RUN_MANUAL_TESTS=1` with `DX_CLAUDE_CODE_OAUTH_TOKEN`
  * or `DX_ANTHROPIC_API_KEY` opts in and CI never selects it. See the package README for the command.
  */
-
-/** Per turn: a real agent with tools is slow, and the reply is all a turn waits on. */
-const TURN_TIMEOUT = 240_000;
 
 const PROJECT_NAME = 'Lighthouse';
 const RUNBOOK_NAME = 'Rotation runbook';
@@ -144,52 +144,6 @@ const setup = Effect.fnUntraced(function* ({ composer = false, decide = () => 'a
   const asked = yield* answerPermissions({ chat, feed, sessions, decide });
   const session = yield* AgentService.getSession(chat);
   return { workspace, sessions, host, chat, feed, asked, session };
-});
-
-/** Sends `prompt` and waits for the turn it starts to end, returning everything the agent said in it. */
-const turn = Effect.fnUntraced(function* (session: AgentService.Session, prompt: string) {
-  const before = yield* messages(session.feed);
-  const seen = new Set(before.map((message) => message.id));
-  const ended = before.filter(endsTurn).length;
-  yield* session.submitPrompt(prompt);
-  let latest = before;
-  const after = yield* eventually(
-    messages(session.feed).pipe(
-      Effect.tap((all) => Effect.sync(() => (latest = all))),
-      Effect.map((all) => (all.filter(endsTurn).length > ended ? all : undefined)),
-    ),
-    () => `the turn did not end: ${prompt}\nthe chat ends with:\n${summarize(latest.slice(-5))}`,
-    TURN_TIMEOUT,
-  );
-  return after
-    .filter((message) => message.sender.role === 'assistant' && !seen.has(message.id))
-    .map((message) => Message.extractText(message))
-    .filter((text) => text.length > 0)
-    .join('\n');
-});
-
-const messages = Effect.fnUntraced(function* (feed: Feed.Feed) {
-  return (yield* Feed.query(feed, Filter.type(Message.Message)).run).filter(Obj.instanceOf(Message.Message));
-});
-
-/** One line per message, naming its blocks, so a turn that stalls says where. */
-const summarize = (tail: readonly Message.Message[]): string =>
-  tail
-    .map(
-      (message) =>
-        `${message.sender.role}: ${message.blocks.map((block) => block._tag).join(', ')} ${Message.extractText(message).slice(0, 200)}`,
-    )
-    .join('\n');
-
-/** An ACP turn closes with its usage, so a stats block marks a turn that ended rather than one still talking. */
-const endsTurn = (message: Message.Message): boolean => message.blocks.some((block) => block._tag === 'stats');
-
-/** The assistant's text, in the order the turns produced it. */
-const transcript = Effect.fnUntraced(function* (feed: Feed.Feed) {
-  return (yield* messages(feed))
-    .filter((message) => message.sender.role === 'assistant')
-    .map((message) => Message.extractText(message))
-    .filter((text) => text.length > 0);
 });
 
 /** A project with two tasks and a runbook among its artifacts, seeded directly rather than through the agent. */
@@ -485,7 +439,7 @@ describe.skipIf(!HAS_CREDENTIAL)('Claude Code, end to end', { tags: ['manual'] }
 
   // Flows the suite covers once the work they exercise lands; each names what it will assert.
   describe('planned', () => {
-    it.todo('remote: a chat on Claude Code runs in an EDGE sandbox, with the same turns, tools and permissions');
+    it.todo('remote: permission requests from the sandboxed agent reach the chat, and a person answers them');
     it.todo('remote: Composer MCP reaches the sandboxed agent with the credentials provisioned for it');
     it.todo('registry: a chat names its process by a dxn: reference, resolved through the operation registry');
     it.todo('shell: ShellService runs, streams and kills bash commands, through Tauri and the vite dev server');
