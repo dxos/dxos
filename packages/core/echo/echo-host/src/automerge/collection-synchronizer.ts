@@ -194,7 +194,7 @@ export class CollectionSynchronizer extends Resource {
     // An EDGE span outlives the connection: the next one resumes it, so it only counts the drop.
     for (const span of this._edgeSyncSpans.values()) {
       if (span.connectedPeers.delete(peerId)) {
-        span.reconnects++;
+        span.disconnects++;
       }
     }
     this._endSyncSpans('disconnected', (_, spanPeerId) => spanPeerId === peerId);
@@ -342,7 +342,7 @@ export class CollectionSynchronizer extends Resource {
       this._edgeSyncSpans.set(collectionId, {
         spanId,
         connections: 1,
-        reconnects: 0,
+        disconnects: 0,
         connectedPeers: new Set([peerId]),
       });
     } else {
@@ -376,7 +376,7 @@ export class CollectionSynchronizer extends Resource {
 
     this._edgeSyncSpans.delete(collectionId);
     trace.spanEnd(span.spanId, {
-      attributes: { outcome, connections: span.connections, reconnects: span.reconnects },
+      attributes: { outcome, connections: span.connections, disconnects: span.disconnects },
     });
   }
 
@@ -499,7 +499,7 @@ type EdgeSyncSpan = {
   /** Connections to EDGE that diverged while the span was open. */
   connections: number;
   /** Connections to EDGE that dropped while the span was open. */
-  reconnects: number;
+  disconnects: number;
   /** EDGE peers of this span still connected; a drop counts once per peer. */
   connectedPeers: Set<PeerId>;
 };
@@ -667,6 +667,6 @@ const isValidDocumentId = (documentId: DocumentId) => {
 /**
  * The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334) queries
  * this name, the attributes set in `_startSyncSpan` and the trigger and outcome values: update it when changing them.
- * A span with EDGE also ends with `connections` and `reconnects`: how many connections the catch-up took.
+ * A span with EDGE also ends with `connections` and `disconnects`: how many connections diverged and dropped under it.
  */
 const SYNC_SPAN_METHOD = 'syncPeer';

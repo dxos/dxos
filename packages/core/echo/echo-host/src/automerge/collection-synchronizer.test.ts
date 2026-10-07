@@ -779,7 +779,7 @@ describe('CollectionSynchronizer', () => {
         expect(span.ended).toBe(false);
 
         synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_1));
-        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'synced', 'ctx.connections': 2, 'ctx.reconnects': 1 });
+        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'synced', 'ctx.connections': 2, 'ctx.disconnects': 1 });
       });
 
       test('ends when a new connection’s first comparison is already synced', async ({ expect }) => {
@@ -792,7 +792,7 @@ describe('CollectionSynchronizer', () => {
         synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_1));
 
         expect(spansFor(collectionId).map((span) => span.endAttributes)).toEqual([
-          { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.reconnects': 1 },
+          { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.disconnects': 1 },
         ]);
       });
 
@@ -806,7 +806,7 @@ describe('CollectionSynchronizer', () => {
 
         synchronizer.clearLocalCollectionState(collectionId);
         expect(spansFor(collectionId).map((span) => span.endAttributes)).toEqual([
-          { 'ctx.outcome': 'closed', 'ctx.connections': 1, 'ctx.reconnects': 1 },
+          { 'ctx.outcome': 'closed', 'ctx.connections': 1, 'ctx.disconnects': 1 },
         ]);
       });
 
@@ -822,8 +822,8 @@ describe('CollectionSynchronizer', () => {
         expect(
           spansFor(collectionId).map((span) => [span.options.attributes?.['ctx.trigger'], span.endAttributes]),
         ).toEqual([
-          ['initial', { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.reconnects': 0 }],
-          ['local', { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.reconnects': 0 }],
+          ['initial', { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.disconnects': 0 }],
+          ['local', { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.disconnects': 0 }],
         ]);
       });
     });
