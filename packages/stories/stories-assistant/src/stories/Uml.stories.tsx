@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Filter, Ref } from '@dxos/echo';
@@ -137,6 +138,14 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
   },
 }));
 
+/** A tldraw shape record, as far as the count reads it. */
+const isShapeRecord = Schema.is(
+  Schema.Struct({
+    typeName: Schema.Literal('shape'),
+    meta: Schema.optional(Schema.Struct({ object: Schema.optional(Schema.String) })),
+  }),
+);
+
 /** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
 const countObjectRecords = async (objectId?: string): Promise<number> => {
   if (!storySpace) {
@@ -145,12 +154,9 @@ const countObjectRecords = async (objectId?: string): Promise<number> => {
   const { Drawing } = await import('@dxos/plugin-illustrator');
   const canvases = await storySpace.db.query(Filter.type(Drawing.Canvas)).run();
   return canvases.reduce((count, canvas) => {
-    const records = Object.values(canvas.content ?? {}) as any[];
+    const shapes = Object.values(canvas.content ?? {}).filter(isShapeRecord);
     return (
-      count +
-      records.filter(
-        (record) => record?.typeName === 'shape' && (objectId ? record.meta?.object === objectId : record.meta?.object),
-      ).length
+      count + shapes.filter((record) => (objectId ? record.meta?.object === objectId : record.meta?.object)).length
     );
   }, 0);
 };
