@@ -5,9 +5,10 @@ name: Publish
 # here (a different filename fails OIDC). Two flows, by trigger:
 #
 #   - push to main (automatic → @latest): maintain the Changesets "Version Packages" PR; merging that PR
-#     (a push with the versions bumped and no changesets left) publishes the bumped packages to npm @latest
-#     with provenance, then tags and releases each version group. The human gate is merging the PR — nobody
-#     runs changeset/publish locally, and the PR is maintained by dxos-bot's PAT so Check runs on it like any
+#     publishes the bumped packages to npm @latest with provenance, then tags and releases each version group.
+#     The merge publishes even when other PRs have landed more changesets on main since the PR was last
+#     refreshed; those wait for the next Version PR. The human gate is merging the PR — nobody runs
+#     changeset/publish locally, and the PR is maintained by dxos-bot's PAT so Check runs on it like any
 #     other PR.
 #   - manual workflow_dispatch (→ @next): cut a SNAPSHOT pre-release — `changeset version --snapshot next`
 #     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
@@ -27,8 +28,11 @@ on:
       - main
   workflow_dispatch: {} # Manual dispatch = a @next snapshot pre-release (pick the commit via the ref selector).
 
+# Release runs (the squash-merged Version PR) queue in their own group. GitHub keeps one pending run per group
+# and cancels it when a newer one arrives, so in a shared group an ordinary push landing while the release run
+# waited would cancel the release, and that commit is the only one that triggers a publish.
 concurrency:
-  group: publish-${{ github.ref }}
+  group: publish-${{ github.ref }}${{ github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages') && '-release' || '' }}
   cancel-in-progress: false
 
 permissions:
@@ -49,6 +53,10 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 90
+    env:
+      # A "Version packages" commit on main is the squash-merged Version PR, i.e. the release commit. The
+      # repo is squash-only with the PR title as the subject, so one push carries one PR.
+      RELEASE: ${{ github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -93,40 +101,32 @@ jobs:
             echo 'No pending changesets — skipping snapshot version.'
           fi
 
+      # Only runs that publish need a build: an ordinary push just refreshes the Version PR.
       - name: Build
+        if: env.RELEASE == 'true' || github.event_name == 'workflow_dispatch'
         run: moon run :build
         env:
           NODE_ENV: production
 
       # Shell must be bundled before npm publish.
       - name: Bundle Shell
+        if: env.RELEASE == 'true' || github.event_name == 'workflow_dispatch'
         run: moon run shell:bundle
         env:
           NODE_ENV: production
 
-      # @latest (push): when changesets exist, maintains/updates the "Version Packages" PR; when that PR is
-      # merged (versions bumped, no changesets remain), runs the publish command instead.
-      - name: Version PR or publish (@latest)
-        if: github.event_name == 'push'
-        uses: changesets/action@v1
-        with:
-          # dxos-bot's PAT, not GITHUB_TOKEN: GitHub's recursion guard parks every `pull_request` run a
-          # GITHUB_TOKEN update triggers in `action_required`, so a GITHUB_TOKEN-owned Version PR reports
-          # zero check runs until a human approves each one by hand. The action reads
-          # `process.env.GITHUB_TOKEN` ahead of this input, so that env var must stay unset here.
-          github-token: ${{ secrets.GH_DXOS_BOT_PAT }}
-          version: pnpm changeset:version
-          # `--no-git-tag`: tagging and releases are done per group by the next step, not per package. The
-          # action pushes each tag it finds in the publish output as its own `git push`, and GitHub's ref
-          # backend rejected roughly half of ~300 back-to-back single-ref pushes with `fatal error in
-          # commit_refs`. Suppressing the tags at the source leaves that loop nothing to iterate over.
-          publish: pnpm changeset:publish --no-git-tag
-          # Per-package releases are replaced by one release per version group (see the next step). The
-          # action derives releases from the tags `changeset publish` prints, so this is already inert under
-          # `--no-git-tag` — set explicitly so the intent survives a future flag change.
-          createGithubReleases: 'false'
-          commit: 'Version packages'
-          title: 'Version packages'
+      # @latest (release push): publish every package whose version npm does not have yet. This runs directly
+      # rather than through changesets/action, which publishes only when no changesets are pending: one
+      # changeset landing on main between the Version PR's last refresh and its merge turned the 0.12.0 merge
+      # into a version-only run, and nothing reached npm. `changeset publish` reads package.json versions and
+      # ignores pending changesets. It also skips versions already on npm, so re-running a failed release run
+      # picks up where it stopped.
+      #
+      # `--no-git-tag`: the tag step below tags once per group. Per-package tags meant ~300 back-to-back
+      # single-ref pushes, and GitHub's ref backend rejected about half with `fatal error in commit_refs`.
+      - name: Publish (@latest)
+        if: env.RELEASE == 'true'
+        run: pnpm changeset:publish --no-git-tag
         env:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
@@ -134,7 +134,7 @@ jobs:
       # prebuilt binary per platform generated into `dist/`, so neither is a workspace member Changesets can
       # see. Runs before the tag step so a failed CLI publish is not tagged as a complete release.
       - name: Publish the CLI (@latest)
-        if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages')
+        if: env.RELEASE == 'true'
         run: moon run cli:publish
         env:
           NODE_ENV: production
@@ -152,22 +152,36 @@ jobs:
           NPM_CONFIG_PROVENANCE: 'true'
 
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for
-      # plugins + CLI), both refs in a single push.
-      #
-      # Gated on the commit subject rather than the action's `published` output: that output is derived by
-      # scraping `New tag:` out of the publish log, so `--no-git-tag` leaves it permanently false
-      # (changesets/action#141). A "Version packages" commit on main IS the release commit — every other push
-      # only refreshes the Version PR. No `always()`/`!cancelled()`: a failed publish must not be tagged, and
-      # a plain `if:` keeps the implicit "previous steps succeeded" requirement.
+      # plugins + CLI), both refs in a single push. No `always()`/`!cancelled()`: a failed publish must not be
+      # tagged, and a plain `if:` keeps the implicit "previous steps succeeded" requirement. `--ref` names the
+      # commit this run built and published.
       - name: Tag + release groups (@latest)
-        if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages')
+        if: env.RELEASE == 'true'
         run: |
           git config user.name 'dxos-bot'
           git config user.email 'bot@dxos.org'
-          node scripts/release-groups.mjs
+          node scripts/release-groups.mjs --ref "$GITHUB_SHA"
         env:
           # Carries both the tag push (the checkout persists no credentials) and the Releases API calls.
           GH_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
+
+      # @latest (ordinary push): open or refresh the "Version Packages" PR from pending changesets. There is no
+      # `publish` input, so this step never publishes; with nothing pending it does nothing. Release runs skip
+      # it: they queue in their own concurrency group and can overlap an ordinary run, and two runs would race
+      # to force-push `changeset-release/main`. Changesets a release leaves pending get their PR on the next
+      # ordinary push.
+      - name: Version PR (@latest)
+        if: github.event_name == 'push' && env.RELEASE != 'true'
+        uses: changesets/action@v1
+        with:
+          # dxos-bot's PAT, not GITHUB_TOKEN: GitHub's recursion guard parks every `pull_request` run a
+          # GITHUB_TOKEN update triggers in `action_required`, so a GITHUB_TOKEN-owned Version PR reports
+          # zero check runs until a human approves each one by hand. The action reads
+          # `process.env.GITHUB_TOKEN` ahead of this input, so that env var must stay unset here.
+          github-token: ${{ secrets.GH_DXOS_BOT_PAT }}
+          version: pnpm changeset:version
+          commit: 'Version packages'
+          title: 'Version packages'
 
       # @next (dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots
       # are ephemeral and never tagged. No-op when no changesets are pending.
