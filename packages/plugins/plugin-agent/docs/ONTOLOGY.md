@@ -60,17 +60,17 @@ An entry is one extraction pass and carries a batch of facts in the `@dxos/pipel
 so its extraction stages and SPARQL engine are reused:
 
 ```ts
-FactEntry {                     // org.dxos.type.agent.factEntry 0.1.0; one feed item per extraction pass
+FactEntry {                     // org.dxos.type.agent.factEntry 0.2.0; one feed item per extraction pass
   source?: Ref<Obj>;            // the document or chat read (absent for a web page)
   url?: string;                 // the web page read
   name?: string;                // the source's display name
   recordedAt: string;           // when the agent extracted it
   extractor: { id: string; model: string; version: string };
-  facts: Fact[];                // subject/object stored as one { entity?, label?, literal? } struct:
-}                               // ECHO only stores discriminated unions, and pipeline-rdf's Term is not
+  facts: Fact[];                // pipeline-rdf's Fact as is; its Term is tagged by `kind`, so ECHO stores it
+}
 
 Fact {                          // pipeline-rdf
-  assertion: { subject, predicate, object, validFrom?, validTo?, quote? };
+  assertion: { subject, predicate, object, validFrom?, validTo?, quote? };  // subject/object: { kind: 'entity', entity, label? } | { kind: 'literal', literal }
   factuality: { value, polarity, confidence, nature? };     // FactBank: CT+/PR+/PS+/…
   illocution?: { force, mood?, addressee? };                 // assertive | directive | commissive | expressive
   attribution: {

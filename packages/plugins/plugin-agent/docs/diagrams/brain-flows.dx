@@ -2,7 +2,7 @@ diagram flow=down aspect=4:3
 group ingest "Facts (ingest)" {
   node Source "Source" ref="packages/plugins/plugin-agent/src/operations/read-source.ts"
   node Extract "Extract facts" ref="packages/core/compute/pipeline-rdf/src/stages/extract-facts.ts"
-  node FactFeed "Fact feed" ref="packages/core/compute/brain/src/FactTuple.ts"
+  node FactFeed "Fact feed" ref="packages/plugins/plugin-agent/src/types/FactEntry.ts"
   node Index "Index" ref="packages/core/compute/brain/src/Encoding.ts"
 }
 group compile "Goals (compile)" {
@@ -15,7 +15,7 @@ group evaluate "Evaluate" compact {
   node Thread "Private thread" ref="packages/plugins/plugin-agent/docs/THREADS.md"
   node Check "checkAction" ref="packages/core/compute/brain/src/GoalRules.ts"
   node Act "Channels" ref="packages/plugins/plugin-agent/src/operations/send-message.ts"
-  node GoalFeed "Goal feed" ref="packages/core/compute/brain/src/FactTuple.ts"
+  node GoalFeed "Goal feed" ref="packages/plugins/plugin-agent/src/types/FactEntry.ts"
 }
 edge Source -> Extract
 edge Extract -> FactFeed "RDF.Fact"
