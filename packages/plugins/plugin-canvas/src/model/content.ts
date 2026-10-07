@@ -26,13 +26,54 @@ import {
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
  * the drawing a portal element shows.
  */
-export type DslIdentity = { object: string; element: string; ref?: string; index?: string; portal?: string };
+export const DslIdentity = Schema.Struct({
+  object: Schema.String,
+  element: Schema.String,
+  ref: Schema.optional(Schema.String),
+  index: Schema.optional(Schema.String),
+  portal: Schema.optional(Schema.String),
+});
+export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
 
-export type CanvasRecord = { kind: 'canvas'; root: SceneId };
-export type SceneRecord = { kind: 'scene'; id: SceneId; name?: string };
-export type NodeRecord = { kind: 'node'; scene: SceneId; node: Node; dsl?: DslIdentity };
-export type LinkRecord = { kind: 'link'; scene: SceneId; link: Link; dsl?: DslIdentity };
-export type ElementRecord = NodeRecord | LinkRecord;
+/** Names the root scene; one per canvas, under the key `canvas`. */
+export const CanvasRecord = Schema.Struct({ kind: Schema.Literal('canvas'), root: Schema.String });
+export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
+
+/** One per scene, under `scene:<id>`; its nodes and links are records of their own that name it. */
+export const SceneRecord = Schema.Struct({
+  kind: Schema.Literal('scene'),
+  id: Schema.String,
+  name: Schema.optional(Schema.String),
+});
+export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
+
+/** One per node, under `node:<id>`; `node` is any node the engine handles, its type the registry's. */
+export const NodeRecord = Schema.Struct({
+  kind: Schema.Literal('node'),
+  scene: Schema.String,
+  node: NodeBase,
+  dsl: Schema.optional(DslIdentity),
+});
+export type NodeRecord = Schema.Schema.Type<typeof NodeRecord>;
+
+/** One per link, under `link:<id>`. */
+export const LinkRecord = Schema.Struct({
+  kind: Schema.Literal('link'),
+  scene: Schema.String,
+  link: Link,
+  dsl: Schema.optional(DslIdentity),
+});
+export type LinkRecord = Schema.Schema.Type<typeof LinkRecord>;
+
+/**
+ * A value of `Drawing.Canvas.content` for this variant, discriminated by `kind`. The shared canvas schema
+ * declares the map's values as `Any`, since every renderer encodes its own; this is the scene encoding.
+ */
+export const ContentRecord = Schema.Union([CanvasRecord, SceneRecord, NodeRecord, LinkRecord]);
+export type ContentRecord = Schema.Schema.Type<typeof ContentRecord>;
+
+export const ElementRecord = Schema.Union([NodeRecord, LinkRecord]);
+export type ElementRecord = Schema.Schema.Type<typeof ElementRecord>;
 
 export const ROOT_SCENE_ID = 'root';
 
@@ -44,22 +85,12 @@ export const sceneKey = (id: SceneId) => `scene:${id}`;
 export const nodeKey = (id: string) => `node:${id}`;
 export const linkKey = (id: string) => `link:${id}`;
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-
-export const isCanvasRecord = (record: unknown): record is CanvasRecord =>
-  isRecord(record) && record.kind === 'canvas' && typeof record.root === 'string';
-
-export const isSceneRecord = (record: unknown): record is SceneRecord =>
-  isRecord(record) && record.kind === 'scene' && typeof record.id === 'string';
-
-export const isNodeRecord = (record: unknown): record is NodeRecord =>
-  isRecord(record) && record.kind === 'node' && typeof record.scene === 'string' && Schema.is(NodeBase)(record.node);
-
-export const isLinkRecord = (record: unknown): record is LinkRecord =>
-  isRecord(record) && record.kind === 'link' && typeof record.scene === 'string' && Schema.is(Link)(record.link);
-
-export const isElementRecord = (record: unknown): record is ElementRecord =>
-  isNodeRecord(record) || isLinkRecord(record);
+export const isContentRecord = Schema.is(ContentRecord);
+export const isCanvasRecord = Schema.is(CanvasRecord);
+export const isSceneRecord = Schema.is(SceneRecord);
+export const isNodeRecord = Schema.is(NodeRecord);
+export const isLinkRecord = Schema.is(LinkRecord);
+export const isElementRecord = Schema.is(ElementRecord);
 
 /** Plain data from a record that may be an ECHO proxy: records must not alias live content. */
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -88,7 +119,8 @@ export const migrateContent = (content: ContentMap): boolean => {
     ...(isSceneRecord(legacy) && legacy.name ? { name: legacy.name } : {}),
   } satisfies SceneRecord;
   content[CANVAS_KEY] = { kind: 'canvas', root: ROOT_SCENE_ID } satisfies CanvasRecord;
-  for (const [key, record] of Object.entries(content)) {
+  for (const [key, value] of Object.entries(content)) {
+    const record: unknown = value;
     if (isNodeRecord(record)) {
       const node = clone(record.node);
       const portal = isPortalNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
