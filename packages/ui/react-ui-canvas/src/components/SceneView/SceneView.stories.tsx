@@ -92,11 +92,11 @@ const createLatticeTree = () => {
     ...[box('a', at(-1, -1), 'A'), box('b', at(-1, 0), 'B'), box('c', at(-1, 1), 'C')].map((element) =>
       element.properties({ style: { hue: 'neutral' } }),
     ),
-    box('d', at(0, 0), 'D').properties({ style: { hue: 'green', tone: 1 } }),
-    box('e', at(0, 1), 'E').properties({ style: { hue: 'green', tone: 3 } }),
+    box('d', at(0, 0), 'D').properties({ style: { hue: 'green', tone: 3 } }),
+    box('e', at(0, 1), 'E').properties({ style: { hue: 'green', tone: 1 } }),
     // Unlabelled, so the scene shows its contents.
     SceneBuilder.scene('f', [
-      // One hue at each of its tones, lightest to strongest.
+      // One hue at each of its tones: outline, then strongest to lightest.
       ...TONES.map((tone, index) =>
         box(`f${index + 1}`, at(0, index - 1), `F${index + 1}`).properties({ style: { hue: 'blue', tone } }),
       ),

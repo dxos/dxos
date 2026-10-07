@@ -291,8 +291,9 @@ test.describe('SceneView', () => {
     const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
     // An unstyled node matches no swatch.
     await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
-    await option('blue:3').click();
-    await expect(option('blue:3')).toHaveAttribute('aria-checked', 'true');
+    // Tone 1 is the strongest fill.
+    await option('blue:1').click();
+    await expect(option('blue:1')).toHaveAttribute('aria-checked', 'true');
     await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-bg/);
     await option('neutral:0').click();
     await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');

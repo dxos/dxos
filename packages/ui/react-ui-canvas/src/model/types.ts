@@ -83,7 +83,7 @@ export type Port = Schema.Schema.Type<typeof Port>;
 // Nodes
 //
 
-/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are lighter to stronger fills. */
+/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are stronger to lighter fills. */
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 

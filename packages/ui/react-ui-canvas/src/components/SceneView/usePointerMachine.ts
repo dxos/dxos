@@ -753,6 +753,7 @@ export const usePointerMachine = ({
             break;
           }
           let target = current.target;
+          let created: Node | undefined;
           if (!target && isPointEndpoint(current.source)) {
             // A free-ended link that never reached a node ends free too.
             target = { point: current.to };
@@ -779,6 +780,7 @@ export const usePointerMachine = ({
                 ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
                 : createNode({ type: 'rect', ...props });
             addNode(node);
+            created = node;
             target = { node: node.id };
           }
           if (target) {
@@ -793,8 +795,9 @@ export const usePointerMachine = ({
               directed: isDirected(scene, nodeRegistry, current.source, target),
             });
             projection.apply({ kind: 'link', link });
-            // The new link is what the user just made, so it is what they act on next (style, delete).
-            select([link.id]);
+            // What the user just made is what they act on next (style, delete): the link, and the node
+            // the drop created with it.
+            select(created ? [link.id, created.id] : [link.id]);
           }
           break;
         }
