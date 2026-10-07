@@ -16,6 +16,8 @@ export type PreloadErrorHandlerOptions = {
 
 const preloadErrorPayload = (event: Event): unknown => ('payload' in event ? event.payload : undefined);
 
+const isModuleLinkFailure = (event: Event): boolean => preloadErrorPayload(event) instanceof SyntaxError;
+
 /** Vite's payload carries the failed chunk's url in its message; nothing else identifies it. */
 const preloadErrorUrl = (event: Event): string | undefined => {
   const payload = preloadErrorPayload(event);
@@ -63,9 +65,7 @@ export const registerPreloadErrorHandler = ({
   reload = () => window.location.reload(),
 }: PreloadErrorHandlerOptions = {}): void => {
   target.addEventListener('vite:preloadError', (event) => {
-    // The module arrived but failed to link or parse (e.g. a plugin importing an export the host dropped);
-    // a reload fetches the same module again. The message names no url, so the origin check cannot catch it.
-    if (preloadErrorPayload(event) instanceof SyntaxError) {
+    if (isModuleLinkFailure(event)) {
       return;
     }
     const url = preloadErrorUrl(event);
