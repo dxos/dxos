@@ -35,12 +35,35 @@ export const ensureAnnotationFeed = Effect.fnUntraced(function* (agent: Agent.Ag
   );
 });
 
-/** Every fact entry in the space's annotation feeds, oldest feed first. */
-export const queryFactEntries = Effect.gen(function* () {
-  const feeds = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
+const annotationFeeds = Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
+
+/** Every fact of a completed pass in the space's annotation feeds. */
+export const queryFacts = Effect.gen(function* () {
+  const feeds = yield* annotationFeeds;
   if (feeds.length === 0) {
     return [];
   }
 
-  return yield* Database.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run;
+  const entries = yield* Database.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run;
+  const passes = yield* Database.query(Query.select(Filter.type(FactEntry.ExtractionPass)).from(feeds)).run;
+  return FactEntry.completed(entries, passes);
+});
+
+/**
+ * Removes a fact from the annotation feeds, every copy of it a re-read appended included; returns how
+ * many entries were removed. The brain's index drops it on its next rebuild from the feeds.
+ */
+export const forgetFact = Effect.fnUntraced(function* (factId: string) {
+  let removed = 0;
+  for (const feed of yield* annotationFeeds) {
+    const entries = yield* Feed.query(feed, Filter.foreignKeys(FactEntry.FactEntry, [FactEntry.factKey(factId)])).run;
+    if (entries.length > 0) {
+      yield* Feed.remove(feed, entries);
+      removed += entries.length;
+    }
+  }
+  if (removed > 0) {
+    yield* Database.flush();
+  }
+  return removed;
 });

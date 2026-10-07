@@ -40,9 +40,9 @@ export const makeTestBrain = ({ wake = 'session' }: TestBrainOptions = {}) => {
         // Triggers come back through JSON, as from EDGE's brain: their refs then have no resolver of their own.
         const service: BrainService.Service = {
           ...memory,
-          listTriggers: (agent) =>
+          subscriptions: (agent) =>
             memory
-              .listTriggers(agent)
+              .subscriptions(agent)
               .pipe(
                 Effect.map((listed) =>
                   listed.map((trigger) =>

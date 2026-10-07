@@ -49,6 +49,20 @@ const BUMP_ORDER = ['patch', 'minor', 'major'];
 const git = (...args) =>
   execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
+const GIT_NOT_ANCESTOR_STATUS = 1;
+
+function isAncestor(ancestor, descendant) {
+  try {
+    git('merge-base', '--is-ancestor', ancestor, descendant);
+    return true;
+  } catch (err) {
+    if (err.status === GIT_NOT_ANCESTOR_STATUS) {
+      return false;
+    }
+    throw err;
+  }
+}
+
 function argValue(flag) {
   const index = process.argv.indexOf(flag);
   return index > 0 ? process.argv[index + 1] : undefined;
@@ -313,12 +327,20 @@ try {
     process.exit(0);
   }
 
-  for (const { tag } of releases) {
+  const pending = [];
+  for (const release of releases) {
+    const { tag } = release;
     if (git('tag', '-l', tag)) {
+      const tagged = git('rev-parse', `${tag}^{commit}`);
+      const unchangedSinceEarlierRelease = tagged !== sha && isAncestor(tagged, sha);
+      if (unchangedSinceEarlierRelease) {
+        console.log(`${tag} was released at ${tagged.slice(0, 9)}; skipping`);
+        continue;
+      }
       // Reusing a tag is only safe if it is the tag this run would have written: a stale one names the wrong
       // commit, and a lightweight one breaks the annotated-tag contract. Either would be pushed and then
       // preserved by the release upsert.
-      if (git('cat-file', '-t', `refs/tags/${tag}`) !== 'tag' || git('rev-parse', `${tag}^{commit}`) !== sha) {
+      if (git('cat-file', '-t', `refs/tags/${tag}`) !== 'tag' || tagged !== sha) {
         throw new Error(`Existing tag ${tag} is not an annotated tag at ${sha} — delete it or pick another ref`);
       }
       console.log(`Tag ${tag} already exists locally`);
@@ -326,14 +348,20 @@ try {
       git('tag', '-a', tag, '-m', tag, sha);
       console.log(`Tagged ${sha.slice(0, 9)} as ${tag}`);
     }
+    pending.push(release);
   }
+  if (!pending.length) {
+    console.log('Every group version is already released; nothing to tag');
+    process.exit(0);
+  }
+
   // Every group tag is pushed, including ones that already existed locally: a previous run may have created
   // a tag and failed before it reached the remote. Pushing a ref the remote already has is a no-op, while a
   // tag that disagrees with the remote is rejected rather than silently moved.
-  await pushTags(releases.map(({ tag }) => tag));
+  await pushTags(pending.map(({ tag }) => tag));
 
   if (!NO_RELEASE) {
-    for (const { tag, body } of releases) {
+    for (const { tag, body } of pending) {
       await upsertRelease({ tag, body, sha });
     }
   }

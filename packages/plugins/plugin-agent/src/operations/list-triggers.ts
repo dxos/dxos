@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.ListTriggers> = Tri
       const agent = yield* Database.load(agentRef);
       const brain = yield* BrainService.BrainService;
       return {
-        triggers: (yield* brain.listTriggers(agent.id)).map(({ id, goal, when, then, createdAt }) => ({
+        triggers: (yield* brain.subscriptions(agent.id)).map(({ id, goal, when, then, createdAt }) => ({
           trigger: id,
           ...(goal ? { goal } : {}),
           when: Trigger.describePattern(when),

@@ -525,9 +525,11 @@
   /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
   /*
    * A field's label reads a step below its value, in ui-theme's subdued text; a Checkbox or Switch's own label is the
-   * control's text, not a field label, so it keeps the base colour.
+   * control's text, not a field label, so it keeps the base colour. A Select's root takes no box, so its label counts as
+   * the field's.
    */
-  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography) {
+  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography),
+  .dx-field > .dx-select > .dx-label {
     color: var(--color-fg-subtle);
   }
   /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
@@ -977,7 +979,7 @@
     min-width: 0;
   }
   /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
-  .dx-toolbar > .dx-checkbox {
+  .dx-toolbar > :is(.dx-checkbox, .dx-switch) {
     align-self: center;
   }
   .dx-toolbar {
