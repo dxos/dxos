@@ -111,17 +111,21 @@ export const make = (
   /** Queues the events not queued before; returns how many were new. */
   const enqueue = (events: readonly Evaluator.Event[]): number => {
     let count = 0;
+    // Appended once per subscription, so a burst of events copies each outbox once.
+    const additions = new Map<string, BrainService.Event[]>();
     for (const event of events) {
       const seen = queued.get(event.subscription) ?? new Set<string>();
       queued.set(event.subscription, seen);
       if (!seen.has(event.id)) {
         remember(seen, event.id, MAX_EVENTS);
-        outboxes.set(
-          event.subscription,
-          [...(outboxes.get(event.subscription) ?? []), BrainService.fromEvaluator(event)].slice(-MAX_EVENTS),
-        );
+        const added = additions.get(event.subscription) ?? [];
+        added.push(BrainService.fromEvaluator(event));
+        additions.set(event.subscription, added);
         count++;
       }
+    }
+    for (const [subscription, added] of additions) {
+      outboxes.set(subscription, [...(outboxes.get(subscription) ?? []), ...added].slice(-MAX_EVENTS));
     }
     return count;
   };
@@ -152,10 +156,15 @@ export const make = (
       if (held.length >= BrainService.MAX_TRIGGERS) {
         return false;
       }
-      yield* Effect.try({
-        try: () => evaluator(trigger.agent).add(BrainService.toSubscription(trigger)),
-        catch: toError,
-      });
+      const subscription = BrainService.toSubscription(trigger);
+      const current = evaluator(trigger.agent).subscriptions.find(({ id }) => id === subscription.id);
+      // Re-subscribing unchanged keeps the evaluator's state, so an achieved goal stays achieved.
+      if (current?.rules !== subscription.rules || current?.createdAt !== subscription.createdAt) {
+        yield* Effect.try({
+          try: () => evaluator(trigger.agent).add(subscription),
+          catch: toError,
+        });
+      }
       triggers.add(trigger);
       return true;
     }),

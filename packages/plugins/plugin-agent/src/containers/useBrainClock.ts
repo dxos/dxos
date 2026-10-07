@@ -29,15 +29,18 @@ export const useBrainClock = (agent: Agent.Agent | undefined): void => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const run = async () => {
-      const { data } = await invokePromise(
+      // A failed run still schedules the next one, so one transient error does not stop the clock.
+      const nextDueAt = await invokePromise(
         TriggerOperation.RunDue,
         { agent: Ref.make(agent) },
         { spaceId: db.spaceId },
-      );
+      )
+        .then(({ data }) => data?.nextDueAt)
+        .catch(() => undefined);
       if (cancelled) {
         return;
       }
-      const due = data?.nextDueAt ? Date.parse(data.nextDueAt) - Date.now() : MAX_WAIT;
+      const due = nextDueAt ? Date.parse(nextDueAt) - Date.now() : MAX_WAIT;
       timer = setTimeout(() => void run(), Math.min(Math.max(due, 1_000), MAX_WAIT));
     };
     void run();

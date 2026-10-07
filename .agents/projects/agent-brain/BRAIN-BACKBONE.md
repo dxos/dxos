@@ -49,7 +49,7 @@ of the three RPCs a push makes today.
 
 ## Phases
 
-Each phase is one PR and leaves `main` working; phases 1–3 change no behaviour.
+Each phase is one PR and leaves `main` working. Phases 1–3 keep behaviour except phase 2's intended `text` change: a stemmed keyword match (`about`) replaces the substring match, which the equivalence table records.
 
 ### 1. Identity: DIDs for speakers and entities (dxos, plugin-agent)
 
