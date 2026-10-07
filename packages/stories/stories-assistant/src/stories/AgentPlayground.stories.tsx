@@ -379,14 +379,15 @@ const readRichReplies = async (db: Database.Database) => {
     .flatMap(({ blocks }) => blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));
 };
 
-/** How often `text` appears in a panel. */
-/** Times `text` appears in what was said: a woken chat's synthetic note (`chat.context`) restates the update it relays. */
+/** Times `text` appears in what was said: a woken chat's synthetic note restates the update it relays. */
 const occurrences = (element: HTMLElement, text: string) => {
   const said = element.cloneNode(true);
   if (!(said instanceof HTMLElement)) {
     return 0;
   }
-  said.querySelectorAll('[data-testid="chat.context"]').forEach((note) => note.remove());
+  said
+    .querySelectorAll('[data-testid="assistant.synthetic"], [data-synthetic-text], [data-testid="chat.context"]')
+    .forEach((note) => note.remove());
   return (said.textContent ?? '').split(text).length - 1;
 };
 

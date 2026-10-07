@@ -16,7 +16,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { AgentOperation, FactEntry, Profile } from '#types';
+import { AgentOperation, ChatParticipant, FactEntry, Profile } from '#types';
 
 import { ensureAnnotationFeed } from './annotations.ts';
 import { AgentOperationError } from './errors.ts';
@@ -52,15 +52,26 @@ const segmentMarkdown = (content: string): Segment[] =>
 /** The name the agent's own messages are attributed to in extracted facts. */
 export const agentSpeaker = (agent: Agent.Agent): string => agent.name ?? 'Agent';
 
-/** The display name of a message's sender: its name, its contact, or its role. */
-const speakerOf = Effect.fnUntraced(function* (agent: Agent.Agent, message: Message.Message) {
+/**
+ * The display name of a message's sender: its name, its contact, the person a participant chat is with
+ * (Composer's prompts carry neither name nor contact, and a goal watching that person's words matches by
+ * name), or its role.
+ */
+const speakerOf = Effect.fnUntraced(function* (
+  agent: Agent.Agent,
+  message: Message.Message,
+  participant: Obj.Unknown | undefined,
+) {
   if (message.sender.name) {
     return message.sender.name;
   }
   if (message.sender.contact) {
     return Profile.displayName(yield* Database.load(message.sender.contact));
   }
-  return message.sender.role === 'assistant' ? agentSpeaker(agent) : 'User';
+  if (message.sender.role === 'assistant') {
+    return agentSpeaker(agent);
+  }
+  return participant ? Profile.displayName(participant) : 'User';
 });
 
 /** Feed items in append order. */
@@ -85,6 +96,8 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
   const messages = inAppendOrder(yield* Feed.query(feed, Filter.type(Message.Message)).run);
   const index = after === undefined ? -1 : messages.findIndex((message) => Obj.getURI(message) === after);
   const start = index + 1;
+  const participantId = ChatParticipant.get(chat);
+  const participant = participantId ? (yield* Database.query(Filter.id(participantId)).run).at(0) : undefined;
   const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
     // Synthetic text (a woken chat's relay, system notes) is not something anyone said.
     const text = message.blocks
@@ -96,7 +109,7 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
     }
     return {
       text,
-      speaker: yield* speakerOf(agent, message),
+      speaker: yield* speakerOf(agent, message, participant),
       source: Obj.getURI(message),
       at: message.created,
     } satisfies Segment;
