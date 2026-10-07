@@ -43,6 +43,8 @@ import {
   SplineLink,
   getElement,
   isLink,
+  isPortalNode,
+  showsContents,
 } from '../../model/types.ts';
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
@@ -101,10 +103,16 @@ const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any>
  * What the form shows for an element: what the frame draws, so an unset fill or border reads as on and an
  * unset port count as the type's.
  */
+/** An element's values as the panel shows them: defaults the view draws are spelled out, so a toggle matches the look. */
 const formValues = (nodes: NodeRegistry, element: Element): Record<string, unknown> =>
   isLink(element)
     ? element
-    : { ...element, style: resolveStyle(element.style), portsPerSide: portsPerSideOf(nodes, element) };
+    : {
+        ...element,
+        style: resolveStyle(element.style),
+        portsPerSide: portsPerSideOf(nodes, element),
+        ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
+      };
 
 /**
  * How the panel presents fields. Ranges are the editor's, not the model's: a check on the stored schema would
