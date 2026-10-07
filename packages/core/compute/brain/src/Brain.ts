@@ -74,6 +74,16 @@ export type TakeOptions = {
 export type Options = {
   /** Deepest causal chain a push may extend; deeper pushes fail with {@link LoopError}. */
   readonly maxDepth?: number;
+  /** Most deliveries an outbox holds; further matches are dropped and counted until the consumer acks. */
+  readonly maxOutbox?: number;
+};
+
+/** A registration's backlog, so a consumer can tell it fell behind. */
+export type OutboxStatus = {
+  readonly pending: number;
+  /** Deliveries dropped because the outbox was full. */
+  readonly dropped: number;
+  readonly subscriptions: number;
 };
 
 /**
@@ -139,6 +149,9 @@ export interface Service {
   /** Removes deliveries from the outbox; unknown ids are ignored. Returns how many were removed. */
   readonly ack: (registration: string, ids: readonly string[]) => Effect.Effect<number, UnknownRegistrationError>;
 
+  /** How far a registration's consumer is behind. */
+  readonly status: (registration: string) => Effect.Effect<OutboxStatus, UnknownRegistrationError>;
+
   /** Removes one subscription, or with no id the registration and its outbox; false when not held. */
   readonly unsubscribe: (registration: string, subscription?: string) => Effect.Effect<boolean>;
 }
@@ -150,8 +163,14 @@ export const key = Brain.key;
 
 export const DEFAULT_MAX_DEPTH = 8;
 
+export const DEFAULT_MAX_OUTBOX = 10_000;
+
 /** A brain held in memory; every operation is serialized, and every read of time goes through `Clock`. */
-export const make = (options: Options = {}): Effect.Effect<Service> => makeCore(options.maxDepth ?? DEFAULT_MAX_DEPTH);
+export const make = (options: Options = {}): Effect.Effect<Service> =>
+  makeCore({
+    maxDepth: options.maxDepth ?? DEFAULT_MAX_DEPTH,
+    maxOutbox: options.maxOutbox ?? DEFAULT_MAX_OUTBOX,
+  });
 
 export const layer = (options?: Options): Layer.Layer<Brain> => Layer.effect(Brain, make(options));
 

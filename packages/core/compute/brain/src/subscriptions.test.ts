@@ -336,6 +336,26 @@ describe('subscriptions', () => {
     );
 
     it.effect(
+      'a full outbox drops further deliveries and counts them until the consumer catches up',
+      Effect.fnUntraced(function* () {
+        const brain = yield* Brain.make({ maxOutbox: 3 });
+        yield* brain.register('slow');
+        yield* brain.subscribe('slow', { selector: { _tag: 'facts', pattern: {} } });
+        yield* brain.push(Array.from({ length: 5 }, (_, index) => said(`f${index}`, 'x', `s${index}`, 'is', 'o')));
+        expect(yield* brain.status('slow')).toEqual({ pending: 3, dropped: 2, subscriptions: 1 });
+
+        const kept = yield* brain.take('slow');
+        expect(kept.map(({ event }) => event.kind === 'asserted' && event.fact.id)).toEqual(['f0', 'f1', 'f2']);
+        yield* brain.ack(
+          'slow',
+          kept.map(({ id }) => id),
+        );
+        yield* brain.push([said('f5', 'x', 's5', 'is', 'o')]);
+        expect(yield* brain.status('slow')).toEqual({ pending: 1, dropped: 2, subscriptions: 1 });
+      }),
+    );
+
+    it.effect(
       'a rejected push delivers nothing',
       Effect.fnUntraced(function* () {
         const brain = yield* Brain.Brain;

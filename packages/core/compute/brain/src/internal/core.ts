@@ -55,6 +55,7 @@ type Registration = {
   meta?: Readonly<Record<string, unknown>>;
   readonly subscriptions: Map<string, Event.Subscription>;
   outbox: Delivery[];
+  dropped: number;
   nextSubscription: number;
 };
 
@@ -103,7 +104,10 @@ const inactiveReason = (
   return !Number.isNaN(validTo) && validTo <= now ? 'expired' : undefined;
 };
 
-export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
+/** Causes older than this many events read as depth 0, which bounds the depth index. */
+const DEPTH_WINDOW = 100_000;
+
+export const makeCore = Effect.fnUntraced(function* ({ maxDepth, maxOutbox }: { maxDepth: number; maxOutbox: number }) {
   const lock = (yield* Semaphore.make(1)).withPermits(1);
   const state: State = {
     facts: new Map(),
@@ -242,6 +246,7 @@ export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
     const seq = ++state.seq;
     const id = `e${seq}`;
     state.depths.set(id, depth);
+    state.depths.delete(`e${seq - DEPTH_WINDOW}`);
     const common = { id, seq, depth, ...(origin !== undefined ? { origin } : {}), ...(replay ? { replay } : {}) };
     switch (draft.kind) {
       case 'asserted':
@@ -258,6 +263,14 @@ export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
     }
   };
 
+  const enqueue = (registration: Registration, delivery: Delivery) => {
+    if (registration.outbox.length < maxOutbox) {
+      registration.outbox.push(delivery);
+    } else {
+      registration.dropped++;
+    }
+  };
+
   const deliver = (event: Event.Event) => {
     for (const registration of state.registrations.values()) {
       const matched = [...registration.subscriptions]
@@ -268,7 +281,7 @@ export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
         )
         .map(([id]) => id);
       if (matched.length > 0) {
-        registration.outbox.push({ id: event.id, event, subscriptions: matched, attempts: 0 });
+        enqueue(registration, { id: event.id, event, subscriptions: matched, attempts: 0 });
       }
     }
   };
@@ -512,6 +525,7 @@ export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
               meta: options.meta,
               subscriptions: new Map(),
               outbox: [],
+              dropped: 0,
               nextSubscription: 0,
             });
           }
@@ -527,7 +541,7 @@ export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
           if (subscription.replay === true) {
             for (const draft of replayDrafts(subscription.selector)) {
               const event = stamp(draft, 0, undefined, true);
-              registration.outbox.push({ id: event.id, event, subscriptions: [id], attempts: 0 });
+              enqueue(registration, { id: event.id, event, subscriptions: [id], attempts: 0 });
             }
           }
           return id;
@@ -555,6 +569,15 @@ export const makeCore = Effect.fnUntraced(function* (maxDepth: number) {
           registration.outbox = registration.outbox.filter(({ id }) => !acked.has(id));
           return before - registration.outbox.length;
         }),
+      ),
+
+    status: (registrationId) =>
+      lock(
+        Effect.map(registrationOf(registrationId), (registration) => ({
+          pending: registration.outbox.length,
+          dropped: registration.dropped,
+          subscriptions: registration.subscriptions.size,
+        })),
       ),
 
     unsubscribe: (registrationId, subscription) =>

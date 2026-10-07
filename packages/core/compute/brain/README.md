@@ -64,6 +64,7 @@ replies(X, count(F)) :- fact(F, X, replied, _).
 - A registration's own pushes (`origin`) are not delivered back to it unless a subscription sets `includeOwn`.
 - A push that names its `cause` events has their depth plus one; past `maxDepth` it fails with `LoopError`.
 - A re-push of known content changes nothing and emits nothing, so an echo ends.
+- An outbox holds at most `maxOutbox` deliveries; overflow is dropped and counted in `status(registration)`.
 
 ## Backing plugin-agent's BrainService
 
