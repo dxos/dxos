@@ -1,5 +1,79 @@
 # @dxos/react-ui-assistant
 
+## 0.13.0
+
+### Minor Changes
+
+- cef0fed: A submitted chat prompt shows in the thread at once, before it is persisted, and carries messenger-style delivery ticks (sent, delivered, read) until the agent takes it up; a prompt that fails to send is marked so in place and can be removed. Queued prompts now render in the thread itself, so `Chat.Queue` and `ChatQueueList` are removed. `AiChatProcessor` gains `send`, `removePrompt`, an `outbox` atom and a `thread` atom that projects the feed, the streaming turn and the outbox into one list of rows; `AiChatProcessorState` exposes `thread` in place of `messages`.
+- 3e73e53: Chats can run on a coding agent other than Composer's own. `SessionConfig` gains `harness` (which agent runs the chat) and `host` (the device that runs it). Plugins register agents through `AssistantCapabilities.Agent`, and the agent service picks the turn engine per chat from it. `MakeTurnProducerOptions` now includes the `chat`.
+
+  `plugin-code` adds the desktop app's agent helper and an ACP turn engine. It streams the agent's transcript into the chat, keeps the agent's session warm between turns and resumes it after a restart. `plugin-claude` uses it to offer Claude Code on the user's machine.
+
+  An agent's permission requests arrive as a `request` content block (`ContentBlock.Request`). The chat renders it as a card, and the answer goes back through `AssistantOperation.RespondToRequest`.
+
+  `ProjectOperation.DelegateTaskToChat` takes an optional `harness`. Without one, it uses the new `defaultAgent` assistant setting while that agent is available, and Composer otherwise. A task's menu lists an "Assign to" entry per registered agent and disables those that cannot run on this device. To support this, `ObjectAction` gains `group` and `unavailable`.
+
+  A project overview has a settings slot, `ProjectView.Settings`, where other plugins add settings. `plugin-code` uses it for the project's repository folder on this device, and a delegated chat works in its own git worktree of that folder.
+
+  A coding agent gets Composer's operations as the `composer` MCP server, scoped to its chat's space. The page serves the same surface as `dx mcp serve`, and the agent helper relays the agent's requests to it.
+
+  `CodeAgent.make` takes `sessionMeta`, agent-specific ACP session options built from the Composer tools on offer. Claude Code uses it to call Composer's read-only tools without asking each time. The Claude plugin now depends on the Code plugin, which runs the agent helper.
+
+### Patch Changes
+
+- cbba318: Streaming an assistant turn no longer re-renders the whole chat. Folded tool runs keep their identity between updates, message toolbars re-render only when their own message changes, and the chat's toolbar, composer and checklist no longer re-render on every streamed block.
+- dc16fdd: `ContentBlock.ToolCall` gains presentational `displayName` and `displayIcon` fields, which the assistant's tool row prefers over the operation name and icon. Code mode sets them on each `eval` call from the operations its code invokes, so the call shows as e.g. "Create task" instead of `eval`.
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [4b50966]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [3e73e53]
+- Updated dependencies [7a177b9]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/react-ui-feed@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-syntax-highlighter@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

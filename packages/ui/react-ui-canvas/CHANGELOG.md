@@ -1,5 +1,65 @@
 # @dxos/react-ui-canvas
 
+## 0.13.0
+
+### Minor Changes
+
+- 597cdb7: Add a lattice projection (`createLatticeProjection`): shapes snap to a grid of fixed cells separated by gutters (256x128 cells, 128x64 gutters by default), span any whole number of cells, resize one cell at a time with the opposite face fixed, and preview a move, copy, resize or create onto occupied cells in red before refusing it. Smart links on a lattice route at right angles through the gutters, run straight through free cells, and are nudged into separate lanes where they share a gutter. Route corners share one radius; a link tool click without a drag draws nothing and returns to the select tool; hover clears while dragging; and a link's start and end markers sit side by side in the properties panel. Node types can be declared on prototypes (`createNodeRegistry(types, prototypes)` with `extends`); rectangle and scene share the `box` prototype, and a scene shape now has a centred editable label, a `contents` option (shown by default while it has no label) and a zoom-in control. `nodeDef` moved to its own module so views no longer import the registry. A guides toggle (toolbar, `;`) shows or hides the page frame and the lattice cells. `SceneBuilder` is now declarative: `SceneBuilder.scene(id, [...])` over element factories (`node`, `rect`, `ellipse`, `class`, `note`, `link`) refined with `.properties()`, nested scenes placed with `.at()`, and `build()` returning `{ root, scenes }` checked against the registry's schemas; the chained `create().rect()…` form is removed. Node styles gain a `tone`, 0 to 3 (outline, light, medium, strong; unset is 2), and the properties panel picks hue and tone together from a style grid of swatches (neutral and eight hues by four tones) instead of a hue select. A scene shape drops its fill as soon as it is zoomed into. On a lattice scene a lattice toggle (Shift+G) chooses whether snap lands on the lattice or the basic grid; with snap off placement is free.
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [1ef899b]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [234ef9c]
+- Updated dependencies [014996b]
+- Updated dependencies [22adb53]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [161f994]
+- Updated dependencies [7a177b9]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [2550779]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/diagram@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
