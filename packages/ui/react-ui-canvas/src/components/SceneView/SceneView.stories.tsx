@@ -36,7 +36,7 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes';
 };
 
 type EditorProps = {
@@ -123,6 +123,32 @@ const createLatticeTree = () => {
     .build();
 };
 
+/**
+ * Three levels of the same column, every shape 256×128: A, scene B, C; inside B, D, scene E, F; inside E,
+ * X, Y, Z. Open the scenes to check that a shape is the same size at the same zoom on every level.
+ */
+const createScenesTree = () => {
+  const root = 'scene:root';
+  const size = { width: 256, height: 128 };
+  const at = (y: number) => ({ x: -size.width / 2, y: y - size.height / 2, ...size });
+  const rect = (id: string, y: number) => SceneBuilder.rect(id, at(y)).properties({ label: id.toUpperCase() });
+  return SceneBuilder.scene(root, [
+    rect('a', -256),
+    SceneBuilder.scene('b', [
+      rect('d', -256),
+      SceneBuilder.scene('e', [rect('x', -256), rect('y', 0), rect('z', 256)])
+        .at(at(0))
+        .name('E'),
+      rect('f', 256),
+    ])
+      .at(at(0))
+      .name('B'),
+    rect('c', 256),
+  ])
+    .name('root')
+    .build();
+};
+
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
@@ -133,7 +159,9 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
           ? createSquareTree()
           : fixture === 'lattice'
             ? createLatticeTree()
-            : createSceneTree(depth);
+            : fixture === 'scenes'
+              ? createScenesTree()
+              : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -201,6 +229,11 @@ export const Model: Story = {
  * Lattice mode (DESIGN §8b): shapes snap to whole cells of a 256x128 lattice with 128x64 gutters, span any number
  * of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
  */
+/** A, an empty scene B and C in a column: open B, draw in it, and compare sizes at 100% on both levels. */
+export const Scenes: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'scenes' },
+};
+
 export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
 };

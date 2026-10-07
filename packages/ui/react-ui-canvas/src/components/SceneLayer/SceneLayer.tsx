@@ -8,7 +8,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { memo, useId, useMemo } from 'react';
+import React, { type CSSProperties, memo, useId, useMemo } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -88,6 +88,8 @@ export type SceneLayerProps = {
   hover?: NodeId;
   /** The portal a drill-in is animating into, while it is. */
   opening?: ElementId;
+  /** The portal filling most of the view, and the opacity of everything else on the layer as it does. */
+  focus?: { id: ElementId; opacity: number };
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
@@ -111,6 +113,7 @@ export const SceneLayer = memo(
     selected,
     hover,
     opening,
+    focus,
     editing,
     ghost,
     debug,
@@ -130,6 +133,8 @@ export const SceneLayer = memo(
       [scene, registry, lattice],
     );
     const unit = 1 / Math.max(zoom, 0.05);
+    // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
+    const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per layer, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
     const markerUrl = (marker: Marker | undefined, end: 'start' | 'end') =>
@@ -137,7 +142,7 @@ export const SceneLayer = memo(
 
     return (
       <>
-        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+        <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           <defs>
             <Markers id={markerId} unit={unit} />
           </defs>
@@ -177,6 +182,8 @@ export const SceneLayer = memo(
             selected={selected?.has(node.id) ?? false}
             hovered={hover === node.id}
             opening={opening === node.id}
+            fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+            chromeFade={focus?.id === node.id ? fadeStyle : undefined}
             editingPart={editing?.id === node.id ? editing.part : undefined}
             ghost={ghost === node.id}
             debug={debug}
@@ -184,7 +191,7 @@ export const SceneLayer = memo(
           />
         ))}
         {/* The ends paint over the nodes, so an end centred on a node's edge shows whole. */}
-        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+        <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           {links.map(({ link, path }) => (
             <path
               key={link.id}
@@ -293,65 +300,82 @@ type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
   ghost?: boolean;
   debug?: boolean;
   handlers?: ElementHandlers;
+  /** The fade while another node is zoomed into. */
+  fade?: CSSProperties;
+  /** The fade of this node's own frame (fill and border) while it is zoomed into; its contents stay. */
+  chromeFade?: CSSProperties;
 };
 
 /** Positions a node, owns its frame styling and pointer events; the node definition renders the body. */
-const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props }: NodeFrameProps) => {
-  const { node, registry, selected } = props;
-  const bounds = nodeBounds(node);
-  const interactive = handlers !== undefined && !ghost;
-  const Component = nodeDef(registry, node)?.component ?? UnknownNodeView;
-  const editing = useMemo<PartEditing | undefined>(
-    () =>
-      editingPart && handlers
-        ? {
-            part: editingPart,
-            multiline: nodeParts(registry, node).some((part) => part.field === editingPart && isMultiline(part)),
-            commit: (text) => handlers.onPartCommit?.(node, editingPart, text),
-            cancel: () => handlers.onPartCancel?.(),
-          }
-        : undefined,
-    [editingPart, handlers, node, registry],
-  );
-  const onOpen = useMemo(
-    () => (interactive && handlers.onNodeOpen ? () => handlers.onNodeOpen?.(node) : undefined),
-    [interactive, handlers, node],
-  );
-  return (
-    <div
-      className={mx(
-        'absolute box-border border-4 overflow-hidden',
-        // Being zoomed into, the frame becomes the child scene's canvas, so it drops its fill (the first class)
-        // at once and keeps only its own border, not the selection's or the hover's.
-        ...(props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered)),
-        interactive && !node.locked && 'cursor-grab',
-        ghost && 'opacity-50 border-dashed pointer-events-none',
-      )}
-      // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
-      // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
-      style={{
-        left: bounds.x,
-        top: bounds.y,
-        width: bounds.width,
-        height: bounds.height,
-        fontSize: node.style?.fontSize,
-      }}
-      data-node-id={node.id}
-      data-ghost={ghost || undefined}
-      onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
-    >
-      <Component {...props} editing={editing} onOpen={onOpen} />
-      {debug && (
-        <div
-          className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
-          data-testid='node-debug'
-        >
-          {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
-        </div>
-      )}
-    </div>
-  );
-});
+const NodeFrame = memo(
+  ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, ...props }: NodeFrameProps) => {
+    const { node, registry, selected } = props;
+    const bounds = nodeBounds(node);
+    const interactive = handlers !== undefined && !ghost;
+    const Component = nodeDef(registry, node)?.component ?? UnknownNodeView;
+    const editing = useMemo<PartEditing | undefined>(
+      () =>
+        editingPart && handlers
+          ? {
+              part: editingPart,
+              multiline: nodeParts(registry, node).some((part) => part.field === editingPart && isMultiline(part)),
+              commit: (text) => handlers.onPartCommit?.(node, editingPart, text),
+              cancel: () => handlers.onPartCancel?.(),
+            }
+          : undefined,
+      [editingPart, handlers, node, registry],
+    );
+    const onOpen = useMemo(
+      () => (interactive && handlers.onNodeOpen ? () => handlers.onNodeOpen?.(node) : undefined),
+      [interactive, handlers, node],
+    );
+    // Being zoomed into, the frame becomes the child scene's canvas, so it drops its fill (the first class)
+    // at once and keeps only its own border, not the selection's or the hover's.
+    const frameLook = props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered);
+    return (
+      <div
+        className={mx(
+          'absolute box-border overflow-hidden',
+          // Fading, the border becomes padding of the same width so the contents stay put.
+          ...(chromeFade ? ['p-1 isolate'] : ['border-4', ...frameLook]),
+          interactive && !node.locked && 'cursor-grab',
+          ghost && 'opacity-50 border-dashed pointer-events-none',
+        )}
+        // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
+        // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
+        style={{
+          left: bounds.x,
+          top: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+          fontSize: node.style?.fontSize,
+          ...fade,
+        }}
+        data-node-id={node.id}
+        data-ghost={ghost || undefined}
+        onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
+      >
+        {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
+        {chromeFade && (
+          <div
+            aria-hidden
+            className={mx('absolute inset-0 -z-10 border-4 pointer-events-none', ...frameLook)}
+            style={chromeFade}
+          />
+        )}
+        <Component {...props} editing={editing} onOpen={onOpen} />
+        {debug && (
+          <div
+            className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
+            data-testid='node-debug'
+          >
+            {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 NodeFrame.displayName = 'NodeFrame';
 

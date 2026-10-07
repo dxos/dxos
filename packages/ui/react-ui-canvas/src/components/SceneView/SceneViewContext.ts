@@ -54,13 +54,14 @@ export type SceneViewContextValue = {
   path: SceneId[];
   camera: Camera;
   /** The zoom against this level's own 1:1 rather than the root's; display only. */
-  nominalZoom: number;
   /** The centre of the view in scene coordinates. */
   pointer: { x: number; y: number };
   /** Whether the viewport has been measured; the scene stays hidden until it has. */
   measured: boolean;
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   frameUnit: number;
+  /** The portal filling most of the view and the opacity of the rest of the layer around it (`layerOpacity`). */
+  focus: { id: ElementId; opacity: number } | undefined;
   /** Minor grid spacing in scene px. */
   grid: number;
   snapEnabled: boolean;
