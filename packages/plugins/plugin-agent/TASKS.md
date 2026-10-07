@@ -1,6 +1,6 @@
 # plugin-agent — Tasks
 
-_Resume: Phase 3 — approve the M0 design (child feed per private thread), then build it. Uncommitted: none. Last: M1 spike findings in BRAIN.md._
+_Resume: Phase 3 — approve M0 (child feed per private thread, THREADS.md), then M2 on `@dxos/brain`. In flight: one feed item per fact; GoalCompiler UI fixes + Datalog highlighting. Uncommitted: none. Last: `FactTuple` removed (`RDF.Fact` with tagged `Term` is the only fact type); goal state projected into the index._
 
 Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), brain: [docs/BRAIN.md](./docs/BRAIN.md), ontology:
 [docs/ONTOLOGY.md](./docs/ONTOLOGY.md), memory: [docs/MEMORY.md](./docs/MEMORY.md), testing:
@@ -53,7 +53,11 @@ in-memory trigger registry ("durable triggers").
 
 - [ ] **M0 Private threads** — a session feed carries threads the chat view hides; agent-runtime runs a turn inside one. Researched: child feed per thread (design B) recommended, awaiting approval.
 - [x] **M1 Goal compilation spike** — Datalog confirmed; 6/8 goals compile reliably on Sonnet; replay (not read-back) catches miscompiles. Findings in BRAIN.md "M1 findings".
-- [ ] **M2 Facts and goals, in-process** — one tuple per feed item; hierarchical `Goal` directives with feeds; Datalog engine; judgment in the session's private thread.
+- [x] **Engine and brain packages** — `@dxos/datalog` and `@dxos/brain` (public; 0.0.1 placeholders on npm, set up trusted publishing before 0.12.0); `CompilePrompt`; the eight scenarios as tests; GoalCompiler story.
+- [x] **pipeline-rdf as the common type** — `RDF.Vocab` / `RDF.Mapping` / `RDF.Predicate` exported; illocution kept in the RDF mapping; `Term` tagged (`kind`) so facts store in ECHO; `pass` on `Fact`; `FactTuple` removed.
+- [ ] **One feed item per fact** — `FactEntry { fact }` (0.2.0, no migration: chats re-read) with extraction-pass markers for atomicity and resume; `forgetFact`. In progress.
+- [ ] **Goal state in the index** — project `goal(G, owner|status|priority, …)`, `subgoal(P, C)` and task links as derived facts (BRAIN.md "State").
+- [ ] **M2 Facts and goals, in-process** — one fact per feed item; hierarchical `Goal` directives with feeds; Datalog engine; judgment in the session's private thread.
 - [ ] **M3 Brain on EDGE** — Durable Object per agent: follows feeds, wake rules, alarms, background sessions per actor; agent service routing.
 - [ ] **M4 Planning and constraints** — sub-goals, action drivers, session → durable promotion.
 - [ ] **M5 Pattern library and evals** — goal-pattern skill, eval personas, cost controls.
@@ -64,4 +68,4 @@ in-memory trigger registry ("durable triggers").
 
 ### References
 
-- dxos/dxos#13590 (Phases 1–2), dxos/edge#1226 (Discord bot), dxos/dxos#13762 (BRAIN.md).
+- dxos/dxos#13590 (Phases 1–2), dxos/edge#1226 (Discord bot), dxos/dxos#13762 (BRAIN.md), dxos/dxos#13766 (M1, packages), [docs/THREADS.md](./docs/THREADS.md).
