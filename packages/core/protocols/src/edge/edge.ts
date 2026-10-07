@@ -426,26 +426,10 @@ export enum EdgeWebsocketProtocol {
 }
 
 /**
- * Compatibility level this client build implements, sent on every EDGE WebSocket upgrade so the router
- * can tell (and, once it enforces a minimum, refuse) builds that would damage a space. It is a monotonic
- * integer, not `DXOS_VERSION`: Composer ships continuously from main, so builds on either side of a
- * breaking change can carry the same version string. To fence off a future incompatibility, bump this and document the new level below.
- *
- * Levels:
- * - 0: implicit, sent by nothing — every build that predates this constant.
- * - 1: never writes self-checkpointed sedimentree fragments (automerge >= 3.5, dxos/dxos#13290).
- */
-export const EDGE_CLIENT_COMPAT_LEVEL = 1;
-
-/**
- * Prefix of the `Sec-WebSocket-Protocol` entry carrying {@link EDGE_CLIENT_COMPAT_LEVEL} (e.g. `dxos-compat.1`).
+ * Prefix of the `Sec-WebSocket-Protocol` entry carrying the client's SDK version (e.g. `dxos-version.0.12.0`).
  * A subprotocol entry because browsers cannot set headers on a WebSocket; the router never selects it.
  */
-export const EDGE_CLIENT_COMPAT_PROTOCOL_PREFIX = 'dxos-compat.';
-
-/** `Sec-WebSocket-Protocol` entry advertising {@link EDGE_CLIENT_COMPAT_LEVEL}. */
-export const encodeEdgeClientCompatProtocol = (level: number = EDGE_CLIENT_COMPAT_LEVEL): string =>
-  `${EDGE_CLIENT_COMPAT_PROTOCOL_PREFIX}${level}`;
+export const EDGE_CLIENT_VERSION_PROTOCOL_PREFIX = 'dxos-version.';
 
 // TODO(mykola): Reconcile with type in EDGE repo.
 export type EdgeStatus = {

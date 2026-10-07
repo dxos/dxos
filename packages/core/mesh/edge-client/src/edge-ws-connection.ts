@@ -8,7 +8,7 @@ import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { EdgeWebsocketProtocol, encodeEdgeClientCompatProtocol } from '@dxos/protocols';
+import { EDGE_CLIENT_VERSION_PROTOCOL_PREFIX, EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
@@ -17,6 +17,7 @@ import { type EdgeIdentity } from './edge-identity.ts';
 import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketClosedError, WebSocketMuxer } from './edge-ws-muxer.ts';
 import { toUint8Array } from './protocol.ts';
 import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
+import { DXOS_VERSION } from './version.ts';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
@@ -180,8 +181,11 @@ export class EdgeWsConnection extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    // Browsers cannot set WebSocket headers, so the compat level rides in the subprotocol list.
-    const baseProtocols = [...Object.values(EdgeWebsocketProtocol), encodeEdgeClientCompatProtocol()];
+    // Browsers cannot set WebSocket headers, so the SDK version rides in the subprotocol list.
+    const baseProtocols = [
+      ...Object.values(EdgeWebsocketProtocol),
+      `${EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}${DXOS_VERSION}`,
+    ];
     this._ws = new WebSocket(
       this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader

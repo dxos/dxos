@@ -5,7 +5,7 @@
 
 // Stamps source version files from their owning package's version, so generated artifacts match the
 // version Changesets assigned. Run inside `changeset:version`:
-//   - `version.ts` (DXOS_VERSION) for @dxos/client, @dxos/client-services, @dxos/observability (Group A)
+//   - `version.ts` (DXOS_VERSION) for @dxos/client, @dxos/client-services, @dxos/edge-client, @dxos/observability (Group A)
 //     and @dxos/cli (Group B).
 //   - `tauri.conf.json` ($.version) for the Composer desktop build (composer-app's own independent line).
 //
@@ -23,6 +23,7 @@ const CHECK = process.argv.includes('--check');
 const VERSION_TS = [
   'packages/sdk/client',
   'packages/sdk/client-services',
+  'packages/core/mesh/edge-client',
   'packages/sdk/observability',
   'packages/devtools/cli',
 ].map((pkgDir) => ({

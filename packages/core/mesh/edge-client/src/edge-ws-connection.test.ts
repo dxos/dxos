@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vites
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { EDGE_CLIENT_COMPAT_LEVEL, EdgeWebsocketProtocol } from '@dxos/protocols';
+import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
@@ -15,6 +15,7 @@ import { type EdgeIdentity } from './edge-identity.ts';
 import { type EdgeWsConnectionCallbacks } from './edge-ws-connection.ts';
 import { WebSocketMuxer } from './edge-ws-muxer.ts';
 import { type ReconnectReason } from './reconnect-reason.ts';
+import { DXOS_VERSION } from './version.ts';
 
 // Segmented-message chunk count depends on the protobuf envelope overhead, which is
 // determined empirically (see chunk-count assertions below) rather than assumed.
@@ -147,8 +148,8 @@ describe('EdgeWsConnection', () => {
   }
 });
 
-describe('EdgeWsConnection compatibility level', () => {
-  test('advertises the compatibility level alongside the protocols and auth header', async ({ expect }) => {
+describe('EdgeWsConnection client version', () => {
+  test('advertises the SDK version alongside the protocols and auth header', async ({ expect }) => {
     const connection = new EdgeWsConnection(
       testIdentity,
       { url: new URL('ws://localhost:1234'), protocolHeader: 'base64url.bearer.authorization.dxos.org.AAAA' },
@@ -162,7 +163,7 @@ describe('EdgeWsConnection compatibility level', () => {
     expect(FakeWebSocket.instances.at(-1)?.protocols).toEqual([
       EdgeWebsocketProtocol.V0,
       EdgeWebsocketProtocol.V1,
-      `dxos-compat.${EDGE_CLIENT_COMPAT_LEVEL}`,
+      `dxos-version.${DXOS_VERSION}`,
       'base64url.bearer.authorization.dxos.org.AAAA',
     ]);
   });
