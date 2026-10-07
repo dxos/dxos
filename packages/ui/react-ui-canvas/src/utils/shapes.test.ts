@@ -15,7 +15,7 @@ describe('shapes', () => {
       style: { hue: 'teal', rounded: true },
     };
     const fresh = createNode({ type: 'rect', id: 'b', z: 'a1', center: { x: 400, y: 0 }, size: source.size });
-    expect(cloneShape(source, fresh)).toEqual({
+    expect(cloneShape(source, fresh, [{ field: 'label' }])).toEqual({
       type: 'rect',
       id: 'b',
       z: 'a1',
@@ -26,13 +26,13 @@ describe('shapes', () => {
     });
   });
 
-  test('a cloned portal opens onto its own scene, and a class gets its type text', ({ expect }) => {
+  test('a cloned portal opens onto its own scene, and a note gets its type text', ({ expect }) => {
     const portal = createNode({ type: 'scene', id: 'p', z: 'a0', center: { x: 0, y: 0 }, scene: 'scene:p' });
     const copy = cloneShape(portal, createNode({ type: 'scene', id: 'q', z: 'a1', center: { x: 0, y: 0 } }));
     expect(copy).toMatchObject({ id: 'q', scene: 'q' });
 
-    const named = { ...createNode({ type: 'class', id: 'c', z: 'a0', center: { x: 0, y: 0 } }), name: 'Person' };
-    const fresh = createNode({ type: 'class', id: 'd', z: 'a1', center: { x: 0, y: 0 } });
-    expect(cloneShape(named, fresh)).toMatchObject({ id: 'd', name: 'Class' });
+    const named = { ...createNode({ type: 'note', id: 'c', z: 'a0', center: { x: 0, y: 0 } }), text: 'Mine' };
+    const fresh = createNode({ type: 'note', id: 'd', z: 'a1', center: { x: 0, y: 0 } });
+    expect(cloneShape(named, fresh, [{ field: 'text', multiline: true }])).toMatchObject({ id: 'd', text: 'Note' });
   });
 });

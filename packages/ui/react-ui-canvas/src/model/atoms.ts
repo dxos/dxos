@@ -80,7 +80,7 @@ export type SceneViewAtoms = {
   linkType: Atom.Writable<LinkType>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
-  /** Guides shown: the scene's page frame and, on a lattice, its cells. */
+  /** Guides shown: on a lattice, its cells. */
   guides: Atom.Writable<boolean>;
   /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
   lattice: Atom.Writable<boolean>;

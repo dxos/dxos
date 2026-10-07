@@ -43,7 +43,7 @@ import { topZ } from '../../utils/order.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { resizeBounds } from '../../utils/resize.ts';
 import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
-import { DEFAULT_SIZES, cloneShape, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
+import { NOMINAL_SIZES, cloneShape, createLink, createNode, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { type LinkEnd, handlePoint } from '../ControlFrame/ControlFrame.tsx';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
@@ -91,6 +91,8 @@ export type UsePointerMachineOptions = {
   /** Set once the user takes the camera over, which stops the view re-fitting itself. */
   interactedRef: MutableRefObject<boolean>;
   select: (ids: Iterable<ElementId>) => void;
+  /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
+  cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
   Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor'>;
 
@@ -153,6 +155,7 @@ export const usePointerMachine = ({
   setCamera,
   cancelAnimation,
   isNavigating,
+  cell,
   minor,
   major,
   snap,
@@ -652,7 +655,7 @@ export const usePointerMachine = ({
       if (!drag.dropped && (drawn.width === 0 || drawn.height === 0)) {
         return undefined;
       }
-      const size = drag.dropped ? { ...def.defaultSize } : { ...drawn };
+      const size = drag.dropped ? nominalSize(def.defaultSize, cell) : { ...drawn };
       const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
@@ -663,7 +666,7 @@ export const usePointerMachine = ({
       pendingRef.current = { type: drag.type, node };
       return node;
     },
-    [nodeRegistry, scene.nodes],
+    [nodeRegistry, scene.nodes, cell],
   );
 
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
@@ -759,7 +762,7 @@ export const usePointerMachine = ({
             // what snaps, so the edges land on the grid.
             const source = scene.nodes[endpointNode(current.source) ?? ''];
             const def = source ? nodeRegistry[source.type] : undefined;
-            const size = source?.size ?? DEFAULT_SIZES.rect;
+            const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
             const props = {
               id: createId(source?.type ?? 'rect'),
               z: topZ(Object.values(scene.nodes)),
@@ -769,7 +772,10 @@ export const usePointerMachine = ({
               },
               size,
             };
-            const node = source && def ? cloneShape(source, def.create(props)) : createNode({ type: 'rect', ...props });
+            const node =
+              source && def
+                ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
+                : createNode({ type: 'rect', ...props });
             addNode(node);
             target = { node: node.id };
           }
@@ -832,6 +838,7 @@ export const usePointerMachine = ({
       commitCreated,
       addNode,
       minor,
+      cell,
     ],
   );
 

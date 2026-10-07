@@ -169,6 +169,7 @@
     "@dxos/plugin-trip": "workspace:*",
     "@dxos/plugin-typefully": "workspace:*",
     "@dxos/plugin-typesafe": "workspace:*",
+    "@dxos/plugin-uml": "workspace:*",
     "@dxos/plugin-video": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",

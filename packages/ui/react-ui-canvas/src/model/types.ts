@@ -145,16 +145,6 @@ export const EllipseNode = Schema.Struct({
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
-/** UML class box: a name compartment over attribute and method compartments. */
-export const ClassNode = Schema.Struct({
-  type: Schema.Literal('class'),
-  ...nodeBase,
-  name: Schema.String,
-  attributes: Schema.Array(Schema.String),
-  methods: Schema.Array(Schema.String),
-});
-export type ClassNode = Schema.Schema.Type<typeof ClassNode>;
-
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
   type: Schema.Literal('note'),
@@ -175,10 +165,10 @@ export const PortalNode = Schema.Struct({
 export type PortalNode = Schema.Schema.Type<typeof PortalNode>;
 
 /** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
-export const BuiltinNode = Schema.Union([RectNode, EllipseNode, ClassNode, NoteNode, PortalNode]);
+export const BuiltinNode = Schema.Union([RectNode, EllipseNode, NoteNode, PortalNode]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
-export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'class', 'note', 'scene'];
+export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'note', 'scene'];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
 export type Node = NodeBase;
@@ -188,7 +178,6 @@ export type NodeType = string;
 /** Narrows a node to one built-in type; sound because the registry maps each type name to one schema. */
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
-export const isClassNode = (node: NodeBase): node is ClassNode => node.type === 'class';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isPortalNode = (node: NodeBase): node is PortalNode => node.type === 'scene';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
@@ -220,7 +209,8 @@ export const isPointEndpoint = (end: Endpoint): end is PointEndpoint => 'point' 
 export const endpointNode = (end: Endpoint): NodeId | undefined => ('node' in end ? end.node : undefined);
 
 /** What is drawn at a link end. */
-export const Marker = Schema.Literals(['arrow', 'circle']);
+/** An end marker: a filled `arrow`, a `circle`, or a hollow `triangle` (inheritance). */
+export const Marker = Schema.Literals(['arrow', 'circle', 'triangle']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
 /** Markers at the source (`start`) and target (`end`) of a link. */
@@ -295,7 +285,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
   });
 
 /** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([RectNode, EllipseNode, ClassNode, NoteNode, PortalNode]);
+export const Scene = createSceneSchema([RectNode, EllipseNode, NoteNode, PortalNode]);
 
 /** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
 export const OpenScene = createSceneSchema([NodeBase]);

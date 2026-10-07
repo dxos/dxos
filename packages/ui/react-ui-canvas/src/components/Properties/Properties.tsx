@@ -13,17 +13,20 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
+import { type Database } from '@dxos/echo';
 import {
   Form,
   type FormFieldMap,
   type FormFieldOverride,
   type FormFieldRenderer,
   type FormUpdateMeta,
+  type RefFieldDataProps,
 } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -44,15 +47,15 @@ import { commonSchema, mergeValues, patchValues } from '../../utils/properties.t
 import { resolveStyle } from '../../utils/style.ts';
 import { StyleGridField } from './StyleGrid.tsx';
 
-/** Identity, ordering and geometry lists are the surface's, not the user's. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
+/** Identity, ordering, geometry lists and a scene shape's child-scene id are the surface's, not the user's. */
+const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'scene'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
  * beats the generic array field's row of inputs. Blank lines survive while typing (they round-trip
  * through split/join) and are dropped on blur, when the form saves.
  */
-const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getValue, onValueChange, onBlur }) => {
+export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getValue, onValueChange, onBlur }) => {
   const lines: string[] = getValue() ?? [];
   return (
     <Form.Field path={jsonPath} label={label} readonly={readonly}>
@@ -74,10 +77,8 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   );
 };
 
-/** Renderers by field path for the built-in types' list fields and the style grid; a host may pass its own. */
+/** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
-  'attributes': LinesField,
-  'methods': LinesField,
   'style.hue': StyleGridField,
 };
 
@@ -129,6 +130,12 @@ export type PropertiesProps = Util.ThemedClassName<{
   fields?: FormFieldMap;
   /** Show the fields without letting them change; also implied by a projection that cannot `update`. */
   readonly?: boolean;
+  /** The database a reference field picks from; without it reference fields are read-only. */
+  db?: Database.Database;
+  /** Narrows a reference field's candidates (e.g. to objects of one kind). */
+  getOptions?: RefFieldDataProps['getOptions'];
+  /** A host's per-selection field overrides (e.g. a field it allows only in some states), over the panel's own. */
+  overrides?: (elements: readonly Element[]) => Record<string, FormFieldOverride>;
 }>;
 
 export const Properties = ({
@@ -136,8 +143,11 @@ export const Properties = ({
   projection,
   atoms,
   nodes = defaultNodeRegistry,
-  fields = DEFAULT_FIELDS,
+  fields,
   readonly: readonlyProp = false,
+  db,
+  getOptions,
+  overrides,
 }: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
@@ -152,12 +162,12 @@ export const Properties = ({
     const shown = elements.map((element) => formValues(nodes, element));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
-    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_OVERRIDES };
+    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_OVERRIDES, ...overrides?.(elements) };
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
     return { values, fieldOverrides };
-  }, [elements, nodes]);
+  }, [elements, nodes, overrides]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -174,9 +184,27 @@ export const Properties = ({
     [projection, elements, nodes],
   );
 
+  // The selected node types' own renderers over the panel's; a host's `fields` win over both.
+  const fieldMap = useMemo(
+    () => ({
+      ...DEFAULT_FIELDS,
+      ...Object.assign(
+        {},
+        ...elements.map((element) => (isLink(element) ? {} : (nodeDef(nodes, element)?.fields ?? {}))),
+      ),
+      ...fields,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [typesKey, nodes, fields],
+  );
+
   if (elements.length === 0) {
     return (
-      <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
+      <div
+        className={mx('flex flex-col overflow-hidden', classNames)}
+        data-testid='properties'
+        {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
+      >
         <div className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</div>
       </div>
     );
@@ -184,14 +212,20 @@ export const Properties = ({
 
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
-    <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
+    <div
+      className={mx('flex flex-col overflow-hidden', classNames)}
+      data-testid='properties'
+      {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
+    >
       {schema ? (
         <Form.Root
           key={[...selection].join()}
           schema={schema}
           values={values}
           fieldOverrides={fieldOverrides}
-          fieldMap={fields}
+          fieldMap={fieldMap}
+          db={db}
+          getOptions={getOptions}
           readonly={readonly}
           autoSave
           onSave={onSave}

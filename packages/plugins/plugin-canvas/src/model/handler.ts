@@ -20,12 +20,12 @@ import {
   type RectNode,
   between,
   createLink,
+  defaultNodeRegistry,
   endpointNode,
-  isClassNode,
   isEllipseNode,
   isNoteNode,
-  isRectNode,
   nodeBounds,
+  nodeTitle,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
 
@@ -256,18 +256,9 @@ export const SceneHandler: ContentHandler = {
 
 const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : record.link.z);
 
-const textOf = (node: Node): string => {
-  if (isRectNode(node) || isEllipseNode(node)) {
-    return node.label ?? '';
-  }
-  if (isNoteNode(node)) {
-    return node.text;
-  }
-  if (isClassNode(node)) {
-    return node.name;
-  }
-  return '';
-};
+// The DSL bridge has no plugin context, so it reads a node's text by the built-in types' parts; a
+// contributed type's text reads back empty.
+const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '';
 
 /** The DSL ref of the node a link end names, relative to `object`. */
 const refTo = (content: ContentMap, nodeId: string, object: string): string => {

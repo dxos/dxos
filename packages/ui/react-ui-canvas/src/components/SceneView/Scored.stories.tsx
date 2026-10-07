@@ -21,7 +21,7 @@ import { type SceneStore, createMemoryStore } from '../../model/store.ts';
 import { type Scene, type SceneId } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/diagram.ts';
-import { createClassSceneTree } from '../../utils/testing.ts';
+import { createModelSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**
@@ -319,9 +319,9 @@ const Editor = ({ store, root, engine }: EditorProps) => {
 };
 
 type StoryArgs = {
-  /** Mermaid flowchart laid out by the engine; ignored when `fixture` is `classes`. */
+  /** Mermaid flowchart laid out by the engine; ignored when `fixture` is `model`. */
   source?: string;
-  fixture?: 'mermaid' | 'classes';
+  fixture?: 'mermaid' | 'model';
 };
 
 const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
@@ -330,8 +330,8 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
   const [failure, setFailure] = useState<string>();
   useEffect(() => {
     const key = `${fixture}:${source}`;
-    if (fixture === 'classes') {
-      setSeed({ ...createClassSceneTree(), key });
+    if (fixture === 'model') {
+      setSeed({ ...createModelSceneTree(), key });
       setFailure(undefined);
       return;
     }
@@ -369,7 +369,7 @@ const meta: Meta<StoryArgs> = {
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   argTypes: {
     source: { control: 'text', description: 'Mermaid flowchart laid out by the engine' },
-    fixture: { control: 'radio', options: ['mermaid', 'classes'] },
+    fixture: { control: 'radio', options: ['mermaid', 'model'] },
   },
 };
 
@@ -387,7 +387,7 @@ export const Platform: Story = {
   args: { source: PLATFORM.trim(), fixture: 'mermaid' },
 };
 
-/** The scene engine's own class fixture, graded as drawn. */
-export const Classes: Story = {
-  args: { fixture: 'classes' },
+/** The scene engine's own model fixture, graded as drawn. */
+export const Model: Story = {
+  args: { fixture: 'model' },
 };

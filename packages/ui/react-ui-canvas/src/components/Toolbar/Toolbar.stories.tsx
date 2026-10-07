@@ -25,6 +25,7 @@ const DefaultStory = () => {
     nameOf: (id) => id.split(':')[1] ?? id,
     onPath: (index) => note(`path → ${index}`),
     fit: () => note('fit'),
+    zoomReset: () => setZoom(1),
     zoomIn: () => setZoom((value) => value * 1.25),
     zoomOut: () => setZoom((value) => value / 1.25),
     snap,
