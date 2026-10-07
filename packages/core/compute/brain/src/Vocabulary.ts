@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { Predicate } from '@dxos/pipeline-rdf/types';
+
 /** A canonical predicate and the surface forms extraction maps onto it. */
 export type Entry = {
   /** Identifier usable as rule shorthand (`helps_with(dima, X)`). */
@@ -12,12 +14,13 @@ export type Entry = {
   readonly description?: string;
 };
 
-/** Lowercases and joins words with `_`, so `Will-Work-On` and `will work on` compare equal. */
+/**
+ * The lookup key for a surface predicate: pipeline-rdf's relation key (case, auxiliaries and head-verb
+ * inflection collapse, as the fact store matches them) with words joined by `_`, so `Will-Work-On`,
+ * `working on` and `works_on` compare equal.
+ */
 export const normalize = (surface: string): string =>
-  surface
-    .trim()
-    .toLowerCase()
-    .replace(/[\s-]+/g, '_');
+  Predicate.normalize(surface.replace(/[_-]+/g, ' ')).replace(/\s+/g, '_');
 
 /** The canonical predicates rules may use as shorthand, and the synonyms that map onto them. */
 export class Vocabulary {

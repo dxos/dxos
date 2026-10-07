@@ -57,6 +57,15 @@ describe('FactTuple', () => {
     expect(Schema.decodeUnknownSync(RDF.Fact)(restored)).toStrictEqual(fact);
   });
 
+  test.for([
+    ['every field', REFUSAL],
+    ['no optional fields', MINIMAL],
+  ] as const)('round-trips a tuple with %s through pipeline-rdf triples', ([, fact], { expect }) => {
+    const tuple = FactTuple.fromFact(fact, { pass: 'pass-1' });
+    const [stored] = RDF.Mapping.triplesToFacts(RDF.Mapping.factToTriples(FactTuple.toFact(tuple)));
+    expect(FactTuple.fromFact(stored, { pass: 'pass-1' })).toStrictEqual(tuple);
+  });
+
   test('defaults force to assertive', ({ expect }) => {
     expect(FactTuple.fromFact(MINIMAL, { pass: 'p' }).force).toBe('assertive');
     const bare = FactTuple.toFact(
