@@ -173,19 +173,20 @@ export const compile = Effect.fnUntraced(function* (rulesets: readonly RulesetSp
     }
 
     for (const constraint of ruleset.program.constraints) {
-      if (constraints.some(({ name }) => name === constraint.name)) {
-        return yield* invalid(`Constraint "${constraint.name}" is defined twice.`, { ruleset: ruleset.id });
+      const name = constraint.anonymous === true ? `${ruleset.id}/${constraint.name}` : constraint.name;
+      if (constraints.some((held) => held.name === name)) {
+        return yield* invalid(`Constraint "${name}" is defined twice.`, { ruleset: ruleset.id });
       }
       for (const literal of constraint.body) {
         yield* literal._tag === 'builtin'
-          ? checkArity(literal.name, literal.args.length, constraint.name)
-          : checkArity(literal.atom.predicate, literal.atom.args.length, constraint.name);
+          ? checkArity(literal.name, literal.args.length, name)
+          : checkArity(literal.atom.predicate, literal.atom.args.length, name);
       }
       temporal ||= constraint.body.some((literal) => literal._tag === 'builtin' && literal.name === 'elapsed');
       constraints.push({
-        name: constraint.name,
+        name,
         mode: ruleset.onViolation,
-        steps: yield* plan(constraint.body, constraint.name),
+        steps: yield* plan(constraint.body, name),
       });
     }
   }

@@ -47,7 +47,7 @@ export type Ruleset = {
   readonly id: string;
   /** Datalog text; see `Rule.parse`. */
   readonly rules: string;
-  /** What a violated constraint of this ruleset does to a push: refuse it (default) or report it. */
+  /** What a violated constraint of this ruleset does to a change: refuse it (default) or report it; see `violations`. */
   readonly onViolation?: 'reject' | 'flag';
 };
 
@@ -114,7 +114,11 @@ export interface Service {
   /** Why an atom holds, down to the facts; none when it does not. */
   readonly explain: (atom: Rule.GroundAtom) => Effect.Effect<Option.Option<Proof>>;
 
-  /** The constraints violated now (flagged ones; rejected ones never commit). */
+  /**
+   * The constraints violated now. A `reject` constraint refuses any push, retraction or rule change that would
+   * violate it, but `tick` cannot refuse the passage of time, so expiry or `elapsed` can still violate one and it
+   * is then reported here like a flagged one.
+   */
   readonly violations: () => Effect.Effect<Violation[]>;
 
   /** Adds or replaces a ruleset; the program is re-stratified and every conclusion re-derived. */
@@ -126,9 +130,9 @@ export interface Service {
   >;
 
   /** Removes a ruleset and withdraws what only it derived; false when it was not held. */
-  readonly removeRules: (id: string) => Effect.Effect<boolean>;
+  readonly removeRules: (id: string) => Effect.Effect<boolean, ConsistencyError>;
 
-  /** Re-reads the clock: expires facts past `validTo` and re-evaluates rules that read time. */
+  /** Re-reads the clock: expires facts past `validTo` and re-evaluates rules that read time; it never refuses. */
   readonly tick: () => Effect.Effect<ChangeResult>;
 
   /** Creates a registration and its outbox; registering an existing id keeps its outbox. */

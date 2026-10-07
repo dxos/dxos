@@ -551,6 +551,68 @@ describe('reasoning', () => {
         expect(yield* brain.violations()).toHaveLength(1);
       }, Effect.provide(TestLayer)),
     );
+
+    it.effect(
+      'unnamed constraints in different rulesets both load; explicit names must stay unique',
+      Effect.fnUntraced(function* () {
+        const brain = yield* Brain.Brain;
+        yield* brain.addRules({ id: 'a', rules: ':- fact(_, x, bad, _).', onViolation: 'flag' });
+        yield* brain.addRules({ id: 'b', rules: ':- fact(_, y, bad, _).', onViolation: 'flag' });
+        yield* brain.push([triple('f1', 'x', 'bad', 'z'), triple('f2', 'y', 'bad', 'z')]);
+        expect((yield* brain.violations()).map(({ constraint }) => constraint)).toEqual([
+          'a/constraint1',
+          'b/constraint1',
+        ]);
+
+        yield* brain.addRules({ id: 'c', rules: '! named :- fact(_, x, worse, _).' });
+        expect(
+          yield* Effect.flip(brain.addRules({ id: 'd', rules: '! named :- fact(_, y, worse, _).' })),
+        ).toBeInstanceOf(Rule.InvalidRuleError);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'removing a ruleset that a reject constraint depends on is refused',
+      Effect.fnUntraced(function* () {
+        const brain = yield* Brain.Brain;
+        yield* brain.addRules({ id: 'approvals', rules: 'approved(X) :- fact(_, X, approved, yes).' });
+        yield* brain.addRules({
+          id: 'policy',
+          rules: '! unapproved_release :- fact(_, R, released, _), not approved(R).',
+        });
+        yield* brain.push([triple('f1', 'v1', 'approved', 'yes'), triple('f2', 'v1', 'released', 'friday')]);
+
+        const error = yield* Effect.flip(brain.removeRules('approvals'));
+        expect(error).toBeInstanceOf(Brain.ConsistencyError);
+        expect(error.context).toMatchObject({
+          violations: [{ constraint: 'unapproved_release', bindings: { R: 'v1' } }],
+        });
+        expect(yield* brain.ask('approved(v1)')).toEqual([{}]);
+        expect(yield* brain.violations()).toEqual([]);
+
+        expect(yield* brain.removeRules('policy')).toBe(true);
+        expect(yield* brain.removeRules('approvals')).toBe(true);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'the passage of time can violate a reject constraint, which is then reported',
+      Effect.fnUntraced(function* () {
+        yield* TestClock.setTime(MONDAY);
+        const brain = yield* Brain.make();
+        yield* brain.addRules({
+          id: 'sla',
+          rules: '! unanswered :- fact(F, _, asked, _), said_at(F, T), elapsed(T, 1d).',
+        });
+        yield* brain.push([triple('f1', 'rich', 'asked', 'dima', { saidAt: new Date(MONDAY).toISOString() })]);
+        expect(yield* brain.violations()).toEqual([]);
+
+        yield* TestClock.adjust('1 day');
+        const tick = yield* brain.tick();
+        expect(tick.events).toHaveLength(1);
+        expect(yield* brain.violations()).toEqual([{ constraint: 'unanswered', bindings: { F: 'f1', T: MONDAY } }]);
+      }),
+    );
   });
 
   describe('determinism', () => {

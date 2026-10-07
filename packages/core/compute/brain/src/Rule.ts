@@ -45,7 +45,12 @@ export type Literal =
 export type Rule = { readonly head: Head; readonly body: readonly Literal[] };
 
 /** An integrity constraint: violated whenever its body holds. */
-export type Constraint = { readonly name: string; readonly body: readonly Literal[] };
+export type Constraint = {
+  readonly name: string;
+  readonly body: readonly Literal[];
+  /** Named by the parser (`:- body.`), so the name is only unique within its ruleset. */
+  readonly anonymous?: boolean;
+};
 
 export type Program = { readonly rules: readonly Rule[]; readonly constraints: readonly Constraint[] };
 
@@ -149,7 +154,7 @@ class Parser {
         this.#expect(':-');
         constraints.push({ name, body: this.body() });
       } else if (this.#accept(':-')) {
-        constraints.push({ name: `constraint${++this.#constraints}`, body: this.body() });
+        constraints.push({ name: `constraint${++this.#constraints}`, body: this.body(), anonymous: true });
       } else {
         const head = this.#head();
         rules.push({ head, body: this.#accept(':-') ? this.body() : [] });

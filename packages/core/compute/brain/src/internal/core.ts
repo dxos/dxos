@@ -496,8 +496,10 @@ export const makeCore = Effect.fnUntraced(function* ({ maxDepth, maxOutbox }: { 
           }
           const rulesets = new Map(state.rulesets);
           rulesets.delete(id);
-          // A subset of a stratified program is stratified, so this cannot fail; orDie keeps the signature honest.
-          commit(yield* recompile(rulesets).pipe(Effect.orDie), [], 0);
+          // A subset of a valid, stratified program compiles, so only a constraint can refuse the removal.
+          const transition = yield* recompile(rulesets).pipe(Effect.orDie);
+          yield* rejectViolations(transition);
+          commit(transition, [], 0);
           return true;
         }),
       ),
