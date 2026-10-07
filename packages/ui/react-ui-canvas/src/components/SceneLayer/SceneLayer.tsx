@@ -160,8 +160,6 @@ export const SceneLayer = memo(
                 className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
                 strokeWidth={2 * unit}
                 data-link-id={link.id}
-                markerStart={markerUrl(linkMarkers(link).start, 'start')}
-                markerEnd={markerUrl(linkMarkers(link).end, 'end')}
               />
             </g>
           ))}
@@ -185,6 +183,18 @@ export const SceneLayer = memo(
             handlers={handlers}
           />
         ))}
+        {/* The ends paint over the nodes, so an end centred on a node's edge shows whole. */}
+        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+          {links.map(({ link, path }) => (
+            <path
+              key={link.id}
+              d={path}
+              className='fill-none stroke-none'
+              markerStart={markerUrl(linkMarkers(link).start, 'start')}
+              markerEnd={markerUrl(linkMarkers(link).end, 'end')}
+            />
+          ))}
+        </svg>
       </>
     );
   },
