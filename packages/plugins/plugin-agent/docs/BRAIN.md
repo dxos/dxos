@@ -1,6 +1,6 @@
 # Agent Brain — design
 
-Status: draft 1 (2026-10-06), in discussion. Builds on plugin-agent's
+Status: draft 2 (2026-10-07): design settled except private threads (M0); M1 done; `@dxos/datalog` and `@dxos/brain` built. Builds on plugin-agent's
 [ONTOLOGY.md](./ONTOLOGY.md) (draft 3) and
 [DESIGN.md](./DESIGN.md), which describe the agent as built in
 PR #13590.
@@ -13,26 +13,27 @@ from people — "keep me informed about X", "get Dima to help with this", "compl
 every conversation and runtime, and act on them when circumstances change rather than only when
 asked.
 
-- **One brain per agent, authoritative on EDGE** as a Durable Object; every runtime is a client, and
-  alarms give time-driven goals a durable home.
-- **Facts are RDF tuples in ECHO feeds** — one feed per source, one tuple per item, append-only; the
-  feeds are the record and the brain's index is derived and rebuildable.
+- **One brain per agent, authoritative on EDGE** as a Durable Object, with an in-process copy in the
+  browser; every layer runs unchanged in the browser, on Workers and in Node.
+- **Facts are pipeline-rdf `Fact`s stored as `FactTuple`s in ECHO feeds** — one feed per source, one
+  tuple per item, append-only, mapped losslessly to and from `RDF.Fact`; the feeds are the record and
+  the brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
-  group or agent), prioritized, lasting a session or until cancelled, optionally carrying
-  instructions.
-- **Goals are hierarchical:** steps are sub-goals whose machinery is optional; a goal creates a
-  concrete `Task` only for substantive, assignable work, and the task links back to it.
-- **Goals compile to Datalog** (outcome, conditions, wake rules), evaluated incrementally without a
-  model; SPARQL stays for judgment-time retrieval. The text is the authority.
-- **Evaluation is two-stage:** cheap rule-driven wake, then model judgment; drivers (fact, time,
+  group or agent), hierarchical (steps are sub-goals), carrying priority, a budget and optional
+  instructions; a goal creates a concrete `Task` only for substantive, assignable work.
+- **Goals compile to Datalog** — `achieved`/`holds`, conditions, `wake` and `blocks` rules — over a
+  canonical predicate vocabulary; a compilation goes active only after independent test facts replay
+  correctly. The text is the authority. SPARQL stays for judgment-time retrieval.
+- **Datalog, not SPARQL or N3, runs the rules** (M1): all three compile equally well, but only a small
+  pure-TypeScript engine is portable, incremental and fast enough per fact.
+- **Two packages:** `@dxos/datalog` (the generic engine) and `@dxos/brain` (facts, vocabulary,
+  built-ins, compiler, `GoalRules`, the example scenarios as tests); both public.
+- **Evaluation is two-stage:** incremental rule-driven wakes, then model judgment; drivers (fact, time,
   action) are the only part hardcoded, and a goal-pattern document teaches the judgment.
-- **Goals carry priority and cost:** priority orders and arbitrates judgment; a budget per window
-  (calls, tokens, model tier) bounds spend, rolled up from sub-goals, degrading by batching before
-  pausing to ask the owner.
 - **State on the goal, history in its feed:** status and a one-line situation on the object; actions
   and judgments recorded as tuples that other goals can match.
-- **Judgment runs in private threads:** a session goal in the current session's feed, a durable goal
-  in a background session per owning actor.
+- **Judgment runs in private threads** — recommended as a child feed per thread (THREADS.md, M0):
+  session goals under the session, durable goals under a background session per owning actor.
 
 ## The brain stack
 
