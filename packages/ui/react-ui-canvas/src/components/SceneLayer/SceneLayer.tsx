@@ -210,8 +210,8 @@ const END_BOX = 32;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
 const Markers = ({ id, unit }: { id: string; unit: number }) => {
-  // Each end fills a 32×32 box in scene units, so it scales with the shapes it joins: the arrow all 10 of its
-  // 10 view units, the triangle 10 of its 12, the circle 8 of its 10.
+  // Each end fills a 32×32 box in scene units, so it scales with the shapes it joins: the arrow and the
+  // triangle 10 of their 12 view units, the circle 8 of its 10.
   const arrow = END_BOX;
   const triangle = (END_BOX * 12) / 10;
   const circle = (END_BOX * 10) / 8;
@@ -224,15 +224,22 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
         <marker
           key={`arrow-${end}`}
           id={`${id}-arrow-${end}`}
-          viewBox='0 0 10 10'
-          refX={9}
+          viewBox='-1 -1 12 12'
+          refX={10}
           refY={5}
-          markerWidth={arrow}
-          markerHeight={arrow}
+          markerWidth={(arrow * 12) / 10}
+          markerHeight={(arrow * 12) / 10}
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
-          <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
+          {/* An open arrowhead: two strokes, not a filled head. */}
+          <path
+            d='M 0 0 L 10 5 L 0 10'
+            className='fill-none stroke-neutral-500'
+            strokeWidth={outline((arrow * 12) / 10, 12)}
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
         </marker>
       ))}
       {/* Inheritance (UML generalization): a triangle filled with the canvas, so the line stops at its base. */}
