@@ -122,7 +122,7 @@ export const RecoveryCredentialsContainer = () => {
                   label: credential.recovery?.label ?? credential.id ?? `${index}`,
                 }))}
               >
-                <Listbox.Content classNames='gap-1'>
+                <Listbox.Content scroll={false} classNames='gap-1'>
                   {recoveryCredentials.map((credential, index) => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
                     return (

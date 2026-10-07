@@ -31,20 +31,22 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ContentBlock, Message } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
 import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
+import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
+import { EMPTY_THREAD, type ThreadProjection, projectThread } from './thread.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -97,6 +99,19 @@ export type ProcessorRequest = {
   context?: ProcessorRequestContext;
   options?: ProcessorRequestOptions;
 };
+
+export type ProcessorSendOptions = {
+  /**
+   * Runs before the prompt is dispatched — after it is already showing — and a rejection fails the
+   * prompt. Lets a transient chat persist and flush its conversation feed so the agent can resolve it.
+   */
+  prepare?: () => Promise<void> | void;
+};
+
+/** Settles the dispatch of one prompt: resolved once the agent holds it, rejected if it never will. */
+export type PromptSubmission = { resolve: () => void; reject: (error: unknown) => void };
+
+type OutboxPayload = { request: ProcessorRequest; prepare?: () => Promise<void> | void };
 
 /** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
 const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
@@ -237,6 +252,20 @@ export class AiChatProcessor {
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
+  readonly #outbox: Outbox<OutboxPayload>;
+
+  /** Prompts sent from this chat, from submit onwards, in submit order (see {@link send}). */
+  public readonly outbox: Atom.Atom<readonly OutboxEntry[]>;
+
+  /** The feed's messages, live: what the outbox and the streamed turn are reconciled against. */
+  readonly #feedMessages: Atom.Atom<readonly Message.Message[]>;
+
+  /**
+   * What the chat renders: the feed's turns, the turn streaming now, and the prompts on their way to
+   * the agent, reconciled into one list (see `projectThread`). The UI reads this and nothing else.
+   */
+  public readonly thread: Atom.Atom<ThreadProjection>;
+
   /**
    * MCP server connection errors observed during the most recent request.
    * Misconfigured/unreachable servers are dropped from the toolkit so the chat
@@ -269,6 +298,21 @@ export class AiChatProcessor {
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
+    this.#outbox = new Outbox(this.#registry, (payload) => this.#dispatch(payload));
+    this.outbox = this.#outbox.entries;
+    // Held for the processor's life: a query's atom is memoized per result, so the query must be too.
+    const db = Obj.getDatabase(this._feed);
+    this.#feedMessages = db
+      ? db.query(Query.select(Filter.type(Message.Message)).from(this._feed)).atom
+      : Atom.make<readonly Message.Message[]>([]);
+    this.thread = Atom.make((get) =>
+      projectThread({
+        feedMessages: get(this.#feedMessages),
+        pendingMessages: get(this.messages),
+        rewindFrom: get(Obj.atom(this._feed)).rewindFrom,
+        outbox: get(this.outbox),
+      }),
+    );
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -333,9 +377,54 @@ export class AiChatProcessor {
   }
 
   /**
-   * Initiates a new request via AgentService.
+   * Sends a prompt the reader typed: it joins {@link outbox} at once — the thread shows it in the
+   * same frame, before anything is persisted — and is then dispatched in submit order, as a request
+   * when the agent is idle and queued behind the running turn otherwise.
+   *
+   * Returns the outbox id, which is the prompt's thread row for its whole life.
    */
-  async request(requestProp: ProcessorRequest): Promise<void> {
+  send(request: ProcessorRequest, { prepare }: ProcessorSendOptions = {}): string {
+    const content = createPromptContent(request);
+    const blocks = typeof content === 'string' ? [ContentBlock.Text.make({ text: content })] : content;
+    // What the feed holds now cannot be this prompt's echo, however alike it reads.
+    const known = new Set(this.#registry.get(this.#feedMessages).map(({ id }) => id));
+    return this.#outbox.add({ request, prepare }, { blocks, known }).id;
+  }
+
+  /** Forgets a prompt this client sent; withdrawing one the agent's queue holds is the feed's business. */
+  removePrompt(id: string): void {
+    this.#outbox.remove(id);
+  }
+
+  /**
+   * Hands one outbox prompt to the agent, settling once it is submitted rather than when its turn
+   * ends, so the next prompt can follow it into the queue while this one runs.
+   */
+  async #dispatch({ request, prepare }: OutboxPayload): Promise<void> {
+    await prepare?.();
+    // Read at dispatch, not at submit: the previous prompt's request is what makes the agent active.
+    if (this.#registry.get(this.active)) {
+      try {
+        await this.#enqueue(request);
+      } catch (err) {
+        this.#registry.set(this.error, Option.some(parseError(err)));
+        throw err;
+      }
+      return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      void this.request(request, { resolve, reject });
+    });
+  }
+
+  /**
+   * Initiates a new request via AgentService.
+   *
+   * `submission` settles once the prompt is submitted (or cannot be), which is long before the turn
+   * this resolves after.
+   */
+  async request(requestProp: ProcessorRequest, submission?: PromptSubmission): Promise<void> {
     if (this.#requestFiber) {
       await this.cancel();
     }
@@ -364,6 +453,7 @@ export class AiChatProcessor {
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
         markWork('chat.prompt-submitted');
+        submission?.resolve();
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
@@ -386,6 +476,8 @@ export class AiChatProcessor {
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
         if (Cause.hasInterruptsOnly(exit.cause)) {
+          // A no-op once submitted: only a prompt stopped on its way to the agent is dropped.
+          submission?.reject(new PromptCancelledError());
           this.#discardStreaming();
           return;
         }
@@ -400,6 +492,8 @@ export class AiChatProcessor {
       // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
       // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
+      // A no-op once submitted: a turn that fails after its prompt reached the agent did deliver it.
+      submission?.reject(err);
       this.#registry.set(this.error, Option.some(parseError(err)));
     } finally {
       log.info('setting active to false');
@@ -420,17 +514,21 @@ export class AiChatProcessor {
    */
   async enqueue(requestProp: ProcessorRequest): Promise<void> {
     try {
-      await this._runtime.runPromise(
-        Effect.gen({ self: this }, function* () {
-          const session = yield* this.#getSession();
-          yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
-          markWork('chat.prompt-submitted');
-        }).pipe(Effect.provide(this._spaceLayer)),
-      );
+      await this.#enqueue(requestProp);
     } catch (err) {
       log.error('enqueue failed', { error: err });
       this.#registry.set(this.error, Option.some(parseError(err)));
     }
+  }
+
+  async #enqueue(requestProp: ProcessorRequest): Promise<void> {
+    await this._runtime.runPromise(
+      Effect.gen({ self: this }, function* () {
+        const session = yield* this.#getSession();
+        yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
+        markWork('chat.prompt-submitted');
+      }).pipe(Effect.provide(this._spaceLayer)),
+    );
   }
 
   /**
@@ -737,13 +835,13 @@ export class AiChatProcessor {
 
 export type AiChatProcessorState = Pick<
   AiChatProcessor,
-  'streaming' | 'active' | 'messages' | 'error' | 'mcpErrors' | 'activity'
+  'streaming' | 'active' | 'thread' | 'error' | 'mcpErrors' | 'activity'
 >;
 
 const idleProcessorState: AiChatProcessorState = {
   streaming: Atom.make(false),
   active: Atom.make(false),
-  messages: Atom.make<Message.Message[]>([]),
+  thread: Atom.make<ThreadProjection>(EMPTY_THREAD),
   error: Atom.make<Option.Option<Error>>(Option.none()),
   mcpErrors: Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]),
   activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),

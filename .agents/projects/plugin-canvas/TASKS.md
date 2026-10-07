@@ -211,3 +211,30 @@ before), not reasoned about from the source.
       frames the floor rather than the circuit. Only `template` (taller than the floor) and
       `artifact` fit to their own bounds. That is the open framing question below, not a separate
       fault.
+
+## Backlog
+
+- [x] **Type prototypes.** `createNodeRegistry(types, prototypes)` with `extends`; `rect` and `scene` share the
+      `box` prototype (DESIGN §4c). Scene shapes: centred label, `contents` option, zoom-in control.
+- [ ] **Instance prototypes** (DESIGN §4c): `prototype?: NodeId`, `resolveNode`, inherited values as
+      placeholders, reset-to-prototype. Candidate: `ellipse` on `box` with its own view and one port per side.
+- [ ] **Object classes and prototypes.** Define named classes of objects (a shared bundle of type, size,
+      style, port count and other non-text properties), and designate the current object as a prototype
+      that can be applied to others: a selection takes the prototype's properties, keeping its own text and
+      geometry. Builds on the multi-select properties panel (common schema, batched `update` intents) and
+      on `cloneShape` (`react-ui-canvas/src/utils/shapes.ts`), which already copies a shape's look without
+      its text. Open questions: whether an applied object stays linked to its prototype (edits propagate)
+      or is a one-off copy; where classes live (per scene, per canvas, or as ECHO objects in the space);
+      how the palette offers them.
+- [ ] **Lattice mode** (design: `packages/ui/react-ui-canvas/docs/DESIGN.md` §8b). Spec: `{ width, height, gutterX, gutterY }`, default 256x128 / 128x64.
+      Steps, each testable alone: (1) `quantize` + occupancy, unit-tested; (2) lattice projection wrapping the freehand
+      reducer, reducer-invariant tests; (3) `Projection.constrain?` in the pointer machine (preview lands
+      where it drops, red on collision); (4) lattice grid layer + story; (5) Column/Row/Span fields and
+      the scene's spec in the properties panel; (6) lattice-aware `smart` routing on `makeAvoidingRouter` + `nudge`; (7) toolbar toggle and switch-on quantization with nearest-free-cell placement.
+      Later: reflow instead of rejection.
+- [ ] **Lattice: dynamic ports.** Instead of a fixed number of ports per side, place a link's port where
+      its incident segment can stay straight (e.g. aligned with the gutter line or the other end), so the
+      route needs no jog at the shape. Interacts with pinned ports and `portsPerSide`.
+- [x] **Lattice: route around occupied cells only.** Gutter routing currently keeps every run on a gutter
+      centre line; instead let a route cross free cells directly and detour through the gutters only
+      around occupied ones (`utils/gutter-route.ts`).

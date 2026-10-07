@@ -144,9 +144,18 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

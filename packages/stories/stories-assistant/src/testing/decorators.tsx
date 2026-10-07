@@ -98,6 +98,23 @@ export const config = {
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
+  /** A local EDGE stack (`moon run edge:dev` in dxos/edge): every worker behind :8787, ai-service under `/ai`. */
+  edgeLocal: new Config({
+    runtime: {
+      // As `configPreset({ edge: 'local' })`: without these the client never replicates the space to EDGE.
+      client: {
+        edgeFeatures: {
+          signaling: true,
+          subductionReplicator: true,
+          feedReplicator: true,
+        },
+      },
+      services: {
+        edge: { url: 'http://localhost:8787' },
+        ai: { server: 'http://localhost:8787/ai' },
+      },
+    },
+  }),
   /**
    * Persistent OPFS storage with no EDGE: the client gates every EDGE layer on an edge URL, so
    * leaving it out keeps replication, signaling and agents off and a perf run measures only the
@@ -279,6 +296,9 @@ type StoryPluginOptions = {
   onReady?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
 };
 
+/** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
+const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };
+
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.makeMeta({
     key: DXN.make('com.example.plugin.testing'),
@@ -383,11 +403,24 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           );
         }
       } else {
+        // A returning profile reopens the chat this harness seeded it with; creating one per load would
+        // make every reload write a chat, its feed and its bindings. Matched by key rather than by any
+        // chat, since a seeded space can hold earlier chats of its own.
+        const [existing] = yield* Effect.promise(() =>
+          space.db.query(Filter.foreignKeys(Chat.Chat, [HARNESS_CHAT_KEY])).run(),
+        );
+        if (existing) {
+          return;
+        }
+
         // Create the initial chat via the canonical CreateChat operation (which binds the default
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
         const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        Obj.update(chat, (chat) => {
+          Obj.getMeta(chat).keys.push(HARNESS_CHAT_KEY);
+        });
         // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
         space.db.add(chat);
         if (onChatCreated) {

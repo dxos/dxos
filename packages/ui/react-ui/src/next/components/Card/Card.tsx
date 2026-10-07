@@ -254,6 +254,8 @@ CardFooter.displayName = 'Card.Footer';
 type CardSectionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /** A caption heading the section; the section is then a `group` named by it. */
   title?: ReactNode;
+  /** Set by a slotting parent (`asChild`), e.g. `Collapsible.Content`, whose animation lives in its class. */
+  className?: string;
 };
 
 /**
@@ -261,7 +263,7 @@ type CardSectionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * a plain column.
  */
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ classNames, title, children, ...props }, forwardedRef) => {
+  ({ classNames, className, title, children, ...props }, forwardedRef) => {
     const titleId = useId();
     return (
       <div
@@ -270,7 +272,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
         aria-labelledby={title ? titleId : undefined}
         data-scope='card'
         data-part='section'
-        className={mx(recipes.cardSection(), classNames)}
+        className={mx(recipes.cardSection(), className, classNames)}
         ref={forwardedRef}
       >
         {title && (
@@ -312,6 +314,11 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * such as a snippet), `end` on through the end rail when there is no trailing cell. The content track by default.
    */
   span?: 'full' | 'end';
+  /**
+   * `start` aligns the leading icon and the trailing cell to the row's first line rather than its middle, for content
+   * of several lines (a title over a snippet); wrapped `Typography` text does this on its own.
+   */
+  align?: 'start';
 };
 
 /**
@@ -321,7 +328,7 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   (
-    { classNames, icon, leading, trailing, end, current, span, onClick, onKeyDown, children, ...props },
+    { classNames, icon, leading, trailing, end, current, span, align, onClick, onKeyDown, children, ...props },
     forwardedRef,
   ) => (
     <div
@@ -332,6 +339,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       data-part='row'
       data-trailing={trailing != null ? '' : undefined}
       data-span={span}
+      data-align={align}
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >

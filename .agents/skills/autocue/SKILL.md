@@ -36,6 +36,10 @@ Not to be confused with `packages/apps/composer-app/demos/`, which arranges seve
 a grid on a real desktop for a human to drive via `robotjs` (its own TODO calls that abandoned). It
 records nothing and exposes no control channel, so it cannot serve an agent or produce an artifact.
 
+**Two people at once** (Alice and Bob, each with their own identity, in one shared space) is a different
+script: `scripts/pair.mjs` records one browser context per person and `scripts/compose.mjs` tiles the
+panes into one side-by-side video on a shared clock. See [SIDE-BY-SIDE.md](SIDE-BY-SIDE.md).
+
 ## Decide what to produce first
 
 **A screenshot is often enough, and always cheaper.** Reach for one when the thing being shown is a

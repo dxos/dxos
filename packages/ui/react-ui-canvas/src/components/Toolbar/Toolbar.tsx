@@ -6,10 +6,10 @@
 // The optional editor toolbars (decision 5): every button is an action the view exposes, so a host may
 // render these bars, its own, or none; the palette stays a separate component. They are separate bars so
 // where a control sits says what it does: `NavigationToolbar` says where the view is in the scene tree,
-// `ActionToolbar` changes the scene, and `DebugToolbar` reports the camera's own numbers.
+// `ActionToolbar` changes the scene, and `CameraToolbar` fits and zooms the view beside its own numbers.
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
@@ -33,6 +33,11 @@ export type ToolbarActions = {
   zoomOut: () => void;
   snap: boolean;
   toggleSnap: () => void;
+  guides: boolean;
+  toggleGuides: () => void;
+  /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; absent elsewhere. */
+  lattice?: boolean;
+  toggleLattice?: () => void;
   debug: boolean;
   toggleDebug: () => void;
   canUndo: boolean;
@@ -51,16 +56,16 @@ export type ToolbarActions = {
   layout?: () => void;
 };
 
-// A bar floats over the canvas, so it takes half the view at most and scrolls what does not fit; the
-// toolbar's own layout supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
-const barClasses = 'w-fit max-w-[50%] gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+// A bar fills the frame its host floats it in and scrolls what does not fit; the toolbar's own layout
+// supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
+const barClasses = 'w-full gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
 
 const readoutClasses = 'text-fg-muted font-mono text-sm whitespace-nowrap';
 
 export type NavigationToolbarProps = Util.ThemedClassName<{
   actions: ToolbarActions;
   /** Trailing status, e.g. the depth readout. */
-  children?: React.ReactNode;
+  children?: ReactNode;
 }>;
 
 /** Where the view is: the drilled path and the readout that follows it. */
@@ -87,27 +92,12 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
   );
 };
 
-export type DebugToolbarProps = Util.ThemedClassName<{ children?: React.ReactNode }>;
+export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions; children?: ReactNode }>;
 
-/** The camera's own numbers, away from the controls: nothing here acts on the scene. */
-export const DebugToolbar = ({ classNames, children }: DebugToolbarProps) => {
+/** The camera: fit and zoom, beside its own numbers; nothing here changes the scene. */
+export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarProps) => {
   return (
     <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
-      <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
-    </Toolbar.Root>
-  );
-};
-
-export type ActionToolbarProps = Util.ThemedClassName<{
-  actions: ToolbarActions;
-  nodes: NodeRegistry;
-  capabilities: Capabilities;
-}>;
-
-/** Everything that changes the view or the scene: camera, history, clipboard, creation and debug. */
-export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
-  return (
-    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
       <Button.Root
         variant='ghost'
         iconOnly
@@ -132,15 +122,51 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-out'
         onClick={actions.zoomOut}
       />
+      <Toolbar.Separator variant='line' />
+      <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
+    </Toolbar.Root>
+  );
+};
+
+export type ActionToolbarProps = Util.ThemedClassName<{
+  actions: ToolbarActions;
+  nodes: NodeRegistry;
+  capabilities: Capabilities;
+}>;
+
+/** Everything that changes the scene, plus snap, history, clipboard, creation and debug. */
+export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
+  return (
+    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
       <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid`}
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
       />
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon='ph--frame-corners--regular'
+        label={`Guides (${shortcutFor('guides')}): show the page frame and the lattice cells`}
+        classNames={mx(actions.guides && 'bg-primary-500/20')}
+        data-testid='toolbar-guides'
+        onClick={actions.toggleGuides}
+      />
+      {actions.toggleLattice && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--squares-four--regular'
+          label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
+          classNames={mx(actions.lattice && 'bg-primary-500/20')}
+          data-testid='toolbar-lattice'
+          onClick={actions.toggleLattice}
+        />
+      )}
       <Toolbar.Separator variant='line' />
       <Button.Root
         variant='ghost'
