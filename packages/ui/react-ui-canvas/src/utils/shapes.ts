@@ -17,6 +17,7 @@ import {
   type Link,
   type LinkEnds,
   type LinkType,
+  MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Size,
@@ -40,21 +41,24 @@ export const resizeNode = <N extends Node>(node: N, bounds: Bounds): N => ({
   size: { width: bounds.width, height: bounds.height },
 });
 
-/** A nominal size (in grid units) in scene px, for a drawing whose grid is `cell` px. */
-export const nominalSize = (size: Size, cell: number = DEFAULT_GRID): Size => ({
+/** Scene px of one nominal unit (a major grid cell) at the default grid. */
+export const DEFAULT_CELL = DEFAULT_GRID * MAJOR_GRID_RATIO;
+
+/** A nominal size (in major grid cells) in scene px, for a drawing whose major cell is `cell` px. */
+export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
   width: size.width * cell,
   height: size.height * cell,
 });
 
 /**
- * The built-in types' sizes when created, in nominal units: one unit is the drawing's grid size, so a new
- * shape is as large as the grid. Rectangle and ellipse share one, so a new circle matches a new square.
+ * The built-in types' sizes when created, in nominal units: one unit is the drawing's major grid cell, so a
+ * new shape scales with the drawing's grid. Rectangle and ellipse share one, so a new circle matches a new square.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 1, height: 1 },
-  ellipse: { width: 1, height: 1 },
-  note: { width: 1, height: 1 },
-  scene: { width: 2, height: 1 },
+  rect: { width: 2, height: 2 },
+  ellipse: { width: 2, height: 2 },
+  note: { width: 2, height: 2 },
+  scene: { width: 4, height: 2 },
 };
 
 /** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */

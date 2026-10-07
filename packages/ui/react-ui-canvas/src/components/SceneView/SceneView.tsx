@@ -142,8 +142,8 @@ const SceneViewRoot = ({
   // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
   // so a fit puts the same gap around the scene whatever the zoom.
   const inset = margin * grid * MAJOR_GRID_RATIO;
-  // A new node's default size is nominal: units of the model's grid, not of the level drawn at this zoom.
-  const cell = grid;
+  // A new node's default size is nominal: major cells of the model's grid, not of the level drawn at this zoom.
+  const cell = grid * MAJOR_GRID_RATIO;
 
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
