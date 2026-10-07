@@ -52,7 +52,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Creates a space from the given archive.
    */
-  import(archive: SpacesService.SpaceArchive, options?: { tags?: string[]; timeout?: number }): Promise<Space>;
+  import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
 
   /**
    * Joins an existing space using the given invitation.

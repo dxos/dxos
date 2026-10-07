@@ -5,9 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
-import fs from 'node:fs';
 import net from 'node:net';
-import path from 'node:path';
 
 import { Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
@@ -36,7 +34,6 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
-import { type EdgeCatchUp, recordEdgeCatchUps } from '../tracing/catch-up-recorder.ts';
 
 /**
  * The one document type the stress test manipulates.
@@ -52,18 +49,6 @@ export class EdgeStressDocument extends Type.makeObject<EdgeStressDocument>(
     docId: Schema.String,
     content: Schema.String,
     counters: Schema.mutable(Schema.Array(Schema.Number)),
-  }),
-) {}
-
-/**
- * Bulk filler for a seeded space: a type of its own, so queries over {@link EdgeStressDocument} — the
- * probes a plan polls — never load the thousands of seed documents beside them.
- */
-export class EdgeSeedDocument extends Type.makeObject<EdgeSeedDocument>(
-  DXN.make('org.dxos.type.bladeRunner.edgeSeedDocument', '0.1.0'),
-)(
-  Schema.Struct({
-    content: Schema.String,
   }),
 ) {}
 
@@ -119,8 +104,6 @@ export class ClientReplicant {
   #proxy?: net.Server = undefined;
   #proxyLive = true;
   #sockets = new Set<net.Socket>();
-  /** This process's `catchUpWithEdge` spans, recorded from the first `init` on (a restart keeps them). */
-  #edgeCatchUps: EdgeCatchUp[] | undefined;
 
   constructor(env: ReplicantEnv) {
     this.#env = env;
@@ -141,7 +124,6 @@ export class ClientReplicant {
     partitions: boolean;
   }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
-    this.#edgeCatchUps ??= recordEdgeCatchUps();
     this.#config = { edgeUrl, agents, partitions };
     // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
     // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
@@ -186,7 +168,7 @@ export class ClientReplicant {
 
     const client = new Client({ config: fullConfig, services });
     await client.initialize();
-    await client.addTypes([EdgeStressDocument, EdgeSeedDocument]);
+    await client.addTypes([EdgeStressDocument]);
 
     this.#services = services;
     this.#client = client;
@@ -409,78 +391,6 @@ export class ClientReplicant {
     return { spaceId: space.id, admittedMs, spaceReadyMs };
   }
 
-  /**
-   * Import a space archive (`space.internal.export()` output) as a new space owned by this identity,
-   * replicated through EDGE. This is how a plan seeds EDGE with the contents of a real space.
-   */
-  @trace.span()
-  async importSpace({ archivePath }: { archivePath: string }): Promise<{ spaceId: string; importMs: number }> {
-    const began = Date.now();
-    // A real space of thousands of documents takes longer than the default import timeout to unpack.
-    const space = await this.#getClient().spaces.import(
-      { filename: path.basename(archivePath), contents: new Uint8Array(fs.readFileSync(archivePath)) },
-      { timeout: 10 * 60_000 },
-    );
-    await space.waitUntilReady();
-    await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
-    return { spaceId: space.id, importMs: Date.now() - began };
-  }
-
-  /**
-   * Wait until this device and EDGE agree on every document of the space — pushing what EDGE lacks
-   * and pulling what this device lacks — and report how long it took.
-   */
-  @trace.span()
-  async syncToEdge({
-    spaceId,
-    timeoutMs,
-  }: {
-    spaceId: string;
-    timeoutMs: number;
-  }): Promise<{ syncMs: number; localDocumentCount: number; remoteDocumentCount: number }> {
-    const space = await this.#getSpace(spaceId);
-    const began = Date.now();
-    let localDocumentCount = 0;
-    let remoteDocumentCount = 0;
-    await space.internal.syncToEdge({
-      timeout: timeoutMs,
-      onProgress: (state) => {
-        localDocumentCount = state?.localDocumentCount ?? localDocumentCount;
-        remoteDocumentCount = state?.remoteDocumentCount ?? remoteDocumentCount;
-      },
-    });
-    return { syncMs: Date.now() - began, localDocumentCount, remoteDocumentCount };
-  }
-
-  /** The `catchUpWithEdge` spans this device recorded for a space, oldest first; an open one has no duration. */
-  @trace.span()
-  async getEdgeCatchUps({ spaceId }: { spaceId: string }): Promise<EdgeCatchUp[]> {
-    return (this.#edgeCatchUps ?? []).filter((catchUp) => catchUp.collectionId.startsWith(`space:${spaceId}:`));
-  }
-
-  //
-  // Documents.
-  //
-
-  /** Fill a space with {@link EdgeSeedDocument}s, one flush for the whole batch so a seed of thousands stays quick. */
-  @trace.span()
-  async createSeedDocuments({
-    spaceId,
-    count,
-    contentBytes,
-  }: {
-    spaceId: string;
-    count: number;
-    contentBytes: number;
-  }): Promise<void> {
-    const db = (await this.#getSpace(spaceId)).db;
-    const content = 'x'.repeat(contentBytes);
-    for (let index = 0; index < count; index++) {
-      db.add(Obj.make(EdgeSeedDocument, { content }));
-    }
-    await db.flush();
-  }
-
   /** Whether this device currently holds the space — no waiting, so callers can poll. */
   async hasSpace({ spaceId }: { spaceId: string }): Promise<boolean> {
     return this.#getClient()
@@ -495,6 +405,10 @@ export class ClientReplicant {
         .map((space) => space.id),
     };
   }
+
+  //
+  // Documents.
+  //
 
   @trace.span()
   async createDocument({
@@ -655,14 +569,10 @@ export class ClientReplicant {
   /**
    * The observable state of a space, reduced to exactly what the model can predict.
    */
-  /** `docIdPrefix` narrows the digest to the documents a caller tracks, so a large seeded space stays cheap to poll. */
-  async digest({ spaceId, docIdPrefix }: { spaceId: string; docIdPrefix?: string }): Promise<SpaceDigest> {
+  async digest({ spaceId }: { spaceId: string }): Promise<SpaceDigest> {
     const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(EdgeStressDocument))).run();
     const docs: Record<string, DocumentDigest> = {};
     for (const object of objects) {
-      if (docIdPrefix !== undefined && !object.docId.startsWith(docIdPrefix)) {
-        continue;
-      }
       docs[object.docId] = {
         // Every token is one character, so the text splits into them with no parsing to get wrong.
         tokens: [...(object.content ?? '')].sort(),

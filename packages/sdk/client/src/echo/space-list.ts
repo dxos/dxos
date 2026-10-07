@@ -304,11 +304,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[]; timeout?: number }): Promise<Space> {
+  async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['SpacesService.importSpace']({ archive, tags: options?.tags }),
-      { timeout: options?.timeout ?? IMPORT_SPACE_TIMEOUT, label: 'SpacesService.importSpace' },
+      { timeout: IMPORT_SPACE_TIMEOUT, label: 'SpacesService.importSpace' },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
