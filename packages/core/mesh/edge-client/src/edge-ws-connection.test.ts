@@ -10,12 +10,12 @@ import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
+import packageJson from '../package.json' with { type: 'json' };
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { type EdgeWsConnectionCallbacks } from './edge-ws-connection.ts';
 import { WebSocketMuxer } from './edge-ws-muxer.ts';
 import { type ReconnectReason } from './reconnect-reason.ts';
-import { DXOS_VERSION } from './version.ts';
 
 // Segmented-message chunk count depends on the protobuf envelope overhead, which is
 // determined empirically (see chunk-count assertions below) rather than assumed.
@@ -163,7 +163,7 @@ describe('EdgeWsConnection client version', () => {
     expect(FakeWebSocket.instances.at(-1)?.protocols).toEqual([
       EdgeWebsocketProtocol.V0,
       EdgeWebsocketProtocol.V1,
-      `dxos-version.${DXOS_VERSION}`,
+      `dxos-version.${packageJson.version}`,
       'base64url.bearer.authorization.dxos.org.AAAA',
     ]);
   });
