@@ -19,12 +19,10 @@ import { ClaudeCodeTokenInvalidError } from '../errors.ts';
 
 const LABEL = 'Claude Code';
 
+// The form shows the description as the field's placeholder, so it stays short enough to read whole.
 const TokenForm = ConnectorSpec.TokenForm({
-  title: 'Claude Code token',
-  description:
-    'Open a terminal and run `claude setup-token`. It signs in with your Claude subscription and prints a ' +
-    'token that starts with sk-ant-oat; paste it here. Claude Code in Composer then runs on your subscription ' +
-    'rather than on an API key.',
+  title: 'Token from `claude setup-token`',
+  description: 'Run it in a terminal, then paste the token here',
 });
 
 /**
