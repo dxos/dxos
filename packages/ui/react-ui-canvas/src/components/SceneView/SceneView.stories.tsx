@@ -125,25 +125,30 @@ const createLatticeTree = () => {
 
 /**
  * Three levels of the same column, every shape 256×128: A, scene B, C; inside B, D, scene E, F; inside E,
- * X, Y, Z. Open the scenes to check that a shape is the same size at the same zoom on every level.
+ * X, Y, Z; each level's shapes linked. Open the scenes to check that a shape is the same size at the same zoom on every level.
  */
 const createScenesTree = () => {
   const root = 'scene:root';
   const size = { width: 256, height: 128 };
   const at = (y: number) => ({ x: -size.width / 2, y: y - size.height / 2, ...size });
   const rect = (id: string, y: number) => SceneBuilder.rect(id, at(y)).properties({ label: id.toUpperCase() });
+  const link = (from: string, to: string) => SceneBuilder.link('smart', from, to);
   return SceneBuilder.scene(root, [
     rect('a', -256),
     SceneBuilder.scene('b', [
       rect('d', -256),
-      SceneBuilder.scene('e', [rect('x', -256), rect('y', 0), rect('z', 256)])
+      SceneBuilder.scene('e', [rect('x', -256), rect('y', 0), rect('z', 256), link('x', 'y'), link('y', 'z')])
         .at(at(0))
         .name('E'),
       rect('f', 256),
+      link('d', 'e'),
+      link('d', 'f'),
     ])
       .at(at(0))
       .name('B'),
     rect('c', 256),
+    link('a', 'b'),
+    link('b', 'c'),
   ])
     .name('root')
     .build();
