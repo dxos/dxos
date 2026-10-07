@@ -51,6 +51,8 @@ export const ExecuteRequest = Schema.Struct({
   database: Schema.String,
   sql: Schema.String,
   params: Schema.Array(SqlValue),
+  /** Id from `begin`; the statement runs inside that transaction. */
+  transaction: Schema.optional(Schema.String),
 });
 export interface ExecuteRequest extends Schema.Schema.Type<typeof ExecuteRequest> {}
 
@@ -58,6 +60,12 @@ export const ExecuteResponse = Schema.Struct({
   rows: Schema.Array(Schema.Record(Schema.String, SqlValue)),
 });
 export interface ExecuteResponse extends Schema.Schema.Type<typeof ExecuteResponse> {}
+
+export const BeginRequest = Schema.Struct({ database: Schema.String });
+export interface BeginRequest extends Schema.Schema.Type<typeof BeginRequest> {}
+
+export const TransactionRequest = Schema.Struct({ transaction: Schema.String });
+export interface TransactionRequest extends Schema.Schema.Type<typeof TransactionRequest> {}
 
 /**
  * Effect RPC definitions for sandboxed SQLite access by operations and processes.
@@ -67,6 +75,19 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('execute', {
     payload: ExecuteRequest,
     success: ExecuteResponse,
+    error: SqlError.SqlError,
+  }),
+  Rpc.make('begin', {
+    payload: BeginRequest,
+    success: TransactionRequest,
+    error: SqlError.SqlError,
+  }),
+  Rpc.make('commit', {
+    payload: TransactionRequest,
+    error: SqlError.SqlError,
+  }),
+  Rpc.make('rollback', {
+    payload: TransactionRequest,
     error: SqlError.SqlError,
   }),
 ).prefix('SqlService.') {}

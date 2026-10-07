@@ -3,8 +3,10 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -74,28 +76,79 @@ describe('SqlService', () => {
           hostRead: yield* attempt('a', 'SELECT * FROM keyring'),
           hostIndex: yield* attempt('a', 'CREATE INDEX steal ON keyring (secret)'),
           catalog: yield* attempt('a', 'SELECT name FROM sqlite_master'),
-          transaction: yield* inDatabase(
-            'a',
-            Effect.gen(function* () {
-              const sql = yield* SqlClient.SqlClient;
-              return yield* sql.withTransaction(sql`SELECT 1`);
-            }),
-          ).pipe(Effect.exit),
         };
       }),
     );
 
     expect(Exit.isSuccess(exits.ownRead)).toBe(true);
-    for (const exit of [
-      exits.otherRead,
-      exits.otherDrop,
-      exits.hostRead,
-      exits.hostIndex,
-      exits.catalog,
-      exits.transaction,
-    ]) {
+    for (const exit of [exits.otherRead, exits.otherDrop, exits.hostRead, exits.hostIndex, exits.catalog]) {
       expect(reasonTag(exit)).toBe('AuthorizationError');
     }
+  });
+
+  test('transactions commit, roll back and stay inside the ownership rules', async ({ expect }) => {
+    const result = await run(
+      Effect.gen(function* () {
+        yield* exec('a', 'CREATE TABLE ledger (id INTEGER PRIMARY KEY, amount INTEGER)');
+        yield* exec('b', 'CREATE TABLE other (id INTEGER)');
+        const inA = <A, E>(effect: (sql: SqlClient.SqlClient) => Effect.Effect<A, E>) =>
+          inDatabase(
+            'a',
+            Effect.gen(function* () {
+              return yield* effect(yield* SqlClient.SqlClient);
+            }),
+          );
+
+        yield* inA((sql) => sql.withTransaction(sql`INSERT INTO ledger (amount) VALUES (1), (2)`));
+        const rolledBack = yield* inA((sql) =>
+          sql.withTransaction(
+            Effect.gen(function* () {
+              yield* sql`INSERT INTO ledger (amount) VALUES (100)`;
+              return yield* Effect.fail('abort');
+            }),
+          ),
+        ).pipe(Effect.exit);
+        const nested = yield* inA((sql) => sql.withTransaction(sql.withTransaction(sql`SELECT 1`))).pipe(Effect.exit);
+        const foreign = yield* inA((sql) => sql.withTransaction(sql`SELECT * FROM other`)).pipe(Effect.exit);
+        const rows = yield* inA((sql) => sql<{ amount: number }>`SELECT amount FROM ledger ORDER BY id`);
+        return { rolledBack, nested, foreign, rows };
+      }),
+    );
+
+    expect(result.rows.map((row) => row.amount)).toEqual([1, 2]);
+    expect(Exit.isFailure(result.rolledBack)).toBe(true);
+    expect(reasonTag(result.nested)).toBe('AuthorizationError');
+    expect(reasonTag(result.foreign)).toBe('AuthorizationError');
+  });
+
+  test('host statements wait for an open transaction instead of joining it', async ({ expect }) => {
+    const hostRows = await run(
+      Effect.gen(function* () {
+        const host = yield* SqlClient.SqlClient;
+        yield* host`CREATE TABLE host_log (entry TEXT)`;
+        yield* exec('a', 'CREATE TABLE scratch (id INTEGER)');
+        const inside = yield* Deferred.make<void>();
+        const transaction = yield* inDatabase(
+          'a',
+          Effect.gen(function* () {
+            const sql = yield* SqlClient.SqlClient;
+            return yield* sql.withTransaction(
+              Effect.gen(function* () {
+                yield* sql`INSERT INTO scratch VALUES (1)`;
+                yield* Deferred.succeed(inside, undefined);
+                yield* Effect.sleep('20 millis');
+                return yield* Effect.fail('abort');
+              }),
+            );
+          }),
+        ).pipe(Effect.exit, Effect.forkChild);
+        yield* Deferred.await(inside);
+        yield* host`INSERT INTO host_log VALUES ('kept')`;
+        yield* Fiber.await(transaction);
+        return yield* host<{ entry: string }>`SELECT entry FROM host_log`;
+      }),
+    );
+    expect(hostRows).toEqual([{ entry: 'kept' }]);
   });
 
   test('releases ownership when an object is dropped', async ({ expect }) => {

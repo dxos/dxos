@@ -41,6 +41,23 @@ describe('SqlService', () => {
       { id: 1, big: '9007199254740993', data: new Uint8Array([1, 2, 3]) },
     ]);
 
+    const rpc = client.services.rpc;
+    const inTransaction = async (end: 'SqlService.commit' | 'SqlService.rollback', id: number) => {
+      const { transaction } = await EffectEx.runPromise(rpc['SqlService.begin']({ database: 'notes' }));
+      await EffectEx.runPromise(
+        rpc['SqlService.execute']({
+          database: 'notes',
+          sql: 'INSERT INTO items (id) VALUES (?)',
+          params: [id],
+          transaction,
+        }),
+      );
+      await EffectEx.runPromise(rpc[end]({ transaction }));
+    };
+    await inTransaction('SqlService.rollback', 2);
+    await inTransaction('SqlService.commit', 3);
+    expect(await execute('notes', 'SELECT id FROM items ORDER BY id')).toEqual([{ id: 1 }, { id: 3 }]);
+
     expect(await rejection('other', 'SELECT * FROM items')).toBe('AuthorizationError');
     expect(await rejection('notes', 'SELECT * FROM keyring')).toBe('AuthorizationError');
     expect(await rejection('notes', 'SELECT name FROM sqlite_master')).toBe('AuthorizationError');

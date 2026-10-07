@@ -22,6 +22,9 @@ export const SqlServiceLayer: Layer.Layer<SqlService.Tag, never, SqlClient.SqlCl
     const handlers: SqlService.Handlers = {
       'SqlService.execute': (request) =>
         backend.execute(request).pipe(Effect.map((rows) => ({ rows: rows.map(toWireRow) }))),
+      'SqlService.begin': (request) => backend.begin(request),
+      'SqlService.commit': (request) => backend.commit(request),
+      'SqlService.rollback': (request) => backend.rollback(request),
     };
     return handlers;
   }),

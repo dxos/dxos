@@ -76,13 +76,15 @@ const SqlLayerSpec = LayerSpec.make(
       ComputeSqlService.SqlService,
       Effect.gen(function* () {
         const client = yield* ClientService;
+        const rpc = client.services.rpc;
         return ComputeSqlService.SqlService.of({
-          execute: ({ database, sql, params }) =>
-            client.services.rpc['SqlService.execute']({
-              database,
-              sql,
-              params: params.map(SqlService.toSqlValue),
-            }).pipe(Effect.map(({ rows }) => rows)),
+          execute: ({ params, ...request }) =>
+            rpc['SqlService.execute']({ ...request, params: params.map(SqlService.toSqlValue) }).pipe(
+              Effect.map(({ rows }) => rows),
+            ),
+          begin: (request) => rpc['SqlService.begin'](request),
+          commit: (request) => rpc['SqlService.commit'](request),
+          rollback: (request) => rpc['SqlService.rollback'](request),
         });
       }),
     ),
