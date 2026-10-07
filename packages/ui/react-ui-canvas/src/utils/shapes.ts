@@ -52,10 +52,10 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
 
 /**
  * The built-in types' sizes when created, in nominal units: one unit is the drawing's major grid cell, so a
- * new shape scales with the drawing's grid. Rectangle and ellipse share one, so a new circle matches a new square.
+ * new shape scales with the drawing's grid.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 2, height: 2 },
+  rect: { width: 4, height: 2 },
   ellipse: { width: 2, height: 2 },
   note: { width: 2, height: 2 },
   scene: { width: 4, height: 2 },
