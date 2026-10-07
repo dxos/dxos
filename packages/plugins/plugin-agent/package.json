@@ -291,6 +291,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",

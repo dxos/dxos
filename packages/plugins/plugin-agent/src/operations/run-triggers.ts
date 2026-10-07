@@ -10,13 +10,14 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 
 import { BrainSkill } from '#skills';
 import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
-import { agentSpeaker, readSource } from './read-source.ts';
+import { agentId } from './members.ts';
+import { readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
@@ -46,8 +47,8 @@ export const pushFacts: (
   if (facts.length === 0) {
     return { fired, undelivered };
   }
-  // The same name `readSource` attributes the agent's own messages to, unnamed agents included.
-  const queued = yield* brain.push(agent.id, facts, { quiet: [normalizeEntityId(agentSpeaker(agent))] });
+  // The id `readSource` attributes the agent's own messages to.
+  const queued = yield* brain.push(agent.id, facts, { quiet: [agentId(agent)] });
   if (queued === 0) {
     return { fired, undelivered };
   }

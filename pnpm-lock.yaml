@@ -7868,6 +7868,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/halo-react':
         specifier: workspace:*
         version: link:../../core/halo/halo-react
