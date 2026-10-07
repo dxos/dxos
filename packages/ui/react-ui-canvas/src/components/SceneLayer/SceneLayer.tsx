@@ -267,7 +267,9 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
     <div
       className={mx(
         'absolute box-border border-4 overflow-hidden',
-        ...frameClasses(node, selected, hovered),
+        // Being zoomed into, the frame becomes the child scene's canvas, so it drops its fill (the first class)
+        // at once and keeps only its own border, not the selection's or the hover's.
+        ...(props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered)),
         interactive && !node.locked && 'cursor-grab',
         ghost && 'opacity-50 border-dashed pointer-events-none',
       )}
@@ -398,7 +400,7 @@ export const PortalNodeView = (props: NodeViewProps) => {
       {tier === 'preview' && child && (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
           <span className='text-2xl'>{title}</span>
-          <span className='text-fg-muted'>
+          <span>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links
           </span>
         </div>
@@ -424,7 +426,10 @@ export const PortalNodeView = (props: NodeViewProps) => {
             />
           </div>
         )}
-      {!opening && <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>{title}</span>}
+      {/* The preview centres the title already; the live scene fills the frame, so it names it in the corner. */}
+      {!opening && tier === 'live' && (
+        <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>{title}</span>
+      )}
       {!opening && onOpen && <OpenControl onOpen={onOpen} />}
     </div>
   );

@@ -278,21 +278,25 @@ test.describe('SceneView', () => {
   test('the properties panel edits the selected class', async () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
-    expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
+    expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Style']));
     // Geometry is two labelled number fields per row.
     expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });
 
-  test('the hue grid colours the node, neutral included, and none clears it', async () => {
+  test('the style grid sets hue and tone together', async () => {
     await scene.clickNode('scene:root/a');
-    const grid = page.getByTestId('hue-grid');
-    await expect(grid.locator('[data-hue-option="none"]')).toHaveAttribute('aria-checked', 'true');
-    await grid.locator('[data-hue-option="orange"]').click();
-    await expect(grid.locator('[data-hue-option="orange"]')).toHaveAttribute('aria-checked', 'true');
-    await grid.locator('[data-hue-option="neutral"]').click();
-    await expect(grid.locator('[data-hue-option="neutral"]')).toHaveAttribute('aria-checked', 'true');
-    await grid.locator('[data-hue-option="none"]').click();
-    await expect(grid.locator('[data-hue-option="none"]')).toHaveAttribute('aria-checked', 'true');
+    const grid = page.getByTestId('style-grid');
+    const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
+    // An unstyled node matches no swatch.
+    await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
+    await option('blue:strong').click();
+    await expect(option('blue:strong')).toHaveAttribute('aria-checked', 'true');
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-bg/);
+    await option('neutral:outline').click();
+    await expect(option('neutral:outline')).toHaveAttribute('aria-checked', 'true');
+    // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-bg/);
   });
 
   test('the geometry fields step by the grid and move the node', async () => {

@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, type NodeStyle, isEllipseNode } from '../model/types.ts';
+import { type Node, type NodeStyle, type NodeTone, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -32,10 +32,79 @@ const HUES: Record<string, HueClasses> = {
   rose: { surface: 'bg-rose-surface', text: 'text-rose-fg', border: 'border-rose-border' },
 };
 
+/** The hues the style picker offers, neutral first; any theme hue still renders, at its `medium` tone. */
+export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'violet', 'pink'] as const;
+export type StyleHue = (typeof STYLE_HUES)[number];
+
+export const TONES: readonly NodeTone[] = ['outline', 'light', 'medium', 'strong'];
+
+type ToneClasses = { surface: string; text: string };
+
+/**
+ * The fills lighter and stronger than a hue's `surface` role: the scale's 200 under its darkest text, and the
+ * hue's solid `bg` role under light text. `medium` is the role pair in `HUES`; `outline` has no fill.
+ */
+const TONE_FILLS: Record<StyleHue, Record<'light' | 'strong', ToneClasses>> = {
+  neutral: {
+    light: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
+    strong: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
+  },
+  red: {
+    light: { surface: 'bg-red-200', text: 'text-red-900' },
+    strong: { surface: 'bg-red-bg', text: 'text-neutral-50' },
+  },
+  orange: {
+    light: { surface: 'bg-orange-200', text: 'text-orange-900' },
+    strong: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
+  },
+  amber: {
+    light: { surface: 'bg-amber-200', text: 'text-amber-900' },
+    strong: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
+  },
+  green: {
+    light: { surface: 'bg-green-200', text: 'text-green-900' },
+    strong: { surface: 'bg-green-bg', text: 'text-neutral-50' },
+  },
+  teal: {
+    light: { surface: 'bg-teal-200', text: 'text-teal-900' },
+    strong: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
+  },
+  blue: {
+    light: { surface: 'bg-blue-200', text: 'text-blue-900' },
+    strong: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
+  },
+  violet: {
+    light: { surface: 'bg-violet-200', text: 'text-violet-900' },
+    strong: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
+  },
+  pink: {
+    light: { surface: 'bg-pink-200', text: 'text-pink-900' },
+    strong: { surface: 'bg-pink-bg', text: 'text-neutral-50' },
+  },
+};
+
+const isStyleHue = (hue: string): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
+
 /** The default look: the base surface, the base text and the separator border. */
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
 
-export const hueClasses = (hue: string | undefined): HueClasses => (hue && HUES[hue]) || DEFAULT;
+/**
+ * The classes a hue at a tone draws with. Every tone keeps the hue's border; `outline` drops the fill and
+ * keeps the default text, and a tone a hue has no fills for draws as `medium`.
+ */
+export const hueClasses = (hue: string | undefined, tone: NodeTone = 'medium'): HueClasses => {
+  const base = (hue && HUES[hue]) || DEFAULT;
+  if (!hue || base === DEFAULT) {
+    return base;
+  }
+  if (tone === 'outline') {
+    return { surface: 'bg-transparent', text: '', border: base.border };
+  }
+  if (tone !== 'medium' && isStyleHue(hue)) {
+    return { ...TONE_FILLS[hue][tone], border: base.border };
+  }
+  return base;
+};
 
 /**
  * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
@@ -53,7 +122,7 @@ export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
  */
 export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
   const style = resolveStyle(node.style);
-  const hue = hueClasses(style.hue);
+  const hue = hueClasses(style.hue, style.tone);
   const filled = style.fill && !style.guide;
   return [
     filled ? hue.surface : '',

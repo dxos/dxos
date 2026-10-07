@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { SceneBuilder } from './builder.ts';
 import { isMultiline, partKey, partText, partValues } from './parts.ts';
-import { frameClasses, resolveStyle } from './style.ts';
+import { frameClasses, hueClasses, resolveStyle } from './style.ts';
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
@@ -48,6 +48,33 @@ describe('parts', () => {
     // A guide is dashed and unfilled whatever fill and border say; the host's class comes last.
     const guide = { ...rect, style: { guide: true, border: false, className: 'shadow' } };
     expect(frameClasses(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm', 'shadow']);
+  });
+
+  test('every tone keeps the hue border; outline drops the fill, unset is medium', ({ expect }) => {
+    expect(hueClasses('blue', 'outline')).toEqual({
+      surface: 'bg-transparent',
+      text: '',
+      border: 'border-blue-border',
+    });
+    expect(hueClasses('blue', 'light')).toEqual({
+      surface: 'bg-blue-200',
+      text: 'text-blue-900',
+      border: 'border-blue-border',
+    });
+    expect(hueClasses('blue')).toEqual(hueClasses('blue', 'medium'));
+    expect(hueClasses('blue', 'medium')).toEqual({
+      surface: 'bg-blue-surface',
+      text: 'text-blue-fg',
+      border: 'border-blue-border',
+    });
+    expect(hueClasses('blue', 'strong')).toEqual({
+      surface: 'bg-blue-bg',
+      text: 'text-neutral-50',
+      border: 'border-blue-border',
+    });
+    // A hue the picker does not offer draws its stronger tones as medium; no hue ignores the tone.
+    expect(hueClasses('lime', 'strong')).toEqual(hueClasses('lime'));
+    expect(hueClasses(undefined, 'strong')).toEqual(hueClasses(undefined));
   });
 
   test('an unset fill or border resolves to drawn', ({ expect }) => {

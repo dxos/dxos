@@ -14,6 +14,7 @@ import { createMemoryStore } from '../../model/store.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
 import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
+import { TONES } from '../../utils/style.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
 
@@ -88,17 +89,17 @@ const createLatticeTree = () => {
   const box = (id: string, cell: Box, label: string) => SceneBuilder.rect(id, cell).properties({ label });
   const smart = (from: string, to: string) => SceneBuilder.link('smart', from, to);
   return SceneBuilder.scene(root, [
-    box('a', at(-1, -1), 'A'),
-    box('b', at(-1, 0), 'B'),
-    box('c', at(-1, 1), 'C'),
+    ...[box('a', at(-1, -1), 'A'), box('b', at(-1, 0), 'B'), box('c', at(-1, 1), 'C')].map((element) =>
+      element.properties({ style: { hue: 'green' } }),
+    ),
     box('d', at(0, 0), 'D'),
     box('e', at(0, 1), 'E'),
     // Unlabelled, so the scene shows its contents.
     SceneBuilder.scene('f', [
-      box('f1', at(0, -1), 'F1'),
-      box('f2', at(0, 0), 'F2'),
-      box('f3', at(0, 1), 'F3'),
-      box('f4', at(0, 2), 'F4'),
+      // One hue at each of its tones, lightest to strongest.
+      ...TONES.map((tone, index) =>
+        box(`f${index + 1}`, at(0, index - 1), `F${index + 1}`).properties({ style: { hue: 'blue', tone } }),
+      ),
       smart('f1', 'f2'),
       smart('f2', 'f3'),
       smart('f3', 'f4'),

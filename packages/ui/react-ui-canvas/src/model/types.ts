@@ -83,10 +83,16 @@ export type Port = Schema.Schema.Type<typeof Port>;
 // Nodes
 //
 
+/** How strongly a hue fills a frame: `outline` leaves it transparent, the rest are lighter to stronger fills. */
+export const NodeTone = Schema.Literals(['outline', 'light', 'medium', 'strong']);
+export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
+
 /** Presentation choices a node carries; every field is optional and the frame supplies the default look. */
 export const NodeStyle = Schema.Struct({
   /** One of the theme's hues, colouring fill, text and border together. */
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  /** The hue's fill; unset is `medium`, the look a hue had before tones. */
+  tone: Schema.optional(NodeTone),
   rounded: Schema.optional(Schema.Boolean),
   fill: Schema.optional(Schema.Boolean),
   border: Schema.optional(Schema.Boolean),
