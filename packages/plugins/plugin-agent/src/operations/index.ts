@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { GoalsSkill } from '#skills';
+import { BrainSkill } from '#skills';
 import { AgentOperation, MemoryOperation, ModeOperation, RelayOperation, TriggerOperation } from '#types';
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
@@ -16,6 +16,7 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CustomizeSkill.pipe(Operation.lazyHandler(() => import('./customize-skill.ts'))),
   AgentOperation.ResetSkill.pipe(Operation.lazyHandler(() => import('./reset-skill.ts'))),
   AgentOperation.EnsureParticipantChat.pipe(Operation.lazyHandler(() => import('./ensure-participant-chat.ts'))),
+  AgentOperation.OpenPrivateChat.pipe(Operation.lazyHandler(() => import('./open-private-chat.ts'))),
   AgentOperation.ReadSource.pipe(Operation.lazyHandler(() => import('./read-source.ts'))),
   ModeOperation.ListModes.pipe(Operation.lazyHandler(() => import('./list-modes.ts'))),
   ModeOperation.SwitchMode.pipe(Operation.lazyHandler(() => import('./switch-mode.ts'))),
@@ -33,5 +34,5 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.WatchFacts.pipe(Operation.lazyHandler(() => import('./watch-facts.ts'))),
   TriggerOperation.ListTriggers.pipe(Operation.lazyHandler(() => import('./list-triggers.ts'))),
   TriggerOperation.CancelTrigger.pipe(Operation.lazyHandler(() => import('./cancel-trigger.ts'))),
-  GoalsSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
+  BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
 ]);

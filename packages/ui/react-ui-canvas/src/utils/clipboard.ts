@@ -20,6 +20,7 @@ import {
   isPointEndpoint,
 } from '../model/types.ts';
 import { unionBounds } from './hit.ts';
+import { between, topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 export type Clipboard = {
@@ -93,4 +94,29 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ }: Pas
     },
     ids: [...nodes.map(({ id }) => id), ...links.map(({ id }) => id)],
   };
+};
+
+/**
+ * The batch that copies the selected nodes (and the links between them) `offset` away, above everything
+ * else, and the ids it creates; nothing when the selection holds no node.
+ */
+export const duplicateSelection = (
+  scene: Scene,
+  selection: Iterable<ElementId>,
+  offset: Point,
+  createId: (prefix: string) => string,
+): Paste | undefined => {
+  const clipboard = copySelection(scene, selection);
+  if (!clipboard) {
+    return undefined;
+  }
+  let nodeZ = topZ(Object.values(scene.nodes));
+  let linkZ = topZ(Object.values(scene.links));
+  return pasteFragment({
+    clipboard,
+    offset,
+    createId,
+    nodeZ: () => (nodeZ = between(nodeZ, undefined)),
+    linkZ: () => (linkZ = between(linkZ, undefined)),
+  });
 };

@@ -7,19 +7,19 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { TriggerOperation } from '#types';
-
-import { triggerRegistry } from '../triggers.ts';
+import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.CancelTrigger> = TriggerOperation.CancelTrigger.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ trigger: id, dropGoal }) {
-      const trigger = triggerRegistry.get(id);
-      if (!trigger || !triggerRegistry.remove(id)) {
+      const brain = yield* BrainService.BrainService;
+      const agent = Trigger.agentOf(id);
+      const trigger = agent ? (yield* brain.listTriggers(agent)).find((trigger) => trigger.id === id) : undefined;
+      if (!trigger || !(yield* brain.removeTrigger(id))) {
         return { cancelled: false };
       }
       if (dropGoal && trigger.goal) {
-        const goal = yield* Database.load(trigger.goal);
+        const goal = yield* Database.resolve(trigger.goal, Goal.Goal);
         Obj.update(goal, (goal) => {
           goal.status = 'dropped';
         });

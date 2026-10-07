@@ -6,7 +6,7 @@
  * Minimal XML-style DSL for laying out schema fields in a grid.
  *
  * Grammar:
- *   <grid cols="N">  ...children...  </grid>
+ *   <grid cols="N" [fixed="true"]>  ...children...  </grid>
  *   <field name="x" span="N"/>
  *
  * - Attributes accept `"…"`, `'…'`, or unquoted integers.
@@ -18,7 +18,13 @@
 
 /** Node type for the parsed layout tree. */
 export type LayoutNode =
-  | { readonly kind: 'grid'; readonly cols: number; readonly children: readonly LayoutNode[] }
+  | {
+      readonly kind: 'grid';
+      readonly cols: number;
+      /** Keeps the columns in a narrow pane rather than stacking the cells. */
+      readonly fixed?: boolean;
+      readonly children: readonly LayoutNode[];
+    }
   | { readonly kind: 'field'; readonly name: string; readonly span?: number };
 
 export class LayoutParseError extends Error {
@@ -146,7 +152,8 @@ export const parseLayout = (template: string): LayoutNode => {
         throw new LayoutParseError('<grid> not closed', token.position);
       }
       index += 1;
-      return { kind: 'grid', cols, children };
+      const fixed = token.attrs.fixed === 'true';
+      return { kind: 'grid', cols, ...(fixed ? { fixed } : {}), children };
     }
 
     throw new LayoutParseError(`unknown element <${token.name}>`, token.position);

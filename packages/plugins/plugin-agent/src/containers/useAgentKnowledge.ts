@@ -18,7 +18,7 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
 } from '#components';
-import { FactEntry, Goal, Memory, Profile, Trigger } from '#types';
+import { FactEntry, Goal, Memory, Profile } from '#types';
 
 import { useFactEntries } from './useFactEntries.ts';
 import { useTriggers } from './useTriggers.ts';
@@ -109,12 +109,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
                 .join(', ') || undefined,
             watches: triggers
               .filter((trigger) => trigger.goal && Profile.refersTo(trigger.goal, goal.id))
-              .map(({ id, when, then }) => ({
-                id,
-                when: Trigger.describePattern(when),
-                recipient: nameOf(then.recipient),
-                message: then.message,
-              })),
+              .map(({ id, when, recipient, message }) => ({ id, when, recipient: nameOf(recipient), message })),
           }));
 
         return { memories: active, nodes, edges, goals: goalItems };

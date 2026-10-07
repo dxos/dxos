@@ -948,10 +948,12 @@ const server = createServer((request, response) => {
 
     try {
       const result = await handler(command);
+      // Serialized before the header goes out, so a result that cannot be stringified reaches the catch below.
+      const body = JSON.stringify({ ok: true, ...result });
       response.writeHead(200, { 'content-type': 'application/json' });
       // Shutdown runs from the write callback: exiting as soon as `end` returns can cut the response
       // off before it flushes, and that response carries the video path.
-      response.end(JSON.stringify({ ok: true, ...result }), () => {
+      response.end(body, () => {
         if (command.op === 'stop' && !manual) {
           // Exit from inside `close`, and drop keep-alive sockets so it can actually complete: dropping
           // the exit entirely leaves the process alive on an idle client socket, and exiting before the

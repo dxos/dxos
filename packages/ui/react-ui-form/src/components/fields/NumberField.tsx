@@ -25,10 +25,18 @@ export const NumberField = ({
   readonly,
   placeholder,
   presentation,
+  min: minProp,
+  max: maxProp,
+  step: stepProp,
   getValue,
   onValueChange,
+  onBlur,
 }: FormFieldRendererProps<number>) => {
-  const { min, max, integer } = getNumericConstraints(type);
+  const constraints = getNumericConstraints(type);
+  // A caller's override narrows the schema's bounds for this form; a whole-number step reads as an integer.
+  const min = minProp ?? constraints.min;
+  const max = maxProp ?? constraints.max;
+  const integer = constraints.integer || (stepProp !== undefined && Number.isInteger(stepProp));
   const committed = getValue();
   // The text is kept locally so a partial edit ("1.", "-") survives until it parses.
   const [text, setText] = useState(committed === undefined ? '' : String(committed));
@@ -48,13 +56,15 @@ export const NumberField = ({
       placeholder={placeholder}
       min={min}
       max={max}
-      step={Option.getOrElse(StepAnnotation.getFromAst(type), () => defaultStep(committed, integer))}
+      step={stepProp ?? Option.getOrElse(StepAnnotation.getFromAst(type), () => defaultStep(committed, integer))}
       formatOptions={integer ? { maximumFractionDigits: 0 } : { useGrouping: false }}
       value={text}
       onValueChange={(next, valueAsNumber) => {
         setText(next);
         if (!Number.isNaN(valueAsNumber)) {
           onValueChange(type, valueAsNumber);
+          // A stepper press never blurs, so every value that parses commits itself, as a pick does.
+          onBlur();
         }
       }}
     />

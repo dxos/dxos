@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 
 import * as Goal from './Goal.ts';
 
@@ -82,6 +83,15 @@ export const Trigger = Schema.Struct({
 });
 
 export interface Trigger extends Schema.Schema.Type<typeof Trigger> {}
+
+/** A trigger id that names its agent, so a brain keyed by agent routes a removal by the id alone. */
+export const makeId = (agent: string): string => `${agent}.${EntityId.random()}`;
+
+/** The agent a {@link makeId} id names; `undefined` for an id minted before ids carried one. */
+export const agentOf = (id: string): string | undefined => {
+  const separator = id.indexOf('.');
+  return separator > 0 ? id.slice(0, separator) : undefined;
+};
 
 /** A pattern as one line, e.g. `Dima · assertive · + · about "indexer PR"`. */
 export const describePattern = ({ speaker, subject, about, force, polarity, text }: FactPattern): string =>

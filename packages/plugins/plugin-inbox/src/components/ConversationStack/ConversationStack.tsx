@@ -20,8 +20,6 @@ import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import * as Card from '@dxos/react-ui/Card';
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
@@ -349,36 +347,30 @@ ConversationStackContent.displayName = CONVERSATION_STACK_CONTENT_NAME;
 // Message Tile
 //
 
-/** Column template established by the tile; message parts subgrid into it. */
-const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
-
-/**
- * Avatar footprint, which sets the width of column 1 — non-avatar tiles reserve the same gutter so
- * their content aligns with the senders and bodies. `DxAvatar` renders `size * 4` px, matching `w-9`;
- * `is-9` is not a real Tailwind utility (see the Slider regression guard).
- */
-const MESSAGE_AVATAR_SIZE = 8;
-const MESSAGE_AVATAR_GUTTER = 'w-8';
+/** Sits inside the card's one-block start rail, as the detail rows' icons do; a block-wide avatar would touch the name. */
+const MESSAGE_AVATAR_SIZE = 6;
 
 const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
-/** Mosaic tile chrome; dispatches to the draft composer or the read-message body. */
+/**
+ * Mosaic tile chrome; dispatches to the draft composer or the read-message body. A `grid` card, so the
+ * tile is a rail Container: every row in it — the summary, the recipients, the tags — subgrids onto the
+ * same rails, its leading avatar or icon in the start rail and its text at the content edge.
+ */
 const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<ConversationTileData>) => {
   const { id, message } = data;
   return (
-    <Mosaic.Tile
-      {...tileProps}
-      data={data}
-      classNames={['dx-attention-surface border border-separator-subtle rounded overflow-hidden', MESSAGE_TILE_COLUMNS]}
-    >
-      {DraftMessage.instanceOf(message) ? (
-        // The composer isn't column-aligned; span the whole tile.
-        <div className='col-span-full'>
-          <DraftTile id={id} message={message} />
-        </div>
-      ) : (
-        <MessageTile id={id} message={message} />
-      )}
+    <Mosaic.Tile {...tileProps} data={data} asChild>
+      <Card.Root grid classNames='dx-attention-surface overflow-hidden'>
+        {DraftMessage.instanceOf(message) ? (
+          // The composer isn't rail-aligned; it spans the whole tile.
+          <div className='col-span-full'>
+            <DraftTile id={id} message={message} />
+          </div>
+        ) : (
+          <MessageTile id={id} message={message} />
+        )}
+      </Card.Root>
     </Mosaic.Tile>
   );
 };
@@ -414,32 +406,26 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
   // and an age this coarse does not warrant a timer.
   const age = formatAge(new Date(summary.created), new Date());
   return (
-    <div
+    // The same rail card as a message tile, so the heading and text line up with the senders and bodies above.
+    <Card.Root
+      grid
       role='complementary'
       aria-label={t('conversation-summary.title')}
-      // Same column template and gutter width as a message tile, so the heading and text line up with
-      // the senders and bodies above rather than starting at the tile edge.
-      className={mx(
-        'dx-document dx-attention-surface border border-separator-subtle rounded overflow-hidden mt-2',
-        MESSAGE_TILE_COLUMNS,
-      )}
+      classNames='dx-document dx-attention-surface overflow-hidden mt-2'
       data-testid='conversation.summary'
     >
-      <div className='p-2'>
-        <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
-          <Icon.Icon icon='ph--text-align-left--regular' size='lg' tone='subtle' />
-        </div>
-      </div>
-      <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
+      <Card.Row icon='ph--text-align-left--regular'>
         <div className='flex items-baseline gap-2 text-sm text-fg-muted'>
           <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
           <span className='text-fg-subtle truncate' title={summary.model} data-testid='conversation.summary.provenance'>
             {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
           </span>
         </div>
+      </Card.Row>
+      <Card.Section classNames='pb-2'>
         <MarkdownViewer content={summary.summary} />
-      </div>
-    </div>
+      </Card.Section>
+    </Card.Root>
   );
 };
 
@@ -449,12 +435,9 @@ ConversationSummaryTile.displayName = CONVERSATION_SUMMARY_TILE_NAME;
 // Message (read tile)
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
-// `ConversationMessageTile` establishes the shared column template — avatar | title | date | menu — on the
-// tile itself; `MessageTile` spans it with `grid-cols-subgrid` so its summary row and its expanded
-// detail/body row share the exact same columns (avatar in column 1, date/menu pinned right).
+// `ConversationMessageTile` is a grid card; `MessageTile`'s summary row and expanded section are a row and a
+// section of it, so the sender's avatar and every detail row's icon share the start rail.
 //
-
-const MESSAGE_TILE_COLUMNS_NAME = 'ConversationStack.MessageTile.Columns';
 
 type MessageTileProps = {
   id: string;
@@ -539,11 +522,10 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
   const summary = summaries?.get(target.id);
 
-  // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
-  // `Collapsible.Root` takes over that same element rather than adding one — an element between the
-  // tile and its rows would break the subgrid chain the columns depend on. A conversation of one
-  // passes no `onExpandedChange`, which disables the machine: the heading keeps its box but stops
-  // being a control, so there is no dead tab stop and nothing to fold.
+  // A card section spanning the tile's rails, so the summary row and the detail/body section share them.
+  // `Collapsible.Root` takes over that element rather than adding one, which would break the subgrid chain.
+  // A conversation of one passes no `onExpandedChange`, which disables the machine: the heading keeps its
+  // box but stops being a control, so there is no dead tab stop and nothing to fold.
   return (
     <Collapsible.Root
       asChild
@@ -553,85 +535,70 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
       lazyMount
       unmountOnExit
     >
-      <div className='contents'>
-        <div className='col-span-full grid grid-cols-subgrid items-start pt-1'>
-          {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
-          {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
-            affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
-          {/* Avatar centred on the title's FIRST line — the row is `items-start` (the title clamps to
-            two lines), so centring against the whole block would leave the avatar hanging below the
-            name it belongs to. The nesting mirrors the title column's own box: `py-1` on the OUTER
-            element, then an unpadded `1lh` line box to centre within. Putting both on one element
-            fails, because `h-[1lh]` is border-box and the padding then eats into the line height,
-            leaving the avatar high by exactly that padding. */}
-          <div className='px-2 py-1 text-lg'>
-            <div className='flex items-center h-[1lh]'>
-              <ContactAvatar
-                actor={target.sender}
-                role='from'
-                db={db}
-                size={MESSAGE_AVATAR_SIZE}
-                onContactCreate={onContactCreate}
-              />
-            </div>
-          </div>
-
-          <div className='col-start-2 flex flex-col py-1'>
-            {/* The accordion heading: a real heading wrapping the control that folds its section, so the
-              thread reads as a list of sections rather than a list of clickable text. The clamp sits on
-              the button, whose own line boxes it counts — on the heading it would see the button as one
-              atomic box and clamp nothing. */}
-            <h2 className='text-lg min-w-0'>
-              <Collapsible.Trigger
-                classNames='line-clamp-2'
-                data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
-              >
-                {sender}
-              </Collapsible.Trigger>
-            </h2>
-            {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
-                tiles at once, and a summary line shorter than a subject line makes the two read as
-                different row heights. Pinned rather than merely clamped, so a message with no subject
-                still holds the line. */}
-            <div
-              // `leading-6` last: `text-sm` carries a line height of its own, and the two states only
-              // share a baseline if the line box is 24px in both.
-              className={mx(isExpanded ? 'font-medium' : 'text-sm text-fg-muted', 'h-6 leading-6 line-clamp-1')}
-              data-testid={!isExpanded && summary ? 'message.summary' : undefined}
+      <Card.Section>
+        {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is affordable
+            here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
+        <Card.Row
+          align='start'
+          classNames='py-1'
+          leading={
+            <ContactAvatar
+              actor={target.sender}
+              role='from'
+              db={db}
+              size={MESSAGE_AVATAR_SIZE}
+              onContactCreate={onContactCreate}
+            />
+          }
+          // The trailing cell is a flex row of its own.
+          trailing={
+            <>
+              <span className='px-2 whitespace-nowrap text-sm text-fg-muted'>{date}</span>
+              {isExpanded && mailbox && <MessageStar message={target} mailbox={mailbox} />}
+              {isExpanded && <MessageMenu attendableId={attendableId} actions={menuActions} />}
+            </>
+          }
+        >
+          {/* The accordion heading: a real heading wrapping the control that folds its section, so the
+            thread reads as a list of sections rather than a list of clickable text. The clamp sits on
+            the label inside the trigger: on the trigger itself it replaces the flex row that keeps the
+            caret beside the name, and on the heading it would see one atomic box and clamp nothing. */}
+          <h2 className='text-lg min-w-0'>
+            {/* Caret after the name, as the chat's disclosures, so the name lines up with the line below. */}
+            <Collapsible.Trigger
+              classNames='text-lg flex-row-reverse justify-end'
+              data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
             >
-              {isExpanded ? subject : (summary ?? snippet)}
-            </div>
+              <span className='line-clamp-2'>{sender}</span>
+            </Collapsible.Trigger>
+          </h2>
+          {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
+              tiles at once, and a summary line shorter than a subject line makes the two read as
+              different row heights. Pinned rather than merely clamped, so a message with no subject
+              still holds the line. */}
+          <div
+            // `leading-6` last: `text-sm` carries a line height of its own, and the two states only
+            // share a baseline if the line box is 24px in both.
+            className={mx(isExpanded ? 'font-medium' : 'text-sm text-fg-muted', 'h-6 leading-6 line-clamp-1')}
+            data-testid={!isExpanded && summary ? 'message.summary' : undefined}
+          >
+            {isExpanded ? subject : (summary ?? snippet)}
           </div>
-
-          <div className='col-start-3 flex items-center'>
-            <span className=' p-2 whitespace-nowrap text-sm text-fg-muted'>{date}</span>
-            {isExpanded && (
-              <>
-                {mailbox && (
-                  <div className='p-1'>
-                    <MessageStar message={target} mailbox={mailbox} />
-                  </div>
-                )}
-                <MessageMenu attendableId={attendableId} actions={menuActions} />
-              </>
-            )}
-          </div>
-        </div>
+        </Card.Row>
 
         {/* `unmountOnExit` keeps a folded message's body out of the tree entirely, as the previous
           conditional did — a thread holds many messages and each body is a rendered document. */}
         <Collapsible.Content asChild>
-          <div className='col-span-full grid grid-cols-subgrid items-start'>
-            {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
+          <Card.Section>
             <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
-            <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
-              {/* The summary is not repeated here: an expanded message shows its body, and the
-                conversation's summary is the last tile in the stack. */}
+            {/* The summary is not repeated here: an expanded message shows its body, and the
+              conversation's summary is the last tile in the stack. */}
+            <div className='flex flex-col gap-1 min-w-0 pb-1'>
               <MessageBody message={message} mailbox={mailbox} options={options} />
             </div>
-          </div>
+          </Card.Section>
         </Collapsible.Content>
-      </div>
+      </Card.Section>
     </Collapsible.Root>
   );
 };
@@ -735,45 +702,36 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
     [onOpenAttachment, message],
   );
 
-  // `grid` so row icons sit in the card's start rail and row content aligns at its content edge.
+  // A section of the tile's card, not a card of its own: its rows subgrid onto the tile's rails, so their
+  // icons sit in the start rail under the sender's avatar and their text at the tile's content edge.
   return (
-    <Card.Root grid classNames='bg-transparent' border={false} data-testid='message-header'>
-      <Card.Body>
-        {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
-        {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
-            tile's own heading, so `"NAME" <addr>` would just repeat it. */}
-        {recipients.length > 0 && (
-          <Card.Row>
-            <Layout.Block>
-              {/* One recipient reads as a person, so it gets the same avatar treatment as every other
-                  person row; several are a group, which an avatar would misrepresent. */}
-              {recipients.length === 1 ? (
-                <Avatar actor={{ email: recipients[0] }} size={5} />
-              ) : (
-                <Icon.Icon icon='ph--users--regular' />
-              )}
-            </Layout.Block>
-            <Card.Text classNames='text-sm' variant='muted'>
-              {recipients.join(', ')}
-            </Card.Text>
-          </Card.Row>
-        )}
+    <Card.Section data-testid='message-header'>
+      {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
+      {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
+          tile's own heading, so `"NAME" <addr>` would just repeat it. One recipient reads as a person, so it
+          gets an avatar like every other person row; several are a group, which an avatar would misrepresent. */}
+      {recipients.length > 0 && (
+        <Card.Row
+          leading={recipients.length === 1 ? <Avatar actor={{ email: recipients[0] }} size={5} /> : undefined}
+          icon={recipients.length === 1 ? undefined : 'ph--users--regular'}
+        >
+          <Card.Text classNames='text-sm' variant='muted'>
+            {recipients.join(', ')}
+          </Card.Text>
+        </Card.Row>
+      )}
 
-        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-        {objects.map((object) => (
-          <Row.Ref key={Obj.getURI(object).toString()} object={object} />
-        ))}
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <Row.Ref key={Obj.getURI(object).toString()} object={object} />
+      ))}
 
-        {/* Attachments row. */}
-        <Row.Attachments
-          attachments={message.attachments}
-          onAttachmentClick={onOpenAttachment && handleOpenAttachment}
-        />
+      {/* Attachments row. */}
+      <Row.Attachments attachments={message.attachments} onAttachmentClick={onOpenAttachment && handleOpenAttachment} />
 
-        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-        <Row.Tags tags={messageTags} />
-      </Card.Body>
-    </Card.Root>
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      <Row.Tags tags={messageTags} />
+    </Card.Section>
   );
 };
 
@@ -836,7 +794,7 @@ type MessageMenuProps = {
 
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
-  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='p-1 bg-transparent' />
+  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='bg-transparent' />
 );
 
 MessageMenu.displayName = MESSAGE_MENU_NAME;
