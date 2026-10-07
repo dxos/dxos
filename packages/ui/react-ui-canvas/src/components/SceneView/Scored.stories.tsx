@@ -78,33 +78,27 @@ const fromMermaid = async (source: string): Promise<Seed> => {
     }),
   );
   const nodeId = (id: string) => `${ROOT}/${id}`;
-  const builder = SceneBuilder.create(ROOT);
-  // Frames first, so their lower z keeps members clickable on top of them. Unlabelled: a rect centres
-  // its label, where the members would cover it.
-  for (const group of graph.groups) {
-    const box = boxes.get(group.id);
-    if (box) {
-      builder.rect(nodeId(group.id), box);
-    }
-  }
-  for (const node of graph.nodes) {
-    const box = boxes.get(node.id);
-    if (box) {
-      builder.rect(nodeId(node.id), box, node.label);
-    }
-  }
-  graph.edges.forEach(({ from, to }, index) => {
-    builder.smart(nodeId(`${from}-${to}-${index}`), nodeId(from), nodeId(to), { directed: true });
-  });
-  const built = builder.build();
-  const frames = new Set(graph.groups.map(({ id }) => nodeId(id)));
-  const nodes = Object.fromEntries(
-    Object.entries(built.nodes).map(([id, node]) => [
-      id,
-      frames.has(id) ? { ...node, style: { ...node.style, guide: true } } : node,
-    ]),
-  );
-  return { scenes: [{ ...built, nodes }], root: ROOT, engine: result.chosen.evaluation };
+  const placed = <T extends { id: string }>(items: readonly T[]) =>
+    items.flatMap((item) => {
+      const box = boxes.get(item.id);
+      return box ? [{ item, box }] : [];
+    });
+  const { scenes } = SceneBuilder.scene(ROOT, [
+    // Frames first, so their lower z keeps members clickable on top of them. Unlabelled guides: a rect
+    // centres its label, where the members would cover it.
+    ...placed(graph.groups).map(({ item, box }) =>
+      SceneBuilder.rect(nodeId(item.id), box).properties({ style: { guide: true } }),
+    ),
+    ...placed(graph.nodes).map(({ item, box }) =>
+      SceneBuilder.rect(nodeId(item.id), box).properties({ label: item.label }),
+    ),
+    ...graph.edges.map(({ from, to }, index) =>
+      SceneBuilder.link('smart', nodeId(from), nodeId(to))
+        .id(nodeId(`${from}-${to}-${index}`))
+        .properties({ directed: true }),
+    ),
+  ]).build();
+  return { scenes, root: ROOT, engine: result.chosen.evaluation };
 };
 
 type Graded = {

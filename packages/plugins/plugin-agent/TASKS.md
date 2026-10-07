@@ -2,7 +2,7 @@
 
 _Resume: pick the next open item below. Uncommitted: none. Last: FormInlineAnnotation survives the JSON-schema round trip (cc98eb32903); knowledge lists scroll (240ed0b2969)._
 
-Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), ontology:
+Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), brain: [docs/BRAIN.md](./docs/BRAIN.md), ontology:
 [docs/ONTOLOGY.md](./docs/ONTOLOGY.md), memory: [docs/MEMORY.md](./docs/MEMORY.md), testing:
 [docs/TESTING.md](./docs/TESTING.md), Discord setup: [docs/SETUP.md](./docs/SETUP.md).
 

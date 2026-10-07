@@ -3,28 +3,47 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { type AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
-import { GoalsSkill } from '#skills';
-import { FactEntry, type Goal, Profile, RelayOperation, Trigger } from '#types';
+import { BrainSkill } from '#skills';
+import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
-import { triggerRegistry } from '../triggers.ts';
 import { composeUpdate } from './compose-update.ts';
 import { firstMatch, matchesPattern } from './match-facts.ts';
-import { readSource } from './read-source.ts';
+import { agentSpeaker, readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
+
+const toRdfTerm = (term: FactEntry.Term): RDF.Term =>
+  term.literal !== undefined
+    ? { literal: term.literal }
+    : { entity: term.entity ?? normalizeEntityId(term.label ?? ''), ...(term.label ? { label: term.label } : {}) };
+
+/** A stored fact back in pipeline-rdf's shape, for the brain's RDF store. */
+export const toRdf = (fact: FactEntry.Fact): RDF.Fact => ({
+  ...fact,
+  assertion: {
+    ...fact.assertion,
+    subject: toRdfTerm(fact.assertion.subject),
+    object: toRdfTerm(fact.assertion.object),
+  },
+});
 
 /**
  * Fires the agent's triggers that `facts` match: sends each one's update, composed by the model from the
  * conversation `transcript` under the relay rules; a one-time trigger also marks its goal achieved and is
  * removed, an ongoing one keeps watching. Triggers whose goal closed meanwhile are removed unfired.
+ *
+ * Facts the agent itself stated never fire a trigger: its replies restate what it passed on, and a watch
+ * matching them would wake the chat it just woke, without end.
  */
 export const fireTriggers: (
   agent: Agent.Agent,
@@ -32,26 +51,37 @@ export const fireTriggers: (
   transcript?: string,
 ) => Effect.Effect<
   { fired: string[]; undelivered: string[] },
-  never,
-  AiService.AiService | Database.Service | Operation.Service
-> = Effect.fnUntraced(function* (agent, facts, transcript) {
+  BrainService.BrainError,
+  AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
+> = Effect.fnUntraced(function* (agent, allFacts, transcript) {
+  const brain = yield* BrainService.BrainService;
+  // The same name `readSource` attributes the agent's own messages to, unnamed agents included.
+  const self = normalizeEntityId(agentSpeaker(agent));
+  const facts = allFacts.filter((fact) => fact.attribution.agent !== self);
   const fired: string[] = [];
   const undelivered: string[] = [];
-  for (const trigger of triggerRegistry.list(agent.id)) {
+  if (facts.length === 0) {
+    return { fired, undelivered };
+  }
+
+  for (const trigger of yield* brain.listTriggers(agent.id)) {
     const goal = trigger.goal
-      ? yield* Database.load(trigger.goal).pipe(Effect.orElseSucceed(() => undefined))
+      ? yield* Database.resolve(trigger.goal, Goal.Goal).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;
     if (goal && CLOSED.includes(goal.status)) {
-      triggerRegistry.remove(trigger.id);
+      yield* brain.removeTrigger(trigger.id);
       continue;
     }
 
     const fact = firstMatch(trigger, facts);
     // A one-time trigger is removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
-    if (!fact || (!trigger.ongoing && !triggerRegistry.remove(trigger.id))) {
+    if (!fact || (!trigger.ongoing && !(yield* brain.removeTrigger(trigger.id)))) {
       continue;
     }
-    const recipient = yield* Database.load(trigger.then.recipient).pipe(Effect.orElseSucceed(() => undefined));
+    // Through the database: a trigger read back from the brain carries refs with no resolver of their own.
+    // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
+    const resolved = Option.getOrUndefined(yield* Database.resolve(trigger.then.recipient).pipe(Effect.option));
+    const recipient = Obj.isObject(resolved) ? resolved : undefined;
     const text = yield* composeUpdate({
       agentName: agent.name ?? 'Agent',
       recipientName: recipient ? Profile.displayName(recipient) : 'the requester',
@@ -62,7 +92,7 @@ export const fireTriggers: (
     });
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
-      recipient: trigger.then.recipient,
+      recipient: recipient ? Ref.make(recipient) : trigger.then.recipient,
       text,
     }).pipe(Effect.orElseSucceed(() => ({ delivered: false, reason: 'The message could not be sent.' })));
     if (!delivery.delivered) {
@@ -79,7 +109,7 @@ export const fireTriggers: (
   return { fired, undelivered };
 });
 
-const handler: Operation.WithHandler<typeof GoalsSkill.RunTriggers> = GoalsSkill.RunTriggers.pipe(
+const handler: Operation.WithHandler<typeof BrainSkill.RunTriggers> = BrainSkill.RunTriggers.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
@@ -90,6 +120,10 @@ const handler: Operation.WithHandler<typeof GoalsSkill.RunTriggers> = GoalsSkill
       }
 
       const { facts, transcript } = yield* readSource(agent, { source: chat });
+      if (facts.length > 0) {
+        const brain = yield* BrainService.BrainService;
+        yield* brain.addFacts(agent.id, facts.map(toRdf));
+      }
       return { facts: facts.length, ...(yield* fireTriggers(agent, facts, transcript)) };
     }),
   ),

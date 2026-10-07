@@ -4,6 +4,7 @@
 
 import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -20,7 +21,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
+import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import {
   AgentOperation,
   FactEntry,
@@ -34,13 +35,17 @@ import {
   TriggerOperation,
 } from '#types';
 
+import { makeTestBrain } from '../brain/testing.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
-import { TriggerRegistry, triggerRegistry } from '../triggers.ts';
+import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
 import { matchesPattern } from './match-facts.ts';
 import { fireTriggers } from './run-triggers.ts';
 
 EntityId.dangerouslyDisableRandomness();
+
+/** One brain for every agent in this file; its triggers are cleared after each test. */
+const brain = makeTestBrain();
 
 const SAID_AT = '2026-10-03T12:00:00.000Z';
 
@@ -240,6 +245,10 @@ const makeScript =
         : typeof lastUser.content === 'string'
           ? lastUser.content
           : lastUser.content.map((part) => (part.type === 'text' ? part.text : '')).join('');
+    const woken = BrainSkill.wakeText(said);
+    if (woken !== undefined) {
+      return { parts: [text(woken)] };
+    }
     if (said.includes(PROMPTS.ask)) {
       return {
         parts: [
@@ -258,33 +267,44 @@ const makeScript =
 
 const refs: Refs = {};
 
-const TestLayer = AssistantTestLayer({
-  operationHandlers: AgentOperationHandlerSet,
-  types: [
-    Agent.Agent,
-    Chat.Chat,
-    Skill.Skill,
-    Feed.Feed,
-    Text.Text,
-    Instructions.Instructions,
-    Person.Person,
-    Organization.Organization,
-    HasSubject.HasSubject,
-    Memory.Memory,
-    Goal.Goal,
-    Mode.Mode,
-    Relay.Relay,
-    Message.Message,
-    FactEntry.FactEntry,
-  ],
-  skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
-  aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
-});
+const TestLayer = brain.layer.pipe(
+  Layer.provideMerge(
+    AssistantTestLayer({
+      operationHandlers: AgentOperationHandlerSet,
+      types: [
+        Agent.Agent,
+        Chat.Chat,
+        Skill.Skill,
+        Feed.Feed,
+        Text.Text,
+        Instructions.Instructions,
+        Person.Person,
+        Organization.Organization,
+        HasSubject.HasSubject,
+        Memory.Memory,
+        Goal.Goal,
+        Mode.Mode,
+        Relay.Relay,
+        Message.Message,
+        FactEntry.FactEntry,
+      ],
+      skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      extraServices: brain.layer,
+      aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
+    }),
+  ),
+);
 
 const texts = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
   const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
   return messages.map((message) => Message.extractText(message));
+});
+
+/** Waits for the chat's current turn (e.g. one a relay woke) and its end-request hooks to finish. */
+const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
+  const session = yield* AgentService.getSession(chat);
+  yield* session.waitForCompletion();
 });
 
 /** Submits a prompt as `name` in the chat and waits for the turn, and its end-request hooks, to finish. */
@@ -296,7 +316,7 @@ const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: 
 
 describe('end-of-turn triggers', () => {
   afterEach(() => {
-    triggerRegistry.snapshot.forEach(({ id }) => triggerRegistry.remove(id));
+    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
   });
 
   it.effect(
@@ -330,22 +350,23 @@ describe('end-of-turn triggers', () => {
         expect(others).toHaveLength(0);
         expect(goal).toMatchObject({ title: "Dima's indexer PR is up", status: 'active' });
         expect(goal.owners.map((owner) => owner.target?.id)).toEqual([rich.id]);
-        const [trigger] = triggerRegistry.list(agent.id);
+        const [trigger] = brain.triggers.list(agent.id);
         expect(trigger.goal?.target?.id).toBe(goal.id);
         expect(yield* texts(richChat)).not.toContain(COMPOSED[PROMPTS.up]);
 
         // 2. Dima says she is still working on it: her fact is about the PR but negative, so nothing fires.
         yield* say(dimaChat, 'Dima', PROMPTS.distractor);
-        expect(triggerRegistry.list(agent.id)).toHaveLength(1);
+        expect(brain.triggers.list(agent.id)).toHaveLength(1);
         expect(yield* texts(richChat)).not.toContain(COMPOSED[PROMPTS.up]);
         expect(goal.status).toBe('active');
 
         // 3. Dima says it is up: the turn's fact fires the trigger, Rich gets the composed update and the goal is achieved.
         yield* say(dimaChat, 'Dima', PROMPTS.up);
+        yield* settle(richChat);
         expect(yield* texts(richChat)).toContain(COMPOSED[PROMPTS.up]);
         expect(yield* texts(richChat)).not.toContain(NOTIFICATION);
         expect(goal.status).toBe('achieved');
-        expect(triggerRegistry.list(agent.id)).toEqual([]);
+        expect(brain.triggers.list(agent.id)).toEqual([]);
 
         // Each turn was read once, with the earlier one only as context: the chat's facts are the distractor's and
         // the announcement's, never repeated.
@@ -388,7 +409,7 @@ describe('end-of-turn triggers', () => {
           }),
         );
         yield* Database.flush();
-        triggerRegistry.add({
+        brain.triggers.add({
           id: 'posted',
           agent: agent.id,
           goal: Ref.make(goal),
@@ -405,15 +426,17 @@ describe('end-of-turn triggers', () => {
         yield* fireTriggers(agent, [
           fact({ subject: 'indexer fix', predicate: 'is', object: 'landed', quote: ONGOING.landed }),
         ]);
+        yield* settle(josiahChat);
         const sent = yield* texts(josiahChat);
         expect(sent).toContain(COMPOSED[ONGOING.plugin]);
         expect(sent).toContain(COMPOSED[ONGOING.landed]);
         expect(sent).not.toContain(`Update on Dima: ${ONGOING.plugin}`);
-        expect(triggerRegistry.list(agent.id)).toHaveLength(1);
+        expect(brain.triggers.list(agent.id)).toHaveLength(1);
         expect(goal.status).toBe('active');
 
         // 2. Someone else's fact does not match the speaker.
         yield* fireTriggers(agent, [fact({ speaker: 'rich', quote: 'I am reviewing it.' })]);
+        yield* settle(josiahChat);
         expect(yield* texts(josiahChat)).toHaveLength(sent.length);
       },
       Effect.provide(TestLayer),
@@ -491,6 +514,10 @@ const makePostedScript =
         : typeof lastUser.content === 'string'
           ? lastUser.content
           : lastUser.content.map((part) => (part.type === 'text' ? part.text : '')).join('');
+    const woken = BrainSkill.wakeText(said);
+    if (woken !== undefined) {
+      return { parts: [text(woken)] };
+    }
     if (said.includes(POSTED.keepPosted)) {
       return {
         parts: [
@@ -511,28 +538,33 @@ const makePostedScript =
 
 const postedRefs: PostedRefs = {};
 
-const PostedTestLayer = AssistantTestLayer({
-  operationHandlers: AgentOperationHandlerSet,
-  types: [
-    Agent.Agent,
-    Chat.Chat,
-    Skill.Skill,
-    Feed.Feed,
-    Text.Text,
-    Instructions.Instructions,
-    Person.Person,
-    Organization.Organization,
-    HasSubject.HasSubject,
-    Memory.Memory,
-    Goal.Goal,
-    Mode.Mode,
-    Relay.Relay,
-    Message.Message,
-    FactEntry.FactEntry,
-  ],
-  skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
-  aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
-});
+const PostedTestLayer = brain.layer.pipe(
+  Layer.provideMerge(
+    AssistantTestLayer({
+      operationHandlers: AgentOperationHandlerSet,
+      types: [
+        Agent.Agent,
+        Chat.Chat,
+        Skill.Skill,
+        Feed.Feed,
+        Text.Text,
+        Instructions.Instructions,
+        Person.Person,
+        Organization.Organization,
+        HasSubject.HasSubject,
+        Memory.Memory,
+        Goal.Goal,
+        Mode.Mode,
+        Relay.Relay,
+        Message.Message,
+        FactEntry.FactEntry,
+      ],
+      skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      extraServices: brain.layer,
+      aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
+    }),
+  ),
+);
 
 /** The quotes of the facts recorded from a chat, in the order they were read. */
 const recordedQuotes = (chat: Chat.Chat) =>
@@ -549,7 +581,7 @@ const recordedQuotes = (chat: Chat.Chat) =>
 
 describe('keep me posted', () => {
   afterEach(() => {
-    triggerRegistry.snapshot.forEach(({ id }) => triggerRegistry.remove(id));
+    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
     postedPrompts.extraction.length = 0;
     postedPrompts.compose.length = 0;
   });
@@ -577,22 +609,23 @@ describe('keep me posted', () => {
 
         // 1. Dima says what she is on before anyone watches: the turn is still read into a fact.
         yield* say(dimaChat, 'Dima', POSTED.plugin);
-        expect(triggerRegistry.list(agent.id)).toEqual([]);
+        expect(brain.triggers.list(agent.id)).toEqual([]);
         const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dima) });
         expect(recalled.facts.map(({ quote }) => quote)).toContain(POSTED.plugin);
 
         // 2. Josiah asks to be kept posted: an ongoing watch on Dima, and nothing is forwarded yet.
         yield* say(josiahChat, 'Josiah', POSTED.ask);
         yield* say(josiahChat, 'Josiah', POSTED.keepPosted);
-        const [trigger, ...others] = triggerRegistry.list(agent.id);
+        const [trigger, ...others] = brain.triggers.list(agent.id);
         expect(others).toHaveLength(0);
         expect(trigger).toMatchObject({ ongoing: true, when: { speaker: 'Dima' } });
         expect(yield* updates).toEqual([]);
 
         // 3. Dima's next update reaches Josiah, composed; the watch stays and its goal stays open.
         yield* say(dimaChat, 'Dima', POSTED.relay);
+        yield* settle(josiahChat);
         expect(yield* updates).toEqual([POSTED_COMPOSED[POSTED.relay]]);
-        expect(triggerRegistry.list(agent.id)).toHaveLength(1);
+        expect(brain.triggers.list(agent.id)).toHaveLength(1);
         const goal = trigger.goal?.target;
         expect(goal?.status).toBe('active');
       },
@@ -623,13 +656,14 @@ describe('keep me posted', () => {
         // 1. Josiah asks to be kept posted on Dima: the watch records his request.
         yield* say(josiahChat, 'Josiah', POSTED.ask);
         yield* say(josiahChat, 'Josiah', POSTED.keepPosted);
-        const [trigger] = triggerRegistry.list(agent.id);
+        const [trigger] = brain.triggers.list(agent.id);
         expect(trigger).toMatchObject({ ongoing: true, request: POSTED_REQUEST });
 
         // 2. Rich asks Dima in her chat; Dima's reply says only "it".
         yield* say(dimaChat, 'Rich', POSTED.withMe);
         postedPrompts.extraction.length = 0;
         yield* say(dimaChat, 'Dima', POSTED.start);
+        yield* settle(josiahChat);
 
         // (a) The extractor saw Rich's question as context, and only the new message's fact was recorded.
         const extraction = postedPrompts.extraction.find((prompt) => prompt.includes(POSTED.start));

@@ -207,6 +207,34 @@ describe('ReadSource', () => {
   );
 
   it.effect(
+    "attributes a private chat's unnamed prompts to the person it is with",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const { chat: chatRef } = yield* Operation.invoke(AgentOperation.OpenPrivateChat, {
+          agent: agentRef,
+          identityDid: 'did:halo:dima',
+          name: 'Dima',
+        });
+        const chat = yield* Database.load(chatRef);
+        const feed = yield* Database.load(chat.feed);
+        yield* Feed.append(feed, [
+          Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'I own the indexer.' }] }),
+        ]);
+        yield* Database.flush();
+
+        yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
+        const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
+        const [entry] = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
+        expect(entry.facts[0].attribution.agent).toBe('dima');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
     'requires a source, or a url with its text',
     Effect.fnUntraced(
       function* ({ expect }) {
