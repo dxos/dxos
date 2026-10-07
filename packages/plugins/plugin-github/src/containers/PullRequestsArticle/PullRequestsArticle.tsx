@@ -6,18 +6,19 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { type Database, Filter, Obj, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { Listbox } from '@dxos/react-ui-list';
 import { GroupMenu, SortMenu } from '@dxos/react-ui-menu';
 import { QueryEditor, usePersistentQuery } from '@dxos/react-ui-query';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { PullRequest, Task } from '@dxos/types';
@@ -37,6 +38,8 @@ import {
   sortRows,
 } from './arrange.ts';
 import { formatRelative } from './format.ts';
+
+const PULL_REQUEST_TYPENAME = Type.getTypename(PullRequest.PullRequest);
 
 const SORT_ICONS: Record<PullRequestsView.SortField, string> = {
   relevance: 'ph--lightning--regular',
@@ -102,6 +105,15 @@ const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & 
   const tasks = useQuery(db, Filter.type(Task.Task));
   const checks = usePullRequestChecks(pullRequests, db.spaceId);
   const { rows, groups } = useArrangedRows(pullRequests, tasks, checks, { filter, sort, group });
+  // In display order, so keyboard order follows the groups the reader sees.
+  const options = useMemo(
+    () =>
+      (groups ? groups.flatMap((group) => group.rows) : rows).map(({ pullRequest }) => ({
+        value: pullRequest.id,
+        label: pullRequest.title,
+      })),
+    [groups, rows],
+  );
 
   const sortFields = useMemo(
     () =>
@@ -172,17 +184,18 @@ const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & 
             {t(pullRequests.length === 0 ? 'pull-requests-empty.message' : 'pull-requests-no-match.message')}
           </Status.Empty>
         ) : (
-          <ScrollArea.Root classNames='dx-expand'>
-            <ScrollArea.Viewport>
-              <ul role='list' className='flex flex-col'>
-                {groups
-                  ? groups
-                      .filter((group) => group.rows.length > 0)
-                      .map((group) => <GroupSection key={group.id} group={group} onOpen={openObject} />)
-                  : rows.map((row) => <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={openObject} />)}
-              </ul>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+          <Listbox.Root items={options}>
+            <Listbox.Content
+              classNames='dx-expand'
+              aria-label={t('typename.label_other', { ns: PULL_REQUEST_TYPENAME })}
+            >
+              {groups
+                ? groups
+                    .filter((group) => group.rows.length > 0)
+                    .map((group) => <GroupSection key={group.id} group={group} onOpen={openObject} />)
+                : rows.map((row) => <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={openObject} />)}
+            </Listbox.Content>
+          </Listbox.Root>
         )}
       </Panel.Body>
     </Panel.Root>
@@ -194,20 +207,18 @@ type OpenHandler = (object: Obj.Any) => Promise<void>;
 const GroupSection = ({ group, onOpen }: { group: PullRequestRowGroup; onOpen: OpenHandler }) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
-    <li role='group' aria-label={group.translate ? t(group.label) : group.label}>
-      <div className='flex items-center gap-2 px-3 py-1.5 sticky top-0 z-[1] bg-base-surface border-b border-separator-subtle text-sm font-medium'>
-        <span className='dx-text flex' data-hue={group.hue}>
-          <Icon.Icon icon={group.icon} />
-        </span>
-        <span className='truncate'>{group.translate ? t(group.label) : group.label}</span>
-        <span className='text-description'>{group.rows.length}</span>
-      </div>
-      <ul role='list' className='flex flex-col'>
-        {group.rows.map((row) => (
-          <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={onOpen} />
-        ))}
-      </ul>
-    </li>
+    <Listbox.ItemGroup>
+      <Listbox.ItemGroupLabel>
+        <Layout.Flex align='center' gap='sm'>
+          <Icon.Icon icon={group.icon} classNames='dx-text' data-hue={group.hue} />
+          <span className='truncate'>{group.translate ? t(group.label) : group.label}</span>
+          <span className='text-description'>{group.rows.length}</span>
+        </Layout.Flex>
+      </Listbox.ItemGroupLabel>
+      {group.rows.map((row) => (
+        <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={onOpen} />
+      ))}
+    </Listbox.ItemGroup>
   );
 };
 
@@ -222,29 +233,28 @@ const PullRequestListRow = ({
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const time = pullRequest.updatedAt ?? pullRequest.createdAt;
   return (
-    <li className='border-b border-separator-subtle' data-testid='pull-requests.row'>
-      <button
-        type='button'
-        className='grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 w-full px-3 py-2 text-start hover:bg-hover-surface dx-focus-ring'
-        onClick={() => void onOpen(pullRequest)}
-      >
-        <div className='flex items-center gap-2 min-w-0 text-sm'>
+    <Listbox.Item
+      id={pullRequest.id}
+      classNames='cursor-pointer py-2'
+      data-testid='pull-requests.row'
+      onClick={() => void onOpen(pullRequest)}
+    >
+      <Layout.Flex column gap='xs' grow>
+        <Layout.Flex align='center' gap='sm' classNames='min-w-0'>
           <span className='dx-tag dx-tag-inline shrink-0' data-hue='neutral'>
             {PullRequest.reference(pullRequest)}
           </span>
-          <span className='truncate'>{pullRequest.title}</span>
-        </div>
-        <div className='flex items-center gap-2 justify-end'>
+          <span className='truncate grow'>{pullRequest.title}</span>
           <ChecksTag pullRequest={pullRequest} checks={checks} />
           <span
-            className='dx-tag dx-tag-inline'
+            className='dx-tag dx-tag-inline shrink-0'
             data-hue={STATE_HUE[pullRequest.state]}
             data-testid='pull-requests.row.state'
           >
             {t(`pull-request-state.${pullRequest.state}.label`)}
           </span>
-        </div>
-        <div className='flex items-center gap-2 min-w-0 text-xs text-description'>
+        </Layout.Flex>
+        <Layout.Flex align='center' gap='sm' classNames='min-w-0 text-xs text-description'>
           {pullRequest.author && <span className='shrink-0'>{pullRequest.author}</span>}
           {time && (
             <time className='shrink-0' dateTime={time} title={new Date(time).toLocaleString()}>
@@ -252,14 +262,14 @@ const PullRequestListRow = ({
             </time>
           )}
           {tasks.length > 0 && (
-            <span className='flex items-center gap-1 min-w-0' data-testid='pull-requests.row.tasks'>
+            <Layout.Flex align='center' gap='xs' classNames='min-w-0' data-testid='pull-requests.row.tasks'>
               <Icon.Icon icon='ph--check-square-offset--regular' size='xs' classNames='shrink-0' />
               <span className='truncate'>{tasks.map((task) => task.title || t('untitled-task.label')).join(', ')}</span>
-            </span>
+            </Layout.Flex>
           )}
-        </div>
-      </button>
-    </li>
+        </Layout.Flex>
+      </Layout.Flex>
+    </Listbox.Item>
   );
 };
 
