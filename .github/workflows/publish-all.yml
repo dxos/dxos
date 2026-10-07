@@ -28,11 +28,12 @@ on:
       - main
   workflow_dispatch: {} # Manual dispatch = a @next snapshot pre-release (pick the commit via the ref selector).
 
-# Release runs (the squash-merged Version PR) queue in their own group. GitHub keeps one pending run per group
-# and cancels it when a newer one arrives, so in a shared group an ordinary push landing while the release run
-# waited would cancel the release, and that commit is the only one that triggers a publish.
+# Release runs queue in their own group. GitHub keeps one pending run per group and cancels it when a newer one
+# arrives, so in a shared group an ordinary push landing while the release run waited would cancel the release,
+# and no later push triggers a publish. The release test is the same as the job's `RELEASE` below; concurrency
+# is evaluated before the job, so it cannot read the job's env.
 concurrency:
-  group: publish-${{ github.ref }}${{ github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages') && '-release' || '' }}
+  group: publish-${{ github.ref }}${{ github.event_name == 'push' && contains(format('::commit::{0}', join(github.event.commits.*.message, '::commit::')), '::commit::Version packages (#') && '-release' || '' }}
   cancel-in-progress: false
 
 permissions:
@@ -54,9 +55,12 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 90
     env:
-      # A "Version packages" commit on main is the squash-merged Version PR, i.e. the release commit. The
-      # repo is squash-only with the PR title as the subject, so one push carries one PR.
-      RELEASE: ${{ github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages') }}
+      # True when the push contains the squash-merged Version PR, whose message starts `Version packages (#N)`.
+      # The merge queue lands up to five PRs in one push, so every commit is checked, not just `head_commit`.
+      # Expressions have no per-line or regex match, so the messages are joined with a marker in front of
+      # each; `marker + subject` then matches only a message that starts with the subject, and a PR titled
+      # "fix the Version packages PR" does not trigger a release.
+      RELEASE: ${{ github.event_name == 'push' && contains(format('::commit::{0}', join(github.event.commits.*.message, '::commit::')), '::commit::Version packages (#') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
