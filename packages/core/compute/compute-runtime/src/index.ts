@@ -9,6 +9,7 @@ export * as LayerStack from './LayerStack.ts';
 export * from './protocol.ts';
 export * as ProcessHandle from './ProcessHandle.ts';
 export * as ProcessManager from './ProcessManager.ts';
+export * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 export * as QueuedRemoteControl from './QueuedRemoteControl.ts';
 export * from './remote-command-queue.ts';
 export * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';

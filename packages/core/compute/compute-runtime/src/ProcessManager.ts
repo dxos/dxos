@@ -25,7 +25,6 @@ import * as Stream from 'effect/Stream';
 import type * as Tracer from 'effect/Tracer';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
-import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -43,6 +42,7 @@ import { ProcessManagerService } from './process-manager-service.ts';
 import { type PersistedProcess, ProcessStore } from './process-store.ts';
 import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
+import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
 /**
@@ -268,14 +268,7 @@ export class Impl implements Manager {
       const handlers = this.#handlerSet;
       services = services.pipe(
         Context.add(OperationHandlerSet.OperationHandlerProvider, handlers),
-        Context.add(
-          Operation.Service,
-          Operation.makeProcessInvoker({
-            manager,
-            toProcess: (op) => DurableOperation.fromOperation(op, handlers),
-            tracer,
-          }),
-        ),
+        Context.add(Operation.Service, ProcessOperationInvoker.make({ manager, handlerSet: handlers, tracer })),
       );
     }
     return services;

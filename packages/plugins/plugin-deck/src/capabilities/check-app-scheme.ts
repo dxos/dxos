@@ -117,7 +117,7 @@ export default Capability.makeModule(
      * Dispatch all NavigationHandler contributions with the current page URL.
      *
      * Each handler is isolated with `catchAllCause`, not `catchAll`: a handler that invokes an
-     * operation fails as a DEFECT (`DurableOperation.fromOperation` uses `Effect.orDie`), which the Fail
+     * operation fails as a DEFECT (`Process.fromOperation` uses `Effect.orDie`), which the Fail
      * channel does not carry. An escaping defect would fail this module's activation and take the
      * popstate listener, the URL<->state sync and the leave-trap down for the whole session — so
      * one handler's failure must not decide whether URL handling exists.

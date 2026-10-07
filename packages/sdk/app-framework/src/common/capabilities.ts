@@ -263,7 +263,7 @@ export const UndoMapping = Capability$.make<UndoMapping[]>()('org.dxos.app-frame
 
 /**
  * Operation invoker backed by the process manager. Spawns a process per
- * operation invocation; see `Operation.makeProcessInvoker`.
+ * operation invocation; see `ProcessOperationInvoker` in `@dxos/compute-runtime`.
  */
 export type OperationInvoker = OperationInvoker$.OperationInvoker;
 

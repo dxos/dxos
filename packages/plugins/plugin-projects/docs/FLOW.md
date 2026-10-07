@@ -118,12 +118,12 @@ boot (`agent-process.ts:217`). The cell is scoped to the process id, so a fresh 
 
 ### 2.5 Sub-agent process
 
-`packages/core/compute/compute/src/DurableOperation.ts` (`spawn`) and
+`packages/core/compute/compute/src/Process.ts` (`spawn`) and
 `packages/core/compute/assistant-toolkit/src/operations/run-instructions.ts`.
 
 | Property      | Value                                                                                                                                                                                                                                                                                                                           |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| key           | `org.dxos.operation.assistantToolkit.runInstructions` (operation process via `DurableOperation.fromOperation`)                                                                                                                                                                                                                  |
+| key           | `org.dxos.operation.assistantToolkit.runInstructions` (operation process via `Process.fromOperation`)                                                                                                                                                                                                                           |
 | `name`        | `Run Instructions (org.dxos.operation.assistantToolkit.runInstructions)` (`Process.spawn`)                                                                                                                                                                                                                                      |
 | `parentPid`   | the agent pid (the `Process.ManagerService` in the agent's context defaults `parentProcessId` to it; `ProcessManager.ts` `#childServices`)                                                                                                                                                                                      |
 | annotations   | none from the strategy; no `TargetAnnotation`                                                                                                                                                                                                                                                                                   |

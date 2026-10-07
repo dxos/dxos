@@ -19,7 +19,17 @@ import * as Scheduler from './scheduler.ts';
 
 // @import-as-namespace
 
-export type InvocationEvent<I = any, O = any> = Operation.InvocationEvent<I, O>;
+/**
+ * Emitted after an operation completes successfully. (The in-progress / failure lifecycle is observed
+ * via the process monitor; this stream surfaces successful invocations for layered consumers — e.g.
+ * the undo history tracker, which derives undoability from the operation/input/output.)
+ */
+export type InvocationEvent<I = any, O = any> = {
+  operation: Operation.Definition<I, O>;
+  input: I;
+  output: O;
+  timestamp: number;
+};
 
 /**
  * Resolves a spaceId to a context containing Database.Service.

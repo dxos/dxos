@@ -8,25 +8,19 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
-import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
-import * as PubSub from 'effect/PubSub';
-import * as Ref$ from 'effect/Ref';
 import * as Rpc from 'effect/rpc/Rpc';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
 import * as Scope from 'effect/Scope';
-import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
-import * as Tracer from 'effect/Tracer';
 import type * as Types from 'effect/Types';
 
-import { Annotation, type Database, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -1229,204 +1223,6 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
           service.schedule(op, input, { ...options, ...invocationOptions })) as any,
       });
     }),
-  );
-
-//
-// Process invoker.
-//
-
-/**
- * Published after an invocation through a {@link ProcessInvoker} succeeds; failures and progress are observed
- * through the process manager instead.
- */
-export type InvocationEvent<I = any, O = any> = {
-  operation: Definition<I, O>;
-  input: I;
-  output: O;
-  timestamp: number;
-};
-
-/**
- * {@link OperationService} that runs every invocation as a process, plus the bookkeeping a host reads off it.
- */
-export interface ProcessInvoker extends OperationService {
-  /** Successful invocations. */
-  readonly invocations: PubSub.PubSub<InvocationEvent>;
-
-  /** Number of scheduled invocations not yet started. */
-  readonly pendingFollowups: Effect.Effect<number>;
-
-  /** Waits for every scheduled invocation to start. */
-  readonly awaitFollowups: Effect.Effect<void>;
-
-  /** Same as {@link invoke}: a process-backed invocation has no path that skips publishing its event. */
-  readonly _invokeCore: <I, O>(
-    op: Definition<I, O>,
-    input: I,
-    options?: InvokeOptions,
-  ) => Effect.Effect<O, NoHandlerError>;
-}
-
-export interface ProcessInvokerOptions {
-  /** Spawns the processes; inside a process, the one whose {@link Process.SpawnOptions.parentProcessId} defaults to it. */
-  readonly manager: Process.Manager;
-
-  /** The durable process that runs `op`. Injected because building it needs the host's operation handlers. */
-  readonly toProcess: <I, O>(op: Definition<I, O>) => Durable<I, O, any>;
-
-  /** Who the spawned processes attribute their database writes to (see `Database.Origin`). */
-  readonly origin?: Database.Origin;
-
-  /**
-   * Applied beneath the caller's context: `invokePromise` starts a fresh, empty-context fiber that would
-   * otherwise fall back to Effect's native tracer, whose spans never reach OpenTelemetry.
-   */
-  readonly tracer?: Tracer.Tracer;
-}
-
-/**
- * Creates a {@link ProcessInvoker}: each invocation spawns a process through `options.manager`, which owns
- * service resolution, storage and lifecycle. `InvokeOptions.on === 'edge'` spawns it on the EDGE runtime
- * hosting `InvokeOptions.spaceId`.
- */
-export const makeProcessInvoker = ({ manager, toProcess, origin, tracer }: ProcessInvokerOptions): ProcessInvoker => {
-  const withFallbackTracer = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
-    tracer === undefined
-      ? effect
-      : effect.pipe(
-          Effect.updateContext((context: Context.Context<never>) =>
-            Context.merge(Context.make(Tracer.Tracer, tracer), context),
-          ),
-        );
-
-  const pubsub = Effect.runSync(PubSub.unbounded<InvocationEvent>());
-  const pendingCount = Effect.runSync(Ref$.make(0));
-  const pendingFibers = new Set<Fiber.Fiber<any>>();
-
-  // Scheduled invocations are detached: they stay out of the caller's child set, so a parent that does not
-  // await them is neither woken by nor kept alive by their exit.
-  const spawn = <I, O>(op: Definition<I, O>, input: I, options: InvokeOptions | undefined, detached: boolean) =>
-    Effect.gen(function* () {
-      if (options?.on === 'edge' && options.spaceId === undefined) {
-        return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
-      }
-      const handle = yield* manager.spawn(toProcess(op), {
-        ...(detached ? { parentProcessId: undefined } : {}),
-        // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
-        ...(origin !== undefined ? { origin } : {}),
-        name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
-        traceMeta: options?.tracing,
-        // Notifications ride the process manager: forward `notify` onto the spawned process's params.
-        notify: options?.notify,
-        environment: {
-          ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
-        },
-        ...(options?.on === 'edge' && options.spaceId !== undefined
-          ? { location: { kind: 'edge', space: options.spaceId } as const }
-          : {}),
-      });
-      yield* handle.submitInput(input);
-      log('operation process spawned', { opKey: op.meta.key, pid: handle.pid });
-      return handle;
-    }).pipe(
-      Effect.withSpan('Operation.invoke', { attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() } }),
-    );
-
-  const invoke: OperationService['invoke'] = <I, O>(op: Definition<I, O>, ...args: any[]): Effect.Effect<O> => {
-    const input = args[0] as I;
-    const options = args[1] as InvokeOptions | undefined;
-    return Effect.gen(function* () {
-      const handle = yield* spawn(op, input, options, false);
-      const output = yield* awaitFirstOutput(handle);
-      yield* PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() });
-      return output;
-    }).pipe(
-      Effect.tapCause((cause) =>
-        Effect.sync(() => {
-          if (!Cause.hasInterruptsOnly(cause)) {
-            log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
-          }
-        }),
-      ),
-      withFallbackTracer,
-    );
-  };
-
-  const schedule: OperationService['schedule'] = <I, O>(op: Definition<I, O>, ...args: any[]): Effect.Effect<void> => {
-    const input = args[0] as I;
-    const options = args[1] as InvokeOptions | undefined;
-    return Effect.gen(function* () {
-      yield* Ref$.update(pendingCount, (count) => count + 1);
-      const fiber = yield* spawn(op, input, options, true).pipe(
-        Effect.ensuring(Ref$.update(pendingCount, (count) => count - 1)),
-        Effect.tapCause((cause) =>
-          Effect.sync(() => {
-            if (Cause.hasInterruptsOnly(cause)) {
-              log.warn('scheduled operation interrupted', { opKey: op.meta.key });
-            } else {
-              log.error('scheduled operation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
-            }
-          }),
-        ),
-        Effect.ignore,
-        Effect.forkDetach,
-      );
-      pendingFibers.add(fiber);
-      fiber.addObserver(() => {
-        pendingFibers.delete(fiber);
-      });
-    }).pipe(withFallbackTracer);
-  };
-
-  const invokePromise: OperationService['invokePromise'] = async <I, O>(
-    op: Definition<I, O>,
-    ...args: any[]
-  ): Promise<{ data?: O; error?: Error }> => {
-    try {
-      const data = await EffectEx.runAndForwardErrors(invoke(op, ...args) as Effect.Effect<O, Error>);
-      return { data };
-    } catch (error) {
-      return { error: error instanceof Error ? error : new Error(String(error)) };
-    }
-  };
-
-  return {
-    invoke,
-    schedule,
-    invokePromise,
-    invocations: pubsub,
-    pendingFollowups: Ref$.get(pendingCount),
-    awaitFollowups: Effect.suspend(() => Fiber.awaitAll(globalThis.Array.from(pendingFibers)).pipe(Effect.asVoid)),
-    _invokeCore: (op, input, options) => invoke(op, input, options),
-  };
-};
-
-// Mirrors `Process.awaitOutput`, which this module cannot import: `Process` reaches back here through
-// `Trace` at load time.
-const awaitFirstOutput = <O>(handle: Process.Process<any, O, any>): Effect.Effect<O> =>
-  handle.subscribeOutputs().pipe(
-    Stream.runHead,
-    Effect.flatMap(
-      Option.match({
-        onSome: Effect.succeed,
-        onNone: () =>
-          Option.match(handle.status.exit, {
-            onSome: (exit): Effect.Effect<O> =>
-              exit._tag === 'Failure'
-                ? Effect.failCause(exit.cause)
-                : // A terminated process also exits with success; the state value is compared as a string
-                  // because `Process.State` cannot be imported here.
-                  Effect.die(
-                    String(handle.status.state) === 'TERMINATED'
-                      ? 'Operation was terminated'
-                      : 'Process produced no output',
-                  ),
-            // Outputs close on a live process only when its manager suspends it: the wait was cut short.
-            onNone: () => Effect.interrupt,
-          }),
-      }),
-    ),
   );
 
 //

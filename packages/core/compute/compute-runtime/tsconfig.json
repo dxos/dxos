@@ -51,6 +51,9 @@
     },
     {
       "path": "../link"
+    },
+    {
+      "path": "../operation"
     }
   ]
 }
