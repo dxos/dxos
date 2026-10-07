@@ -29,6 +29,9 @@ const OBJECTS_TABLE = 'dx_sql_service_objects';
 /** An open transaction holds the connection's lock, so an abandoned one must not block the host for long. */
 const TRANSACTION_IDLE_TIMEOUT = '10 seconds';
 
+/** Caps a transaction that keeps itself alive with periodic statements. */
+const TRANSACTION_MAX_DURATION = '30 seconds';
+
 type Command =
   | {
       readonly _tag: 'execute';
@@ -188,7 +191,14 @@ export const makeGuardedExecutor = Effect.fn('SqlService.makeGuardedExecutor')(f
       }
     });
 
-    yield* sql.withTransaction(serve).pipe(
+    const bounded = serve.pipe(
+      Effect.timeoutOrElse({
+        duration: TRANSACTION_MAX_DURATION,
+        orElse: () => Effect.fail(authorizationError('Transaction rolled back after exceeding its maximum duration.')),
+      }),
+    );
+
+    yield* sql.withTransaction(bounded).pipe(
       Effect.exit,
       Effect.flatMap((exit) =>
         Effect.gen(function* () {

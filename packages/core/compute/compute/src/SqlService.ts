@@ -123,9 +123,16 @@ const runInTransaction = (
       return Effect.succeed([]);
     case 'COMMIT':
     case 'ROLLBACK': {
-      state.open = false;
       const end = sql.trim().toUpperCase() === 'COMMIT' ? service.commit : service.rollback;
-      return end({ transaction: state.id }).pipe(Effect.as([]));
+      // Cleared only on success so the acquirer's finalizer still rolls back after a failed COMMIT.
+      return end({ transaction: state.id }).pipe(
+        Effect.tap(() =>
+          Effect.sync(() => {
+            state.open = false;
+          }),
+        ),
+        Effect.as([]),
+      );
     }
   }
   if (SAVEPOINT.test(sql.trim())) {
