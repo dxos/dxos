@@ -15,6 +15,7 @@ import { BaseError } from '@dxos/errors';
 import type { RDF } from '@dxos/pipeline-rdf';
 import { ContentBlock } from '@dxos/types';
 
+import * as FactEntry from './FactEntry.ts';
 import * as Trigger from './Trigger.ts';
 
 /**
@@ -44,31 +45,70 @@ export type WakeRequest = {
 export class BrainError extends BaseError.extend('BrainError', 'The agent brain failed.') {}
 
 /**
- * An agent's brain: the facts it has extracted from its conversations (an RDF store), the triggers that
- * connect facts to the goals people asked it to watch, and the means to wake a chat when one fires.
+ * An event queued in a subscription's outbox: one pushed fact its pattern matched. Events stay queued
+ * until acknowledged, so a consumer that fails between {@link Service.take} and {@link Service.ack}
+ * sees them again.
+ */
+export const Event = Schema.Struct({
+  /** Stable per subscription and fact, so pushing a fact twice queues it once. */
+  id: Schema.String,
+  subscription: Schema.String,
+  fact: FactEntry.Fact,
+});
+
+export interface Event extends Schema.Schema.Type<typeof Event> {}
+
+export type PushOptions = {
+  /** Speakers (entity slugs) whose facts are stored but queue no events: an agent's own words must not wake it. */
+  readonly quiet?: readonly string[];
+};
+
+/**
+ * An agent's brain, in two halves.
+ *
+ * - Knowledge base: {@link Service.push} stores facts extracted from conversations (an RDF store) and
+ *   {@link Service.query} reads them back.
+ * - Event base: a subscription (a {@link Trigger.Trigger}) is a standing pattern; every pushed fact it
+ *   matches is queued in that subscription's own outbox, which its consumer drains with
+ *   {@link Service.take} and {@link Service.ack}.
  *
  * One brain per agent, keyed by the agent's entity id. Implementations differ per platform: in memory
  * in the client (`BrainMemory`), a Durable Object with SQLite on EDGE.
- *
- * TODO(dmaretskyi): Reshape as a durable outbox — `push(facts)`, one-time `query(facts)`, `register(regId, meta)`,
- * `subscribe(regId, to)`, `take(regId): Event[]`, `ack(regId, eventIds)`, `unsubscribe(regId)` — so consumers pull
- * matched events instead of the brain waking chats itself.
  */
 export interface Service {
-  /** Appends facts to the agent's store; facts already stored are kept once. */
-  readonly addFacts: (agent: string, facts: readonly RDF.Fact[]) => Effect.Effect<void, BrainError>;
+  /**
+   * Stores facts (one copy each) and queues an event in every matching subscription's outbox; returns
+   * how many events were queued.
+   */
+  readonly push: (
+    agent: string,
+    facts: readonly RDF.Fact[],
+    options?: PushOptions,
+  ) => Effect.Effect<number, BrainError>;
 
   /** The agent's facts matching the query. */
-  readonly queryFacts: (agent: string, query: FactQuery) => Effect.Effect<RDF.Fact[], BrainError>;
+  readonly query: (agent: string, query: FactQuery) => Effect.Effect<RDF.Fact[], BrainError>;
 
-  /** Adds or replaces a trigger; false when the agent already holds {@link MAX_TRIGGERS} others. */
-  readonly putTrigger: (trigger: Trigger.Trigger) => Effect.Effect<boolean, BrainError>;
+  /**
+   * Adds or replaces a subscription; it matches facts pushed from its `createdAt` on. False when the
+   * agent already holds {@link MAX_TRIGGERS} others.
+   */
+  readonly subscribe: (subscription: Trigger.Trigger) => Effect.Effect<boolean, BrainError>;
 
-  /** The agent's triggers, oldest first. */
-  readonly listTriggers: (agent: string) => Effect.Effect<Trigger.Trigger[], BrainError>;
+  /** The agent's subscriptions, oldest first. */
+  readonly subscriptions: (agent: string) => Effect.Effect<Trigger.Trigger[], BrainError>;
 
-  /** Removes a trigger by id; false when it was already gone, so only one caller acts on a one-time trigger. */
-  readonly removeTrigger: (id: string) => Effect.Effect<boolean, BrainError>;
+  /**
+   * Removes a subscription and drops its outbox; false when it was already gone, so only one caller
+   * acts on a one-time subscription.
+   */
+  readonly unsubscribe: (id: string) => Effect.Effect<boolean, BrainError>;
+
+  /** The subscription's unacknowledged events, oldest first; empty for an unknown subscription. */
+  readonly take: (id: string) => Effect.Effect<Event[], BrainError>;
+
+  /** Removes the events from the subscription's outbox; unknown ids are ignored. */
+  readonly ack: (id: string, events: readonly string[]) => Effect.Effect<void, BrainError>;
 
   /**
    * Starts a turn in the chat with the prompt as a synthetic note. Returns once the turn is scheduled,
@@ -83,8 +123,8 @@ export class BrainService extends Context.Service<BrainService, Service>()('@dxo
 export const key = BrainService.key;
 
 /**
- * Most triggers an agent holds at once: ongoing triggers never fire away, so without a cap the store
- * (and the end-of-turn scan over it) would grow with every watch an agent is asked for.
+ * Most subscriptions an agent holds at once: ongoing ones never fire away, so without a cap the store
+ * (and the match on every push) would grow with every watch an agent is asked for.
  */
 export const MAX_TRIGGERS = 256;
 
@@ -101,3 +141,26 @@ export const encodeTrigger = Schema.encodeSync(Trigger.Trigger);
 
 /** The inverse of {@link encodeTrigger}; refs come back unresolved, to be loaded through the database. */
 export const decodeTrigger = Schema.decodeUnknownSync(Trigger.Trigger);
+
+/** The id of the event a fact queues for a subscription. */
+export const eventId = (subscription: string, fact: string): string => `${subscription}:${fact}`;
+
+/**
+ * The event a fact queues for the subscription, or `undefined` when the subscription does not want it:
+ * the fact does not match, was said before the subscription began, or comes from a quiet speaker.
+ */
+export const matchEvent = (
+  subscription: Trigger.Trigger,
+  fact: RDF.Fact,
+  { quiet = [] }: PushOptions = {},
+): Event | undefined =>
+  (fact.attribution.agent !== undefined && quiet.includes(fact.attribution.agent)) ||
+  !Trigger.matchesPattern(subscription.when, fact, { after: subscription.createdAt })
+    ? undefined
+    : { id: eventId(subscription.id, fact.id), subscription: subscription.id, fact };
+
+/** An event as plain JSON, for brains across a wire. */
+export const encodeEvent = Schema.encodeSync(Event);
+
+/** The inverse of {@link encodeEvent}. */
+export const decodeEvent = Schema.decodeUnknownSync(Event);

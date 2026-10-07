@@ -16,7 +16,6 @@ import { BrainSkill } from '#skills';
 import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
-import { firstMatch, matchesPattern } from './match-facts.ts';
 import { agentSpeaker, readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
@@ -38,14 +37,16 @@ export const toRdf = (fact: FactEntry.Fact): RDF.Fact => ({
 });
 
 /**
- * Fires the agent's triggers that `facts` match: sends each one's update, composed by the model from the
- * conversation `transcript` under the relay rules; a one-time trigger also marks its goal achieved and is
- * removed, an ongoing one keeps watching. Triggers whose goal closed meanwhile are removed unfired.
+ * Pushes `facts` into the agent's brain, then delivers what its subscriptions queued: each subscription
+ * with events sends one update, composed by the model from those facts and the conversation `transcript`
+ * under the relay rules. A one-time subscription also marks its goal achieved and is removed; an ongoing
+ * one acknowledges its events and keeps watching. Subscriptions whose goal closed meanwhile are removed
+ * undelivered.
  *
- * Facts the agent itself stated never fire a trigger: its replies restate what it passed on, and a watch
- * matching them would wake the chat it just woke, without end.
+ * Facts the agent itself stated are stored but queue nothing: its replies restate what it passed on, and
+ * a watch matching them would wake the chat it just woke, without end.
  */
-export const fireTriggers: (
+export const pushFacts: (
   agent: Agent.Agent,
   facts: readonly FactEntry.Fact[],
   transcript?: string,
@@ -53,57 +54,70 @@ export const fireTriggers: (
   { fired: string[]; undelivered: string[] },
   BrainService.BrainError,
   AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
-> = Effect.fnUntraced(function* (agent, allFacts, transcript) {
+> = Effect.fnUntraced(function* (agent, facts, transcript) {
   const brain = yield* BrainService.BrainService;
-  // The same name `readSource` attributes the agent's own messages to, unnamed agents included.
-  const self = normalizeEntityId(agentSpeaker(agent));
-  const facts = allFacts.filter((fact) => fact.attribution.agent !== self);
   const fired: string[] = [];
   const undelivered: string[] = [];
   if (facts.length === 0) {
     return { fired, undelivered };
   }
+  // The same name `readSource` attributes the agent's own messages to, unnamed agents included.
+  const queued = yield* brain.push(agent.id, facts.map(toRdf), { quiet: [normalizeEntityId(agentSpeaker(agent))] });
+  if (queued === 0) {
+    return { fired, undelivered };
+  }
 
-  for (const trigger of yield* brain.listTriggers(agent.id)) {
-    const goal = trigger.goal
-      ? yield* Database.resolve(trigger.goal, Goal.Goal).pipe(Effect.orElseSucceed(() => undefined))
+  for (const subscription of yield* brain.subscriptions(agent.id)) {
+    const events = yield* brain.take(subscription.id);
+    if (events.length === 0) {
+      continue;
+    }
+    const goal = subscription.goal
+      ? yield* Database.resolve(subscription.goal, Goal.Goal).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;
     if (goal && CLOSED.includes(goal.status)) {
-      yield* brain.removeTrigger(trigger.id);
+      yield* brain.unsubscribe(subscription.id);
+      continue;
+    }
+    // A one-time subscription is removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
+    if (!subscription.ongoing && !(yield* brain.unsubscribe(subscription.id))) {
       continue;
     }
 
-    const fact = firstMatch(trigger, facts);
-    // A one-time trigger is removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
-    if (!fact || (!trigger.ongoing && !(yield* brain.removeTrigger(trigger.id)))) {
-      continue;
-    }
-    // Through the database: a trigger read back from the brain carries refs with no resolver of their own.
+    const matched = events.map(({ fact }) => fact);
+    const [first] = matched;
+    // Through the database: a subscription read back from the brain carries refs with no resolver of their own.
     // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
-    const resolved = Option.getOrUndefined(yield* Database.resolve(trigger.then.recipient).pipe(Effect.option));
+    const resolved = Option.getOrUndefined(yield* Database.resolve(subscription.then.recipient).pipe(Effect.option));
     const recipient = Obj.isObject(resolved) ? resolved : undefined;
     const text = yield* composeUpdate({
       agentName: agent.name ?? 'Agent',
       recipientName: recipient ? Profile.displayName(recipient) : 'the requester',
-      request: trigger.request ?? goal?.title ?? trigger.then.message,
-      facts: facts.filter((candidate) => matchesPattern(trigger.when, candidate, { after: trigger.createdAt })),
+      request: subscription.request ?? goal?.title ?? subscription.then.message,
+      facts: matched,
       transcript,
-      hint: Trigger.renderMessage(trigger, fact.assertion.quote ?? FactEntry.factText(fact)),
+      hint: Trigger.renderMessage(subscription, first.assertion.quote ?? FactEntry.factText(first)),
     });
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
-      recipient: recipient ? Ref.make(recipient) : trigger.then.recipient,
+      recipient: recipient ? Ref.make(recipient) : subscription.then.recipient,
       text,
     }).pipe(Effect.orElseSucceed(() => ({ delivered: false, reason: 'The message could not be sent.' })));
     if (!delivery.delivered) {
       undelivered.push(delivery.reason ?? 'The message could not be delivered.');
     }
-    if (goal && !trigger.ongoing) {
+    if (subscription.ongoing) {
+      // Acknowledged even when undelivered: the failure is reported to this turn, and a retry would resend on every turn.
+      yield* brain.ack(
+        subscription.id,
+        events.map(({ id }) => id),
+      );
+    } else if (goal) {
       Obj.update(goal, (goal) => {
         goal.status = 'achieved';
       });
     }
-    fired.push(trigger.id);
+    fired.push(subscription.id);
   }
   yield* Database.flush();
   return { fired, undelivered };
@@ -120,11 +134,7 @@ const handler: Operation.WithHandler<typeof BrainSkill.RunTriggers> = BrainSkill
       }
 
       const { facts, transcript } = yield* readSource(agent, { source: chat });
-      if (facts.length > 0) {
-        const brain = yield* BrainService.BrainService;
-        yield* brain.addFacts(agent.id, facts.map(toRdf));
-      }
-      return { facts: facts.length, ...(yield* fireTriggers(agent, facts, transcript)) };
+      return { facts: facts.length, ...(yield* pushFacts(agent, facts, transcript)) };
     }),
   ),
 );

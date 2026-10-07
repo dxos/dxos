@@ -39,8 +39,7 @@ import { makeTestBrain } from '../brain/testing.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
-import { matchesPattern } from './match-facts.ts';
-import { fireTriggers } from './run-triggers.ts';
+import { pushFacts } from './run-triggers.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -83,26 +82,28 @@ const PR_IS_UP: Trigger.FactPattern = { speaker: 'Dima', about: 'indexer PR', fo
 
 describe('matchesPattern', () => {
   it('matches on speaker, force, polarity and the words the fact mentions', ({ expect }) => {
-    expect(matchesPattern(PR_IS_UP, fact())).toBe(true);
+    expect(Trigger.matchesPattern(PR_IS_UP, fact())).toBe(true);
     // A plain assertion records no illocution; a commitment is not the PR being up.
-    expect(matchesPattern(PR_IS_UP, fact({ force: 'commissive' }))).toBe(false);
-    expect(matchesPattern(PR_IS_UP, fact({ speaker: 'rich' }))).toBe(false);
-    expect(matchesPattern(PR_IS_UP, fact({ polarity: '-' }))).toBe(false);
-    expect(matchesPattern(PR_IS_UP, fact({ subject: 'release', quote: 'The release is up.' }))).toBe(false);
+    expect(Trigger.matchesPattern(PR_IS_UP, fact({ force: 'commissive' }))).toBe(false);
+    expect(Trigger.matchesPattern(PR_IS_UP, fact({ speaker: 'rich' }))).toBe(false);
+    expect(Trigger.matchesPattern(PR_IS_UP, fact({ polarity: '-' }))).toBe(false);
+    expect(Trigger.matchesPattern(PR_IS_UP, fact({ subject: 'release', quote: 'The release is up.' }))).toBe(false);
     // Words match anywhere in the fact, and as prefixes from three letters.
-    expect(matchesPattern({ about: 'indexers' }, fact())).toBe(false);
-    expect(matchesPattern({ about: 'index' }, fact())).toBe(true);
-    expect(matchesPattern({ about: 'pr' }, fact({ subject: 'prior art', quote: 'Prior art is up.' }))).toBe(false);
-    expect(matchesPattern({ subject: 'indexer', text: 'is up' }, fact())).toBe(true);
+    expect(Trigger.matchesPattern({ about: 'indexers' }, fact())).toBe(false);
+    expect(Trigger.matchesPattern({ about: 'index' }, fact())).toBe(true);
+    expect(Trigger.matchesPattern({ about: 'pr' }, fact({ subject: 'prior art', quote: 'Prior art is up.' }))).toBe(
+      false,
+    );
+    expect(Trigger.matchesPattern({ subject: 'indexer', text: 'is up' }, fact())).toBe(true);
   });
 
   it('names a speaker by their first name and bounds the time the fact was said', ({ expect }) => {
-    expect(matchesPattern({ speaker: 'Rich' }, fact({ speaker: 'rich-burdon' }))).toBe(true);
-    expect(matchesPattern({ speaker: 'Rich Burdon' }, fact({ speaker: 'rich' }))).toBe(true);
-    expect(matchesPattern({ speaker: 'Richard' }, fact({ speaker: 'rich' }))).toBe(false);
-    expect(matchesPattern(PR_IS_UP, fact(), { after: '2026-10-03T13:00:00.000Z' })).toBe(false);
-    expect(matchesPattern({ ...PR_IS_UP, before: '2026-10-03T11:00:00.000Z' }, fact())).toBe(false);
-    expect(matchesPattern({ ...PR_IS_UP, after: '2026-10-03T11:00:00.000Z' }, fact())).toBe(true);
+    expect(Trigger.matchesPattern({ speaker: 'Rich' }, fact({ speaker: 'rich-burdon' }))).toBe(true);
+    expect(Trigger.matchesPattern({ speaker: 'Rich Burdon' }, fact({ speaker: 'rich' }))).toBe(true);
+    expect(Trigger.matchesPattern({ speaker: 'Richard' }, fact({ speaker: 'rich' }))).toBe(false);
+    expect(Trigger.matchesPattern(PR_IS_UP, fact(), { after: '2026-10-03T13:00:00.000Z' })).toBe(false);
+    expect(Trigger.matchesPattern({ ...PR_IS_UP, before: '2026-10-03T11:00:00.000Z' }, fact())).toBe(false);
+    expect(Trigger.matchesPattern({ ...PR_IS_UP, after: '2026-10-03T11:00:00.000Z' }, fact())).toBe(true);
   });
 });
 
@@ -420,10 +421,10 @@ describe('end-of-turn triggers', () => {
         });
 
         // 1. Each of Dima's facts is passed on, composed; the watch stays and the goal stays open.
-        yield* fireTriggers(agent, [
+        yield* pushFacts(agent, [
           fact({ subject: 'Dima', predicate: 'works on', object: 'agent plugin', quote: ONGOING.plugin }),
         ]);
-        yield* fireTriggers(agent, [
+        yield* pushFacts(agent, [
           fact({ subject: 'indexer fix', predicate: 'is', object: 'landed', quote: ONGOING.landed }),
         ]);
         yield* settle(josiahChat);
@@ -435,7 +436,7 @@ describe('end-of-turn triggers', () => {
         expect(goal.status).toBe('active');
 
         // 2. Someone else's fact does not match the speaker.
-        yield* fireTriggers(agent, [fact({ speaker: 'rich', quote: 'I am reviewing it.' })]);
+        yield* pushFacts(agent, [fact({ speaker: 'rich', quote: 'I am reviewing it.' })]);
         yield* settle(josiahChat);
         expect(yield* texts(josiahChat)).toHaveLength(sent.length);
       },
