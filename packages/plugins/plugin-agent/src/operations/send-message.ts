@@ -5,6 +5,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Result from 'effect/Result';
 
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
@@ -13,7 +14,8 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { Channel, Message, Person, Task } from '@dxos/types';
 
-import { AgentChannels, ChatParticipant, type Relay, RelayOperation } from '#types';
+import { BrainSkill } from '#skills';
+import { AgentChannels, BrainService, ChatParticipant, type Relay, RelayOperation } from '#types';
 
 import { loadChats } from './agent-skills.ts';
 import { ensureChannelChat } from './ensure-channel-chat.ts';
@@ -30,6 +32,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
       const relay = relayRef ? yield* Database.load(relayRef).pipe(Effect.orDie) : undefined;
       const role = relay ? roleIn(relay, recipient) : undefined;
 
+      const brain = yield* BrainService.BrainService;
       const deliver: Effect.Effect<Delivery, never, Database.Service | Operation.Service> = Effect.gen(function* () {
         // The requester asked from a particular conversation, so the outcome goes back there first.
         if (role === 'requester' && relay?.replyChannel) {
@@ -49,8 +52,13 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
           const conversation = AgentChannels.conversationOf(chat);
           const channel = conversation && (yield* findChannel(conversation.channelId));
           if (!conversation || !channel) {
-            yield* appendToChat(agent, chat, text);
-            return { delivered: true, via: 'chat', chat: Ref.make(chat) };
+            // A Composer chat: wake it, so the agent tells them in a turn of its own there.
+            const woken = yield* brain
+              .wake({ chat, prompt: BrainSkill.wakePrompt(partyName(recipient), text), sender: { name: agent.name } })
+              .pipe(Effect.result);
+            return Result.isSuccess(woken)
+              ? { delivered: true, via: 'chat', chat: Ref.make(chat) }
+              : { delivered: false, reason: woken.failure.message };
           }
           const sent = yield* postToChannel(agent, channel, conversation.thread, text);
           return sent.delivered

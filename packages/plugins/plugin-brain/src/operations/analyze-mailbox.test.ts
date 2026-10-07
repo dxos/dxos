@@ -25,9 +25,9 @@ const makeMessage = (suffix: string, created: string) =>
 const makeFact = (source: string, id: string, object = 'paris'): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: object },
+    object: { kind: 'entity', entity: object },
   },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: {

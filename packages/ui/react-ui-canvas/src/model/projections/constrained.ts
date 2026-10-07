@@ -15,8 +15,10 @@ import { Layout } from '@dxos/diagram';
 
 import { centeredOrigin } from '../../utils/layout.ts';
 import { initialKeys } from '../../utils/order.ts';
-import { createNode, withLabel } from '../../utils/shapes.ts';
+import { withTitle } from '../../utils/parts.ts';
+import { createNode } from '../../utils/shapes.ts';
 import { type Projection } from '../projection.ts';
+import { defaultNodeRegistry } from '../registry.ts';
 import {
   type BuiltinNodeType,
   type Capabilities,
@@ -193,7 +195,8 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {})
       x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
       y: origin.y + (rows.get(node.id) ?? 0) * pitch.height,
     };
-    const solved = withLabel(
+    const solved = withTitle(
+      defaultNodeRegistry,
       createNode({ type: node.type ?? 'rect', id: node.id, z: keys[index], center, size }),
       node.label ?? node.id,
     );

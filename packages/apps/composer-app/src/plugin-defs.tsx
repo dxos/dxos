@@ -93,6 +93,7 @@ import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
 import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
 import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
 import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
+import * as UmlPlugin from '@dxos/plugin-uml/UmlPlugin';
 import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
@@ -177,6 +178,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
+      UmlPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
       ZenPlugin.meta.profile.key,
     ],
@@ -312,6 +314,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ThreadPlugin.make(),
     TldrawPlugin.make(),
     TranscriptionPlugin.make(),
+    UmlPlugin.make(),
     ...experimental,
   ]
     .filter(isTruthy)

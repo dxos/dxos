@@ -19,7 +19,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type PartEditing, type PartKey, isMultiline } from '../../utils/parts.ts';
+import { type PartEditing, type PartKey } from '../../utils/parts.ts';
 
 export type TextPartProps = Util.ThemedClassName<
   PropsWithChildren<{
@@ -46,7 +46,7 @@ const stop = (event: React.SyntheticEvent) => event.stopPropagation();
 
 const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
   const themeMode = Hooks.useThemeMode();
-  const multiline = isMultiline(part);
+  const multiline = editing.multiline;
   // Commit or cancel once: the editor unmounts on either, and its focus loss must not commit again.
   const done = useRef(false);
   const finish = (action: () => void) => {
@@ -65,8 +65,12 @@ const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
         createBasicExtensions({ lineWrapping: true, history: false, search: false }),
         createThemeExtensions({
           themeMode,
-          slots: { editor: { className: 'h-full w-full [&>.cm-scroller]:scrollbar-none' } },
+          // Content height, not full height, so the part's own layout places the editor where it puts the
+          // static text (a label centred in its cell).
+          slots: { editor: { className: 'w-full max-h-full [&>.cm-scroller]:scrollbar-none' } },
         }),
+        // The part's own leading, not the editor theme's, so the lines do not shift when editing starts.
+        Prec.highest(EditorView.theme({ '.cm-scroller, .cm-content, .cm-line': { lineHeight: 'inherit' } })),
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
             finish(() => editing.commit(state.doc.toString()));

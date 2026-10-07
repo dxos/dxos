@@ -11,7 +11,7 @@ import { SceneManager } from './SceneManager.ts';
 const PORT = 9006;
 const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--freehand', PORT);
 
-// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, class C; links A→B (curve), A→C
+// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
 test.describe('SceneView', () => {
   let page: Page;
@@ -37,8 +37,8 @@ test.describe('SceneView', () => {
   test('draws the fixture with an arrowhead on the directed link', async () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
     expect(await scene.linkCount()).toBe(3);
-    // One marker set per layer (arrow and circle, start and end); the directed line uses the end arrow.
-    await expect(page.locator('[data-testid="scene-view"] marker')).toHaveCount(4);
+    // One marker set per layer (arrow, triangle and circle, start and end); the directed line uses the end arrow.
+    await expect(page.locator('[data-testid="scene-view"] marker')).toHaveCount(6);
     await expect(page.locator('[data-testid="scene-view"] path[marker-end]')).toHaveCount(1);
   });
 
@@ -64,12 +64,18 @@ test.describe('SceneView', () => {
     await page.mouse.move(entry.x + entry.width / 2, entry.y + entry.height / 2);
     await page.mouse.down();
     await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
-    await page.mouse.move(view.x + view.width * 0.7, view.y + view.height * 0.8, { steps: 10 });
-    // A drop carries the palette's own preview, so the canvas shows the frame alone.
+    const drop = { x: view.x + view.width * 0.7, y: view.y + view.height * 0.8 };
+    await page.mouse.move(drop.x, drop.y, { steps: 10 });
+    // The drag carries no image of its own, so the canvas shows the shape inside its frame.
     await expect(page.getByTestId('create-frame')).toHaveCount(1);
-    await expect(page.locator('[data-ghost]')).toHaveCount(0);
+    await expect(page.locator('[data-ghost]')).toHaveCount(1);
     await page.mouse.up();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
+    // The pointer was the shape's centre; snapping its top-left to the grid moves it by under a cell.
+    const created = await scene.box(page.locator('[data-node-id^="ellipse-"]'));
+    const cell = (64 * (await scene.zoom())) / 100;
+    expect(Math.abs(created.x + created.width / 2 - drop.x)).toBeLessThanOrEqual(cell);
+    expect(Math.abs(created.y + created.height / 2 - drop.y)).toBeLessThanOrEqual(cell);
   });
 
   test('hovering outlines the node and reveals its ports, and D labels every frame', async () => {
@@ -81,11 +87,34 @@ test.describe('SceneView', () => {
     await expect(ports).not.toHaveCount(0);
     await page.mouse.move(box.x + box.width + 200, box.y + box.height + 200);
     await expect(ports).toHaveCount(0);
+    // A selected node shows its handles, not its ports, even under the pointer.
+    await scene.clickNode('scene:root/a');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(ports).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press('d');
     await expect(page.getByTestId('node-debug')).toHaveCount(4);
     await page.keyboard.press('d');
     await expect(page.getByTestId('node-debug')).toHaveCount(0);
+  });
+
+  test('a ⌘-drag leaves the selection and drops a copy, which becomes the selection', async () => {
+    const id = 'scene:root/a';
+    const before = await scene.nodeCount();
+    const box = await scene.box(scene.node(id));
+    const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.keyboard.down('Meta');
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x, start.y + box.height * 1.5, { steps: 8 });
+    await page.mouse.up();
+    await page.keyboard.up('Meta');
+    await expect(page.locator('[data-node-id]')).toHaveCount(before + 1);
+    // The original has not moved; the selection is the copy.
+    expect(await scene.box(scene.node(id))).toEqual(box);
+    const selected = await scene.selectedNodes();
+    expect(selected).toHaveLength(1);
+    expect(selected[0]).not.toBe(id);
   });
 
   test('shift-resize keeps the centre; a plain resize keeps the opposite edge', async () => {
@@ -110,6 +139,8 @@ test.describe('SceneView', () => {
   });
 
   test('a marquee replaces the selection, shift adds and alt subtracts', async () => {
+    // Fit frames the shapes tightly, so step out to leave empty canvas around A for the marquee to start on.
+    await scene.zoomOut();
     const a = await scene.box(scene.node('scene:root/a'));
     // The empty canvas above and left of A, dragging back over A's corner. Not the other corner: the
     // B→C spline passes below and right of A, and a press on a link starts an endpoint drag.
@@ -146,6 +177,25 @@ test.describe('SceneView', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
+  test('the line tool shows no link until the pointer has moved a grid cell', async () => {
+    await scene.zoomOut();
+    const view = await scene.box(scene.root);
+    await scene.focus();
+    await page.keyboard.press('l');
+    const right = await scene.nodesRight();
+    const from = { x: right + (view.x + view.width - right) / 2, y: view.y + view.height / 2 };
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    // A few pixels is well under a grid cell at any zoom the story fits to.
+    await page.mouse.move(from.x + 3, from.y + 2, { steps: 3 });
+    await expect(page.locator('[data-link-id]')).toHaveCount(3);
+    await page.mouse.up();
+    expect(await scene.linkCount()).toBe(3);
+    // A click on the background ends the link tool: the select tool is back.
+    await expect(page.getByTestId('palette-L')).not.toHaveClass(/bg-primary-500\/20/);
+    await expect(page.getByTestId('palette-V')).toHaveClass(/bg-primary-500\/20/);
+  });
+
   test('picking a creation tool clears the selection', async () => {
     await scene.clickNode('scene:root/a');
     expect(await scene.selectedNodes()).toEqual(['scene:root/a']);
@@ -168,6 +218,13 @@ test.describe('SceneView', () => {
     expect(await scene.linkCount()).toBe(before + 1);
     // No node was created: the drop landed on an existing one rather than on empty canvas.
     expect(await scene.nodeCount()).toBe(4);
+    // The new link is the selection, and nothing else is.
+    await expect(page.locator('[data-link-id].stroke-primary-500')).toHaveCount(1);
+    expect(await scene.selectedNodes()).toEqual([]);
+    // The hover follows the pointer, not the gesture: the source is no longer highlighted, the target under
+    // the released pointer is.
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/border-primary-500\/50/);
+    await expect(scene.node('scene:root/c')).toHaveClass(/border-primary-500\/50/);
   });
 
   test('the line tool draws nothing when a press on a node never moves', async () => {
@@ -190,7 +247,7 @@ test.describe('SceneView', () => {
     // One step is ×1.25; both readouts round, so they can disagree by a point.
     await expect.poll(async () => Math.abs((await scene.zoom()) - fitted * 1.25)).toBeLessThanOrEqual(1);
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-class').click();
+    await page.getByTestId('create-note').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     await page.getByTestId('toolbar-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
@@ -213,26 +270,49 @@ test.describe('SceneView', () => {
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
-  test('the properties panel edits the selected class', async () => {
-    await scene.clickNode('scene:root/c');
-    const labels = await page.locator('[data-testid="properties"] label').allTextContents();
-    expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
-    // Geometry is two labelled cells per row, not a collapsible fieldset.
-    expect(labels).toEqual(expect.arrayContaining(['Center', 'X', 'Y', 'Size', 'W', 'H']));
+  test('a scene shape opens from its zoom-in control', async () => {
+    await page.getByTestId('toolbar-create').click();
+    await page.getByTestId('create-scene').click();
+    await page.getByTestId('portal-open').first().click();
+    await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
-  test('the geometry cells step by the grid and move the node', async () => {
+  test('the properties panel edits the selected node', async () => {
+    await scene.clickNode('scene:root/c');
+    const labels = await page.locator('[data-testid="properties"] label').allTextContents();
+    expect(labels).toEqual(expect.arrayContaining(['Label', 'Style']));
+    // Geometry is two labelled number fields per row.
+    expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
+  });
+
+  test('the style grid sets hue and tone together', async () => {
+    await scene.clickNode('scene:root/a');
+    const grid = page.getByTestId('style-grid');
+    const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
+    // An unstyled node matches no swatch.
+    await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
+    await option('blue:3').click();
+    await expect(option('blue:3')).toHaveAttribute('aria-checked', 'true');
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-bg/);
+    await option('neutral:0').click();
+    await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');
+    // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-bg/);
+  });
+
+  test('the geometry fields step by the grid and move the node', async () => {
     await scene.clickNode('scene:root/c');
     const node = await scene.box(scene.node('scene:root/c'));
-    const x = page.locator('[data-testid="properties"] input[type="number"]').first();
+    const x = page.locator('[data-testid="properties"] [role="spinbutton"]').first();
     const read = async () => Number(await x.inputValue());
     const start = await read();
     await x.focus();
-    // One arrow press is a minor cell (16), Shift a major one (64) — the same units an arrow nudge uses.
+    // One arrow press is a minor grid cell (the field's step annotation); Shift is the number field's ten steps.
     await x.press('ArrowUp');
     await expect.poll(read).toBe(start + 16);
     await x.press('Shift+ArrowUp');
-    await expect.poll(read).toBe(start + 16 + 64);
+    await expect.poll(read).toBe(start + 16 + 160);
     // The node followed, so the edit reached the model as an intent rather than staying in the input.
     await expect.poll(async () => (await scene.box(scene.node('scene:root/c'))).x).toBeGreaterThan(node.x);
   });

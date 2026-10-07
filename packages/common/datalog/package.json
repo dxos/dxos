@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/datalog",
+  "version": "0.13.0",
+  "description": "Datalog engine with no third-party dependencies: parser, static checks, incremental stratified semi-naive evaluation with provenance and pluggable built-ins.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./Ast": {
+      "source": "./src/Ast.ts",
+      "types": "./dist/types/src/Ast.d.ts",
+      "import": "./dist/lib/Ast.mjs"
+    },
+    "./Builtin": {
+      "source": "./src/Builtin.ts",
+      "types": "./dist/types/src/Builtin.d.ts",
+      "import": "./dist/lib/Builtin.mjs"
+    },
+    "./Checker": {
+      "source": "./src/Checker.ts",
+      "types": "./dist/types/src/Checker.d.ts",
+      "import": "./dist/lib/Checker.mjs"
+    },
+    "./Engine": {
+      "source": "./src/Engine.ts",
+      "types": "./dist/types/src/Engine.d.ts",
+      "import": "./dist/lib/Engine.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Parser": {
+      "source": "./src/Parser.ts",
+      "types": "./dist/types/src/Parser.d.ts",
+      "import": "./dist/lib/Parser.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/errors": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

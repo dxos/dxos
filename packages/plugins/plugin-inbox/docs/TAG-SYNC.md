@@ -116,9 +116,10 @@ below, not by a conflict policy.
 2. Read `local` and capture `nextHeads = Obj.version(tagIndex).automergeHeads` **at the same
    instant**.
 3. Diff base/local/remote; push the local-only changes to the provider.
-4. Persist `nextHeads` **and** the delta token in a single `Obj.update` on the cursor — but only if
-   the push fully drained with nothing `pending` (see
-   [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)).
+4. Persist `nextHeads` in a single `Obj.update` on the cursor — but only if the push fully drained
+   with nothing `pending` (see
+   [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)). This holds on
+   capped runs too; the delta token joins the same update only on an uncapped run.
 
 Capturing at step 2 rather than at the end of the run is what keeps the two failure modes from
 appearing:
@@ -185,10 +186,21 @@ below. The push phase therefore runs **before** this block, `source.nextToken()`
 rather than written as it is captured, and the block becomes a single combined write:
 
 ```ts
-if (!capped && pending.length === 0) {
+if (pending.length === 0) {
+  const nextToken = capped ? undefined : source.nextToken?.();
   Cursor.writeSyncState(binding, { token: nextToken, tagHeads: nextHeads });
 }
 ```
+
+A capped run writes the heads alone. That is the safe direction: the next run re-reads, from the
+unadvanced token, a delta the base already holds, and re-applying it is idempotent absent concurrent
+local edits. With one, a replayed `add X` re-applies X over a local removal made between the runs,
+and the removal is lost — not a regression, since without a base the additive path never pushed
+removals at all. An initial backfill never replays: the token is written only by an uncapped run, so
+it stays undefined until backfill completes. Withholding the
+heads instead is not safe for memory: a backfill caps every run, so the base would never exist, and
+every run's additive reconcile would re-push — and load in full — every message synced so far. On
+EDGE that grew until the operation-service isolate ran out of memory.
 
 With anything `pending`, neither field is written — the run requests `runAgain` and both the token and
 the base stay where they were, so the next run re-reads the same delta and re-derives the same diff.
@@ -372,7 +384,8 @@ and only the first may advance `nextHeads`:
 | Permanent rejection — message deleted (404), label gone, insufficient scope | `settled`      | No retry can succeed. Advancing past it is the only terminating choice; the local tag stays as the user left it and simply never reaches the provider. Logged at `warn` with the op. |
 | Transient — 429, 5xx, timeout                                               | `pending`      | Retrying is expected to succeed.                                                                                                                                                     |
 
-**`nextHeads` is persisted only when `pending` is empty** (and the cap was not hit). A run with any
+**`nextHeads` is persisted only when `pending` is empty**, capped or not; the delta token advances
+only on an uncapped run. A run with any
 pending op leaves the base where it was and requests `runAgain`, so the whole diff — including the
 ops that did settle — recomputes next run. Re-pushing a settled op is a no-op at both providers, so
 the duplication is the acceptable half of the trade; the alternative, advancing past a transient

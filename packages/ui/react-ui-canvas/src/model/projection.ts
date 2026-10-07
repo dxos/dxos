@@ -12,6 +12,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
+import { type LatticeSpec } from '../utils/lattice.ts';
 import { layoutScene } from '../utils/layout.ts';
 import { resizeNode } from '../utils/shapes.ts';
 import { type SceneStore, putScene, updateScene } from './store.ts';
@@ -38,6 +39,14 @@ export type Projection = {
    */
   snapshot: () => unknown;
   restore: (snapshot: unknown) => void;
+  /**
+   * What `apply` would make of `intent`, without applying it: the rewritten intent, or undefined when it
+   * would be refused. Absent means intents apply as given. Previews of a gesture in flight read it, so a
+   * drag shows where the drop will land.
+   */
+  constrain?: (intent: Intent) => Intent | undefined;
+  /** The lattice the projection keeps shapes on, for the grid layer that draws it (DESIGN §8b). */
+  lattice?: LatticeSpec;
 };
 
 const EMPTY: Scene = { id: '', nodes: {}, links: {} };
@@ -147,6 +156,11 @@ export type FreehandProjectionOptions = {
   registry: Registry.AtomRegistry;
   store: SceneStore;
   sceneId: SceneId;
+  /**
+   * Whether a constraining projection (the lattice) applies its constraint now; the view passes its snap
+   * toggle. Read per intent, so turning it off frees the next gesture without rebuilding the projection.
+   */
+  constrained?: () => boolean;
 };
 
 export const freehandCapabilities: Capabilities = {

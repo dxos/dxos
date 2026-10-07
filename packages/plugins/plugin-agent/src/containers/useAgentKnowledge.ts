@@ -18,7 +18,7 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
 } from '#components';
-import { FactEntry, Goal, Memory, Profile, Trigger } from '#types';
+import { FactEntry, Goal, Memory, Profile } from '#types';
 
 import { useFactEntries } from './useFactEntries.ts';
 import { useTriggers } from './useTriggers.ts';
@@ -109,12 +109,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
                 .join(', ') || undefined,
             watches: triggers
               .filter((trigger) => trigger.goal && Profile.refersTo(trigger.goal, goal.id))
-              .map(({ id, when, then }) => ({
-                id,
-                when: Trigger.describePattern(when),
-                recipient: nameOf(then.recipient),
-                message: then.message,
-              })),
+              .map(({ id, when, recipient, message }) => ({ id, when, recipient: nameOf(recipient), message })),
           }));
 
         return { memories: active, nodes, edges, goals: goalItems };
@@ -124,21 +119,19 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   const { memories: active, nodes, edges, goals: goalItems } = useAtomValue(graphAtom);
 
   // Feed items are immutable, so the entries query alone tracks every change.
-  const { entries } = useFactEntries(agent);
+  const { facts: recorded } = useFactEntries(agent);
   const facts = useMemo(
     () =>
-      entries
-        .flatMap((entry) =>
-          entry.facts.map((fact): AgentKnowledgeFact => ({
-            id: `${entry.id}:${fact.id}`,
-            text: FactEntry.factText(fact),
-            source: entry.name,
-            speaker: fact.attribution.agent,
-            saidAt: fact.attribution.generatedAtTime,
-          })),
-        )
+      recorded
+        .map(({ entry, fact, pass }): AgentKnowledgeFact => ({
+          id: entry.id,
+          text: FactEntry.factText(fact),
+          source: pass.name,
+          speaker: fact.attribution.agent,
+          saidAt: fact.attribution.generatedAtTime,
+        }))
         .sort((left, right) => right.saidAt.localeCompare(left.saidAt)),
-    [entries],
+    [recorded],
   );
 
   return { memories: active, facts, goals: goalItems, nodes, edges };

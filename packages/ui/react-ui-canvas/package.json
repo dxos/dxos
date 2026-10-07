@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "A canvas component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,6 +40,8 @@
     "@codemirror/view": "catalog:",
     "@dxos/debug": "workspace:*",
     "@dxos/diagram": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

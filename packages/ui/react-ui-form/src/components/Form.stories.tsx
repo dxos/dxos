@@ -87,6 +87,37 @@ export const DocumentWidth: Story = {
   },
 };
 
+const OVERRIDES = {
+  age: { indeterminate: true },
+  active: { indeterminate: true },
+  status: { indeterminate: true },
+  name: { label: 'Display name' },
+};
+
+/**
+ * `fieldOverrides`: per-field changes for this use of the form. Indeterminate fields (values several edited objects
+ * disagree on) read as unset with a "Mixed" placeholder, and a dimmed switch for a boolean, until edited.
+ */
+export const FieldOverrides: Story = {
+  render: () => (
+    <Form.Root
+      schema={ScalarSchema}
+      values={{ ...SCALAR_VALUES, active: true, status: 'active' }}
+      fieldOverrides={OVERRIDES}
+    >
+      <Form.Content>
+        <Form.Fields include={['name', 'age', 'active', 'status']} />
+      </Form.Content>
+    </Form.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByPlaceholderText('Mixed')).toBeInTheDocument();
+    await expect(await canvas.findByText('Display name')).toBeInTheDocument();
+    await expect(canvasElement.querySelector('[data-indeterminate]')).not.toBeNull();
+  },
+};
+
 /** `Form.Submit` with its own icon, spinning while busy (a send rather than a save). */
 export const Submit: Story = {
   render: () => (

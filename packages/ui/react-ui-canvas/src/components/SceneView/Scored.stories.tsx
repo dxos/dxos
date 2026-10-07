@@ -21,7 +21,7 @@ import { type SceneStore, createMemoryStore } from '../../model/store.ts';
 import { type Scene, type SceneId } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/diagram.ts';
-import { createClassSceneTree } from '../../utils/testing.ts';
+import { createModelSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**
@@ -78,33 +78,27 @@ const fromMermaid = async (source: string): Promise<Seed> => {
     }),
   );
   const nodeId = (id: string) => `${ROOT}/${id}`;
-  const builder = SceneBuilder.create(ROOT);
-  // Frames first, so their lower z keeps members clickable on top of them. Unlabelled: a rect centres
-  // its label, where the members would cover it.
-  for (const group of graph.groups) {
-    const box = boxes.get(group.id);
-    if (box) {
-      builder.rect(nodeId(group.id), box);
-    }
-  }
-  for (const node of graph.nodes) {
-    const box = boxes.get(node.id);
-    if (box) {
-      builder.rect(nodeId(node.id), box, node.label);
-    }
-  }
-  graph.edges.forEach(({ from, to }, index) => {
-    builder.smart(nodeId(`${from}-${to}-${index}`), nodeId(from), nodeId(to), { directed: true });
-  });
-  const built = builder.build();
-  const frames = new Set(graph.groups.map(({ id }) => nodeId(id)));
-  const nodes = Object.fromEntries(
-    Object.entries(built.nodes).map(([id, node]) => [
-      id,
-      frames.has(id) ? { ...node, style: { ...node.style, guide: true } } : node,
-    ]),
-  );
-  return { scenes: [{ ...built, nodes }], root: ROOT, engine: result.chosen.evaluation };
+  const placed = <T extends { id: string }>(items: readonly T[]) =>
+    items.flatMap((item) => {
+      const box = boxes.get(item.id);
+      return box ? [{ item, box }] : [];
+    });
+  const { scenes } = SceneBuilder.scene(ROOT, [
+    // Frames first, so their lower z keeps members clickable on top of them. Unlabelled guides: a rect
+    // centres its label, where the members would cover it.
+    ...placed(graph.groups).map(({ item, box }) =>
+      SceneBuilder.rect(nodeId(item.id), box).properties({ style: { guide: true } }),
+    ),
+    ...placed(graph.nodes).map(({ item, box }) =>
+      SceneBuilder.rect(nodeId(item.id), box).properties({ label: item.label }),
+    ),
+    ...graph.edges.map(({ from, to }, index) =>
+      SceneBuilder.link('smart', nodeId(from), nodeId(to))
+        .id(nodeId(`${from}-${to}-${index}`))
+        .properties({ directed: true }),
+    ),
+  ]).build();
+  return { scenes, root: ROOT, engine: result.chosen.evaluation };
 };
 
 type Graded = {
@@ -325,9 +319,9 @@ const Editor = ({ store, root, engine }: EditorProps) => {
 };
 
 type StoryArgs = {
-  /** Mermaid flowchart laid out by the engine; ignored when `fixture` is `classes`. */
+  /** Mermaid flowchart laid out by the engine; ignored when `fixture` is `model`. */
   source?: string;
-  fixture?: 'mermaid' | 'classes';
+  fixture?: 'mermaid' | 'model';
 };
 
 const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
@@ -336,8 +330,8 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
   const [failure, setFailure] = useState<string>();
   useEffect(() => {
     const key = `${fixture}:${source}`;
-    if (fixture === 'classes') {
-      setSeed({ ...createClassSceneTree(), key });
+    if (fixture === 'model') {
+      setSeed({ ...createModelSceneTree(), key });
       setFailure(undefined);
       return;
     }
@@ -375,7 +369,7 @@ const meta: Meta<StoryArgs> = {
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   argTypes: {
     source: { control: 'text', description: 'Mermaid flowchart laid out by the engine' },
-    fixture: { control: 'radio', options: ['mermaid', 'classes'] },
+    fixture: { control: 'radio', options: ['mermaid', 'model'] },
   },
 };
 
@@ -393,7 +387,7 @@ export const Platform: Story = {
   args: { source: PLATFORM.trim(), fixture: 'mermaid' },
 };
 
-/** The scene engine's own class fixture, graded as drawn. */
-export const Classes: Story = {
-  args: { fixture: 'classes' },
+/** The scene engine's own model fixture, graded as drawn. */
+export const Model: Story = {
+  args: { fixture: 'model' },
 };
