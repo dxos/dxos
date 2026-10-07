@@ -575,6 +575,11 @@ export interface DurableProps {
    */
   readonly key: string;
 
+  /**
+   * Human-readable label; `Process.spawn` names the process after it.
+   */
+  readonly name?: string;
+
   readonly input: Schema.Codec<any, any>;
   readonly output: Schema.Codec<any, any>;
   readonly services: readonly Context.Key<any, any>[];

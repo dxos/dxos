@@ -23,6 +23,8 @@ import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 import { markWork } from '@dxos/util';
 
+import * as OperationProcess from './OperationProcess.ts';
+
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
 
 export class Service extends Context.Service<Service, ProcessOperationInvoker>()(
@@ -74,7 +76,7 @@ export const make = ({
       if (options?.on === 'edge' && options.spaceId === undefined) {
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
-      const handle = yield* Process.spawn(op, input, {
+      const handle = yield* Process.spawn(OperationProcess.make(op, handlerSet), input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
@@ -88,10 +90,7 @@ export const make = ({
         ...(options?.on === 'edge' && options.spaceId !== undefined
           ? { location: { kind: 'edge', space: options.spaceId } as const }
           : {}),
-      }).pipe(
-        Effect.provideService(Process.ManagerService, manager),
-        Effect.provideService(OperationHandlerSet.OperationHandlerProvider, handlerSet),
-      );
+      }).pipe(Effect.provideService(Process.ManagerService, manager));
       markWork('process.input-submitted');
       return handle;
     }).pipe(

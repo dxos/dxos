@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
@@ -70,7 +71,8 @@ const StubDelegationStrategy: DelegationStrategy = {
         .map((work) => ({
           id: work.id,
           spawn: Effect.gen(function* () {
-            const handle = yield* Process.spawn(DelegatedWork, work.input);
+            const provided = yield* OperationHandlerSet.OperationHandlerProvider;
+            const handle = yield* Process.spawn(OperationProcess.make(DelegatedWork, provided), work.input);
             return handle.pid;
           }),
         })),

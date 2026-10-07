@@ -10,7 +10,9 @@ import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -204,7 +206,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           spawn: Effect.gen(function* () {
             // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
             // task id) — nothing is stamped on the durable task.
-            const handle = yield* Process.spawn(AgentOperation.RunInstructions, {
+            const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+            const handle = yield* Process.spawn(OperationProcess.make(AgentOperation.RunInstructions, handlers), {
               instructions: Ref.make(instructions),
               input: {},
             });

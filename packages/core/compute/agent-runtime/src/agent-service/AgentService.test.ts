@@ -22,6 +22,7 @@ import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, SessionLink } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -213,7 +214,8 @@ const StubDelegationStrategy: DelegationStrategy = {
         .map((work) => ({
           id: work.id,
           spawn: Effect.gen(function* () {
-            const handle = yield* Process.spawn(DelegatedWork, work.input);
+            const provided = yield* OperationHandlerSet.OperationHandlerProvider;
+            const handle = yield* Process.spawn(OperationProcess.make(DelegatedWork, provided), work.input);
             return handle.pid;
           }),
         })),

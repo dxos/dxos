@@ -28,6 +28,7 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
@@ -304,7 +305,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {
-                const handle = yield* Process.spawn(operation, input, {
+                const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+                const handle = yield* Process.spawn(OperationProcess.make(operation, handlers), input, {
                   environment: { conversation: Obj.getURI(feed) },
                   traceMeta: { conversation: Ref.make(feed) },
                 });
@@ -1034,7 +1036,8 @@ const ToolExecutionService = ({
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
             log('invoking operation', { operationDef, input });
-            const handle = yield* Process.spawn(operationDef, input, {
+            const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+            const handle = yield* Process.spawn(OperationProcess.make(operationDef, handlers), input, {
               environment: {
                 conversation: Obj.getURI(feed),
               },

@@ -44,6 +44,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as OperationProcess from '../OperationProcess.ts';
 import * as ProcessManager from '../ProcessManager.ts';
 import { filterReadyFeedItems } from './feed-position.ts';
 import { createInvocationPayload } from './input-builder.ts';
@@ -675,7 +676,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const inputData = this._prepareInputData(trigger, event);
 
         const manager = yield* ProcessManager.Service;
-        const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        const executable = OperationProcess.make(functionDef, manager.operationHandlerSet);
         // Thread the dispatcher's space through `ProcessManager.spawn` so the
         // spawned process resolves space-affinity services (e.g.
         // `Database.Service`) for the same space the dispatcher is bound to.
