@@ -41,16 +41,16 @@ const nullableAsAbsent = <A>(schema: Schema.Codec<A, A>) =>
 const OptionalString = nullableAsAbsent(Schema.String);
 
 // Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
-// null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
+// null) to absent. A bad enrichment value must not discard an otherwise-valid fact. The wire side is a
+// nullable string, not `Unknown`: Anthropic's structured output rejects a property schema with no type.
 const softEnum = <const A extends string>(...values: readonly A[]) =>
   Schema.optional(
-    Schema.Unknown.pipe(
+    Schema.NullOr(Schema.String).pipe(
       Schema.decodeTo(
         Schema.UndefinedOr(Schema.Literals(values)),
         SchemaTransformation.transform({
-          decode: (value) =>
-            typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
-          encode: (value) => value,
+          decode: (value) => values.find((known) => known === value),
+          encode: (value) => value ?? null,
         }),
       ),
     ),

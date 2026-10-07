@@ -233,7 +233,7 @@ export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.De
  * Decoding here keeps the coercions the projection introduces, above all a ref supplied as a URI
  * string becoming a `Ref`, and surfaces a malformed argument to the model as a tool error.
  */
-const decodeToolParameters = (tool: Tool.Any, input: unknown): Effect.Effect<unknown, Schema.SchemaError> =>
+export const decodeToolParameters = (tool: Tool.Any, input: unknown): Effect.Effect<unknown, Schema.SchemaError> =>
   Context.getOption(FunctionToolAnnotation)(tool.annotations).pipe(
     Option.match({
       onNone: () => Effect.succeed(input),

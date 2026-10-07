@@ -36,3 +36,31 @@ export const get = (chat: Chat.Chat): string | undefined =>
 export const set = (chat: Obj.Mutable<Chat.Chat>, person: Obj.Unknown): void => {
   Annotation.set(chat, ParticipantAnnotation, person.id);
 };
+
+/**
+ * The identity (DID) a private chat belongs to: only its owner is shown the chat. An unowned chat is the
+ * agent's shared conversation. ECHO has no per-object access control yet, so privacy is enforced by
+ * the views that list an agent's chats, not by replication.
+ */
+export const OwnerAnnotation = Annotation.make({
+  id: 'org.dxos.agent.chatOwner',
+  schema: Schema.String,
+});
+
+/** The DID of the identity the chat is private to, if any. */
+export const getOwner = (chat: Chat.Chat): string | undefined =>
+  Annotation.get(chat, OwnerAnnotation).pipe(Option.getOrUndefined);
+
+/** Makes the chat private to the identity. Call inside the caller's `Obj.update`. */
+export const setOwner = (chat: Obj.Mutable<Chat.Chat>, identityDid: string): void => {
+  Annotation.set(chat, OwnerAnnotation, identityDid);
+};
+
+/** Whether the identity may see the chat: shared chats are visible to everyone, private ones to their owner. */
+export const isVisibleTo = (chat: Chat.Chat, identityDid: string | undefined): boolean => {
+  const owner = getOwner(chat);
+  return owner === undefined || owner === identityDid;
+};
+
+/** `Person.identities` label of a member's HALO identity, so a private chat's person is found by DID. */
+export const IDENTITY_LABEL = 'did';

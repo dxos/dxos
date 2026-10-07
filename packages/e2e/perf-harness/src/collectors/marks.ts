@@ -39,7 +39,7 @@ const expression = (since: number) => `(() => {
       .map((mark) => ({
         name: mark.name.slice(${WORK_MARK_PREFIX.length}),
         at: perf.timeOrigin + mark.startTime,
-        detail: typeof mark.detail === 'string' ? mark.detail : undefined,
+        detail: typeof mark.detail?.text === 'string' ? mark.detail.text : undefined,
       }))
       .filter((mark) => mark.at >= ${since}),
   );

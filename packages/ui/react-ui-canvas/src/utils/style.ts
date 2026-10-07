@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, isEllipseNode } from '../model/types.ts';
+import { type Node, type NodeStyle, type NodeTone, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -32,19 +32,104 @@ const HUES: Record<string, HueClasses> = {
   rose: { surface: 'bg-rose-surface', text: 'text-rose-fg', border: 'border-rose-border' },
 };
 
+/** The hues the style picker offers, neutral first; any theme hue still renders, at its `medium` tone. */
+export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'violet', 'pink'] as const;
+export type StyleHue = (typeof STYLE_HUES)[number];
+
+export const TONES: readonly NodeTone[] = [0, 1, 2, 3];
+
+/** What each tone is called, for labels. */
+export const TONE_NAMES: Record<NodeTone, string> = { 0: 'outline', 1: 'light', 2: 'medium', 3: 'strong' };
+
+/** The tone a hue without one draws at: the look a hue had before tones. */
+export const DEFAULT_TONE: NodeTone = 2;
+
+type ToneClasses = { surface: string; text: string };
+
+/**
+ * The fills lighter and stronger than a hue's `surface` role: the scale's 200 under its darkest text, and the
+ * hue's solid `bg` role under light text (tones 1 and 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
+ */
+const TONE_FILLS: Record<StyleHue, Record<1 | 3, ToneClasses>> = {
+  neutral: {
+    1: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
+    3: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
+  },
+  red: {
+    1: { surface: 'bg-red-200', text: 'text-red-900' },
+    3: { surface: 'bg-red-bg', text: 'text-neutral-50' },
+  },
+  orange: {
+    1: { surface: 'bg-orange-200', text: 'text-orange-900' },
+    3: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
+  },
+  amber: {
+    1: { surface: 'bg-amber-200', text: 'text-amber-900' },
+    3: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
+  },
+  green: {
+    1: { surface: 'bg-green-200', text: 'text-green-900' },
+    3: { surface: 'bg-green-bg', text: 'text-neutral-50' },
+  },
+  teal: {
+    1: { surface: 'bg-teal-200', text: 'text-teal-900' },
+    3: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
+  },
+  blue: {
+    1: { surface: 'bg-blue-200', text: 'text-blue-900' },
+    3: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
+  },
+  violet: {
+    1: { surface: 'bg-violet-200', text: 'text-violet-900' },
+    3: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
+  },
+  pink: {
+    1: { surface: 'bg-pink-200', text: 'text-pink-900' },
+    3: { surface: 'bg-pink-bg', text: 'text-neutral-50' },
+  },
+};
+
+const isStyleHue = (hue: string): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
+
 /** The default look: the base surface, the base text and the separator border. */
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
 
-export const hueClasses = (hue: string | undefined): HueClasses => (hue && HUES[hue]) || DEFAULT;
+/**
+ * The classes a hue at a tone draws with. Every tone keeps the hue's border; tone 0 drops the fill and
+ * keeps the default text, and a tone a hue has no fills for draws as `medium`.
+ */
+export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TONE): HueClasses => {
+  const base = (hue && HUES[hue]) || DEFAULT;
+  if (!hue || base === DEFAULT) {
+    return base;
+  }
+  if (tone === 0) {
+    return { surface: 'bg-transparent', text: '', border: base.border };
+  }
+  if ((tone === 1 || tone === 3) && isStyleHue(hue)) {
+    return { ...TONE_FILLS[hue][tone], border: base.border };
+  }
+  return base;
+};
+
+/**
+ * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
+ * the properties panel must show it as on rather than as an unset (off) toggle.
+ */
+export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
+  ...style,
+  fill: style.fill ?? true,
+  border: style.border ?? true,
+});
 
 /**
  * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
  * dashed and unfilled, and the host's `className` comes last so it wins.
  */
 export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
-  const style = node.style ?? {};
-  const hue = hueClasses(style.hue);
-  const filled = style.fill !== false && !style.guide;
+  const style = resolveStyle(node.style);
+  const hue = hueClasses(style.hue, style.tone);
+  const filled = style.fill && !style.guide;
   return [
     filled ? hue.surface : '',
     hue.text,

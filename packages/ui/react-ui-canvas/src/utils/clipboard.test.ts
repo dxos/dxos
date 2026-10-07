@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { reduceIntent } from '../model/projection.ts';
 import { type Link, type Scene, endpointNode } from '../model/types.ts';
-import { copySelection, pasteFragment } from './clipboard.ts';
+import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
 import { createSceneTree } from './testing.ts';
 
 const fixture = (): Scene => {
@@ -26,6 +26,31 @@ describe('clipboard', () => {
     // a→b joins two copied nodes; a→c does not, selected or not.
     expect(clipboard?.links.map(({ id }) => id)).toEqual(['scene:r/ab']);
     expect(copySelection(scene, ['scene:r/ab'])).toBeUndefined();
+  });
+
+  test('duplicating keeps the originals and adds offset copies with the links between them', ({ expect }) => {
+    const scene = fixture();
+    let next = 0;
+    const copy = duplicateSelection(
+      scene,
+      ['scene:r/a', 'scene:r/b'],
+      { x: 64, y: 0 },
+      (prefix) => `${prefix}-${next++}`,
+    );
+    if (!copy) {
+      throw new Error('the selection holds nodes, so it duplicates');
+    }
+    // Two nodes and the a→b link between them.
+    expect(copy.ids).toHaveLength(3);
+    const after = reduceIntent(scene, copy.intent);
+    expect(Object.keys(after.nodes)).toHaveLength(Object.keys(scene.nodes).length + 2);
+    expect(after.nodes['scene:r/a'].center).toEqual(scene.nodes['scene:r/a'].center);
+    const [copyOfA] = copy.ids;
+    expect(after.nodes[copyOfA].center).toEqual({
+      x: scene.nodes['scene:r/a'].center.x + 64,
+      y: scene.nodes['scene:r/a'].center.y,
+    });
+    expect(duplicateSelection(scene, ['scene:r/ab'], { x: 64, y: 0 }, (prefix) => prefix)).toBeUndefined();
   });
 
   test('paste recreates the fragment with fresh ids, offset, and rewired links, as one batch', ({ expect }) => {

@@ -4,40 +4,14 @@
 
 // @import-as-namespace
 
-import * as Schema from 'effect/Schema';
-
-import { AiService } from '@dxos/ai';
-import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { MemoryOperation, TriggerOperation } from '#types';
 
 import { RELAY_RULES } from './relay-rules.ts';
-
-/**
- * The skill's end-request hook: reads the turn's new messages into facts, then fires the agent's
- * triggers they match. Defined beside the skill rather than in `#types` because the harness service
- * it needs carries the session runtime, which the UI must not load.
- */
-export const RunTriggers = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.agent.runTriggers'),
-    name: 'Run triggers',
-    description: "Records the facts of the conversation's latest turn and fires the agent's triggers they match.",
-    icon: 'ph--lightning--regular',
-  },
-  services: [Harness.HarnessService, Database.Service, AiService.AiService],
-  input: Schema.Struct({}),
-  output: Schema.Struct({
-    facts: Schema.Number.annotate({ description: 'Facts recorded from the turn.' }),
-    fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the triggers that fired.' }),
-    undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired notification was not delivered.' }),
-  }),
-});
 
 const operations = [
   MemoryOperation.ResolveEntity,
@@ -98,6 +72,4 @@ export const make = (): Skill.Skill =>
         ${RELAY_RULES}
       `,
     }),
-    // Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said.
-    hooks: [{ spec: { _tag: 'end-request' }, function: Ref.make(Operation.serialize(RunTriggers)) }],
   });

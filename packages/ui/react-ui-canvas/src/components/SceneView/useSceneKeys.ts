@@ -7,8 +7,9 @@ import { type KeyboardEvent, useCallback } from 'react';
 import { type useRegistry } from '../../hooks/index.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { isToolKey, keyAction } from '../../model/keys.ts';
+import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
-import { type LinkRegistry, type NodeRegistry, nodeDef } from '../../model/registry.ts';
+import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Bounds, type Capabilities, type ElementId, type Scene, type Size } from '../../model/types.ts';
 import { fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
@@ -37,6 +38,8 @@ export type UseSceneKeysOptions = {
   grid: number;
   select: (ids: Iterable<ElementId>) => void;
   toggleSnap: () => void;
+  toggleGuides: () => void;
+  toggleLattice: () => void;
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -65,6 +68,8 @@ export const useSceneKeys = ({
   grid,
   select,
   toggleSnap,
+  toggleGuides,
+  toggleLattice,
   toggleDebug,
   onUndo,
   onRedo,
@@ -174,6 +179,12 @@ export const useSceneKeys = ({
         case 'snap':
           toggleSnap();
           break;
+        case 'guides':
+          toggleGuides();
+          break;
+        case 'lattice':
+          toggleLattice();
+          break;
         case 'debug':
           toggleDebug();
           break;
@@ -212,6 +223,8 @@ export const useSceneKeys = ({
       major,
       setTool,
       toggleSnap,
+      toggleGuides,
+      toggleLattice,
       toggleDebug,
       onUndo,
       onRedo,
