@@ -396,7 +396,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
     editing={editing}
     classNames={mx(
       'dx-cover flex items-center justify-center text-center whitespace-pre-wrap',
-      sizeClass(node, 'text-2xl'),
+      sizeClass(node, 'text-lg'),
     )}
   >
     {label}
@@ -451,7 +451,7 @@ export const PortalNodeView = (props: NodeViewProps) => {
     <div className='dx-cover'>
       {tier === 'preview' && child && (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
-          <span className='text-2xl'>{title}</span>
+          <span className='text-lg'>{title}</span>
           <span>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links
           </span>
