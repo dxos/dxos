@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
+import { makeTestProcess } from '@dxos/compute-runtime/testing';
 import * as Process from '@dxos/compute/Process';
 import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
@@ -1151,7 +1152,7 @@ describe('readTaskStatusChanges', () => {
 });
 
 const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Process =>
-  Process.make({
+  makeTestProcess({
     pid: Process.ID.make(pid),
     parentPid: null,
     key: 'agent',

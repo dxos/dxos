@@ -24,6 +24,7 @@ import { log } from '@dxos/log';
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
 
+import { makeProcessSnapshot } from './process-snapshot.ts';
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
@@ -277,7 +278,9 @@ export const makeControlVerbs = (
       // A tree entry builds its remote handle only once a live member is used.
       Effect.map((processes) =>
         processes.map((info) =>
-          Process.make(info, () => RemoteProcessHandle.RemoteProcessHandle.makeSync(handleOptions(spaceId, info))),
+          makeProcessSnapshot(info, () =>
+            RemoteProcessHandle.RemoteProcessHandle.makeSync(handleOptions(spaceId, info)),
+          ),
         ),
       ),
       Effect.tap((tree) => Effect.sync(() => registry.update(processTreeAtom, () => tree))),

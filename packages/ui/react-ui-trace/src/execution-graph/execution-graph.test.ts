@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
+import { makeTestProcess } from '@dxos/compute-runtime/testing';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
@@ -190,7 +191,7 @@ const SHIMMER_EFFECT_TAG = 'effect:shimmer';
 const makeActiveProcess = (
   overrides: Partial<Process.Data> & Pick<Process.Data, 'pid' | 'key' | 'state'>,
 ): Process.Process =>
-  Process.make({
+  makeTestProcess({
     parentPid: null,
     params: { name: null, annotations: {} },
     environment: {},

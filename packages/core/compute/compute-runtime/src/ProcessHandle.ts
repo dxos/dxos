@@ -31,6 +31,7 @@ import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
+import { makeProcessSnapshot } from './process-snapshot.ts';
 import type { PersistedEvent, PersistedEventInput } from './process-store.ts';
 import { EphemeralTraceBuffer } from './trace-buffer.ts';
 
@@ -255,7 +256,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
   }
   /** The process as of now: its current data, live members delegating to this handle. */
   snapshotProcessInfo(): Process.Process<I, O, any> {
-    return Process.make<I, O, any>(
+    return makeProcessSnapshot<I, O, any>(
       {
         pid: this.pid,
         parentPid: this.parentPid,
