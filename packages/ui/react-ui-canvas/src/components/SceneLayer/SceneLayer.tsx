@@ -140,7 +140,7 @@ export const SceneLayer = memo(
       <>
         <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           <defs>
-            <Markers id={markerId} unit={unit} />
+            <Markers id={markerId} />
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -159,7 +159,7 @@ export const SceneLayer = memo(
               <path
                 d={path}
                 className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
-                strokeWidth={LINK_WIDTH * unit}
+                strokeWidth={LINK_WIDTH}
                 data-link-id={link.id}
               />
             </g>
@@ -208,21 +208,21 @@ SceneLayer.displayName = 'SceneLayer';
 /** The width of a node frame's border, which a nested scene drawn inside it steps out over. */
 const FRAME_BORDER = '--scene-frame-border' as const;
 
-/** A link's stroke, in screen px. */
+/** A link's stroke, in scene units like a node's 4px border, so a link keeps its weight beside the shapes at any zoom. */
 const LINK_WIDTH = 2;
 
 /** Bounding box of every end, in scene units. */
 const END_BOX = 32;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, unit }: { id: string; unit: number }) => {
+const Markers = ({ id }: { id: string }) => {
   // Each end fills a 32×32 box in scene units, so it scales with the shapes it joins: the arrow and the
   // triangle 10 of their 12 view units, the circle 8 of its 10.
   const arrow = END_BOX;
   const triangle = (END_BOX * 12) / 10;
   const circle = (END_BOX * 10) / 8;
-  // An outline matches the line's on-screen width (`unit` is one screen px in scene units), in its marker's view units.
-  const outline = (size: number, view: number) => (LINK_WIDTH * unit * view) / size;
+  // An outline matches the line's width, in its marker's view units.
+  const outline = (size: number, view: number) => (LINK_WIDTH * view) / size;
   const ends = ['start', 'end'] as const;
   return (
     <>
