@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -115,11 +115,17 @@ describe('EdgeClient', () => {
     onTestFinished(cleanup);
 
     const { client } = await openNewClient(endpoint);
+    const sending = new Trigger();
+    const sendAndWait = client.sendAndWait.bind(client);
+    client.sendAndWait = (ctx, message) => {
+      sending.wake();
+      return sendAndWait(ctx, message);
+    };
     const controller = new AbortController();
     const writer = client.createStream({ serviceId: 'test-service', signal: controller.signal }).getWriter();
     const write = writer.write(textMessage('Hello world 1'));
     // Past the sink's own pre-write abort check, so only the race can fail it.
-    await sleep(50);
+    await sending.wait();
     controller.abort(new Error('aborted'));
     await expect(write).rejects.toThrow('aborted');
   });
