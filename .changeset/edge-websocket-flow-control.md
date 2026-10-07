@@ -1,5 +1,6 @@
 ---
 '@dxos/edge-client': minor
+'@dxos/protocols': minor
 ---
 
 The EDGE websocket supports credit-based flow control, negotiated as the `edge-ws-v2` subprotocol.

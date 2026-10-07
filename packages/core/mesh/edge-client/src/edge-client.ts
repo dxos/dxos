@@ -277,7 +277,16 @@ export class EdgeClient extends Resource implements EdgeConnection {
         write: async (message) => {
           signal?.throwIfAborted();
           message.serviceId ??= serviceId;
-          await this.sendAndWait(Context.default(), message);
+          const sent = this.sendAndWait(Context.default(), message);
+          if (!signal) {
+            return sent;
+          }
+          // Raced rather than checked once: a write stalled on credit would otherwise ignore the abort until a grant.
+          return new Promise<void>((resolve, reject) => {
+            const onAbort = () => reject(signal.reason);
+            signal.addEventListener('abort', onAbort, { once: true });
+            sent.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+          });
         },
       },
       {
