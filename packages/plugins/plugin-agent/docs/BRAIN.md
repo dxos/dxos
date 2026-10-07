@@ -308,6 +308,11 @@ Constraints are checked before every action (`checkAction`), not when facts arri
 takes are recorded as facts, so goals depend on each other ("keep me informed" sees the relay that
 "get Dima to help" sent).
 
+`GoalRules` holds a bounded working memory, so a goal that never ends ("keep my inbox empty") never
+stops: each update retires facts past their `validTo`, then the oldest beyond `MAX_FACTS`, while the
+feed and index keep them. Retirement never wakes a goal and never retires the facts behind `achieved`,
+so an achieved goal stays achieved; `holds` can lapse as its facts age out.
+
 ### State
 
 - **On the goal object — what the runtime and UI read directly.** `status` (`active` | `paused` |

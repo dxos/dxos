@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { type RDF } from '@dxos/pipeline-rdf';
+
 import * as GoalRules from './GoalRules.ts';
 import { REFERENCE, SCENARIOS, WRONG, simulate, toFact } from './testing/index.ts';
 
@@ -94,41 +96,91 @@ describe('GoalRules', () => {
     expect(rules.checkAction(friday).blocked).toBe(true);
   });
 
-  test('rejects input past the fact and sub-goal caps without applying it', ({ expect }) => {
-    const rules = GoalRules.make({
-      source: 'wake(reply) :- speaker(F, dima), about(F, "plugin").',
-      createdAt: 0,
-      maxFacts: 2,
-      maxSubgoals: 1,
-    });
-    const saidAt = new Date(1).toISOString();
-    const fact = (id: string, quote: string) =>
-      toFact(
+  describe('working memory', () => {
+    const DAY = 86_400_000;
+    const said = (id: string, object: string, day: number, validTo?: string): RDF.Fact => {
+      const fact = toFact(
         {
           id,
           speaker: 'dima',
-          quote,
+          quote: object,
           s: 'dima',
           p: 'says',
-          o: 'x',
+          o: object,
           force: 'assertive',
           polarity: '+',
           mood: 'declarative',
           source: 'chat',
           factuality: 'CT+',
         },
-        saidAt,
+        new Date(day * DAY).toISOString(),
       );
+      return validTo === undefined ? fact : { ...fact, assertion: { ...fact.assertion, validTo } };
+    };
 
-    rules.update({ at: 1, facts: [fact('f1', 'lunch?'), fact('f2', 'coffee?')] });
-    expect(rules.update({ at: 2, facts: [fact('f1', 'lunch?')] }).wakes).toEqual([]);
-    expect(() => rules.update({ at: 3, facts: [fact('f3', 'the plugin is ready')] })).toThrow(GoalRules.CapacityError);
-    expect(rules.update({ at: 4 }).wakes).toEqual([]);
+    test('retires the oldest facts past the cap instead of rejecting them', ({ expect }) => {
+      const rules = GoalRules.make({ source: 'holds(goal) :- fact(_, dima, says, a).', createdAt: 0, maxFacts: 2 });
+      expect(rules.update({ at: 1 * DAY, facts: [said('f1', 'a', 1)] }).holds).toBe(true);
+      expect(rules.update({ at: 2 * DAY, facts: [said('f2', 'b', 2)] }).holds).toBe(true);
+      // A re-sent fact is already in working memory and does not count again.
+      expect(rules.update({ at: 3 * DAY, facts: [said('f1', 'a', 1)] }).holds).toBe(true);
+      expect(rules.update({ at: 4 * DAY, facts: [said('f3', 'c', 4)] }).holds).toBe(false);
+      // A late arrival said before everything kept is itself the oldest, so it retires at once.
+      expect(rules.update({ at: 5 * DAY, facts: [said('f4', 'a', 0)] }).holds).toBe(false);
+    });
 
-    rules.update({ at: 5, subgoals: { first: 'active' } });
-    expect(() => rules.update({ at: 6, subgoals: { second: 'active' } })).toThrow(GoalRules.CapacityError);
-    expect(rules.update({ at: 7, subgoals: { first: 'done' } }).wakes).toEqual([
-      { label: 'first', cause: 'subgoal', facts: [] },
-    ]);
+    test('retires facts once the clock passes their validTo', ({ expect }) => {
+      const rules = GoalRules.make({ source: 'holds(goal) :- fact(_, dima, says, a).', createdAt: 0 });
+      const validTo = new Date(3 * DAY).toISOString();
+      const first = rules.update({ at: 1 * DAY, facts: [said('f1', 'a', 1, validTo)] });
+      expect(first.holds).toBe(true);
+      expect(rules.update({ at: 2 * DAY }).holds).toBe(true);
+      expect(rules.update({ at: 4 * DAY })).toEqual({ at: 4 * DAY, wakes: [], achieved: false, holds: false });
+      expect(rules.update({ at: 5 * DAY, facts: [said('f2', 'a', 5, validTo)] }).holds).toBe(false);
+    });
+
+    test('retiring a fact does not wake the goal', ({ expect }) => {
+      const rules = GoalRules.make({
+        source: 'wake(gap) :- not seen.\nseen :- fact(_, dima, says, b).',
+        createdAt: 0,
+        maxFacts: 1,
+      });
+      rules.update({ at: 1 * DAY, facts: [said('f1', 'b', 1)] });
+      expect(rules.update({ at: 2 * DAY, facts: [said('f2', 'c', 2)] }).wakes).toEqual([]);
+      expect(rules.update({ at: 3 * DAY }).wakes).toEqual([]);
+    });
+
+    test('keeps the facts behind achieved, so retirement never un-achieves the goal', ({ expect }) => {
+      const rules = GoalRules.make({
+        source: 'achieved(goal) :- fact(_, dima, says, a).',
+        createdAt: 0,
+        maxFacts: 1,
+      });
+      const validTo = new Date(2 * DAY).toISOString();
+      expect(rules.update({ at: 1 * DAY, facts: [said('f1', 'a', 1, validTo)] }).wakes).toEqual([
+        { label: 'achieved', cause: 'achieved', facts: ['f1'] },
+      ]);
+      expect(rules.update({ at: 3 * DAY, facts: [said('f2', 'b', 3)] })).toEqual({
+        at: 3 * DAY,
+        wakes: [],
+        achieved: true,
+        holds: false,
+      });
+    });
+
+    test('rejects sub-goals past the cap without applying them', ({ expect }) => {
+      const rules = GoalRules.make({
+        source:
+          'achieved(goal) :- subgoal(goal, G), status(G, done), not open.\nopen :- subgoal(goal, G), status(G, active).',
+        createdAt: 0,
+        maxSubgoals: 1,
+      });
+      rules.update({ at: 1, subgoals: { first: 'active' } });
+      expect(() => rules.update({ at: 2, subgoals: { second: 'active' } })).toThrow(GoalRules.CapacityError);
+      expect(rules.update({ at: 3, subgoals: { first: 'done' } }).wakes).toEqual([
+        { label: 'first', cause: 'subgoal', facts: [] },
+        { label: 'achieved', cause: 'achieved', facts: [] },
+      ]);
+    });
   });
 });

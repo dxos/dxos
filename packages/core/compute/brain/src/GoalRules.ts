@@ -15,21 +15,18 @@ import * as Encoding from './Encoding.ts';
 import type * as Vocabulary from './Vocabulary.ts';
 
 /**
- * Most distinct facts one evaluator indexes; it keeps every fact for the life of the goal, so an
- * unbounded stream would grow the engine, text and entity indexes (and every query over them) forever.
+ * Size of the evaluator's working memory: past it the oldest facts retire, so a goal that runs
+ * indefinitely keeps a bounded engine, text and entity index (and bounded queries over them).
  */
 export const MAX_FACTS = 10_000;
 
-/** Most sub-goals one evaluator tracks; each is a pair of live relation tuples. */
+/** Most sub-goals one evaluator tracks; sub-goals are structural, so exceeding it is an error. */
 export const MAX_SUBGOALS = 256;
 
-/** Thrown by `GoalRules.update` when an input would take the evaluator past its fact or sub-goal cap. */
+/** Thrown by `GoalRules.update` when an input would take the evaluator past {@link MAX_SUBGOALS}. */
 export class CapacityError extends BaseError.extend('CapacityError', 'Goal evaluator capacity exceeded') {
-  constructor(context: { readonly kind: 'facts' | 'subgoals'; readonly max: number; readonly requested: number }) {
-    super({
-      message: `Goal evaluator would hold ${context.requested} ${context.kind}; the cap is ${context.max}.`,
-      context,
-    });
+  constructor(context: { readonly max: number; readonly requested: number }) {
+    super({ message: `Goal evaluator would hold ${context.requested} sub-goals; the cap is ${context.max}.`, context });
   }
 }
 
@@ -71,7 +68,15 @@ export type Options = {
   readonly entities?: Builtins.EntityIndex;
   /** Entities a fact concerns; defaults to its subject. */
   readonly concerns?: (fact: RDF.Fact) => ReadonlyArray<string>;
-  /** Overrides {@link MAX_FACTS}. */
+  /**
+   * Working-memory size; defaults to {@link MAX_FACTS}. Each `update` first retires facts whose
+   * `assertion.validTo` is before the clock, then the oldest (by `generatedAtTime`, then arrival)
+   * until at most `maxFacts` remain. Retiring drops a fact from the evaluator only; the feed and any
+   * external index keep it, and a re-sent fact with a retired id is admitted again as new.
+   * Retirement never wakes the goal, and the facts behind the current `achieved` derivation are
+   * never retired, so a goal stays achieved once it is; `holds` and wake bindings may lapse as
+   * their facts retire, and a lapsed binding wakes again when new facts restore it.
+   */
   readonly maxFacts?: number;
   /** Overrides {@link MAX_SUBGOALS}. */
   readonly maxSubgoals?: number;
@@ -97,13 +102,15 @@ export class GoalRules {
   readonly #text: Builtins.TextIndex;
   readonly #entities: Builtins.EntityIndex;
   readonly #concerns: (fact: RDF.Fact) => ReadonlyArray<string>;
-  readonly #saidAt = new Map<string, number>();
+  /** Working memory in arrival order. */
+  readonly #facts = new Map<string, Admitted>();
   readonly #subgoals = new Map<string, string>();
   readonly #maxFacts: number;
   readonly #maxSubgoals: number;
   #now: number;
   #previous: number;
   #achieved = false;
+  #sequence = 0;
 
   /** @throws Compiler.CompileError if the rules do not compile. */
   constructor(options: Options) {
@@ -120,7 +127,7 @@ export class GoalRules {
         now: () => this.#now,
         previous: () => this.#previous,
         createdAt: options.createdAt,
-        saidAt: (factId) => this.#saidAt.get(factId),
+        saidAt: (factId) => this.#facts.get(factId)?.saidAt,
       },
       text: this.#text,
       entities: this.#entities,
@@ -139,20 +146,46 @@ export class GoalRules {
   }
 
   /**
-   * Adds facts and sub-goal status at time `at`; returns the wakes and the goal's state.
-   * @throws CapacityError if the input would exceed the fact or sub-goal cap; nothing is applied.
+   * Adds facts and sub-goal status at time `at`, retiring facts past the working-memory window
+   * (see {@link Options.maxFacts}); returns the wakes and the goal's state.
+   * @throws CapacityError if the input would exceed the sub-goal cap; nothing is applied.
    */
   update({ at, facts = [], subgoals = {} }: Input): Evaluation {
-    this.#checkCapacity(facts, subgoals);
+    this.#checkSubgoals(subgoals);
     this.#previous = this.#now;
     this.#now = at;
+
+    const arrived = new Map<string, { fact: RDF.Fact; admitted: Admitted }>();
+    for (const fact of facts) {
+      if (!this.#facts.has(fact.id) && !arrived.has(fact.id)) {
+        arrived.set(fact.id, { fact, admitted: this.#admit(fact) });
+      }
+    }
+    const retired = this.#retire([...arrived.values()].map(({ admitted }) => admitted));
+    const retiring: Engine.Entry[] = [];
+    for (const id of retired) {
+      const admitted = this.#facts.get(id);
+      if (admitted) {
+        retiring.push(...admitted.entries);
+        this.#facts.delete(id);
+        this.#text.remove(id);
+        this.#entities.remove(id);
+      }
+    }
+    if (retiring.length > 0) {
+      // A separate pass whose changes are discarded, so retirement never wakes the goal.
+      this.#engine.update({ retract: retiring });
+    }
+
     const insert: Engine.Entry[] = [];
     const retract: Engine.Entry[] = [];
-    for (const fact of facts) {
-      this.#saidAt.set(fact.id, Date.parse(fact.attribution.generatedAtTime));
-      this.#text.add(fact.id, factText(fact));
-      this.#entities.add(fact.id, this.#concerns(fact));
-      insert.push(...Encoding.encode(fact, this.#vocabulary));
+    for (const { fact, admitted } of arrived.values()) {
+      if (!retired.has(fact.id)) {
+        this.#facts.set(fact.id, admitted);
+        this.#text.add(fact.id, factText(fact));
+        this.#entities.add(fact.id, this.#concerns(fact));
+        insert.push(...admitted.entries);
+      }
     }
 
     const wakes: Wake[] = [];
@@ -190,19 +223,49 @@ export class GoalRules {
     return { at, wakes, achieved, holds: this.holds };
   }
 
-  #checkCapacity(facts: ReadonlyArray<RDF.Fact>, subgoals: Readonly<Record<string, string>>): void {
-    const newFacts = new Set(facts.map(({ id }) => id).filter((id) => !this.#saidAt.has(id))).size;
-    if (this.#saidAt.size + newFacts > this.#maxFacts) {
-      throw new CapacityError({ kind: 'facts', max: this.#maxFacts, requested: this.#saidAt.size + newFacts });
+  #checkSubgoals(subgoals: Readonly<Record<string, string>>): void {
+    const requested = this.#subgoals.size + Object.keys(subgoals).filter((id) => !this.#subgoals.has(id)).length;
+    if (requested > this.#maxSubgoals) {
+      throw new CapacityError({ max: this.#maxSubgoals, requested });
     }
-    const newSubgoals = Object.keys(subgoals).filter((id) => !this.#subgoals.has(id)).length;
-    if (this.#subgoals.size + newSubgoals > this.#maxSubgoals) {
-      throw new CapacityError({
-        kind: 'subgoals',
-        max: this.#maxSubgoals,
-        requested: this.#subgoals.size + newSubgoals,
-      });
+  }
+
+  #admit(fact: RDF.Fact): Admitted {
+    const validTo = fact.assertion.validTo === undefined ? undefined : Date.parse(fact.assertion.validTo);
+    return {
+      id: fact.id,
+      sequence: this.#sequence++,
+      saidAt: Date.parse(fact.attribution.generatedAtTime),
+      validTo: validTo === undefined || Number.isNaN(validTo) ? undefined : validTo,
+      entries: Encoding.encode(fact, this.#vocabulary),
+    };
+  }
+
+  /** Ids to retire from working memory plus the arriving facts: expired first, then oldest past the cap. */
+  #retire(arriving: ReadonlyArray<Admitted>): Set<string> {
+    const pinned = new Set(this.achieved ? Encoding.factIds(this.#engine.provenance('achieved', ['goal'])) : []);
+    const retired = new Set<string>();
+    const kept: Admitted[] = [];
+    for (const admitted of [...this.#facts.values(), ...arriving]) {
+      if (!pinned.has(admitted.id) && admitted.validTo !== undefined && admitted.validTo < this.#now) {
+        retired.add(admitted.id);
+      } else {
+        kept.push(admitted);
+      }
     }
+    let excess = kept.length - this.#maxFacts;
+    if (excess > 0) {
+      const oldest = kept
+        .filter(({ id }) => !pinned.has(id))
+        .sort((a, b) => age(a.saidAt) - age(b.saidAt) || a.sequence - b.sequence);
+      for (const { id } of oldest) {
+        if (excess-- <= 0) {
+          break;
+        }
+        retired.add(id);
+      }
+    }
+    return retired;
   }
 
   /** Evaluates the `blocks` rules for a proposed action without keeping it. */
@@ -219,6 +282,19 @@ export class GoalRules {
     return { blocked, facts };
   }
 }
+
+/** A fact in working memory, with what retirement needs to order and retract it. */
+type Admitted = {
+  readonly id: string;
+  /** Arrival order, the tie-break between facts said at the same time. */
+  readonly sequence: number;
+  readonly saidAt: number;
+  readonly validTo?: number;
+  readonly entries: ReadonlyArray<Engine.Entry>;
+};
+
+/** An unparseable `generatedAtTime` sorts as oldest. */
+const age = (saidAt: number): number => (Number.isNaN(saidAt) ? Number.NEGATIVE_INFINITY : saidAt);
 
 /** Creates a goal evaluator. */
 export const make = (options: Options): GoalRules => new GoalRules(options);

@@ -9,6 +9,7 @@ import * as Builtin from '@dxos/datalog/Builtin';
 /** Finds facts about a topic; a semantic index replaces the keyword one without touching rules. */
 export interface TextIndex {
   add(factId: string, text: string): void;
+  remove(factId: string): void;
   /** True if the fact is about `query`. */
   matches(factId: string, query: string): boolean;
   /** Every fact about `query`. */
@@ -18,6 +19,7 @@ export interface TextIndex {
 /** The entities each fact concerns (entity resolution), for scoping possessive goals. */
 export interface EntityIndex {
   add(factId: string, entities: ReadonlyArray<string>): void;
+  remove(factId: string): void;
   concerns(factId: string): ReadonlyArray<string>;
   facts(entity: string): Iterable<string>;
 }
@@ -109,6 +111,10 @@ export class KeywordIndex implements TextIndex {
     this.#texts.set(factId, text);
   }
 
+  remove(factId: string): void {
+    this.#texts.delete(factId);
+  }
+
   matches(factId: string, query: string): boolean {
     return keywordMatch(this.#texts.get(factId) ?? '', query);
   }
@@ -128,6 +134,10 @@ export class MemoryEntityIndex implements EntityIndex {
 
   add(factId: string, entities: ReadonlyArray<string>): void {
     this.#byFact.set(factId, entities);
+  }
+
+  remove(factId: string): void {
+    this.#byFact.delete(factId);
   }
 
   concerns(factId: string): ReadonlyArray<string> {

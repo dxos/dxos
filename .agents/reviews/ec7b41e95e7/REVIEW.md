@@ -130,4 +130,4 @@ measured chars per token: 3.22
 
 ### Resolutions
 
-- ec7b41e95e7-3 (resolved) — `GoalRules` kept every fact and sub-goal for the goal's life; `update` now checks `MAX_FACTS` / `MAX_SUBGOALS` (named, documented, overridable) before applying anything and throws a typed `CapacityError` (`BaseError.extend`); covered by `GoalRules.test.ts`.
+- ec7b41e95e7-3 (resolved) — `GoalRules` kept every fact for the goal's life. It now holds a bounded working memory: each `update` retires facts past `assertion.validTo`, then the oldest (by `generatedAtTime`, then arrival) beyond `MAX_FACTS` (named, documented, overridable via `maxFacts`), retracting them from the engine and the text/entity indexes without waking and never retiring the facts behind `achieved`. Sub-goals stay hard-capped by `MAX_SUBGOALS` with a typed `CapacityError` (`BaseError.extend`). Covered by `GoalRules.test.ts` (`working memory`).
