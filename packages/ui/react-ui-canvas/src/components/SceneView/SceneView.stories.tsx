@@ -164,13 +164,20 @@ const createScenesTree = () => {
         .name('E'),
       rect('f', 256),
       // Empty scenes either side of E, two each way.
-      ...[-768, -384, 384, 768].map((x) => SceneBuilder.scene(`e${x}`, []).at(at(0, x)).name('Untitled')),
+      ...(
+        [
+          ['g', -768],
+          ['h', -384],
+          ['i', 384],
+          ['j', 768],
+        ] as const
+      ).map(([id, x]) => SceneBuilder.scene(id, []).at(at(0, x)).name(id.toUpperCase())),
       link('d', 'e'),
       link('e', 'f'),
-      link('e-768', 'e-384'),
-      link('e-384', 'e'),
-      link('e', 'e384'),
-      link('e384', 'e768'),
+      link('g', 'h'),
+      link('h', 'e'),
+      link('e', 'i'),
+      link('i', 'j'),
     ])
       .at(at(0))
       .name('B'),
