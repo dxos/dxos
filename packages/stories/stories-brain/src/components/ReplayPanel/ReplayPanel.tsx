@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as Listbox from '@dxos/react-ui/Listbox';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { FactForm } from './FactForm.tsx';
@@ -60,10 +60,6 @@ export const ReplayPanel = ({
 }: ReplayPanelProps) => {
   const scenario = mode === 'scenario';
   const steps = scenario ? replay.steps.slice(0, cursor) : replay.steps;
-  const items = useMemo(
-    () => steps.map((step) => ({ value: step.id, label: `${step.id} · ${step.note}`, description: step.at })),
-    [steps],
-  );
   const done = scenario && replay.steps.length > 0 && cursor >= replay.steps.length;
 
   return (
@@ -122,31 +118,27 @@ export const ReplayPanel = ({
                   <Banner.Body>{replay.error}</Banner.Body>
                 </Banner.Root>
               )}
-              {items.length > 0 && (
-                <Listbox.Root items={items} selectionMode='none'>
-                  <Listbox.Content scroll={false}>
-                    {steps.map((step, index) => (
-                      <StepRow key={step.id} step={step} item={items[index]} />
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              )}
-              {done && (
-                <Banner.Root
-                  valence={replay.failures.length === 0 ? 'success' : 'error'}
-                  data-testid='goal-compiler.summary'
-                  data-status={replay.failures.length === 0 ? 'pass' : 'fail'}
-                >
-                  <Banner.Title>
-                    {replay.failures.length === 0 ? 'Every expectation holds' : `${replay.failures.length} failed`}
-                  </Banner.Title>
-                  {replay.failures.length > 0 && <Banner.Body>{replay.failures.join('\n')}</Banner.Body>}
-                </Banner.Root>
-              )}
+              {steps.map((step) => (
+                <StepCard key={step.id} step={step} />
+              ))}
             </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
+      <Panel.Footer>
+        {done && (
+          <Banner.Root
+            valence={replay.failures.length === 0 ? 'success' : 'error'}
+            data-testid='goal-compiler.summary'
+            data-status={replay.failures.length === 0 ? 'pass' : 'fail'}
+          >
+            <Banner.Title>
+              {replay.failures.length === 0 ? 'Every expectation holds' : `${replay.failures.length} failed`}
+            </Banner.Title>
+            {replay.failures.length > 0 && <Banner.Body>{replay.failures.join('\n')}</Banner.Body>}
+          </Banner.Root>
+        )}
+      </Panel.Footer>
     </Panel.Root>
   );
 };
@@ -157,39 +149,39 @@ const STATUS_ICON: Record<ReplayStep['status'], { icon: string; valence?: 'succe
   info: { icon: 'ph--circle--regular' },
 };
 
-const StepRow = ({ step, item }: { step: ReplayStep; item: Listbox.Option }) => {
+/** One step as a card: its title and time, the facts it adds, and the expected and actual outcome. */
+const StepCard = ({ step }: { step: ReplayStep }) => {
   const { icon, valence } = STATUS_ICON[step.status];
   return (
-    <Listbox.Item item={item} data-testid='goal-compiler.step' data-step={step.id} data-status={step.status}>
-      <Listbox.ItemIcon icon={icon} valence={valence} />
-      <Listbox.ItemText />
-      <Listbox.ItemDescription />
-      {step.status !== 'info' && <Tag.Tag hue={step.status === 'pass' ? 'success' : 'error'}>{step.status}</Tag.Tag>}
-      <Layout.Flex column data-place='full'>
+    <Card.Root grid data-testid='goal-compiler.step' data-step={step.id} data-status={step.status}>
+      <Card.Row
+        leading={<Icon.Icon icon={icon} valence={valence} />}
+        trailing={
+          step.status !== 'info' && <Tag.Tag hue={step.status === 'pass' ? 'success' : 'error'}>{step.status}</Tag.Tag>
+        }
+      >
+        <Card.Title>
+          {step.id} · {step.note}
+        </Card.Title>
+      </Card.Row>
+      <Card.Section>
+        <Card.Text variant='muted'>{step.at}</Card.Text>
         {step.facts.map((fact) => (
-          <Typography.Text key={fact.id}>
+          <Card.Text key={fact.id}>
             {fact.id} · {fact.speaker}: “{fact.quote}” ({fact.subject} {fact.predicate} {fact.object}; {fact.force},{' '}
             {fact.polarity})
-          </Typography.Text>
+          </Card.Text>
         ))}
         {step.actions.map((action) => (
-          <Typography.Text key={action} mono>
-            action {action}
-          </Typography.Text>
+          <Card.Text key={action}>action {action}</Card.Text>
         ))}
-        {step.expected && (
-          <Typography.Text tone='muted' mono>
-            expected {formatExpected(step.expected)}
-          </Typography.Text>
-        )}
-        <Typography.Text mono>actual {formatActual(step)}</Typography.Text>
+        {step.expected && <Card.Text variant='muted'>expected {formatExpected(step.expected)}</Card.Text>}
+        <Card.Text variant='muted'>actual {formatActual(step)}</Card.Text>
         {step.failures.map((failure) => (
-          <Typography.Text key={failure} tone='muted' mono>
-            ✗ {failure}
-          </Typography.Text>
+          <Card.Text key={failure}>✗ {failure}</Card.Text>
         ))}
-      </Layout.Flex>
-    </Listbox.Item>
+      </Card.Section>
+    </Card.Root>
   );
 };
 
