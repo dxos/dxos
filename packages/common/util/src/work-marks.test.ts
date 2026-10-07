@@ -34,7 +34,7 @@ describe('work marks', () => {
       { name: 'late', detail: 'tools' },
     ]);
     const entry = performance.getEntriesByName(`${WORK_MARK_PREFIX}late`, 'mark').at(-1);
-    expect(entry && 'detail' in entry ? entry.detail : undefined).toEqual('tools');
+    expect(entry && 'detail' in entry ? entry.detail : undefined).toEqual({ text: 'tools' });
   });
 
   test('leaves marks written by others alone', ({ expect }) => {
