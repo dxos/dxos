@@ -52,6 +52,9 @@
       "path": "packages/core/echo/blob/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/brain/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {

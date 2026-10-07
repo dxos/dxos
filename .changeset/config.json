@@ -26,6 +26,7 @@
       "@dxos/beast",
       "@dxos/blade-runner",
       "@dxos/blob",
+      "@dxos/brain",
       "@dxos/brand",
       "@dxos/cli-util",
       "@dxos/client",

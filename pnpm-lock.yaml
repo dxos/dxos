@@ -4733,6 +4733,22 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
 
+  packages/core/compute/brain:
+    dependencies:
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))(vitest@4.1.10)
+      effect:
+        specifier: 4.0.0
+        version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.2)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/compute/compute:
     dependencies:
       '@dxos/ai':
