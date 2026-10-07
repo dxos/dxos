@@ -18,6 +18,7 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import { FactForm } from './FactForm.tsx';
 import { type Replay, type ReplayFact, type ReplayStep } from './replay.ts';
+import { StepTable, StepTableCell, StepTableRow } from './StepTable.tsx';
 
 export type ReplayMode = 'scenario' | 'custom';
 
@@ -167,10 +168,7 @@ const StepCard = ({ step }: { step: ReplayStep }) => {
       <Card.Section>
         <Card.Text variant='muted'>{step.at}</Card.Text>
         {step.facts.map((fact) => (
-          <Card.Text key={fact.id}>
-            {fact.id} · {fact.speaker}: “{fact.quote}” ({fact.subject} {fact.predicate} {fact.object}; {fact.force},{' '}
-            {fact.polarity})
-          </Card.Text>
+          <FactTable key={fact.id} fact={fact} />
         ))}
         {step.actions.map((action) => (
           <Card.Text key={action}>action {action}</Card.Text>
@@ -200,32 +198,41 @@ const formatActual = (step: ReplayStep, property: (typeof PROPERTIES)[number]): 
 
 /** Expected against actual for each checked property; an actual that contradicts its expectation reads as an error. */
 const OutcomeTable = ({ step }: { step: ReplayStep }) => (
-  <table className='w-full text-sm' data-testid='goal-compiler.outcome'>
-    <thead>
-      <tr className='text-left text-fg-muted'>
-        <th className='pe-2 font-normal'></th>
-        <th className='pe-2 font-normal'>Expected</th>
-        <th className='font-normal'>Actual</th>
-      </tr>
-    </thead>
-    <tbody>
-      {PROPERTIES.map((property) => {
-        const expected = step.expected?.[property];
-        const actual = property === 'wake' ? step.wakes.length > 0 : step[property];
-        const mismatch = typeof expected === 'boolean' && expected !== actual;
-        return (
-          <tr key={property} className='border-t border-separator' data-property={property}>
-            <th scope='row' className='pe-2 text-left font-normal text-fg-muted'>
-              {property}
-            </th>
-            <td className='pe-2 text-fg-muted'>{formatExpected(expected)}</td>
-            <td className={mismatch ? 'text-error-text' : undefined} data-mismatch={mismatch ? '' : undefined}>
-              {mismatch && '✗ '}
-              {formatActual(step, property)}
-            </td>
-          </tr>
-        );
-      })}
-    </tbody>
-  </table>
+  <StepTable columns={['Expected', 'Actual']} data-testid='goal-compiler.outcome'>
+    {PROPERTIES.map((property) => {
+      const expected = step.expected?.[property];
+      const actual = property === 'wake' ? step.wakes.length > 0 : step[property];
+      const mismatch = typeof expected === 'boolean' && expected !== actual;
+      return (
+        <StepTableRow key={property} label={property} data-property={property}>
+          <StepTableCell tone='muted'>{formatExpected(expected)}</StepTableCell>
+          <StepTableCell tone={mismatch ? 'error' : undefined} data-mismatch={mismatch ? '' : undefined}>
+            {mismatch && '✗ '}
+            {formatActual(step, property)}
+          </StepTableCell>
+        </StepTableRow>
+      );
+    })}
+  </StepTable>
+);
+
+/** Fact fields in reading order: the proposition first, then how and by whom it was said. */
+const FACT_FIELDS = ['id', 'subject', 'predicate', 'object', 'force', 'polarity', 'speaker', 'quote'] as const;
+
+/** One fact as key/value rows, skipping fields it does not carry. */
+const FactTable = ({ fact }: { fact: ReplayStep['facts'][number] }) => (
+  <StepTable data-testid='goal-compiler.fact' data-fact={fact.id}>
+    {FACT_FIELDS.flatMap((field) => {
+      const value = fact[field];
+      return value === undefined || value === ''
+        ? []
+        : [
+            <StepTableRow key={field} label={field}>
+              <StepTableCell tone={field === 'quote' ? 'muted' : undefined}>
+                {field === 'quote' ? `“${value}”` : value}
+              </StepTableCell>
+            </StepTableRow>,
+          ];
+    })}
+  </StepTable>
 );
