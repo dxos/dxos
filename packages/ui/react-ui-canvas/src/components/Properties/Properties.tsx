@@ -229,11 +229,7 @@ export const Properties = ({
       data-testid='properties'
       {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
     >
-      <Toolbar.Root
-        size='sm'
-        classNames='shrink-0 gap-1 px-2 py-1 border-b border-separator'
-        data-testid='properties-toolbar'
-      >
+      <Toolbar.Root size='sm' data-testid='properties-toolbar'>
         {links.length > 0 && links.length === elements.length && (
           <Button.Root
             variant='ghost'
