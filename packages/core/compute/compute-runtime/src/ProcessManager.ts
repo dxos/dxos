@@ -472,6 +472,7 @@ export class Impl implements Manager {
       const cancellation = new AbortController();
       const origin = resolveOrigin(environment, options?.origin);
       let builtinCtx = originContext(origin).pipe(
+        Context.add(Process.EnvironmentService, environment),
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -496,6 +497,7 @@ export class Impl implements Manager {
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
+        Process.EnvironmentService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
@@ -680,6 +682,7 @@ export class Impl implements Manager {
       const cancellation = new AbortController();
       const origin = resolveOrigin(environment, record.origin);
       let builtinCtx = originContext(origin).pipe(
+        Context.add(Process.EnvironmentService, environment),
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -703,6 +706,7 @@ export class Impl implements Manager {
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
+        Process.EnvironmentService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,

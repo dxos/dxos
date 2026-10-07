@@ -10,6 +10,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
 
+import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
 import * as Trigger from './Trigger.ts';
 
@@ -25,7 +26,7 @@ export const WatchFacts = Operation.make({
       'Waits for something to happen ("let me know when X") and tells the requester when a fact says it did. Records the outcome as a goal the requester owns.',
     icon: 'ph--binoculars--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that watches.' }),
     requester: Ref.Ref(Obj.Unknown).annotate({
@@ -84,7 +85,7 @@ export const ListTriggers = Operation.make({
     description: 'Lists what the agent is waiting for and who it will tell.',
     icon: 'ph--list-checks--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
   }),
@@ -101,7 +102,7 @@ export const CancelTrigger = Operation.make({
     description: 'Stops waiting for something, e.g. when the requester no longer needs to know.',
     icon: 'ph--x-circle--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     trigger: Schema.String.annotate({ description: 'The id of the watch.' }),
     dropGoal: Schema.optional(Schema.Boolean.annotate({ description: 'Also mark the goal it served as dropped.' })),

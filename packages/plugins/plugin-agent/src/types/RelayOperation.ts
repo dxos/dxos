@@ -12,6 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
 import { Channel, Task } from '@dxos/types';
 
+import * as BrainService from './BrainService.ts';
 import * as Relay from './Relay.ts';
 
 /** Records a relay: a task in the agent's own task list plus its delivery record. */
@@ -120,7 +121,7 @@ export const SendMessage = Operation.make({
       "Sends a message to a person through the agent's conversation with them (their chat, else a direct message through one of the agent's channels). Pass the relay it belongs to.",
     icon: 'ph--paper-plane-tilt--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent sending the message.' }),
     recipient: Ref.Ref(Obj.Unknown).annotate({ description: 'The person to deliver to.' }),
