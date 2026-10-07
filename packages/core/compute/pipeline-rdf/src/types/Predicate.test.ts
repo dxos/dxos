@@ -4,29 +4,29 @@
 
 import { describe, test } from 'vitest';
 
-import { normalizePredicate } from './normalize-predicate.ts';
+import * as Predicate from './Predicate.ts';
 
-describe('normalizePredicate', () => {
+describe('Predicate.normalize', () => {
   test('collapses case, whitespace, and inflection of the head verb', ({ expect }) => {
-    const key = normalizePredicate('works at');
-    expect(normalizePredicate('Works At')).toBe(key);
-    expect(normalizePredicate('  works   at ')).toBe(key);
-    expect(normalizePredicate('worked at')).toBe(key);
-    expect(normalizePredicate('is working at')).toBe(key);
+    const key = Predicate.normalize('works at');
+    expect(Predicate.normalize('Works At')).toBe(key);
+    expect(Predicate.normalize('  works   at ')).toBe(key);
+    expect(Predicate.normalize('worked at')).toBe(key);
+    expect(Predicate.normalize('is working at')).toBe(key);
   });
 
   test('drops leading copula/article so "is a man" keys as "man"', ({ expect }) => {
-    expect(normalizePredicate('is a man')).toBe('man');
-    expect(normalizePredicate('man')).toBe('man');
+    expect(Predicate.normalize('is a man')).toBe('man');
+    expect(Predicate.normalize('man')).toBe('man');
   });
 
   test('does NOT merge true synonyms / different particles', ({ expect }) => {
-    expect(normalizePredicate('works for')).not.toBe(normalizePredicate('works at'));
-    expect(normalizePredicate('employed by')).not.toBe(normalizePredicate('works at'));
+    expect(Predicate.normalize('works for')).not.toBe(Predicate.normalize('works at'));
+    expect(Predicate.normalize('employed by')).not.toBe(Predicate.normalize('works at'));
   });
 
   test('is idempotent', ({ expect }) => {
-    const once = normalizePredicate('is leading');
-    expect(normalizePredicate(once)).toBe(once);
+    const once = Predicate.normalize('is leading');
+    expect(Predicate.normalize(once)).toBe(once);
   });
 });
