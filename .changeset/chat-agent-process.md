@@ -1,11 +1,12 @@
 ---
 '@dxos/compute': minor
+'@dxos/compute-runtime': minor
 '@dxos/plugin-claude': minor
 ---
 
 A chat can run on Claude Code on this computer or on EDGE.
 
-A chat names the durable process that runs it in `session.process`. Plugins contribute agent processes through `AssistantCapabilities.AgentProcess`, and `AgentService` spawns the one a chat names, falling back to the assistant's own. The Claude plugin's Claude Code process starts the agent through the new `Subprocess` service (`@dxos/compute/Subprocess`; the Node.js implementation is `@dxos/compute-runtime/node-subprocess`), which ends the agent when the process ends.
+A chat names the durable process that runs it in `session.process`. Plugins contribute agent processes through `AssistantCapabilities.AgentProcess`, and `AgentService` spawns the one a chat names, falling back to the assistant's own. The Claude plugin's Claude Code process starts the agent through the new `ShellService` (`@dxos/compute/ShellService`), which runs operating-system processes and bash scripts for a compute process. Each process gets its own instance, and every child it started ends when that process ends. The Node.js implementation is `@dxos/compute-runtime/node-shell`.
 
 "Claude Code (cloud)", built on plugin-code's new `EdgeAgent.make`, runs a chat's turns on EDGE's coding-agent process in a sandbox container. The session keeps working with no client connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. Each turn lends the process the user's credential, so the credential never enters the container. The cloud session runs unattended by default: a permission request is denied on the spot, and the agent skips that step and carries on.
 
