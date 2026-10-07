@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { FactEntry, type Trigger } from '#types';
 
@@ -33,11 +33,7 @@ export type MatchOptions = {
 };
 
 /** Whether the fact satisfies every field the pattern sets. */
-export const matchesPattern = (
-  pattern: Trigger.FactPattern,
-  fact: FactEntry.Fact,
-  { after }: MatchOptions = {},
-): boolean => {
+export const matchesPattern = (pattern: Trigger.FactPattern, fact: RDF.Fact, { after }: MatchOptions = {}): boolean => {
   const { assertion, attribution, factuality, illocution } = fact;
   const said = time(attribution.generatedAtTime);
   const since = pattern.after ?? after;
@@ -73,5 +69,5 @@ export const matchesPattern = (
 };
 
 /** The first fact that fires the trigger: one matching its pattern, said after the trigger was set. */
-export const firstMatch = (trigger: Trigger.Trigger, facts: readonly FactEntry.Fact[]): FactEntry.Fact | undefined =>
+export const firstMatch = (trigger: Trigger.Trigger, facts: readonly RDF.Fact[]): RDF.Fact | undefined =>
   facts.find((fact) => matchesPattern(trigger.when, fact, { after: trigger.createdAt }));

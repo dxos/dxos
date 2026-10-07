@@ -10,8 +10,8 @@ import { useQuery } from '@dxos/echo-react';
 
 import { FactEntry } from '#types';
 
-/** The entries of the agent's annotation feeds — one per source it read. */
-export const useFactEntries = (agent: Agent.Agent): { entries: FactEntry.FactEntry[]; sources: number } => {
+/** The facts of the agent's annotation feeds — one feed per source it read — whose pass completed. */
+export const useFactEntries = (agent: Agent.Agent): { facts: FactEntry.Recorded[]; sources: number } => {
   const db = Obj.getDatabase(agent);
   // Child-of rather than a `.children()` traversal, which EDGE's query planner cannot run.
   const feedFilter = useMemo(
@@ -20,11 +20,18 @@ export const useFactEntries = (agent: Agent.Agent): { entries: FactEntry.FactEnt
   );
   const results = useQuery(db, feedFilter);
   const feeds = useMemo(() => results.filter(Obj.instanceOf(Feed.Feed)), [results]);
-  const entriesQuery = useMemo(
+  const [entriesQuery, passesQuery] = useMemo(
     () =>
-      feeds.length > 0 ? Query.select(Filter.type(FactEntry.FactEntry)).from(feeds) : Query.select(Filter.nothing()),
+      feeds.length > 0
+        ? [
+            Query.select(Filter.type(FactEntry.FactEntry)).from(feeds),
+            Query.select(Filter.type(FactEntry.ExtractionPass)).from(feeds),
+          ]
+        : [Query.select(Filter.nothing()), Query.select(Filter.nothing())],
     [feeds],
   );
   const entries = useQuery(db, entriesQuery);
-  return { entries, sources: feeds.length };
+  const passes = useQuery(db, passesQuery);
+  const facts = useMemo(() => FactEntry.completed(entries, passes), [entries, passes]);
+  return { facts, sources: feeds.length };
 };
