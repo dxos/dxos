@@ -19,7 +19,7 @@ import { nodeBounds } from './shapes.ts';
 /** A bend costs as much as this much distance: turns dominate, length breaks ties. */
 const TURN_COST = 100_000;
 
-/** Gutter lines beyond the two ends the search may use, so a route can go round an obstacle. */
+/** Gutter lines beyond the ends and the shapes the search may use, so a route can go round the outermost. */
 const MARGIN = 3;
 
 const EPSILON = 1e-6;
@@ -67,11 +67,15 @@ export const gutterRoute = (
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const start = gutterExit(from, spec);
   const end = gutterExit(to, spec);
-  const verticals = gutterLines(Math.min(start.x, end.x), Math.max(start.x, end.x), pitchX);
-  const horizontals = gutterLines(Math.min(start.y, end.y), Math.max(start.y, end.y), pitchY);
+  // The search spans the shapes' frames as well as the ends, so a way round a wide obstacle is never out of
+  // range of the margin and the route never falls back to cutting through it.
+  const frames = nodes.map(nodeBounds);
+  const extentX = [start.x, end.x, ...frames.flatMap((frame) => [frame.x, frame.x + frame.width])];
+  const extentY = [start.y, end.y, ...frames.flatMap((frame) => [frame.y, frame.y + frame.height])];
+  const verticals = gutterLines(Math.min(...extentX), Math.max(...extentX), pitchX);
+  const horizontals = gutterLines(Math.min(...extentY), Math.max(...extentY), pitchY);
   const xs = sortedUnique([...verticals, start.x, end.x]);
   const ys = sortedUnique([...horizontals, start.y, end.y]);
-  const frames = nodes.map(nodeBounds);
   const clear = (a: Point, b: Point) => !frames.some((frame) => crosses(a, b, frame));
 
   const indexOf = (values: number[], value: number) => values.indexOf(Math.round(value * 1000) / 1000);

@@ -80,6 +80,16 @@ describe('SceneBuilder', () => {
     expect(() => SceneBuilder.scene('root', [SceneBuilder.scene('f')]).build()).toThrow(/needs a frame/);
   });
 
+  test('two elements with one id fail the build', ({ expect }) => {
+    const rect = SceneBuilder.rect('a', box(0, 0));
+    expect(() => SceneBuilder.scene('s', [rect, rect]).build()).toThrow(/Duplicate id a in scene s/);
+    const link = SceneBuilder.link('line', 'a', 'a').id('l');
+    expect(() => SceneBuilder.scene('s', [rect, link, link]).build()).toThrow(/Duplicate id l/);
+    // An explicit id that repeats one already generated clashes too.
+    const generated = SceneBuilder.link('line', 'a', 'a');
+    expect(() => SceneBuilder.scene('s', [rect, generated, generated.id('a-a')]).build()).toThrow(/Duplicate id a-a/);
+  });
+
   test('a node its type does not describe fails the build', ({ expect }) => {
     const host = SceneBuilder.node('rect', 'a', box(0, 0)).properties({ portsPerSide: 2 });
     expect(() => SceneBuilder.scene('s', [host]).build()).not.toThrow();

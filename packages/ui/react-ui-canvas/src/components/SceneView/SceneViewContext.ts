@@ -49,6 +49,8 @@ export type SceneViewContextValue = {
   blocked: boolean;
   /** The current scene's frame. */
   bounds: Bounds;
+  /** The scene's frame and the visible viewport together, for the lattice cells. */
+  latticeBounds: Bounds;
   path: SceneId[];
   camera: Camera;
   /** The zoom against this level's own 1:1 rather than the root's; display only. */

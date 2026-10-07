@@ -49,7 +49,7 @@ import {
 import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
-import { hitTest } from '../../utils/hit.ts';
+import { boundsFromPoints, hitTest, unionBounds } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
 import { createLink, nodeBounds } from '../../utils/shapes.ts';
@@ -525,6 +525,15 @@ const SceneViewRoot = ({
     [camera, viewport],
   );
 
+  // Shapes may land on free cells beyond the scene's frame, so the cells cover whatever is in view as well.
+  const latticeBounds = useMemo(() => {
+    const visible = boundsFromPoints(
+      screenToScene(camera, { x: 0, y: 0 }),
+      screenToScene(camera, { x: viewport.width, y: viewport.height }),
+    );
+    return unionBounds([bounds, visible]) ?? bounds;
+  }, [camera, viewport, bounds]);
+
   const zoomBy = useCallback(
     (factor: number) => {
       interactedRef.current = true;
@@ -641,6 +650,7 @@ const SceneViewRoot = ({
       displayScene={displayScene}
       blocked={blocked}
       bounds={bounds}
+      latticeBounds={latticeBounds}
       path={path}
       camera={camera}
       nominalZoom={nominalZoom}
@@ -742,6 +752,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     displayScene,
     blocked,
     bounds,
+    latticeBounds,
     camera,
     measured,
     frameUnit,
@@ -801,7 +812,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             one scene unit under it — exactly the thickening that zooming in would cause. */}
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
         {guides && latticeOn && projection.lattice && (
-          <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />
+          <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
         )}
         {guides && (
           <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>

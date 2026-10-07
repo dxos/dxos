@@ -153,11 +153,13 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
       case 'node': {
         const node = { ...child.node, z };
         check(registry, node);
+        claim(nodes, node.id, element.id);
         nodes[node.id] = node;
         break;
       }
       case 'link': {
         const id = child.linkId ?? uniqueId(links, linkId(child.link.source, child.link.target));
+        claim(links, id, element.id);
         links[id] = { ...child.link, id, z };
         break;
       }
@@ -172,6 +174,7 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
           scene: child.id,
         };
         check(registry, node);
+        claim(nodes, node.id, element.id);
         nodes[node.id] = node;
         buildScene(child, registry, scenes);
         break;
@@ -190,6 +193,13 @@ const check = (registry: NodeRegistry, node: Node): void => {
   const result = Schema.encodeExit(def.schema, { onExcessProperty: 'error' })(node);
   if (Exit.isFailure(result)) {
     throw new Error(`Node ${node.id} is not a valid ${node.type}: ${result.cause}`);
+  }
+};
+
+/** Two elements given one id would leave only the second, so the fixture fails instead. */
+const claim = (taken: Record<string, unknown>, id: string, sceneId: SceneId): void => {
+  if (id in taken) {
+    throw new Error(`Duplicate id ${id} in scene ${sceneId}.`);
   }
 };
 

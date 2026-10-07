@@ -116,6 +116,28 @@ describe('gutter route', () => {
     }
   });
 
+  test('a wall wider than the search margin is still routed round', ({ expect }) => {
+    // Eleven cells wide across row 0, between two ends in column 0: the way round lies beyond its ends.
+    const wall = cellNode('wall', -5, 0, 11, 1);
+    const route = gutterRoute(
+      [wall],
+      spec,
+      { point: { x: 0, y: -128 }, side: 's' },
+      { point: { x: 0, y: 128 }, side: 'n' },
+    );
+    expect(route).toBeDefined();
+    const { x, y, width, height } = cellBounds({ col: -5, row: 0, spanX: 11, spanY: 1 }, spec);
+    for (const [from, to] of (route ?? []).slice(1).map((point, index) => [route?.[index] ?? point, point])) {
+      // No segment passes through the wall's interior.
+      const crosses =
+        Math.min(from.x, to.x) < x + width &&
+        Math.max(from.x, to.x) > x &&
+        Math.min(from.y, to.y) < y + height &&
+        Math.max(from.y, to.y) > y;
+      expect(crosses).toBe(false);
+    }
+  });
+
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
     const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>
