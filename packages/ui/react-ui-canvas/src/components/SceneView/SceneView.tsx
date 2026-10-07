@@ -35,6 +35,7 @@ import {
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
+  type Camera,
   DEFAULT_GRID,
   type ElementId,
   type Endpoint,
@@ -71,6 +72,8 @@ import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 1;
+/** Quiet time after the camera's last move before `onCameraChange` reports it. */
+const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
 /** Length of a dash of the scene's frame, in screen px. */
@@ -89,6 +92,10 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   projection?: Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: SceneViewAtoms;
+  /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
+  initialCamera?: Camera;
+  /** Called once the camera settles on the root scene, so a host can persist it. */
+  onCameraChange?: (camera: Camera) => void;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in whole major cells. */
@@ -110,6 +117,8 @@ const SceneViewRoot = ({
   createProjection,
   projection: projectionProp,
   atoms: atomsProp,
+  initialCamera,
+  onCameraChange,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
@@ -167,7 +176,8 @@ const SceneViewRoot = ({
 
   // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
   // effect, so the fit lands before the first paint instead of one frame after it.
-  const interactedRef = useRef(false);
+  // A restored camera counts as taken over, so the fit leaves it where it was.
+  const interactedRef = useRef(initialCamera !== undefined);
 
   const select = useCallback(
     (ids: Iterable<ElementId>) => {
@@ -199,10 +209,27 @@ const SceneViewRoot = ({
 
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
+    if (initialCamera) {
+      setCamera(initialCamera);
+    }
+    // Only the camera the view opened with is restored; later values are the host echoing ours back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setCamera]);
+  useLayoutEffect(() => {
     if (!interactedRef.current && measured) {
       setCamera(fitBounds(bounds, viewport, inset));
     }
   }, [measured, viewport, bounds, inset, setCamera]);
+
+  // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
+  const atRoot = path.length === 1;
+  useEffect(() => {
+    if (!onCameraChange || !atRoot || !interactedRef.current) {
+      return;
+    }
+    const timeout = setTimeout(() => onCameraChange(camera), CAMERA_SETTLE_MS);
+    return () => clearTimeout(timeout);
+  }, [onCameraChange, atRoot, camera]);
 
   useWheel(
     rootRef,

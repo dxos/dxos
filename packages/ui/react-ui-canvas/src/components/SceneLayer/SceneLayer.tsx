@@ -130,7 +130,7 @@ export const SceneLayer = memo(
       [scene, registry, lattice],
     );
     const unit = 1 / Math.max(zoom, 0.05);
-    // One set of end markers per layer, sized in scene units so they scale with the stroke.
+    // One set of end markers per layer, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
     const markerUrl = (marker: Marker | undefined, end: 'start' | 'end') =>
       marker ? `url(#${markerId}-${marker}-${end})` : undefined;
@@ -139,7 +139,7 @@ export const SceneLayer = memo(
       <>
         <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
           <defs>
-            <Markers id={markerId} unit={unit} />
+            <Markers id={markerId} />
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -192,11 +192,18 @@ export const SceneLayer = memo(
 
 SceneLayer.displayName = 'SceneLayer';
 
+/** Bounding box of a triangle or circle end, in scene units. */
+const END_BOX = 32;
+
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, unit }: { id: string; unit: number }) => {
-  const size = 6 * unit;
+const Markers = ({ id }: { id: string }) => {
+  // In scene units: a tenth of a default 256px node, so an end stays in proportion to the shapes it joins.
+  const size = 24;
   // An arrowhead has to read as a direction at a glance, so it carries twice the weight of an end dot.
   const arrow = 2 * size;
+  // The triangle and the circle each fill a 32×32 box: the triangle 10 of its 12 view units, the circle 8 of its 10.
+  const triangle = (END_BOX * 12) / 10;
+  const circle = (END_BOX * 10) / 8;
   const ends = ['start', 'end'] as const;
   return (
     <>
@@ -223,8 +230,8 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           viewBox='-1 -1 12 12'
           refX={10}
           refY={5}
-          markerWidth={arrow * 1.2}
-          markerHeight={arrow * 1.2}
+          markerWidth={triangle}
+          markerHeight={triangle}
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
@@ -238,8 +245,8 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           viewBox='0 0 10 10'
           refX={5}
           refY={5}
-          markerWidth={size}
-          markerHeight={size}
+          markerWidth={circle}
+          markerHeight={circle}
           markerUnits='userSpaceOnUse'
         >
           <circle cx={5} cy={5} r={4} className='fill-neutral-500' />

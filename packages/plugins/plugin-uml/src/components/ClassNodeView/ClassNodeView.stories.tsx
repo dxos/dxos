@@ -56,7 +56,7 @@ const createClassTree = () =>
       methods: ['hire(person)'],
     }),
     SceneBuilder.link('smart', 'employee', 'person').properties({ ends: { end: 'triangle' } }),
-    SceneBuilder.link('smart', 'employee', 'org').properties({ directed: true }),
+    SceneBuilder.link('smart', 'employee', 'org').properties({ ends: { start: 'circle', end: 'arrow' } }),
   ])
     .name('Classes')
     .build(nodes);

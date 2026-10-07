@@ -10,7 +10,9 @@ import { Entity, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
+  type Camera,
   type Element,
   SceneView,
   type SceneViewPropertiesProps,
@@ -32,6 +34,8 @@ import {
   parseLinkedSceneId,
 } from '#model';
 import { Canvas, CanvasCapabilities } from '#types';
+
+import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
@@ -64,6 +68,15 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   }, [registry, canvas]);
 
   const db = Obj.getDatabase(canvas);
+
+  // Restores where the root scene was last left; read once per binding, since later values are our own writes.
+  const contextId = Entity.getURI(canvas);
+  const { camera: savedCamera } = useViewState(canvasViewAspect, contextId);
+  const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
+  const handleCameraChange = useCallback(
+    (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
+    [updateViewState],
+  );
 
   // A scene shape links only to another canvas drawing: never to itself, nor to a drawing of another renderer.
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
@@ -105,7 +118,14 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
-          <SceneView.Root key={bound.root} store={bound.store} root={bound.root} nodes={nodes}>
+          <SceneView.Root
+            key={bound.root}
+            store={bound.store}
+            root={bound.root}
+            nodes={nodes}
+            initialCamera={savedCamera}
+            onCameraChange={handleCameraChange}
+          >
             <SceneView.Canvas liveDepth={settings.liveDepth} />
             {/* Unset means shown: settings saved before the default existed hold neither key. */}
             {(settings.showToolbar ?? true) && (
