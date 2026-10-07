@@ -42,7 +42,7 @@ export const spec: NodeDefSpec = {
   key: 'C',
   schema: ClassNode,
   create: make,
-  defaultSize: { width: 256, height: 256 },
+  defaultSize: { width: 8, height: 8 },
   resizable: true,
   minSize: { width: 128, height: 96 },
   parts: [{ field: 'name' }, { field: 'attributes', lines: true }, { field: 'methods', lines: true }],

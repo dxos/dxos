@@ -20,7 +20,7 @@ import { type FormFieldMap } from '@dxos/react-ui-form';
 
 import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
 import { type PartEditing, type PartField } from '../utils/parts.ts';
-import { DEFAULT_SIZES, createNode } from '../utils/shapes.ts';
+import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
   EllipseNode,
@@ -72,6 +72,7 @@ export type NodeDef = {
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
   create: (props: CreateProps) => Node;
+  /** Size when created, in nominal units: major grid cells, scaled by the drawing's major grid. */
   defaultSize: Size;
   /** Explicit port layout; absent, the type gets `portsPerSide` ports spread along each side. */
   ports?: (node: Node) => readonly Port[];
@@ -152,7 +153,7 @@ const MIN_SIZE: Size = { width: 64, height: 32 };
 export const boxPrototype: NodeDefSpec = {
   component: BoxNodeView,
   parts: [{ field: 'label' }],
-  defaultSize: DEFAULT_SIZES.rect,
+  defaultSize: NOMINAL_SIZES.rect,
   resizable: true,
   minSize: MIN_SIZE,
 };
@@ -175,7 +176,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     schema: EllipseNode,
     component: EllipseNodeView,
     create: (props) => createNode({ type: 'ellipse', ...props }),
-    defaultSize: DEFAULT_SIZES.ellipse,
+    defaultSize: NOMINAL_SIZES.ellipse,
     // Only the side centres of the frame lie on the curve.
     portsPerSide: 1,
     parts: [{ field: 'label' }],
@@ -191,7 +192,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     component: NoteNodeView,
     parts: [{ field: 'text', multiline: true }],
     create: (props) => createNode({ type: 'note', ...props }),
-    defaultSize: DEFAULT_SIZES.note,
+    defaultSize: NOMINAL_SIZES.note,
     resizable: true,
     minSize: MIN_SIZE,
   },
@@ -203,7 +204,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     schema: PortalNode,
     component: PortalNodeView,
     create: (props) => createNode({ type: 'scene', ...props }),
-    defaultSize: DEFAULT_SIZES.scene,
+    defaultSize: NOMINAL_SIZES.scene,
     minSize: { width: 96, height: 60 },
     openable: true,
   },

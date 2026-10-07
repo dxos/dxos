@@ -53,7 +53,7 @@ import { nodeDragType } from '../../utils/dnd.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
-import { createLink, nodeBounds } from '../../utils/shapes.ts';
+import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
@@ -142,6 +142,8 @@ const SceneViewRoot = ({
   // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
   // so a fit puts the same gap around the scene whatever the zoom.
   const inset = margin * grid * MAJOR_GRID_RATIO;
+  // A new node's default size is nominal (major cells of the model's grid, not the level drawn at this zoom).
+  const cell = grid * MAJOR_GRID_RATIO;
 
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
@@ -320,6 +322,7 @@ const SceneViewRoot = ({
     setCamera,
     cancelAnimation,
     isNavigating,
+    cell,
     minor,
     major,
     snap,
@@ -523,7 +526,8 @@ const SceneViewRoot = ({
     // The pointer is the shape's centre; its top-left is what snaps, so the edges land on the grid.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
-      const size = nodeRegistry[type]?.defaultSize ?? { width: 0, height: 0 };
+      const def = nodeRegistry[type];
+      const size = def ? nominalSize(def.defaultSize, cell) : { width: 0, height: 0 };
       const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
       return { kind: 'create', type, from, to: from, dropped: true };
     };
@@ -545,7 +549,7 @@ const SceneViewRoot = ({
       onDragLeave: cancelDrag,
       onDrop: () => onPointerUpRef.current(),
     });
-  }, [capabilities.create, nodeRegistry, toScene, snap, setDrag, cancelDrag]);
+  }, [capabilities.create, nodeRegistry, cell, toScene, snap, setDrag, cancelDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
@@ -587,7 +591,7 @@ const SceneViewRoot = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = def.defaultSize;
+      const size = nominalSize(def.defaultSize, cell);
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
       // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
       const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
@@ -595,7 +599,7 @@ const SceneViewRoot = ({
         commitCreated(node);
       }
     },
-    [nodeRegistry, capabilities.create, snap, pointer, createdNode, commitCreated],
+    [nodeRegistry, capabilities.create, cell, snap, pointer, createdNode, commitCreated],
   );
 
   const toolbarActions = useMemo<ToolbarActions>(
