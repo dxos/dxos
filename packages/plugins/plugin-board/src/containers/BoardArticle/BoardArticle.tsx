@@ -75,26 +75,30 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const controller = useRef<BoardController>(null);
   const [zoom, setZoom] = useState(1);
 
-  const layout = useMemo<Layout>(() => ({ items: normalizeCells(board.layout.cells) }), [board.layout.cells]);
+  const [{ layout: boardLayout }] = useObject(board);
+  const layout = useMemo<Layout>(() => ({ items: normalizeCells(boardLayout.cells) }), [boardLayout.cells]);
   const bounds = useMemo(
-    () => ({ columns: board.layout.size.width, rows: board.layout.size.height }),
-    [board.layout.size.width, board.layout.size.height],
+    () => ({ columns: boardLayout.size.width, rows: boardLayout.size.height }),
+    [boardLayout.size.width, boardLayout.size.height],
   );
 
   // TODO(burdon): Use search.
   const objects = useQuery(db, Filter.everything());
-  const options = useMemo<ObjectPickerProps['options']>(
+  const optionsAtom = useMemo(
     () =>
-      objects
-        .filter((obj) => obj.id !== board.id)
-        .map((obj) => {
-          const label = Obj.getLabel(obj);
-          return label ? { id: obj.id, label, hue: 'neutral' as const } : undefined;
-        })
-        .filter(isNonNullable)
-        .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
+      Atom.make((get): ObjectPickerProps['options'] =>
+        objects
+          .filter((obj) => obj.id !== board.id)
+          .map((obj) => {
+            const label = get(Obj.labelAtom(obj));
+            return label ? { id: obj.id, label, hue: 'neutral' as const } : undefined;
+          })
+          .filter(isNonNullable)
+          .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
+      ),
     [objects, board.id],
   );
+  const options = useAtomValue(optionsAtom);
 
   const handleChange = useCallback<NonNullable<BoardRootProps['onChange']>>(
     (next) => {

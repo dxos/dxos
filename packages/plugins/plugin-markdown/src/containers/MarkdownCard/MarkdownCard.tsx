@@ -27,19 +27,20 @@ export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  // Subscribe to the live content so the snippet + word count track edits (e.g. an agent updating
-  // the document); reading `subject.content.target.content` alone is not reactive to the string.
-  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
+  const [document] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject : undefined);
+  const [docContent] = useObject(document?.content, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
+  const content = docContent ?? textContent ?? '';
   // NOTE: Newline is added so that the mask does not obscure the last line.
   // An empty document has no snippet at all, so it renders no preview box rather than an empty one
   // (concatenating the newline unconditionally made this always truthy).
   const snippet = useMemo(() => {
-    const text = getSnippet(subject);
+    const text = (document && Obj.getDescription(document)) || getContentSnippet(content, 16);
     return text ? text + '\n' : undefined;
-  }, [subject, docContent, textContent]);
+  }, [document, content]);
   const extensions = useMemo(() => [snippetExtension({ maxHeight: SNIPPET_MAX_HEIGHT, scale: 0.8 })], []);
-  const info = getInfo(subject);
+  // Split on runs of whitespace and drop empties, so an empty document counts 0 rather than 1.
+  const words = content.split(/\s+/).filter(Boolean).length;
 
   return (
     <Card.Body>
@@ -73,26 +74,12 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
         {/* Across the rails, as the snippet is, so the count starts at the snippet's text edge rather than indented. */}
         <Card.Row span='full'>
           <Card.Text classNames='px-2 text-xs' variant='muted' data-testid='markdown.card.words'>
-            {info.words} {t('words.label', { count: info.words })}
+            {words} {t('words.label', { count: words })}
           </Card.Text>
         </Card.Row>
       </Card.Section>
     </Card.Body>
   );
-};
-
-const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 16) => {
-  if (Obj.instanceOf(Markdown.Document, subject)) {
-    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback, maxLines);
-  } else if (Obj.instanceOf(Text.Text, subject)) {
-    return getContentSnippet(subject.content ?? fallback, maxLines);
-  }
-};
-
-const getInfo = (subject: Markdown.Document | Text.Text) => {
-  const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';
-  // Split on runs of whitespace and drop empties, so an empty document counts 0 rather than 1.
-  return { words: text.split(/\s+/).filter(Boolean).length };
 };
 
 MarkdownCard.displayName = 'MarkdownCard';

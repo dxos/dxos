@@ -10,12 +10,10 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Table } from '@dxos/react-ui-table/types';
 import * as Card from '@dxos/react-ui/Card';
-import { getTypeURIFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 
 import { RelatedContacts } from '#components';
@@ -27,15 +25,7 @@ export const RelatedToOrganization = ({
   const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
   const db = Obj.getDatabase(organization);
 
-  const contacts = useQuery(db, Filter.type(Person.Person));
-  const related = contacts.filter((contact) =>
-    typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
-  );
-
-  const spaceViews = useQuery(db, Filter.type(Table.Table));
-  const spaceContactTable = spaceViews.find(
-    (table) => getTypeURIFromQuery(table.view.target?.query?.ast) === Type.getURI(Person.Person),
-  );
+  const related = useQuery(db, Query.select(Filter.id(organization.id)).referencedBy(Person.Person, 'organization'));
 
   // TODO(wittjosiah): Generalized way of handling related objects navigation.
   const handleContactClick = useCallback(
@@ -50,7 +40,7 @@ export const RelatedToOrganization = ({
           workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
         });
       }).pipe(EffectEx.runAndForwardErrors),
-    [invoke, db, contacts, spaceContactTable, pivotId],
+    [invoke, db, pivotId],
   );
 
   return (

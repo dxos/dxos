@@ -5,6 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
+import { useObject } from '@dxos/echo-react';
 import type { ProjectionModel } from '@dxos/schema';
 
 import { Kanban } from '#types';
@@ -16,10 +17,13 @@ import { Kanban } from '#types';
  * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */
 export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel => {
-  return useMemo(() => {
-    const pivotField = kanban.spec.pivotField;
+  const [{ pivotField }] = useObject(kanban, 'spec');
+  const [arrangement] = useObject(kanban, 'arrangement');
+  // Serialized so the memo keys on the column ids, not the arrangement record (a fresh copy on every change).
+  const optionIdsKey = JSON.stringify(Object.keys(arrangement?.columns ?? {}));
 
-    const optionIds = Object.keys(kanban.arrangement?.columns ?? {});
+  return useMemo(() => {
+    const optionIds: string[] = JSON.parse(optionIdsKey);
     const options = optionIds.map((id) => ({ id, title: id, color: 'neutral' as const }));
 
     const fieldProjection: any = {
@@ -40,5 +44,5 @@ export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel 
 
     // TODO(wittjosiah): Refactor ProjectionModel to be an interface that we can fulfill.
     return stub as unknown as ProjectionModel;
-  }, [kanban.arrangement?.columns, kanban.spec.pivotField]);
+  }, [optionIdsKey, pivotField]);
 };

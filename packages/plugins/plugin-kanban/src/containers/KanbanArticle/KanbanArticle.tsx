@@ -133,7 +133,8 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
     () =>
       Atom.make((get) => {
         const out: Obj.Unknown[] = [];
-        for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
+        const { items } = get(Obj.atomProperty(object, 'spec'));
+        for (const ref of items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
           const target = get(Obj.atom(ref));
           if (target == null) {
             continue;
@@ -148,7 +149,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
         }
         return out;
       }),
-    [object.spec.items],
+    [object],
   );
 
   const handleCardRemove = useCallback(() => undefined, []);

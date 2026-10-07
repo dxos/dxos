@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
-import { useType } from '@dxos/echo-react';
+import { useObject, useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
@@ -31,6 +31,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const [snapshot] = useObject(subject);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the
   // `compact` form layout. Callers can override either via the explicit `layout` prop.
@@ -78,8 +79,8 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     if (!readonly) {
       return true;
     }
-    return properties.some((prop) => (subject as any)?.[prop.name] != null);
-  }, [schema, subject, readonly]);
+    return properties.some((prop) => (snapshot as any)?.[prop.name] != null);
+  }, [schema, snapshot, readonly]);
 
   const handleSave = useCallback(
     (values: AnyProperties, { changed }: FormUpdateMeta<AnyProperties>) => {
@@ -105,14 +106,12 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     );
   }
 
-  const { icon, hue } = Obj.getIcon(subject) ?? { icon: 'ph--circle-dashed--regular', hue: 'neutral' };
-
   return (
     <Card.Body>
       <Form.Root
         schema={schema}
         projection={projection}
-        values={subject}
+        values={snapshot}
         readonly={readonly}
         layout={resolvedLayout}
         autoSave

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
@@ -11,9 +12,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { useContextObjects } from '#hooks';
+import { type UseContextObjects, useContextObjects } from '#hooks';
 import { meta } from '#meta';
 
 export type ChatReferencesProps = Util.ThemedClassName<{
@@ -22,35 +23,44 @@ export type ChatReferencesProps = Util.ThemedClassName<{
 }>;
 
 export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
   const { objects, onUpdateObject } = useContextObjects({ db, context });
 
   return (
     <ul className={mx('flex gap-1', classNames)}>
-      {objects.map((obj) => {
-        const uri = Obj.getURI(obj);
-        const typename = Obj.getTypename(obj);
-        const label: Theme.Label =
-          Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
-        const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
-        const styles = hue ? getStyles(hue) : undefined;
-        return (
-          <li key={uri.toString()} className='dx-tag dx-tag-inline py-0 flex items-center gap-1' data-hue='neutral'>
-            <Icon.Icon icon={icon} size='md' />
-            {Theme.toLocalizedString(label, t)}
-            <Button.Root
-              icon='ph--x--bold'
-              iconOnly
-              variant='ghost'
-              label={t('remove-object.label')}
-              classNames='p-0 hover:bg-transparent'
-              iconSize='xs'
-              onClick={() => onUpdateObject?.(uri, false)}
-            />
-          </li>
-        );
-      })}
+      {objects.map((obj) => (
+        <ChatReference key={Obj.getURI(obj).toString()} object={obj} onUpdateObject={onUpdateObject} />
+      ))}
     </ul>
+  );
+};
+
+type ChatReferenceProps = {
+  object: Obj.Unknown;
+  onUpdateObject: UseContextObjects['onUpdateObject'];
+};
+
+const ChatReference = ({ object, onUpdateObject }: ChatReferenceProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const uri = Obj.getURI(object);
+  const typename = Obj.getTypename(object);
+  const objectLabel = useAtomValue(Obj.labelAtom(object));
+  const label: Theme.Label = objectLabel ?? (typename ? ['object-name.placeholder', { ns: typename }] : object.id);
+  const { icon } = Obj.getIcon(object) ?? { icon: DEFAULT_OBJECT_ICON };
+
+  return (
+    <li className='dx-tag dx-tag-inline py-0 flex items-center gap-1' data-hue='neutral'>
+      <Icon.Icon icon={icon} size='md' />
+      {Theme.toLocalizedString(label, t)}
+      <Button.Root
+        icon='ph--x--bold'
+        iconOnly
+        variant='ghost'
+        label={t('remove-object.label')}
+        classNames='p-0 hover:bg-transparent'
+        iconSize='xs'
+        onClick={() => onUpdateObject(uri, false)}
+      />
+    </li>
   );
 };
 

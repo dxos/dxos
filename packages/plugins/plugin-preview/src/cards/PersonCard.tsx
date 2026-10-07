@@ -10,6 +10,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Attention } from '@dxos/react-ui-attention/types';
 import * as Avatar from '@dxos/react-ui/Avatar';
@@ -22,9 +23,11 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
   const { invoke } = Hooks.useOperationInvoker();
   // Card.Action's onClick carries no event, so resolve the origin plank from the card element itself.
   const cardRef = useRef<HTMLDivElement>(null);
-  const { image, organization: { target: organization } = {}, emails = [] } = subject;
+  const [{ image, organization: organizationRef, emails = [] }] = useObject(subject);
+  const [organizationName] = useObject(organizationRef, 'name');
 
   const handleOrganizationClick = useCallback(() => {
+    const organization = organizationRef?.target;
     if (!organization) {
       return;
     }
@@ -41,7 +44,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
         workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
       });
     }).pipe(EffectEx.runAndForwardErrors);
-  }, [invoke, organization]);
+  }, [invoke, organizationRef]);
 
   return (
     <Card.Body ref={cardRef}>
@@ -57,8 +60,8 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
           />
         </Card.Row>
       )}
-      {organization?.name && (
-        <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
+      {organizationName && (
+        <Card.Action icon='ph--buildings--regular' label={organizationName} onClick={handleOrganizationClick} />
       )}
       {emails.length > 0 && (
         <Card.Row>

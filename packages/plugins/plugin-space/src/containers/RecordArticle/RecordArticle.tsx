@@ -9,7 +9,6 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj, Type } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
@@ -37,7 +36,6 @@ import { SpaceSurface } from '#types';
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
-  useObject(subject);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);

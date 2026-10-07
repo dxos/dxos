@@ -5,6 +5,7 @@
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
@@ -39,6 +40,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     // Refs don't trigger re-renders, so reading `.current` at render time leaves the prop null.
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
+    const [item] = useObject(data);
     const { model } = useBoard(BOARD_ITEM_NAME);
     const column = useBoardColumn();
     const items = useMemo(
@@ -54,12 +56,12 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
       [column, data, model.onItemDelete, t],
     );
 
-    if (!data) {
+    if (!data || !item) {
       return null;
     }
 
-    const label = Obj.getLabel(data);
-    const description = Obj.getDescription(data);
+    const label = Obj.getLabel(item);
+    const description = Obj.getDescription(item);
 
     return (
       <Mosaic.Tile

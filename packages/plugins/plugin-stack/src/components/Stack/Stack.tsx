@@ -17,6 +17,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -197,8 +198,9 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const attentionAttrs = useAttentionAttributes(attendableId);
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
-  const title = Obj.getLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
+  const [snapshot] = useObject(object);
+  const icon = Obj.getIcon(snapshot)?.icon ?? 'ph--circle-dashed--regular';
+  const title = Obj.getLabel(snapshot, { fallback: 'typename' }) ?? t('untitled-section.title');
 
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>

@@ -5,6 +5,7 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
@@ -45,7 +46,8 @@ const since = (iso: string): string => {
  * is working, and what it last said.
  */
 export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
-  const { state, title, lastMessage, started, lastCheckedIn, repo, branch, worktree } = subject;
+  const [session] = useObject(subject);
+  const { state, title, lastMessage, started, lastCheckedIn, repo, branch, worktree } = session;
   const option = stateOption(state);
   const harness = RemoteSession.harnessName(subject);
   const harnessIcon = RemoteSession.harnessIcon(subject);
@@ -90,7 +92,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
         <div className='flex items-center gap-2 text-sm text-fg-subtle'>
           <span>started {since(started)}</span>
           {/* Only meaningful while the session might still be working; a closed one has an end. */}
-          {lastCheckedIn && !RemoteSession.isTerminal(subject) && <span>· seen {since(lastCheckedIn)}</span>}
+          {lastCheckedIn && !RemoteSession.isTerminal(session) && <span>· seen {since(lastCheckedIn)}</span>}
         </div>
       </Card.Row>
       {lastMessage && (

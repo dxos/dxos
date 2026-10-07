@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Relation } from '@dxos/echo';
@@ -88,10 +90,15 @@ export const CommentThread = ({
   const [status] = useObject(thread, 'status');
   const [messages] = useObject(thread, 'messages');
 
-  const loadedMessages = useMemo(
-    () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
+  // `ref.atom` loads each target and re-emits when it arrives.
+  const loadedMessagesAtom = useMemo(
+    () =>
+      Atom.make((get) =>
+        (messages ?? []).map((ref) => get(ref.atom)).filter((message): message is Message.Message => !!message),
+      ),
     [messages],
   );
+  const loadedMessages = useAtomValue(loadedMessagesAtom);
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);

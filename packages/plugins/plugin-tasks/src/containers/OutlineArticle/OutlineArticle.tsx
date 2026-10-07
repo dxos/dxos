@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { useResolveRef } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
@@ -182,6 +182,7 @@ OutlineArticle.displayName = 'OutlineArticle';
 
 const TaskForm = ({ task }: { task: Task.Task }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
+  const [snapshot] = useObject(task);
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
@@ -197,7 +198,7 @@ const TaskForm = ({ task }: { task: Task.Task }) => {
   );
 
   return (
-    <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
+    <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
       <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />

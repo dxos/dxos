@@ -6,6 +6,7 @@ import { format, intervalToDuration } from 'date-fns';
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { EID, type URI } from '@dxos/keys';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
@@ -202,7 +203,8 @@ type RowRefProps = {
 
 /** A Card.Row rendering an ECHO ref/relation with a card-preview anchor icon. */
 const RowRef = ({ object }: RowRefProps) => {
-  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
+  const [snapshot] = useObject(object);
+  const label = Obj.getLabel(snapshot, { fallback: 'typename' }) ?? 'object';
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 

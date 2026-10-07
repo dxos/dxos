@@ -37,13 +37,6 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
 ): BoardModel<KanbanLayout.ColumnStructure, T> {
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
   const arrangementAtom = useMemo(() => Obj.atomProperty(kanban, 'arrangement'), [kanban]);
-  const viewSnapshotAtom = useMemo(
-    () =>
-      kanban?.spec?.kind === 'view' && kanban.spec.view
-        ? Obj.atom(kanban.spec.view)
-        : Atom.make<undefined>(() => undefined),
-    [kanban?.spec],
-  );
 
   /**
    * Only changes when the discriminator-relevant pivot input changes.
@@ -53,12 +46,13 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
   const pivotFieldIdAtom = useMemo(
     () =>
       Atom.make((get) => {
-        if (kanban?.spec.kind === 'items') {
-          return kanban.spec.pivotField;
+        const spec = get(Obj.atomProperty(kanban, 'spec'));
+        if (spec.kind === 'items') {
+          return spec.pivotField;
         }
-        return get(viewSnapshotAtom)?.projection?.pivotFieldId as string | undefined;
+        return get(Obj.atom(spec.view))?.projection?.pivotFieldId as string | undefined;
       }),
-    [kanban?.spec, viewSnapshotAtom],
+    [kanban],
   );
 
   // Effective per-column ids: from kanban.arrangement.columns; empty when arrangement has no columns.

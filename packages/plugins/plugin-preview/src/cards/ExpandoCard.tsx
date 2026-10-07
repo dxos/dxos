@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
@@ -33,20 +34,21 @@ const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
 const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
 
 export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
+  const [snapshot] = useObject(subject);
   const schema = useMemo(() => {
     const ignored = new Set(ignorePaths ?? []);
     const fields: Record<string, Schema.Codec<any, any>> = {};
-    for (const key of Object.keys(subject)) {
+    for (const key of Object.keys(snapshot)) {
       if (isInternalKey(key) || ignored.has(key)) {
         continue;
       }
-      const fieldSchema = schemaForValue((subject as any)[key]);
+      const fieldSchema = schemaForValue((snapshot as any)[key]);
       if (fieldSchema) {
         fields[key] = fieldSchema;
       }
     }
     return Schema.Struct(fields);
-  }, [subject, ignorePaths]);
+  }, [snapshot, ignorePaths]);
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {
@@ -64,7 +66,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
 
   return (
     <Card.Body>
-      <Form.Root schema={schema} values={subject} autoSave onSave={handleSave}>
+      <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
             <Form.Fields />

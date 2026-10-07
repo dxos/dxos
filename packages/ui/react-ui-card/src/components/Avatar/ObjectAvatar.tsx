@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Entity, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
 import * as Icon from '@dxos/react-ui/Icon';
 import { getStyles } from '@dxos/ui-theme';
@@ -46,9 +47,11 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
  * that away; the type glyph stays the default.
  */
 export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
-  const image = getObjectImage(object);
-  const label = Obj.getLabel(object as Obj.Unknown);
-  const iconAnnotation = Entity.getIcon(object);
+  const [snapshot] = useObject(Obj.isObject(object) ? object : undefined);
+  const current = snapshot ?? object;
+  const image = getObjectImage(current);
+  const label = Entity.getLabel(current);
+  const iconAnnotation = Entity.getIcon(current);
 
   // No picture and no label leaves initials with nothing to derive from, so the type's own glyph is
   // the only honest thing left — a blank disc would read as a failed image rather than as an object

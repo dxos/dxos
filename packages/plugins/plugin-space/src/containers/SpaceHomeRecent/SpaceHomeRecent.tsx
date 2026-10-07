@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -80,8 +81,9 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
+  const objectLabel = useAtomValue(Obj.labelAtom(data));
   const label = Theme.toLocalizedString(
-    Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
+    objectLabel ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );
   const iconAnnotation = Obj.getIcon(data);

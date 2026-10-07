@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, forwardRef } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { type ReactNode, forwardRef, useMemo } from 'react';
 
 import { Entity } from '@dxos/echo';
 import * as Card from '@dxos/react-ui/Card';
@@ -52,6 +54,19 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
     const iconAnnotation = entity && Entity.getIcon(entity);
     const icon = iconProp ?? iconAnnotation?.icon ?? DEFAULT_ICON;
     const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
+    const label = useAtomValue(
+      useMemo(
+        () =>
+          Atom.make((get) =>
+            Entity.isEntity(subject)
+              ? (get(Entity.labelAtom(subject)) ?? Entity.getTypename(subject))
+              : Entity.isSnapshot(subject)
+                ? Entity.getLabel(subject, { fallback: 'typename' })
+                : undefined,
+          ),
+        [subject],
+      ),
+    );
 
     return (
       <Card.Header ref={forwardedRef}>
@@ -61,7 +76,7 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
           </CardIconSlot>
         </Layout.Block>
         <Card.Title truncate={lines === undefined} lines={lines}>
-          {children ?? (entity && Entity.getLabel(entity, { fallback: 'typename' }))}
+          {children ?? label}
         </Card.Title>
         {menu}
       </Card.Header>

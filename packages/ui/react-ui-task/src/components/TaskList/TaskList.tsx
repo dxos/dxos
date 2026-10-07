@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
+import { Tag as EchoTag, Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
@@ -576,7 +578,7 @@ const TaskListItem = ({
 
       {/* The row's second line, under the title; it takes no height when the task has no chips. */}
       <Layout.Flex align='center' classNames='col-[title] row-start-2 empty:hidden' data-testid='taskList.item.chips'>
-        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+        <TaskListItemTags task={task} />
       </Layout.Flex>
       {/* Under the title and the chips, clearing the gutter and the status control so it does not read as the row
           above's, and stopping short of the trailing controls. What the task says, and nothing the log recorded. */}
@@ -661,18 +663,19 @@ TaskListItemActions.displayName = 'TaskList.ItemActions';
  */
 const TaskListItemArtifacts = ({ task, filter }: { task: Task.Task; filter?: (obj: Obj.Unknown) => boolean }) => {
   const db = Obj.getDatabase(task);
+  const [refs] = useObject(task, 'artifacts');
   const ids = useMemo(
     () =>
-      (task.artifacts ?? []).flatMap((ref) => {
+      (refs ?? []).flatMap((ref) => {
         const id = Task.refEntityId(ref);
         return id ? [id] : [];
       }),
-    [task.artifacts],
+    [refs],
   );
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
   // Without a database — a story, a preview — the refs were made from objects already in hand,
   // so their targets resolve synchronously and the row still shows what the task produced.
-  const resolved = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+  const resolved = db ? queried : (refs ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
   const artifacts = filter ? resolved.filter(filter) : resolved;
 
   return (
@@ -692,7 +695,7 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 export const TaskTags = ({ task }: { task: Task.Task }) => {
   return (
     <>
-      <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+      <TaskListItemTags task={task} />
       <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
     </>
   );
@@ -704,8 +707,18 @@ TaskTags.displayName = 'TaskList.Tags';
  * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
  * reason artifacts are: a tag's target is not in memory on a cold load.
  */
-const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.Ref<EchoTag.Tag>[] }) => {
+const TaskListItemTags = ({ task }: { task: Task.Task }) => {
   const db = Obj.getDatabase(task);
+  // Meta has no property atom; the object's atom fires on meta writes too.
+  const tagsAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        get(Obj.atom(task));
+        return [...Obj.getMeta(task).tags];
+      }),
+    [task],
+  );
+  const tags = useAtomValue(tagsAtom);
   const ids = useMemo(
     () =>
       tags.flatMap((ref) => {
@@ -715,11 +728,21 @@ const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.
     [tags],
   );
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
-  const resolved = db ? queried : tags.flatMap((ref) => (ref.target ? [ref.target] : []));
-  const labelled = useMemo(
-    () => resolved.filter((object) => Obj.instanceOf(EchoTag.Tag, object)).sort(EchoTag.sortTags),
+  const resolved = useMemo(
+    () => (db ? queried : tags.flatMap((ref) => (ref.target ? [ref.target] : []))),
+    [db, queried, tags],
+  );
+  const labelledAtom = useMemo(
+    () =>
+      Atom.make((get) =>
+        resolved
+          .filter((object) => Obj.instanceOf(EchoTag.Tag, object))
+          .map((tag) => get(Obj.atom(tag)))
+          .sort((a, b) => a.label.localeCompare(b.label)),
+      ),
     [resolved],
   );
+  const labelled = useAtomValue(labelledAtom);
 
   return (
     <>
@@ -743,10 +766,11 @@ TaskListItemTags.displayName = 'TaskList.ItemTags';
  * markdown — so a row reads the same as the text that references it.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
-  const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const [snapshot] = useObject(artifact);
+  const label = Obj.getLabel(snapshot) ?? Obj.getTypename(snapshot) ?? '';
   const anchor = usePreviewAnchor({ eid: Obj.getURI(artifact).toString(), label });
 
-  if (PullRequest.instanceOf(artifact)) {
+  if (Obj.snapshotOf(PullRequest.PullRequest, snapshot)) {
     return (
       <Button.Root
         {...anchor}
@@ -755,8 +779,8 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
         // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
         classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
         icon='ph--git-pull-request--regular'
-        iconClassNames={pullRequestStateStyle[artifact.state]}
-        label={`#${artifact.number}`}
+        iconClassNames={pullRequestStateStyle[snapshot.state]}
+        label={`#${snapshot.number}`}
         tabIndex={-1}
       />
     );

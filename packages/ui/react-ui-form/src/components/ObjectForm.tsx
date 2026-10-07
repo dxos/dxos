@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
@@ -50,12 +52,21 @@ type ObjectFormModelOptions = {
  * handler that adds a ref field's new target to the object's database.
  */
 const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) => {
-  const meta = Obj.getMeta(object);
+  // Meta has no property atom; the object's atom fires on meta writes too.
+  const metaTagsAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        get(Obj.atom(object));
+        return [...Obj.getMeta(object).tags];
+      }),
+    [object],
+  );
+  const storedTags = useAtomValue(metaTagsAtom);
   // Provider-owned tags are held out of the form and written back untouched (see `partitionMetaTags`).
   const spaceTags = useQuery(db, Filter.type(Tag.Tag));
   const { editable: tags, preserved: preservedTags } = useMemo(
-    () => partitionMetaTags([...meta.tags], spaceTags),
-    [meta.tags, spaceTags],
+    () => partitionMetaTags(storedTags, spaceTags),
+    [storedTags, spaceTags],
   );
   const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...snapshot }), [snapshot, tags]);
 

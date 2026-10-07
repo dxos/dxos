@@ -65,9 +65,9 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
+  const objectLabel = useAtomValue(Obj.labelAtom(item.object));
   const label =
-    Obj.getLabel(item.object) ??
-    Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
+    objectLabel ?? Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(
