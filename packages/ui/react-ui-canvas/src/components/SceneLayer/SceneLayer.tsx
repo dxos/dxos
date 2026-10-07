@@ -215,7 +215,7 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
   const arrow = END_BOX;
   const triangle = (END_BOX * 12) / 10;
   const circle = (END_BOX * 10) / 8;
-  // The outline rounds the corners at the line's on-screen width (`unit` is one screen px in scene units), in its marker's view units.
+  // An outline matches the line's on-screen width (`unit` is one screen px in scene units), in its marker's view units.
   const outline = (size: number, view: number) => (LINK_WIDTH * unit * view) / size;
   const ends = ['start', 'end'] as const;
   return (
@@ -235,7 +235,7 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
         </marker>
       ))}
-      {/* Inheritance (UML generalization): a triangle. */}
+      {/* Inheritance (UML generalization): a triangle filled with the canvas, so the line stops at its base. */}
       {ends.map((end) => (
         <marker
           key={`triangle-${end}`}
@@ -250,12 +250,12 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
         >
           <path
             d='M 0 0 L 10 5 L 0 10 z'
-            className='fill-neutral-500 stroke-neutral-500'
+            className='fill-base-surface stroke-neutral-500'
             strokeWidth={outline(triangle, 12)}
           />
         </marker>
       ))}
-      {/* A circle centred on the connection point. */}
+      {/* A circle centred on the connection point, filled with the canvas so the line stops at its rim. */}
       {ends.map((end) => (
         <marker
           key={`circle-${end}`}
@@ -271,7 +271,7 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
             cx={5}
             cy={5}
             r={4}
-            className='fill-neutral-500 stroke-neutral-500'
+            className='fill-base-surface stroke-neutral-500'
             strokeWidth={outline(circle, 10)}
           />
         </marker>
