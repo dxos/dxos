@@ -61,7 +61,7 @@ export interface ExecuteResponse extends Schema.Schema.Type<typeof ExecuteRespon
 
 /**
  * Effect RPC definitions for sandboxed SQLite access by operations and processes.
- * The host screens every statement; see `SqliteService` in `@dxos/compute`.
+ * The host screens every statement; see `SqlService` in `@dxos/compute`.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('execute', {
@@ -69,13 +69,13 @@ export class Rpcs extends RpcGroup.make(
     success: ExecuteResponse,
     error: SqlError.SqlError,
   }),
-).prefix('SqliteService.') {}
+).prefix('SqlService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 /**
- * Effect service tag for the `SqliteService` RPC handlers.
+ * Effect service tag for the `SqlService` RPC handlers.
  */
-export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/SqliteService') {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/SqlService') {}

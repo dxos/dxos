@@ -19,4 +19,4 @@ export const MIGRATIONS = {
 };
 
 /** Own history table, since the service shares its database with other stores. */
-export const MIGRATIONS_TABLE = 'dx_sqlite_service_migrations';
+export const MIGRATIONS_TABLE = 'dx_sql_service_migrations';

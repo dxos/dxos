@@ -114,10 +114,10 @@
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
     },
-    "./SqliteService": {
-      "source": "./src/SqliteService.ts",
-      "types": "./dist/types/src/SqliteService.d.ts",
-      "import": "./dist/lib/SqliteService.mjs"
+    "./SqlService": {
+      "source": "./src/SqlService.ts",
+      "types": "./dist/types/src/SqlService.d.ts",
+      "import": "./dist/lib/SqlService.mjs"
     },
     "./StorageService": {
       "source": "./src/StorageService.ts",

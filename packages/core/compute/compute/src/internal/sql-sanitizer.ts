@@ -3,7 +3,7 @@
 //
 
 /**
- * Lexical SQL screen for `SqliteService`: a tokenizer plus keyword rules, not a parser.
+ * Lexical SQL screen for `SqlService`: a tokenizer plus keyword rules, not a parser.
  * It finds the names a statement reads or writes as tables so the caller can check ownership.
  */
 
@@ -23,8 +23,8 @@ const FORBIDDEN_LEADING = new Set([
   'vacuum',
 ]);
 
-/** Name prefixes of SQLite, Cloudflare and `SqliteService` internals. */
-export const RESERVED_PREFIXES = ['sqlite_', 'pragma_', '_cf_', 'dx_sqlite_service'] as const;
+/** Name prefixes of SQLite, Cloudflare and `SqlService` internals. */
+export const RESERVED_PREFIXES = ['sqlite_', 'pragma_', '_cf_', 'dx_sql_service'] as const;
 
 /** Functions that escape the sandbox; matched wherever they appear. */
 const FORBIDDEN_WORDS = new Set(['load_extension', 'readfile', 'writefile', 'fts3_tokenizer']);

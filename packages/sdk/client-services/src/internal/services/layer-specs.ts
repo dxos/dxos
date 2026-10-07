@@ -54,7 +54,7 @@ import {
   NetworkService,
   QueryService,
   SpacesService,
-  SqliteService,
+  SqlService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
@@ -92,7 +92,7 @@ import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
-import { SqliteServiceLayer } from '../sqlite/index.ts';
+import { SqlServiceLayer } from '../sql/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
 import { TransportFactoryService } from './client-platform.ts';
 import {
@@ -780,14 +780,14 @@ export const DevtoolsHostSpec = LayerSpec.make(
   () => DevtoolsHostLayer,
 );
 
-export const SqliteServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [SqliteService.Tag] },
-  () => SqliteServiceLayer,
+export const SqlServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [SqlService.Tag] },
+  () => SqlServiceLayer,
 );
 
-export const SqliteServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqliteService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(SqliteService.Rpcs, SqliteService.Tag),
+export const SqlServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
 export const DevtoolsHostRegistrationSpec = LayerSpec.make(
@@ -861,8 +861,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   FeedServiceRegistrationSpec,
   LoggingServiceSpec,
   LoggingServiceRegistrationSpec,
-  SqliteServiceSpec,
-  SqliteServiceRegistrationSpec,
+  SqlServiceSpec,
+  SqlServiceRegistrationSpec,
   DevtoolsHostSpec,
   DevtoolsHostRegistrationSpec,
 ];

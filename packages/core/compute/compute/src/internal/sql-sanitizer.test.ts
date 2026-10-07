@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { sanitize } from './sqlite-sanitizer.ts';
+import { sanitize } from './sql-sanitizer.ts';
 
 const tables = (sql: string) => {
   const result = sanitize(sql);
@@ -58,7 +58,7 @@ describe('sanitize', () => {
       'SELECT * FROM "SQLITE_SCHEMA"',
       'SELECT * FROM pragma_table_info(?)',
       'SELECT * FROM _cf_KV',
-      'DELETE FROM dx_sqlite_service_objects',
+      'DELETE FROM dx_sql_service_objects',
       'PRAGMA writable_schema = ON',
       'ATTACH DATABASE ? AS other',
       'BEGIN',

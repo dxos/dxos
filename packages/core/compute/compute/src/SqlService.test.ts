@@ -14,16 +14,16 @@ import { describe, test } from 'vitest';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
-import * as SqliteService from './SqliteService.ts';
+import * as SqlService from './SqlService.ts';
 
 /** Two databases and the host share one SQLite file, as in the client services host. */
-const run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient | SqliteService.SqliteService>) =>
+const run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient | SqlService.SqlService>) =>
   EffectEx.runPromise(
-    effect.pipe(Effect.provide(Layer.provideMerge(SqliteService.layerGuarded, layerMemory)), Effect.scoped),
+    effect.pipe(Effect.provide(Layer.provideMerge(SqlService.layerGuarded, layerMemory)), Effect.scoped),
   );
 
 const inDatabase = <A, E>(name: string, effect: Effect.Effect<A, E, SqlClient.SqlClient>) =>
-  effect.pipe(Effect.provide(SqliteService.database({ name })));
+  effect.pipe(Effect.provide(SqlService.database({ name })));
 
 const exec = (name: string, statement: string) =>
   inDatabase(
@@ -43,7 +43,7 @@ const reasonTag = (exit: Exit.Exit<unknown, unknown>) =>
       )
     : undefined;
 
-describe('SqliteService', () => {
+describe('SqlService', () => {
   test('round-trips through the client', async ({ expect }) => {
     const rows = await run(
       inDatabase(

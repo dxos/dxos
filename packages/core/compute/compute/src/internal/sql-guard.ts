@@ -7,8 +7,8 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import * as SqlError from 'effect/sql/SqlError';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/sqlite-service/index.ts';
-import { sanitize } from './sqlite-sanitizer.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/sql-service/index.ts';
+import { sanitize } from './sql-sanitizer.ts';
 
 export type Row = Readonly<Record<string, unknown>>;
 
@@ -18,7 +18,7 @@ export type ExecuteRequest = {
   readonly params: ReadonlyArray<unknown>;
 };
 
-const OBJECTS_TABLE = 'dx_sqlite_service_objects';
+const OBJECTS_TABLE = 'dx_sql_service_objects';
 
 export const authorizationError = (message: string): SqlError.SqlError =>
   new SqlError.SqlError({
@@ -27,17 +27,17 @@ export const authorizationError = (message: string): SqlError.SqlError =>
 
 /**
  * Executes sanitized statements on a shared SqlClient.
- * Every schema object is owned by the database that created it (recorded in `dx_sqlite_service_objects`);
+ * Every schema object is owned by the database that created it (recorded in `dx_sql_service_objects`);
  * a statement that names an object owned by another database, or by the host, is rejected.
  */
-export const makeGuardedExecutor = Effect.fn('SqliteService.makeGuardedExecutor')(function* () {
+export const makeGuardedExecutor = Effect.fn('SqlService.makeGuardedExecutor')(function* () {
   const sql = yield* SqlClient.SqlClient;
   yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
     Effect.mapError((error) =>
       error instanceof SqlError.SqlError
         ? error
         : new SqlError.SqlError({
-            reason: new SqlError.UnknownError({ cause: error, message: 'SqliteService migration failed' }),
+            reason: new SqlError.UnknownError({ cause: error, message: 'SqlService migration failed' }),
           }),
     ),
   );
@@ -52,7 +52,7 @@ export const makeGuardedExecutor = Effect.fn('SqliteService.makeGuardedExecutor'
       )
       .pipe(Effect.map((rows) => new Map(rows.map((row) => [row.name, row.owner]))));
 
-  const execute = Effect.fn('SqliteService.execute')(function* ({ database, sql: statement, params }: ExecuteRequest) {
+  const execute = Effect.fn('SqlService.execute')(function* ({ database, sql: statement, params }: ExecuteRequest) {
     const result = sanitize(statement);
     if (!result.ok) {
       return yield* authorizationError(result.reason);

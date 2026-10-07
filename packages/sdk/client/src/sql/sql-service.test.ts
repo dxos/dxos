@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import { describe, onTestFinished, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type SqliteService } from '@dxos/protocols/rpc';
+import { type SqlService } from '@dxos/protocols/rpc';
 
 import { Client } from '../client/index.ts';
 import { TestBuilder } from '../testing/index.ts';
 
-describe('SqliteService', () => {
+describe('SqlService', () => {
   test('executes sanitized statements across the client services boundary', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
@@ -19,13 +19,13 @@ describe('SqliteService', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    const execute = (database: string, sql: string, params: SqliteService.SqlValue[] = []) =>
+    const execute = (database: string, sql: string, params: SqlService.SqlValue[] = []) =>
       EffectEx.runPromise(
-        client.services.rpc['SqliteService.execute']({ database, sql, params }).pipe(Effect.map(({ rows }) => rows)),
+        client.services.rpc['SqlService.execute']({ database, sql, params }).pipe(Effect.map(({ rows }) => rows)),
       );
     const rejection = (database: string, sql: string) =>
       EffectEx.runPromise(
-        client.services.rpc['SqliteService.execute']({ database, sql, params: [] }).pipe(
+        client.services.rpc['SqlService.execute']({ database, sql, params: [] }).pipe(
           Effect.flip,
           Effect.map((error) => error.reason._tag),
         ),

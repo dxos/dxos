@@ -33,7 +33,7 @@ import {
   NetworkService,
   QueryService,
   SpacesService,
-  SqliteService,
+  SqlService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
@@ -71,7 +71,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   InboxService.Rpcs,
   EdgeAgentService.Rpcs,
-  SqliteService.Rpcs,
+  SqlService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
 
@@ -96,7 +96,7 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
-  SqliteService: SqliteService.Handlers;
+  SqlService: SqlService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
 
@@ -353,7 +353,7 @@ export interface ClientServicesRpc
     ContactsService.Client,
     InboxService.Client,
     EdgeAgentService.Client,
-    SqliteService.Client,
+    SqlService.Client,
     DevtoolsHost.Client {}
 
 /**
