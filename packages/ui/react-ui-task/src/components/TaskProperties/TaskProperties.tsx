@@ -5,7 +5,7 @@
 import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -59,10 +59,12 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  */
 export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const status = task.status ?? 'todo';
-  const priority = task.priority ?? undefined;
-  const estimate = task.estimate ?? undefined;
-  const assignee = task.assignee ?? undefined;
+  // The live task's identity never changes, so the fields are read through a subscription or an edit would not repaint.
+  const [snapshot] = useObject(task);
+  const status = snapshot.status ?? 'todo';
+  const priority = snapshot.priority ?? undefined;
+  const estimate = snapshot.estimate ?? undefined;
+  const assignee = snapshot.assignee ?? undefined;
 
   // The people the space knows, for the picker. Queried rather than read off refs: a contact's
   // target is not in memory on a cold load, and the picker must offer everyone, not only whoever

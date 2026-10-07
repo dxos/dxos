@@ -5,6 +5,7 @@
 import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
@@ -53,11 +54,14 @@ export type TaskStatusControlProps = {
 /** The status glyph, which is also the control that completes the task. */
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const status = task.status ?? 'todo';
+  // Subscribed here, not left to the row: the live task's identity never changes, so a compiled
+  // parent hands this control the same props and it would not re-render on a status write.
+  const [snapshot] = useObject(task);
+  const status = snapshot.status ?? 'todo';
   // Derived from the task rather than wired down from the list: a task an agent has taken and
   // started is being worked right now whoever renders it, and the row is the only place that says
   // so. A human-started task keeps the static glyph.
-  const working = active ?? Task.isAgentWorking(task);
+  const working = active ?? Task.isAgentWorking(snapshot);
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: statusIcon(status), classNames: statusTextStyle(status) };
@@ -230,9 +234,10 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  */
 export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const [estimate] = useObject(task, 'estimate');
   return (
     <TaskEstimatePicker
-      estimate={task.estimate}
+      estimate={estimate}
       onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
       testId='taskList.item.estimate'
       classNames={classNames}
@@ -296,9 +301,10 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  */
 export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
+  const [priority] = useObject(task, 'priority');
   return (
     <TaskPriorityPicker
-      priority={task.priority ?? undefined}
+      priority={priority ?? undefined}
       onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
       testId='taskList.item.priority'
       classNames={classNames}
