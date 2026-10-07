@@ -17,13 +17,13 @@ const decodeFact = Schema.decodeUnknownSync(Fact);
 
 const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
 const termToObject = (term: Term): NamedNode | Literal =>
-  'entity' in term ? Vocab.entityIri(term.entity) : Vocab.str(term.literal);
+  term.kind === 'entity' ? Vocab.entityIri(term.entity) : Vocab.str(term.literal);
 const objectToTerm = (term: RdfTerm | undefined, label?: string): Term | undefined =>
   term === undefined
     ? undefined
     : term.termType === 'NamedNode' && term.value.startsWith(Vocab.ENTITY)
-      ? { entity: Vocab.entityIdFromIri(term.value), ...(label !== undefined ? { label } : {}) }
-      : { literal: term.value };
+      ? { kind: 'entity', entity: Vocab.entityIdFromIri(term.value), ...(label !== undefined ? { label } : {}) }
+      : { kind: 'literal', literal: term.value };
 
 /**
  * Plain RDF reification of a Fact.
@@ -34,6 +34,7 @@ const objectToTerm = (term: RdfTerm | undefined, label?: string): Term | undefin
  * `attribution.wasDerivedFrom` (array) uses the `sx:derivedFrom` predicate — a distinct local name from the
  * `prov:wasDerivedFrom` used for `source` — so the two never collide on reassembly.
  * `illocution` is flattened to `sx:force` / `sx:mood` / `sx:addressee`; absent `force` means no illocution.
+ * A term's `kind` is not serialized: an entity IRI vs a string literal already distinguishes it.
  */
 
 /** Expand a Fact into plain reified triples (a Fact node + annotation triples). */
@@ -73,10 +74,10 @@ export const factToTriples = (fact: Fact): Quad[] => {
     triples.push(quad(node, Vocab.sx('quote'), Vocab.str(fact.assertion.quote), g));
   }
   // Preserve the original surface form for display (entity ids are lowercased slugs).
-  if ('entity' in fact.assertion.subject && fact.assertion.subject.label) {
+  if (fact.assertion.subject.kind === 'entity' && fact.assertion.subject.label) {
     triples.push(quad(node, Vocab.sx('subjectLabel'), Vocab.str(fact.assertion.subject.label), g));
   }
-  if ('entity' in fact.assertion.object && fact.assertion.object.label) {
+  if (fact.assertion.object.kind === 'entity' && fact.assertion.object.label) {
     triples.push(quad(node, Vocab.sx('objectLabel'), Vocab.str(fact.assertion.object.label), g));
   }
   if (fact.attribution.wasDerivedFrom) {
@@ -96,6 +97,9 @@ export const factToTriples = (fact: Fact): Quad[] => {
     if (fact.illocution.addressee !== undefined) {
       triples.push(quad(node, Vocab.sx('addressee'), Vocab.str(fact.illocution.addressee), g));
     }
+  }
+  if (fact.pass !== undefined) {
+    triples.push(quad(node, Vocab.sx('pass'), Vocab.str(fact.pass), g));
   }
   return triples;
 };
@@ -167,6 +171,7 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
       recordedAt: one('recordedAt'),
       extractor: { id: one('extractorId'), model: one('extractorModel'), version: one('extractorVersion') },
       sourceHash: one('sourceHash'),
+      ...(one('pass') !== undefined ? { pass: one('pass') } : {}),
     };
     facts.push(decodeFact(candidate));
   }

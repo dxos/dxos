@@ -22,21 +22,6 @@ import { agentSpeaker, readSource } from './read-source.ts';
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
 
-const toRdfTerm = (term: FactEntry.Term): RDF.Term =>
-  term.literal !== undefined
-    ? { literal: term.literal }
-    : { entity: term.entity ?? normalizeEntityId(term.label ?? ''), ...(term.label ? { label: term.label } : {}) };
-
-/** A stored fact back in pipeline-rdf's shape, for the brain's RDF store. */
-export const toRdf = (fact: FactEntry.Fact): RDF.Fact => ({
-  ...fact,
-  assertion: {
-    ...fact.assertion,
-    subject: toRdfTerm(fact.assertion.subject),
-    object: toRdfTerm(fact.assertion.object),
-  },
-});
-
 /**
  * Fires the agent's triggers that `facts` match: sends each one's update, composed by the model from the
  * conversation `transcript` under the relay rules; a one-time trigger also marks its goal achieved and is
@@ -47,7 +32,7 @@ export const toRdf = (fact: FactEntry.Fact): RDF.Fact => ({
  */
 export const fireTriggers: (
   agent: Agent.Agent,
-  facts: readonly FactEntry.Fact[],
+  facts: readonly RDF.Fact[],
   transcript?: string,
 ) => Effect.Effect<
   { fired: string[]; undelivered: string[] },
@@ -122,7 +107,7 @@ const handler: Operation.WithHandler<typeof BrainSkill.RunTriggers> = BrainSkill
       const { facts, transcript } = yield* readSource(agent, { source: chat });
       if (facts.length > 0) {
         const brain = yield* BrainService.BrainService;
-        yield* brain.addFacts(agent.id, facts.map(toRdf));
+        yield* brain.addFacts(agent.id, facts);
       }
       return { facts: facts.length, ...(yield* fireTriggers(agent, facts, transcript)) };
     }),

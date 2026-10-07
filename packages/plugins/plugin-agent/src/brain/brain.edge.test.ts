@@ -26,6 +26,7 @@ import { Context } from '@dxos/context';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EdgeProcessManager } from '@dxos/edge-compute';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { RDF } from '@dxos/pipeline-rdf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
@@ -141,11 +142,11 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
 
   /** What `GET /compute/brain/:spaceId/:agentId` answers; triggers arrive encoded (`BrainService.encodeTrigger`). */
   const BrainStateResponse = Schema.Struct({
-    facts: Schema.Array(FactEntry.Fact),
+    facts: Schema.Array(RDF.Fact),
     triggers: Schema.Array(Schema.Unknown),
   });
 
-  type BrainState = { facts: readonly FactEntry.Fact[]; triggers: readonly Trigger.Trigger[] };
+  type BrainState = { facts: readonly RDF.Fact[]; triggers: readonly Trigger.Trigger[] };
 
   const brainState = async (agent: Agent.Agent): Promise<BrainState> => {
     const response = await client.edge.http.request(Context.default(), `/compute/brain/${space.id}/${agent.id}`, {

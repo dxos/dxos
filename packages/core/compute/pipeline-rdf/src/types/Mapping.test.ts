@@ -11,9 +11,9 @@ import * as Mapping from './Mapping.ts';
 const FACT: Fact = {
   id: 'fact-1',
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: 'paris' },
+    object: { kind: 'entity', entity: 'paris' },
     validFrom: '2026-06-12',
   },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
@@ -35,7 +35,11 @@ describe('fact ↔ triples mapping', () => {
     const fact: Fact = {
       ...FACT,
       id: 'fact-2',
-      assertion: { subject: { entity: 'meeting' }, predicate: 'scheduledFor', object: { literal: '2026-07-15' } },
+      assertion: {
+        subject: { kind: 'entity', entity: 'meeting' },
+        predicate: 'scheduledFor',
+        object: { kind: 'literal', literal: '2026-07-15' },
+      },
       attribution: { source: 'dxn:queue:x:m3', generatedAtTime: '2026-06-08T00:00:00.000Z' },
     };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
@@ -57,14 +61,20 @@ describe('fact ↔ triples mapping', () => {
     expect(back).toEqual(fact);
   });
 
+  test('round-trips the extraction pass', ({ expect }) => {
+    const fact: Fact = { ...FACT, id: 'fact-pass', pass: 'pass-1' };
+    const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
   test('round-trips entity display labels (preserving surface casing)', ({ expect }) => {
     const fact: Fact = {
       ...FACT,
       id: 'fact-4',
       assertion: {
-        subject: { entity: 'dxos', label: 'DXOS' },
+        subject: { kind: 'entity', entity: 'dxos', label: 'DXOS' },
         predicate: 'is',
-        object: { entity: 'open-source-project', label: 'an open source project' },
+        object: { kind: 'entity', entity: 'open-source-project', label: 'an open source project' },
       },
     };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));

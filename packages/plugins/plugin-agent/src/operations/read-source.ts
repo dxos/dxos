@@ -191,7 +191,7 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
 
 export type ReadSourceResult = {
   entry?: FactEntry.FactEntry;
-  facts: readonly FactEntry.Fact[];
+  facts: readonly RDF.Fact[];
   /** A chat's rendered window: the context lines before the new messages, then the new ones. */
   transcript?: string;
 };

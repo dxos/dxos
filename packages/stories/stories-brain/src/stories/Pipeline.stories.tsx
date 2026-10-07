@@ -406,7 +406,7 @@ const toDocs = (text: string): { readonly text: string; readonly source: string 
     .map((part, index) => ({ text: part, source: `doc-${index}` }));
 
 const factEntities = (fact: RDF.Fact): string[] =>
-  [fact.assertion.subject, fact.assertion.object].flatMap((term) => ('entity' in term ? [term.entity] : []));
+  [fact.assertion.subject, fact.assertion.object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 

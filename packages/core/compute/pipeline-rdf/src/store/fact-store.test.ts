@@ -12,7 +12,11 @@ import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
-  assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
+  assertion: {
+    subject: { kind: 'entity', entity: 'alice' },
+    predicate: 'travelsTo',
+    object: { kind: 'entity', entity: 'paris' },
+  },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
   attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',
@@ -49,7 +53,11 @@ describe('FactStore', () => {
         mk({ id: 'f1' }),
         mk({
           id: 'f2',
-          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } },
+          assertion: {
+            subject: { kind: 'entity', entity: 'alice' },
+            predicate: 'travelsTo',
+            object: { kind: 'entity', entity: 'rome' },
+          },
           attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
         }),
       ]);
@@ -69,7 +77,11 @@ describe('FactStore', () => {
       yield* store.putFacts([
         mk({
           id: 'f1',
-          assertion: { subject: { entity: 'bob' }, predicate: 'Works At', object: { entity: 'dxos' } },
+          assertion: {
+            subject: { kind: 'entity', entity: 'bob' },
+            predicate: 'Works At',
+            object: { kind: 'entity', entity: 'dxos' },
+          },
         }),
       ]);
       // Different case + tense than stored, but the same relation key.

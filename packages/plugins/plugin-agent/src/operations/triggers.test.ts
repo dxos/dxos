@@ -17,6 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
@@ -50,6 +51,8 @@ const brain = makeTestBrain();
 const SAID_AT = '2026-10-03T12:00:00.000Z';
 
 /** A fact as `readSource` records it from a chat message. */
+const entityTerm = (label: string): RDF.Term => ({ kind: 'entity', entity: normalizeEntityId(label), label });
+
 const fact = ({
   speaker = 'dima',
   subject = 'indexer PR',
@@ -68,9 +71,9 @@ const fact = ({
   polarity?: '+' | '-';
   force?: Trigger.Force;
   saidAt?: string;
-} = {}): FactEntry.Fact => ({
+} = {}): RDF.Fact => ({
   id: `fact-${subject}-${predicate}-${object}`,
-  assertion: { subject: { label: subject }, predicate, object: { label: object }, quote },
+  assertion: { subject: entityTerm(subject), predicate, object: entityTerm(object), quote },
   factuality: { value: polarity === '+' ? 'CT+' : 'CT-', polarity },
   ...(force ? { illocution: { force } } : {}),
   attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },

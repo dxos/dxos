@@ -63,7 +63,8 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
             return true;
           }
           const { subject, object } = fact.assertion;
-          return [subject.entity, object.entity, fact.attribution.agent].some((id) => id !== undefined && ids.has(id));
+          const entities = [subject, object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
+          return [...entities, fact.attribution.agent].some((id) => id !== undefined && ids.has(id));
         })
         .filter(
           ({ fact }) =>
