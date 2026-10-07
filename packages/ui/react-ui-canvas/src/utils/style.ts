@@ -33,7 +33,7 @@ const HUES: Record<string, HueClasses> = {
 };
 
 /** The hues the style picker offers, neutral first; any theme hue still renders, at its `medium` tone. */
-export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'violet', 'pink'] as const;
+export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet'] as const;
 export type StyleHue = (typeof STYLE_HUES)[number];
 
 export const TONES: readonly NodeTone[] = [0, 1, 2, 3];
@@ -75,6 +75,10 @@ const TONE_FILLS: Record<StyleHue, Record<'light' | 'strong', ToneClasses>> = {
     light: { surface: 'bg-teal-200', text: 'text-teal-900' },
     strong: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
   },
+  sky: {
+    light: { surface: 'bg-sky-200', text: 'text-sky-900' },
+    strong: { surface: 'bg-sky-bg', text: 'text-neutral-50' },
+  },
   blue: {
     light: { surface: 'bg-blue-200', text: 'text-blue-900' },
     strong: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
@@ -82,10 +86,6 @@ const TONE_FILLS: Record<StyleHue, Record<'light' | 'strong', ToneClasses>> = {
   violet: {
     light: { surface: 'bg-violet-200', text: 'text-violet-900' },
     strong: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
-  },
-  pink: {
-    light: { surface: 'bg-pink-200', text: 'text-pink-900' },
-    strong: { surface: 'bg-pink-bg', text: 'text-neutral-50' },
   },
 };
 
