@@ -39,7 +39,7 @@ export const ComputeGraphRegistry = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [SheetCapabilities.ComputeGraphRegistry],
     // Needs a client, which headless hosts (EDGE) do not provide.
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./compute-graph-registry.ts'),
 );
@@ -53,8 +53,8 @@ export const Markdown = Capability.lazyModule(
     requires: [SheetCapabilities.ComputeGraphRegistry],
     provides: [MarkdownCapabilities.ExtensionProvider],
     activatesOn: MarkdownEvents.Start,
-    // Follows its required registry, which is node-only.
-    environments: ['node'],
+    // Follows its required registry, which headless hosts (EDGE) do not provide.
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./markdown-extension.ts'),
 );
