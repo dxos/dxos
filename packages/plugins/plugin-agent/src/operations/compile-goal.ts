@@ -106,7 +106,9 @@ export const compileGoal = (
   }).pipe(
     Effect.timeoutOption(COMPILE_BUDGET),
     Effect.map(Option.getOrUndefined),
-    Effect.provide(AiService.languageModel(COMPILE_MODEL).pipe(Layer.orDie)),
+    // Without extended thinking a compile answers in about 9 s rather than 37 s, which is what lets the oracle,
+    // a compile and one retry fit the budget; the replay gate, not the model's deliberation, checks the rules.
+    Effect.provide(AiService.languageModel(COMPILE_MODEL, { thinking: false }).pipe(Layer.orDie)),
     Effect.catchCause((cause) =>
       Effect.logInfo('goal compilation failed', { goal: props.goal, cause }).pipe(Effect.as(undefined)),
     ),
