@@ -169,7 +169,7 @@ export interface Filter {
  * Whether `info` satisfies `filter`. Exported so every {@link Manager} filters identically rather
  * than each implementation growing its own notion of a match.
  */
-export const matchesFilter = (info: Process, filter: Filter = {}): boolean => {
+export const matchesFilter = (info: Data, filter: Filter = {}): boolean => {
   if (filter.key !== undefined && info.key !== filter.key) {
     return false;
   }
