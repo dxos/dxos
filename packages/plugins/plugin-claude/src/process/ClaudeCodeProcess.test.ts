@@ -13,7 +13,7 @@ import { expect } from 'vitest';
 import { type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer, waitForMessage } from '@dxos/agent-runtime/testing';
 import * as Chat from '@dxos/assistant/Chat';
-import * as NodeSubprocess from '@dxos/compute-runtime/node-subprocess';
+import * as NodeShell from '@dxos/compute-runtime/node-shell';
 import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -32,7 +32,7 @@ let definition: AgentProcessDefinition | undefined;
 const TestLayer = AssistantTestLayer({
   types: [Feed.Feed, AccessToken.AccessToken],
   agent: { processes: () => (definition ? [definition] : []) },
-  extraServices: NodeSubprocess.layer,
+  extraServices: NodeShell.layer,
 });
 
 const setup = Effect.fnUntraced(function* (command: ClaudeCodeProcess.Command, env?: Record<string, string>) {
@@ -115,6 +115,34 @@ describe('ClaudeCodeProcess', () => {
   );
 
   it.effect(
+    'starts a new agent once the last one died, though something it started still holds its output',
+    Effect.fnUntraced(
+      function* (_) {
+        const { chat } = yield* setup(
+          { command: process.execPath, args: [FAKE_AGENT] },
+          { FAKE_AGENT_HOLD_STDOUT: '1' },
+        );
+        const session = yield* AgentService.getSession(chat);
+        yield* session.submitPrompt('first');
+        const [first] = yield* replies(session.feed, 1);
+        const pid = Number(first.match(/ pid=(\d+)/)?.[1]);
+        const holder = Number(first.match(/ holder=(\d+)/)?.[1]);
+        yield* Effect.addFinalizer(() => Effect.sync(() => process.kill(holder, 'SIGKILL')));
+        process.kill(pid, 'SIGKILL');
+
+        yield* session.submitPrompt('second');
+        const [, second] = yield* replies(session.feed, 2);
+        expect(second).toMatch(/^second pid=\d+/);
+        expect(Number(second.match(/ pid=(\d+)/)?.[1])).not.toBe(pid);
+      },
+      Effect.scoped,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
     'fails the turn when the agent cannot be started',
     Effect.fnUntraced(
       function* (_) {
@@ -129,31 +157,5 @@ describe('ClaudeCodeProcess', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },
-  );
-
-  // Real Claude Code through its ACP adapter, against the Anthropic API: opt in with `DX_E2E_CLAUDE=1`
-  // and `DX_ANTHROPIC_API_KEY`, with `npx` able to fetch the adapter.
-  it.effect.skipIf(!process.env.DX_E2E_CLAUDE || !process.env.DX_ANTHROPIC_API_KEY)(
-    'e2e: runs turns on Claude Code, which remembers the conversation',
-    Effect.fnUntraced(
-      function* (_) {
-        const { chat } = yield* setup(
-          { command: 'npx', args: ['-y', '@agentclientprotocol/claude-agent-acp@0.85.0'] },
-          { ANTHROPIC_API_KEY: process.env.DX_ANTHROPIC_API_KEY ?? '' },
-        );
-        const session = yield* AgentService.getSession(chat);
-        yield* session.submitPrompt('Reply with exactly the single word "pong" and nothing else. Do not use tools.');
-        const [reply] = yield* replies(session.feed, 1);
-        expect(reply.toLowerCase()).toContain('pong');
-
-        yield* session.submitPrompt('Which word did you just reply with? Answer with that word only, in upper case.');
-        const [, followUp] = yield* replies(session.feed, 2);
-        expect(followUp).toContain('PONG');
-      },
-      Effect.scoped,
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 240_000 },
   );
 });

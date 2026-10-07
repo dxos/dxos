@@ -92,7 +92,7 @@ export const InvitationsContainer = () => {
           {available.length > 0 ? (
             <Form.FieldSet label={t('available-invitations.title')}>
               <Listbox.Root items={available.map((row) => ({ value: row.code, label: row.code }))}>
-                <Listbox.Content classNames='gap-1'>
+                <Listbox.Content scroll={false} classNames='gap-1'>
                   {available.map((row) => (
                     <AvailableInvitationItem key={row.code} row={row} />
                   ))}
@@ -104,7 +104,7 @@ export const InvitationsContainer = () => {
           {redeemed.length > 0 ? (
             <Form.FieldSet label={t('redeemed-invitations.title')}>
               <Listbox.Root items={redeemed.map((row) => ({ value: row.code, label: row.code }))}>
-                <Listbox.Content classNames='gap-1'>
+                <Listbox.Content scroll={false} classNames='gap-1'>
                   {redeemed.map((row) => (
                     <RedeemedInvitationItem key={row.code} row={row} />
                   ))}

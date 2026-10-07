@@ -65,8 +65,12 @@ const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
         createBasicExtensions({ lineWrapping: true, history: false, search: false }),
         createThemeExtensions({
           themeMode,
-          slots: { editor: { className: 'h-full w-full [&>.cm-scroller]:scrollbar-none' } },
+          // Content height, not full height, so the part's own layout places the editor where it puts the
+          // static text (a label centred in its cell).
+          slots: { editor: { className: 'w-full max-h-full [&>.cm-scroller]:scrollbar-none' } },
         }),
+        // The part's own leading, not the editor theme's, so the lines do not shift when editing starts.
+        Prec.highest(EditorView.theme({ '.cm-scroller, .cm-content, .cm-line': { lineHeight: 'inherit' } })),
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
             finish(() => editing.commit(state.doc.toString()));

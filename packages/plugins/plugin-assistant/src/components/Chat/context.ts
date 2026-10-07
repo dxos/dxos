@@ -36,8 +36,6 @@ export type ChatContextValue = {
   event: Event<ChatEvent>;
   db?: Database.Database;
   chat?: Chat.Chat;
-  /** Removes a queued message or a pending alarm from the feed. */
-  onCancel: (item: Message.Message | Alarm.Alarm) => void;
   /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
   processor?: AiChatProcessor;
   /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
@@ -51,8 +49,8 @@ export type ChatContextValue = {
 /** What the chat currently shows: the projected thread and the state that moves with it. */
 export type ChatThreadContextValue = {
   messages: Message.Message[];
-  /** Queued input the agent has not taken up yet, in append order. */
-  queued: Message.Message[];
+  /** How many rows at the end of `messages` are prompts the agent has not taken up yet. */
+  tail: number;
   /** Alarms still waiting to fire, earliest first. */
   alarms: Alarm.Alarm[];
   /** Alarms that have woken the agent since the last user prompt. */

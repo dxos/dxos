@@ -4,12 +4,8 @@
 
 import React, { useState } from 'react';
 
-import type * as Process from '@dxos/compute/Process';
 import { Form, createSelectField } from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Select from '@dxos/react-ui/Select';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import {
   MandelbrotFormValues,
@@ -18,14 +14,8 @@ import {
   randomFormValues,
   startingPointParams,
 } from '../testing/index.ts';
-
-/** Where the user asks a process to run; the space an EDGE location needs is the story's own. */
-export type LocationKind = Process.Location['kind'];
-
-const LOCATIONS: { value: LocationKind; label: string }[] = [
-  { value: 'local', label: 'Local' },
-  { value: 'edge', label: 'EDGE' },
-];
+import { CommandToolbar } from './CommandToolbar.tsx';
+import { type LocationKind } from './types.ts';
 
 const fieldMap = {
   preset: createSelectField({ options: STARTING_POINTS.map(({ name }) => name), defaultLabel: null }),
@@ -62,34 +52,13 @@ export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: Co
   return (
     <Panel.Root>
       <Panel.Header>
-        <Toolbar.Root>
-          <Button.Root
-            icon='ph--plus--regular'
-            label='Create'
-            disabled={!ready}
-            onClick={handleCreate}
-            data-testid='process-create'
-          />
-          {edge && (
-            <Select.Root
-              items={LOCATIONS}
-              value={[location]}
-              onValueChange={({ value: [value] }) => {
-                const next = LOCATIONS.find((item) => item.value === value);
-                if (next) {
-                  setLocation(next.value);
-                }
-              }}
-            >
-              <Select.Trigger data-testid='process-location-select' />
-              <Select.Content>
-                {LOCATIONS.map((item) => (
-                  <Select.Item key={item.value} item={item} />
-                ))}
-              </Select.Content>
-            </Select.Root>
-          )}
-        </Toolbar.Root>
+        <CommandToolbar
+          edge={edge}
+          disabled={!ready}
+          location={location}
+          onLocationChange={setLocation}
+          onCreate={handleCreate}
+        />
       </Panel.Header>
       <Panel.Body>
         <Form.Root

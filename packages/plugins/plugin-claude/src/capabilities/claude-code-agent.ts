@@ -13,7 +13,7 @@ import { ClaudeCodeProcess } from '../process/index.ts';
 
 /**
  * Claude Code on this machine: run through the desktop app's agent helper over ACP as a chat's agent,
- * and as a process of its own for a chat that names it, which starts the agent through `Subprocess`.
+ * and as a process of its own for a chat that names it, which starts the agent through `ShellService`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

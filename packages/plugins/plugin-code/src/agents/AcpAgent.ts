@@ -28,7 +28,7 @@ import * as Protocol from './Protocol.ts';
 
 export { AgentError };
 
-/** Environment variable an agent started for a turn finds Composer's tools token in. */
+/** The environment variable an agent reads Composer's tools token from, which its MCP config names. */
 export const TOOLS_TOKEN_ENV = Protocol.MCP_TOKEN_ENV;
 
 /** How long a session with no turns stays connected; the next prompt after that reloads it. */

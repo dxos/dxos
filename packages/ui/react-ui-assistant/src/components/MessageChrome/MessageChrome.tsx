@@ -15,6 +15,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
+import { getDelivery, isUnread } from '../../types.ts';
 import { formatTime } from './format-time.ts';
 
 //
@@ -111,7 +112,8 @@ export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps)
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
-      {onRewind && (
+      {/* Nothing to rewind to until the agent has taken the prompt up: it is not in the history yet. */}
+      {onRewind && !isUnread(getDelivery(message)) && (
         <Button.Root
           icon='ph--clock-counter-clockwise--regular'
           iconOnly
@@ -268,9 +270,11 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
+            {/* Sized by its own text, not the column: the toolbar below shares the column, and its
+                relative timestamp changing width ("just now" → "1 minute ago") resized the bubble. */}
             <div
               className={mx(
-                'px-3 py-2 border-s-2 rounded-sm bg-input-surface',
+                'w-fit max-w-full ms-auto px-3 py-2 border-s-2 rounded-sm bg-input-surface',
                 userHue ? getStyles(userHue).border : 'border-accent-bg',
               )}
             >

@@ -4,17 +4,22 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
 
 import { Chat } from '@dxos/assistant';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
+import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { type ContentBlock, Message } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
+import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
+import { type ContentBlock, Message, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';
 import * as EdgeAgent from './EdgeAgent.ts';
@@ -27,6 +32,7 @@ class FakeEdge implements EdgeAgent.ProcessControl {
   readonly spawned: RemoteProcessManager.SpawnRequest[] = [];
   readonly inputs: unknown[] = [];
   readonly credentials: EdgeProtocol.AnthropicCredential[] = [];
+  readonly gitCredentials: EdgeProtocol.GitCredential[] = [];
   readonly answers: { requestId: string; optionId: string | null }[] = [];
   readonly #events: RemoteProcessManager.Event[] = [];
 
@@ -67,6 +73,10 @@ class FakeEdge implements EdgeAgent.ProcessControl {
           provideAuth: (credential) =>
             Effect.sync(() => {
               this.credentials.push(credential);
+            }),
+          provideGitAuth: (credential) =>
+            Effect.sync(() => {
+              this.gitCredentials.push(credential);
             }),
           respondPermission: (answer) =>
             Effect.sync(() => {
@@ -149,7 +159,18 @@ const summarize = (block: ContentBlock.Any): string => {
 
 describe('EdgeAgent', () => {
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+    TestDatabaseLayer({
+      types: [
+        Feed.Feed,
+        Message.Message,
+        Chat.Chat,
+        Project.Project,
+        Repo.Repo,
+        TaskSet.TaskSet,
+        Outline.Outline,
+        AccessToken.AccessToken,
+      ],
+    }),
     Layer.succeed(Trace.TraceService, { write: () => {} }),
   );
 
@@ -230,6 +251,118 @@ describe('EdgeAgent', () => {
       yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'go' });
       expect(yield* transcript(feed)).toContainEqual(['assistant', 'text:fresh']);
       expect(yield* transcript(feed)).not.toContainEqual(['assistant', 'text:stale']);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('picks up a turn a closed client left running, without prompting again or repeating what it showed', () =>
+    Effect.gen(function* () {
+      const permission = (turnId: string): EdgeProtocol.Output => ({
+        _tag: 'permission',
+        turnId,
+        requestId: 'permission-1',
+        request: {
+          toolCall: { toolCallId: 'call-1', title: 'Run sleep 60' },
+          options: [{ optionId: 'allow', name: 'Allow', kind: 'allow_once' }],
+        },
+        resolution: { optionId: 'allow' },
+      });
+      // The turn's first output; the rest arrives on EDGE once the first client is gone.
+      const { feed, chat, edge, options } = yield* setup((turnId) => [text(turnId, 'sleeping'), permission(turnId)]);
+      const first = yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'sleep, then write' }).pipe(
+        Effect.forkChild,
+      );
+      const recorded = yield* Effect.gen(function* () {
+        while (true) {
+          const [key] = Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'));
+          if (key && key.id.endsWith(':2')) {
+            return { source: key.source, id: key.id };
+          }
+          yield* Effect.sleep('20 millis');
+        }
+      });
+      const [prompt] = edge.inputs;
+      const turnId = recorded.id.split(':')[0];
+
+      // Composer closing runs no finalizer: the record stays, and nothing cancels the turn on EDGE.
+      yield* Fiber.interrupt(first);
+      Obj.update(chat, (chat) => {
+        Obj.getMeta(chat).keys.push(recorded);
+      });
+      edge.inputs.length = 0;
+      edge.emit(text(turnId, 'wrote slow.txt'), { _tag: 'turn-end', turnId, stopReason: 'end_turn' });
+
+      // The redelivered prompt picks the same turn up.
+      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'sleep, then write' });
+      expect(yield* transcript(feed)).toEqual([
+        ['user', 'text:sleep, then write'],
+        ['assistant', 'text:sleeping'],
+        ['assistant', 'request:Run sleep 60:allow'],
+        ['assistant', 'text:wrote slow.txt'],
+        ['assistant', 'stats'],
+      ]);
+      // Sent again under the same key, which EDGE drops as a repeat, and no new turn.
+      expect(edge.inputs).toEqual([prompt]);
+      expect(Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'))).toEqual([]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live("checks out the project's repositories in the sandbox, and lends the git credential", () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [
+        { _tag: 'git-auth-required', host: 'github.com' },
+        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+      ]);
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos', defaultBranch: 'main' }));
+      const edgeRepo = yield* Database.add(Repo.make({ owner: 'dxos', name: 'edge' }));
+      const fork = yield* Database.add(Repo.make({ owner: 'someone', name: 'edge' }));
+      const project = yield* Database.add(
+        Project.make({ repo: Ref.make(dxos), repositories: [Ref.make(edgeRepo), Ref.make(dxos), Ref.make(fork)] }),
+      );
+      Obj.setParent(chat, project);
+      const gitCredential: EdgeProtocol.GitCredential = { host: 'github.com', token: 'ghp-test' };
+      const withGit = {
+        ...options,
+        definition: { ...options.definition, gitCredential: Effect.succeed(gitCredential) },
+      };
+
+      yield* EdgeAgent.runTurn(withGit, { chat, feed }, { prompt: 'build it' });
+
+      expect(edge.spawned[0]).toMatchObject({
+        annotations: {
+          [EdgeProtocol.Annotation.repositories]: [
+            { name: 'dxos', url: 'https://github.com/dxos/dxos.git', branch: 'main' },
+            { name: 'edge', url: 'https://github.com/dxos/edge.git' },
+            { name: 'someone-edge', url: 'https://github.com/someone/edge.git' },
+          ],
+        },
+      });
+      // Lent with the turn, and again when the process reports a host refused it.
+      expect(edge.gitCredentials).toEqual([gitCredential, gitCredential]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live("lends the space's GitHub token, resolving one EDGE custodies", () =>
+    Effect.gen(function* () {
+      const resolved: string[] = [];
+      const resolver = Layer.succeed(Credential.AccessTokenResolver, {
+        resolve: async ({ accessTokenId }) => {
+          resolved.push(accessTokenId);
+          return 'ghs-live';
+        },
+      });
+      const credential = EdgeAgent.githubCredential.pipe(Effect.provide(resolver));
+      expect(yield* credential).toBeUndefined();
+
+      yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'anthropic.com', token: 'sk-ant' }));
+      const github = yield* Database.add(
+        Obj.make(AccessToken.AccessToken, { source: 'github.com', token: MANAGED_ACCESS_TOKEN }),
+      );
+      expect(yield* credential).toEqual({ host: 'github.com', token: 'ghs-live' });
+      expect(resolved).toEqual([github.id]);
+
+      // One EDGE cannot resolve leaves the checkout to public repositories rather than failing the turn.
+      const unresolved = EdgeAgent.githubCredential.pipe(Effect.provide(Credential.AccessTokenResolver.notAvailable));
+      expect(yield* unresolved).toBeUndefined();
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

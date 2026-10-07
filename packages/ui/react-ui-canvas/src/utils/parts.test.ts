@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { SceneBuilder } from './builder.ts';
 import { isMultiline, partKey, partText, partValues } from './parts.ts';
-import { frameClasses } from './style.ts';
+import { frameClasses, resolveStyle } from './style.ts';
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
@@ -43,5 +43,11 @@ describe('parts', () => {
     // A guide is dashed and unfilled whatever fill and border say; the host's class comes last.
     const guide = { ...rect, style: { guide: true, border: false, className: 'shadow' } };
     expect(frameClasses(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm', 'shadow']);
+  });
+
+  test('an unset fill or border resolves to drawn', ({ expect }) => {
+    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true });
+    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true });
+    expect(resolveStyle({ fill: false, border: false })).toEqual({ fill: false, border: false });
   });
 });

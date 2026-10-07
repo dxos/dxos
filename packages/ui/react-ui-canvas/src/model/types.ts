@@ -11,13 +11,38 @@
 
 import * as Schema from 'effect/Schema';
 
-import { HueAnnotationId } from '@dxos/ui-types';
+import { Annotation } from '@dxos/echo';
+import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Point = Schema.Schema.Type<typeof Point>;
 
 export const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number });
 export type Size = Schema.Schema.Type<typeof Size>;
+
+/** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
+export const DEFAULT_GRID = 16;
+
+/** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
+export const MAJOR_GRID_RATIO = 4;
+
+/** Snap unit: nodes, layout defaults and scene bounds align to it. */
+export const MAJOR_GRID = DEFAULT_GRID * MAJOR_GRID_RATIO;
+
+/** Two fields side by side in a form, rather than one row each. */
+const pairLayout = (first: string, second: string) =>
+  `<grid cols="2" fixed="true"><field name="${first}"/><field name="${second}"/></grid>`;
+
+/** A node coordinate as a form edits it: the stepper moves by one minor grid cell, as an arrow nudge does. */
+const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnotationId]: DEFAULT_GRID });
+
+/** `Point` and `Size` for a node's own frame, laid out as one row each in the properties form. */
+const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') }).pipe(
+  Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }),
+);
+const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') }).pipe(
+  Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }),
+);
 
 export const Bounds = Schema.Struct({
   x: Schema.Number,
@@ -67,11 +92,7 @@ export const NodeStyle = Schema.Struct({
   border: Schema.optional(Schema.Boolean),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
-  /**
-   * Text size in the node's own scene units. A nested scene's units are finer than its parent's by the
-   * portal's factor, so a node created deeper carries a proportionally larger value and reads the same
-   * on screen at every level.
-   */
+  /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Extra classes on the frame, for a host's own look. */
   className: Schema.optional(Schema.String),
@@ -84,11 +105,13 @@ export const nodeBase = {
   /** Fractional z-order key (see `order.ts`). */
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
-  center: Point,
+  center: NodeCenter,
   /** The frame is `size` centred on `center`, whatever the type draws inside it. */
-  size: Size,
+  size: NodeSize,
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
+  /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
+  portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
   style: Schema.optional(NodeStyle),
 };
 
@@ -308,12 +331,3 @@ export type Tool =
   | { kind: 'hand' }
   | { kind: 'node'; type: NodeType }
   | { kind: 'link'; type: LinkType };
-
-/** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
-export const DEFAULT_GRID = 16;
-
-/** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
-export const MAJOR_GRID_RATIO = 4;
-
-/** Snap unit: nodes, layout defaults and scene bounds align to it. */
-export const MAJOR_GRID = DEFAULT_GRID * MAJOR_GRID_RATIO;

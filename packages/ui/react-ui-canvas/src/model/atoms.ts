@@ -40,9 +40,10 @@ export type Drag =
   | { kind: 'marquee'; from: Point; to: Point; mode: 'replace' | 'add' | 'subtract' }
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
-   * and `delta` the resulting scene-space offset applied transiently to every selected node.
+   * and `delta` the resulting scene-space offset applied transiently to every selected node. With
+   * `copy` (⌘ held) the originals stay and copies land at `delta` instead.
    */
-  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
+  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; copy?: boolean }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**

@@ -323,6 +323,8 @@ export const createConfig = ({
     // Nothing here highlights, yet once armed (every story load resets it) the addon re-runs
     // `getComputedStyle` over every element in the preview on each DOM mutation of the story root.
     highlight: false,
+    // Marks stories whose files git reports changed; its `git` spawn fails here (EBADF) and logs an error on every start.
+    changeDetection: false,
   },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.

@@ -18,6 +18,10 @@
     opacity: 0.5;
     cursor: default;
   }
+  /* Neither on nor off: the track is dimmed and the host's label says why. */
+  .dx-switch[data-indeterminate] .dx-switch-control {
+    opacity: 0.5;
+  }
 
   .dx-switch-control {
     --dx-switch-inset: 2px;

@@ -18,8 +18,8 @@ import { ANTHROPIC_SOURCE, CLAUDE_CODE_EDGE_AGENT, OAUTH_TOKEN_PREFIX } from '..
 
 /**
  * Claude Code run by EDGE in a sandbox container. It lends each turn the space's Claude subscription
- * token, or its Anthropic token: the container holds only a token for EDGE's proxy, so the user's
- * credential never enters it.
+ * token, or its Anthropic token, and the space's GitHub token for the project's repositories: the
+ * container holds only a token for EDGE's proxy, so the user's credentials never enter it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -37,6 +37,7 @@ export default Capability.makeModule(
         label: 'Claude Code (cloud)',
         icon: 'px--anthropic--regular',
         credential: anthropicCredential,
+        gitCredential: EdgeAgent.githubCredential,
         mode,
       }),
     );

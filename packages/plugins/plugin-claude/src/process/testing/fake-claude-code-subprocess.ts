@@ -3,6 +3,7 @@
 //
 
 import * as acp from '@agentclientprotocol/sdk';
+import { spawn } from 'node:child_process';
 
 // Stands in for the Claude Code ACP adapter on stdio: each prompt is answered with its own text and
 // the agent's pid and working directory, which is what a test needs to tell where and in which
@@ -18,6 +19,12 @@ const output = new WritableStream<Uint8Array>({
     process.stdout.write(chunk);
   },
 });
+
+// As a tool Claude Code started would: a process that shares the agent's stdout and outlives it.
+const holder = process.env.FAKE_AGENT_HOLD_STDOUT
+  ? spawn('sleep', ['300'], { stdio: ['ignore', 'inherit', 'ignore'], detached: true })
+  : undefined;
+holder?.unref();
 
 let sessions = 0;
 const connection = acp
@@ -35,7 +42,7 @@ const connection = acp
         sessionUpdate: 'agent_message_chunk',
         content: {
           type: 'text',
-          text: `${text} pid=${process.pid} oauth=${process.env.CLAUDE_CODE_OAUTH_TOKEN ?? 'none'} cwd=${process.cwd()}`,
+          text: `${text} pid=${process.pid} oauth=${process.env.CLAUDE_CODE_OAUTH_TOKEN ?? 'none'} cwd=${process.cwd()}${holder ? ` holder=${holder.pid}` : ''}`,
         },
       },
     });
