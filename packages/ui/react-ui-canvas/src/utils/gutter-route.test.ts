@@ -151,6 +151,20 @@ describe('gutter route', () => {
     expect(route).toEqual(gutterRoute(nodes, spec, ...ends));
   });
 
+  test('a chain of abutting shapes does not widen a local search', ({ expect }) => {
+    // A row of cells running far to the right, each within reach of the next: only a failed local search
+    // may follow the chain, and B to D routes without it.
+    const chain = Array.from({ length: 400 }, (_, index) => cellNode(`chain-${index}`, index, 3));
+    const ends = [
+      { point: { x: -256, y: 0 }, side: 'e' },
+      { point: { x: -128, y: 0 }, side: 'w' },
+    ] as const;
+    const started = performance.now();
+    const route = gutterRoute([...nodes, ...chain], spec, ...ends);
+    expect(performance.now() - started).toBeLessThan(1_000);
+    expect(route).toEqual(gutterRoute(nodes, spec, ...ends));
+  });
+
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
     const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>

@@ -31,9 +31,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../stories/storybook-testing"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {

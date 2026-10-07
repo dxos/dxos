@@ -18613,9 +18613,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/storybook-testing':
-        specifier: workspace:*
-        version: link:../../stories/storybook-testing
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

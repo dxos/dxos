@@ -87,11 +87,13 @@ describe('SceneBuilder', () => {
     expect(() => SceneBuilder.scene('s', [rect, generated, generated.id('a-a')]).build()).toThrow(/Duplicate id a-a/);
   });
 
-  test('an id an object inherits is not taken', ({ expect }) => {
+  test('an id an object inherits is not taken, and any id is kept', ({ expect }) => {
     const rect = SceneBuilder.rect('constructor', box(0, 0));
-    expect(() =>
-      SceneBuilder.scene('s', [rect, SceneBuilder.link('line', 'constructor', 'constructor').id('toString')]).build(),
-    ).not.toThrow();
+    const proto = SceneBuilder.rect('__proto__', box(0, 0));
+    const link = SceneBuilder.link('line', 'constructor', '__proto__').id('toString');
+    const [scene] = SceneBuilder.scene('s', [rect, proto, link]).build().scenes;
+    expect(Object.keys(scene.nodes)).toEqual(['constructor', '__proto__']);
+    expect(Object.keys(scene.links)).toEqual(['toString']);
   });
 
   test('a node its type does not describe fails the build', ({ expect }) => {

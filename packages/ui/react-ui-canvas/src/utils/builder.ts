@@ -143,10 +143,11 @@ export class SceneElement {
 export type SceneTree = { root: SceneId; scenes: Scene[] };
 
 const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene[]): void => {
-  const nodes: Record<string, Node> = {};
-  const links: Record<string, Link> = {};
+  // Maps, so any id (`constructor`, `__proto__`) is an ordinary key; `fromEntries` keeps them own properties.
+  const nodes = new Map<string, Node>();
+  const links = new Map<string, Link>();
   const keys = initialKeys(element.elements.length);
-  const index = scenes.push({ id: element.id, name: element.sceneName, nodes, links }) - 1;
+  const index = scenes.push({ id: element.id, name: element.sceneName, nodes: {}, links: {} }) - 1;
   element.elements.forEach((child, order) => {
     const z = keys[order];
     switch (child.kind) {
@@ -158,13 +159,13 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
         const node = { ...fresh, ...child.node, z };
         check(registry, node);
         claim(nodes, node.id, element.id);
-        nodes[node.id] = node;
+        nodes.set(node.id, node);
         break;
       }
       case 'link': {
         const id = child.linkId ?? uniqueId(links, linkId(child.link.source, child.link.target));
         claim(links, id, element.id);
-        links[id] = { ...child.link, id, z };
+        links.set(id, { ...child.link, id, z });
         break;
       }
       case 'scene': {
@@ -179,13 +180,13 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
         };
         check(registry, node);
         claim(nodes, node.id, element.id);
-        nodes[node.id] = node;
+        nodes.set(node.id, node);
         buildScene(child, registry, scenes);
         break;
       }
     }
   });
-  scenes[index] = { ...scenes[index], nodes, links };
+  scenes[index] = { ...scenes[index], nodes: Object.fromEntries(nodes), links: Object.fromEntries(links) };
 };
 
 /** A node its type does not describe (a wrong value, or a property the type does not have) fails the build. */
@@ -201,9 +202,8 @@ const check = (registry: NodeRegistry, node: Node): void => {
 };
 
 /** Two elements given one id would leave only the second, so the fixture fails instead. */
-const claim = (taken: Record<string, unknown>, id: string, sceneId: SceneId): void => {
-  // Own keys only: an id like `constructor` is not taken by the record's prototype.
-  if (Object.hasOwn(taken, id)) {
+const claim = (taken: ReadonlyMap<string, unknown>, id: string, sceneId: SceneId): void => {
+  if (taken.has(id)) {
     throw new Error(`Duplicate id ${id} in scene ${sceneId}.`);
   }
 };
@@ -213,9 +213,9 @@ const linkId = (source: Endpoint, target: Endpoint): string => {
   return `${name(source)}-${name(target)}`;
 };
 
-const uniqueId = (taken: Record<string, unknown>, id: string): string => {
+const uniqueId = (taken: ReadonlyMap<string, unknown>, id: string): string => {
   let candidate = id;
-  for (let suffix = 2; Object.hasOwn(taken, candidate); ++suffix) {
+  for (let suffix = 2; taken.has(candidate); ++suffix) {
     candidate = `${id}-${suffix}`;
   }
   return candidate;

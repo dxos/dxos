@@ -37,8 +37,8 @@ test.describe('SceneView', () => {
   test('draws the fixture with an arrowhead on the directed link', async () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
     expect(await scene.linkCount()).toBe(3);
-    // One marker set per layer (arrow and circle, start and end); the directed line uses the end arrow.
-    await expect(page.locator('[data-testid="scene-view"] marker')).toHaveCount(4);
+    // One marker set per layer (arrow, triangle and circle, start and end); the directed line uses the end arrow.
+    await expect(page.locator('[data-testid="scene-view"] marker')).toHaveCount(6);
     await expect(page.locator('[data-testid="scene-view"] path[marker-end]')).toHaveCount(1);
   });
 
