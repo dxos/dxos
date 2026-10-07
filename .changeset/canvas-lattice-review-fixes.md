@@ -1,6 +1,5 @@
 ---
-'@dxos/react-ui-canvas': patch
-'@dxos/plugin-canvas': patch
+'@dxos/react-ui-canvas': minor
 ---
 
-Lattice cells now cover the visible view as well as the scene's frame, since shapes may land on free cells beyond it, and gutter routing searches past every shape's frame so a link finds its way round a wide shape. `SceneBuilder.build()` throws on a duplicate node or link id instead of silently keeping the last. The canvas article shows the properties panel for the selection. Canvas content records are Effect schemas (`ContentRecord`, discriminated by `kind`), and the root scene's id is `root`, so its key is `scene:root` rather than the doubled `scene:scene:root`; a drawing saved with the old id is migrated in place the first time it is opened.
+The scene engine's node types are defined by the registry: a type declares its text `parts` and `fields`, may `extend` a prototype, and its `defaultSize` is in major grid cells. The UML class shape moved out of the built-ins into the new `@dxos/plugin-uml`. Breaking: hosts that set `defaultSize` in pixels must give it in major cells. Scene shapes now look like rectangles, with an editable label, ports and a zoom-in control, and can show another canvas drawing. Styles are a hue and a tone from 0 to 3. Guides and the lattice have their own toggles. Link ends scale with the zoom. `SceneView.Root` can start from a saved camera and report camera changes (`initialCamera`, `onCameraChange`). `SceneBuilder` builds fixtures declaratively and rejects duplicate ids. Canvas drawings keep their camera position, have Lattice and Grid size settings in the Properties companion, and migrate content saved under the old `scene:root` id.
