@@ -1,7 +1,7 @@
 {
   "name": "@dxos/brain",
   "version": "0.12.0",
-  "description": "Agent brain: pipeline-rdf facts encoded as Datalog relations, a canonical predicate vocabulary, goal built-ins and an incremental goal-rule evaluator.",
+  "description": "Agent brain: an in-memory fact store with Datalog reasoning and outbox subscriptions, plus pipeline-rdf fact encoding, a canonical predicate vocabulary, goal built-ins and an incremental goal-rule evaluator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./Brain": {
+      "source": "./src/Brain.ts",
+      "types": "./dist/types/src/Brain.d.ts",
+      "import": "./dist/lib/Brain.mjs"
     },
     "./Builtins": {
       "source": "./src/Builtins.ts",
@@ -38,21 +43,36 @@
       "types": "./dist/types/src/Encoding.d.ts",
       "import": "./dist/lib/Encoding.mjs"
     },
+    "./Event": {
+      "source": "./src/Event.ts",
+      "types": "./dist/types/src/Event.d.ts",
+      "import": "./dist/lib/Event.mjs"
+    },
+    "./Fact": {
+      "source": "./src/Fact.ts",
+      "types": "./dist/types/src/Fact.d.ts",
+      "import": "./dist/lib/Fact.mjs"
+    },
     "./GoalRules": {
       "source": "./src/GoalRules.ts",
       "types": "./dist/types/src/GoalRules.d.ts",
       "import": "./dist/lib/GoalRules.mjs"
     },
-    "./Vocabulary": {
-      "source": "./src/Vocabulary.ts",
-      "types": "./dist/types/src/Vocabulary.d.ts",
-      "import": "./dist/lib/Vocabulary.mjs"
-    },
     "./package.json": "./package.json",
+    "./Rule": {
+      "source": "./src/Rule.ts",
+      "types": "./dist/types/src/Rule.d.ts",
+      "import": "./dist/lib/Rule.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./Vocabulary": {
+      "source": "./src/Vocabulary.ts",
+      "types": "./dist/types/src/Vocabulary.d.ts",
+      "import": "./dist/lib/Vocabulary.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -67,6 +87,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
   },
