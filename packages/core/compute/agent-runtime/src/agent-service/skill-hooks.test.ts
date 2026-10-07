@@ -94,12 +94,11 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** The agent process serving the session's chat. */
-const agentProcess = (session: { chat: Obj.Unknown }) =>
-  Effect.gen(function* () {
-    const processManager = yield* ProcessManager.ProcessManagerService;
-    const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: AGENT_PROCESS_KEY });
-    return handle;
-  });
+const agentProcess = Effect.fnUntraced(function* (session: { chat: Obj.Unknown }) {
+  const processManager = yield* ProcessManager.ProcessManagerService;
+  const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: AGENT_PROCESS_KEY });
+  return handle;
+});
 
 describe('end-request skill hooks', () => {
   beforeEach(() => {
