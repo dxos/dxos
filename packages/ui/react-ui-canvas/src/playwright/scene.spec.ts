@@ -139,6 +139,8 @@ test.describe('SceneView', () => {
   });
 
   test('a marquee replaces the selection, shift adds and alt subtracts', async () => {
+    // Fit frames the shapes tightly, so step out to leave empty canvas around A for the marquee to start on.
+    await scene.zoomOut();
     const a = await scene.box(scene.node('scene:root/a'));
     // The empty canvas above and left of A, dragging back over A's corner. Not the other corner: the
     // B→C spline passes below and right of A, and a press on a link starts an endpoint drag.
