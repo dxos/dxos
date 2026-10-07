@@ -38,6 +38,7 @@ export type UseSceneKeysOptions = {
   grid: number;
   select: (ids: Iterable<ElementId>) => void;
   toggleSnap: () => void;
+  toggleGuides: () => void;
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -66,6 +67,7 @@ export const useSceneKeys = ({
   grid,
   select,
   toggleSnap,
+  toggleGuides,
   toggleDebug,
   onUndo,
   onRedo,
@@ -175,6 +177,9 @@ export const useSceneKeys = ({
         case 'snap':
           toggleSnap();
           break;
+        case 'guides':
+          toggleGuides();
+          break;
         case 'debug':
           toggleDebug();
           break;
@@ -213,6 +218,7 @@ export const useSceneKeys = ({
       major,
       setTool,
       toggleSnap,
+      toggleGuides,
       toggleDebug,
       onUndo,
       onRedo,

@@ -35,6 +35,7 @@ export type KeyAction =
   | 'redo'
   | 'selectAll'
   | 'snap'
+  | 'guides'
   | 'debug';
 
 /** Every action's chords; the first is the one shown in labels. */
@@ -55,6 +56,7 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
   snap: [{ key: 'g' }],
+  guides: [{ key: ';' }],
   debug: [{ key: 'd' }],
 };
 

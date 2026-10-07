@@ -62,6 +62,7 @@ export type SceneViewContextValue = {
   /** Minor grid spacing in scene px. */
   grid: number;
   snapEnabled: boolean;
+  guides: boolean;
 
   selection: ReadonlySet<ElementId>;
   hover: ElementId | undefined;

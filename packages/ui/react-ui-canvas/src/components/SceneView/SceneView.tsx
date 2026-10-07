@@ -139,6 +139,7 @@ const SceneViewRoot = ({
   const clipboard = useAtomValue(atoms.clipboard);
   const editing = useAtomValue(atoms.editing);
   const debug = useAtomValue(atoms.debug);
+  const guides = useAtomValue(atoms.guides);
   const sceneId = path[path.length - 1];
   const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;
   const canRedo = !readonly && undoState.key === sceneId && undoState.future.length > 0;
@@ -241,6 +242,10 @@ const SceneViewRoot = ({
 
   const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
+  const toggleGuides = useCallback(
+    () => registry.set(atoms.guides, !registry.get(atoms.guides)),
+    [registry, atoms.guides],
+  );
   const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
   const {
     onBackgroundPointerDown,
@@ -319,6 +324,7 @@ const SceneViewRoot = ({
     grid,
     select,
     toggleSnap,
+    toggleGuides,
     toggleDebug,
     onUndo,
     onRedo,
@@ -558,6 +564,8 @@ const SceneViewRoot = ({
       zoomOut: () => zoomBy(1 / ZOOM_STEP),
       snap: snapEnabled,
       toggleSnap,
+      guides,
+      toggleGuides,
       debug,
       toggleDebug,
       canUndo,
@@ -587,6 +595,8 @@ const SceneViewRoot = ({
       zoomBy,
       snapEnabled,
       toggleSnap,
+      guides,
+      toggleGuides,
       debug,
       toggleDebug,
       canUndo,
@@ -629,6 +639,7 @@ const SceneViewRoot = ({
       frameUnit={frameUnit}
       grid={grid}
       snapEnabled={snapEnabled}
+      guides={guides}
       selection={selection}
       hover={hover}
       selectedPoint={selectedPoint}
@@ -725,6 +736,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     frameUnit,
     grid,
     snapEnabled,
+    guides,
     selection,
     hover,
     selectedPoint,
@@ -776,19 +788,21 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             CSS border because a border's width is rounded to whole local pixels, which puts a floor of
             one scene unit under it — exactly the thickening that zooming in would cause. */}
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-        {projection.lattice && <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />}
-        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
-          <rect
-            data-testid='scene-frame'
-            x={bounds.x}
-            y={bounds.y}
-            width={bounds.width}
-            height={bounds.height}
-            className='fill-none stroke-orange-border opacity-50'
-            strokeWidth={frameUnit}
-            strokeDasharray={`${FRAME_DASH * frameUnit} ${FRAME_DASH * frameUnit}`}
-          />
-        </svg>
+        {guides && projection.lattice && <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />}
+        {guides && (
+          <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+            <rect
+              data-testid='scene-frame'
+              x={bounds.x}
+              y={bounds.y}
+              width={bounds.width}
+              height={bounds.height}
+              className='fill-none stroke-orange-border opacity-50'
+              strokeWidth={frameUnit}
+              strokeDasharray={`${FRAME_DASH * frameUnit} ${FRAME_DASH * frameUnit}`}
+            />
+          </svg>
+        )}
         <div className='pointer-events-auto'>
           <SceneLayer
             store={store}

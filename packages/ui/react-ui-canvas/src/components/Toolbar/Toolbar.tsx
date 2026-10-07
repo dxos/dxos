@@ -33,6 +33,8 @@ export type ToolbarActions = {
   zoomOut: () => void;
   snap: boolean;
   toggleSnap: () => void;
+  guides: boolean;
+  toggleGuides: () => void;
   debug: boolean;
   toggleDebug: () => void;
   canUndo: boolean;
@@ -141,6 +143,15 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
+      />
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon='ph--frame-corners--regular'
+        label={`Guides (${shortcutFor('guides')}): show the page frame and the lattice cells`}
+        classNames={mx(actions.guides && 'bg-primary-500/20')}
+        data-testid='toolbar-guides'
+        onClick={actions.toggleGuides}
       />
       <Toolbar.Separator variant='line' />
       <Button.Root
