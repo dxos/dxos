@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, type NodeStyle, type NodeTone, isEllipseNode } from '../model/types.ts';
+import { type Node, type NodeStyle, type NodeTone, STYLE_HUES, type StyleHue, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -31,10 +31,6 @@ const HUES: Record<string, HueClasses> = {
   pink: { surface: 'bg-pink-surface', text: 'text-pink-fg', border: 'border-pink-border' },
   rose: { surface: 'bg-rose-surface', text: 'text-rose-fg', border: 'border-rose-border' },
 };
-
-/** The hues the style picker offers, neutral first; any theme hue still renders, at its `medium` tone. */
-export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet'] as const;
-export type StyleHue = (typeof STYLE_HUES)[number];
 
 export const TONES: readonly NodeTone[] = [0, 1, 2, 3];
 
@@ -145,3 +141,23 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
     style.className ?? '',
   ];
 };
+
+export type LineClasses = { stroke: string; fill: string };
+
+/** A link's stroke and its end markers' fill, in the hue's border colour so a link matches a node of its hue. */
+const LINE_CLASSES: Record<StyleHue, LineClasses> = {
+  neutral: { stroke: 'stroke-neutral-border', fill: 'fill-neutral-border' },
+  red: { stroke: 'stroke-red-border', fill: 'fill-red-border' },
+  orange: { stroke: 'stroke-orange-border', fill: 'fill-orange-border' },
+  amber: { stroke: 'stroke-amber-border', fill: 'fill-amber-border' },
+  green: { stroke: 'stroke-green-border', fill: 'fill-green-border' },
+  teal: { stroke: 'stroke-teal-border', fill: 'fill-teal-border' },
+  sky: { stroke: 'stroke-sky-border', fill: 'fill-sky-border' },
+  blue: { stroke: 'stroke-blue-border', fill: 'fill-blue-border' },
+  violet: { stroke: 'stroke-violet-border', fill: 'fill-violet-border' },
+};
+
+/** The default line: the grey every link drew before lines took a hue. */
+const DEFAULT_LINE: LineClasses = { stroke: 'stroke-neutral-500', fill: 'fill-neutral-500' };
+
+export const lineClasses = (hue: StyleHue | undefined): LineClasses => (hue ? LINE_CLASSES[hue] : DEFAULT_LINE);

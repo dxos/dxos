@@ -23,6 +23,7 @@ import {
   type Node,
   type NodeId,
   type Scene,
+  type StyleHue,
   isBoxNode,
   isEllipseNode,
   isNoteNode,
@@ -37,7 +38,7 @@ import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
 import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
-import { frameClasses } from '../../utils/style.ts';
+import { frameClasses, lineClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
@@ -136,16 +137,19 @@ export const SceneLayer = memo(
     const unit = 1 / Math.max(zoom, 0.05);
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
-    // One set of end markers per layer, sized in scene units so they scale with the nodes they join.
+    // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
-    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end') =>
-      marker ? `url(#${markerId}-${marker}-${end})` : undefined;
+    const lineHues = useMemo(() => [...new Set(links.map(({ link }) => link.line?.hue))], [links]);
+    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: StyleHue | undefined) =>
+      marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
 
     return (
       <CellContext.Provider value={cell}>
         <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           <defs>
-            <Markers id={markerId} cell={cell} />
+            {lineHues.map((hue) => (
+              <Markers key={hue ?? 'default'} id={`${markerId}-${hue ?? 'default'}`} cell={cell} hue={hue} />
+            ))}
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -163,8 +167,12 @@ export const SceneLayer = memo(
               )}
               <path
                 d={path}
-                className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
+                className={mx(
+                  'fill-none',
+                  selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(link.line?.hue).stroke,
+                )}
                 strokeWidth={LINK_WIDTH}
+                strokeDasharray={link.line?.dash === 'dashed' ? `${4 * LINK_WIDTH} ${3 * LINK_WIDTH}` : undefined}
                 data-link-id={link.id}
               />
             </g>
@@ -198,8 +206,8 @@ export const SceneLayer = memo(
               key={link.id}
               d={path}
               className='fill-none stroke-none'
-              markerStart={markerUrl(linkMarkers(link).start, 'start')}
-              markerEnd={markerUrl(linkMarkers(link).end, 'end')}
+              markerStart={markerUrl(linkMarkers(link).start, 'start', link.line?.hue)}
+              markerEnd={markerUrl(linkMarkers(link).end, 'end', link.line?.hue)}
             />
           ))}
         </svg>
@@ -223,7 +231,8 @@ const CellContext = createContext(DEFAULT_CELL);
 const END_BOX = 0.25;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, cell }: { id: string; cell: number }) => {
+const Markers = ({ id, cell, hue }: { id: string; cell: number; hue: StyleHue | undefined }) => {
+  const line = lineClasses(hue);
   // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
   // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
   const box = END_BOX * cell;
@@ -250,7 +259,7 @@ const Markers = ({ id, cell }: { id: string; cell: number }) => {
           {/* An open arrowhead: two strokes, not a filled head. */}
           <path
             d='M 0 0 L 10 5 L 0 10'
-            className='fill-none stroke-neutral-500'
+            className={mx('fill-none', line.stroke)}
             strokeWidth={outline((arrow * 12) / 10, 12)}
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -272,7 +281,7 @@ const Markers = ({ id, cell }: { id: string; cell: number }) => {
         >
           <path
             d='M 0 0 L 10 5 L 0 10 z'
-            className='fill-base-surface stroke-neutral-500'
+            className={mx('fill-base-surface', line.stroke)}
             strokeWidth={outline(triangle, 12)}
           />
         </marker>
@@ -293,7 +302,7 @@ const Markers = ({ id, cell }: { id: string; cell: number }) => {
             cx={5}
             cy={5}
             r={4}
-            className='fill-base-surface stroke-neutral-500'
+            className={mx('fill-base-surface', line.stroke)}
             strokeWidth={outline(circle, 10)}
           />
         </marker>

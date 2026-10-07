@@ -9,7 +9,8 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { NodeStyle, type NodeTone } from '../../model/types.ts';
-import { DEFAULT_TONE, STYLE_HUES, type StyleHue, TONE_NAMES, TONES, hueClasses } from '../../utils/style.ts';
+import { STYLE_HUES, type StyleHue } from '../../model/types.ts';
+import { DEFAULT_TONE, TONE_NAMES, TONES, hueClasses } from '../../utils/style.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
 
