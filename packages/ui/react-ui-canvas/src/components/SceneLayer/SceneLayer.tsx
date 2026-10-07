@@ -360,7 +360,7 @@ const NodeFrame = memo(
         {chromeFade && (
           <div
             aria-hidden
-            className={mx('absolute inset-0 -z-10 border-4 pointer-events-none', ...frameLook)}
+            className={mx('dx-cover -z-10 border-4 pointer-events-none', ...frameLook)}
             style={chromeFade}
           />
         )}
