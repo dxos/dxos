@@ -78,7 +78,7 @@ export const ImportSpaceDialog = () => {
             gap='sm'
             asChild
             role='status'
-            classNames='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm'
+            classNames='my-4 p-8 border-2 border-dashed border-separator rounded-sm'
           >
             <div>
               <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
@@ -88,7 +88,7 @@ export const ImportSpaceDialog = () => {
         ) : (
           <FileUploader
             types={['json', 'tar']}
-            classes='block my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
+            classes='block my-4 p-8 border-2 border-dashed border-separator rounded-sm flex items-center justify-center gap-2 cursor-pointer'
             dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
             handleChange={(file: File) => {
               void handleFile(file);

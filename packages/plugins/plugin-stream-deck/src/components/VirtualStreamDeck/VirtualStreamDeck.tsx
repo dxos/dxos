@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import * as Layout from '@dxos/react-ui/Layout';
+
 import type * as Protocol from '#protocol';
 
 export type VirtualStreamDeckProps = {
@@ -18,8 +20,8 @@ export type VirtualStreamDeckProps = {
  */
 export const VirtualStreamDeck = ({ device, frame, onKeyPress }: VirtualStreamDeckProps) => {
   return (
-    <div className='flex flex-col gap-4 p-4 rounded-lg bg-neutral-900'>
-      <div className='grid grid-cols-4 gap-2'>
+    <Layout.Flex column gap='lg' classNames='p-4 rounded-lg bg-neutral-900'>
+      <Layout.Grid cols={4} gap='sm'>
         {frame.keys.map((key, slot) => (
           <button
             key={slot}
@@ -34,15 +36,18 @@ export const VirtualStreamDeck = ({ device, frame, onKeyPress }: VirtualStreamDe
             dangerouslySetInnerHTML={{ __html: key?.svg ?? '' }}
           />
         ))}
-      </div>
+      </Layout.Grid>
 
-      <div className='grid grid-cols-4 gap-2'>
+      <Layout.Grid cols={4} gap='sm'>
         {Array.from({ length: device.dials }, (_, slot) => {
           const segment = frame.dials[slot];
           return (
-            <div
+            <Layout.Flex
               key={slot}
-              className='flex flex-col justify-center gap-1 p-2 rounded bg-neutral-950 text-neutral-100 aspect-[2/1]'
+              column
+              justify='center'
+              gap='xs'
+              classNames='p-2 rounded bg-neutral-950 text-neutral-100 aspect-[2/1]'
               data-testid={`stream-deck.dial-${slot}`}
             >
               {segment && (
@@ -56,11 +61,11 @@ export const VirtualStreamDeck = ({ device, frame, onKeyPress }: VirtualStreamDe
                   )}
                 </>
               )}
-            </div>
+            </Layout.Flex>
           );
         })}
-      </div>
-    </div>
+      </Layout.Grid>
+    </Layout.Flex>
   );
 };
 

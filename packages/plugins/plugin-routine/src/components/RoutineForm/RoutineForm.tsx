@@ -14,6 +14,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -291,12 +292,12 @@ const ActionSection = ({
   const instructions = Routine.instructionsRef(routine)?.target;
 
   return (
-    <div className='flex flex-col'>
+    <Layout.Flex column>
       <Form.Fields path={ACTION_PATH} schema={ActionForm} />
       {kind === 'instructions' && instructions ? (
         <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}
-    </div>
+    </Layout.Flex>
   );
 };
 

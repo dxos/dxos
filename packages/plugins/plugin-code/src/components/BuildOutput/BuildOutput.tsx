@@ -5,6 +5,7 @@
 import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -29,18 +30,20 @@ export const BuildOutput = ({ state }: BuildOutputProps) => {
 
   if (!build && !run) {
     return (
-      <div className='dx-expand grid p-2 overflow-auto text-xs text-fg-muted'>{t('diagnostics.empty.placeholder')}</div>
+      <Layout.Grid grow classNames='p-2 overflow-auto text-xs text-fg-muted'>
+        {t('diagnostics.empty.placeholder')}
+      </Layout.Grid>
     );
   }
 
   return (
-    <div className='dx-expand grid grid-rows-[auto_1fr] text-xs'>
+    <Layout.Grid grow rows={['auto', 'fill']} classNames='text-xs'>
       <BuildStatus build={build} run={run} />
-      <div className='dx-expand grid grid-cols-2 divide-x divide-separator'>
+      <Layout.Grid grow cols={2} classNames='divide-x divide-separator'>
         <DiagnosticsList diagnostics={build?.diagnostics ?? []} />
         <ConsoleView stdout={run?.stdout ?? []} stderr={run?.stderr ?? []} />
-      </div>
-    </div>
+      </Layout.Grid>
+    </Layout.Grid>
   );
 };
 
@@ -58,10 +61,10 @@ const BuildStatus = ({ build, run }: BuildStatusProps) => {
   const buildLabel = build.ok ? t('build.clean.label') : t('build.failed.label');
   const runLabel = run ? (run.ok ? null : t('run.failed.label')) : null;
   return (
-    <div className='flex gap-2 px-2 py-1 border-b border-separator items-center'>
+    <Layout.Flex gap='sm' align='center' classNames='px-2 py-1 border-b border-separator'>
       <span className={mx(build.ok ? 'text-success-text' : 'text-error-text')}>● {buildLabel}</span>
       {runLabel && <span className='text-error-text'>● {runLabel}</span>}
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -72,7 +75,7 @@ type DiagnosticsListProps = {
 const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <div className='dx-expand flex flex-col overflow-auto'>
+    <Layout.Flex column classNames='dx-expand overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
       {diagnostics.length === 0 ? (
         <div className='p-2 text-fg-muted'>—</div>
@@ -99,7 +102,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
           ))}
         </ol>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -112,7 +115,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const total = stdout.length + stderr.length;
   return (
-    <div className='dx-expand flex flex-col overflow-auto'>
+    <Layout.Flex column classNames='dx-expand overflow-auto'>
       <SectionHeader label={t('console.section.label')} count={total} />
       {total === 0 ? (
         <div className='p-2 text-fg-muted'>{t('console.empty.placeholder')}</div>
@@ -128,13 +131,17 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
           ))}
         </pre>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 
 const SectionHeader = ({ label, count }: { label: string; count: number }) => (
-  <div className='px-2 py-1 text-fg-muted border-b border-separator flex items-center gap-2 dx-toolbar-surface'>
+  <Layout.Flex
+    align='center'
+    gap='sm'
+    classNames='px-2 py-1 text-fg-muted border-b border-separator dx-toolbar-surface'
+  >
     <span>{label}</span>
     <span className='text-fg-muted'>({count})</span>
-  </div>
+  </Layout.Flex>
 );

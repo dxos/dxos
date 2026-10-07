@@ -224,7 +224,7 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
             ref={forwardedRef}
           >
             {showHeader && (
-              <div className='flex items-center justify-between pt-form-gap'>
+              <Layout.Flex align='center' justify='between' classNames='pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
                   <Button.Root
@@ -235,13 +235,15 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
                     onClick={onDelete}
                   />
                 )}
-              </div>
+              </Layout.Flex>
             )}
 
             {/* Label / editor / reveal-links tracks; every row shares the grid so the labels and
                 fields align as columns, with a small row gap separating the fields vertically. */}
-            <div
-              className='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
+            <Layout.Grid
+              cols={['min', 'fill', 'min']}
+              align='center'
+              classNames='gap-y-2'
               data-testid='edit-email-form'
             >
               <span className={labelStyles}>{t('draft-to.label')}</span>
@@ -314,9 +316,9 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
                   }}
                 />
               </Field.Root>
-            </div>
+            </Layout.Grid>
 
-            <div className='flex flex-col dx-grow py-3'>
+            <Layout.Flex column classNames='dx-grow py-3'>
               <Editor
                 compact
                 classNames='dx-input-box dx-expand'
@@ -325,7 +327,7 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}
                 onChange={handleBodyChanged}
               />
-            </div>
+            </Layout.Flex>
 
             <div className='pb-form-padding'>
               <Button.Root variant='primary' onClick={handleSend} data-testid='send-email-button'>
