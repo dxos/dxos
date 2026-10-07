@@ -758,8 +758,10 @@ export const usePointerMachine = ({
             target = { point: current.to };
           } else if (!target && capabilities.create) {
             // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
-            // behaviour): a copy of the shape it left, without its text, else a rectangle. Its top-left is
-            // what snaps, so the edges land on the grid.
+            // behaviour): a copy of the shape it left, without its text, else a rectangle. It is centred on
+            // the release point (not the settled end, already snapped to the coarse grid) with its top-left
+            // on the minor grid, as a palette drop lands.
+            const drop = raw.kind === 'link' ? raw.to : current.to;
             const source = scene.nodes[endpointNode(current.source) ?? ''];
             const def = source ? nodeRegistry[source.type] : undefined;
             const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
@@ -767,8 +769,8 @@ export const usePointerMachine = ({
               id: createId(source?.type ?? 'rect'),
               z: topZ(Object.values(scene.nodes)),
               center: {
-                x: snap(current.to.x - size.width / 2) + size.width / 2,
-                y: snap(current.to.y - size.height / 2) + size.height / 2,
+                x: snapMinor(drop.x - size.width / 2) + size.width / 2,
+                y: snapMinor(drop.y - size.height / 2) + size.height / 2,
               },
               size,
             };
@@ -839,6 +841,7 @@ export const usePointerMachine = ({
       addNode,
       minor,
       cell,
+      snapMinor,
     ],
   );
 
