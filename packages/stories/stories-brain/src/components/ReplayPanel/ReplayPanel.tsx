@@ -175,8 +175,7 @@ const StepCard = ({ step }: { step: ReplayStep }) => {
         {step.actions.map((action) => (
           <Card.Text key={action}>action {action}</Card.Text>
         ))}
-        {step.expected && <Card.Text variant='muted'>expected {formatExpected(step.expected)}</Card.Text>}
-        <Card.Text variant='muted'>actual {formatActual(step)}</Card.Text>
+        <OutcomeTable step={step} />
         {step.failures.map((failure) => (
           <Card.Text key={failure}>✗ {failure}</Card.Text>
         ))}
@@ -185,17 +184,48 @@ const StepCard = ({ step }: { step: ReplayStep }) => {
   );
 };
 
-const formatExpected = (expected: NonNullable<ReplayStep['expected']>): string =>
-  (['wake', 'achieved', 'holds', 'blocks'] as const)
-    .flatMap((key) => (expected[key] === undefined || expected[key] === null ? [] : [`${key}=${expected[key]}`]))
-    .join(' ') || 'nothing';
+const PROPERTIES = ['wake', 'achieved', 'holds', 'blocks'] as const;
 
-const formatActual = ({ wakes, achieved, holds, blocks }: ReplayStep): string =>
-  [
-    wakes.length === 0
-      ? 'wake=false'
-      : `wake ${wakes.map(({ label, facts }) => (facts.length > 0 ? `${label}←${facts.join(',')}` : label)).join(' ')}`,
-    `achieved=${achieved}`,
-    `holds=${holds}`,
-    `blocks=${blocks}`,
-  ].join(' ');
+/** An expectation cell: absent (`—`) when the step does not check it, `either` when it is explicitly unconstrained. */
+const formatExpected = (value: boolean | null | undefined): string =>
+  value === undefined ? '—' : value === null ? 'either' : String(value);
+
+/** The wake cell names each wake with the facts behind it (`reply←f1`); other cells are the plain value. */
+const formatActual = (step: ReplayStep, property: (typeof PROPERTIES)[number]): string =>
+  property === 'wake'
+    ? step.wakes.length === 0
+      ? 'false'
+      : step.wakes.map(({ label, facts }) => (facts.length > 0 ? `${label}←${facts.join(',')}` : label)).join(' ')
+    : String(step[property]);
+
+/** Expected against actual for each checked property; an actual that contradicts its expectation reads as an error. */
+const OutcomeTable = ({ step }: { step: ReplayStep }) => (
+  <table className='w-full text-sm' data-testid='goal-compiler.outcome'>
+    <thead>
+      <tr className='text-left text-fg-muted'>
+        <th className='pe-2 font-normal'></th>
+        <th className='pe-2 font-normal'>Expected</th>
+        <th className='font-normal'>Actual</th>
+      </tr>
+    </thead>
+    <tbody>
+      {PROPERTIES.map((property) => {
+        const expected = step.expected?.[property];
+        const actual = property === 'wake' ? step.wakes.length > 0 : step[property];
+        const mismatch = typeof expected === 'boolean' && expected !== actual;
+        return (
+          <tr key={property} className='border-t border-separator' data-property={property}>
+            <th scope='row' className='pe-2 text-left font-normal text-fg-muted'>
+              {property}
+            </th>
+            <td className='pe-2 text-fg-muted'>{formatExpected(expected)}</td>
+            <td className={mismatch ? 'text-error-text' : undefined} data-mismatch={mismatch ? '' : undefined}>
+              {mismatch && '✗ '}
+              {formatActual(step, property)}
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+);
