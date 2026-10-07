@@ -11,12 +11,14 @@ import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ComputeSqliteService from '@dxos/compute/SqliteService';
 import { ConfigService } from '@dxos/config';
 import { Database, Hypergraph } from '@dxos/echo';
 import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
+import { SqliteService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities } from '#types';
 
@@ -25,6 +27,7 @@ import { ClientCapabilities } from '#types';
 //
 // Contributes the core client/space service layer specs:
 //   - {@link ClientService}, {@link ConfigService}, {@link EdgeHttpClientService} (application affinity).
+//   - {@link ComputeSqliteService.SqliteService} over the client services RPC (application affinity).
 //   - {@link Database.Service}, {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
@@ -56,6 +59,32 @@ const ClientLayerSpec = LayerSpec.make(
         yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout }));
         return fromClient(client);
       }).pipe(Effect.orDie),
+    ),
+);
+
+/**
+ * {@link ComputeSqliteService.SqliteService} served by the client services host, which sanitizes every statement.
+ */
+const SqliteLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [ComputeSqliteService.SqliteService],
+  },
+  () =>
+    Layer.effect(
+      ComputeSqliteService.SqliteService,
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return ComputeSqliteService.SqliteService.of({
+          execute: ({ database, sql, params }) =>
+            client.services.rpc['SqliteService.execute']({
+              database,
+              sql,
+              params: params.map(SqliteService.toSqlValue),
+            }).pipe(Effect.map(({ rows }) => rows)),
+        });
+      }),
     ),
 );
 
@@ -215,6 +244,7 @@ export default Capability.makeModule(() =>
     Capability.contributeAll(Capabilities.LayerSpec, [
       ClientLayerSpec,
       ConfigLayerSpec,
+      SqliteLayerSpec,
       EdgeHttpClientLayerSpec,
       DatabaseLayerSpec,
       HypergraphLayerSpec,

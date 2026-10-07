@@ -114,6 +114,11 @@
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
     },
+    "./SqliteService": {
+      "source": "./src/SqliteService.ts",
+      "types": "./dist/types/src/SqliteService.d.ts",
+      "import": "./dist/lib/SqliteService.mjs"
+    },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
@@ -166,6 +171,7 @@
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },
