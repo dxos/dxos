@@ -213,7 +213,7 @@ SceneLayer.displayName = 'SceneLayer';
 /** The width of a node frame's border, which a nested scene drawn inside it steps out over. */
 const FRAME_BORDER = '--scene-frame-border' as const;
 
-/** A link's stroke, in scene units like a node's 4px border, so a link keeps its weight beside the shapes at any zoom. */
+/** A link's stroke, in scene units like a node's 2px border, so a link keeps its weight beside the shapes at any zoom. */
 const LINK_WIDTH = 2;
 
 /** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
@@ -347,7 +347,7 @@ const NodeFrame = memo(
       width: bounds.width,
       height: bounds.height,
       fontSize: node.style?.fontSize,
-      [FRAME_BORDER]: chromeFade ? '0px' : '4px',
+      [FRAME_BORDER]: chromeFade ? '0px' : '2px',
       ...fade,
     };
     const frameLook = props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered);
@@ -356,7 +356,7 @@ const NodeFrame = memo(
         className={mx(
           'absolute box-border overflow-hidden',
           // Fading, the border becomes padding of the same width so the contents stay put.
-          ...(chromeFade ? ['p-1 isolate'] : ['border-4', ...frameLook]),
+          ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
           interactive && !node.locked && 'cursor-grab',
           ghost && 'opacity-50 border-dashed pointer-events-none',
         )}
@@ -369,7 +369,7 @@ const NodeFrame = memo(
         {chromeFade && (
           <div
             aria-hidden
-            className={mx('dx-cover -z-10 border-4 pointer-events-none', ...frameLook)}
+            className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
             style={chromeFade}
           />
         )}
@@ -477,8 +477,8 @@ export const PortalNodeView = (props: NodeViewProps) => {
           <div
             className='absolute pointer-events-none'
             style={{
-              top: `calc(-1 * var(${FRAME_BORDER}, 4px))`,
-              left: `calc(-1 * var(${FRAME_BORDER}, 4px))`,
+              top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+              left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
               transform: portalTransform(node, bounds),
               transformOrigin: '0 0',
             }}
