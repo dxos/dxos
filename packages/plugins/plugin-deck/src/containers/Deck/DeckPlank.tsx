@@ -70,10 +70,15 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     onScrollIntoView,
   } = useDeckPlank({ id, part, active });
 
-  // In flat mode only the current plank renders, so its heading shows where it sits in the tree. Clicking a crumb
-  // goes back to it: an ancestor already open drops the planks after it, any other opens in its place.
+  // In flat mode only the current plank renders, so its heading shows where it sits in the tree (or, outside any
+  // object, the planks opened before it). Clicking a crumb goes back to it: an ancestor already open drops the
+  // planks after it, any other opens in its place.
   const { flatten } = useDeckSettings();
-  const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined);
+  const history = useMemo(() => {
+    const index = active?.indexOf(id) ?? -1;
+    return active && index > 0 ? active.slice(0, index) : [];
+  }, [active, id]);
+  const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined, history);
   const onSelectBreadcrumb = useCallback(
     (crumbId: string) => {
       const index = active?.indexOf(crumbId) ?? -1;

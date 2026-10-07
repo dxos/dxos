@@ -64,25 +64,28 @@ export const ancestorPaths = (id: string): string[] => {
  * A node's place in the tree as breadcrumbs: its ancestors from the nearest object below the workspace (a project,
  * a collection's item) down to its parent, so a session reads `Project > Sessions`. The root, the workspace and the
  * navtree's section and type groups above that object are left out, since every node under them shares them.
+ * A node with no object above it (a plugin in the registry) falls back to `history`, the planks opened before it.
  */
-export const useAncestorBreadcrumbs = (id: string | undefined): Breadcrumb[] => {
+export const useAncestorBreadcrumbs = (id: string | undefined, history: readonly string[] = []): Breadcrumb[] => {
   const { graph } = ToolkitHooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const [ids, setIds] = useState<string[]>([]);
+  const historyKey = history.join('\0');
 
   useEffect(() => {
     const paths = id ? ancestorPaths(id) : [];
+    const fallback = id && historyKey.length > 0 ? historyKey.split('\0') : [];
     const atoms = paths.map((path) => graph.node(path));
     const update = () => {
       const first = atoms.findIndex((atom) => Obj.isObject(Option.getOrUndefined(registry.get(atom))?.data));
-      const next = first < 0 ? [] : paths.slice(first);
+      const next = first < 0 ? fallback : paths.slice(first);
       setIds((prev) => (prev.join('\0') === next.join('\0') ? prev : next));
     };
 
     update();
     const unsubscribers = atoms.map((atom) => registry.subscribe(atom, update));
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [graph, registry, id]);
+  }, [graph, registry, id, historyKey]);
 
   return useBreadcrumbs(ids);
 };

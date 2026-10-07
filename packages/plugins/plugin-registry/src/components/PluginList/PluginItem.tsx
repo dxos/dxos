@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
@@ -34,7 +34,8 @@ export type PluginItemProps = {
   extraTags?: readonly string[];
   /** Whether this device's answer for this plugin differs from the account's. */
   deviceOnly?: boolean;
-  onClick?: (id: string) => void;
+  /** `modified` (Cmd/Ctrl held) asks for a plank of its own instead of the list's detail. */
+  onClick?: (id: string, options: { modified: boolean }) => void;
   onChange?: (id: string, enabled: boolean) => void;
   /**
    * Install handler. When provided and the plugin is not installed, an Install button
@@ -101,7 +102,10 @@ export const PluginItem = ({
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
   const hasSettings = hasSettingsProp?.(id) ?? false;
   const titleId = `${id}-title`;
-  const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
+  const handleClick = useCallback(
+    (event: MouseEvent) => onClick?.(id, { modified: event.metaKey || event.ctrlKey }),
+    [id, onClick],
+  );
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const handleInstall = useCallback(() => onInstall?.(id), [id, onInstall]);
   const handleUpdate = useCallback(() => onUpdate?.(id), [id, onUpdate]);

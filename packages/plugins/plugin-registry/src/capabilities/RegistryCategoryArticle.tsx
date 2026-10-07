@@ -29,6 +29,8 @@ const useCategoryPredicate = (category: string): PluginPredicate => {
 };
 
 export type RegistryCategoryArticleProps = {
+  /** The category plank's id, which a plugin's detail opens beside. */
+  id: string;
   category: string;
 };
 
@@ -37,7 +39,7 @@ export type RegistryCategoryArticleProps = {
  * `usePluginManager` + `useRegistryPlugins` + `useAutoTags` wiring shared by every category surface,
  * none of which can live in a surface's `props` mapper.
  */
-export const RegistryCategoryArticle = ({ category }: RegistryCategoryArticleProps) => {
+export const RegistryCategoryArticle = ({ id, category }: RegistryCategoryArticleProps) => {
   const manager = PluginManagerProvider.usePluginManager();
   const filter = useCategoryPredicate(category);
   const { entries } = useRegistryPlugins();
@@ -45,7 +47,5 @@ export const RegistryCategoryArticle = ({ category }: RegistryCategoryArticlePro
   const deviceOnlyIds = Hooks.useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
   const filtered = useMemo(() => manager.getPlugins().filter(filter), [manager, filter]);
 
-  return (
-    <RegistryArticle id={category} plugins={filtered} extraTagsById={extraTagsById} deviceOnlyIds={deviceOnlyIds} />
-  );
+  return <RegistryArticle id={id} plugins={filtered} extraTagsById={extraTagsById} deviceOnlyIds={deviceOnlyIds} />;
 };
