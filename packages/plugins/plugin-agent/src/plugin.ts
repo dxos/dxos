@@ -4,7 +4,15 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { AppGraphBuilder, Brain, OperationHandler, ReactSurface, Schema, SkillDefinition, Translations } from '#capabilities';
+import {
+  AppGraphBuilder,
+  Brain,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+  SkillDefinition,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
 
 export const AgentPlugin = Plugin.define(meta).pipe(
