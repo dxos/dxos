@@ -9,8 +9,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
+import { BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
 
+import { compileGoal } from './compile-goal.ts';
 import { AgentOperationError } from './errors.ts';
 import * as Identity from './identity.ts';
 
@@ -62,7 +63,16 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       const createdAt = DateTime.formatIso(yield* DateTime.now);
       // People named in the pattern are matched by identity DID, as `readSource` attributes their words.
       const roster = yield* Identity.loadRoster;
-      const rules = Trigger.toRules(when, { createdAt, person: (name) => roster.byName.get(Identity.slug(name)) });
+      // The goal's text compiled to rules is the authority; the pattern, translated, is the fallback.
+      const compiled = yield* compileGoal({
+        goal: request ?? goal.title,
+        owner: Identity.identityOf(requester) ?? Identity.slug(Profile.displayName(requester)),
+        people: [...roster.names].map(([id, name]) => ({ name, id })),
+        now: createdAt,
+      });
+      const rules =
+        compiled?.rules ??
+        Trigger.toRules(when, { createdAt, person: (name) => roster.byName.get(Identity.slug(name)) });
       const trigger: Trigger.Trigger = {
         id: Trigger.makeId(agent.id),
         agent: agent.id,

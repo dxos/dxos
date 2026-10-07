@@ -27,7 +27,7 @@ export const WatchFacts = Operation.make({
       'Waits for something to happen ("let me know when X") and tells the requester when a fact says it did. Records the outcome as a goal the requester owns.',
     icon: 'ph--binoculars--regular',
   },
-  services: [Database.Service, BrainService.BrainService],
+  services: [Database.Service, AiService.AiService, BrainService.BrainService],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that watches.' }),
     requester: Ref.Ref(Obj.Unknown).annotate({

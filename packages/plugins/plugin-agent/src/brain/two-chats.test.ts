@@ -90,6 +90,34 @@ const update = (...lines: string[]): string => `${UPDATE} ${lines.join(' / ')}`;
 
 type Refs = { agent?: string; alice?: string; bob?: string };
 
+/** The first words of the compile and oracle prompts, so the script tells those calls apart. */
+const COMPILE_PROMPT = "You compile an agent's goals";
+const ORACLE_PROMPT = 'You write acceptance tests for an agent';
+
+/** Rules a careful compiler writes for "keep me posted about what Bob is working on". */
+const GOOD_RULES = `wake(bob) :- speaker(F, ${JSON.stringify(BOB)}).`;
+/** Rules that wake on anything anyone says, which the oracle's near miss exposes. */
+const WRONG_RULES = 'wake(any) :- fact(F, _, _, _).';
+
+/** The timeline an oracle writes from the goal's text alone: Alice's own words are a near miss. */
+const TIMELINE = JSON.stringify({
+  steps: [
+    {
+      after: '10m',
+      says: [{ speaker: ALICE, quote: 'Lunch?', subject: ALICE, predicate: 'suggests', object: 'lunch' }],
+      wake: false,
+    },
+    {
+      after: '1h',
+      says: [{ speaker: BOB, quote: 'On the indexer.', subject: BOB, predicate: 'works on', object: 'indexer' }],
+      wake: true,
+    },
+  ],
+});
+
+/** What the scripted compiler answers; `off` replies with no rules, as a model that ignored the format. */
+let compiler: 'off' | 'good' | 'wrong' = 'off';
+
 const { text, toolCall } = ScriptedLanguageModel;
 
 const lastUserText = (request: ScriptedLanguageModel.ScriptedRequest): string => {
@@ -109,6 +137,17 @@ const makeScript =
       // Only the facts being passed on: the transcript and the draft also quote lines.
       const facts = request.text.split('What changed:')[1]?.split('A draft')[0] ?? '';
       return { parts: [text(update(...Object.keys(FACTS).filter((line) => facts.includes(line))))] };
+    }
+    if (request.text.startsWith(ORACLE_PROMPT)) {
+      return { parts: [text(compiler === 'off' ? 'Noted.' : TIMELINE)] };
+    }
+    if (request.text.startsWith(COMPILE_PROMPT)) {
+      const rules = compiler === 'good' ? GOOD_RULES : compiler === 'wrong' ? WRONG_RULES : undefined;
+      return {
+        parts: [
+          text(rules ? `<kind>condition</kind>\n<drivers>fact</drivers>\n<datalog>\n${rules}\n</datalog>` : 'Noted.'),
+        ],
+      };
     }
     if (request.text.includes(EXTRACTION_PROMPT)) {
       const facts = Object.entries(FACTS)
@@ -232,6 +271,7 @@ describe('local brain: two private chats', () => {
   afterEach(() => {
     brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
     offset = 0;
+    compiler = 'off';
   });
 
   it.effect(
@@ -412,6 +452,50 @@ describe('local brain: two private chats', () => {
         // It fired once; the clock has nothing more for it.
         expect((yield* run).fired).toEqual([]);
         expect(yield* service.nextDueAt(agent.id)).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    "a goal compiled from its text replaces the pattern once it replays the oracle's timeline",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        compiler = 'good';
+        const { agent, alice, bob } = yield* setup();
+        yield* say(alice, LINE.aliceWatchesBob);
+        const service = yield* BrainService.BrainService;
+        const [watch] = yield* service.subscriptions(agent.id);
+        expect(watch.rules).toBe(GOOD_RULES);
+
+        yield* say(alice, LINE.aliceWorking);
+        yield* say(bob, LINE.bobWorking);
+        yield* settle(alice);
+        expect(yield* updates(alice)).toEqual([update(LINE.bobWorking)]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'a compilation that fails the replay gate is not used, and the pattern stands',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        compiler = 'wrong';
+        const { agent, alice } = yield* setup();
+        yield* say(alice, LINE.aliceWatchesBob);
+        const [watch] = yield* (yield* BrainService.BrainService).subscriptions(agent.id);
+        expect(watch.rules).not.toContain(WRONG_RULES);
+        expect(watch.rules).toContain(`wake(${Trigger.MATCH_LABEL})`);
+        expect(watch.rules).toContain(JSON.stringify(BOB));
+
+        // Had the wrong rules gone active, Alice's own words would wake her watch.
+        yield* say(alice, LINE.aliceWorking);
+        expect(yield* updates(alice)).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

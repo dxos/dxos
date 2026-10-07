@@ -8,4 +8,5 @@ export * as Compiler from './Compiler.ts';
 export * as Encoding from './Encoding.ts';
 export * as Evaluator from './Evaluator.ts';
 export * as GoalRules from './GoalRules.ts';
+export * as Oracle from './Oracle.ts';
 export * as Vocabulary from './Vocabulary.ts';

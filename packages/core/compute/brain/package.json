@@ -48,6 +48,11 @@
       "types": "./dist/types/src/GoalRules.d.ts",
       "import": "./dist/lib/GoalRules.mjs"
     },
+    "./Oracle": {
+      "source": "./src/Oracle.ts",
+      "types": "./dist/types/src/Oracle.d.ts",
+      "import": "./dist/lib/Oracle.mjs"
+    },
     "./Vocabulary": {
       "source": "./src/Vocabulary.ts",
       "types": "./dist/types/src/Vocabulary.d.ts",

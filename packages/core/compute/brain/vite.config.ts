@@ -13,6 +13,7 @@ export default defineConfig({
     Encoding: 'src/Encoding.ts',
     Evaluator: 'src/Evaluator.ts',
     GoalRules: 'src/GoalRules.ts',
+    Oracle: 'src/Oracle.ts',
     Vocabulary: 'src/Vocabulary.ts',
     testing: 'src/testing/index.ts',
   },

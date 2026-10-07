@@ -87,8 +87,12 @@ export const deliver: (
       yield* brain.unsubscribe(subscription.id);
       continue;
     }
-    // A one-time subscription is removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
-    if (!subscription.ongoing && !(yield* brain.unsubscribe(subscription.id))) {
+    // A one-time subscription closes when its outcome happened: compiled rules say so with `achieved`,
+    // a translated pattern with its single wake. Other wakes (a follow-up, a reply) pass on and keep it open.
+    const closes =
+      !subscription.ongoing && events.some(({ label }) => label === 'achieved' || label === Trigger.MATCH_LABEL);
+    // Removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
+    if (closes && !(yield* brain.unsubscribe(subscription.id))) {
       continue;
     }
 
@@ -120,7 +124,7 @@ export const deliver: (
     if (!delivery.delivered) {
       undelivered.push(delivery.reason ?? 'The message could not be delivered.');
     }
-    if (subscription.ongoing) {
+    if (!closes) {
       // Acknowledged even when undelivered: the failure is reported to this turn, and a retry would resend on every turn.
       yield* brain.ack(
         subscription.id,
