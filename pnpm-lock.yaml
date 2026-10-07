@@ -20730,6 +20730,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/brain':
+        specifier: workspace:*
+        version: link:../../core/compute/brain
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
