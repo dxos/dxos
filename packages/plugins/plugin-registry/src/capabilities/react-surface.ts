@@ -26,7 +26,7 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
           id: 'registry',
           filter: AppSurface.literal(AppSurface.Article, 'registry'),
           component: PublicRegistryArticle,
-          props: ({ data: { attendableId } }) => ({ id: attendableId }),
+          props: ({ data: { attendableId } }) => ({ contextId: attendableId }),
         }),
         Surface.create({
           id: LOAD_PLUGIN_DIALOG,
@@ -48,25 +48,25 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
         id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, 'bundled'),
         component: RegistryCategoryArticle,
-        props: ({ data: { attendableId } }) => ({ id: attendableId, category: 'bundled' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'bundled' }),
       }),
       Surface.create({
         id: 'installed',
         filter: AppSurface.literal(AppSurface.Article, 'installed'),
         component: RegistryCategoryArticle,
-        props: ({ data: { attendableId } }) => ({ id: attendableId, category: 'installed' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'installed' }),
       }),
       Surface.create({
         id: 'recommended',
         filter: AppSurface.literal(AppSurface.Article, 'recommended'),
         component: RegistryCategoryArticle,
-        props: ({ data: { attendableId } }) => ({ id: attendableId, category: 'recommended' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'recommended' }),
       }),
       Surface.create({
         id: 'labs',
         filter: AppSurface.literal(AppSurface.Article, 'labs'),
         component: RegistryCategoryArticle,
-        props: ({ data: { attendableId } }) => ({ id: attendableId, category: 'labs' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'labs' }),
       }),
       Surface.create({
         id: 'pluginDetails',

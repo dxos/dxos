@@ -60,6 +60,11 @@ export const ancestorPaths = (id: string): string[] => {
   return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join('/'));
 };
 
+export const planksBefore = (active: readonly string[] | undefined, id: string): string[] => {
+  const index = active?.indexOf(id) ?? -1;
+  return active && index > 0 ? active.slice(0, index) : [];
+};
+
 /**
  * A node's place in the tree as breadcrumbs: its ancestors from the nearest object below the workspace (a project,
  * a collection's item) down to its parent, so a session reads `Project > Sessions`. The root, the workspace and the

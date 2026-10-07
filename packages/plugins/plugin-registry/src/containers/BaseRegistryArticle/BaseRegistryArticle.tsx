@@ -36,8 +36,7 @@ const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
 };
 
 export type BaseRegistryArticleProps = {
-  /** The list's own plank, which a plugin's detail opens beside. */
-  id: string;
+  contextId: string;
   /** Plugins to display, pre-sorted by the caller. */
   plugins: readonly Plugin.Plugin[];
   /**
@@ -63,7 +62,7 @@ export type BaseRegistryArticleProps = {
 export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
-      id,
+      contextId,
       plugins,
       source,
       empty,
@@ -124,7 +123,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
       [dispatchToggle, requestDisable],
     );
 
-    const handleClick = ToolkitHooks.useDetailNavigation({ contextId: id, getPath: getPluginPath });
+    const handleClick = ToolkitHooks.useDetailNavigation({ contextId, getPath: getPluginPath });
 
     const hasSettings = useCallback(
       (pluginId: string) => allSettings.some((setting) => setting.prefix === pluginId),
