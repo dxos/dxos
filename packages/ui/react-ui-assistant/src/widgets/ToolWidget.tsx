@@ -2,17 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Accordion, Icon, SystemButton, useTranslation } from '@dxos/react-ui';
-import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
+import { BACKGROUND_TOOL } from '../renderer.ts';
 import { translationKey } from '../translations.ts';
+import { PANEL_FRAME, WidgetPanel, WidgetPanelRow } from './WidgetPanel.tsx';
 
 export type ToolWidgetProps = WidgetProps;
 
@@ -67,6 +71,8 @@ type ToolEntry = {
   active: boolean;
   title: string;
   icon: string;
+  /** A background tool's result, recovered without the call it answers; named by {@link entryLabel}. */
+  background?: boolean;
   /** Prose of a status or reasoning row; a call carries its payload in the fields below. */
   text?: string;
   error?: unknown;
@@ -77,9 +83,6 @@ type ToolEntry = {
 const TOOL_ICON = 'ph--wrench--regular';
 const STATUS_ICON = 'ph--info--regular';
 const REASONING_ICON = 'ph--brain--regular';
-
-/** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
-const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
 
 /**
  * The call's display label where its producer supplied one (a code-mode `eval`), else the operation's
@@ -132,7 +135,23 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
       }
 
       case 'toolResult': {
-        const entry = pending();
+        // A background tool's result answers a call from an earlier turn, so it stands as its own row
+        // rather than answering whichever call in this run is still unanswered. A pid reported again
+        // replaces its earlier row: the latest report is the outcome.
+        let entry: ToolEntry | undefined;
+        if (block.name === BACKGROUND_TOOL) {
+          const id = `background-${block.toolCallId}`;
+          entry = { id, kind: 'call', active: false, background: true, title: '', icon: TOOL_ICON };
+          // Replaced in place, not moved: `indexById` holds positions of the calls after it.
+          const previous = entries.findIndex((existing) => existing.id === id);
+          if (previous === -1) {
+            entries.push(entry);
+          } else {
+            entries[previous] = entry;
+          }
+        } else {
+          entry = pending();
+        }
         if (!entry) {
           break;
         }
@@ -191,16 +210,15 @@ type ToolPanelProps = {
  * The row's own words. Reasoning names the kind instead of its prose: it runs to paragraphs, and a
  * truncated first line reads as a broken title rather than a summary.
  */
-const entryLabel = (entry: ToolEntry, t: ReturnType<typeof useTranslation>['t']): string =>
-  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.title;
+const entryLabel = (entry: ToolEntry, t: ReturnType<typeof Hooks.useTranslation>['t']): string =>
+  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.background ? t('tool-background.label') : entry.title;
 
 /** Whether the row carries anything an expansion could show. */
 const hasDetail = (entry: ToolEntry): boolean =>
   entry.text !== undefined || entry.input !== undefined || entry.error !== undefined || entry.result !== undefined;
 
 const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
-  const { t } = useTranslation(translationKey);
-  const [open, setOpen] = useState(false);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const calls = entries.filter((entry) => entry.kind === 'call');
   const status = entries.filter((entry) => entry.kind === 'status').at(-1);
@@ -228,67 +246,40 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     ? entryLabel(narrating, t)
     : running
       ? `${entryLabel(running, t)} · ${t('tool-run-suffix.label', { count: calls.length })}`
-      : (singleCall?.title ?? count);
+      : singleCall
+        ? entryLabel(singleCall, t)
+        : count;
   const icon = narrating?.icon ?? running?.icon ?? singleCall?.icon ?? TOOL_ICON;
 
   // Nothing an expansion could show — a lone status, which is what a run looks like while the model
   // is still saying what it is about to do. A caret that reveals emptiness reads as a failure, so
   // the row stays plain prose until a call or a second line of narration joins it.
   if (single && !hasDetail(single)) {
-    return (
-      <div
-        className='flex items-center gap-2 p-1 text-fg-muted min-h-(--dx-control)'
-        data-testid={`assistant.tool-${single.kind}`}
-      >
-        <Icon icon={icon} size='md' />
-        <span className='truncate'>{header}</span>
-      </div>
-    );
+    return <WidgetPanelRow icon={icon} label={header} testId={`assistant.tool-${single.kind}`} />;
   }
 
   return (
-    // The summary is a bare text row rather than a bordered panel header: the border belongs to
-    // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
-    //
-    // The body animates: the Collapsible measures its own `--height`, so the reveal ramps instead
-    // of the content appearing and vanishing in one frame. Content stays mounted and the machine
-    // hides it, which is what lets the ramp have a height to animate to.
-    <TogglePanel.Root
-      open={open}
-      onChangeOpen={setOpen}
-      // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
-      // would stretch the whole line — carrying the summary row out of view and scrolling the
-      // editor instead of the payload. Zero width removes this widget from that calculation, and
-      // the min-width then takes the line's own width, which is what bounds the payload's scroller.
-      classNames='w-0 min-w-full'
+    <WidgetPanel
+      icon={icon}
+      label={header}
+      error={single?.error !== undefined}
+      suffix={
+        failed > 0 && <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+      }
+      testId={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
+      onChangeOpen={onChangeOpen}
+      // A thread is a column of these, nearly all left closed; building each payload at mount was
+      // most of the cost of scrolling one into view.
+      lazyMount
     >
-      <TogglePanel.Header
-        caret='end'
-        data-testid={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
-        classNames='gap-1'
-      >
-        <span className='flex min-w-0 items-center gap-2 text-fg-muted tabular-nums'>
-          {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
-              whether it is collapsed or not. */}
-          <Icon icon={icon} size='md' />
-          <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
-          {failed > 0 && (
-            <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
-          )}
-        </span>
-      </TogglePanel.Header>
-      {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
-          ramp, while the box is still shorter than the content it is growing to hold. */}
-      <TogglePanel.Body>
-        {single ? (
-          // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
-          // padding twice pushed the copy button off the caret's column.
-          <ToolCallDetail entry={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
-        ) : (
-          <ToolCallList entries={entries} onOpen={onChangeOpen} />
-        )}
-      </TogglePanel.Body>
-    </TogglePanel.Root>
+      {single ? (
+        // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
+        // padding twice pushed the copy button off the caret's column.
+        <ToolCallDetail entry={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
+      ) : (
+        <ToolCallList entries={entries} onOpen={onChangeOpen} />
+      )}
+    </WidgetPanel>
   );
 };
 
@@ -305,7 +296,7 @@ type ToolCallListProps = {
  * feed measures that height as the row mounts.
  */
 const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const label = (entry: ToolEntry) => entryLabel(entry, t);
 
   return (
@@ -340,7 +331,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
 
 /** What a row carries, in the order it happened. */
 const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: string }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     // `min-w-0` so a wide payload scrolls inside its own section rather than widening this column
     // and taking the summary row with it.

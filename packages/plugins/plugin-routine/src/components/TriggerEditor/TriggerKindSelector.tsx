@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -32,7 +32,7 @@ export type TriggerKindSelectorProps = {
  * selecting a row emits its kind. Selection is transient — the parent swaps in the variant editor on change.
  */
 export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const handleValueChange = useCallback(
     (id: string) => {
       const option = OPTIONS.find((option) => option.kind === id);

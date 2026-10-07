@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ContentBlock, Message } from '@dxos/types';
 

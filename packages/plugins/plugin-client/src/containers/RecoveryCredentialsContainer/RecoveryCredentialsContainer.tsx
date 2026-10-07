@@ -4,14 +4,17 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { Banner, Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
@@ -32,8 +35,8 @@ const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
 };
 
 export const RecoveryCredentialsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
     (credential) => credential.type === 'dxos.halo.credentials.IdentityRecovery',
@@ -79,7 +82,7 @@ export const RecoveryCredentialsContainer = () => {
           <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
             {supportsPasskeys && (
               <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
-                <Button
+                <Button.Root
                   label={t('create-passkey.label')}
                   icon='ph--key--duotone'
                   variant='primary'
@@ -97,7 +100,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create-recovery-code.label')}
               description={t('create-recovery-code.description')}
             >
-              <Button
+              <Button.Root
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
                 variant='default'
@@ -119,12 +122,12 @@ export const RecoveryCredentialsContainer = () => {
                   label: credential.recovery?.label ?? credential.id ?? `${index}`,
                 }))}
               >
-                <Listbox.Content classNames='gap-1'>
+                <Listbox.Content scroll={false} classNames='gap-1'>
                   {recoveryCredentials.map((credential, index) => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
                     return (
                       <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
-                        <Icon icon={KIND_ICONS[kind]} />
+                        <Icon.Icon icon={KIND_ICONS[kind]} />
                         <Listbox.ItemText classNames={revoked ? 'text-fg-subtle line-through' : undefined}>
                           {label ?? t(`recovery-kind-${kind}.label`)}
                         </Listbox.ItemText>
@@ -136,7 +139,7 @@ export const RecoveryCredentialsContainer = () => {
                           // identity, and there is no self-service way back.
                           lookupKey &&
                           activeCount > 1 && (
-                            <Button
+                            <Button.Root
                               iconOnly
                               label={t('revoke-credential.label')}
                               icon='ph--trash--regular'
@@ -163,7 +166,7 @@ export const RecoveryCredentialsContainer = () => {
             )}
             {recoveryCredentials.length > 0 && (
               <Form.Field standalone label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
-                <Button
+                <Button.Root
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
                   variant='default'

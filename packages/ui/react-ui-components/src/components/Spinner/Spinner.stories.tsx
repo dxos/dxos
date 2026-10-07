@@ -5,8 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useState } from 'react';
 
-import { Button, Flex, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { PulseSpinner } from './PulseSpinner.tsx';
 import { ShapeSpinner } from './ShapeSpinner.tsx';
@@ -21,18 +23,18 @@ const DefaultStory = ({ Spinner, state: initialState }: StoryArgs) => {
   const [state, setState] = useState(initialState);
 
   return (
-    <Flex column grow>
+    <Layout.Flex column grow>
       <Toolbar.Root>
         {STATES.map((value) => (
-          <Button key={value} onClick={() => setState(value)} classNames='capitalize'>
+          <Button.Root key={value} onClick={() => setState(value)} classNames='capitalize'>
             {value}
-          </Button>
+          </Button.Root>
         ))}
       </Toolbar.Root>
-      <Flex grow center>
+      <Layout.Flex grow center>
         <Spinner state={state} size={6} />
-      </Flex>
-    </Flex>
+      </Layout.Flex>
+    </Layout.Flex>
   );
 };
 

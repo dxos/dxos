@@ -30,12 +30,34 @@ describe('perf score measurements', () => {
     expect(measurements).toContainEqual({ id: 'run > total blocking time', group: RUN_GROUP, value: 12 });
   });
 
+  test('scores submit-to-visible from the one stage that measured it', ({ expect }) => {
+    const measurements = toMeasurements([
+      row(0, 'boot'),
+      row(0, 'assistant-turns', { submitToQueuedVisibleMs: 14 }),
+      row(1, 'assistant-turns', { submitToQueuedVisibleMs: 18 }),
+      row(2, 'assistant-turns', { submitToQueuedVisibleMs: 16 }),
+    ]);
+    expect(measurements).toContainEqual({ id: 'run > submit to queued visible', group: RUN_GROUP, value: 16 });
+  });
+
   test('ignores a footprint reading from a stage that read no processes', ({ expect }) => {
     const measurements = toMeasurements([
       row(0, 'boot', { appFootprintBytes: 0, footprintProcesses: 0 }),
       row(0, 'open-tasks', { appFootprintBytes: 50, footprintProcesses: 3 }),
     ]);
     expect(measurements).toContainEqual({ id: 'run > peak app footprint', group: RUN_GROUP, value: 50 });
+  });
+
+  test('scores request latency only from stages that asked a model, as the median across iterations', ({ expect }) => {
+    const measurements = toMeasurements([
+      row(0, 'boot'),
+      row(0, 'assistant-turns', { turnToRequestP50Ms: 80, turnToRequestMaxMs: 400, turnToRequestCount: 20 }),
+      row(1, 'assistant-turns', { turnToRequestP50Ms: 120, turnToRequestMaxMs: 200, turnToRequestCount: 20 }),
+      row(2, 'assistant-turns', { turnToRequestP50Ms: 100, turnToRequestMaxMs: 300, turnToRequestCount: 20 }),
+    ]);
+    expect(measurements).toContainEqual({ id: 'run > turn to request p50', group: RUN_GROUP, value: 100 });
+    expect(measurements).toContainEqual({ id: 'run > turn to request max', group: RUN_GROUP, value: 300 });
+    expect(measurements.map(({ id }) => id)).not.toContain('run > submit to request p50');
   });
 
   test('rejects a batch line that is not flat scalar properties', ({ expect }) => {

@@ -210,6 +210,10 @@
     .dx-container > [data-span][data-span]:not([data-rail]) {
       grid-column: content;
     }
+    /* A `fixed` row keeps its tracks (its own `--dx-columns` is inline, so only the cells need placing back). */
+    .dx-container[data-layout='row'][data-fixed] > :not([data-rail]) {
+      grid-column: auto;
+    }
   }
 
   [data-debug] .dx-container > * {

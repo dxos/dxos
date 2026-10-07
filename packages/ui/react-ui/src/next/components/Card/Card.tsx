@@ -2,24 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ComponentPropsWithoutRef, type MouseEvent, type ReactNode, forwardRef, useId } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Block } from '../Block/index.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
-import { Container } from '../Container/index.ts';
-import { Group, type GroupProps } from '../Group/index.ts';
-import { Icon, type IconHue } from '../Icon/index.ts';
-import { Image, type ImageProps } from '../Image/index.ts';
-import { Menu } from '../Menu/index.ts';
-import { SystemButton } from '../SystemButton/index.ts';
-import { Typography, type TypographyProps } from '../Typography/index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group, type GroupProps } from '../Group/Group.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Image, type ImageProps } from '../Image/Image.tsx';
+import * as Menu from '../Menu/Menu.tsx';
+import * as SystemButton from '../SystemButton/SystemButton.tsx';
+import * as Typography from '../Typography/Typography.tsx';
 
 /** A click inside a clickable card or row (a trailing action, a menu) must not also activate it. */
 const stopPropagation = (event: MouseEvent) => event.stopPropagation();
@@ -108,7 +110,7 @@ CardPoster.displayName = 'Card.Poster';
 type CardTileProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>> & {
   icon: string;
   /** Fills the tile with the hue's surface and colours the icon with its foreground. */
-  hue?: IconHue;
+  hue?: Icon.IconHue;
 };
 
 /**
@@ -127,7 +129,7 @@ const CardTile = forwardRef<HTMLDivElement, CardTileProps>(
       ref={forwardedRef}
     >
       {/* No `hue` on the Icon: its own hue rule would paint the hue's text tone over the tile's foreground. */}
-      <Icon icon={icon} />
+      <Icon.Icon icon={icon} />
     </div>
   ),
 );
@@ -161,14 +163,20 @@ CardHeader.displayName = 'Card.Header';
 //
 
 type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'h3'>> &
-  Pick<TypographyProps, 'truncate' | 'lines' | 'tone'>;
+  Pick<Typography.TextProps, 'truncate' | 'lines' | 'tone'>;
 
 /** An `h3` on Typography, so it clamps (`lines`), truncates and takes a tone like any text. */
 const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ classNames, truncate, lines, tone, ...props }, forwardedRef) => (
-    <Typography asChild truncate={truncate} lines={lines} tone={tone} classNames={mx(recipes.cardTitle(), classNames)}>
+    <Typography.Text
+      asChild
+      truncate={truncate}
+      lines={lines}
+      tone={tone}
+      classNames={mx(recipes.cardTitle(), classNames)}
+    >
       <h3 {...props} data-scope='card' data-part='title' ref={forwardedRef} />
-    </Typography>
+    </Typography.Text>
   ),
 );
 
@@ -246,6 +254,8 @@ CardFooter.displayName = 'Card.Footer';
 type CardSectionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /** A caption heading the section; the section is then a `group` named by it. */
   title?: ReactNode;
+  /** Set by a slotting parent (`asChild`), e.g. `Collapsible.Content`, whose animation lives in its class. */
+  className?: string;
 };
 
 /**
@@ -253,7 +263,7 @@ type CardSectionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * a plain column.
  */
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ classNames, title, children, ...props }, forwardedRef) => {
+  ({ classNames, className, title, children, ...props }, forwardedRef) => {
     const titleId = useId();
     return (
       <div
@@ -262,7 +272,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
         aria-labelledby={title ? titleId : undefined}
         data-scope='card'
         data-part='section'
-        className={mx(recipes.cardSection(), classNames)}
+        className={mx(recipes.cardSection(), className, classNames)}
         ref={forwardedRef}
       >
         {title && (
@@ -304,6 +314,11 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * such as a snippet), `end` on through the end rail when there is no trailing cell. The content track by default.
    */
   span?: 'full' | 'end';
+  /**
+   * `start` aligns the leading icon and the trailing cell to the row's first line rather than its middle, for content
+   * of several lines (a title over a snippet); wrapped `Typography` text does this on its own.
+   */
+  align?: 'start';
 };
 
 /**
@@ -313,7 +328,7 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   (
-    { classNames, icon, leading, trailing, end, current, span, onClick, onKeyDown, children, ...props },
+    { classNames, icon, leading, trailing, end, current, span, align, onClick, onKeyDown, children, ...props },
     forwardedRef,
   ) => (
     <div
@@ -324,10 +339,11 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       data-part='row'
       data-trailing={trailing != null ? '' : undefined}
       data-span={span}
+      data-align={align}
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >
-      {(leading != null || icon) && <Block rail='start'>{leading ?? (icon && <Icon icon={icon} />)}</Block>}
+      {(leading != null || icon) && <Block rail='start'>{leading ?? (icon && <Icon.Icon icon={icon} />)}</Block>}
       <div data-scope='card' data-part='row-main' className={recipes.cardRowMain()}>
         <div data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
           {children}
@@ -360,7 +376,7 @@ type CardTextProps = ThemedClassName<ComponentPropsWithoutRef<'p'>> & {
 /** Card text on Typography, with the current `Card.Text` variants. */
 const CardText = forwardRef<HTMLParagraphElement, CardTextProps>(
   ({ classNames, truncate, lines, variant = 'default', ...props }, forwardedRef) => (
-    <Typography
+    <Typography.Text
       {...props}
       classNames={classNames}
       truncate={truncate}
@@ -448,13 +464,13 @@ const CardLink = forwardRef<HTMLAnchorElement, CardLinkProps>(
       ref={forwardedRef}
     >
       <Block rail='start'>
-        <Icon icon='ph--link--regular' />
+        <Icon.Icon icon='ph--link--regular' />
       </Block>
       <span data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
         {label}
       </span>
       <Block rail='end'>
-        <Icon icon='ph--arrow-square-out--regular' />
+        <Icon.Icon icon='ph--arrow-square-out--regular' />
       </Block>
     </a>
   ),
@@ -494,37 +510,36 @@ const CardMenu = ({ label, size, children }: CardMenuProps) => (
 );
 
 CardMenu.displayName = 'Card.Menu';
-
-export const Card = {
-  Root: CardRoot,
-  Poster: CardPoster,
-  Tile: CardTile,
-  Header: CardHeader,
-  Title: CardTitle,
-  Description: CardDescription,
-  Body: CardBody,
-  Footer: CardFooter,
-  Section: CardSection,
-  Row: CardRow,
-  Text: CardText,
-  Action: CardAction,
-  Link: CardLink,
-  Menu: CardMenu,
+export type {
+  CardActionProps as ActionProps,
+  CardBodyProps as BodyProps,
+  CardDescriptionProps as DescriptionProps,
+  CardFooterProps as FooterProps,
+  CardHeaderProps as HeaderProps,
+  CardLinkProps as LinkProps,
+  CardMenuProps as MenuProps,
+  CardPosterProps as PosterProps,
+  CardRootProps as RootProps,
+  CardRowProps as RowProps,
+  CardSectionProps as SectionProps,
+  CardTextProps as TextProps,
+  CardTileProps as TileProps,
+  CardTitleProps as TitleProps,
 };
 
-export type {
-  CardActionProps,
-  CardBodyProps,
-  CardDescriptionProps,
-  CardFooterProps,
-  CardHeaderProps,
-  CardLinkProps,
-  CardMenuProps,
-  CardPosterProps,
-  CardRootProps,
-  CardRowProps,
-  CardSectionProps,
-  CardTextProps,
-  CardTileProps,
-  CardTitleProps,
+export {
+  CardAction as Action,
+  CardBody as Body,
+  CardDescription as Description,
+  CardFooter as Footer,
+  CardHeader as Header,
+  CardLink as Link,
+  CardMenu as Menu,
+  CardPoster as Poster,
+  CardRoot as Root,
+  CardRow as Row,
+  CardSection as Section,
+  CardText as Text,
+  CardTile as Tile,
+  CardTitle as Title,
 };

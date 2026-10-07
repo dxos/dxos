@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import type { MenuActions } from '@dxos/react-ui-menu';
+import * as Surface from '@dxos/app-framework/Surface';
+import { type MenuActions } from '@dxos/react-ui-menu';
 
 import * as AppSurface from './app-surface.ts';
 

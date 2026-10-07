@@ -19,25 +19,22 @@ import React, {
   useState,
 } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
-import { useNode } from '@dxos/plugin-graph/hooks';
-import {
-  Button,
-  Flex,
-  Main,
-  type MainContentProps,
-  ScrollArea,
-  Splitter,
-  type ThemedClassName,
-  toLocalizedString,
-  useOnTransition,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Main from '@dxos/react-ui/Main';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Theme from '@dxos/react-ui/Theme';
+import type * as Util from '@dxos/react-ui/Util';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { FoldSpine, SPINE_PX } from '#components';
@@ -185,7 +182,7 @@ const PlankContext = createContext<PlankContextValue>({
 // DeckViewport
 //
 
-export type DeckViewportProps = ThemedClassName<PropsWithChildren>;
+export type DeckViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Deck viewport that renders the main content area and sets CSS variables for sidebar widths.
@@ -221,7 +218,7 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
               : complementarySidebarState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
-        } as MainContentProps['style']
+        } as Main.ContentProps['style']
       }
     >
       {children}
@@ -240,7 +237,7 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <Flex
+    <Layout.Flex
       column
       center
       classNames='p-8 relative dx-deck-surface'
@@ -249,7 +246,7 @@ export const DeckContentEmpty = () => {
     >
       <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -403,7 +400,7 @@ const PlankSplit = ({
   companionSize,
   total,
   classNames,
-}: ThemedClassName<{
+}: Util.ThemedClassName<{
   id: string;
   /** Whether the seam is open; the pane it opens is empty until `companionId` resolves. */
   companion: boolean;
@@ -412,7 +409,7 @@ const PlankSplit = ({
   companionSize: number;
   total?: number;
 }>) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [liveSize, onSizeChange] = useSplitSize(companionSize, (next) => {
     // Committed unrounded: the seam is controlled from `liveSize`, so a value that did not round-trip
     // exactly would snap the panes when the persisted size reseeds it.
@@ -465,9 +462,9 @@ const FOLD_CONTENT_CLASSNAMES =
 const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const id = props.data;
   const { deck, state } = useDeckContext('DeckPlankTile');
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const node = GraphHooks.useNode(graph, id);
   const breakpoint = useBreakpoints();
   const {
     planks: rendered,
@@ -492,8 +489,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const index = rendered.indexOf(id);
   // Resolve the node's (possibly localized) label the same way the plank heading does, falling back to
   // the id only when there is no label at all.
-  const { t } = useTranslation(meta.profile.key);
-  const spineLabel = toLocalizedString(node?.properties?.label ?? '', t) || id;
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const spineLabel = Theme.toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
@@ -757,7 +754,7 @@ const usePreservedScroll = ({
       viewportRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, [viewportRef]);
-  useOnTransition(isSliding, (value) => !value, true, restoreScroll);
+  UiHooks.useOnTransition(isSliding, (value) => !value, true, restoreScroll);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -1024,7 +1021,7 @@ const useScrollIntoView = ({
   scrollIntoViewId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
 }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Outlives the effect on purpose: the effect clears the one-shot flag, which re-runs it with no id —
   // a cleanup there would kill the watchdog the moment it was armed.
   const watchdogRef = useRef<number | undefined>(undefined);
@@ -1362,7 +1359,7 @@ const useExposeInert = ({ getPlankTiles, expose }: { getPlankTiles: () => HTMLEl
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
 const useFullscreen = (fullscreenId: string | undefined) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const toggleFullscreen = useCallback(() => {
     if (!fullscreenId) {
@@ -1481,7 +1478,7 @@ export const DeckPlanks = () => {
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
   const captureExposeGeometry = useExposeFlip({ stackRef, getPlankTiles, expose });
   const toggleFullscreen = useFullscreen(fullscreenId);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   // Read from refs so the key handler is bound once rather than rebound whenever the exposé toggles.
   const exposeRef = useRef(state.expose);
@@ -1899,7 +1896,7 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
     <div
       className={mx(
@@ -1909,7 +1906,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <Button
+      <Button.Root
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

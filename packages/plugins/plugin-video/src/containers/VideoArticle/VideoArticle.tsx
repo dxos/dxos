@@ -4,13 +4,16 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { Video } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -25,7 +28,7 @@ export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
  * The transcript/summary are shown in a tab panel below the player on large form factors.
  */
 export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);
@@ -154,7 +157,7 @@ const TranscriptTabs = ({
   onTabChange,
   onRegenerate,
 }: TranscriptTabsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // The selected tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
 

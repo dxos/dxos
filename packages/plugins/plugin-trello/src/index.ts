@@ -3,5 +3,4 @@
 //
 
 export * as TrelloPlugin from './TrelloPlugin.ts';
-export * from '#meta';
 export * from '#types';

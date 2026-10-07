@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
-import { Checkbox, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -23,7 +24,7 @@ export type ActionItemsProps = {
 };
 
 export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Section title={t('action-items.title')}>
@@ -35,7 +36,7 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
         <List variant='unordered' className='space-y-1'>
           {items.map((item) => (
             <ListItem key={item.id} className='flex items-center gap-2 text-sm'>
-              <Checkbox
+              <Input.Checkbox
                 checked={item.completed}
                 onCheckedChange={() => onToggle?.(item)}
                 label={

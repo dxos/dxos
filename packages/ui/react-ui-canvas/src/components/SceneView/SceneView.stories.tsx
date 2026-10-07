@@ -5,13 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { useSceneProjection } from '../../hooks/index.ts';
-import { createSceneViewAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
+import { SceneBuilder } from '../../utils/builder.ts';
+import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
-import { Properties } from '../Properties/index.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**
@@ -25,9 +26,10 @@ import { SceneView } from './SceneView.tsx';
  * 4. R / E / C / T / S then drag draws a rectangle, ellipse, UML class, text or nested scene; Delete removes the
  *    selection (nodes or links).
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
- * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
+ * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
+ *    selected element.
  */
-type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' };
+type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' | 'square' };
 
 type EditorProps = {
   store: ReturnType<typeof createMemoryStore>;
@@ -36,27 +38,39 @@ type EditorProps = {
   readonly?: boolean;
 };
 
-const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => {
-  const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
-  const projection = useSceneProjection({ store, atoms });
-  return (
-    <div className='dx-fill grid grid-cols-[1fr_20rem]'>
-      <SceneView.Root store={store} root={root} atoms={atoms} readonly={readonly}>
-        <SceneView.Canvas liveDepth={liveDepth} />
-        <SceneView.Navigation />
-        <SceneView.Actions />
-        <SceneView.Debug />
-        <SceneView.Palette />
-      </SceneView.Root>
-      <Properties projection={projection} atoms={atoms} readonly={readonly} classNames='border-l border-separator' />
-    </div>
-  );
+const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => (
+  <SceneView.Root store={store} root={root} readonly={readonly}>
+    <SceneView.Canvas liveDepth={liveDepth} />
+    <SceneView.Navigation />
+    <SceneView.Actions />
+    <SceneView.Debug />
+    <SceneView.Palette />
+    <SceneView.Properties />
+  </SceneView.Root>
+);
+
+/** One square centred on the origin: something to select and style straight away. */
+const createSquareTree = () => {
+  const root = 'scene:root';
+  const scene = SceneBuilder.create(root, 'root')
+    .rect(
+      'square',
+      { x: -DEFAULT_SHAPE_SIZE.width / 2, y: -DEFAULT_SHAPE_SIZE.height / 2, ...DEFAULT_SHAPE_SIZE },
+      'DXOS',
+    )
+    .build();
+  return { scenes: [scene], root };
 };
 
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The class fixture is a fixed three levels, so `depth` does not apply to it.
-    const tree = fixture === 'classes' ? createClassSceneTree() : createSceneTree(depth);
+    const tree =
+      fixture === 'classes'
+        ? createClassSceneTree()
+        : fixture === 'square'
+          ? createSquareTree()
+          : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -68,6 +82,8 @@ const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/scene/SceneView',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
+  // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
+  parameters: { translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
@@ -84,9 +100,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** An empty canvas: draw the first node, then link it. */
+/** A single square at the origin: select it to style it, or draw more nodes and link them. */
 export const Default: Story = {
-  args: { depth: 0, liveDepth: 1 },
+  args: { depth: 0, liveDepth: 1, fixture: 'square' },
 };
 
 /** One scene, no portals: selection, move, resize, linking and the palette. */

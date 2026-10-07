@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FloatingPanel.tsx';
+export * as FloatingPanel from './FloatingPanel.tsx';

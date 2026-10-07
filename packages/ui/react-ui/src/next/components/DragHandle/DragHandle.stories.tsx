@@ -14,17 +14,11 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  DragHandle,
-  type DragMoveDirection,
-  DragPreview,
-  DropIndicator,
-  Listbox,
-  type ListboxOption,
-  Typography,
-} from '../index.ts';
+import * as Listbox from '../Listbox/Listbox.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as DragHandle from './DragHandle.tsx';
 
-const ITEMS: ListboxOption[] = [
+const ITEMS: Listbox.Option[] = [
   { value: 'one', label: 'One' },
   { value: 'two', label: 'Two' },
   { value: 'three', label: 'Three' },
@@ -38,7 +32,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [items, setItems] = useState(ITEMS);
   const [source, setSource] = useState<HTMLElement | null>(null);
   const rowRef = useRef<HTMLDivElement>(null);
-  const move = (value: string, direction: DragMoveDirection) =>
+  const move = (value: string, direction: DragHandle.DragMoveDirection) =>
     setItems((items) => {
       const from = items.findIndex((item) => item.value === value);
       const to = direction === 'up' ? from - 1 : from + 1;
@@ -61,20 +55,20 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
               ref={index === 0 ? (element) => setSource(element) : index === 1 ? rowRef : undefined}
             >
               <Listbox.ItemText />
-              <DragHandle
+              <DragHandle.DragHandle
                 label={`Move ${item.label}`}
                 onMove={(direction) => move(item.value, direction)}
                 data-testid={`handle-${item.value}-${size}`}
               />
-              {index === 1 && <DropIndicator edge='top' />}
+              {index === 1 && <DragHandle.DropIndicator edge='top' />}
             </Listbox.Item>
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Typography data-testid={`order-${size}`}>{items.map((item) => item.value).join(' ')}</Typography>
-      <DragPreview source={source}>
+      <Typography.Text data-testid={`order-${size}`}>{items.map((item) => item.value).join(' ')}</Typography.Text>
+      <DragHandle.DragPreview source={source}>
         <span data-testid={`preview-${size}`}>{items[0].label}</span>
-      </DragPreview>
+      </DragHandle.DragPreview>
     </>
   );
 };

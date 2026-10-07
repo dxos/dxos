@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { useCallback, useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis } from '@dxos/ui-types';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
@@ -25,7 +27,7 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 // Root
 //
 
-export type ScrollAreaRootProps = {
+type ScrollAreaRootProps = {
   size?: Size;
   /** `overlay` paints the thumb over the end gutter; `reserve` takes its width out of the end track. */
   mode?: 'overlay' | 'reserve';
@@ -125,7 +127,7 @@ ScrollAreaRoot.displayName = 'ScrollArea.Root';
 // Viewport
 //
 
-export type ScrollAreaViewportProps = {};
+type ScrollAreaViewportProps = {};
 
 /** The scrolling element; under `asChild` it is the child (e.g. a Container) itself. */
 const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
@@ -151,7 +153,5 @@ const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
 
 ScrollAreaViewport.displayName = 'ScrollArea.Viewport';
 
-export const ScrollArea = {
-  Root: ScrollAreaRoot,
-  Viewport: ScrollAreaViewport,
-};
+export { ScrollAreaRoot as Root, ScrollAreaViewport as Viewport };
+export type { ScrollAreaRootProps as RootProps, ScrollAreaViewportProps as ViewportProps };

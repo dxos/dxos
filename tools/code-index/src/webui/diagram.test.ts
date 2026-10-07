@@ -9,45 +9,42 @@ import * as Diagram from '../workspace/Diagram.ts';
 import { layout } from './diagram.ts';
 
 describe('diagram', () => {
-  test('lays a graph out as one object per node, a frame per group, plus the connectors', async ({ expect }) => {
-    const graph = Result.getOrThrow(
+  test('lays DSL out as one object per node and group, plus the connectors, keeping refs', async ({ expect }) => {
+    const source = Result.getOrThrow(
       Diagram.fromValue({
-        direction: 'LR',
+        flow: 'right',
         groups: [{ id: 'core', label: 'Core' }],
         nodes: [
-          { id: '@dxos/alpha', label: 'Alpha', group: 'core' },
-          { id: '@dxos/beta', label: 'Beta', group: 'core' },
+          { id: 'alpha', label: 'Alpha', group: 'core', ref: 'https://dxos.org/deus/package/alpha' },
+          { id: 'beta', label: 'Beta', group: 'core' },
         ],
         edges: [
-          { from: '@dxos/alpha', to: '@dxos/beta', label: 'uses' },
-          { from: '@dxos/beta', to: 'gamma' },
+          { from: 'alpha', to: 'beta', label: 'uses' },
+          { from: 'beta', to: 'gamma', relation: 'depends-on' },
         ],
       }),
     );
-    const objects = await layout(Diagram.toSource(graph));
+    const objects = await layout(source);
     const labels = objects.flatMap((object) =>
-      object.elements.flatMap((element) => ('text' in element ? [element.text] : [])),
+      object.elements.flatMap((element) => ('text' in element && element.text ? [element.text] : [])),
     );
     expect(labels).toEqual(expect.arrayContaining(['Alpha', 'Beta', 'gamma', 'Core', 'uses']));
     const arrows = objects
       .find((object) => object.id === 'edges')
       ?.elements.filter((element) => element.kind === 'arrow');
     expect(arrows).toHaveLength(2);
-    const ids = Diagram.objectIds(graph);
-    expect(objects.map((object) => object.id)).toEqual(expect.arrayContaining([...ids.values(), 'group_core']));
+    expect(objects.find((object) => object.id === 'alpha')?.ref).toEqual('https://dxos.org/deus/package/alpha');
   });
 
-  test('routes candidates through `emitCandidate` when one is given', async ({ expect }) => {
-    const graph = Result.getOrThrow(Diagram.fromMermaid('graph TD; A --> B --> C'));
-    let routed = 0;
-    const { MermaidEngine } = await import('@dxos/diagram');
-    const objects = await layout(Diagram.toSource(graph), {
-      emitCandidate: async (job) => {
-        routed++;
-        return MermaidEngine.emitJob(job);
-      },
-    });
-    expect(routed).toBeGreaterThan(0);
-    expect(objects.find((object) => object.id === 'edges')?.elements).toHaveLength(2);
-  });
+  test('lays out a large graph', async ({ expect }) => {
+    const groups = ['a', 'b', 'c', 'd'];
+    const nodes = groups.flatMap((group) =>
+      Array.from({ length: 8 }, (_, index) => ({ id: `${group}${index}`, group })),
+    );
+    const edges = nodes.slice(1).map((node, index) => ({ from: nodes[Math.floor(index / 2)].id, to: node.id }));
+    const objects = await layout(
+      Result.getOrThrow(Diagram.fromValue({ groups: groups.map((id) => ({ id })), nodes, edges })),
+    );
+    expect(objects.filter((object) => nodes.some((node) => node.id === object.id))).toHaveLength(nodes.length);
+  }, 120_000);
 });

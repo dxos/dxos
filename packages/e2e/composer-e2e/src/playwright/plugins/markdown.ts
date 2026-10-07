@@ -48,8 +48,8 @@ export const Markdown = {
   waitForMarkdownTextbox: (page: Page) => Markdown.getMarkdownTextbox(page).waitFor(),
   waitForMarkdownTextboxWithLocator: (locator: Locator) => Markdown.getMarkdownTextboxWithLocator(locator).waitFor(),
 
-  getCollaboratorCursors: (page: Page) => page.locator('.cm-collab-selectionInfo'),
-  getCollaboratorCursorsWithLocator: (locator: Locator) => locator.locator('.cm-collab-selectionInfo'),
+  getCollaboratorCursors: (page: Page) => page.locator('.cm-collab-selectionCaret'),
+  getCollaboratorCursorsWithLocator: (locator: Locator) => locator.locator('.cm-collab-selectionCaret'),
 
   getMarkdownLineText: (page: Page) =>
     Markdown.getMarkdownTextbox(page)

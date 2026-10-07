@@ -17,9 +17,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import { Database } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
+import { markWork } from '@dxos/util';
 
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
 
@@ -72,7 +74,7 @@ export const make = ({
       if (options?.on === 'edge' && options.spaceId === undefined) {
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
-      return yield* Process.spawn(op, input, {
+      const handle = yield* Process.spawn(op, input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
@@ -90,6 +92,8 @@ export const make = ({
         Effect.provideService(Process.ManagerService, manager),
         Effect.provideService(OperationHandlerSet.OperationHandlerProvider, handlerSet),
       );
+      markWork('process.input-submitted');
+      return handle;
     }).pipe(
       Effect.withSpan('ProcessOperationInvoker.invoke', {
         attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() },

@@ -15,7 +15,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 import { createComment } from '@dxos/ui-editor/headless';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';

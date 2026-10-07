@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 import { PreviewCapabilities } from '#types';
 
-import { PreviewEvents } from '../events.ts';
+import * as PreviewEvents from '../PreviewEvents.ts';
 
 // Browser-only with the popover it serves: the resolver loads objects for a card no headless host renders.
 export const LinkResolver = Capability.lazyModule(

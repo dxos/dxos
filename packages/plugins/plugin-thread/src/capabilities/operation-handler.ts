@@ -11,6 +11,6 @@ import { ThreadOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, ThreadOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, ThreadOperationHandlerSet.handlers);
   }),
 );

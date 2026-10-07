@@ -15,7 +15,10 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Banner, Button, Container, Group } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Banner from './Banner.tsx';
 
 const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 

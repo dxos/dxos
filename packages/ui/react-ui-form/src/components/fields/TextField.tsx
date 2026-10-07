@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Format } from '@dxos/echo';
-import { Input } from '@dxos/react-ui';
+import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -19,6 +19,7 @@ export const TextField = ({
   placeholder,
   presentation,
   autoFocus,
+  jsonPath,
   getValue,
   onBlur,
   onValueChange,
@@ -31,7 +32,7 @@ export const TextField = ({
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
   const key = format === Format.TypeFormat.Key;
   return (
-    <Input
+    <Input.Root
       noAutoFill
       autoFocus={autoFocus}
       disabled={!!readonly}
@@ -39,6 +40,13 @@ export const TextField = ({
       value={value}
       onBlur={onBlur}
       onChange={(event) => onValueChange(type, event.target.value)}
+      // Enter commits the field as leaving it does, so an auto-saving form saves without the user tabbing away.
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+          onBlur();
+        }
+      }}
+      data-testid={jsonPath}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );

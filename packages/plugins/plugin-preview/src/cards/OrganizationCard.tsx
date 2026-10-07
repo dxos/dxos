@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Card from '@dxos/react-ui/Card';
 import { type Organization } from '@dxos/types';
 
 export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organization.Organization>) => {

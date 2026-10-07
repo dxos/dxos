@@ -17,7 +17,7 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 
 import { Annotation, type Database } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SerializedError } from '@dxos/protocols';
@@ -27,6 +27,8 @@ import * as Operation from './Operation.ts';
 import * as OperationHandlerSet from './OperationHandlerSet.ts';
 import * as StorageService from './StorageService.ts';
 import * as Trace from './Trace.ts';
+
+export { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE, RunAgainError } from './errors.ts';
 
 //
 // Process.

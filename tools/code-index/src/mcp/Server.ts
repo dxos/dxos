@@ -395,8 +395,8 @@ export const DesignTool = readOnly(
       'generated and file-local code hidden unless asked for; System One relevance boosted by connectivity; kept ' +
       'connected); without one it walks from text-matched seeds and scores by System One blended with a ' +
       'text/degree baseline (the baseline alone without TYPESAFE_API_KEY). It prunes to `budget` files (default 30) and ' +
-      'returns them best first with their edges, plus a compact mermaid draft of at most 14 boxes with a ' +
-      '`%% ref <id> <path>` line per box. Takes a few seconds. Example: { "prompt": "how does the agent runtime ' +
+      "returns them best first with their edges, plus a compact draft of at most 14 boxes in plugin-illustrator's " +
+      'semantic diagram DSL, each box\'s `ref` its file. Takes a few seconds. Example: { "prompt": "how does the agent runtime ' +
       'wire its services?" }',
     parameters: Schema.Struct({
       prompt: Schema.String.annotate({ description: 'The design question, in prose.' }),
@@ -417,7 +417,7 @@ export const DesignTool = readOnly(
         }),
       ),
       edges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String, kind: Schema.String })),
-      mermaid: Schema.String,
+      diagram: Schema.String,
     }),
     failure: ToolFailure,
   }),

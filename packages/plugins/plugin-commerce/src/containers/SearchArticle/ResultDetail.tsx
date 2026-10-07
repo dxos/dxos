@@ -5,7 +5,12 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Button, Carousel, Empty, Flex, Grid, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -20,24 +25,24 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result: subject, starred = false, onToggleStar, onClose }: ResultDetailProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {
-    return <Empty>{t('no-result-selected.message')}</Empty>;
+    return <Status.Empty>{t('no-result-selected.message')}</Status.Empty>;
   }
 
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <Flex column gap='md' classNames='p-3 overflow-y-auto'>
-      <Grid cols={['fill', 'min', 'min']} gap='sm' align='start'>
+    <Layout.Flex column gap='md' classNames='p-3 overflow-y-auto'>
+      <Layout.Grid cols={['fill', 'min', 'min']} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={onToggleStar} />
         {onClose && (
-          <Button iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
+          <Button.Root iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
-      </Grid>
+      </Layout.Grid>
 
       {result.price != null && (
         // Match ResultCard: currency-first, locale-grouped.
@@ -75,7 +80,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
           ))}
         </dl>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 

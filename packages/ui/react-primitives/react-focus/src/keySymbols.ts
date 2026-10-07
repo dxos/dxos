@@ -43,7 +43,9 @@ const getSymbol = (part: string) => {
     // Mods.
     case 'alt':
       return alt[platform];
+    // `control` is the hotkey parser's own name for it.
     case 'ctrl':
+    case 'control':
       return ctrl[platform];
     case 'meta':
       return meta[platform];

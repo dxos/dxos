@@ -10,7 +10,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, EID } from '@dxos/echo';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ClientCapabilities } from '#types';
 

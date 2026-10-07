@@ -57,6 +57,9 @@ export const api = {
 
   deleteProject: (projectId: string) => call((client) => client.DeleteProject({ projectId })),
 
+  /** What a diagram box's `ref` names in the index: an IRI, or a path, package or symbol name. */
+  describe: (target: string) => call((client) => client.Describe({ target })),
+
   /** Sends an event. A `UserMessage` starts a turn; anything else is only recorded. */
   dispatch: (projectId: string, event: Events.Event) => call((client) => client.Dispatch({ projectId, event })),
 

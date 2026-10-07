@@ -16,7 +16,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { PlanningSkill } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
@@ -28,7 +28,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -148,7 +148,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform } }) => {
       return {
         plugins: [
-          ...corePlugins(),
+          ...CorePlugins.make(),
           ClientPlugin.make({
             types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
@@ -355,22 +355,17 @@ export const QueueWhileProcessing: Story = {
     // No `waitFor` on the first reply: this submit is meant to land while the first turn is running.
     await submitPrompt(canvasElement, messages[1].prompt);
 
-    // While it waits, the queued prompt shows over the thread as a right-aligned bubble wide enough to read, not a
-    // sliver its container squeezed to nothing.
+    // While it waits, the queued prompt is the thread's last row, framed as a prompt and ticked as
+    // waiting on the agent rather than read.
     await waitFor(
       () => {
-        const status = canvasElement.querySelector<HTMLElement>('[data-testid="assistant.chat-status"]');
-        const bubble = [
-          ...(status?.querySelectorAll<HTMLElement>('[data-testid="assistant.queued-message"]') ?? []),
-        ].find((item) => item.textContent?.includes(messages[1].prompt));
-        if (!status || !bubble) {
-          throw new Error(`Queued prompt "${messages[1].prompt}" not shown.`);
+        const rows = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="feed.message"]')];
+        const row = rows.find((item) => item.textContent?.includes(messages[1].prompt));
+        const status = row?.querySelector<HTMLElement>('[data-testid="chat.delivery"]')?.dataset.delivery;
+        if (!row || (status !== 'sent' && status !== 'delivered')) {
+          throw new Error(`Queued prompt "${messages[1].prompt}" not shown as waiting.`);
         }
-        const box = bubble.getBoundingClientRect();
-        void expect(box.width).toBeGreaterThan(100);
-        // Right-aligned, flush with the status chip under it.
-        const chip = status.querySelector<HTMLElement>(':scope > :last-child');
-        void expect(Math.abs((chip?.getBoundingClientRect().right ?? 0) - box.right)).toBeLessThan(1);
+        void expect(rows.at(-1)).toBe(row);
       },
       { timeout: 10_000, interval: 50 },
     );
@@ -382,6 +377,21 @@ export const QueueWhileProcessing: Story = {
       });
       await expect(threadText(canvasElement)).toContain(prompt);
     }
+  },
+};
+
+/**
+ * For people rather than the runner: three prompts submitted while the first turn is still being
+ * answered, so each shows in the thread at once and its ticks move from sent to delivered to read as
+ * the agent takes them up in order. The first reply is held long enough for the queue to be seen.
+ */
+export const QueuedPrompts: Story = {
+  args: {
+    messages: [
+      { prompt: 'Summarize the meeting notes.', reply: 'The meeting agreed three things.', delay: '4 seconds' },
+      { prompt: 'Then draft a follow-up email.', reply: 'Here is a draft of the email.', delay: '2 seconds' },
+      { prompt: 'Copy in the design leads.', reply: 'Added the design leads.' },
+    ],
   },
 };
 

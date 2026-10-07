@@ -10,7 +10,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { log } from '@dxos/log';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 

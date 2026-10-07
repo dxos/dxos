@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Native from '../internal/native.ts';
 import * as Store from '../Store.ts';
@@ -85,6 +85,8 @@ describe('Lock', () => {
     expect(Lock.isTransient(holder('code-index mcp'))).toBe(false);
     expect(Lock.isTransient(holder('code-index chat --prompt hi'))).toBe(false);
     expect(Lock.isTransient(holder('vim LOCK'))).toBe(false);
+    // An exiting holder's `cmdline` reads empty while its descriptors are still listed.
+    expect(Lock.isTransient(holder(''))).toBe(true);
   });
 
   test('a lock error is recognised through the store error that wraps it', ({ expect }) => {

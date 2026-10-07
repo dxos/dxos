@@ -6,9 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Field, Panel, Switch, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Capabilities } from '../../../common/index.ts';
@@ -120,13 +124,13 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button onClick={handleAdd}>Add</Button>
-          <Button onClick={handleSelect}>Pick</Button>
-          <Button onClick={handleError}>Error</Button>
+          <Button.Root onClick={handleAdd}>Add</Button.Root>
+          <Button.Root onClick={handleSelect}>Pick</Button.Root>
+          <Button.Root onClick={handleError}>Error</Button.Root>
           <Toolbar.Separator />
           <Field.Root>
             <Field.Label classNames='pr-1'>Debug</Field.Label>
-            <Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
+            <Input.Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
           </Field.Root>
         </Toolbar.Root>
       </Panel.Header>

@@ -7,7 +7,8 @@ import React, { captureOwnerStack, useEffect, useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { safeStringify } from '@dxos/util';
 
-import { ErrorStack, parseCaptureOwnerStack } from '../next/components/ErrorFallback/index.ts';
+import { ErrorStack } from '../next/components/ErrorFallback/ErrorFallback.tsx';
+import { parseCaptureOwnerStack } from '../next/components/ErrorFallback/parse-stack.ts';
 
 export type LoadingProps = { data?: any };
 
@@ -16,7 +17,8 @@ export type LoadingProps = { data?: any };
  */
 export const Loading = ({ data }: LoadingProps) => {
   const [visible, setVisible] = useState(false);
-  const ownerFrames = parseCaptureOwnerStack(captureOwnerStack());
+  // React exports `captureOwnerStack` only from its development build; a production Storybook has none.
+  const ownerFrames = parseCaptureOwnerStack(typeof captureOwnerStack === 'function' ? captureOwnerStack() : null);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 1000);

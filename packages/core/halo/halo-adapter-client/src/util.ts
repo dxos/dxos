@@ -15,7 +15,7 @@ import {
   Invitation_Type as ClientInvitationType,
   InvitationEncoder,
 } from '@dxos/client/invitations';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';

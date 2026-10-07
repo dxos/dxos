@@ -6,10 +6,9 @@ import React, { useMemo } from 'react';
 
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import type { SpaceMember } from '@dxos/react-client/echo';
-import { useMembers } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -49,7 +48,7 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
 };
 
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const visibleMembers = members.filter(isIdentified);
   const items = visibleMembers.map((member) => {
     const value = requirePublicKey(member.identity.identityKey).toHex();

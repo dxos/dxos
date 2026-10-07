@@ -67,6 +67,7 @@
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",

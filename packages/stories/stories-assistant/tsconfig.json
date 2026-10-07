@@ -74,6 +74,9 @@
       "path": "../../core/echo/echo-query"
     },
     {
+      "path": "../../plugins/plugin-agent"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {

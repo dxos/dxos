@@ -4,20 +4,20 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardMenuSlot, ObjectCard, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import {
-  Block,
-  Button,
-  Card,
-  Popover,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-  virtualAnchor,
-} from '@dxos/react-ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CardSlot from '@dxos/app-toolkit/CardSlot';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -62,7 +62,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
   // The rename popover is modal so other navtree item menus are inert while it is open.
   const modal = isRename;
   // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
-  const [isLg] = useMediaQuery('lg', { fallback: [true] });
+  const [isLg] = Hooks.useMediaQuery('lg', { fallback: [true] });
   const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
 
   const handleOpenChange = useCallback(
@@ -94,7 +94,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
       // The trigger was the row that asked for the popover; the rename field takes focus, a card does not.
       autoFocus={isRename}
       positioning={{
-        ...(state.popoverAnchor ? virtualAnchor(virtualRef) : {}),
+        ...(state.popoverAnchor ? VirtualAnchor.virtualAnchor(virtualRef) : {}),
         placement: side,
         hideWhenDetached: true,
       }}
@@ -107,17 +107,17 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { state } = useDeckState();
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
   // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
   const pivotId =
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
-  const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
+  const objectMenuItems = ToolkitHooks.useObjectMenuItems(popoverSubject, pivotId);
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
-  const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
+  const title = state.popoverTitle ? Theme.toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const content = state.popoverContent;
   // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
   const isComponentPopover =
@@ -164,12 +164,12 @@ export const PopoverContent = () => {
             subject={popoverSubject}
             menu={
               // TODO(wittjosiah): Reconcile with Card.Menu.
-              <Block rail='end'>
-                {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+              <Layout.Block rail='end'>
+                {popoverSubject !== undefined && <CardSlot.MenuSlot subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                  <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                  <Button.Root variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
                 </ActionMenu>
-              </Block>
+              </Layout.Block>
             }
           >
             {title}

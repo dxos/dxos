@@ -302,7 +302,10 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => {
       part='label'
       text={label}
       editing={editing}
-      classNames={mx('dx-cover flex items-center justify-center text-center', sizeClass(node, 'text-2xl'))}
+      classNames={mx(
+        'dx-cover flex items-center justify-center text-center whitespace-pre-wrap',
+        sizeClass(node, 'text-2xl'),
+      )}
     >
       {label}
     </TextPart>
@@ -349,7 +352,7 @@ export const UnknownNodeView = ({ node }: NodeViewProps) => (
 export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
   const text = isNoteNode(node) ? node.text : '';
   return (
-    <TextPart part='text' text={text} editing={editing} classNames='dx-cover p-3'>
+    <TextPart part='text' text={text} editing={editing} classNames='dx-cover p-3 whitespace-pre-wrap'>
       {text}
     </TextPart>
   );

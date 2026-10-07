@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps } from 'react';
 
-import { Avatar, type AvatarStatus, toAvatarHue } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
 import { hexToFallback } from '@dxos/util';
 
 import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
@@ -14,7 +14,7 @@ export type UserAccountAvatarProps = {
   userId?: string;
   hue?: string;
   emoji?: string;
-  status?: AvatarStatus;
+  status?: Avatar.Status;
   /** Shows a dot on the avatar, e.g. while invitations are pending. */
   badge?: boolean;
 };
@@ -36,7 +36,7 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status, badge }: U
             variant='circle'
             size={size ?? 'xl'}
             {...(resolved && { status: status ?? 'active' })}
-            hue={toAvatarHue(hue || fallbackValue?.hue)}
+            hue={Avatar.toAvatarHue(hue || fallbackValue?.hue)}
             fallback={emoji || fallbackValue?.emoji || ''}
             data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
           />

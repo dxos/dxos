@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/FreeqEvents': 'src/FreeqEvents.ts',
     'index': 'src/index.ts',
     'constants': 'src/constants.ts',
     'errors': 'src/errors.ts',

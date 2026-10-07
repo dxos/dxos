@@ -11,7 +11,7 @@ import React, { Fragment, type ReactNode, useContext, useEffect, useMemo, useSta
 
 import { Diagnostics, type Scene as Diagram, Mermaid, MermaidEngine, Objective, Score } from '@dxos/diagram';
 import { BASIC } from '@dxos/diagram/testing';
-import { Flex, Grid } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -218,14 +218,14 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
     registry.set(atoms.selection, new Set(diagnosticElements(converted, refs)));
 
   return (
-    <Flex
+    <Layout.Flex
       column
       gap='lg'
       classNames='p-3 overflow-y-auto text-sm border-l border-separator'
       data-testid='scene-view.scorecard'
     >
       <Section title='Score'>
-        <Flex align='baseline' gap='sm'>
+        <Layout.Flex align='baseline' gap='sm'>
           <span
             className={mx('text-3xl font-mono', total === undefined ? 'text-fg-muted' : scoreColor(total))}
             data-testid='scene-view.scorecard.score'
@@ -233,7 +233,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
             {total?.toFixed(2) ?? '—'}
           </span>
           {total !== undefined && baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
-        </Flex>
+        </Layout.Flex>
         <div className='text-xs text-fg-muted'>
           0 is bad, 1 is good. A broken constraint scores 0 overall; otherwise the mean of the other scores.
           {engine && ` Engine layout (its own routes): ${engineScore(engine)?.toFixed(2) ?? '—'}.`}
@@ -247,7 +247,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
           // row's tooltip is carried on every cell instead of the grid container.
           const title = [description, error ?? detail].filter(Boolean).join('\n');
           return (
-            <Grid
+            <Layout.Grid
               key={id}
               cols={['5.5rem', 'fill', '3rem', '2.5rem']}
               gap='sm'
@@ -273,20 +273,20 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
               <span title={title} className='font-mono text-end'>
                 {previous && !error && !previous.error && <Delta value={score - previous.score} />}
               </span>
-            </Grid>
+            </Layout.Grid>
           );
         })}
       </Section>
 
       <Section title='Metrics'>
-        <Grid cols={['fill', 'auto']} classNames='gap-x-4 font-mono text-xs'>
+        <Layout.Grid cols={['fill', 'auto']} classNames='gap-x-4 font-mono text-xs'>
           {Object.entries(report.metrics).map(([key, value]) => (
             <Fragment key={key}>
               <span className='text-fg-muted'>{key}</span>
               <span className='text-end'>{format(value)}</span>
             </Fragment>
           ))}
-        </Grid>
+        </Layout.Grid>
       </Section>
 
       <Section title={`Diagnostics · ${errors.length} errors · ${warnings.length} warnings`}>
@@ -304,7 +304,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
           </button>
         ))}
       </Section>
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -313,14 +313,14 @@ type EditorProps = { store: SceneStore; root: SceneId; engine?: Objective.Evalua
 const Editor = ({ store, root, engine }: EditorProps) => {
   const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
   return (
-    <Grid cols={['fill', '24rem']} classNames='dx-fill'>
+    <Layout.Grid cols={['fill', '24rem']} classNames='dx-fill'>
       <SceneView.Root store={store} root={root} atoms={atoms}>
         <SceneView.Canvas liveDepth={0} />
         <SceneView.Actions />
         <SceneView.Palette />
       </SceneView.Root>
       <Scorecard store={store} root={root} atoms={atoms} engine={engine} />
-    </Grid>
+    </Layout.Grid>
   );
 };
 

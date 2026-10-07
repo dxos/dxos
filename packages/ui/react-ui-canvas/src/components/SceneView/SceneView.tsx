@@ -13,7 +13,9 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Menu, type ThemedClassName, virtualAnchor } from '@dxos/react-ui';
+import * as Menu from '@dxos/react-ui/Menu';
+import type * as Util from '@dxos/react-ui/Util';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
@@ -44,6 +46,7 @@ import {
   isPointEndpoint,
 } from '../../model/types.ts';
 import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
@@ -53,10 +56,11 @@ import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { Palette } from '../Palette/Palette.tsx';
+import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
-import { ActionToolbar, DebugToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
-import { PREVIEW_NODE_ID, createId, usePointerMachine, viewSize } from './usePointerMachine.ts';
+import { PREVIEW_NODE_ID, createId, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
@@ -72,7 +76,7 @@ const FRAME_DASH = 4;
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
-export type SceneViewRootProps = ThemedClassName<{
+export type SceneViewRootProps = Util.ThemedClassName<{
   store: SceneStore;
   root: SceneId;
   nodes?: NodeRegistry;
@@ -298,7 +302,7 @@ const SceneViewRoot = ({
     snap,
   });
 
-  const onKeyDown = useSceneKeys({
+  const onSceneKey = useSceneKeys({
     registry,
     atoms,
     scene,
@@ -328,6 +332,17 @@ const SceneViewRoot = ({
     setTool,
   });
 
+  // Shortcuts belong to the canvas itself: keys typed into a control the view hosts (the properties
+  // panel, a toolbar) bubble here too, and must not toggle debug or delete the selection.
+  const onKeyDown = useCallback<typeof onSceneKey>(
+    (event) => {
+      if (event.target === event.currentTarget) {
+        onSceneKey(event);
+      }
+    },
+    [onSceneKey],
+  );
+
   //
   // Render.
   //
@@ -342,7 +357,14 @@ const SceneViewRoot = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped.
   const displayScene = useMemo<Scene>(() => {
     if (drag?.kind === 'move') {
-      return reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
+      // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
+      let preview = 0;
+      const copy = drag.copy
+        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${preview++}`)
+        : undefined;
+      return copy
+        ? reduceIntent(scene, copy.intent)
+        : reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
     }
     if (drag?.kind === 'resize') {
       return reduceIntent(scene, { kind: 'resize', id: drag.id, bounds: drag.bounds });
@@ -367,10 +389,10 @@ const SceneViewRoot = ({
       const end: Endpoint = drag.target ?? { point: drag.to };
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
     }
-    // A node drawn on the canvas previews as the type's own view; one dragged in from the palette shows
-    // the frame alone, since the pointer is already carrying the palette's preview of it.
+    // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
+    // or dragged in from the palette (whose drag carries no image of its own).
     if (drag?.kind === 'create') {
-      return createPreview && !drag.dropped ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
+      return createPreview ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
     }
     return scene;
   }, [scene, drag, createPreview]);
@@ -430,9 +452,11 @@ const SceneViewRoot = ({
     if (!element) {
       return;
     }
+    // The pointer is the shape's centre; its top-left is what snaps, so the edges land on the grid.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
-      const from = { x: snap(point.x), y: snap(point.y) };
+      const size = nodeRegistry[type]?.defaultSize ?? { width: 0, height: 0 };
+      const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
       return { kind: 'create', type, from, to: from, dropped: true };
     };
     return dropTargetForElements({
@@ -453,7 +477,7 @@ const SceneViewRoot = ({
       onDragLeave: cancelDrag,
       onDrop: () => onPointerUpRef.current(),
     });
-  }, [capabilities.create, toScene, snap, setDrag, cancelDrag]);
+  }, [capabilities.create, nodeRegistry, toScene, snap, setDrag, cancelDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
@@ -484,7 +508,7 @@ const SceneViewRoot = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = viewSize(def.defaultSize, camera.zoom);
+      const size = def.defaultSize;
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
       // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
       const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
@@ -778,7 +802,12 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
       <Menu.Root
         open={menu !== undefined}
         onOpenChange={({ open }) => !open && closeMenu()}
-        positioning={{ ...virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
+        positioning={{
+          ...VirtualAnchor.virtualAnchor(menuAnchorRef),
+          placement: 'right',
+          gutter: 4,
+          overflowPadding: 8,
+        }}
       >
         <Menu.Content>
           {menu?.kind === 'point' && (
@@ -833,37 +862,47 @@ SceneViewCanvas.displayName = 'SceneView.Canvas';
 // Toolbars
 //
 
-export type SceneViewBarProps = ThemedClassName<{}>;
+export type SceneViewBarProps = Util.ThemedClassName<{}>;
+
+/**
+ * The frame a bar floats in: its content's width, but half the view at most (the bar scrolls beyond that).
+ * The toolbar's own scroll frame is zero-height in flow, so `classNames` positions this frame, not the bar.
+ */
+const barFrame = 'absolute w-max max-w-[50%]';
 
 /** Where the view is in the scene tree. */
-const SceneViewNavigation = ({ classNames = 'absolute top-2 left-2' }: SceneViewBarProps) => {
+const SceneViewNavigation = ({ classNames = 'top-2 left-2' }: SceneViewBarProps) => {
   const { toolbarActions, path } = useSceneViewContext('SceneView.Navigation');
   return (
-    <NavigationToolbar classNames={classNames} actions={toolbarActions}>
-      depth {path.length - 1}
-    </NavigationToolbar>
+    <div className={mx(barFrame, classNames)}>
+      <NavigationToolbar actions={toolbarActions}>depth {path.length - 1}</NavigationToolbar>
+    </div>
   );
 };
 
 SceneViewNavigation.displayName = 'SceneView.Navigation';
 
 /** Everything that changes the view or the scene. */
-const SceneViewActions = ({ classNames = 'absolute top-2 right-2' }: SceneViewBarProps) => {
+const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: SceneViewBarProps) => {
   const { toolbarActions, nodeRegistry, capabilities } = useSceneViewContext('SceneView.Actions');
   return (
-    <ActionToolbar classNames={classNames} actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
+    <div className={mx(barFrame, classNames)}>
+      <ActionToolbar actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
+    </div>
   );
 };
 
 SceneViewActions.displayName = 'SceneView.Actions';
 
-/** The camera's own numbers; nothing here acts on the scene. */
-const SceneViewDebug = ({ classNames = 'absolute bottom-2 left-2' }: SceneViewBarProps) => {
-  const { nominalZoom, pointer } = useSceneViewContext('SceneView.Debug');
+/** The camera's controls and numbers; nothing here changes the scene. */
+const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) => {
+  const { toolbarActions, nominalZoom, pointer } = useSceneViewContext('SceneView.Debug');
   return (
-    <DebugToolbar classNames={classNames}>
-      {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
-    </DebugToolbar>
+    <div className={mx(barFrame, classNames)}>
+      <CameraToolbar actions={toolbarActions}>
+        {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
+      </CameraToolbar>
+    </div>
   );
 };
 
@@ -891,6 +930,36 @@ const SceneViewPalette = ({ classNames = 'absolute top-14 left-2' }: SceneViewBa
 
 SceneViewPalette.displayName = 'SceneView.Palette';
 
+//
+// Properties
+//
+
+export type SceneViewPropertiesProps = Util.ThemedClassName<Pick<PropertiesProps, 'fields'>>;
+
+/** The selected element's properties as a floating panel; absent while nothing is selected. */
+const SceneViewProperties = ({
+  classNames = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]',
+  fields,
+}: SceneViewPropertiesProps) => {
+  const { projection, atoms, nodeRegistry, capabilities, selection } = useSceneViewContext('SceneView.Properties');
+  if (selection.size === 0) {
+    return null;
+  }
+
+  return (
+    <Properties
+      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      projection={projection}
+      atoms={atoms}
+      nodes={nodeRegistry}
+      fields={fields}
+      readonly={!capabilities.update}
+    />
+  );
+};
+
+SceneViewProperties.displayName = 'SceneView.Properties';
+
 export const SceneView = {
   Root: SceneViewRoot,
   Canvas: SceneViewCanvas,
@@ -898,4 +967,5 @@ export const SceneView = {
   Actions: SceneViewActions,
   Debug: SceneViewDebug,
   Palette: SceneViewPalette,
+  Properties: SceneViewProperties,
 };

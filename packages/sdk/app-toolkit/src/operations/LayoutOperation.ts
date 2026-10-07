@@ -10,7 +10,6 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Selection } from '@dxos/react-ui-attention/types';
@@ -475,11 +474,11 @@ export const UpdateCompanion = Operation.make({
  * no `UpdateCompanion` handler, which is not a failure; it is matched on the whole cause, since some invokers report it
  * as a defect rather than an error.
  */
-export const closeCompanion = (): Effect.Effect<void, NoHandlerError, Operation.Service> =>
+export const closeCompanion = (): Effect.Effect<void, Operation.NoHandlerError, Operation.Service> =>
   Operation.invoke(UpdateCompanion, { subject: null }).pipe(
     Effect.catchCause((cause) => {
       const error = Cause.squash(cause);
-      return error instanceof NoHandlerError && error.context?.operationKey === UpdateCompanion.meta.key
+      return error instanceof Operation.NoHandlerError && error.context?.operationKey === UpdateCompanion.meta.key
         ? Effect.void
         : Effect.failCause(cause);
     }),

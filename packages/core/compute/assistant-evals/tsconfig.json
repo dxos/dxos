@@ -30,6 +30,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../plugins/plugin-agent"
+    },
+    {
       "path": "../../../plugins/plugin-assistant"
     },
     {

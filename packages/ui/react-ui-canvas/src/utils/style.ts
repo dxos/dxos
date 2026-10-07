@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, isEllipseNode } from '../model/types.ts';
+import { type Node, type NodeStyle, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -38,13 +38,23 @@ const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'bor
 export const hueClasses = (hue: string | undefined): HueClasses => (hue && HUES[hue]) || DEFAULT;
 
 /**
+ * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
+ * the properties panel must show it as on rather than as an unset (off) toggle.
+ */
+export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
+  ...style,
+  fill: style.fill ?? true,
+  border: style.border ?? true,
+});
+
+/**
  * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
  * dashed and unfilled, and the host's `className` comes last so it wins.
  */
 export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
-  const style = node.style ?? {};
+  const style = resolveStyle(node.style);
   const hue = hueClasses(style.hue);
-  const filled = style.fill !== false && !style.guide;
+  const filled = style.fill && !style.guide;
   return [
     filled ? hue.surface : '',
     hue.text,

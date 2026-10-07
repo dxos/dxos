@@ -7,11 +7,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, type URI } from '@dxos/keys';
-import { Button, Group, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps, type RefFieldDataProps } from '#types';
@@ -42,10 +43,11 @@ export const InlineRefField = ({
   onCreate,
   useType = defaultUseType,
 }: InlineRefFieldProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const reference = getValue();
   const typename = useMemo(
-    () => SchemaEx.findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename,
+    () =>
+      SchemaEx.findAnnotation<Annotation.ReferenceAnnotationValue>(type, Annotation.ReferenceAnnotationId)?.typename,
     [type],
   );
   const createType = useType(db, typename ? DXN.make(typename) : undefined);
@@ -70,14 +72,14 @@ export const InlineRefField = ({
       ) : (
         !readonly &&
         onCreate && (
-          <Group fill>
-            <Button
+          <Button.Group fill>
+            <Button.Root
               icon='ph--plus--regular'
               label={label || t('ref-field.placeholder')}
               disabled={!createType}
               onClick={() => void handleCreate()}
             />
-          </Group>
+          </Button.Group>
         )
       )}
     </FormFieldSet>

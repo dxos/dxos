@@ -4,7 +4,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,
@@ -20,6 +19,8 @@ import {
   useTour,
   useWheel,
 } from '@dxos/react-ui-geo';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types.ts';
@@ -36,9 +37,9 @@ const distanceSq = (a: LatLngLiteral, b: LatLngLiteral): number => {
   return dLat * dLat + dLng * dLng;
 };
 
-export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
+export const GlobeControl = Util.composable<HTMLDivElement, GlobeControlProps>(
   ({ center, zoom, markers = [], lines = [], selected = [], onSelect, onToggle, onChange, ...props }, forwardedRef) => {
-    const themeMode = useThemeMode();
+    const themeMode = Hooks.useThemeMode();
     const styles = globeStyles(themeMode);
 
     // Track the live globe zoom so topology resolution refines as the user zooms in
@@ -183,7 +184,7 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
 
     return (
       <Globe.Root rotation={initialRotation} zoom={initialZoom} ref={setController}>
-        <Globe.Viewport {...composableProps(props)} ref={forwardedRef}>
+        <Globe.Viewport {...Util.composableProps(props)} ref={forwardedRef}>
           <Globe.Canvas topology={topology} projection='orthographic' features={features} styles={styles} />
           <Globe.Action onAction={handleAction} />
           <Globe.Zoom onAction={handleZoomAction} />

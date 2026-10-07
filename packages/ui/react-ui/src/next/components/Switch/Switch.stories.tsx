@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Switch } from '../index.ts';
+import { Switch } from './Switch.tsx';
 
 /** Icon size (and so track height) per size, in px. */
 const ICON: Record<Size, number> = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };

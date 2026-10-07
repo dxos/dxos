@@ -13,15 +13,15 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { ToolkitError } from '../errors.ts';
-import { RunInstructions } from '../operations/index.ts';
-import { DelegationSkill } from '../skills/index.ts';
+import * as DelegationSkill from '../skills/delegation/DelegationSkill.ts';
+import * as AgentOperation from '../types/AgentOperation.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
@@ -204,7 +204,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           spawn: Effect.gen(function* () {
             // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
             // task id) — nothing is stamped on the durable task.
-            const handle = yield* Process.spawn(RunInstructions, {
+            const handle = yield* Process.spawn(AgentOperation.RunInstructions, {
               instructions: Ref.make(instructions),
               input: {},
             });

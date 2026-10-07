@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { DEFAULT_PACKAGES } from '@dxos/app-framework/SharedPackages';
+import * as SharedPackages from '@dxos/app-framework/SharedPackages';
 import { log } from '@dxos/log';
 
 /** How far up from a resolved entry module to look for its package root. */
@@ -47,7 +47,7 @@ const readSubpaths = (pkg: string, entry: string): string[] => {
 /** Every shared specifier this binary can serve, paired with the file it resolves to. */
 const collectSharedModules = (): Array<[specifier: string, url: string]> => {
   const modules: Array<[string, string]> = [];
-  for (const pkg of DEFAULT_PACKAGES) {
+  for (const pkg of SharedPackages.DEFAULT_PACKAGES) {
     let entryUrl: string;
     try {
       entryUrl = import.meta.resolve(pkg);
@@ -110,7 +110,10 @@ export const registerSharedScope = ({ enabled }: { enabled: boolean }): void => 
         }
       },
     });
-    log('registered shared plugin scope', { specifiers: modules.length, declared: DEFAULT_PACKAGES.length });
+    log('registered shared plugin scope', {
+      specifiers: modules.length,
+      declared: SharedPackages.DEFAULT_PACKAGES.length,
+    });
   } catch (error) {
     // A shared scope that fails to register is not fatal for a `dx` with no third-party plugins,
     // which is every invocation until someone runs `dx plugin add`.

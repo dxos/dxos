@@ -3,5 +3,4 @@
 //
 
 export * as MeetingPlugin from './MeetingPlugin.ts';
-export * from '#meta';
 export * from '#types';

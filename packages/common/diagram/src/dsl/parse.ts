@@ -12,12 +12,18 @@
 import type { SyntaxNode } from '@lezer/common';
 
 import * as Scene from '../scene.ts';
+import * as SemanticEngine from '../semantic-engine.ts';
+import * as Semantic from '../semantic.ts';
 import { parser } from './gen/diagram.ts';
 import {
   type AttrSpec,
+  DIAGRAM_ATTRS,
+  EDGE_ATTRS,
   ELEMENT_ATTRS,
   ELEMENT_KINDS,
   type ElementKind,
+  GROUP_ATTRS,
+  NODE_ATTRS,
   OBJECT_ATTRS,
   REF_SHAPE,
 } from './vocabulary.ts';
@@ -79,19 +85,28 @@ const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
   return children;
 };
 
+/** The message for a semantic id that would replace the connectors object. */
+const CONNECTORS_CLASH = `"${Semantic.CONNECTORS}" names the diagram's connectors object; choose another id.`;
+
+/** A document as read, before any semantic statement is laid out. */
+export type Reading = ParseResult & {
+  /** The semantic statements, when the document has any. */
+  diagram?: Semantic.Diagram;
+};
+
 /**
  * Reads a document. Syntax errors are reported rather than thrown, and the commands that did parse
  * are returned alongside them, so an editor can keep rendering the last good shapes while a line
- * is half-typed.
+ * is half-typed. Semantic statements are collected into a diagram but not laid out.
  */
-export const parse = (text: string): ParseResult => {
+export const read = (text: string): Reading => {
   const problems: Problem[] = [];
   const commands: Scene.Command[] = [];
   const ranges = new Map<string, Range>();
 
   const slice = (node: SyntaxNode): string => text.slice(node.from, node.to);
 
-  const report = (node: SyntaxNode, message: string, severity: Problem['severity'] = 'error'): void => {
+  const report = (node: Range, message: string, severity: Problem['severity'] = 'error'): void => {
     problems.push({ severity, message, from: node.from, to: node.to });
   };
 
@@ -375,6 +390,7 @@ export const parse = (text: string): ParseResult => {
           ...optional('text', text),
           ...optional('head', enumAttr(attrs, 'head', Scene.ArrowHead.literals)),
           ...optional('tail', enumAttr(attrs, 'tail', Scene.ArrowTail.literals)),
+          ...optional('relation', enumAttr(attrs, 'relation', Scene.Relation.literals)),
           ...style,
         };
       }
@@ -409,6 +425,415 @@ export const parse = (text: string): ParseResult => {
             return [element];
           })
       : [];
+
+  //
+  // Semantic statements, collected into one diagram and checked once every statement is read, since
+  // an edge may name a node declared further down.
+  //
+
+  const diagram = Semantic.empty();
+  let semantic = false;
+  const rangeOf = (node: SyntaxNode): Range => ({ from: node.from, to: node.to });
+
+  const sizeAttr = (attrs: Map<string, Attr>, name: string): Semantic.Size | undefined => {
+    const attr = attrs.get(name);
+    if (!attr) {
+      return undefined;
+    }
+    const raw = slice(attr.valueNode);
+    const [width, height] = raw.split('x').map(Number.parseFloat);
+    if (!/^[^x]+x[^x]+$/.test(raw) || !(width > 0) || !(height > 0)) {
+      report(attr.node, `"${name}" takes a size like 384x224.`);
+      return undefined;
+    }
+    return { w: width, h: height };
+  };
+
+  /** `W:H` as the ratio W/H. */
+  const ratioAttr = (attrs: Map<string, Attr>, name: string): number | undefined => {
+    const attr = attrs.get(name);
+    if (!attr) {
+      return undefined;
+    }
+    const [width, height] = slice(attr.valueNode).split(':').map(Number.parseFloat);
+    if (attr.valueNode.getChild('Ratio') === null || !(width > 0) || !(height > 0)) {
+      report(attr.node, `"${name}" takes a ratio like 4:3.`);
+      return undefined;
+    }
+    return width / height;
+  };
+
+  const attributesOf = (statement: SyntaxNode) => childrenOf(statement).filter((child) => child.name === 'Attribute');
+
+  const readRelations = (statement: SyntaxNode): Semantic.Relation[] =>
+    childrenOf(statement)
+      .filter((child) => child.name === 'Relation')
+      .flatMap((relation) => {
+        const kindNode = relation.getChild('RelationKind');
+        const target = relation.getChild('Id');
+        if (!kindNode || !target) {
+          return [];
+        }
+        const word = slice(kindNode);
+        const kind = Semantic.RELATION_KINDS.find((candidate) => candidate === word);
+        if (!kind) {
+          report(kindNode, `Unknown relation "${word}"; use one of: ${Semantic.RELATION_KINDS.join(', ')}.`);
+          return [];
+        }
+        return [{ kind, target: readId(target), soft: relation.getChild('Soft') !== null, range: rangeOf(relation) }];
+      });
+
+  /** `cell(c,r)` coordinates; `_` leaves one open where the caller allows it. */
+  const readCoords = (node: SyntaxNode): (number | undefined)[] =>
+    childrenOf(node)
+      .filter((child) => child.name === 'Coord')
+      .map((coord) => {
+        const number = coord.getChild('Number');
+        return number ? readNumber(number) : undefined;
+      });
+
+  const readPin = (statement: SyntaxNode): Semantic.Pin | undefined => {
+    const pin = statement.getChild('Pin');
+    if (!pin) {
+      return undefined;
+    }
+    const point = pin.getChild('Point');
+    if (point) {
+      const at = readPoint(point);
+      return at ? { kind: 'point', ...at, range: rangeOf(pin) } : undefined;
+    }
+    const cell = pin.getChild('CellRef');
+    if (!cell) {
+      return undefined;
+    }
+    const [col, row] = readCoords(cell);
+    if (col === undefined || row === undefined || !Number.isInteger(col) || !Number.isInteger(row)) {
+      report(cell, 'A pin names a whole cell: @cell(<column>,<row>) with two integers.');
+      return undefined;
+    }
+    return { kind: 'cell', col, row, range: rangeOf(pin) };
+  };
+
+  const readNode = (statement: SyntaxNode, group: string | undefined): void => {
+    const idNode = statement.getChild('Id');
+    if (!idNode) {
+      return;
+    }
+    const id = readId(idNode);
+    const label = statement.getChild('Label');
+    const attrs = readAttrs(attributesOf(statement), NODE_ATTRS, `node "${id}"`);
+    const pins = childrenOf(statement).filter((child) => child.name === 'Pin');
+    if (pins.length > 1) {
+      report(pins[1], `node "${id}" has more than one pin.`);
+    }
+    if (id === Semantic.CONNECTORS) {
+      report(idNode, CONNECTORS_CLASH);
+      return;
+    }
+    if (diagram.nodes.some((node) => node.id === id) || diagram.groups.some((entry) => entry.id === id)) {
+      report(idNode, `"${id}" is already declared.`);
+      return;
+    }
+    const pin = readPin(statement);
+    const relations = readRelations(statement);
+    diagram.hinted ||= pin !== undefined || relations.length > 0;
+    diagram.nodes.push({
+      id,
+      label: label ? unquote(slice(label)) : id,
+      relations,
+      range: rangeOf(statement),
+      ...optional('group', group),
+      ...optional('pin', pin),
+      ...optional('ref', stringAttr(attrs, 'ref')),
+      ...optional('shape', enumAttr(attrs, 'shape', Scene.BoxKind.literals)),
+      ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+      ...optional('fill', enumAttr(attrs, 'fill', Scene.Fill.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
+    });
+    ranges.set(id, rangeOf(statement));
+  };
+
+  const readEnd = (node: SyntaxNode): Semantic.End | undefined => {
+    const idNode = node.getChild('Id');
+    if (!idNode) {
+      return undefined;
+    }
+    const sideList = node.getChild('SideList');
+    const sides = sideList
+      ? childrenOf(sideList)
+          .filter((child) => child.name === 'Side')
+          .flatMap((child) => {
+            const word = slice(child);
+            const side = Semantic.SIDES.find((candidate) => candidate === word);
+            if (!side) {
+              report(child, `Unknown side "${word}"; use top, bottom, left or right.`);
+            }
+            return side ? [side] : [];
+          })
+      : undefined;
+    const soft = sides?.length && node.getChild('Soft') !== null ? true : undefined;
+    return {
+      node: readId(idNode),
+      range: rangeOf(node),
+      ...optional('sides', sides?.length ? sides : undefined),
+      ...optional('soft', soft),
+    };
+  };
+
+  const readWaypoints = (via: SyntaxNode): Semantic.Waypoint[] =>
+    childrenOf(via)
+      .filter((child) => child.name === 'Waypoint')
+      .flatMap((waypoint): Semantic.Waypoint[] => {
+        const cell = waypoint.getChild('CellRef');
+        const [x, y] = readCoords(cell ?? waypoint);
+        if (x === undefined && y === undefined) {
+          report(waypoint, 'A waypoint needs at least one coordinate; write `_` only for the one left free.');
+          return [];
+        }
+        return [{ unit: cell ? 'cell' : 'scene', range: rangeOf(waypoint), ...optional('x', x), ...optional('y', y) }];
+      });
+
+  /** Unnamed buses are per statement; named ones join across statements. */
+  let statementIndex = 0;
+  const pendingBuses: { edges: Semantic.Edge[]; name: string; node: SyntaxNode; label?: string; named: boolean }[] = [];
+
+  const readEdge = (statement: SyntaxNode): void => {
+    statementIndex++;
+    const lists = childrenOf(statement).filter((child) => child.name === 'EndList');
+    if (lists.length < 2) {
+      return;
+    }
+    const [sources, targets] = lists.map((list) =>
+      childrenOf(list)
+        .filter((child) => child.name === 'EdgeEnd')
+        .flatMap((end) => readEnd(end) ?? []),
+    );
+    const opNode = statement.getChild('EdgeOp');
+    const op = opNode ? slice(opNode) : '->';
+    const word = opNode?.getChild('RelationWord');
+    const relation = word && Object.hasOwn(Semantic.RELATIONSHIPS, op) ? Semantic.RELATIONSHIPS[op] : undefined;
+    if (word && !relation) {
+      report(
+        word,
+        `Unknown relationship "${op}"; use ->, <->, -- or one of: ${Object.keys(Semantic.RELATIONSHIPS).join(', ')}.`,
+      );
+    }
+    const label = statement.getChild('Label');
+    const text = label ? unquote(slice(label)) : undefined;
+    const attrs = readAttrs(attributesOf(statement), EDGE_ATTRS, 'edge');
+    const via = childrenOf(statement)
+      .filter((child) => child.name === 'Via')
+      .flatMap(readWaypoints);
+    const busNode = statement.getChild('Bus');
+    const busName = busNode?.getChild('Id');
+    const style: Semantic.EdgeStyle = {
+      ...optional('relation', relation),
+      ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Scene.ArrowHead.literals)),
+      ...optional('tail', enumAttr(attrs, 'tail', Scene.ArrowTail.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
+      ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+    };
+    const fan = sources.length > 1 || targets.length > 1;
+    if (busNode && sources.length > 1 && targets.length > 1) {
+      report(busNode, 'A bus joins one node to several: write `edge A -> B, C bus` or `edge B, C -> A bus`.');
+    }
+    const busTrunk = busNode !== null && fan && !(sources.length > 1 && targets.length > 1);
+    const pairs = sources.flatMap((from) => targets.map((to) => ({ from, to })));
+    const made: Semantic.Edge[] = [];
+    for (const { from, to } of pairs) {
+      const directions =
+        op === '<->'
+          ? [
+              { from, to },
+              { from: to, to: from },
+            ]
+          : [{ from, to }];
+      directions.forEach((direction, position) => {
+        const edge: Semantic.Edge = {
+          id: `${direction.from.node}-${direction.to.node}-${diagram.edges.length}`,
+          from: direction.from,
+          to: direction.to,
+          via: position === 0 ? via : [...via].reverse(),
+          range: rangeOf(statement),
+          ...style,
+          // A trunk carries the statement's label; the reverse of a two-way edge repeats nothing.
+          ...optional('label', busTrunk || position > 0 ? undefined : text),
+        };
+        diagram.edges.push(edge);
+        made.push(edge);
+        ranges.set(`edges/${edge.id}`, rangeOf(statement));
+        ranges.set(`edges/${edge.id}-path`, rangeOf(statement));
+      });
+    }
+    diagram.hinted ||=
+      via.length > 0 ||
+      busNode !== null ||
+      sources.some((end) => end.sides !== undefined) ||
+      targets.some((end) => end.sides !== undefined);
+    if (busNode && !(sources.length > 1 && targets.length > 1)) {
+      pendingBuses.push({
+        edges: made,
+        name: busName ? readId(busName) : `#${statementIndex}`,
+        node: busNode,
+        named: busName !== null,
+        ...optional('label', busTrunk ? text : undefined),
+      });
+    }
+  };
+
+  const readGroup = (statement: SyntaxNode, outer: string | undefined): void => {
+    const idNode = statement.getChild('Id');
+    if (!idNode) {
+      return;
+    }
+    const id = readId(idNode);
+    if (outer !== undefined) {
+      report(idNode, `Groups do not nest; the members of "${id}" join "${outer}".`);
+    } else if (id === Semantic.CONNECTORS) {
+      report(idNode, CONNECTORS_CLASH);
+    } else if (diagram.groups.some((group) => group.id === id) || diagram.nodes.some((node) => node.id === id)) {
+      report(idNode, `"${id}" is already declared.`);
+    } else {
+      const label = statement.getChild('Label');
+      const attrs = readAttrs(attributesOf(statement), GROUP_ATTRS, `group "${id}"`);
+      const relations = readRelations(statement);
+      const gap = numberAttr(attrs, 'gap');
+      const width = numberAttr(attrs, 'max-width');
+      const maxWidth = width !== undefined && Number.isInteger(width) && width >= 1 ? width : undefined;
+      if (width !== undefined && maxWidth === undefined) {
+        report(attrs.get('max-width')?.node ?? statement, '"max-width" takes a whole number of columns, at least 1.');
+      }
+      const compact = statement.getChild('Compact') !== null ? true : undefined;
+      diagram.hinted ||= relations.length > 0 || gap !== undefined || maxWidth !== undefined || compact === true;
+      diagram.groups.push({
+        id,
+        label: label ? unquote(slice(label)) : id,
+        relations,
+        range: rangeOf(statement),
+        ...optional('gap', gap),
+        ...optional('maxWidth', maxWidth),
+        ...optional('compact', compact),
+        ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+      });
+      ranges.set(id, rangeOf(statement));
+    }
+    const owner = outer ?? id;
+    for (const child of childrenOf(statement.getChild('GroupBody') ?? statement)) {
+      if (child.name === 'NodeDecl') {
+        readNode(child, owner);
+      } else if (child.name === 'EdgeDecl') {
+        readEdge(child);
+      } else if (child.name === 'GroupDecl') {
+        readGroup(child, owner);
+      }
+    }
+  };
+
+  const readDiagram = (statement: SyntaxNode): void => {
+    const attrs = readAttrs(attributesOf(statement), DIAGRAM_ATTRS, 'diagram');
+    const point = statement.getChild('Origin')?.getChild('Point');
+    const origin = point && readPoint(point);
+    const flow = enumAttr(attrs, 'flow', Semantic.FLOWS);
+    const grid = sizeAttr(attrs, 'grid');
+    const box = sizeAttr(attrs, 'box');
+    const aspect = ratioAttr(attrs, 'aspect');
+    if (aspect) {
+      diagram.aspect = aspect;
+    }
+    if (origin) {
+      diagram.origin = origin;
+    }
+    if (flow) {
+      diagram.flow = flow;
+    }
+    if (grid) {
+      diagram.grid = grid;
+    }
+    if (box) {
+      diagram.box = box;
+    }
+    diagram.hinted ||= grid !== undefined || box !== undefined || aspect !== undefined;
+  };
+
+  /** Drops what names nothing, then forms the buses; run once every statement is read. */
+  const resolveSemantic = (): void => {
+    const nodeIds = new Set(diagram.nodes.map((node) => node.id));
+    const groupIds = new Set(diagram.groups.map((group) => group.id));
+    const known = (end: Semantic.End) => {
+      if (!nodeIds.has(end.node)) {
+        report(end.range, `Unknown node "${end.node}"; declare it with \`node ${end.node}\`.`);
+        return false;
+      }
+      return true;
+    };
+    diagram.edges = diagram.edges.filter((edge) => [edge.from, edge.to].map(known).every(Boolean));
+    const checkTargets = (owner: string, relations: Semantic.Relation[], ids: Set<string>, kind: string) =>
+      relations.filter((relation) => {
+        if (relation.target === owner) {
+          problems.push({
+            severity: 'error',
+            message: `"${owner}" cannot be placed relative to itself.`,
+            ...relation.range,
+          });
+          return false;
+        }
+        if (!ids.has(relation.target)) {
+          problems.push({ severity: 'error', message: `Unknown ${kind} "${relation.target}".`, ...relation.range });
+          return false;
+        }
+        return true;
+      });
+    diagram.nodes.forEach((node) => (node.relations = checkTargets(node.id, node.relations, nodeIds, 'node')));
+    diagram.groups.forEach((group) => (group.relations = checkTargets(group.id, group.relations, groupIds, 'group')));
+
+    const live = new Set(diagram.edges);
+    const byName = new Map<string, typeof pendingBuses>();
+    for (const entry of pendingBuses) {
+      byName.set(entry.name, [...(byName.get(entry.name) ?? []), entry]);
+    }
+    for (const [name, entries] of byName) {
+      const edges = entries.flatMap((entry) => entry.edges).filter((edge) => live.has(edge));
+      if (edges.length < 2) {
+        if (edges.length === 1) {
+          problems.push({
+            severity: 'warning',
+            message: entries[0].named
+              ? `Bus "${name}" has only one edge, so it has no trunk to share.`
+              : 'A bus needs several edges from or to one node: `edge A -> B, C bus` or `edge B, C -> A bus`.',
+            ...rangeOf(entries[0].node),
+          });
+        }
+        continue;
+      }
+      const hubOut = edges.every((edge) => edge.from.node === edges[0].from.node);
+      const hubIn = edges.every((edge) => edge.to.node === edges[0].to.node);
+      if (!hubOut && !hubIn) {
+        problems.push({
+          severity: 'warning',
+          message: `The edges of bus "${name}" share neither their source nor their target, so they are drawn apart.`,
+          ...rangeOf(entries[0].node),
+        });
+        continue;
+      }
+      const direction = hubOut ? 'out' : 'in';
+      const key = Semantic.busKey(hubOut ? edges[0].from.node : edges[0].to.node, name, direction);
+      const label = entries.find((entry) => entry.label !== undefined)?.label;
+      if (label !== undefined) {
+        diagram.busLabels.set(key, label);
+      }
+      for (const edge of edges) {
+        edge.bus = key;
+      }
+      const routed = edges.find((edge) => edge.via.length > 0);
+      if (routed) {
+        problems.push({
+          severity: 'warning',
+          message: 'Waypoints on a bus edge are ignored: the trunk and its spokes are routed together.',
+          ...routed.via[0].range,
+        });
+      }
+    }
+  };
 
   const tree = parser.parse(text);
 
@@ -493,10 +918,68 @@ export const parse = (text: string): ParseResult => {
           });
         }
         break;
+
+      case 'DiagramDecl':
+        semantic = true;
+        readDiagram(statement);
+        break;
+
+      case 'GroupDecl':
+        semantic = true;
+        readGroup(statement, undefined);
+        break;
+
+      case 'NodeDecl':
+        semantic = true;
+        readNode(statement, undefined);
+        break;
+
+      case 'EdgeDecl':
+        semantic = true;
+        readEdge(statement);
+        break;
     }
   }
 
-  return { commands, problems, ranges };
+  if (!semantic) {
+    return { commands, problems, ranges };
+  }
+  resolveSemantic();
+  // The layout emits objects named after nodes and groups, plus one `edges` object; a scene
+  // statement claiming one of those ids would silently replace part of the diagram.
+  const claimed = new Set([
+    ...diagram.nodes.map((node) => node.id),
+    ...diagram.groups.map((group) => group.id),
+    'edges',
+  ]);
+  for (const command of commands) {
+    if (command.op === 'upsert-object' && claimed.has(command.object.id) && diagram.nodes.length > 0) {
+      const range = ranges.get(command.object.id);
+      problems.push({
+        severity: 'warning',
+        message: `object "${command.object.id}" replaces the laid-out ${command.object.id === 'edges' ? 'connectors' : `"${command.object.id}"`}; use \`elements ${command.object.id} { … }\` to add to it instead.`,
+        from: range?.from ?? 0,
+        to: range?.to ?? 0,
+      });
+    }
+  }
+  return { commands, problems, ranges, diagram };
+};
+
+/** A reading with its semantic diagram laid out: the layout's commands first, then the scene statements. */
+export const withLayout = (reading: Reading, solution?: SemanticEngine.Solution): ParseResult => ({
+  commands: solution ? [...solution.commands, ...reading.commands] : reading.commands,
+  problems: [...reading.problems, ...(solution?.issues ?? [])],
+  ranges: reading.ranges,
+});
+
+/**
+ * Reads a document and lays out its semantic statements with the grid search, synchronously, so
+ * an editor can lint and preview it; see {@link compile} for the full search.
+ */
+export const parse = (text: string): ParseResult => {
+  const reading = read(text);
+  return withLayout(reading, reading.diagram && SemanticEngine.solve(reading.diagram));
 };
 
 /** Applies commands in order, the same semantics `Scene.Command` documents. */
