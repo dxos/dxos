@@ -20,10 +20,6 @@ _3 error(s), 0 warning(s)._
 - 81ce7bba08-2 - ignored - no-casts - packages/e2e/blade-runner/src/replicants/client-replicant.ts:656
 - 81ce7bba08-3 - ignored - no-casts - packages/sdk/client/src/echo/space-list.ts:184
 
-## Dismissals
-
-- 81ce7bba08-1, 81ce7bba08-2, 81ce7bba08-3: not in this PR — the branch restores these files to `main`, so the PR's diff against its merge base no longer touches them; the flagged casts are `main`'s own.
-
 ## Issues
 
 # ERROR 81ce7bba08-1 no-casts `packages/e2e/blade-runner/src/main.ts:28`
@@ -54,3 +50,8 @@ estimated input tokens: 866064
 billed input tokens: 852354 (cost $0.0358)
 measured chars per token: 3.05
 ```
+
+### Dismissals
+
+- 81ce7bba08-1, 81ce7bba08-2, 81ce7bba08-3: not in this PR — the branch restores these files to `main`, so the PR's diff against its merge base no longer touches them; the flagged casts are `main`'s own.
+
