@@ -11,7 +11,16 @@
 import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
-import { Link, type Node, NodeBase, type Scene, type SceneId, type SceneMap } from '@dxos/react-ui-canvas/scene';
+import {
+  Link,
+  type Node,
+  NodeBase,
+  type PortalNode,
+  type Scene,
+  type SceneId,
+  type SceneMap,
+  isPortalNode,
+} from '@dxos/react-ui-canvas/scene';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
@@ -25,7 +34,10 @@ export type NodeRecord = { kind: 'node'; scene: SceneId; node: Node; dsl?: DslId
 export type LinkRecord = { kind: 'link'; scene: SceneId; link: Link; dsl?: DslIdentity };
 export type ElementRecord = NodeRecord | LinkRecord;
 
-export const ROOT_SCENE_ID = 'scene:root';
+export const ROOT_SCENE_ID = 'root';
+
+/** The root id drawings were saved with before it lost the `scene:` its key already adds. */
+const LEGACY_ROOT_SCENE_ID = 'scene:root';
 const CANVAS_KEY = 'canvas';
 
 export const sceneKey = (id: SceneId) => `scene:${id}`;
@@ -52,8 +64,52 @@ export const isElementRecord = (record: unknown): record is ElementRecord =>
 /** Plain data from a record that may be an ECHO proxy: records must not alias live content. */
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
+const toRoot = (node: PortalNode): PortalNode => ({ ...node, scene: ROOT_SCENE_ID });
+
+/** Whether the content was saved with the legacy root scene id, so `migrateContent` would change it. */
+export const hasLegacyRoot = (content: ContentMap): boolean => {
+  const canvas = content[CANVAS_KEY];
+  return isCanvasRecord(canvas) && canvas.root === LEGACY_ROOT_SCENE_ID;
+};
+
+/**
+ * Renames a legacy root scene (`scene:root`, stored under `scene:scene:root`) to `root` in place: its
+ * record, the canvas record, and every element in it or showing it. Returns whether anything changed.
+ */
+export const migrateContent = (content: ContentMap): boolean => {
+  if (!hasLegacyRoot(content)) {
+    return false;
+  }
+  const legacy = content[sceneKey(LEGACY_ROOT_SCENE_ID)];
+  delete content[sceneKey(LEGACY_ROOT_SCENE_ID)];
+  content[sceneKey(ROOT_SCENE_ID)] = {
+    kind: 'scene',
+    id: ROOT_SCENE_ID,
+    ...(isSceneRecord(legacy) && legacy.name ? { name: legacy.name } : {}),
+  } satisfies SceneRecord;
+  content[CANVAS_KEY] = { kind: 'canvas', root: ROOT_SCENE_ID } satisfies CanvasRecord;
+  for (const [key, record] of Object.entries(content)) {
+    if (isNodeRecord(record)) {
+      const node = clone(record.node);
+      const portal = isPortalNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
+      if (record.scene === LEGACY_ROOT_SCENE_ID || portal) {
+        const next: Node = isPortalNode(node) && portal ? toRoot(node) : node;
+        content[key] = {
+          ...clone(record),
+          scene: record.scene === LEGACY_ROOT_SCENE_ID ? ROOT_SCENE_ID : record.scene,
+          node: next,
+        } satisfies NodeRecord;
+      }
+    } else if (isLinkRecord(record) && record.scene === LEGACY_ROOT_SCENE_ID) {
+      content[key] = { ...clone(record), scene: ROOT_SCENE_ID } satisfies LinkRecord;
+    }
+  }
+  return true;
+};
+
 /** Content with a root scene, written into an empty map when the first record is needed. */
 export const seedContent = (content: ContentMap, root: SceneId = ROOT_SCENE_ID): SceneId => {
+  migrateContent(content);
   const canvas = content[CANVAS_KEY];
   if (isCanvasRecord(canvas)) {
     if (!isSceneRecord(content[sceneKey(canvas.root)])) {

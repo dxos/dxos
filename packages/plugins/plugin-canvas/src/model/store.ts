@@ -16,7 +16,7 @@ import { type SceneId, type SceneStore, createMemoryStore } from '@dxos/react-ui
 
 import { Canvas } from '#types';
 
-import { clone, readScenes, rootOf, seedContent, writeScenes } from './content.ts';
+import { clone, hasLegacyRoot, migrateContent, readScenes, rootOf, seedContent, writeScenes } from './content.ts';
 
 export type BoundCanvasStore = {
   store: SceneStore;
@@ -25,6 +25,11 @@ export type BoundCanvasStore = {
 };
 
 export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing.Canvas): BoundCanvasStore => {
+  if (hasLegacyRoot(canvas.content)) {
+    Obj.update(canvas, (canvas) => {
+      migrateContent(canvas.content);
+    });
+  }
   let root = rootOf(canvas.content);
   if (root === undefined) {
     Obj.update(canvas, (canvas) => {
