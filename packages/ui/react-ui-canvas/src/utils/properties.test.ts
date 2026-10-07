@@ -52,6 +52,15 @@ describe('properties', () => {
     expect([...mixed].sort()).toEqual(['center.x', 'style.hue']);
   });
 
+  test('an instance value (a reference) is kept whole, not merged field by field', ({ expect }) => {
+    class Reference {
+      constructor(readonly uri: string) {}
+    }
+    const reference = new Reference('echo://space/object');
+    const { values } = mergeValues([{ drawing: reference }], ['drawing']);
+    expect(values.drawing).toBe(reference);
+  });
+
   test('a patch writes only the changed paths and keeps the rest of a nested value', ({ expect }) => {
     const element = { label: 'A', style: { hue: 'red', rounded: true }, center: { x: 0, y: 16 } };
     const values = { label: 'B', style: { hue: 'blue', rounded: false }, center: { x: 48, y: 0 } };

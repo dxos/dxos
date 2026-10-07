@@ -47,8 +47,8 @@ import { commonSchema, mergeValues, patchValues } from '../../utils/properties.t
 import { resolveStyle } from '../../utils/style.ts';
 import { StyleGridField } from './StyleGrid.tsx';
 
-/** Identity, ordering and geometry lists are the surface's, not the user's. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
+/** Identity, ordering, geometry lists and a scene shape's child-scene id are the surface's, not the user's. */
+const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'scene'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea

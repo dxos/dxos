@@ -23,7 +23,14 @@ import {
 } from '@dxos/react-ui-canvas/scene';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { type BoundCanvasStore, CanvasSceneNode, bindCanvasStore, drawingUri, parseLinkedSceneId } from '#model';
+import {
+  type BoundCanvasStore,
+  CanvasSceneNode,
+  UNTITLED_DRAWING,
+  bindCanvasStore,
+  drawingUri,
+  parseLinkedSceneId,
+} from '#model';
 import { Canvas, CanvasCapabilities } from '#types';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -71,7 +78,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
         })
         .map((result) => {
           const id = Entity.getURI(result, { prefer: 'named' });
-          return { id, label: Entity.getLabel(result) ?? id };
+          return { id, label: Entity.getLabel(result) ?? UNTITLED_DRAWING };
         }),
     [canvas],
   );

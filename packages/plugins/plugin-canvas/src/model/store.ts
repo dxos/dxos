@@ -15,7 +15,7 @@
 
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Entity, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
@@ -42,7 +42,7 @@ import {
   seedContent,
   writeScenes,
 } from './content.ts';
-import { drawingUri, linkedSceneId, parseLinkedSceneId } from './scene-node.ts';
+import { UNTITLED_DRAWING, drawingUri, linkedSceneId, parseLinkedSceneId } from './scene-node.ts';
 
 export type BoundCanvasStore = {
   store: SceneStore;
@@ -178,7 +178,7 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
         linked.set(uri, {
           canvas: target,
           root: linkedRoot,
-          name: drawing.name,
+          name: Entity.getLabel(drawing) ?? UNTITLED_DRAWING,
           dispose: Obj.subscribe(target, refresh),
         });
         refresh();

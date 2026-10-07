@@ -22,6 +22,9 @@ export const CanvasSceneNode = Schema.Struct({
 });
 export type CanvasSceneNode = Schema.Schema.Type<typeof CanvasSceneNode>;
 
+/** What an unnamed drawing is called where its id would otherwise show (a linked scene's title, the picker). */
+export const UNTITLED_DRAWING = 'Untitled drawing';
+
 /** Separates a linked drawing's URI from its scene id; neither a URI nor a scene id contains it. */
 const LINK_SEPARATOR = '|';
 
