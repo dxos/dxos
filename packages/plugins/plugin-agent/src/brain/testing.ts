@@ -18,13 +18,15 @@ export type TestBrainOptions = {
    * @default 'session'
    */
   wake?: 'session' | 'record';
+  /** The brain's clock (epoch ms); the wall clock by default, so tests of time-driven rules can move it. */
+  now?: () => number;
 };
 
 /**
  * One in-memory brain for a test file: the layer can be provided both to the resolver (operations) and
  * to the test body, and every build sees the same stores.
  */
-export const makeTestBrain = ({ wake = 'session' }: TestBrainOptions = {}) => {
+export const makeTestBrain = ({ wake = 'session', now }: TestBrainOptions = {}) => {
   const state = BrainMemory.makeState();
   const { triggers, stores } = state;
   const wakes: BrainService.WakeRequest[] = [];
@@ -34,7 +36,7 @@ export const makeTestBrain = ({ wake = 'session' }: TestBrainOptions = {}) => {
     AgentService.AgentService.pipe(
       Effect.map((agents) => {
         // Built once per layer, each with its own host's agents, over the same stores.
-        const { service: memory } = BrainMemory.make(agents, { state });
+        const { service: memory } = BrainMemory.make(agents, { state, now });
         // Triggers come back through JSON, as from EDGE's brain: their refs then have no resolver of their own.
         const service: BrainService.Service = {
           ...memory,

@@ -14,7 +14,7 @@ import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -148,7 +148,9 @@ const makeScript =
   };
 
 const refs: Refs = {};
-const brain = makeTestBrain();
+/** The brain's clock, moved forward by tests of time-driven rules. */
+let offset = 0;
+const brain = makeTestBrain({ now: () => Date.now() + offset });
 
 const TestLayer = brain.layer.pipe(
   Layer.provideMerge(
@@ -229,6 +231,7 @@ const pending = Effect.fnUntraced(function* (agent: Agent.Agent) {
 describe('local brain: two private chats', () => {
   afterEach(() => {
     brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+    offset = 0;
   });
 
   it.effect(
@@ -373,6 +376,42 @@ describe('local brain: two private chats', () => {
         const facts = yield* service.query(agent.id, { subjectEntity: BOB });
         expect(yield* service.push(agent.id, facts)).toBe(0);
         expect(yield* pending(agent)).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'a watch that waits on the clock wakes its chat when its time comes, once',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, alice } = yield* setup();
+        yield* say(alice, LINE.aliceAwaitsShip);
+        const service = yield* BrainService.BrainService;
+        const [watch] = yield* service.subscriptions(agent.id);
+        // The goal's text compiled to a follow-up: nudge Alice if nothing happened within two days.
+        // Started on the brain's clock: the test context's clock stamps operations at the epoch.
+        yield* service.subscribe({
+          ...watch,
+          createdAt: new Date().toISOString(),
+          ongoing: true,
+          rules: `${watch.rules}\nwake(followup) :- elapsed(goal, 2d), not achieved(goal).`,
+        });
+        const [clocked] = yield* service.subscriptions(agent.id);
+        const due = yield* service.nextDueAt(agent.id);
+        expect(Date.parse(due ?? '') - Date.parse(clocked.createdAt)).toBe(2 * 24 * 60 * 60_000);
+
+        const run = Operation.invoke(TriggerOperation.RunDue, { agent: Ref.make(agent) });
+        expect((yield* run).fired).toEqual([]);
+        offset = 2 * 24 * 60 * 60_000 + 60_000;
+        expect((yield* run).fired).toEqual([watch.id]);
+        yield* settle(alice);
+        expect(yield* updates(alice)).toHaveLength(1);
+        // It fired once; the clock has nothing more for it.
+        expect((yield* run).fired).toEqual([]);
+        expect(yield* service.nextDueAt(agent.id)).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
