@@ -81,11 +81,13 @@ describe('route', () => {
   });
 
   test('a free end faces the other end, and a node end facing it takes its nearest port', ({ expect }) => {
-    const scene = SceneBuilder.create('s')
-      .rect('a', { x: 0, y: 0, width: 256, height: 128 })
-      .line('free', '@-200,64', '@-100,64')
-      .line('half', '@640,64', 'a')
-      .build();
+    const {
+      scenes: [scene],
+    } = SceneBuilder.scene('s', [
+      SceneBuilder.rect('a', { x: 0, y: 0, width: 256, height: 128 }),
+      SceneBuilder.link('line', '@-200,64', '@-100,64').id('free'),
+      SceneBuilder.link('line', '@640,64', 'a').id('half'),
+    ]).build();
     expect(sideToward({ x: 0, y: 0 }, { x: 10, y: 3 })).toBe('e');
     expect(sideToward({ x: 0, y: 0 }, { x: -3, y: 10 })).toBe('s');
     const free = linkGeometry(scene, defaultNodeRegistry, scene.links.free);

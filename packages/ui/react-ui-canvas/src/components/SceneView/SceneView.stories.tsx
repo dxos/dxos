@@ -11,7 +11,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
-import { SceneBuilder } from '../../utils/builder.ts';
+import { type Box, SceneBuilder } from '../../utils/builder.ts';
 import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
@@ -65,14 +65,15 @@ const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
 /** One square centred on the origin: something to select and style straight away. */
 const createSquareTree = () => {
   const root = 'scene:root';
-  const scene = SceneBuilder.create(root, 'root')
-    .rect(
-      'square',
-      { x: -DEFAULT_SHAPE_SIZE.width / 2, y: -DEFAULT_SHAPE_SIZE.height / 2, ...DEFAULT_SHAPE_SIZE },
-      'DXOS',
-    )
+  return SceneBuilder.scene(root, [
+    SceneBuilder.rect('square', {
+      x: -DEFAULT_SHAPE_SIZE.width / 2,
+      y: -DEFAULT_SHAPE_SIZE.height / 2,
+      ...DEFAULT_SHAPE_SIZE,
+    }).properties({ label: 'DXOS' }),
+  ])
+    .name('root')
     .build();
-  return { scenes: [scene], root };
 };
 
 /**
@@ -84,35 +85,38 @@ const createLatticeTree = () => {
   const root = 'scene:root';
   const at = (col: number, row: number, spanX = 1, spanY = 1) =>
     cellBounds({ col, row, spanX, spanY }, DEFAULT_LATTICE);
-  const child = 'scene:f';
-  const inner = SceneBuilder.create(child, 'F')
-    .rect('f1', at(0, -1), 'F1')
-    .rect('f2', at(0, 0), 'F2')
-    .rect('f3', at(0, 1), 'F3')
-    .smart('f12', 'f1', 'f2')
-    .smart('f23', 'f2', 'f3')
-    .build();
-  const scene = SceneBuilder.create(root, 'root')
-    .rect('a', at(-1, -1), 'A')
-    .rect('b', at(-1, 0), 'B')
-    .rect('c', at(-1, 1), 'C')
-    .rect('d', at(0, 0), 'D')
-    .rect('e', at(0, 1), 'E')
+  const box = (id: string, cell: Box, label: string) => SceneBuilder.rect(id, cell).properties({ label });
+  const smart = (from: string, to: string) => SceneBuilder.link('smart', from, to);
+  return SceneBuilder.scene(root, [
+    box('a', at(-1, -1), 'A'),
+    box('b', at(-1, 0), 'B'),
+    box('c', at(-1, 1), 'C'),
+    box('d', at(0, 0), 'D'),
+    box('e', at(0, 1), 'E'),
     // Unlabelled, so the scene shows its contents.
-    .portal('f', at(1, -1, 1, 3), child)
-    .smart('ab', 'a', 'b')
-    .smart('bc', 'b', 'c')
-    .smart('bd', 'b', 'd')
-    .smart('de', 'd', 'e')
-    .smart('df', 'd', 'f')
+    SceneBuilder.scene('f', [
+      box('f1', at(0, -1), 'F1'),
+      box('f2', at(0, 0), 'F2'),
+      box('f3', at(0, 1), 'F3'),
+      smart('f1', 'f2'),
+      smart('f2', 'f3'),
+    ])
+      .name('F')
+      .at(at(1, -1, 1, 3)),
+    smart('a', 'b'),
+    smart('b', 'c'),
+    smart('b', 'd'),
+    smart('d', 'e'),
+    smart('d', 'f'),
     // Two links that share the column gutter between B and D and the row gutter above E: they run in
     // separate lanes rather than on top of each other.
-    .smart('ae', 'a#s2', 'e#n2')
-    .smart('be', 'b#e3', 'e#n2')
+    smart('a#s2', 'e#n2'),
+    smart('b#e3', 'e#n2'),
     // Level ports with only a free cell between them: the route runs straight through it.
-    .smart('af', 'a#e2', 'f#w1')
+    smart('a#e2', 'f#w1'),
+  ])
+    .name('root')
     .build();
-  return { scenes: [scene, inner], root };
 };
 
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {

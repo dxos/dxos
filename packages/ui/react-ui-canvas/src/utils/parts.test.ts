@@ -10,7 +10,12 @@ import { frameClasses, resolveStyle } from './style.ts';
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
-  const { nodes } = SceneBuilder.create('s').rect('r', box).class('c', box, 'Person', ['name: string']).build();
+  const {
+    scenes: [{ nodes }],
+  } = SceneBuilder.scene('s', [
+    SceneBuilder.rect('r', box),
+    SceneBuilder.class('c', box).properties({ name: 'Person', attributes: ['name: string'], methods: [] }),
+  ]).build();
   const rect = nodes.r;
   const cls = nodes.c;
 
