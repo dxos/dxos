@@ -2,4 +2,4 @@
 '@dxos/echo': patch
 ---
 
-A `catchUpWithEdge` span now records how long a space takes to fully sync with EDGE across reconnects, with how many connections and per-connection sync episodes it took.
+The `syncPeer` span with EDGE now times a space's whole catch-up: it spans reconnects, ends `synced` or `closed` (never `disconnected`), and records how many connections and reconnects the catch-up took.

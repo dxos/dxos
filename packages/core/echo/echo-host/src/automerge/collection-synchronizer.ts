@@ -53,8 +53,8 @@ export class CollectionSynchronizer extends Resource {
   /** Open sync span ids, by collection then peer. */
   private readonly _syncSpans = new Map<string, Map<PeerId, string>>();
 
-  /** Open catch-ups with EDGE, by collection; see {@link EDGE_CATCH_UP_SPAN_METHOD}. */
-  private readonly _edgeCatchUps = new Map<string, EdgeCatchUp>();
+  /** Open sync spans with EDGE, by collection alone: each reconnect reaches EDGE under a new peer id. */
+  private readonly _edgeSyncSpans = new Map<string, EdgeSyncSpan>();
 
   /** The manual span registry is global, so ids must differ across synchronizers and across a pair's spans. */
   private readonly _spanIdPrefix = `collection-sync-${PublicKey.random().toHex()}`;
@@ -91,7 +91,7 @@ export class CollectionSynchronizer extends Resource {
 
   protected override async _close(_ctx: Context): Promise<void> {
     this._endSyncSpans('closed', () => true);
-    this._endEdgeCatchUps('closed', () => true);
+    this._endEdgeSyncSpans('closed', () => true);
   }
 
   getRegisteredCollectionIds(): string[] {
@@ -135,7 +135,7 @@ export class CollectionSynchronizer extends Resource {
 
   clearLocalCollectionState(collectionId: string): void {
     this._endSyncSpans('closed', (spanCollectionId) => spanCollectionId === collectionId);
-    this._endEdgeCatchUps('closed', (catchUpCollectionId) => catchUpCollectionId === collectionId);
+    this._endEdgeSyncSpans('closed', (spanCollectionId) => spanCollectionId === collectionId);
     this._activeCollections.delete(collectionId);
     this._perCollectionStates.delete(collectionId);
     log('clearLocalCollectionState', { collectionId });
@@ -191,10 +191,10 @@ export class CollectionSynchronizer extends Resource {
   onConnectionClosed(peerId: PeerId): void {
     log('onConnectionClosed', { peerId });
 
-    // A catch-up outlives the connection: the next one resumes it, so it only counts the drop.
-    for (const catchUp of this._edgeCatchUps.values()) {
-      if (catchUp.peers.delete(peerId)) {
-        catchUp.reconnects++;
+    // An EDGE span outlives the connection: the next one resumes it, so it only counts the drop.
+    for (const span of this._edgeSyncSpans.values()) {
+      if (span.connectedPeers.delete(peerId)) {
+        span.reconnects++;
       }
     }
     this._endSyncSpans('disconnected', (_, spanPeerId) => spanPeerId === peerId);
@@ -286,9 +286,10 @@ export class CollectionSynchronizer extends Resource {
       hasLocalChange: this._hasLocalChange,
     });
     if (isDiffEmpty(diff)) {
-      this._endSyncSpan(collectionId, peerId, 'synced');
       if (isEdgePeerId(peerId)) {
-        this._endEdgeCatchUp(collectionId, 'synced');
+        this._endEdgeSyncSpan(collectionId, 'synced');
+      } else {
+        this._endSyncSpan(collectionId, peerId, 'synced');
       }
     } else {
       this._startSyncSpan(collectionId, peerId, trigger, diff);
@@ -308,7 +309,11 @@ export class CollectionSynchronizer extends Resource {
     });
   }
 
-  /** Opens a span when a (collection, peer) pair diverges; see {@link SYNC_SPAN_METHOD} for its dashboard. */
+  /**
+   * Opens a span when a collection diverges from a peer; see {@link SYNC_SPAN_METHOD} for its dashboard.
+   * Spans with EDGE are keyed by the collection, so one span covers a catch-up however many connections
+   * it takes; spans with other peers, whose ids survive a reconnect, are keyed by the peer as well.
+   */
   private _startSyncSpan(
     collectionId: string,
     peerId: PeerId,
@@ -316,17 +321,33 @@ export class CollectionSynchronizer extends Resource {
     diff: CollectionStateDiff,
   ): void {
     // Nothing would end a span for a closed synchronizer, a gone peer or an inactive collection.
-    if (
-      !this.isOpen ||
-      !this._connectedPeers.has(peerId) ||
-      !this._activeCollections.has(collectionId) ||
-      this._syncSpans.get(collectionId)?.has(peerId)
-    ) {
+    if (!this.isOpen || !this._connectedPeers.has(peerId) || !this._activeCollections.has(collectionId)) {
+      return;
+    }
+
+    const edgeSpan = isEdgePeerId(peerId) ? this._edgeSyncSpans.get(collectionId) : undefined;
+    if (edgeSpan) {
+      if (!edgeSpan.connectedPeers.has(peerId)) {
+        edgeSpan.connectedPeers.add(peerId);
+        edgeSpan.connections++;
+      }
+      return;
+    }
+    if (this._syncSpans.get(collectionId)?.has(peerId)) {
       return;
     }
 
     const spanId = `${this._spanIdPrefix}-${collectionId}-${peerId}-${++this._syncSpanCount}`;
-    defaultMap(this._syncSpans, collectionId, () => new Map<PeerId, string>()).set(peerId, spanId);
+    if (isEdgePeerId(peerId)) {
+      this._edgeSyncSpans.set(collectionId, {
+        spanId,
+        connections: 1,
+        reconnects: 0,
+        connectedPeers: new Set([peerId]),
+      });
+    } else {
+      defaultMap(this._syncSpans, collectionId, () => new Map<PeerId, string>()).set(peerId, spanId);
+    }
     const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
     // The derived ctx is discarded: the downstream `_queryCollectionState` hop is a user-supplied callback with no ctx.
     void trace.spanStart({
@@ -345,65 +366,24 @@ export class CollectionSynchronizer extends Resource {
         different: diff.different.length,
       },
     });
-
-    if (isEdgePeerId(peerId)) {
-      this._continueEdgeCatchUp(collectionId, peerId, trigger, diff);
-    }
   }
 
-  /**
-   * Opens the collection's catch-up with EDGE on its first divergence, or counts one more episode of
-   * an open one: every reconnect reaches EDGE under a new peer id, so only the collection spans it.
-   */
-  private _continueEdgeCatchUp(
-    collectionId: string,
-    peerId: PeerId,
-    trigger: SyncSpanTrigger,
-    diff: CollectionStateDiff,
-  ): void {
-    const open = this._edgeCatchUps.get(collectionId);
-    if (open) {
-      open.episodes++;
-      open.peers.add(peerId);
+  private _endEdgeSyncSpan(collectionId: string, outcome: SyncSpanOutcome): void {
+    const span = this._edgeSyncSpans.get(collectionId);
+    if (!span) {
       return;
     }
 
-    const spanId = `${this._spanIdPrefix}-catch-up-${collectionId}-${++this._syncSpanCount}`;
-    this._edgeCatchUps.set(collectionId, { spanId, episodes: 1, reconnects: 0, peers: new Set([peerId]) });
-    const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
-    void trace.spanStart({
-      id: spanId,
-      methodName: EDGE_CATCH_UP_SPAN_METHOD,
-      instance: this,
-      parentCtx: this._ctx,
-      showInBrowserTimeline: true,
-      attributes: {
-        collectionId,
-        ...(spaceId ? { spaceId } : {}),
-        trigger,
-        missingOnLocal: diff.missingOnLocal.length,
-        missingOnRemote: diff.missingOnRemote.length,
-        different: diff.different.length,
-      },
+    this._edgeSyncSpans.delete(collectionId);
+    trace.spanEnd(span.spanId, {
+      attributes: { outcome, connections: span.connections, reconnects: span.reconnects },
     });
   }
 
-  private _endEdgeCatchUp(collectionId: string, outcome: SyncSpanOutcome): void {
-    const catchUp = this._edgeCatchUps.get(collectionId);
-    if (!catchUp) {
-      return;
-    }
-
-    this._edgeCatchUps.delete(collectionId);
-    trace.spanEnd(catchUp.spanId, {
-      attributes: { outcome, episodes: catchUp.episodes, reconnects: catchUp.reconnects },
-    });
-  }
-
-  private _endEdgeCatchUps(outcome: SyncSpanOutcome, matches: (collectionId: string) => boolean): void {
-    for (const collectionId of [...this._edgeCatchUps.keys()]) {
+  private _endEdgeSyncSpans(outcome: SyncSpanOutcome, matches: (collectionId: string) => boolean): void {
+    for (const collectionId of [...this._edgeSyncSpans.keys()]) {
       if (matches(collectionId)) {
-        this._endEdgeCatchUp(collectionId, outcome);
+        this._endEdgeSyncSpan(collectionId, outcome);
       }
     }
   }
@@ -513,21 +493,24 @@ export type CollectionStateDiff = {
   different: DocumentId[];
 };
 
-/** One collection's catch-up with EDGE, across however many connections it takes. */
-type EdgeCatchUp = {
+/** One collection's sync span with EDGE, across however many connections the catch-up takes. */
+type EdgeSyncSpan = {
   spanId: string;
-  /** Per-connection divergences (`syncPeer` spans) the catch-up has gone through. */
-  episodes: number;
-  /** Connections to EDGE that dropped while this catch-up was open. */
+  /** Connections to EDGE that diverged while the span was open. */
+  connections: number;
+  /** Connections to EDGE that dropped while the span was open. */
   reconnects: number;
-  /** EDGE peers that diverged during this catch-up; a drop counts once per peer. */
-  peers: Set<PeerId>;
+  /** EDGE peers of this span still connected; a drop counts once per peer. */
+  connectedPeers: Set<PeerId>;
 };
 
 /** What exposed a divergence: the pair's first comparison, a peer change, or a local change. */
 type SyncSpanTrigger = 'initial' | 'remote' | 'local';
 
-/** `closed` covers both a cleared collection and a closed synchronizer. */
+/**
+ * `closed` covers both a cleared collection and a closed synchronizer; `disconnected` ends only a
+ * span with a non-EDGE peer, since one with EDGE carries on over the next connection.
+ */
 type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
@@ -684,14 +667,6 @@ const isValidDocumentId = (documentId: DocumentId) => {
 /**
  * The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334) queries
  * this name, the attributes set in `_startSyncSpan` and the trigger and outcome values: update it when changing them.
+ * A span with EDGE also ends with `connections` and `reconnects`: how many connections the catch-up took.
  */
 const SYNC_SPAN_METHOD = 'syncPeer';
-
-/**
- * One collection's divergence from EDGE until a comparison finds it fully synced, however many
- * connections that takes; `syncPeer` ends at each reconnect, so its synced spans time only the last
- * connection's tail. Ends `synced`, or `closed` with the collection or synchronizer, never
- * `disconnected`. Carries `episodes` and `reconnects`. The same dashboard reads it: update it when
- * changing the name or attributes.
- */
-const EDGE_CATCH_UP_SPAN_METHOD = 'catchUpWithEdge';

@@ -750,12 +750,10 @@ describe('CollectionSynchronizer', () => {
       expect(spansFor(collectionId).map((span) => span.endAttributes?.['ctx.outcome'])).toEqual(['synced', undefined]);
     });
 
-    // Every connection reaches EDGE under a new peer id, so `syncPeer` splits one catch-up at each reconnect and its
-    // synced spans time only the last connection's tail. `catchUpWithEdge` spans the whole catch-up.
-    describe('EDGE catch-up', () => {
+    // Every connection reaches EDGE under a new peer id, so a span with EDGE is keyed by the collection: one span times
+    // a whole catch-up, however many connections it takes, instead of ending at each reconnect.
+    describe('with EDGE', () => {
       const edgePeer = (connection: number) => `subduction-replicator:${spaceId}-connection-${connection}` as PeerId;
-      const named = (method: string) =>
-        spansFor(collectionId).filter((span) => span.options.name === `CollectionSynchronizer.${method}`);
 
       test('spans every connection until one finds the collection synced', async ({ expect }) => {
         const synchronizer = await openSynchronizer();
@@ -766,9 +764,11 @@ describe('CollectionSynchronizer', () => {
         synchronizer.onConnectionOpen(edgePeer(2));
         synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_2));
 
-        const [catchUp, ...rest] = named('catchUpWithEdge');
+        const [span, ...rest] = spansFor(collectionId);
         expect(rest).toEqual([]);
-        expect(catchUp.options.attributes).toEqual({
+        expect(span.options.name).toBe('CollectionSynchronizer.syncPeer');
+        expect(span.options.attributes).toEqual({
+          'ctx.peerId': edgePeer(1),
           'ctx.collectionId': collectionId,
           'ctx.spaceId': spaceId,
           'ctx.trigger': 'initial',
@@ -776,14 +776,10 @@ describe('CollectionSynchronizer', () => {
           'ctx.missingOnRemote': 1,
           'ctx.different': 1,
         });
-        expect(catchUp.ended).toBe(false);
+        expect(span.ended).toBe(false);
 
         synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_1));
-        expect(catchUp.endAttributes).toEqual({ 'ctx.outcome': 'synced', 'ctx.episodes': 2, 'ctx.reconnects': 1 });
-        expect(named('syncPeer').map((span) => span.endAttributes?.['ctx.outcome'])).toEqual([
-          'disconnected',
-          'synced',
-        ]);
+        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'synced', 'ctx.connections': 2, 'ctx.reconnects': 1 });
       });
 
       test('ends when a new connection’s first comparison is already synced', async ({ expect }) => {
@@ -795,8 +791,8 @@ describe('CollectionSynchronizer', () => {
         synchronizer.onConnectionOpen(edgePeer(2));
         synchronizer.onRemoteStateReceived(collectionId, edgePeer(2), structuredClone(STATE_1));
 
-        expect(named('catchUpWithEdge').map((span) => span.endAttributes)).toEqual([
-          { 'ctx.outcome': 'synced', 'ctx.episodes': 1, 'ctx.reconnects': 1 },
+        expect(spansFor(collectionId).map((span) => span.endAttributes)).toEqual([
+          { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.reconnects': 1 },
         ]);
       });
 
@@ -806,22 +802,29 @@ describe('CollectionSynchronizer', () => {
         synchronizer.onConnectionOpen(edgePeer(1));
         synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_2));
         synchronizer.onConnectionClosed(edgePeer(1));
-        expect(named('catchUpWithEdge').map((span) => span.ended)).toEqual([false]);
+        expect(spansFor(collectionId).map((span) => span.ended)).toEqual([false]);
 
         synchronizer.clearLocalCollectionState(collectionId);
-        expect(named('catchUpWithEdge').map((span) => span.endAttributes)).toEqual([
-          { 'ctx.outcome': 'closed', 'ctx.episodes': 1, 'ctx.reconnects': 1 },
+        expect(spansFor(collectionId).map((span) => span.endAttributes)).toEqual([
+          { 'ctx.outcome': 'closed', 'ctx.connections': 1, 'ctx.reconnects': 1 },
         ]);
       });
 
-      test('opens none for a peer that is not EDGE', async ({ expect }) => {
+      test('opens a new span when the collection diverges again on the same connection', async ({ expect }) => {
         const synchronizer = await openSynchronizer();
         synchronizer.setLocalCollectionState(collectionId, STATE_1);
-        synchronizer.onConnectionOpen(peerId);
-        synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+        synchronizer.onConnectionOpen(edgePeer(1));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_2));
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_1));
+        synchronizer.setLocalCollectionState(collectionId, STATE_2);
+        synchronizer.onRemoteStateReceived(collectionId, edgePeer(1), structuredClone(STATE_2));
 
-        expect(named('catchUpWithEdge')).toEqual([]);
-        expect(named('syncPeer')).toHaveLength(1);
+        expect(
+          spansFor(collectionId).map((span) => [span.options.attributes?.['ctx.trigger'], span.endAttributes]),
+        ).toEqual([
+          ['initial', { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.reconnects': 0 }],
+          ['local', { 'ctx.outcome': 'synced', 'ctx.connections': 1, 'ctx.reconnects': 0 }],
+        ]);
       });
     });
   });
