@@ -14,8 +14,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.CancelTrigger> = Tr
     Effect.fnUntraced(function* ({ trigger: id, dropGoal }) {
       const brain = yield* BrainService.BrainService;
       const agent = Trigger.agentOf(id);
-      const trigger = agent ? (yield* brain.listTriggers(agent)).find((trigger) => trigger.id === id) : undefined;
-      if (!trigger || !(yield* brain.removeTrigger(id))) {
+      const trigger = agent ? (yield* brain.subscriptions(agent)).find((trigger) => trigger.id === id) : undefined;
+      if (!trigger || !(yield* brain.unsubscribe(id))) {
         return { cancelled: false };
       }
       if (dropGoal && trigger.goal) {
