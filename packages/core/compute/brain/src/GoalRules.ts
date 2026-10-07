@@ -6,12 +6,32 @@
 
 import type * as Ast from '@dxos/datalog/Ast';
 import * as Engine from '@dxos/datalog/Engine';
+import { BaseError } from '@dxos/errors';
 import { RDF } from '@dxos/pipeline-rdf';
 
 import * as Builtins from './Builtins.ts';
 import * as Compiler from './Compiler.ts';
 import * as Encoding from './Encoding.ts';
 import type * as Vocabulary from './Vocabulary.ts';
+
+/**
+ * Most distinct facts one evaluator indexes; it keeps every fact for the life of the goal, so an
+ * unbounded stream would grow the engine, text and entity indexes (and every query over them) forever.
+ */
+export const MAX_FACTS = 10_000;
+
+/** Most sub-goals one evaluator tracks; each is a pair of live relation tuples. */
+export const MAX_SUBGOALS = 256;
+
+/** Thrown by `GoalRules.update` when an input would take the evaluator past its fact or sub-goal cap. */
+export class CapacityError extends BaseError.extend('CapacityError', 'Goal evaluator capacity exceeded') {
+  constructor(context: { readonly kind: 'facts' | 'subgoals'; readonly max: number; readonly requested: number }) {
+    super({
+      message: `Goal evaluator would hold ${context.requested} ${context.kind}; the cap is ${context.max}.`,
+      context,
+    });
+  }
+}
 
 /** A reason to run judgment on the goal. */
 export type Wake = {
@@ -51,6 +71,10 @@ export type Options = {
   readonly entities?: Builtins.EntityIndex;
   /** Entities a fact concerns; defaults to its subject. */
   readonly concerns?: (fact: RDF.Fact) => ReadonlyArray<string>;
+  /** Overrides {@link MAX_FACTS}. */
+  readonly maxFacts?: number;
+  /** Overrides {@link MAX_SUBGOALS}. */
+  readonly maxSubgoals?: number;
 };
 
 export type Input = {
@@ -75,6 +99,8 @@ export class GoalRules {
   readonly #concerns: (fact: RDF.Fact) => ReadonlyArray<string>;
   readonly #saidAt = new Map<string, number>();
   readonly #subgoals = new Map<string, string>();
+  readonly #maxFacts: number;
+  readonly #maxSubgoals: number;
   #now: number;
   #previous: number;
   #achieved = false;
@@ -83,6 +109,8 @@ export class GoalRules {
   constructor(options: Options) {
     this.#now = options.createdAt;
     this.#previous = options.createdAt;
+    this.#maxFacts = options.maxFacts ?? MAX_FACTS;
+    this.#maxSubgoals = options.maxSubgoals ?? MAX_SUBGOALS;
     this.#vocabulary = options.vocabulary ?? Compiler.defaultVocabulary();
     this.#text = options.text ?? new Builtins.KeywordIndex();
     this.#entities = options.entities ?? new Builtins.MemoryEntityIndex();
@@ -110,8 +138,12 @@ export class GoalRules {
     return this.#engine.has('holds', ['goal']);
   }
 
-  /** Adds facts and sub-goal status at time `at`; returns the wakes and the goal's state. */
+  /**
+   * Adds facts and sub-goal status at time `at`; returns the wakes and the goal's state.
+   * @throws CapacityError if the input would exceed the fact or sub-goal cap; nothing is applied.
+   */
   update({ at, facts = [], subgoals = {} }: Input): Evaluation {
+    this.#checkCapacity(facts, subgoals);
     this.#previous = this.#now;
     this.#now = at;
     const insert: Engine.Entry[] = [];
@@ -156,6 +188,21 @@ export class GoalRules {
     }
     this.#achieved = achieved;
     return { at, wakes, achieved, holds: this.holds };
+  }
+
+  #checkCapacity(facts: ReadonlyArray<RDF.Fact>, subgoals: Readonly<Record<string, string>>): void {
+    const newFacts = new Set(facts.map(({ id }) => id).filter((id) => !this.#saidAt.has(id))).size;
+    if (this.#saidAt.size + newFacts > this.#maxFacts) {
+      throw new CapacityError({ kind: 'facts', max: this.#maxFacts, requested: this.#saidAt.size + newFacts });
+    }
+    const newSubgoals = Object.keys(subgoals).filter((id) => !this.#subgoals.has(id)).length;
+    if (this.#subgoals.size + newSubgoals > this.#maxSubgoals) {
+      throw new CapacityError({
+        kind: 'subgoals',
+        max: this.#maxSubgoals,
+        requested: this.#subgoals.size + newSubgoals,
+      });
+    }
   }
 
   /** Evaluates the `blocks` rules for a proposed action without keeping it. */

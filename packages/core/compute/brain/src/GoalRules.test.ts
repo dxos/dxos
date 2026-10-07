@@ -93,4 +93,42 @@ describe('GoalRules', () => {
     expect(rules.checkAction({ ...friday, id: 'a2', args: { start: '2027-01-05T10:00:00Z' } }).blocked).toBe(false);
     expect(rules.checkAction(friday).blocked).toBe(true);
   });
+
+  test('rejects input past the fact and sub-goal caps without applying it', ({ expect }) => {
+    const rules = GoalRules.make({
+      source: 'wake(reply) :- speaker(F, dima), about(F, "plugin").',
+      createdAt: 0,
+      maxFacts: 2,
+      maxSubgoals: 1,
+    });
+    const saidAt = new Date(1).toISOString();
+    const fact = (id: string, quote: string) =>
+      toFact(
+        {
+          id,
+          speaker: 'dima',
+          quote,
+          s: 'dima',
+          p: 'says',
+          o: 'x',
+          force: 'assertive',
+          polarity: '+',
+          mood: 'declarative',
+          source: 'chat',
+          factuality: 'CT+',
+        },
+        saidAt,
+      );
+
+    rules.update({ at: 1, facts: [fact('f1', 'lunch?'), fact('f2', 'coffee?')] });
+    expect(rules.update({ at: 2, facts: [fact('f1', 'lunch?')] }).wakes).toEqual([]);
+    expect(() => rules.update({ at: 3, facts: [fact('f3', 'the plugin is ready')] })).toThrow(GoalRules.CapacityError);
+    expect(rules.update({ at: 4 }).wakes).toEqual([]);
+
+    rules.update({ at: 5, subgoals: { first: 'active' } });
+    expect(() => rules.update({ at: 6, subgoals: { second: 'active' } })).toThrow(GoalRules.CapacityError);
+    expect(rules.update({ at: 7, subgoals: { first: 'done' } }).wakes).toEqual([
+      { label: 'first', cause: 'subgoal', facts: [] },
+    ]);
+  });
 });
