@@ -132,7 +132,8 @@ const createScenesTree = () => {
   const root = 'scene:root';
   const size = { width: 256, height: 128 };
   const at = (y: number, x = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
-  const rect = (id: string, y: number) => SceneBuilder.rect(id, at(y)).properties({ label: id.toUpperCase() });
+  const rect = (id: string, y: number, x = 0) =>
+    SceneBuilder.rect(id, at(y, x)).properties({ label: id.toUpperCase() });
   // An unlabelled box beside the column.
   const box = (id: string, y: number, x: number) => SceneBuilder.rect(id, at(y, x));
   const link = (from: string, to: string) => SceneBuilder.link('smart', from, to);
@@ -164,10 +165,10 @@ const createScenesTree = () => {
         .name('E'),
       rect('f', 256),
       // Two rectangles either side of E.
-      SceneBuilder.rect('g', at(0, -768)).properties({ label: 'G' }),
-      SceneBuilder.rect('h', at(0, -384)).properties({ label: 'H' }),
-      SceneBuilder.rect('i', at(0, 384)).properties({ label: 'I' }),
-      SceneBuilder.rect('j', at(0, 768)).properties({ label: 'J' }),
+      rect('g', 0, -768),
+      rect('h', 0, -384),
+      rect('i', 0, 384),
+      rect('j', 0, 768),
       link('d', 'e'),
       link('e', 'f'),
       link('g', 'h'),
