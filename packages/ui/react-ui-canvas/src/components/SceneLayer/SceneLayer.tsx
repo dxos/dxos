@@ -139,7 +139,7 @@ export const SceneLayer = memo(
       <>
         <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
           <defs>
-            <Markers id={markerId} />
+            <Markers id={markerId} unit={unit} />
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -158,7 +158,7 @@ export const SceneLayer = memo(
               <path
                 d={path}
                 className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
-                strokeWidth={2 * unit}
+                strokeWidth={LINK_WIDTH * unit}
                 data-link-id={link.id}
               />
             </g>
@@ -202,18 +202,21 @@ export const SceneLayer = memo(
 
 SceneLayer.displayName = 'SceneLayer';
 
-/** Bounding box of a triangle or circle end, in scene units. */
+/** A link's stroke, in screen px. */
+const LINK_WIDTH = 2;
+
+/** Bounding box of every end, in scene units. */
 const END_BOX = 32;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id }: { id: string }) => {
-  // In scene units: a tenth of a default 256px node, so an end stays in proportion to the shapes it joins.
-  const size = 24;
-  // An arrowhead has to read as a direction at a glance, so it carries twice the weight of an end dot.
-  const arrow = 2 * size;
-  // The triangle and the circle each fill a 32×32 box: the triangle 10 of its 12 view units, the circle 8 of its 10.
+const Markers = ({ id, unit }: { id: string; unit: number }) => {
+  // Each end fills a 32×32 box in scene units, so it scales with the shapes it joins: the arrow all 10 of its
+  // 10 view units, the triangle 10 of its 12, the circle 8 of its 10.
+  const arrow = END_BOX;
   const triangle = (END_BOX * 12) / 10;
   const circle = (END_BOX * 10) / 8;
+  // An outline matches the line's on-screen width (`unit` is one screen px in scene units), in its marker's view units.
+  const outline = (size: number, view: number) => (LINK_WIDTH * unit * view) / size;
   const ends = ['start', 'end'] as const;
   return (
     <>
@@ -245,9 +248,14 @@ const Markers = ({ id }: { id: string }) => {
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
-          <path d='M 0 0 L 10 5 L 0 10 z' className='fill-base-surface stroke-neutral-500' strokeWidth={1} />
+          <path
+            d='M 0 0 L 10 5 L 0 10 z'
+            className='fill-base-surface stroke-neutral-500'
+            strokeWidth={outline(triangle, 12)}
+          />
         </marker>
       ))}
+      {/* A hollow circle centred on the connection point, filled with the canvas so the line stops at its rim. */}
       {ends.map((end) => (
         <marker
           key={`circle-${end}`}
@@ -259,7 +267,13 @@ const Markers = ({ id }: { id: string }) => {
           markerHeight={circle}
           markerUnits='userSpaceOnUse'
         >
-          <circle cx={5} cy={5} r={4} className='fill-neutral-500' />
+          <circle
+            cx={5}
+            cy={5}
+            r={4}
+            className='fill-base-surface stroke-neutral-500'
+            strokeWidth={outline(circle, 10)}
+          />
         </marker>
       ))}
     </>
