@@ -20,7 +20,7 @@ export default Config2.make({
 
       The Coder skill drives the authoring loop: the assistant refines the
       spec with the user, then calls the introspect-mcp server to look up live
-      DXOS and Composer APIs before writing Usource files. A full file-CRUD
+      DXOS and Composer APIs before writing source files. A full file-CRUD
       operation set (scaffold, list, read, write, delete, reset, helloWorld) is
       exposed as skill tools, letting the agent build up a project
       incrementally and correct mistakes without leaving the chat. An Anthropic
