@@ -41,6 +41,12 @@ import {
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/AgentPlayground',
   render: ModuleContainer,
+  // A new story's setup starts after the previous one's refs and database are still in place, so each story
+  // waits on its own setup rather than racing it.
+  beforeEach: () => {
+    storyDb = undefined;
+    setupDone = deferred();
+  },
   parameters: {
     ...storyParameters,
     translations: [...storyParameters.translations, ...agentTranslations],
@@ -131,6 +137,17 @@ const refs: PlaygroundRefs = { chats: {} };
 // Captured from the setup hook so assertions read the objects the operations write.
 let storyDb: Database.Database | undefined;
 
+const deferred = () => {
+  let resolve = () => {};
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+};
+
+// Resolved once the current story's setup has filled `refs`; the scripted model names objects through them.
+let setupDone = deferred();
+
 /** Polls the space until `predicate` holds, reporting what it last saw. */
 const waitForSpace = async <T,>(read: (db: Database.Database) => Promise<T>, predicate: (value: T) => boolean) => {
   let value: T | undefined;
@@ -211,10 +228,12 @@ export const PlaygroundScripted: Story = {
     onReady: async ({ db, invoker }) => {
       storyDb = db;
       await setupPlayground({ db, invoker, read: true, refs });
+      setupDone.resolve();
     },
   }),
   args: { layout: LAYOUT },
   play: async ({ canvasElement }) => {
+    await setupDone.promise;
     const canvas = within(canvasElement);
 
     // 1. The agent read the transcript into its annotation feed, with no conversation of its own.
@@ -361,7 +380,15 @@ const readRichReplies = async (db: Database.Database) => {
 };
 
 /** How often `text` appears in a panel. */
-const occurrences = (element: HTMLElement, text: string) => (element.textContent ?? '').split(text).length - 1;
+/** Times `text` appears in what was said: a woken chat's synthetic note (`chat.context`) restates the update it relays. */
+const occurrences = (element: HTMLElement, text: string) => {
+  const said = element.cloneNode(true);
+  if (!(said instanceof HTMLElement)) {
+    return 0;
+  }
+  said.querySelectorAll('[data-testid="chat.context"]').forEach((note) => note.remove());
+  return (said.textContent ?? '').split(text).length - 1;
+};
 
 /** Waits until the knowledge panel lists `count` watches. */
 const expectWatches = (canvasElement: HTMLElement, count: number) =>
@@ -381,10 +408,12 @@ export const GoalsScripted: Story = {
     onReady: async ({ db, invoker }) => {
       storyDb = db;
       await setupPlayground({ db, invoker, refs });
+      setupDone.resolve();
     },
   }),
   args: { layout: LAYOUT },
   play: async ({ canvasElement }) => {
+    await setupDone.promise;
     const canvas = within(canvasElement);
     const rich = await panel(canvasElement, 'Rich');
     const dima = await panel(canvasElement, 'Dima');
