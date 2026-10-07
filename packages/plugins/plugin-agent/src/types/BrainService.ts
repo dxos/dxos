@@ -12,10 +12,9 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as AgentService from '@dxos/compute/AgentService';
 import type { Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import type { RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import { ContentBlock } from '@dxos/types';
 
-import * as FactEntry from './FactEntry.ts';
 import * as Trigger from './Trigger.ts';
 
 /**
@@ -53,7 +52,7 @@ export const Event = Schema.Struct({
   /** Stable per subscription and fact, so pushing a fact twice queues it once. */
   id: Schema.String,
   subscription: Schema.String,
-  fact: FactEntry.Fact,
+  fact: RDF.Fact,
 });
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}

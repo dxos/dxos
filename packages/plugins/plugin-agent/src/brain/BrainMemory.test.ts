@@ -29,9 +29,9 @@ const fact = (
 ): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: speaker, label: speaker },
+    subject: { kind: 'entity', entity: speaker, label: speaker },
     predicate: 'works on',
-    object: { entity: 'indexer-migration', label: 'indexer migration' },
+    object: { kind: 'entity', entity: 'indexer-migration', label: 'indexer migration' },
     quote,
   },
   factuality: { value: 'CT+', polarity: '+' },

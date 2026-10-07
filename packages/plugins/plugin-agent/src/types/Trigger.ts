@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
-import { normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import * as FactEntry from './FactEntry.ts';
 import * as Goal from './Goal.ts';
@@ -146,7 +146,7 @@ export type MatchOptions = {
 };
 
 /** Whether the fact satisfies every field the pattern sets. */
-export const matchesPattern = (pattern: FactPattern, fact: FactEntry.Fact, { after }: MatchOptions = {}): boolean => {
+export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: MatchOptions = {}): boolean => {
   const { assertion, attribution, factuality, illocution } = fact;
   const said = time(attribution.generatedAtTime);
   const since = pattern.after ?? after;

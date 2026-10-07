@@ -21,21 +21,6 @@ import { agentSpeaker, readSource } from './read-source.ts';
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
 
-const toRdfTerm = (term: FactEntry.Term): RDF.Term =>
-  term.literal !== undefined
-    ? { literal: term.literal }
-    : { entity: term.entity ?? normalizeEntityId(term.label ?? ''), ...(term.label ? { label: term.label } : {}) };
-
-/** A stored fact back in pipeline-rdf's shape, for the brain's RDF store. */
-export const toRdf = (fact: FactEntry.Fact): RDF.Fact => ({
-  ...fact,
-  assertion: {
-    ...fact.assertion,
-    subject: toRdfTerm(fact.assertion.subject),
-    object: toRdfTerm(fact.assertion.object),
-  },
-});
-
 /**
  * Pushes `facts` into the agent's brain, then delivers what its subscriptions queued: each subscription
  * with events sends one update, composed by the model from those facts and the conversation `transcript`
@@ -48,7 +33,7 @@ export const toRdf = (fact: FactEntry.Fact): RDF.Fact => ({
  */
 export const pushFacts: (
   agent: Agent.Agent,
-  facts: readonly FactEntry.Fact[],
+  facts: readonly RDF.Fact[],
   transcript?: string,
 ) => Effect.Effect<
   { fired: string[]; undelivered: string[] },
@@ -62,7 +47,7 @@ export const pushFacts: (
     return { fired, undelivered };
   }
   // The same name `readSource` attributes the agent's own messages to, unnamed agents included.
-  const queued = yield* brain.push(agent.id, facts.map(toRdf), { quiet: [normalizeEntityId(agentSpeaker(agent))] });
+  const queued = yield* brain.push(agent.id, facts, { quiet: [normalizeEntityId(agentSpeaker(agent))] });
   if (queued === 0) {
     return { fired, undelivered };
   }

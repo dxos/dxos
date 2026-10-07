@@ -17,6 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
@@ -49,6 +50,8 @@ const brain = makeTestBrain();
 const SAID_AT = '2026-10-03T12:00:00.000Z';
 
 /** A fact as `readSource` records it from a chat message. */
+const entityTerm = (label: string): RDF.Term => ({ kind: 'entity', entity: normalizeEntityId(label), label });
+
 const fact = ({
   speaker = 'dima',
   subject = 'indexer PR',
@@ -67,9 +70,9 @@ const fact = ({
   polarity?: '+' | '-';
   force?: Trigger.Force;
   saidAt?: string;
-} = {}): FactEntry.Fact => ({
+} = {}): RDF.Fact => ({
   id: `fact-${subject}-${predicate}-${object}`,
-  assertion: { subject: { label: subject }, predicate, object: { label: object }, quote },
+  assertion: { subject: entityTerm(subject), predicate, object: entityTerm(object), quote },
   factuality: { value: polarity === '+' ? 'CT+' : 'CT-', polarity },
   ...(force ? { illocution: { force } } : {}),
   attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
@@ -288,6 +291,7 @@ const TestLayer = brain.layer.pipe(
         Relay.Relay,
         Message.Message,
         FactEntry.FactEntry,
+        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       extraServices: brain.layer,
@@ -378,10 +382,7 @@ describe('end-of-turn triggers', () => {
           ),
         ).run;
         const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.quote))).toEqual([
-          PROMPTS.distractor,
-          PROMPTS.up,
-        ]);
+        expect(entries.map(({ fact }) => fact.assertion.quote)).toEqual([PROMPTS.distractor, PROMPTS.up]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -559,6 +560,7 @@ const PostedTestLayer = brain.layer.pipe(
         Relay.Relay,
         Message.Message,
         FactEntry.FactEntry,
+        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       extraServices: brain.layer,
@@ -577,7 +579,7 @@ const recordedQuotes = (chat: Chat.Chat) =>
       ),
     ).run;
     const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-    return entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.quote));
+    return entries.map(({ fact }) => fact.assertion.quote);
   });
 
 describe('keep me posted', () => {

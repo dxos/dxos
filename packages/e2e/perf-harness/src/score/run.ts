@@ -6,10 +6,18 @@ import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } f
 import path from 'node:path';
 
 import { publishPosthogBatch } from '../report.ts';
+import { type WorkCalibrationOptions, proposeWorkBudgets } from './calibrate.ts';
 import { toScoreEvents } from './events.ts';
 import { renderReport } from './render.ts';
 import { type Budget, type ScoreReport, scoreMeasurements } from './score.ts';
-import { type StageEvent, groupOfId, parseStageEvent, toMeasurements } from './stages.ts';
+import {
+  type MeasureOptions,
+  type StageEvent,
+  WORK_GROUP,
+  groupOfId,
+  parseStageEvent,
+  toMeasurements,
+} from './stages.ts';
 
 /**
  * A further fixture scored into the same suite: each of its metric ids is prefixed (`busy > wall >
@@ -19,16 +27,62 @@ export type ExtraScale = {
   scale: string;
   prefix: string;
   group: string;
+  /** The group its work counters land in instead, so a work regression is legible as one. */
+  workGroup?: string;
 };
+
+/** An id with any extra scale's prefix removed, and the scale it belonged to. */
+const unscaled = (extraScales: ReadonlyArray<ExtraScale>, id: string) => {
+  const extra = extraScales.find(({ prefix }) => id.startsWith(`${prefix} > `));
+  return { extra, id: extra ? id.slice(`${extra.prefix} > `.length) : id };
+};
+
+const isWorkId = (extraScales: ReadonlyArray<ExtraScale>, id: string): boolean =>
+  groupOfId(unscaled(extraScales, id).id) === WORK_GROUP;
 
 /** {@link groupOfId}, extended so an extra scale's prefixed ids map to that scale's group. */
 export const groupOfScaledId =
   (extraScales: ReadonlyArray<ExtraScale>) =>
-  (id: string): string =>
-    extraScales.find(({ prefix }) => id.startsWith(`${prefix} > `))?.group ?? groupOfId(id);
+  (id: string): string => {
+    const { extra } = unscaled(extraScales, id);
+    if (!extra) {
+      return groupOfId(id);
+    }
+    return extra.workGroup && isWorkId(extraScales, id) ? extra.workGroup : extra.group;
+  };
 
 /** The comparability fields every stage row carries, pinned on the score rows so a tile can match run shape. */
-const PINNED_KEYS = ['flow', 'scale', 'servingMode', 'pluginSet', 'profileState', 'instruments'];
+const PINNED_KEYS = ['flow', 'scale', 'servingMode', 'pluginSet', 'profileState', 'instruments', 'counters'];
+
+/** Every `measure` row a flow's per-iteration batches in `dir` hold; a malformed line throws. */
+export const readStageEvents = (dir: string, flow: string): StageEvent[] =>
+  readdirSync(dir)
+    .filter((file) => file.startsWith(`${flow}-measure-`) && file.endsWith('.events.ndjson'))
+    .flatMap((file) =>
+      readFileSync(path.join(dir, file), 'utf8')
+        .split('\n')
+        .map((line, index) => ({ line, lineNumber: index + 1 }))
+        .filter(({ line }) => line.trim())
+        .map(({ line, lineNumber }) => {
+          try {
+            return parseStageEvent(JSON.parse(line));
+          } catch (error) {
+            throw new Error(`malformed stage event at ${file}:${lineNumber}`, { cause: error });
+          }
+        }),
+    );
+
+const primaryEvents = (
+  events: ReadonlyArray<StageEvent>,
+  scale: string | undefined,
+  extraScales: ReadonlyArray<ExtraScale>,
+): StageEvent[] => {
+  // Without a primary scale its metrics would pool every fixture's rows, extra scales' included.
+  if (scale === undefined && extraScales.length > 0) {
+    throw new Error('scale is required when extraScales is set');
+  }
+  return events.filter(({ properties }) => scale === undefined || properties.scale === scale);
+};
 
 export type ScoreStageRunOptions = {
   workspaceRoot: string;
@@ -39,6 +93,8 @@ export type ScoreStageRunOptions = {
   scale?: string;
   /** Other fixtures scored into the same report, each under its own prefix and group. */
   extraScales?: ReadonlyArray<ExtraScale>;
+  /** Which metrics are measured; the default is every timing plus the default work counters. */
+  measure?: MeasureOptions;
   /** The `ciSuite` the score rows are published under. */
   suite: string;
   /** Heading of the markdown report. */
@@ -62,6 +118,7 @@ export const scoreStageRun = ({
   flow,
   scale,
   extraScales = [],
+  measure,
   suite,
   title,
   budgets,
@@ -69,27 +126,8 @@ export const scoreStageRun = ({
   publish = false,
   summary,
 }: ScoreStageRunOptions): ScoreReport => {
-  const files = readdirSync(dir).filter(
-    (file) => file.startsWith(`${flow}-measure-`) && file.endsWith('.events.ndjson'),
-  );
-  const allEvents: StageEvent[] = files.flatMap((file) =>
-    readFileSync(path.join(dir, file), 'utf8')
-      .split('\n')
-      .map((line, index) => ({ line, lineNumber: index + 1 }))
-      .filter(({ line }) => line.trim())
-      .map(({ line, lineNumber }) => {
-        try {
-          return parseStageEvent(JSON.parse(line));
-        } catch (error) {
-          throw new Error(`malformed stage event at ${file}:${lineNumber}`, { cause: error });
-        }
-      }),
-  );
-  // Without a primary scale its metrics would pool every fixture's rows, extra scales' included.
-  if (scale === undefined && extraScales.length > 0) {
-    throw new Error('scale is required when extraScales is set');
-  }
-  const events = allEvents.filter(({ properties }) => scale === undefined || properties.scale === scale);
+  const allEvents = readStageEvents(dir, flow);
+  const events = primaryEvents(allEvents, scale, extraScales);
   if (events.length === 0) {
     throw new Error(
       `no ${flow} measure rows${scale ? ` at scale ${scale}` : ''} in ${dir}; did the flow reach a stage?`,
@@ -97,16 +135,22 @@ export const scoreStageRun = ({
   }
 
   // An extra scale with no rows adds no measurements; `scoreMissing` then floors its budgeted metrics.
-  const extraMeasurements = extraScales.flatMap(({ scale: extraScale, prefix, group }) =>
-    toMeasurements(allEvents.filter(({ properties }) => properties.scale === extraScale)).map((measurement) => ({
-      ...measurement,
-      id: `${prefix} > ${measurement.id}`,
-      group,
-    })),
+  const groupOf = groupOfScaledId(extraScales);
+  const extraMeasurements = extraScales.flatMap(({ scale: extraScale, prefix }) =>
+    toMeasurements(
+      allEvents.filter(({ properties }) => properties.scale === extraScale),
+      measure,
+    ).map((measurement) => {
+      const id = `${prefix} > ${measurement.id}`;
+      return { ...measurement, id, group: groupOf(id) };
+    }),
   );
-  const report = scoreMeasurements([...toMeasurements(events), ...extraMeasurements], budgets, {
-    scoreMissing: { groupOf: groupOfScaledId(extraScales) },
-  });
+  // Work counters are budgeted stage by stage: a counter that is zero, or a stage paced by the
+  // network, has no budget on purpose, so an unbudgeted one is not a gap worth a warning.
+  const measurements = [...toMeasurements(events, measure), ...extraMeasurements].filter(
+    ({ id }) => budgets[id] !== undefined || !isWorkId(extraScales, id),
+  );
+  const report = scoreMeasurements(measurements, budgets, { scoreMissing: { groupOf } });
   const markdown = renderReport(title, report);
   console.log(markdown);
   if (summary) {
@@ -133,3 +177,51 @@ export const scoreStageRun = ({
   }
   return report;
 };
+
+export type CalibrateStageRunsOptions = WorkCalibrationOptions & {
+  /** One directory per run, each holding that run's `<flow>-measure-*.events.ndjson` batches. */
+  dirs: ReadonlyArray<string>;
+  flow: string;
+  scale?: string;
+  extraScales?: ReadonlyArray<ExtraScale>;
+};
+
+/**
+ * Proposes work-counter budgets from several runs' batches, keyed as {@link scoreStageRun} scores
+ * them: the primary scale's ids bare, each extra scale's under its prefix, each calibrated on its own rows.
+ */
+export const calibrateStageRuns = ({
+  dirs,
+  flow,
+  scale,
+  extraScales = [],
+  ...options
+}: CalibrateStageRunsOptions): Record<string, Budget> => {
+  const runs = dirs.map((dir) => readStageEvents(dir, flow));
+  const primary = proposeWorkBudgets(
+    runs.map((events) => primaryEvents(events, scale, extraScales)),
+    options,
+  );
+  const extras = extraScales.flatMap(({ scale: extraScale, prefix }) =>
+    Object.entries(
+      proposeWorkBudgets(
+        runs.map((events) => events.filter(({ properties }) => properties.scale === extraScale)),
+        options,
+      ),
+    ).map(([id, budget]) => [`${prefix} > ${id}`, budget] as const),
+  );
+  return { ...primary, ...Object.fromEntries(extras) };
+};
+
+/**
+ * `current` with its work-counter budgets replaced by `proposed`: every other budget keeps its value
+ * and its place in the file, and the proposed ones follow, so a recalibration diff touches only them.
+ */
+export const replaceWorkBudgets = (
+  current: Readonly<Record<string, Budget>>,
+  proposed: Readonly<Record<string, Budget>>,
+  extraScales: ReadonlyArray<ExtraScale> = [],
+): Record<string, Budget> => ({
+  ...Object.fromEntries(Object.entries(current).filter(([id]) => !isWorkId(extraScales, id))),
+  ...proposed,
+});
