@@ -36,6 +36,7 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
+import { type EdgeCatchUp, recordEdgeCatchUps } from '../tracing/catch-up-recorder.ts';
 
 /**
  * The one document type the stress test manipulates.
@@ -118,6 +119,8 @@ export class ClientReplicant {
   #proxy?: net.Server = undefined;
   #proxyLive = true;
   #sockets = new Set<net.Socket>();
+  /** This process's `catchUpWithEdge` spans, recorded from the first `init` on (a restart keeps them). */
+  #edgeCatchUps: EdgeCatchUp[] | undefined;
 
   constructor(env: ReplicantEnv) {
     this.#env = env;
@@ -138,6 +141,7 @@ export class ClientReplicant {
     partitions: boolean;
   }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
+    this.#edgeCatchUps ??= recordEdgeCatchUps();
     this.#config = { edgeUrl, agents, partitions };
     // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
     // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
@@ -446,6 +450,12 @@ export class ClientReplicant {
       },
     });
     return { syncMs: Date.now() - began, localDocumentCount, remoteDocumentCount };
+  }
+
+  /** The `catchUpWithEdge` spans this device recorded for a space, oldest first; an open one has no duration. */
+  @trace.span()
+  async getEdgeCatchUps({ spaceId }: { spaceId: string }): Promise<EdgeCatchUp[]> {
+    return (this.#edgeCatchUps ?? []).filter((catchUp) => catchUp.collectionId.startsWith(`space:${spaceId}:`));
   }
 
   //

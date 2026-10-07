@@ -19,6 +19,7 @@ import {
   onCleanupSignal,
 } from '../../plan/index.ts';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant.ts';
+import { type EdgeCatchUp } from '../../tracing/catch-up-recorder.ts';
 import { describeError } from '../../util.ts';
 import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, token, urlsFor } from '../edge-stress/index.ts';
 
@@ -132,8 +133,12 @@ export type EdgeSeededSpaceResult = {
   maxRoundMs?: number;
   p95EditMs?: number;
   maxEditMs?: number;
+  /** Every identity's `catchUpWithEdge` spans for the space: whole catch-ups across reconnects. */
+  catchUps?: ClientCatchUp[];
   violations: string[];
 };
+
+export type ClientCatchUp = EdgeCatchUp & { client: number };
 
 const POLL_INTERVAL_MS = 250;
 const PROBE_PREFIX = 'probe-';
@@ -243,8 +248,17 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
       // Rounds.
       const seq = new Array<number>(spec.identities).fill(0);
       for (let round = 0; round < spec.rounds; round++) {
-        const recycleMs =
-          spec.recycleEachRound && round > 0 ? await recycleReplicator(edgeUrl, space, spec.recycleCommand) : undefined;
+        let recycleMs: number | undefined;
+        try {
+          recycleMs =
+            spec.recycleEachRound && round > 0
+              ? await recycleReplicator(edgeUrl, space, spec.recycleCommand)
+              : undefined;
+        } catch (err) {
+          // The run stops without the recycle the round needs; the summary still names the round and why.
+          rounds.push({ round, editLatenciesMs: [], ok: false, error: `recycle: ${describeError(err)}` });
+          throw err;
+        }
         rounds.push({ ...(await this._runRound(spec, clients, space, expected, seq, round)), recycleMs });
         log.info('round measured', { ...rounds[rounds.length - 1] });
       }
@@ -255,6 +269,7 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
     } finally {
       try {
         const summary = this._summarize(edgeUrl, spec, seed, seedMs, uploadMs, joins, rounds);
+        summary.catchUps = spaceId ? await collectCatchUps(clients, spaceId) : undefined;
         fs.writeFileSync(path.join(params.outDir, 'seeded-space.json'), `${JSON.stringify(summary, null, 2)}\n`);
         fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary, spec));
       } finally {
@@ -477,6 +492,49 @@ const expectedDigest = (expected: Map<string, Set<string>>): SpaceDigest => ({
   ),
 });
 
+/** Every identity's catch-ups for the space; an identity that cannot answer is left out rather than failing the run. */
+const collectCatchUps = async (
+  clients: ReplicantBrain<ClientReplicant>[],
+  spaceId: string,
+): Promise<ClientCatchUp[]> => {
+  const perClient = await Promise.all(
+    clients.map(async (client, index) => {
+      try {
+        return (await client.brain.getEdgeCatchUps({ spaceId })).map((catchUp) => ({ ...catchUp, client: index }));
+      } catch (err) {
+        log.warn('catch-ups unavailable', { client: index, err: describeError(err) });
+        return [];
+      }
+    }),
+  );
+  return perClient.flat();
+};
+
+const renderCatchUps = (catchUps: ClientCatchUp[] | undefined, seconds: (value: number | undefined) => string) => {
+  if (!catchUps || catchUps.length === 0) {
+    return [];
+  }
+  const closed = catchUps.filter((catchUp) => catchUp.durationMs !== undefined);
+  const durations = closed.map((catchUp) => catchUp.durationMs ?? 0).sort((left, right) => left - right);
+  const reconnects = catchUps.reduce((total, catchUp) => total + (catchUp.reconnects ?? 0), 0);
+  return [
+    '### EDGE catch-ups (`catchUpWithEdge`)',
+    '',
+    `${catchUps.length} catch-ups, ${closed.filter((catchUp) => catchUp.outcome === 'synced').length} synced, ` +
+      `${catchUps.length - closed.length} still open; ${reconnects} reconnects inside them. ` +
+      `Median ${seconds(durations[Math.floor(durations.length / 2)])}, max ${seconds(durations[durations.length - 1])}.`,
+    '',
+    '| Client | Started | Duration | Outcome | Episodes | Reconnects |',
+    '| --- | --- | --- | --- | --- | --- |',
+    ...catchUps.map(
+      (catchUp) =>
+        `| ${catchUp.client} | ${new Date(catchUp.startedAt).toISOString().slice(11, 19)} | ${seconds(catchUp.durationMs)} | ` +
+        `${catchUp.outcome ?? 'open'} | ${catchUp.episodes ?? '—'} | ${catchUp.reconnects ?? '—'} |`,
+    ),
+    '',
+  ];
+};
+
 const renderSummary = (result: EdgeSeededSpaceResult, spec: EdgeSeededSpaceSpec): string => {
   const seconds = (value: number | undefined) => (value === undefined ? '—' : `${(value / 1000).toFixed(1)}s`);
   return [
@@ -503,6 +561,7 @@ const renderSummary = (result: EdgeSeededSpaceResult, spec: EdgeSeededSpaceSpec)
         )} | ${round.error ?? ''} |`,
     ),
     '',
+    ...renderCatchUps(result.catchUps, seconds),
     ...(result.violations.length > 0
       ? ['### Violations', '', ...result.violations.map((line) => `- ${line}`), '']
       : []),
