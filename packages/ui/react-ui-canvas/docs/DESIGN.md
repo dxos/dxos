@@ -168,8 +168,8 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
 - `shapes.ts` is the pure geometry of the types: `nodeBounds(node)` (the box, or the radii for an ellipse),
   `resizeNode(node, bounds)` (writes `size` or `rx`/`ry`), `createNode(type, …)` / `createLink(type, …)` defaults.
   The registry only renders and declares ports and flags; the projection never depends on it.
-- `bounds(scene)` is derived: union of node frames plus padding, grown to the major grid; an empty scene gets a
-  default extent.
+- `contentBounds(scene)` is derived: union of node frames plus padding, grown to the major grid; an empty scene
+  has none. Fit frames it; nothing draws it.
 - **Derived properties**: an `Object` node's displayed props (label, icon, colour, summary, ports) come from a
   `projector(obj) → NodeProps` chosen by the object's type, merged under `node.overrides`. Rendering goes through
   `Surface` so plugins own the card body; the projector only supplies what the frame and ports need.
@@ -268,15 +268,16 @@ resolved values in.
 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to
   `[1/32, 32]`.
-- **Portal frame**: the child-space region that maps exactly onto the portal, `portalFrame(portal, bounds)`: the
-  portal's box scaled by the smallest power of `MAJOR_GRID_RATIO` (4, 16, 64, …; never 1) that contains the
-  child's derived bounds, placed on the major grid **scaled by that factor** as near their centre as containing
-  them allows. A power of the ratio maps every child grid level onto a parent level: the parent's minor grid is
-  the child's major grid one level down. Placing the frame on the scaled grid then puts the child's lines on the
-  parent's own lines rather than merely at their spacing (on the plain major grid the phase can be off by up to
-  `ratio - 1` minor cells), so the grids stay aligned through a drill-in and the frame's edges sit on the lines.
-  The frame drawn once drilled in (dashed, orange) is the portal's own outline; the root shows its derived
-  bounds. `s = 1 / factor`; child point `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
+- **True scale**: every scene keeps its own coordinates, and zoom is always against them, so at 100%
+  (`NOMINAL_ZOOM`) a shape of a given size is the same number of screen px at any level. Fit (Home) frames the
+  scene's content but never zooms past 100%; Actual size (Shift+0) returns to 100% about the view's centre.
+- **Portal frame**: the child-space region that maps onto the portal, `portalFrame(portal, contentBounds(child))`:
+  the child's content centred in the smallest region of the portal's proportions that holds it, never smaller than
+  the portal's own box (an empty child is that box about its origin). It only places the child under the portal:
+  the preview shrinks a large child to fit but never magnifies a small one, and entering maps the camera through
+  it, so the zoom continues unchanged into the child's own scale. It is held for the visit, so editing inside does
+  not move the child under the user, and is never drawn. Child point `q` maps to parent point
+  `portal.origin + (q - frame.origin) * s` with `s = portalScale(portal, frame) ≤ 1`.
 - **While the camera moves on its own** (wheel zoom or pan, an animation) the canvas ignores the pointer: a shield
   takes presses and hover is cleared, since nothing under the pointer is where it will be.
 - **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), stopping where the child
@@ -287,9 +288,9 @@ resolved values in.
   a root covering < 30% of what it covered on arrival (the history entry for the path) yields to its parent, so a
   child capped at 1:1, or a frame that shrinks as its first node is drawn, is never thrown out on arrival. The
   swap preserves coverage, so the two rules cannot oscillate.
-- **Tiers** for a portal by on-screen size (`min(size) × composed zoom`): `< 40px` tile, `< 260px` title +
-  cell count (later: rasterised thumbnail), else live child scene, only while `depth < 2`. Hysteresis of ±10% at
-  the boundaries.
+- **Tiers** for a portal showing its contents, by on-screen size (`min(size) × composed zoom`): `< 40px` its title alone, as a closed scene,
+  else the live child scene while `depth < liveDepth`, and past it a title + node count (later: a rasterised
+  thumbnail). Hysteresis of ±10% at the tile boundary.
 
 ## 6. Navigation
 
@@ -445,7 +446,7 @@ a scene by mode.)
 | Gutter routing                  | `smart` links on a lattice scene route through the gutters (`utils/gutter-route.ts`): each end leaves its port straight out to the centre line of the adjacent gutter, and the route runs at right angles with the fewest bends along gutter centre lines and the lines through its ports; a port line runs straight through free cells, so a route detours into the gutters only around occupied ones (a shortest-path search where a turn costs far more than distance). A gutter inside a multi-cell shape is covered by it, so it is not a track. Lattice-specific rather than `@dxos/diagram`'s general router: the tracks are a regular grid, so the search is small. Line, curve and spline keep their routes. |
 | Properties                      | Geometry reads as Column / Row and Span X / Span Y (whole cells, step 1) via `fieldOverrides`; the scene's spec when nothing is selected.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Switching on                    | Every node is quantized once; a shape landing on occupied cells moves to the nearest free cells, in z-order, as one undoable batch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Snap and lattice toggles        | Snap (G) on with the lattice toggle (Shift+G, shown only on a lattice scene) on is lattice mode; snap on with the lattice off snaps to the basic grid; snap off is free. The projection reads both per intent (`constrained`), so outside lattice mode intents apply as freehand. Smart links route through the gutters whenever the lattice toggle is on, snap or not. A shape left off the lattice snaps onto it the next time it is moved. The guides toggle only hides the page frame and the cells, and the cells show only while the lattice is on.                                                                                                                                                             |
+| Snap and lattice toggles        | Snap (G) on with the lattice toggle (Shift+G, shown only on a lattice scene) on is lattice mode; snap on with the lattice off snaps to the basic grid; snap off is free. The projection reads both per intent (`constrained`), so outside lattice mode intents apply as freehand. Smart links route through the gutters whenever the lattice toggle is on, snap or not. A shape left off the lattice snaps onto it the next time it is moved. The guides toggle only hides the cells, which show only while the lattice is on.                                                                                                                                                                                        |
 
 **Lanes and crossings.** Routing each link on its own puts parallel links on the same gutter centre line,
 drawn on top of each other. The standard answer, from VLSI routing and orthogonal connector routing
@@ -498,7 +499,7 @@ packages/ui/react-ui-canvas/src/
       shapes.ts            per-type geometry: nodeBounds, resizeNode, DEFAULT_SIZES, createNode, createLink
       resize.ts            resizeBounds by handle: snapped moving edge, min / max size, shift-symmetric
       camera.ts            zoomAt, panBy, fitBounds, portalFrame, enterPortal / exitPortal, coverage, animateCamera
-      hit.ts               derived sceneBounds, hitTest, nodesIntersecting, bounds helpers
+      hit.ts               derived contentBounds, hitTest, nodesIntersecting, bounds helpers
       ports.ts             sidePorts, nodePorts, portPoint (exact offset), sideNormal, pairPorts (automatic pairing), nearestPort
       route.ts             linePath, curvePath, splinePath (rounded polyline), linkPath by type, linkGeometry (free ends face the other end), insertIndex; ortho later †
       dnd.ts               nodeDragData / nodeDragType: the pragmatic-dnd payload a node type drops onto the canvas as

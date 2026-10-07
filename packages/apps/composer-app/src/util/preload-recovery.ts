@@ -14,9 +14,13 @@ export type PreloadErrorHandlerOptions = {
   reload?: () => void;
 };
 
+const preloadErrorPayload = (event: Event): unknown => ('payload' in event ? event.payload : undefined);
+
+const isModuleLinkFailure = (event: Event): boolean => preloadErrorPayload(event) instanceof SyntaxError;
+
 /** Vite's payload carries the failed chunk's url in its message; nothing else identifies it. */
 const preloadErrorUrl = (event: Event): string | undefined => {
-  const payload: unknown = 'payload' in event ? event.payload : undefined;
+  const payload = preloadErrorPayload(event);
   const message =
     payload instanceof Error
       ? payload.message
@@ -61,6 +65,9 @@ export const registerPreloadErrorHandler = ({
   reload = () => window.location.reload(),
 }: PreloadErrorHandlerOptions = {}): void => {
   target.addEventListener('vite:preloadError', (event) => {
+    if (isModuleLinkFailure(event)) {
+      return;
+    }
     const url = preloadErrorUrl(event);
     // A reload cannot bring back another origin's module, and would drop the page for a plugin that failed.
     if (url && !isOwnChunk(url)) {

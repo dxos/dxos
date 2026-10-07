@@ -52,6 +52,9 @@
       "path": "packages/core/echo/blob/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/brain/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -119,6 +122,9 @@
     },
     {
       "path": "packages/common/crypto/tsconfig.json"
+    },
+    {
+      "path": "packages/common/datalog/tsconfig.json"
     },
     {
       "path": "packages/common/debug/tsconfig.json"
@@ -686,6 +692,9 @@
     },
     {
       "path": "packages/plugins/plugin-typesafe/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-uml/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-video/tsconfig.json"

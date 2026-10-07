@@ -16,7 +16,7 @@ const sortByPluginMeta = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.profile.name ?? a.meta.profile.key).localeCompare(b.meta.profile.name ?? b.meta.profile.key);
 
 export type RegistryArticleProps = {
-  id: string;
+  contextId: string;
   plugins: Plugin.Plugin[];
   /**
    * Map from plugin id → display-only tags (e.g. `registry`, `local`) computed by the caller.
@@ -25,7 +25,7 @@ export type RegistryArticleProps = {
 };
 
 export const RegistryArticle = Util.composable<HTMLDivElement, RegistryArticleProps>(
-  ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
+  ({ contextId, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
     const manager = PluginManagerProvider.usePluginManager();
     const failed = useAtomValue(manager.failed);
     const plugins = useMemo(() => [...pluginsProp].sort(sortByPluginMeta), [pluginsProp]);
@@ -41,7 +41,7 @@ export const RegistryArticle = Util.composable<HTMLDivElement, RegistryArticlePr
     return (
       <BaseRegistryArticle
         {...props}
-        id={id}
+        contextId={contextId}
         plugins={plugins}
         extraTagsById={extraTagsById}
         failuresById={failuresById}

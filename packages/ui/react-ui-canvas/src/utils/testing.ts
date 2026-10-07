@@ -7,9 +7,10 @@ import { portId } from './ports.ts';
 import { DEFAULT_SIZES } from './shapes.ts';
 
 //
-// A three-level class diagram: the fixture for anything that needs a scene tree to look like a real
-// model rather than one of every element type. The domain is invented — a document editor — so it
-// stays readable without tracking any package's actual classes.
+// A three-level model diagram, one box per class: the fixture for anything that needs a scene tree to look
+// like a real model rather than one of every element type. The domain is invented — a document editor —
+// so it stays readable without tracking any package's actual classes. (The UML class shape itself is
+// plugin-uml's; the engine fixture draws each class as a labelled rectangle.)
 //
 
 /** The class fixture's unit: a major cell, so every box lands on the grid move and resize snap to. */
@@ -73,20 +74,18 @@ const MODEL: LevelDef = {
 };
 
 /**
- * A three-level class diagram over {@link MODEL}: one scene per subsystem, each holding its classes
+ * A three-level model diagram over {@link MODEL}: one scene per subsystem, each holding a box per class
  * in a row joined by an association, with a portal per child subsystem below them. Ids are
  * deterministic (`scene:app/editor`, `scene:app/editor/view`) so tests and stories can name elements.
  */
-export const createClassSceneTree = (prefix = 'app'): SceneTree => classLevel(MODEL, prefix).build();
+export const createModelSceneTree = (prefix = 'app'): SceneTree => classLevel(MODEL, prefix).build();
 
 const classLevel = (level: LevelDef, path: string): SceneElement => {
   const id = `scene:${path}`;
   // Classes sit in a row; each child subsystem gets a portal in the row below, under its own column.
-  const classes = level.classes.map(({ key, name, attributes, methods }, index) =>
-    SceneBuilder.class(`${id}/${key}`, { x: cell(2) + index * cell(6), y: cell(2), ...CLASS_SIZE }).properties({
-      name,
-      attributes,
-      methods,
+  const classes = level.classes.map(({ key, name }, index) =>
+    SceneBuilder.rect(`${id}/${key}`, { x: cell(2) + index * cell(6), y: cell(2), ...CLASS_SIZE }).properties({
+      label: name,
     }),
   );
   const associations = level.classes.slice(1).map((current, index) =>
@@ -161,11 +160,7 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
   SceneBuilder.note(elementId('t'), units(-10, 8, 12, 4)).properties({
     text: `Scene "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
   }),
-  SceneBuilder.class(elementId('c'), units(-22, 6, 8, 6)).properties({
-    name: `${name} · C`,
-    attributes: ['id: string', 'name: string'],
-    methods: ['save(): void'],
-  }),
+  labelled(SceneBuilder.rect, elementId('c'), units(-22, 6, 8, 6), `${name} · C`),
   SceneBuilder.link('curve', elementId('a'), elementId('b')).id(elementId('ab')),
   SceneBuilder.link('line', elementId('a'), elementId('c')).id(elementId('ac')).properties({ directed: true }),
   // Pinned ports rather than automatic ones, so the spline leaves and arrives where its corners turn.
@@ -193,16 +188,8 @@ const childElements = (name: string, elementId: (suffix: string) => string, vari
       ];
     case 'model':
       return [
-        SceneBuilder.class(elementId('person'), units(-20, -4, 8, 8)).properties({
-          name: 'Person',
-          attributes: ['name: string'],
-          methods: ['greet()'],
-        }),
-        SceneBuilder.class(elementId('org'), units(-4, -4, 8, 8)).properties({
-          name: 'Organization',
-          attributes: ['title: string'],
-          methods: ['hire(person)'],
-        }),
+        labelled(SceneBuilder.rect, elementId('person'), units(-20, -4, 8, 8), 'Person'),
+        labelled(SceneBuilder.rect, elementId('org'), units(-4, -4, 8, 8), 'Organization'),
         SceneBuilder.link('curve', `${elementId('person')}#e2`, `${elementId('org')}#w2`).id(elementId('works')),
       ];
     case 'cycle':

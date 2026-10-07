@@ -119,21 +119,19 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   const { memories: active, nodes, edges, goals: goalItems } = useAtomValue(graphAtom);
 
   // Feed items are immutable, so the entries query alone tracks every change.
-  const { entries } = useFactEntries(agent);
+  const { facts: recorded } = useFactEntries(agent);
   const facts = useMemo(
     () =>
-      entries
-        .flatMap((entry) =>
-          entry.facts.map((fact): AgentKnowledgeFact => ({
-            id: `${entry.id}:${fact.id}`,
-            text: FactEntry.factText(fact),
-            source: entry.name,
-            speaker: fact.attribution.agent,
-            saidAt: fact.attribution.generatedAtTime,
-          })),
-        )
+      recorded
+        .map(({ entry, fact, pass }): AgentKnowledgeFact => ({
+          id: entry.id,
+          text: FactEntry.factText(fact),
+          source: pass.name,
+          speaker: fact.attribution.agent,
+          saidAt: fact.attribution.generatedAtTime,
+        }))
         .sort((left, right) => right.saidAt.localeCompare(left.saidAt)),
-    [entries],
+    [recorded],
   );
 
   return { memories: active, facts, goals: goalItems, nodes, edges };

@@ -46,6 +46,12 @@ describe('TailSampler', () => {
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'tool' } }))).toEqual(true);
   });
 
+  test('keeps a span marked to keep, under either attribute namespace', ({ expect }) => {
+    expect(new TailSampler().keep(span({ attributes: { 'dxos.sampling.keep': true } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'ctx.dxos.sampling.keep': true } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'ctx.dxos.sampling.keep': false } }))).toEqual(false);
+  });
+
   test('keeps a span slower than the threshold', ({ expect }) => {
     expect(new TailSampler().keep(span({ durationMs: DEFAULT_SLOW_MS + 1 }))).toEqual(true);
   });
