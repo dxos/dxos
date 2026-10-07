@@ -28,6 +28,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { useRegistry } from '../../hooks/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
@@ -100,10 +101,9 @@ const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any>
   isLink(element) ? LINK_SCHEMAS[element.type] : (nodeDef(nodes, element)?.schema ?? NodeBase);
 
 /**
- * What the form shows for an element: what the frame draws, so an unset fill or border reads as on and an
- * unset port count as the type's.
+ * What the form shows for an element: what the view draws, so an unset fill, border or Show contents reads as it
+ * looks and an unset port count as the type's.
  */
-/** An element's values as the panel shows them: defaults the view draws are spelled out, so a toggle matches the look. */
 const formValues = (nodes: NodeRegistry, element: Element): Record<string, unknown> =>
   isLink(element)
     ? element
@@ -161,6 +161,7 @@ export const Properties = ({
   getOptions,
   overrides,
 }: PropertiesProps) => {
+  const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
   const elements = useMemo(() => [...selection].flatMap((id) => getElement(scene, id) ?? []), [scene, selection]);
@@ -203,7 +204,9 @@ export const Properties = ({
       kind: 'batch',
       intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
     });
-  }, [projection, links]);
+    // A spline's control points run the other way after a flip, so a selected point's index names another one.
+    registry.set(atoms.point, undefined);
+  }, [projection, links, registry, atoms.point]);
 
   // The selected node types' own renderers over the panel's; a host's `fields` win over both.
   const fieldMap = useMemo(
