@@ -30,6 +30,7 @@ const objectToTerm = (term: RdfTerm | undefined, label?: string): Term | undefin
  * Invariant: every serialized predicate must have a UNIQUE local name (reassembly keys annotations by local name).
  * `attribution.wasDerivedFrom` (array) uses the `sx:derivedFrom` predicate — a distinct local name from the
  * `prov:wasDerivedFrom` used for `source` — so the two never collide on reassembly.
+ * `illocution` is flattened to `sx:force` / `sx:mood` / `sx:addressee`; absent `force` means no illocution.
  */
 
 /** Expand a Fact into plain reified triples (a Fact node + annotation triples). */
@@ -84,6 +85,15 @@ export const factToTriples = (fact: Fact): Quad[] => {
     triples.push(quad(node, sx('spanStart'), str(String(fact.attribution.span.start)), g));
     triples.push(quad(node, sx('spanEnd'), str(String(fact.attribution.span.end)), g));
   }
+  if (fact.illocution) {
+    triples.push(quad(node, sx('force'), str(fact.illocution.force), g));
+    if (fact.illocution.mood) {
+      triples.push(quad(node, sx('mood'), str(fact.illocution.mood), g));
+    }
+    if (fact.illocution.addressee !== undefined) {
+      triples.push(quad(node, sx('addressee'), str(fact.illocution.addressee), g));
+    }
+  }
   return triples;
 };
 
@@ -114,6 +124,7 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
     const derivedFrom = many('derivedFrom');
     const spanStart = one('spanStart');
     const spanEnd = one('spanEnd');
+    const force = one('force');
     // Assemble an untyped candidate; Schema.decodeUnknownSync validates required fields and literal unions,
     // throwing on missing/invalid data rather than silently producing undefined.
     const candidate = {
@@ -132,6 +143,15 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
         ...(one('confidence') !== undefined ? { confidence: Number(one('confidence')) } : {}),
         ...(one('nature') !== undefined ? { nature: one('nature') } : {}),
       },
+      ...(force !== undefined
+        ? {
+            illocution: {
+              force,
+              ...(one('mood') !== undefined ? { mood: one('mood') } : {}),
+              ...(one('addressee') !== undefined ? { addressee: one('addressee') } : {}),
+            },
+          }
+        : {}),
       attribution: {
         ...(agentTerm !== undefined ? { agent: entityIdFromIri(agentTerm.value) } : {}),
         source: one('wasDerivedFrom'),

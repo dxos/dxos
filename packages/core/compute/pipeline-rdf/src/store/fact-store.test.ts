@@ -3,7 +3,7 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -80,6 +80,33 @@ describe('FactStore', () => {
         }
       });
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'preserves illocution through put → query',
+    Effect.fnUntraced(function* () {
+      const store = yield* FactStore;
+      yield* store.putFacts([
+        mk({ id: 'f1', illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' } }),
+        mk({ id: 'f2', illocution: { force: 'commissive' } }),
+        mk({ id: 'f3' }),
+      ]);
+      const facts = yield* store.query({ subjectEntity: 'alice' });
+      const byId = new Map(facts.map((fact) => [fact.id, fact]));
+      expect(byId.get('f1')?.illocution).toEqual({ force: 'directive', mood: 'interrogative', addressee: 'bob' });
+      expect(byId.get('f2')?.illocution).toEqual({ force: 'commissive' });
+      expect(byId.get('f3')?.illocution).toBeUndefined();
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'preserves illocution through put → query (in-memory store)',
+    Effect.fnUntraced(function* () {
+      const store = yield* FactStore;
+      yield* store.putFacts([mk({ id: 'f1', illocution: { force: 'directive', mood: 'imperative' } })]);
+      const [fact] = yield* store.query({});
+      expect(fact.illocution).toEqual({ force: 'directive', mood: 'imperative' });
+    }, Effect.provide(FactStoreLive.layerMemory)),
   );
 
   it.effect(

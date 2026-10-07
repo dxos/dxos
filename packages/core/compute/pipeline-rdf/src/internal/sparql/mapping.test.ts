@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DataFactory } from 'n3';
 import { describe, test } from 'vitest';
 
 import { type Fact } from '../../types/index.ts';
@@ -68,6 +69,51 @@ describe('fact ↔ triples mapping', () => {
     };
     const [back] = triplesToFacts(factToTriples(fact));
     expect(back).toEqual(fact);
+  });
+
+  test('omits illocution triples when the fact has no illocution', ({ expect }) => {
+    const quads = factToTriples(FACT);
+    const names = quads.map((quad) => quad.predicate.value);
+    expect(names.some((name) => /#(force|mood|addressee)$/.test(name))).toBe(false);
+    const [back] = triplesToFacts(quads);
+    expect(back.illocution).toBeUndefined();
+  });
+
+  test('round-trips a full illocution (force, mood, addressee)', ({ expect }) => {
+    const fact: Fact = {
+      ...FACT,
+      id: 'fact-5',
+      illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' },
+    };
+    const [back] = triplesToFacts(factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
+  test('round-trips an illocution with only force', ({ expect }) => {
+    const fact: Fact = { ...FACT, id: 'fact-6', illocution: { force: 'commissive' } };
+    const [back] = triplesToFacts(factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
+  test('round-trips an illocution with force and mood only', ({ expect }) => {
+    const fact: Fact = { ...FACT, id: 'fact-7', illocution: { force: 'directive', mood: 'imperative' } };
+    const [back] = triplesToFacts(factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
+  test('round-trips an illocution with force and addressee only', ({ expect }) => {
+    const fact: Fact = { ...FACT, id: 'fact-8', illocution: { force: 'expressive', addressee: 'carol@example.com' } };
+    const [back] = triplesToFacts(factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
+  test('rejects an invalid stored force', ({ expect }) => {
+    const quads = factToTriples({ ...FACT, illocution: { force: 'assertive' } }).map((quad) =>
+      quad.predicate.value.endsWith('#force')
+        ? DataFactory.quad(quad.subject, quad.predicate, DataFactory.literal('bogus'), quad.graph)
+        : quad,
+    );
+    expect(() => triplesToFacts(quads)).toThrow();
   });
 
   test('throws when a required predicate triple is missing', ({ expect }) => {
