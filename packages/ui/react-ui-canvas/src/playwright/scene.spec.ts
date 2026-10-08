@@ -83,7 +83,7 @@ test.describe('SceneView', () => {
     await expect(ports).toHaveCount(0);
     const box = await scene.box(scene.node('scene:root/a'));
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await expect(scene.node('scene:root/a')).toHaveClass(/border-focus-ring\/50/);
+    await expect(scene.node('scene:root/a')).toHaveClass(/border-focus-ring-subtle\/50/);
     await expect(ports).not.toHaveCount(0);
     await page.mouse.move(box.x + box.width + 200, box.y + box.height + 200);
     await expect(ports).toHaveCount(0);
@@ -219,12 +219,12 @@ test.describe('SceneView', () => {
     // No node was created: the drop landed on an existing one rather than on empty canvas.
     expect(await scene.nodeCount()).toBe(4);
     // The new link is the selection, and nothing else is.
-    await expect(page.locator('[data-link-id].stroke-focus-ring')).toHaveCount(1);
+    await expect(page.locator('[data-link-id].stroke-focus-ring-subtle')).toHaveCount(1);
     expect(await scene.selectedNodes()).toEqual([]);
     // The hover follows the pointer, not the gesture: the source is no longer highlighted, the target under
     // the released pointer is.
-    await expect(scene.node('scene:root/a')).not.toHaveClass(/border-focus-ring\/50/);
-    await expect(scene.node('scene:root/c')).toHaveClass(/border-focus-ring\/50/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/border-focus-ring-subtle\/50/);
+    await expect(scene.node('scene:root/c')).toHaveClass(/border-focus-ring-subtle\/50/);
   });
 
   test('the line tool draws nothing when a press on a node never moves', async () => {

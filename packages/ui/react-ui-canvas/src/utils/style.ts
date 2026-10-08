@@ -173,9 +173,9 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
     surface,
     hue.text,
     selected
-      ? 'border-focus-ring'
+      ? 'border-focus-ring-subtle'
       : hovered
-        ? 'border-focus-ring/50'
+        ? 'border-focus-ring-subtle/50'
         : style.border === false && !style.guide
           ? 'border-transparent'
           : hue.border,
