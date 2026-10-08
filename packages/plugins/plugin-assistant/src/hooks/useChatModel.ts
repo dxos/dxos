@@ -82,6 +82,7 @@ export const useChatModel = ({
   // Primitives rather than the object, so an inline `sender` literal does not rebuild the chat model each render.
   const senderName = sender?.name;
   const senderDid = sender?.identityDid;
+  const reportStruggles = settings?.reportStruggles ?? false;
 
   const chatModel = useMemo(() => {
     if (!runtime || !session || !chat || !feed || !db) {
@@ -110,8 +111,9 @@ export const useChatModel = ({
         senderName || senderDid
           ? { ...(senderName ? { name: senderName } : {}), ...(senderDid ? { identityDid: senderDid } : {}) }
           : undefined,
+      reportStruggles,
     });
-  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid]);
+  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid, reportStruggles]);
 
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh chat model whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;
