@@ -140,7 +140,20 @@ export const LayersPanel = ({
         onMove={(from, to) => onMove?.(items[from].id, items.length - 1 - to)}
       >
         {({ items }) => (
-          <OrderedList.Content aria-label='Layers'>
+          <OrderedList.Content
+            aria-label='Layers'
+            onKeyDown={(event) => {
+              // Enter on the list (as well as selecting the highlighted row) opens that row's name.
+              if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
+                return;
+              }
+              const active = event.currentTarget.getAttribute('aria-activedescendant');
+              const id = active ? event.currentTarget.ownerDocument.getElementById(active)?.dataset.value : undefined;
+              if (id) {
+                setEditingId(id);
+              }
+            }}
+          >
             {items.map((layer) => (
               <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
                 <OrderedList.DragHandle />

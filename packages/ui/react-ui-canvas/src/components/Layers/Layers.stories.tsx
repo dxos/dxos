@@ -100,5 +100,10 @@ export const Test: Story = {
     // 5. Merge down and delete each take the active layer.
     await userEvent.click(canvas.getByTestId('layers-merge'));
     await waitFor(() => expect(names()).toEqual(['Diagram', 'Notes', 'Background']));
+
+    // 6. The arrows move along the list, and Enter opens the current row's name.
+    await userEvent.click(canvas.getByTestId('layer-name-diagram'));
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('layer-input-notes')).toHaveFocus());
   },
 };
