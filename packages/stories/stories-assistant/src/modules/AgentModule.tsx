@@ -71,7 +71,7 @@ const blockClass = (block: ContentBlock.Any): string => {
  * A prompt box wired straight to the Claude Agent SDK host.
  *
  * Renders the projected `ContentBlock`s directly rather than through the assistant's Chat surface,
- * which reads a processor's in-memory state and so cannot show an externally produced turn. Needs
+ * which reads a chat model's in-memory state and so cannot show an externally produced turn. Needs
  * the host mounted in the dev server — see `DX_AGENT_CWD` in `.storybook/main.ts`.
  */
 export const AgentModule = () => {

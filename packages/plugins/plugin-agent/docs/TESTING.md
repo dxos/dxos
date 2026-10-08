@@ -36,7 +36,7 @@ it. Tagged `!test`, so CI never runs it.
 **Agent playground** (`stories-stories-assistant-agentplayground--playground`): one agent, Kai, and
 three chat panels — Rich, Dima, Josiah — plus the agent state panel. Each panel is that person's chat
 with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every prompt to them: the panel
-passes a `sender` to `useChatProcessor`, the agent process records it on the user message, and the
+passes a `sender` to `useChatModel`, the agent process records it on the user message, and the
 model sees `[From: Dima]`. On load the space holds the three people, the "DXOS Eng" team and a
 transcript of an earlier CI-triage conversation, which the agent reads on load (`readSource`: a
 direct pipeline-rdf extraction, no chat) into facts in the transcript's annotation feed — the state

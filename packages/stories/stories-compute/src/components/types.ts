@@ -12,5 +12,5 @@ export type SpawnedProcess<Params, Input, Output> = {
   id: string;
   location: Process.Location;
   params: Params;
-  handle: Process.Handle<Input, Output, never>;
+  handle: Process.Process<Input, Output, never>;
 };

@@ -24,9 +24,9 @@ const makeFact = (options: {
 }): RDF.Fact => ({
   id: options.id,
   assertion: {
-    subject: { entity: options.subject, label: options.subject },
+    subject: { kind: 'entity', entity: options.subject, label: options.subject },
     predicate: options.predicate,
-    object: { entity: options.object, label: options.object },
+    object: { kind: 'entity', entity: options.object, label: options.object },
   },
   factuality: { value: 'CT+', polarity: '+', confidence: options.confidence ?? 0.9, nature: 'epistemic' },
   attribution: {

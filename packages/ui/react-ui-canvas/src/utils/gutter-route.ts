@@ -19,7 +19,7 @@ import { nodeBounds } from './shapes.ts';
 /** A bend costs as much as this much distance: turns dominate, length breaks ties. */
 const TURN_COST = 100_000;
 
-/** Gutter lines beyond the two ends the search may use, so a route can go round an obstacle. */
+/** Gutter lines beyond the ends and the shapes the search may use, so a route can go round the outermost. */
 const MARGIN = 3;
 
 const EPSILON = 1e-6;
@@ -49,6 +49,53 @@ const gutterLines = (low: number, high: number, pitch: number): number[] => {
   return Array.from({ length: last - first + 1 }, (_, index) => (first + index + 0.5) * pitch);
 };
 
+type Region = { left: number; right: number; top: number; bottom: number };
+
+/**
+ * The span the search covers: the ends, grown by every frame within `MARGIN` pitches of them, so a way round
+ * an obstacle is in range while a distant shape adds no lines to the grid. `transitive` keeps growing by the
+ * frames near the grown span until none is left, for the rare detour round a chain of abutting shapes.
+ */
+const searchRegion = (
+  start: Point,
+  end: Point,
+  frames: readonly Bounds[],
+  pitchX: number,
+  pitchY: number,
+  transitive: boolean,
+): Region => {
+  const region: Region = {
+    left: Math.min(start.x, end.x),
+    right: Math.max(start.x, end.x),
+    top: Math.min(start.y, end.y),
+    bottom: Math.max(start.y, end.y),
+  };
+  const [reachX, reachY] = [MARGIN * pitchX, MARGIN * pitchY];
+  const pending = new Set(frames);
+  for (let grown = true; grown;) {
+    grown = false;
+    // A single pass measures nearness against the ends' span only, so one frame cannot pull in the next.
+    const reach = { ...region };
+    for (const frame of pending) {
+      const span = transitive ? region : reach;
+      const near =
+        frame.x <= span.right + reachX &&
+        frame.x + frame.width >= span.left - reachX &&
+        frame.y <= span.bottom + reachY &&
+        frame.y + frame.height >= span.top - reachY;
+      if (near) {
+        region.left = Math.min(region.left, frame.x);
+        region.right = Math.max(region.right, frame.x + frame.width);
+        region.top = Math.min(region.top, frame.y);
+        region.bottom = Math.max(region.bottom, frame.y + frame.height);
+        pending.delete(frame);
+        grown = transitive;
+      }
+    }
+  }
+  return region;
+};
+
 const sortedUnique = (values: number[]): number[] =>
   [...new Set(values.map((value) => Math.round(value * 1000) / 1000))].sort((left, right) => left - right);
 
@@ -67,11 +114,28 @@ export const gutterRoute = (
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const start = gutterExit(from, spec);
   const end = gutterExit(to, spec);
-  const verticals = gutterLines(Math.min(start.x, end.x), Math.max(start.x, end.x), pitchX);
-  const horizontals = gutterLines(Math.min(start.y, end.y), Math.max(start.y, end.y), pitchY);
+  const frames = nodes.map(nodeBounds);
+  // The local grid finds almost every route; only when it offers no way round does the search widen.
+  const search = (transitive: boolean) =>
+    searchGrid(from, to, start, end, frames, searchRegion(start, end, frames, pitchX, pitchY, transitive), spec);
+  return search(false) ?? search(true);
+};
+
+/** Dijkstra over the gutter lines and port lines in `region`, from the gutter exit `start` to `end`. */
+const searchGrid = (
+  from: RouteEnd,
+  to: RouteEnd,
+  start: Point,
+  end: Point,
+  frames: readonly Bounds[],
+  region: Region,
+  spec: LatticeSpec,
+): Point[] | undefined => {
+  const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
+  const verticals = gutterLines(region.left, region.right, pitchX);
+  const horizontals = gutterLines(region.top, region.bottom, pitchY);
   const xs = sortedUnique([...verticals, start.x, end.x]);
   const ys = sortedUnique([...horizontals, start.y, end.y]);
-  const frames = nodes.map(nodeBounds);
   const clear = (a: Point, b: Point) => !frames.some((frame) => crosses(a, b, frame));
 
   const indexOf = (values: number[], value: number) => values.indexOf(Math.round(value * 1000) / 1000);

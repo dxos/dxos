@@ -1,5 +1,28 @@
 # @dxos/react-ui-feed
 
+## 0.13.0
+
+### Patch Changes
+
+- 4b50966: Scrolling a long message feed no longer janks. Rows no longer re-render on every scroll event, a jump fills in a few rows per frame (visible rows first) instead of mounting the whole window in one task, and CodeMirror's shared stylesheet is no longer rewritten each time a row mounts (`style-mod` 4.1.4). `TogglePanel.Root` takes `lazyMount` to build its body on first open.
+- Updated dependencies [d2a6aad]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [7d222fc]
+- Updated dependencies [3e73e53]
+- Updated dependencies [7a177b9]
+- Updated dependencies [246ee3c]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/react-ui-virtual@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

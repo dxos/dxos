@@ -1,6 +1,6 @@
 {
   "name": "@dxos/code-index",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Bun CLI that indexes a codebase into a SQLite catalogue and a persistent RDF quad store, queryable with SPARQL/LDkit and extensible with N3 (EYE) rules.",
   "homepage": "https://dxos.org",

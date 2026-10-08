@@ -49,7 +49,7 @@ export interface Options {
  */
 export const makeHost = (options: Options): Effect.Effect<Host> =>
   Effect.gen(function* () {
-    const handles = new Map<Process.ID, Process.Handle.Any>();
+    const handles = new Map<Process.ID, Process.Any>();
     const events = new Map<Process.ID, RemoteProcessManager.Event[]>();
     const inputCounts = new Map<Process.ID, number>();
     const applied: { pid: Process.ID; input: unknown }[] = [];
@@ -59,9 +59,9 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
 
     const definitionFor = (key: string) => options.definitions.find((definition) => definition.key === key);
 
-    const snapshot = (handle: Process.Handle.Any): RemoteProcessManager.Snapshot => ({
+    const snapshot = (handle: Process.Any): RemoteProcessManager.Snapshot => ({
       pid: handle.pid,
-      parentPid: handle.parentId,
+      parentPid: handle.parentPid,
       key: handle.key,
       params: handle.params,
       environment: handle.environment,
@@ -79,7 +79,7 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
       },
     });
 
-    const handleFor = (pid: Process.ID): Effect.Effect<Process.Handle.Any> => {
+    const handleFor = (pid: Process.ID): Effect.Effect<Process.Any> => {
       const handle = handles.get(pid);
       return handle ? Effect.succeed(handle) : Effect.die(`no such process on host: ${pid}`);
     };

@@ -1,5 +1,123 @@
 # @dxos/plugin-space
 
+## 0.13.0
+
+### Minor Changes
+
+- 9ab98cd: The roots of `@dxos/app-framework`, `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`, `@dxos/effect`, `@dxos/graph`, `@dxos/observability` and every plugin now export namespaces only, and every namespace has its own subpath: import it with `import * as Hooks from '@dxos/app-framework/Hooks'` and call `Hooks.useOperationInvoker()`. A compound component exports its parts (`<ObjectCard.Root>`, `<ObjectCard.Header>`), a single component keeps its own name (`<TracePanel.TracePanel>`), and errors live in the namespace that owns them (`Operation.NoHandlerError`, `Capability.NotFoundError`, `ConnectorSync.DatabaseMissingError`) or in a `<Domain>Error` module (`FunctionsAiError`, `ConnectorError`).
+
+  Breaking: names that were exported flat from a root moved into namespaces, e.g. `ProcessManagerPlugin.make()`, `PluginManager.Context`, `PluginManifest.DEV_SERVER_PORT`, `Progress.makeTraceSink`, `SpaceSurface.RENAME_POPOVER`, `Calendar.getRangeSelectionId`, `AgentSkill.Handlers`, `SlashCommand.resolveSlashCommand`, `SelectionModel.SelectionModel`, `HaloServices.layer`, `PluginStorage.loadPlugins`, `CorePlugins.make()`, `KvsStore.make` (formerly `createKvsStore`), `CardSlot.IconSlot` and `CardSlot.MenuSlot` (formerly `CardIconSlot` and `CardMenuSlot`), `Hooks.useUpdateRow` in `@dxos/app-toolkit` and `OtelTracer.make`/`OtelTracer.layer` in `@dxos/effect`; a plugin's `meta` is `<Name>Plugin.meta`. Flat names nothing imported outside their package are no longer exported. `@dxos/compute/Errors` is removed, `@dxos/app-solid` no longer re-exports `@dxos/app-framework`, and `@dxos/util/Position` is a subpath.
+
+  `HomeSection` and `NamePopover` move from `@dxos/app-framework` to `@dxos/app-toolkit` (`@dxos/app-toolkit/HomeSection`, `@dxos/app-toolkit/NamePopover`), so app-framework no longer depends on `@dxos/react-ui`. A `check-module-structure` guard fails if any app-framework export reaches react-ui again.
+
+### Patch Changes
+
+- 66727e3: Fixes found driving a Composer basics demo. Creating an object from an `@` link keeps the typed name. Creating a type now opens its table, from the create dialog and from the debug object generator. Types and views navigate to their node in the Database section instead of a plank stuck on "Loading…". A table can be created without picking a type: it gets a new type named after it. The table's add-column button appears for a database type. The type and location pickers in the create forms list their options and show their labels. A map created on a table's type offers the type's location properties. Toggling a world-view map shows the whole globe.
+- Updated dependencies [ecd099a]
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [64f1a7a]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/react-ui-mosaic@0.13.0
+  - @dxos/react-ui-table@0.13.0
+  - @dxos/extractor@0.13.0
+  - @dxos/cli-util@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/plugin-settings@0.13.0
+  - @dxos/plugin-status-bar@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/shell@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-dashboard@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui-masonry@0.13.0
+  - @dxos/react-ui-pickers@0.13.0
+  - @dxos/react-ui-query@0.13.0
+  - @dxos/react-ui-search@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/migrations@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/display-name@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/progress@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

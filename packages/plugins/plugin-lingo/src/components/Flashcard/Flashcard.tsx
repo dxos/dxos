@@ -7,8 +7,8 @@ import React from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type Word } from '#types';
@@ -29,18 +29,18 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
   const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
-    <div className={mx('flex flex-col items-center justify-center gap-6 p-8', classNames)}>
-      <div className='flex flex-col items-center gap-2 text-center'>
+    <Layout.Flex column center gap='xl' classNames={['p-8', classNames]}>
+      <Layout.Flex column align='center' gap='sm' classNames='text-center'>
         <span className='text-3xl'>{word.term}</span>
         {word.reading && <span className='text-fg-muted'>{word.reading}</span>}
-      </div>
+      </Layout.Flex>
 
       {revealed ? (
-        <div className='flex flex-col items-center gap-2 text-center'>
+        <Layout.Flex column align='center' gap='sm' classNames='text-center'>
           <span className='text-2xl text-accent-text'>{word.translation}</span>
           {word.partOfSpeech && <span className='text-sm text-fg-muted'>{word.partOfSpeech}</span>}
           {word.examples?.[0] && <span className='text-sm text-fg-muted italic'>{word.examples[0]}</span>}
-        </div>
+        </Layout.Flex>
       ) : (
         <Button.Root onClick={onReveal} data-testid='lingo.flashcard.reveal'>
           <Icon.Icon icon='ph--eye--regular' size='md' />
@@ -49,7 +49,7 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
       )}
 
       {revealed && (
-        <div className='flex gap-2'>
+        <Layout.Flex gap='sm'>
           <Button.Root onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
             <Icon.Icon icon='ph--x--regular' size='md' />
             <span className='pl-2'>{t('incorrect.button')}</span>
@@ -58,9 +58,9 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
             <Icon.Icon icon='ph--check--regular' size='md' />
             <span className='pl-2'>{t('correct.button')}</span>
           </Button.Root>
-        </div>
+        </Layout.Flex>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 

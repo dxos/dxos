@@ -35,6 +35,7 @@ import {
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
 import { Message, Task } from '@dxos/types';
@@ -44,15 +45,15 @@ import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
-import { TaskSlashCommands } from '../../commands/index.ts';
 import {
   AiUsageQuotaError,
-  type ProcessorRequestContext,
-  getProcessorState,
+  type ChatRequestContext,
+  getChatModelState,
   projectAlarms,
   projectSelfWakes,
   resolveRewind,
-} from '../../processor/index.ts';
+} from '../../chat-model/index.ts';
+import { TaskSlashCommands } from '../../commands/index.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -78,7 +79,7 @@ import { SurfaceWidget } from './SurfaceWidget.tsx';
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'processor' | 'debug'> & {
+  Pick<ChatContextValue, 'chat' | 'chatModel' | 'debug'> & {
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -88,14 +89,14 @@ type ChatRootProps = PropsWithChildren<
      */
     onSubmit?: (text: string) => Promise<void> | void;
     /** Called at submit time to capture ephemeral request context (e.g. companion selection). */
-    getContext?: () => ProcessorRequestContext | undefined;
+    getContext?: () => ChatRequestContext | undefined;
   }
 >;
 
 const ChatRoot = ({
   children,
   chat,
-  processor,
+  chatModel,
   db: dbFallback,
   debug: debugProp,
   onEvent,
@@ -106,12 +107,12 @@ const ChatRoot = ({
   const [debug, setDebug] = useState(debugProp ?? false);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
   const { invokePromise } = Hooks.useOperationInvoker();
-  const processorState = getProcessorState(processor);
-  const streaming = useAtomValue(processorState.streaming);
-  const active = useAtomValue(processorState.active);
+  const chatModelState = getChatModelState(chatModel);
+  const streaming = useAtomValue(chatModelState.streaming);
+  const active = useAtomValue(chatModelState.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
-  // A slash command runs outside the processor, so `streaming` does not cover it.
+  // A slash command runs outside the chat model, so `streaming` does not cover it.
   const commandPending = useRef(false);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
@@ -133,15 +134,15 @@ const ChatRoot = ({
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
   );
-  // The processor queries the feed and reconciles it with the streamed turn and the outbox.
-  const { messages, delivery, queued, tail } = useAtomValue(processorState.thread);
+  // The chat model queries the feed and reconciles it with the streamed turn and the outbox.
+  const { messages, delivery, queued, tail } = useAtomValue(chatModelState.thread);
   const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
   const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
 
-  const dump = useDebug({ processor });
+  const dump = useDebug({ chatModel });
 
-  // Surface processor failures (e.g., AI service unavailable) to subscribers via the event bus.
-  const error = useAtomValue(processorState.error);
+  // Surface chat model failures (e.g., AI service unavailable) to subscribers via the event bus.
+  const error = useAtomValue(chatModelState.error);
   useEffect(() => {
     if (Option.isSome(error)) {
       event.emit({ type: 'error', error: error.value });
@@ -188,7 +189,7 @@ const ChatRoot = ({
               void db.removeFeedItemsByIds(feed, [row.entryId]).catch((err) => log.catch(err));
             }
             if (row.outboxId) {
-              processor?.removePrompt(row.outboxId);
+              chatModel?.removePrompt(row.outboxId);
             }
           }
           break;
@@ -199,7 +200,7 @@ const ChatRoot = ({
     });
     // `feed`, `messages` and `delivery` are dependencies because the rewind and prompt branches read
     // them: without them the handler would keep resolving against whatever was mounted first.
-  }, [event, dump, onEvent, db, feed, messages, delivery, processor]);
+  }, [event, dump, onEvent, db, feed, messages, delivery, chatModel]);
 
   useEffect(() => {
     return event.on((ev) => {
@@ -222,7 +223,7 @@ const ChatRoot = ({
   }, [event, chat, invokePromise]);
 
   useEffect(() => {
-    if (!processor) {
+    if (!chatModel) {
       return;
     }
 
@@ -275,7 +276,7 @@ const ChatRoot = ({
                 if (result.followUp) {
                   // Some effects run on the supervisor loop (delegation spawns post-turn), so the
                   // command wakes the conversation with a short synthetic prompt.
-                  void processor.request({ message: result.followUp });
+                  void chatModel.request({ message: result.followUp });
                 }
               })()
                 .catch((error) => {
@@ -293,9 +294,9 @@ const ChatRoot = ({
             markWork('chat.submit');
             lastPrompt.current = ev.text;
             // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
-            // transient chat and before the agent acknowledges it. The processor requests it when the
+            // transient chat and before the agent acknowledges it. The chat model requests it when the
             // agent is idle and queues it behind a running turn otherwise.
-            processor.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
+            chatModel.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
           }
           break;
         }
@@ -307,8 +308,8 @@ const ChatRoot = ({
             // content is synthetic — nobody typed it.
             void Promise.resolve(onSubmit?.(text)).then(() =>
               active
-                ? processor.enqueue({ message: text, disposition: 'synthetic' })
-                : processor.request({ message: text, disposition: 'synthetic' }),
+                ? chatModel.enqueue({ message: text, disposition: 'synthetic' })
+                : chatModel.request({ message: text, disposition: 'synthetic' }),
             );
           }
           break;
@@ -316,13 +317,13 @@ const ChatRoot = ({
 
         case 'retry': {
           if (!streaming) {
-            void processor.retry();
+            void chatModel.retry();
           }
           break;
         }
 
         case 'cancel': {
-          void processor.cancel();
+          void chatModel.cancel();
           if (streaming) {
             if (lastPrompt.current) {
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
@@ -332,7 +333,7 @@ const ChatRoot = ({
         }
       }
     });
-  }, [event, processor, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
+  }, [event, chatModel, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.
@@ -344,7 +345,7 @@ const ChatRoot = ({
       event={event}
       db={db}
       chat={chat}
-      processor={processor}
+      chatModel={chatModel}
       queueSize={queued}
       setController={setController}
       setVisibleRange={setVisibleRange}
@@ -537,7 +538,7 @@ type ChatThreadProps = Util.ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
-  const { chat, db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
@@ -565,7 +566,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
-  const streaming = useAtomValue(getProcessorState(processor).streaming);
+  const streaming = useAtomValue(getChatModelState(chatModel).streaming);
   useEffect(() => {
     // The answer streams above any prompts still waiting for the agent, which end the thread.
     const last = messages[messages.length - 1 - tail];
@@ -717,7 +718,7 @@ ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
-type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' | 'event' | 'tasksVisible'> & {
+type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'chatModel' | 'event' | 'tasksVisible'> & {
   /** Whether the checklist is disclosed on mount. */
   defaultTasksVisible?: boolean;
 };
@@ -734,7 +735,7 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' 
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
 const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
-  const { chat, db, processor, event, queueSize } = useChatContext(CHAT_PROMPT_NAME);
+  const { chat, db, chatModel, event, queueSize } = useChatContext(CHAT_PROMPT_NAME);
 
   // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
@@ -774,7 +775,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
         classNames={[tasksVisible && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
-        processor={processor}
+        chatModel={chatModel}
         event={event}
         queueSize={queueSize}
         tasksVisible={hasTasks ? tasksVisible : undefined}
@@ -939,7 +940,7 @@ const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
   }
 
   return (
-    <div className='flex flex-col gap-2 p-2' data-testid='chat.taskQuestions'>
+    <Layout.Flex column gap='sm' classNames='p-2' data-testid='chat.taskQuestions'>
       {threads.map(({ task, thread }) => (
         <TaskQuestion
           key={thread.question.id}
@@ -947,7 +948,7 @@ const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
           onAnswer={(answer) => handleAnswer(task, thread.question.id, answer)}
         />
       ))}
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -960,14 +961,14 @@ ChatTaskQuestions.displayName = 'Chat.TaskQuestions';
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
 
 /**
- * The activity line bound to the chat's processor and the chat's pending alarms: what the agent is
+ * The activity line bound to the chat's chat model and the chat's pending alarms: what the agent is
  * doing, for as long as it is doing anything. The line itself takes resolved values, so it lives
  * beside the prompt with the rest of the presentational parts and only the binding is here.
  */
 const ChatActivity = ({ classNames }: Util.ThemedClassName) => {
-  const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { chatModel } = useChatContext(CHAT_ACTIVITY_NAME);
   const { alarms } = useChatThreadContext(CHAT_ACTIVITY_NAME);
-  const activity = useAtomValue(getProcessorState(processor).activity);
+  const activity = useAtomValue(getChatModelState(chatModel).activity);
 
   // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
   // wait in front of the reader.

@@ -8,6 +8,7 @@ import { type Obj, type Ref } from '@dxos/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -68,9 +69,9 @@ export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }
 
   if (items.length === 0) {
     return (
-      <div role='status' className='flex items-center justify-center h-full text-fg-subtle'>
+      <Layout.Flex role='status' center classNames='h-full text-fg-subtle'>
         {emptyMessage ?? t('empty.message')}
-      </div>
+      </Layout.Flex>
     );
   }
 

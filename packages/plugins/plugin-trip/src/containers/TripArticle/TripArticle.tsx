@@ -19,8 +19,8 @@ import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
 import { meta } from '#meta';
@@ -261,12 +261,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
 
   return (
     <div role={role} className='@container dx-expand'>
-      <div
-        className={mx(
-          'grid h-full',
-          showGlobe ? 'grid-rows-[minmax(0,1fr)_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]',
-        )}
-      >
+      <Layout.Grid rows={showGlobe ? ['fill', 'fill'] : ['fill']} classNames='h-full'>
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
@@ -303,7 +298,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
             </Panel.Body>
           </Panel.Root>
         )}
-      </div>
+      </Layout.Grid>
     </div>
   );
 };

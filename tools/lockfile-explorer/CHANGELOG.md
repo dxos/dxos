@@ -1,5 +1,14 @@
 # @dxos/lockfile-explorer
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

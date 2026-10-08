@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Umbrella package for AI-aware DXOS compute primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -114,6 +114,11 @@
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
     },
+    "./SqlService": {
+      "source": "./src/SqlService.ts",
+      "types": "./dist/types/src/SqlService.d.ts",
+      "import": "./dist/lib/SqlService.mjs"
+    },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
@@ -166,6 +171,7 @@
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

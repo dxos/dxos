@@ -67,6 +67,9 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {
@@ -86,6 +89,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../devtools/devtools"

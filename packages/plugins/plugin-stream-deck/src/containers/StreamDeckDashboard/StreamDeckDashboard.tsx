@@ -11,6 +11,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useQuery } from '@dxos/echo-react';
 import * as Dashboard from '@dxos/plugin-space/Dashboard';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { VirtualStreamDeck } from '#components';
@@ -48,7 +49,7 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
   return (
     <Panel.Root role={role}>
       <Panel.Body>
-        <div className='flex flex-col gap-2'>
+        <Layout.Flex column gap='sm'>
           <VirtualStreamDeck device={DEVICE} frame={frame} />
           <div className='text-xs text-fg-muted'>
             {status?.state === 'connected'
@@ -57,7 +58,7 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
                 ? 'Device plugin version mismatch'
                 : 'No device connected'}
           </div>
-        </div>
+        </Layout.Flex>
       </Panel.Body>
     </Panel.Root>
   );

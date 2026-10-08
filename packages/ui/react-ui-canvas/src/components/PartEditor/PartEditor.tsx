@@ -19,7 +19,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type PartEditing, type PartKey, isMultiline } from '../../utils/parts.ts';
+import { type PartEditing, type PartKey } from '../../utils/parts.ts';
 
 export type TextPartProps = Util.ThemedClassName<
   PropsWithChildren<{
@@ -46,7 +46,7 @@ const stop = (event: React.SyntheticEvent) => event.stopPropagation();
 
 const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
   const themeMode = Hooks.useThemeMode();
-  const multiline = isMultiline(part);
+  const multiline = editing.multiline;
   // Commit or cancel once: the editor unmounts on either, and its focus loss must not commit again.
   const done = useRef(false);
   const finish = (action: () => void) => {
