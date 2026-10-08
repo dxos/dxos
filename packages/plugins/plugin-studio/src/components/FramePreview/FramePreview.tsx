@@ -5,6 +5,7 @@
 import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -48,9 +49,9 @@ export const FramePreview = ({ classNames, index, name, src, contentType }: Fram
         ) : src ? (
           <img src={src} alt={name ?? label} loading='lazy' draggable={false} className='block dx-fill object-cover' />
         ) : (
-          <div role='img' aria-label={label} className='dx-fill flex items-center justify-center text-fg-muted'>
+          <Layout.Flex role='img' aria-label={label} center classNames='dx-fill text-fg-muted'>
             {label}
-          </div>
+          </Layout.Flex>
         )}
         <span className='absolute top-1 start-1 px-1 rounded-sm bg-modal-surface text-xs text-fg-muted'>
           {index + 1}

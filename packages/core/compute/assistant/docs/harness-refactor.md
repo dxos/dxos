@@ -62,7 +62,7 @@ Consequences:
 ## 3. Background — execution locality (the root problem)
 
 Operations (e.g. `set-alarm`, a future `tasks-check`) execute as **child processes** via
-`operationInvoker.invokeFiber`. A child process:
+`Process.spawn` through the agent's own `Process.ManagerService`. A child process:
 
 - CAN derive conversation-scoped state from `context.conversation` (resolve the feed, build
   a `Binder`, read history) — this is why `AiContext.Service` resolves fine in children.
@@ -94,15 +94,14 @@ A process optionally declares an `rpcs` group; `create()` must then return match
 
 ```ts
 // Process.ts
-Operation.makeDurable(
-  {
-    key: 'test.process-with-rpcs',
-    input: Schema.Void,
-    output: Schema.Void,
-    services: [],
-    rpcs, // RpcGroup.RpcGroup<_Rpcs> (optional; defaults to an empty group)
-  },
-  (ctx) =>
+Operation.makeDurable({
+  key: 'test.process-with-rpcs',
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [],
+  rpcs, // RpcGroup.RpcGroup<_Rpcs> (optional; defaults to an empty group)
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       const storage = yield* StorageService.StorageService;
       return {
@@ -119,10 +118,11 @@ Operation.makeDurable(
         }),
       };
     }),
+  ),
 );
 ```
 
-`Callbacks.rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>`. `Operation.makeDurable` validates the
+`Callbacks.rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>`. `Operation.withDurableHandler` validates the
 handler contract at construction via `sanitizeRpcs`: handlers are required iff a non-empty
 `rpcs` group is declared (and rejected/empty otherwise).
 

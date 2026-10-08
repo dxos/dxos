@@ -55,7 +55,7 @@ export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
         {
           agent: Ref.make(agent),
           identityDid: identity.did,
-          name: identity.displayName ?? 'Me',
+          ...(identity.displayName ? { name: identity.displayName } : {}),
           remote: true,
         },
         { spaceId: db.spaceId },

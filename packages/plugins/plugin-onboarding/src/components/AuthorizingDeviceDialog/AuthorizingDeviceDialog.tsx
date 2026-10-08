@@ -10,7 +10,6 @@ import { DXOSHorizontalType } from '@dxos/brand';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta.ts';
 
@@ -23,11 +22,12 @@ export const AuthorizingDeviceDialog = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
-    <div
-      className={mx(
-        'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
+    <Layout.Grid
+      cols={1}
+      classNames={[
+        'relative md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
-      )}
+      ]}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
@@ -51,7 +51,7 @@ export const AuthorizingDeviceDialog = () => {
           </a>
         </Layout.Flex>
       </Layout.Flex>
-    </div>
+    </Layout.Grid>
   );
 };
 

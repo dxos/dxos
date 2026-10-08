@@ -14,7 +14,7 @@ import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Chat, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, usePresets } from '#hooks';
+import { useChatModel, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
@@ -30,7 +30,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const runtime = useChatServices({ id: db?.spaceId });
   const { preset, ...chatProps } = usePresets(settings, chat);
   const registry = useRegistry();
-  const processor = useChatProcessor({ chat, preset, runtime, registry, settings });
+  const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
   // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.
   const [chatViewType] = useObject(chat, 'viewType');
 
@@ -50,12 +50,12 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
     }
   }, []);
 
-  if (!chat || !processor) {
+  if (!chat || !chatModel) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
+    <Chat.Root chat={chat} chatModel={chatModel} onEvent={handleEvent}>
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
         <NaturalChatDialog.Content>

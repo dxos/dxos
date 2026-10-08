@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
+import { makeTestProcess } from '@dxos/compute-runtime/testing';
 import * as Process from '@dxos/compute/Process';
 import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
@@ -1150,24 +1151,25 @@ describe('readTaskStatusChanges', () => {
   );
 });
 
-const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Process => ({
-  pid: Process.ID.make(pid),
-  parentPid: null,
-  key: 'agent',
-  params: {
-    name: null,
-    annotations: Annotation.buildDictionary((dictionary) => {
-      Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
-      Annotation.setDictionary(dictionary, Process.TargetAnnotation, URI.make(chat.session.uri));
-    }),
-  },
-  environment: {},
-  state,
-  error: null,
-  startedAt: 0,
-  completedAt: Option.none(),
-  metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
-});
+const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Process =>
+  makeTestProcess({
+    pid: Process.ID.make(pid),
+    parentPid: null,
+    key: 'agent',
+    params: {
+      name: null,
+      annotations: Annotation.buildDictionary((dictionary) => {
+        Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+        Annotation.setDictionary(dictionary, Process.TargetAnnotation, URI.make(chat.session.uri));
+      }),
+    },
+    environment: {},
+    state,
+    error: null,
+    startedAt: 0,
+    completedAt: Option.none(),
+    metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+  });
 
 /** A chat reduced to what the builder joins on, with the feed ref its trace meta would carry. */
 type TestChat = { id: string; feed: Ref.Ref<Feed.Feed>; session: Session };

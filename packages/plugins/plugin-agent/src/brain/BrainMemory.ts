@@ -7,10 +7,12 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as Agent from '@dxos/assistant/Agent';
+import * as Evaluator from '@dxos/brain/Evaluator';
 import * as AgentService from '@dxos/compute/AgentService';
 import { type FactStoreApi, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { BrainService } from '#types';
+import { BrainService, Trigger } from '#types';
 
 import { TriggerRegistry } from '../triggers.ts';
 
@@ -22,25 +24,73 @@ export type BrainMemory = {
   readonly facts: (agent: string) => FactStoreApi;
 };
 
+/**
+ * What a brain keeps between calls. Brains made over the same state (each with its own host's agents)
+ * see the same facts, subscriptions and outboxes.
+ */
+export type State = {
+  /** The trigger store; shared with the UI that lists it. */
+  readonly triggers: TriggerRegistry;
+  /** Fact stores by agent id. */
+  readonly stores: Map<string, FactStoreApi>;
+  /** Rule evaluators by agent id. */
+  readonly evaluators: Map<string, Evaluator.Evaluator>;
+  /** Unacknowledged events by subscription id, in the order they were queued. */
+  readonly outboxes: Map<string, BrainService.Event[]>;
+  /** Event ids each subscription has queued, acknowledged or not, so a wake re-derived queues nothing. */
+  readonly queued: Map<string, Set<string>>;
+};
+
+export const makeState = ({
+  triggers = new TriggerRegistry(),
+  stores = new Map(),
+}: { triggers?: TriggerRegistry; stores?: Map<string, FactStoreApi> } = {}): State => ({
+  triggers,
+  stores,
+  evaluators: new Map(),
+  outboxes: new Map(),
+  queued: new Map(),
+});
+
+export type MakeOptions = {
+  /** Shared state; a fresh one by default. */
+  state?: State;
+  /** The clock (epoch ms); tests pin it. */
+  now?: () => number;
+};
+
+/**
+ * Most event ids one subscription remembers as queued, and most events its outbox holds: an ongoing watch
+ * queues without end, so past this the oldest are forgotten (a re-pushed fact that old may queue again).
+ */
+export const MAX_EVENTS = 10_000;
+
+/** Adds to an insertion-ordered set, dropping the oldest entries past `max`. */
+const remember = (set: Set<string>, value: string, max: number): void => {
+  set.add(value);
+  for (const oldest of set) {
+    if (set.size <= max) {
+      break;
+    }
+    set.delete(oldest);
+  }
+};
+
 const toError = (cause: unknown) =>
   new BrainService.BrainError({ message: cause instanceof Error ? cause.message : String(cause), cause });
 
 /**
  * A brain held in process memory: pipeline-rdf's in-memory RDF store per agent, the trigger registry as
- * its subscriptions, and an outbox per subscription. Nothing survives a reload. Waking a chat submits the prompt to its session through
+ * its subscriptions, a `@dxos/brain` evaluator per agent deciding which subscriptions wake, and an outbox
+ * per subscription. Nothing survives a reload. Waking a chat submits the prompt to its session through
  * `agents`, which runs the turn locally or on EDGE as the session was opened.
  */
-export type MakeOptions = {
-  /** The trigger store; shared with the UI that lists it. */
-  triggers?: TriggerRegistry;
-  /** Fact stores by agent id; shared by brains that must see the same facts. */
-  stores?: Map<string, FactStoreApi>;
-};
-
 export const make = (
   agents: AgentService.Service,
-  { triggers = new TriggerRegistry(), stores = new Map() }: MakeOptions = {},
+  { state = makeState(), now = Date.now }: MakeOptions = {},
 ): BrainMemory => {
+  const { triggers, stores, evaluators, outboxes, queued } = state;
+
   const facts = (agent: string): FactStoreApi => {
     let store = stores.get(agent);
     if (!store) {
@@ -50,10 +100,36 @@ export const make = (
     return store;
   };
 
-  // Outboxes by subscription id, events in the order they were queued.
-  const outboxes = new Map<string, BrainService.Event[]>();
-  // Event ids each subscription has queued, acknowledged or not, so a fact pushed again queues nothing.
-  const queued = new Map<string, Set<string>>();
+  const evaluator = (agent: string): Evaluator.Evaluator => {
+    let held = evaluators.get(agent);
+    if (!held) {
+      held = Evaluator.make();
+      evaluators.set(agent, held);
+    }
+    return held;
+  };
+
+  /** Queues the events not queued before; returns how many were new. */
+  const enqueue = (events: readonly Evaluator.Event[]): number => {
+    let count = 0;
+    // Appended once per subscription, so a burst of events copies each outbox once.
+    const additions = new Map<string, BrainService.Event[]>();
+    for (const event of events) {
+      const seen = queued.get(event.subscription) ?? new Set<string>();
+      queued.set(event.subscription, seen);
+      if (!seen.has(event.id)) {
+        remember(seen, event.id, MAX_EVENTS);
+        const added = additions.get(event.subscription) ?? [];
+        added.push(BrainService.fromEvaluator(event));
+        additions.set(event.subscription, added);
+        count++;
+      }
+    }
+    for (const [subscription, added] of additions) {
+      outboxes.set(subscription, [...(outboxes.get(subscription) ?? []), ...added].slice(-MAX_EVENTS));
+    }
+    return count;
+  };
 
   const service: BrainService.Service = {
     push: (agent, entries, options) =>
@@ -61,23 +137,14 @@ export const make = (
         .putFacts(entries)
         .pipe(
           Effect.mapError(toError),
-          Effect.map(() => {
-            let count = 0;
-            for (const subscription of triggers.list(agent)) {
-              const seen = queued.get(subscription.id) ?? new Set<string>();
-              queued.set(subscription.id, seen);
-              for (const fact of entries) {
-                const event = BrainService.matchEvent(subscription, fact, options);
-                if (event && !seen.has(event.id)) {
-                  seen.add(event.id);
-                  outboxes.set(subscription.id, [...(outboxes.get(subscription.id) ?? []), event]);
-                  count++;
-                }
-              }
-            }
-            return count;
-          }),
+          Effect.map(() => enqueue(evaluator(agent).push(entries, { at: now(), quiet: options?.quiet }))),
         ),
+    tick: (agent) => Effect.sync(() => enqueue(evaluator(agent).tick(now()))),
+    nextDueAt: (agent) =>
+      Effect.sync(() => {
+        const due = evaluators.get(agent)?.nextDueAt();
+        return due === undefined ? undefined : new Date(due).toISOString();
+      }),
     query: (agent, query) =>
       facts(agent)
         .query(query)
@@ -85,18 +152,30 @@ export const make = (
           Effect.map((found): RDF.Fact[] => found),
           Effect.mapError(toError),
         ),
-    subscribe: (trigger) =>
-      Effect.sync(() => {
-        const held = triggers.list(trigger.agent).filter(({ id }) => id !== trigger.id);
-        if (held.length >= BrainService.MAX_TRIGGERS) {
-          return false;
-        }
-        triggers.add(trigger);
-        return true;
-      }),
+    subscribe: Effect.fnUntraced(function* (trigger) {
+      const held = triggers.list(trigger.agent).filter(({ id }) => id !== trigger.id);
+      if (held.length >= BrainService.MAX_TRIGGERS) {
+        return false;
+      }
+      const subscription = BrainService.toSubscription(trigger);
+      const current = evaluator(trigger.agent).subscriptions.find(({ id }) => id === subscription.id);
+      // Re-subscribing unchanged keeps the evaluator's state, so an achieved goal stays achieved.
+      if (current?.rules !== subscription.rules || current?.createdAt !== subscription.createdAt) {
+        yield* Effect.try({
+          try: () => evaluator(trigger.agent).add(subscription),
+          catch: toError,
+        });
+      }
+      triggers.add(trigger);
+      return true;
+    }),
     subscriptions: (agent) => Effect.sync(() => triggers.list(agent)),
     unsubscribe: (id) =>
       Effect.sync(() => {
+        const agent = triggers.get(id)?.agent ?? Trigger.agentOf(id);
+        if (agent !== undefined) {
+          evaluators.get(agent)?.remove(id);
+        }
         outboxes.delete(id);
         queued.delete(id);
         return triggers.remove(id);
@@ -114,7 +193,8 @@ export const make = (
       }),
     wake: ({ chat, prompt, sender }) =>
       agents
-        .getSession(chat)
+        // The chat's own location, else an agent chat on EDGE would wake a second, local session.
+        .getSession(chat, { location: Agent.chatLocation(chat) })
         .pipe(
           Effect.flatMap((session) =>
             session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),

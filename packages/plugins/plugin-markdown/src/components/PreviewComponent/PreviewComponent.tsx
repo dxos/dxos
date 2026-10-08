@@ -361,14 +361,14 @@ export const PreviewComponent = ({
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
-          <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
+          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute bottom-1 right-1'>
             <span className='dx-tag dx-tag-inline flex gap-1' data-hue='neutral'>
               {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
             </span>
-          </div>
+          </Layout.Flex>
 
-          <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
+          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute top-1 right-1'>
             <Button.Root
               size='sm'
               icon='ph--arrow-square-out--regular'
@@ -377,7 +377,7 @@ export const PreviewComponent = ({
               variant='ghost'
               onClick={handleOpen}
             />
-          </div>
+          </Layout.Flex>
 
           <ResizeHandle
             side='block-end'

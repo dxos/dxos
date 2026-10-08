@@ -35,6 +35,7 @@ import {
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
+  type Camera,
   DEFAULT_GRID,
   type ElementId,
   type Endpoint,
@@ -45,14 +46,25 @@ import {
   type Scene,
   type SceneId,
   isPointEndpoint,
+  isPortalNode,
 } from '../../model/types.ts';
-import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import {
+  MIN_ZOOM,
+  NOMINAL_ZOOM,
+  cameraTransform,
+  fitBounds,
+  layerOpacity,
+  panBy,
+  sceneToScreen,
+  screenToScene,
+  zoomAt,
+} from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
-import { hitTest } from '../../utils/hit.ts';
+import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
-import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
-import { createLink, nodeBounds } from '../../utils/shapes.ts';
+import { type PartKey, partText, partValues } from '../../utils/parts.ts';
+import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
@@ -70,11 +82,11 @@ import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
-const DEFAULT_MARGIN = 1;
+const DEFAULT_MARGIN = 2;
+/** Quiet time after the camera's last move before `onCameraChange` reports it. */
+const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
-/** Length of a dash of the scene's frame, in screen px. */
-const FRAME_DASH = 4;
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
@@ -89,9 +101,13 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   projection?: Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: SceneViewAtoms;
+  /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
+  initialCamera?: Camera;
+  /** Called once the camera settles on the root scene, so a host can persist it. */
+  onCameraChange?: (camera: Camera) => void;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
-  /** Least gap between the scene's frame and each viewport edge when fitting, in whole major cells. */
+  /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
   margin?: number;
   /**
    * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
@@ -110,6 +126,8 @@ const SceneViewRoot = ({
   createProjection,
   projection: projectionProp,
   atoms: atomsProp,
+  initialCamera,
+  onCameraChange,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
@@ -133,6 +151,8 @@ const SceneViewRoot = ({
   // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
   // so a fit puts the same gap around the scene whatever the zoom.
   const inset = margin * grid * MAJOR_GRID_RATIO;
+  // A new node's default size is nominal: major cells of the model's grid, not of the level drawn at this zoom.
+  const cell = grid * MAJOR_GRID_RATIO;
 
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
@@ -167,7 +187,8 @@ const SceneViewRoot = ({
 
   // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
   // effect, so the fit lands before the first paint instead of one frame after it.
-  const interactedRef = useRef(false);
+  // A restored camera counts as taken over, so the fit leaves it where it was.
+  const interactedRef = useRef(initialCamera !== undefined);
 
   const select = useCallback(
     (ids: Iterable<ElementId>) => {
@@ -177,32 +198,48 @@ const SceneViewRoot = ({
     [registry, atoms.selection, atoms.point],
   );
 
-  const { nameOf, portalTo, frameOf, bounds, nominalZoom, pushHistory, drillIn, drillOut, goHistory } =
-    useSceneNavigation({
-      registry,
-      atoms,
-      store,
-      scenes,
-      scene,
-      path,
-      camera,
-      viewport,
-      inset,
-      drag,
-      interactedRef,
-      select,
-      animateTo,
-      setCamera,
-      setOpening,
-      isAnimating,
-    });
+  const { nameOf, portalTo, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory } = useSceneNavigation({
+    registry,
+    atoms,
+    store,
+    scenes,
+    scene,
+    path,
+    camera,
+    viewport,
+    inset,
+    drag,
+    interactedRef,
+    select,
+    animateTo,
+    setCamera,
+    setOpening,
+    isAnimating,
+  });
 
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
-    if (!interactedRef.current && measured) {
-      setCamera(fitBounds(bounds, viewport, inset));
+    if (initialCamera) {
+      setCamera(initialCamera);
     }
-  }, [measured, viewport, bounds, inset, setCamera]);
+    // Only the camera the view opened with is restored; later values are the host echoing ours back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setCamera]);
+  useLayoutEffect(() => {
+    if (!interactedRef.current && measured) {
+      setCamera(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM));
+    }
+  }, [measured, viewport, fitTarget, inset, setCamera]);
+
+  // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
+  const atRoot = path.length === 1;
+  useEffect(() => {
+    if (!onCameraChange || !atRoot || !interactedRef.current) {
+      return;
+    }
+    const timeout = setTimeout(() => onCameraChange(camera), CAMERA_SETTLE_MS);
+    return () => clearTimeout(timeout);
+  }, [onCameraChange, atRoot, camera]);
 
   useWheel(
     rootRef,
@@ -293,6 +330,7 @@ const SceneViewRoot = ({
     setCamera,
     cancelAnimation,
     isNavigating,
+    cell,
     minor,
     major,
     snap,
@@ -324,7 +362,7 @@ const SceneViewRoot = ({
     projection,
     capabilities,
     viewport,
-    bounds,
+    bounds: fitTarget,
     inset,
     grid,
     select,
@@ -432,12 +470,12 @@ const SceneViewRoot = ({
   const onPartCommit = useCallback(
     (node: Node, part: PartKey, text: string) => {
       registry.set(atoms.editing, undefined);
-      const values = partValues(node, part, text);
-      if (values && capabilities.update && text !== partText(node, part)) {
+      const values = partValues(nodeRegistry, node, part, text);
+      if (values && capabilities.update && text !== partText(nodeRegistry, node, part)) {
         projection.apply({ kind: 'update', id: node.id, values });
       }
     },
-    [registry, atoms.editing, capabilities.update, projection],
+    [registry, atoms.editing, capabilities.update, projection, nodeRegistry],
   );
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 
@@ -472,9 +510,9 @@ const SceneViewRoot = ({
       const partElement = target.closest('[data-part]');
       const part =
         partElement?.closest('[data-node-id]')?.getAttribute('data-node-id') === node.id
-          ? partKey(partElement?.getAttribute('data-part'))
+          ? (partElement?.getAttribute('data-part') ?? undefined)
           : undefined;
-      if (part && capabilities.update && partText(node, part) !== undefined) {
+      if (part && capabilities.update && partText(nodeRegistry, node, part) !== undefined) {
         select([node.id]);
         registry.set(atoms.editing, { id: node.id, part });
       } else if (nodeDef(nodeRegistry, node)?.openable) {
@@ -493,11 +531,13 @@ const SceneViewRoot = ({
     if (!element) {
       return;
     }
-    // The pointer is the shape's centre; its top-left is what snaps, so the edges land on the grid.
+    // The pointer is the shape's centre; its top-left snaps to the minor grid, as a move does, so the shape
+    // lands where it was dropped rather than up to half a major cell away.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
-      const size = nodeRegistry[type]?.defaultSize ?? { width: 0, height: 0 };
-      const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
+      const def = nodeRegistry[type];
+      const size = def ? nominalSize(def.defaultSize, cell) : { width: 0, height: 0 };
+      const from = { x: snapMinor(point.x - size.width / 2), y: snapMinor(point.y - size.height / 2) };
       return { kind: 'create', type, from, to: from, dropped: true };
     };
     return dropTargetForElements({
@@ -516,22 +556,44 @@ const SceneViewRoot = ({
         }
       },
       onDragLeave: cancelDrag,
-      onDrop: () => onPointerUpRef.current(),
+      // Placed where it is released: the last drag-over can lag the pointer by a step.
+      onDrop: ({ source, location }) => {
+        const type = nodeDragType(source.data);
+        if (type !== undefined) {
+          setDrag(dragAt(type, location.current.input));
+        }
+        onPointerUpRef.current();
+      },
     });
-  }, [capabilities.create, nodeRegistry, toScene, snap, setDrag, cancelDrag]);
+  }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
     [camera, viewport],
   );
 
-  const zoomBy = useCallback(
-    (factor: number) => {
+  // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
+  // since a union with a distant frame would exceed the grid's cell budget and hide the lattice.
+  const latticeBounds = useMemo(
+    () =>
+      boundsFromPoints(
+        screenToScene(camera, { x: 0, y: 0 }),
+        screenToScene(camera, { x: viewport.width, y: viewport.height }),
+      ),
+    [camera, viewport],
+  );
+
+  const zoomTo = useCallback(
+    (zoom: number) => {
       interactedRef.current = true;
       const centre = { x: viewport.width / 2, y: viewport.height / 2 };
-      animateTo(zoomAt(registry.get(atoms.camera), centre, registry.get(atoms.camera).zoom * factor));
+      animateTo(zoomAt(registry.get(atoms.camera), centre, zoom));
     },
     [viewport, animateTo, registry, atoms.camera],
+  );
+  const zoomBy = useCallback(
+    (factor: number) => zoomTo(registry.get(atoms.camera).zoom * factor),
+    [zoomTo, registry, atoms.camera],
   );
 
   const deleteSelection = useCallback(() => {
@@ -549,15 +611,15 @@ const SceneViewRoot = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = def.defaultSize;
-      const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
+      const size = nominalSize(def.defaultSize, cell);
+      const from = { x: snapMinor(pointer.x - size.width / 2), y: snapMinor(pointer.y - size.height / 2) };
       // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
       const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
       if (node) {
         commitCreated(node);
       }
     },
-    [nodeRegistry, capabilities.create, snap, pointer, createdNode, commitCreated],
+    [nodeRegistry, capabilities.create, cell, snapMinor, pointer, createdNode, commitCreated],
   );
 
   const toolbarActions = useMemo<ToolbarActions>(
@@ -565,7 +627,8 @@ const SceneViewRoot = ({
       path,
       nameOf,
       onPath: (index) => drillOut(path.length - 1 - index),
-      fit: () => animateTo(fitBounds(bounds, viewport, inset)),
+      fit: () => animateTo(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM)),
+      zoomReset: () => zoomTo(NOMINAL_ZOOM),
       zoomIn: () => zoomBy(ZOOM_STEP),
       zoomOut: () => zoomBy(1 / ZOOM_STEP),
       snap: snapEnabled,
@@ -597,10 +660,11 @@ const SceneViewRoot = ({
       nameOf,
       drillOut,
       animateTo,
-      bounds,
+      fitTarget,
       viewport,
       inset,
       zoomBy,
+      zoomTo,
       snapEnabled,
       toggleSnap,
       guides,
@@ -625,6 +689,27 @@ const SceneViewRoot = ({
     ],
   );
 
+  // The portal on screen that fills most of the view; the rest of the layer fades as it grows, so zooming into
+  // a scene (by wheel or drill-in) fades out what surrounds it and zooming out fades it back in.
+  const focus = useMemo(() => {
+    let best: { id: ElementId; opacity: number } | undefined;
+    for (const node of Object.values(displayScene.nodes)) {
+      if (!isPortalNode(node)) {
+        continue;
+      }
+      const bounds = nodeBounds(node);
+      const centre = sceneToScreen(camera, { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 });
+      if (centre.x < 0 || centre.y < 0 || centre.x > viewport.width || centre.y > viewport.height) {
+        continue;
+      }
+      const opacity = layerOpacity(camera, bounds, viewport);
+      if (!best || opacity < best.opacity) {
+        best = { id: node.id, opacity };
+      }
+    }
+    return best;
+  }, [displayScene.nodes, camera, viewport]);
+
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
 
@@ -641,12 +726,13 @@ const SceneViewRoot = ({
       displayScene={displayScene}
       blocked={blocked}
       bounds={bounds}
+      latticeBounds={latticeBounds}
       path={path}
       camera={camera}
-      nominalZoom={nominalZoom}
       pointer={pointer}
       measured={measured}
       frameUnit={frameUnit}
+      focus={focus}
       grid={grid}
       snapEnabled={snapEnabled}
       guides={guides}
@@ -742,9 +828,11 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     displayScene,
     blocked,
     bounds,
+    latticeBounds,
     camera,
     measured,
     frameUnit,
+    focus,
     grid,
     snapEnabled,
     guides,
@@ -795,27 +883,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         className={mx('absolute pointer-events-none', !measured && 'invisible')}
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
-        {/* The frame is chrome rather than content, so its stroke and dashes are divided by the zoom
-            the parent applies, the way the control frame's are. It is drawn as a stroke rather than a
-            CSS border because a border's width is rounded to whole local pixels, which puts a floor of
-            one scene unit under it — exactly the thickening that zooming in would cause. */}
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
         {guides && latticeOn && projection.lattice && (
-          <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />
-        )}
-        {guides && (
-          <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
-            <rect
-              data-testid='scene-frame'
-              x={bounds.x}
-              y={bounds.y}
-              width={bounds.width}
-              height={bounds.height}
-              className='fill-none stroke-orange-border opacity-50'
-              strokeWidth={frameUnit}
-              strokeDasharray={`${FRAME_DASH * frameUnit} ${FRAME_DASH * frameUnit}`}
-            />
-          </svg>
+          <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
         )}
         <div className='pointer-events-auto'>
           <SceneLayer
@@ -828,12 +898,14 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             selected={selection}
             hover={hover}
             opening={opening}
+            focus={focus}
             editing={editing}
             ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
             debug={debug}
             handlers={handlers}
             // Routes follow the gutters in lattice mode, whether or not snap is on.
             lattice={latticeOn ? projection.lattice : undefined}
+            cell={grid * MAJOR_GRID_RATIO}
           />
         </div>
         <ControlFrame
@@ -937,10 +1009,10 @@ const barFrame = 'absolute w-max max-w-[50%]';
 
 /** Where the view is in the scene tree. */
 const SceneViewNavigation = ({ classNames = 'top-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions, path } = useSceneViewContext('SceneView.Navigation');
+  const { toolbarActions } = useSceneViewContext('SceneView.Navigation');
   return (
     <div className={mx(barFrame, classNames)}>
-      <NavigationToolbar actions={toolbarActions}>depth {path.length - 1}</NavigationToolbar>
+      <NavigationToolbar actions={toolbarActions} />
     </div>
   );
 };
@@ -961,11 +1033,11 @@ SceneViewActions.displayName = 'SceneView.Actions';
 
 /** The camera's controls and numbers; nothing here changes the scene. */
 const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions, nominalZoom, pointer } = useSceneViewContext('SceneView.Debug');
+  const { toolbarActions, camera, pointer } = useSceneViewContext('SceneView.Debug');
   return (
     <div className={mx(barFrame, classNames)}>
       <CameraToolbar actions={toolbarActions}>
-        {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
+        {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
       </CameraToolbar>
     </div>
   );
@@ -999,12 +1071,17 @@ SceneViewPalette.displayName = 'SceneView.Palette';
 // Properties
 //
 
-export type SceneViewPropertiesProps = Util.ThemedClassName<Pick<PropertiesProps, 'fields'>>;
+export type SceneViewPropertiesProps = Util.ThemedClassName<
+  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'>
+>;
 
 /** The selected element's properties as a floating panel; absent while nothing is selected. */
 const SceneViewProperties = ({
   classNames = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]',
   fields,
+  db,
+  getOptions,
+  overrides,
 }: SceneViewPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, selection } = useSceneViewContext('SceneView.Properties');
   if (selection.size === 0) {
@@ -1018,6 +1095,9 @@ const SceneViewProperties = ({
       atoms={atoms}
       nodes={nodeRegistry}
       fields={fields}
+      db={db}
+      getOptions={getOptions}
+      overrides={overrides}
       readonly={!capabilities.update}
     />
   );

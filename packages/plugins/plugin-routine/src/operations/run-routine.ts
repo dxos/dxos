@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
       // An edge routine is registered only on the EDGE dispatcher, so running it means force-running that
       // trigger over HTTP; invoking the runnable here would silently run it on the client instead.
       if (trigger?.remote === true) {
-        const monitor = yield* Trigger.TriggerMonitorService;
+        const monitor = yield* Trigger.ManagerService;
         yield* monitor.invokeTrigger({ trigger, event: { tick: Date.now() } });
         return;
       }

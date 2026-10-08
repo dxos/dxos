@@ -15,6 +15,7 @@ import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Message, Person } from '@dxos/types';
@@ -297,14 +298,14 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 pagination={pagination}
               />
               {loading && (
-                <div role='status' className='grid place-items-center px-2 py-3'>
+                <Layout.Grid role='status' center classNames='px-2 py-3'>
                   <Icon.Icon
                     icon='ph--spinner-gap--regular'
                     size='lg'
                     classNames='[animation:spin_1s_linear_infinite]'
                     tone='subtle'
                   />
-                </div>
+                </Layout.Grid>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>

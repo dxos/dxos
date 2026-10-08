@@ -18,7 +18,6 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { mx } from '@dxos/ui-theme';
 
 import {
   type DiagnosticIssue,
@@ -169,7 +168,7 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
     <Layout.Flex column gap='sm' classNames='p-2'>
       <p className='text-sm font-medium'>{t('summary.label', { count: totalIssues })}</p>
       {failedProviders > 0 && (
-        <p className='text-xs text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</p>
+        <p className='text-xs text-error-text'>{t('summary.failed.label', { count: failedProviders })}</p>
       )}
       {results.map((result) => (
         <ProviderResult key={result.providerId} result={result} t={t} />
@@ -213,9 +212,9 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: Theme.T
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
   <li className='flex items-center gap-2 p-2'>
-    <Icon.Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={mx(paletteToText(issue.severity))} />
+    <Icon.Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={paletteToText(issue.severity)} />
     <Layout.Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
-      <span className='wrap-break-words break-all'>{issue.message}</span>
+      <span className='wrap-break-word break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
         <span className='text-fg-muted font-mono break-all'>
           {issue.subjectLabel ?? ''}
@@ -230,9 +229,9 @@ const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
 const paletteToText = (severity: DiagnosticSeverity): string => {
   switch (SEVERITY_PALETTE[severity]) {
     case 'rose':
-      return 'text-rose-600';
+      return 'text-rose-text';
     case 'amber':
-      return 'text-amber-600';
+      return 'text-amber-text';
     default:
       return 'text-fg-muted';
   }

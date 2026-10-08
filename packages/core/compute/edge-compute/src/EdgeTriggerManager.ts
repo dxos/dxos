@@ -48,7 +48,7 @@ const REPLICATION_BACKOFF = Schedule.exponential(Duration.seconds(1), 2).pipe(Sc
  * runtime status into a {@link Trigger.State} (marked `environment: 'edge'`).
  * The referenced `Trigger` objects are replicated into the local database, so
  * the trigger ref is a space-relative echo ref synthesized from the id. The
- * aggregate {@link TriggerMonitor} dedupes these against the database-derived
+ * aggregate {@link TriggerManager} dedupes these against the database-derived
  * view (edge entries here supersede the bare database ones).
  *
  * `invokeTrigger` force-runs the trigger's cron on the EDGE dispatcher via
