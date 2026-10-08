@@ -7,6 +7,7 @@ export * from './camera.ts';
 export * from './clipboard.ts';
 export * from './diagram.ts';
 export * from './dnd.ts';
+export * from './group.ts';
 export * from './hit.ts';
 export * from './lattice.ts';
 export * from './layout.ts';

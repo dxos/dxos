@@ -61,6 +61,7 @@ import {
 } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
+import { groupIntoScene } from '../../utils/group.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
@@ -1090,8 +1091,23 @@ const SceneViewProperties = ({
 }: SceneViewPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
     useSceneViewContext('SceneView.Properties');
+  const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
+
+  // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
+  const onGroup = useCallback(() => {
+    const id = createId('scene');
+    const group = groupIntoScene(registry.get(projection.scene), selection, id);
+    if (!group) {
+      return;
+    }
+    registry.set(store.scenes, { ...registry.get(store.scenes), [id]: { ...group.child, name: 'Untitled' } });
+    projection.apply({ kind: 'batch', intents: group.intents });
+    registry.set(atoms.selection, new Set([id]));
+    registry.set(atoms.point, undefined);
+  }, [registry, projection, selection, store.scenes, atoms.selection, atoms.point]);
+
   if (selection.size === 0) {
     return null;
   }
@@ -1108,6 +1124,7 @@ const SceneViewProperties = ({
       overrides={overrides}
       sceneOptions={options}
       styles={store.styles}
+      onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
       readonly={!capabilities.update}
     />
   );

@@ -525,6 +525,9 @@ feat F-3: Selection and editing
     naming one in `class` derives its style or line from it. Taking a class drops the element's own
     look; editing a classed element's look edits the class, so every element of it changes together.
     "New class from selection" makes a class of the selected element's look and moves the element onto it.
+  req F-3.13: "New scene from selection" moves the selected nodes, and the links between them, into a new
+    scene opened by a scene shape over their bounds; a link crossing out of the group stays, re-attached to
+    the shape. It is one undo step (`groupIntoScene`).
 ```
 
 ```mdl

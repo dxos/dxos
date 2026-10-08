@@ -162,6 +162,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   sceneOptions?: readonly SceneOption[];
   /** The drawing's style classes (`SceneStore.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
+  /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
+  onGroup?: () => void;
 }>;
 
 export const Properties = ({
@@ -176,6 +178,7 @@ export const Properties = ({
   overrides,
   sceneOptions,
   styles,
+  onGroup,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -310,6 +313,17 @@ export const Properties = ({
       {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
     >
       <Toolbar.Root data-testid='properties-toolbar'>
+        {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--frame-corners--regular'
+            label='New scene from selection'
+            disabled={readonly}
+            data-testid='properties-group'
+            onClick={onGroup}
+          />
+        )}
         {styles && single && (
           <Button.Root
             variant='ghost'
