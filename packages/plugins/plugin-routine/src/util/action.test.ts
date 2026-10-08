@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { DXN, Ref } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 
 import { type ActionStash, switchActionKind } from './action.ts';
 import { isRunInstructions } from './run-instructions.ts';
@@ -47,6 +47,22 @@ describe('switchActionKind', () => {
     switchActionKind(routine, 'instructions', stash);
     expect(Routine.instructionsRef(routine)?.target?.id).toBe(instructions.id);
     expect(isRunInstructions(trigger.runnable)).toBe(true);
+  });
+
+  test('an operation cleared on purpose stays cleared through a later round trip', ({ expect }) => {
+    const { routine, trigger } = makeSyncRoutine();
+    const stash: ActionStash = {};
+    switchActionKind(routine, 'instructions', stash);
+    switchActionKind(routine, 'runnable', stash);
+
+    // What the operation picker does when the user clears it.
+    Obj.update(routine, (routine) => {
+      routine.spec = undefined;
+    });
+    switchActionKind(routine, 'instructions', stash);
+    switchActionKind(routine, 'runnable', stash);
+    expect(routine.spec).toBeUndefined();
+    expect(trigger.runnable).toBeUndefined();
   });
 
   test("a stash kept for another routine does not restore that routine's action", ({ expect }) => {

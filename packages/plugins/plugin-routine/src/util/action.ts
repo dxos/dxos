@@ -27,14 +27,22 @@ export const switchActionKind = (routine: Routine.Routine, next: Routine.Kind, s
     stash.instructions = undefined;
     stash.operation = undefined;
   }
-  stash.instructions = Routine.instructionsRef(routine) ?? stash.instructions;
-  stash.operation = Routine.runnableRef(routine) ?? stash.operation;
+  // An unset action is the operation kind with none chosen yet.
+  const current = routine.spec?.kind ?? 'runnable';
+  if (current === next) {
+    return;
+  }
+  // Record the action of the kind being left even when it is none, so an action cleared on purpose stays cleared.
+  if (current === 'runnable') {
+    stash.operation = Routine.runnableRef(routine);
+  } else {
+    stash.instructions = Routine.instructionsRef(routine);
+  }
   const { instructions, operation } = stash;
   Obj.update(routine, (routine) => {
     if (next === 'runnable') {
-      // With no operation to restore the action stays unset until one is picked.
       routine.spec = operation ? { kind: 'runnable', runnable: operation } : undefined;
-    } else if (routine.spec?.kind !== 'instructions') {
+    } else {
       routine.spec = { kind: 'instructions', instructions: instructions ?? Ref.make(Instructions.make({})) };
     }
   });
