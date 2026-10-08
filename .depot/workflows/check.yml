@@ -56,11 +56,14 @@ env:
 # A manual dispatch also keys on its run id, so repeated dispatches of one ref run in parallel:
 # measuring flakiness needs N independent samples of the same commit. Every other event keeps
 # one-run-per-ref, where superseding an in-flight run is what you want.
+#
+# A merge group never cancels: its ref is unique, so only a duplicate run for the same commit shares
+# the group, and cancelling one posts `cancelled` on required checks, which dequeues the PR.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
     }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
