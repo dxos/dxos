@@ -37,7 +37,7 @@ import {
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { makeTestBrain, makeTestSpaceLayer } from './testing.ts';
+import { createLocalAgent, makeTestBrain, makeTestSpaceLayer } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -146,7 +146,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 
 /** Kai, with a private chat for Alice and one for Bob. */
 const setup = Effect.fnUntraced(function* () {
-  const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: SCENARIO.agent });
+  const { agent: agentRef } = yield* createLocalAgent(SCENARIO.agent);
   const agent = yield* Database.load(agentRef);
   const open = (identityDid: string, name: string) =>
     Operation.invoke(AgentOperation.OpenPrivateChat, { agent: agentRef, identityDid, name }).pipe(
@@ -320,7 +320,7 @@ describe('agent brain (local)', () => {
     'keeps a private chat apart from a shared chat with the same person',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: SCENARIO.agent });
+        const { agent: agentRef } = yield* createLocalAgent(SCENARIO.agent);
         const carol = yield* Database.add(
           Person.make({
             fullName: 'Carol',

@@ -7,6 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as AgentService from '@dxos/compute/AgentService';
 import { type FactStoreApi, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
@@ -114,7 +115,8 @@ export const make = (
       }),
     wake: ({ chat, prompt, sender }) =>
       agents
-        .getSession(chat)
+        // The chat's own location, else an agent chat on EDGE would wake a second, local session.
+        .getSession(chat, { location: Agent.chatLocation(chat) })
         .pipe(
           Effect.flatMap((session) =>
             session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),

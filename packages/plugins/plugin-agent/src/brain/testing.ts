@@ -7,12 +7,15 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Obj } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { IdentityDid } from '@dxos/keys';
 import { type FactStoreApi } from '@dxos/pipeline-rdf';
 
-import { BrainService } from '#types';
+import { AgentOperation, BrainService } from '#types';
 
 import { TriggerRegistry } from '../triggers.ts';
 import * as BrainMemory from './BrainMemory.ts';
@@ -25,6 +28,21 @@ export type TestBrainOptions = {
    */
   wake?: 'session' | 'record';
 };
+
+/**
+ * Creates an agent whose chats run in the test's runtime: an agent's chats default to EDGE, which a test
+ * has none of, and its participant chats take the primary chat's location.
+ */
+export const createLocalAgent = Effect.fnUntraced(function* (name: string) {
+  const created = yield* Operation.invoke(AgentOperation.CreateAgent, { name });
+  const chat = yield* Agent.loadChat(yield* Database.load(created.agent));
+  if (chat) {
+    Obj.update(chat, (chat) => {
+      chat.remote = false;
+    });
+  }
+  return created;
+});
 
 /**
  * One in-memory brain for a test file: the layer can be provided both to the resolver (operations) and
