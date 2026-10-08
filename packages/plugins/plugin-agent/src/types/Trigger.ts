@@ -152,6 +152,14 @@ const mentions = (haystack: string, needle: string): boolean => {
 const isSubject = (term: RDF.Term, subject: string): boolean =>
   (term.kind === 'entity' && term.entity === subject) || mentions(FactEntry.termText(term), subject);
 
+const nameKey = (name: string): string => name.trim().replace(/\s+/g, ' ').toLowerCase();
+
+/** A member id matches exactly; a bare name (someone who is no member) matches however it is cased or spaced. */
+const isSpeaker = (agent: string | undefined, speaker: string): boolean =>
+  agent !== undefined &&
+  (agent === speaker ||
+    (!speaker.startsWith('did:') && !agent.startsWith('did:') && nameKey(agent) === nameKey(speaker)));
+
 const time = (iso: string): number => Date.parse(iso);
 
 export type MatchOptions = {
@@ -171,7 +179,7 @@ export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: 
     return false;
   }
   // Watches store the speaker as facts are attributed: a member id (`watchFacts` resolves the name), else a bare name.
-  if (pattern.speaker !== undefined && attribution.agent !== pattern.speaker) {
+  if (pattern.speaker !== undefined && !isSpeaker(attribution.agent, pattern.speaker)) {
     return false;
   }
   // pipeline-rdf records no illocution for a plain assertion.

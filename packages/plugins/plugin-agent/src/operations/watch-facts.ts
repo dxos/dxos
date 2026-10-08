@@ -93,13 +93,16 @@ const memberOf = (members: readonly Space.Member[], name: string): Space.Member 
 /**
  * The pattern with its speaker (and a subject that names someone) replaced by the member's id, which is what
  * facts are attributed to. A speaker who is no member stays a bare name, as `readSource` attributes their words;
- * a name several members go by is a message for the model.
+ * a name several members go by is a message for the model, since matching it as words would fire on any of them.
  */
 const resolvePattern = (members: readonly Space.Member[], when: Trigger.FactPattern): Trigger.FactPattern | string => {
-  const speaker = when.speaker === undefined ? undefined : memberOf(members, when.speaker)?.did;
-  if (when.speaker !== undefined && !speaker && membersNamed(members, when.speaker) > 1) {
-    return `More than one member of the space goes by "${when.speaker}"; use the name they are listed under in the space.`;
+  const ambiguous = [when.speaker, when.subject].find(
+    (name) => name !== undefined && membersNamed(members, name) > 1 && !memberByDid(members, name),
+  );
+  if (ambiguous !== undefined) {
+    return `More than one member of the space goes by "${ambiguous}"; use the name they are listed under in the space.`;
   }
+  const speaker = when.speaker === undefined ? undefined : memberOf(members, when.speaker)?.did;
   const subject = when.subject === undefined ? undefined : memberOf(members, when.subject)?.did;
   return { ...when, ...(speaker ? { speaker } : {}), ...(subject ? { subject } : {}) };
 };
