@@ -56,7 +56,7 @@ export class SceneManager {
   selectedNodes(): Promise<string[]> {
     return this.page.evaluate(() =>
       Array.from(document.querySelectorAll<HTMLElement>('[data-node-id]'))
-        .filter((element) => element.className.includes('border-primary-500 '))
+        .filter((element) => element.className.includes('border-focus-ring '))
         .map((element) => element.dataset.nodeId ?? ''),
     );
   }

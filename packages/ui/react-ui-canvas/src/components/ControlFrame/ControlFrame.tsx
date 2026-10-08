@@ -165,7 +165,7 @@ export const ControlFrame = memo(
               y={bounds.y}
               width={bounds.width}
               height={bounds.height}
-              className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-primary-500')}
+              className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-focus-ring')}
               strokeWidth={unit}
               data-blocked={blocked || undefined}
             />
@@ -188,8 +188,8 @@ export const ControlFrame = memo(
                 cy={point.y}
                 r={portRadius}
                 className={mx(
-                  'stroke-primary-500 pointer-events-auto cursor-crosshair hover:fill-primary-500',
-                  active ? 'fill-primary-500' : 'fill-base-surface',
+                  'stroke-focus-ring pointer-events-auto cursor-crosshair hover:fill-focus-ring',
+                  active ? 'fill-focus-ring' : 'fill-base-surface',
                 )}
                 strokeWidth={unit}
                 onPointerDown={(event) => onPortPointerDown?.(node, port, event)}
@@ -209,7 +209,7 @@ export const ControlFrame = memo(
                   y={point.y - handleSize / 2}
                   width={handleSize}
                   height={handleSize}
-                  className='fill-base-surface stroke-primary-500 pointer-events-auto'
+                  className='fill-base-surface stroke-focus-ring pointer-events-auto'
                   strokeWidth={unit}
                   style={{ cursor: cursorFor(handle) }}
                   onPointerDown={(event) => onHandlePointerDown?.(single, handle, event)}
@@ -242,9 +242,9 @@ export const ControlFrame = memo(
                   cy={point.y}
                   r={portRadius}
                   className={mx(
-                    'stroke-primary-500 pointer-events-auto cursor-move hover:fill-primary-500',
+                    'stroke-focus-ring pointer-events-auto cursor-move hover:fill-focus-ring',
                     drag?.kind === 'end' && drag.id === link.id && drag.end === end
-                      ? 'fill-primary-500'
+                      ? 'fill-focus-ring'
                       : 'fill-base-surface',
                   )}
                   strokeWidth={unit}
@@ -259,7 +259,7 @@ export const ControlFrame = memo(
                     cx={point.x}
                     cy={point.y}
                     r={midpointRadius}
-                    className='fill-primary-500/40 pointer-events-auto cursor-copy hover:fill-primary-500'
+                    className='fill-focus-ring/40 pointer-events-auto cursor-copy hover:fill-focus-ring'
                     onPointerDown={(event) => onMidpointPointerDown?.(link, index, point, event)}
                   />
                 ))}
@@ -273,9 +273,9 @@ export const ControlFrame = memo(
                     height={handleSize}
                     transform={`rotate(45 ${point.x} ${point.y})`}
                     className={mx(
-                      'stroke-primary-500 pointer-events-auto cursor-move hover:fill-primary-500',
+                      'stroke-focus-ring pointer-events-auto cursor-move hover:fill-focus-ring',
                       selectedPoint?.link === link.id && selectedPoint.index === index
-                        ? 'fill-primary-500'
+                        ? 'fill-focus-ring'
                         : 'fill-base-surface',
                     )}
                     strokeWidth={unit}
@@ -289,7 +289,7 @@ export const ControlFrame = memo(
         {band && (
           <path
             d={curvePath(band.from, { point: band.to, side: oppositeSide(band.from.side) })}
-            className='fill-none stroke-primary-500'
+            className='fill-none stroke-focus-ring'
             strokeWidth={2 * unit}
             strokeDasharray={`${6 * unit} ${4 * unit}`}
           />
@@ -300,7 +300,7 @@ export const ControlFrame = memo(
             y={marquee.y}
             width={marquee.width}
             height={marquee.height}
-            className='fill-primary-500/10 stroke-primary-500'
+            className='fill-focus-ring/10 stroke-focus-ring'
             strokeWidth={unit}
           />
         )}
@@ -312,7 +312,7 @@ export const ControlFrame = memo(
             y={frame.y}
             width={frame.width}
             height={frame.height}
-            className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-primary-500')}
+            className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-focus-ring')}
             data-blocked={blocked || undefined}
             strokeWidth={unit}
             strokeDasharray={`${4 * unit} ${4 * unit}`}
@@ -325,7 +325,7 @@ export const ControlFrame = memo(
             y={createFrame.y}
             width={createFrame.width}
             height={createFrame.height}
-            className={blocked ? 'fill-error-surface stroke-error-border' : 'fill-primary-500/10 stroke-primary-500'}
+            className={blocked ? 'fill-error-surface stroke-error-border' : 'fill-focus-ring/10 stroke-focus-ring'}
             data-blocked={blocked || undefined}
             strokeWidth={unit}
           />
