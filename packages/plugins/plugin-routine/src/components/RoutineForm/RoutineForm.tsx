@@ -14,7 +14,6 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -294,7 +293,7 @@ const ActionSection = ({
   const unset = kind === 'runnable' && !action?.operation && trigger?.enabled === true;
 
   return (
-    <Layout.Flex column>
+    <>
       <Form.Fields path={ACTION_PATH} schema={ActionForm} />
       {unset && !readonly ? (
         <Banner.Root valence='warning' data-testid='routine-form.action-unset'>
@@ -304,7 +303,7 @@ const ActionSection = ({
       {kind === 'instructions' && instructions ? (
         <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}
-    </Layout.Flex>
+    </>
   );
 };
 
