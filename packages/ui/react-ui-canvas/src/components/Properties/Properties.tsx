@@ -62,9 +62,9 @@ import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { AlignField } from './AlignField.tsx';
-import { ClassField, StyleClassesContext } from './ClassField.tsx';
+import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
-import { LayerField, LayersContext } from './LayerField.tsx';
+import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
@@ -104,8 +104,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'scene': SceneField,
-  'class': ClassField,
-  'layer': LayerField,
+  'layer': LayerClassField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -223,7 +222,8 @@ export const Properties = ({
     const fieldOverrides: Record<string, FormFieldOverride> = {
       ...FIELD_OVERRIDES,
       ...(sceneOptions ? {} : { scene: { hidden: true } }),
-      ...(styles ? {} : { class: { hidden: true } }),
+      // The class is edited in the layer's row (`LayerClassField`).
+      class: { hidden: true },
       ...overrides?.(elements),
     };
     for (const path of mixed) {
@@ -358,7 +358,7 @@ export const Properties = ({
       <Panel.Body>
         {schema && (
           <LayersContext.Provider value={layers}>
-            <StyleClassesContext.Provider value={styleMap}>
+            <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
               <SceneOptionsContext.Provider value={sceneOptions ?? []}>
                 <Form.Root
                   key={[...selection].join()}
