@@ -530,6 +530,11 @@ feat F-3: Selection and editing
     A selection of several kinds edits only the fields every kind declares (`commonSchema` intersects nested
     structs), with one style picker that offers the fill rows only when every element is a node; a class's style
     restyles nodes and links alike, a link taking its common base.
+  req F-3.15: A scene has ordered layers (`Scene.layers`, one implicit when it names none) and every node and link
+    is on exactly one (`layer`; unset, the bottom one). Elements paint by layer, then by their own order; a hidden
+    layer is neither drawn nor hit. The layers panel (`SceneView.Layers`) adds, deletes, merges down, shows or
+    hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
+    properties panel picks an element's layer.
   req F-3.13: "New scene from selection" moves the selected nodes, and the links between them, into a new
     scene opened by a scene shape over their bounds; a link crossing out of the group stays, re-attached to
     the shape. It is one undo step (`groupIntoScene`).

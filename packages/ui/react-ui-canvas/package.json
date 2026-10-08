@@ -45,6 +45,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
@@ -54,7 +55,9 @@
     "transformation-matrix": "catalog:"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@playwright/test": "catalog:",

@@ -40,6 +40,7 @@ import {
   BaseNode,
   CurveLink,
   type Element,
+  type Layer,
   LineLink,
   type LinkType,
   type Node,
@@ -54,6 +55,7 @@ import {
   isPortalNode,
   showsContents,
 } from '../../model/types.ts';
+import { elementLayer, sceneLayers } from '../../utils/layers.ts';
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { type SceneOption } from '../../utils/scenes.ts';
@@ -61,6 +63,7 @@ import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { AlignField } from './AlignField.tsx';
 import { ClassField, StyleClassesContext } from './ClassField.tsx';
+import { LayerField, LayersContext } from './LayerField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
@@ -100,6 +103,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'scene': SceneField,
   'class': ClassField,
+  'layer': LayerField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -123,11 +127,17 @@ const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertic
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
  * contents read as they look and an unset port count as the type's.
  */
-const formValues = (nodes: NodeRegistry, element: Element, styles: StyleMap): Record<string, unknown> =>
+const formValues = (
+  nodes: NodeRegistry,
+  element: Element,
+  styles: StyleMap,
+  layers: readonly Layer[],
+): Record<string, unknown> =>
   isLink(element)
-    ? { ...element, style: classedLink(element, styles).style }
+    ? { ...element, layer: elementLayer(element, layers), style: classedLink(element, styles).style }
     : {
         ...element,
+        layer: elementLayer(element, layers),
         style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
@@ -145,6 +155,7 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.fontSize': { min: 8, max: 80, step: 1 },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
   'scene': { label: 'Scene' },
+  'layer': { label: 'Layer' },
 };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -197,13 +208,14 @@ export const Properties = ({
   const elements = useMemo(() => [...selection].flatMap((id) => getElement(scene, id) ?? []), [scene, selection]);
   const readonly = readonlyProp || !projection.capabilities.update;
   const styleMap = useAtomValue(styles ?? NO_STYLES);
+  const layers = useMemo(() => sceneLayers(scene), [scene]);
 
   // Keyed by the selected types, so the schema (and the form built on it) holds while values change under it.
   const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
   const { values, fieldOverrides } = useMemo(() => {
-    const shown = elements.map((element) => formValues(nodes, element, styleMap));
+    const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
     const fieldOverrides: Record<string, FormFieldOverride> = {
@@ -216,7 +228,7 @@ export const Properties = ({
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, sceneOptions, styles, styleMap]);
+  }, [elements, nodes, overrides, sceneOptions, styles, styleMap, layers]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -224,7 +236,7 @@ export const Properties = ({
       // A classed element's look is its class's: an edit of it restyles the class, and so every element deriving it.
       const classes: Record<string, StyleClass> = {};
       const intents = elements.map((element) => {
-        const shown = formValues(nodes, element, styleMap);
+        const shown = formValues(nodes, element, styleMap, layers);
         const patch = patchValues(shown, values, paths);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
@@ -247,7 +259,7 @@ export const Properties = ({
       }
       projection.apply({ kind: 'batch', intents });
     },
-    [projection, elements, nodes, styles, styleMap, registry],
+    [projection, elements, nodes, styles, styleMap, layers, registry],
   );
 
   // A new class takes the selected element's look, and the element then follows it rather than carrying its own.
@@ -346,34 +358,36 @@ export const Properties = ({
         )}
       </Toolbar.Root>
       {schema ? (
-        <StyleClassesContext.Provider value={styleMap}>
-          <SceneOptionsContext.Provider value={sceneOptions ?? []}>
-            <Form.Root
-              key={[...selection].join()}
-              schema={schema}
-              values={values}
-              fieldOverrides={fieldOverrides}
-              fieldMap={fieldMap}
-              db={db}
-              getOptions={getOptions}
-              readonly={readonly}
-              autoSave
-              onSave={onSave}
-            >
-              {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
-              <Form.Viewport scroll>
-                <Form.Content>
-                  <Form.Fields exclude={HIDDEN} />
-                  {summary && (
-                    <p className='text-sm text-fg-muted' data-testid='properties-summary'>
-                      {summary}
-                    </p>
-                  )}
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </SceneOptionsContext.Provider>
-        </StyleClassesContext.Provider>
+        <LayersContext.Provider value={layers}>
+          <StyleClassesContext.Provider value={styleMap}>
+            <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+              <Form.Root
+                key={[...selection].join()}
+                schema={schema}
+                values={values}
+                fieldOverrides={fieldOverrides}
+                fieldMap={fieldMap}
+                db={db}
+                getOptions={getOptions}
+                readonly={readonly}
+                autoSave
+                onSave={onSave}
+              >
+                {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
+                <Form.Viewport scroll>
+                  <Form.Content>
+                    <Form.Fields exclude={HIDDEN} />
+                    {summary && (
+                      <p className='text-sm text-fg-muted' data-testid='properties-summary'>
+                        {summary}
+                      </p>
+                    )}
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            </SceneOptionsContext.Provider>
+          </StyleClassesContext.Provider>
+        </LayersContext.Provider>
       ) : (
         <p className='p-2 text-sm text-fg-muted' data-testid='properties-summary'>
           {summary}

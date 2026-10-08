@@ -28,10 +28,10 @@ describe('properties', () => {
     expect(rectNote).toContain('style');
     expect(rectNote).not.toContain('label');
 
-    // A node and a link share only what both declare: `locked`, `class` and `style` (and the hidden `id`/`z`), the
-    // style narrowed to the common base both kinds' styles extend.
+    // A node and a link share only what both declare: `locked`, `layer`, `class` and `style` (and the hidden `id`/`z`),
+    // the style narrowed to the common base both kinds' styles extend.
     const shared = commonSchema([RectNode, LineLink]);
-    expect(names(shared)).toEqual(['id', 'z', 'locked', 'class', 'style']);
+    expect(names(shared)).toEqual(['id', 'z', 'locked', 'layer', 'class', 'style']);
     const style = shared && getPropertySignatures(shared.ast).find((property) => property.name === 'style');
     const struct = style?.type._tag === 'Union' ? style.type.types.find((type) => type._tag === 'Objects') : undefined;
     expect(struct?._tag === 'Objects' && struct.propertySignatures.map((property) => property.name)).toEqual([

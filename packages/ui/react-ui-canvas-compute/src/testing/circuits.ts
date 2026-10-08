@@ -4,8 +4,8 @@
 
 import { createSystemPrompt } from '@dxos/assistant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
+import { type Point, type Size } from '@dxos/react-ui-canvas/scene';
 
 import {
   type ComputeShape,
@@ -304,7 +304,7 @@ export const createAudioCircuit = () => {
 // Utils
 //
 
-const position = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
+const position = (rect: Point & Partial<Size>, snap = 32): { center: Point; size?: Size } => {
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
   const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
   if (width && height) {

@@ -60,6 +60,7 @@ const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
     <SceneView.Debug />
     <SceneView.Palette />
     <SceneView.Properties />
+    <SceneView.Layers />
   </SceneView.Root>
 );
 

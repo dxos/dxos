@@ -27,6 +27,7 @@ import {
   type Scene,
   type SceneId,
 } from '../model/types.ts';
+import { DEFAULT_LAYER } from './layers.ts';
 import { initialKeys } from './order.ts';
 import { createNode } from './shapes.ts';
 
@@ -147,7 +148,15 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
   const nodes = new Map<string, Node>();
   const links = new Map<string, Link>();
   const keys = initialKeys(element.elements.length);
-  const index = scenes.push({ id: element.id, name: element.sceneName, nodes: {}, links: {} }) - 1;
+  // Every element names its layer, so a fixture reads as a scene the editor wrote.
+  const index =
+    scenes.push({
+      id: element.id,
+      name: element.sceneName,
+      nodes: {},
+      links: {},
+      layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+    }) - 1;
   element.elements.forEach((child, order) => {
     const z = keys[order];
     switch (child.kind) {
@@ -156,7 +165,7 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
         // fixture sets only what it means and the type supplies the rest of its content.
         const def = isBuiltinType(child.node.type) ? undefined : registry[child.node.type];
         const fresh = def?.create({ id: child.node.id, z, center: child.node.center, size: child.node.size });
-        const node = { ...fresh, ...child.node, z };
+        const node = { layer: DEFAULT_LAYER.id, ...fresh, ...child.node, z };
         check(registry, node);
         claim(nodes, node.id, element.id);
         nodes.set(node.id, node);
@@ -165,7 +174,7 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
       case 'link': {
         const id = child.linkId ?? uniqueId(links, linkId(child.link.source, child.link.target));
         claim(links, id, element.id);
-        links.set(id, { ...child.link, id, z });
+        links.set(id, { layer: DEFAULT_LAYER.id, ...child.link, id, z });
         break;
       }
       case 'scene': {
@@ -174,6 +183,7 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
         }
         const node: PortalNode = {
           ...createNode({ type: 'scene', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
+          layer: DEFAULT_LAYER.id,
           ...child.portal,
           type: 'scene',
           scene: child.id,

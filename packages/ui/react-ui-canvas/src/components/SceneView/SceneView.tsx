@@ -41,6 +41,8 @@ import {
   type ElementId,
   type Endpoint,
   type Intent,
+  type Layer,
+  type LayerId,
   type LinkId,
   MAJOR_GRID_RATIO,
   type Node,
@@ -66,6 +68,14 @@ import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { groupIntoScene } from '../../utils/group.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
+import {
+  activeLayer,
+  createLayer,
+  mergeLayersIntent,
+  moveLayer,
+  sceneLayers,
+  visibleScene,
+} from '../../utils/layers.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
@@ -74,6 +84,7 @@ import { recordScenes, redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
+import { LayersPanel } from '../Layers/Layers.tsx';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
@@ -96,7 +107,10 @@ const ZOOM_STEP = 1.25;
 const LINK_HOVER_GRACE_MS = 150;
 
 /** How long a move's pointer rests before the shapes snap to where they will land. */
-const SETTLE_MS = 100;
+const SETTLE_MS = 200;
+
+/** Where the properties and layers panels float: the top right, one at a time (properties with a selection). */
+const PANEL_CLASSES = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -152,6 +166,7 @@ const SceneViewRoot = ({
   const path = useAtomValue(atoms.path);
   const projection = useSceneProjection({ store, atoms, createProjection, projection: projectionProp });
   const scene = useAtomValue(projection.scene);
+  const visible = useMemo(() => visibleScene(scene), [scene]);
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
@@ -330,7 +345,8 @@ const SceneViewRoot = ({
     registry,
     atoms,
     store,
-    scene,
+    // A hidden layer's elements are not hit: gestures see the scene as drawn.
+    scene: visible,
     nodeRegistry,
     projection,
     capabilities,
@@ -938,6 +954,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     menuAnchorRef,
   } = useSceneViewContext('SceneView.Canvas');
 
+  // Handles and ports belong to what is drawn: a hidden layer's elements show none.
+  const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
+
   return (
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
@@ -985,7 +1004,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           />
         </div>
         <ControlFrame
-          scene={displayScene}
+          scene={shownScene}
           registry={nodeRegistry}
           selection={selection}
           hover={hover}
@@ -1159,7 +1178,7 @@ export type SceneViewPropertiesProps = Util.ThemedClassName<
 
 /** The selected element's properties as a floating panel; absent while nothing is selected. */
 const SceneViewProperties = ({
-  classNames = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]',
+  classNames = PANEL_CLASSES,
   fields,
   db,
   getOptions,
@@ -1175,7 +1194,8 @@ const SceneViewProperties = ({
   // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
   const onGroup = useCallback(() => {
     const id = createId('scene');
-    const group = groupIntoScene(registry.get(projection.scene), selection, id);
+    const current = registry.get(projection.scene);
+    const group = groupIntoScene(current, selection, id, activeLayer(current, registry.get(atoms.layer)));
     if (!group) {
       return;
     }
@@ -1193,7 +1213,7 @@ const SceneViewProperties = ({
     recordScenes(registry, atoms.undo, path[path.length - 1], before);
     registry.set(atoms.selection, new Set([id]));
     registry.set(atoms.point, undefined);
-  }, [registry, projection, selection, store.scenes, atoms.selection, atoms.point, atoms.undo, path]);
+  }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
   if (selection.size === 0) {
     return null;
@@ -1219,6 +1239,90 @@ const SceneViewProperties = ({
 
 SceneViewProperties.displayName = 'SceneView.Properties';
 
+//
+// Layers
+//
+
+export type SceneViewLayersProps = Util.ThemedClassName<{}>;
+
+/**
+ * The current scene's layers as a floating panel where the properties panel goes, shown while nothing is selected
+ * (the two take turns). Each edit is one intent, so one undo step.
+ */
+const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
+  const { projection, atoms, capabilities, selection } = useSceneViewContext('SceneView.Layers');
+  const registry = useRegistry();
+  const scene = useAtomValue(projection.scene);
+  const active = useAtomValue(atoms.layer);
+  const layers = useMemo(() => sceneLayers(scene), [scene]);
+  const readonly = !capabilities.update;
+  const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
+  const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
+  // The layers picked in the panel; the active layer (the top-most of them) is the one new shapes go on.
+  const [picked, setPicked] = useState<LayerId[]>([]);
+  const top = activeLayer(scene, active);
+  const selected = useMemo(() => {
+    const ids = picked.filter((id) => byId(id));
+    return ids.includes(top) ? ids : [top];
+  }, [picked, byId, top]);
+  const select = useCallback(
+    (ids: LayerId[]) => {
+      setPicked(ids);
+      const topMost = [...layers].reverse().find((layer) => ids.includes(layer.id));
+      topMost && registry.set(atoms.layer, topMost.id);
+    },
+    [layers, registry, atoms],
+  );
+  if (selection.size > 0) {
+    return null;
+  }
+
+  return (
+    <LayersPanel
+      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      layers={layers}
+      selected={selected}
+      readonly={readonly}
+      onSelectedChange={select}
+      onToggle={(id) => {
+        const layer = byId(id);
+        layer && setLayer({ ...layer, hidden: !layer.hidden });
+      }}
+      onRename={(id, name) => {
+        const layer = byId(id);
+        layer && setLayer({ ...layer, name });
+      }}
+      onMove={(id, index) => {
+        const layer = moveLayer(scene, id, index);
+        layer && setLayer(layer);
+      }}
+      onCreate={() => {
+        const layer = createLayer(scene, createId('layer'));
+        setLayer(layer);
+        select([layer.id]);
+        return layer.id;
+      }}
+      onDelete={
+        capabilities.delete
+          ? (ids) => {
+              projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+              setPicked([]);
+            }
+          : undefined
+      }
+      onMerge={(ids, into) => {
+        const merge = mergeLayersIntent(scene, ids, into);
+        if (merge) {
+          projection.apply(merge);
+          select([into]);
+        }
+      }}
+    />
+  );
+};
+
+SceneViewLayers.displayName = 'SceneView.Layers';
+
 export const SceneView = {
   Root: SceneViewRoot,
   Canvas: SceneViewCanvas,
@@ -1227,4 +1331,5 @@ export const SceneView = {
   Debug: SceneViewDebug,
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
+  Layers: SceneViewLayers,
 };
