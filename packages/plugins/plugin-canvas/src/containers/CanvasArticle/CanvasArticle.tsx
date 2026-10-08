@@ -15,6 +15,7 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type Camera,
   type Element,
+  type SceneId,
   SceneView,
   type SceneViewPropertiesProps,
   createLatticeProjection,
@@ -85,6 +86,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     [updateViewState],
   );
 
+  // A shape opens a scene of this drawing, never one bound from a linked drawing.
+  const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
+
   // A scene shape links only to another canvas drawing: never to itself, nor to a drawing of another renderer.
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
     (results) =>
@@ -114,7 +118,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
         const child = scenes[element.scene];
         return child !== undefined && Object.keys(child.nodes).length > 0;
       });
-      return locked ? { drawing: { readonly: true } } : {};
+      // A shape showing another drawing opens that drawing's root, not a scene of this one.
+      const linked = elements.some((element) => !isLink(element) && drawingUri(element));
+      return { ...(locked ? { drawing: { readonly: true } } : {}), ...(linked ? { scene: { hidden: true } } : {}) };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [registry, bound],
@@ -146,7 +152,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             )}
             {(settings.showPalette ?? true) && <SceneView.Palette />}
             {/* Floats over the canvas while something is selected; renders nothing otherwise. */}
-            <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} />
+            <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
           </SceneView.Root>
         )}
       </Panel.Body>

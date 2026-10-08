@@ -91,4 +91,28 @@ describe('bindCanvasStore', () => {
     expect(scenes.root.nodes.f).toMatchObject({ scene: 'f' });
     bound.dispose();
   });
+
+  test('style classes are kept beside the scenes, both ways', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const canvas = db.add(createCanvas());
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    const { styles } = bound.store;
+    expect(styles && registry.get(styles)).toEqual({});
+
+    // A class made in the view is written to the canvas.
+    const warning = { id: 'warn', name: 'Warning', style: { hue: 'red' } };
+    if (styles) {
+      registry.set(styles, { warn: warning });
+    }
+    expect(clone(canvas.styles)).toEqual({ warn: warning });
+
+    // A class changed in the canvas (a peer's edit) reaches the view.
+    Obj.update(canvas, (canvas) => {
+      canvas.styles = { warn: { ...warning, name: 'Alert' } };
+    });
+    await expect.poll(() => styles && registry.get(styles).warn?.name).toBe('Alert');
+    bound.dispose();
+  });
 });
