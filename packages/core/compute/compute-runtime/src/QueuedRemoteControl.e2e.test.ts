@@ -3,6 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -116,6 +117,38 @@ describe('queued remote control (e2e against a local host)', () => {
 
           expect((yield* host.applied).map((entry) => entry.input)).toEqual(['one', 'two']);
         }),
+      );
+    }),
+  );
+
+  it.live(
+    'a process with an undelivered input reads as RUNNING, not the IDLE the host last reported',
+    Effect.fn(function* ({ expect }) {
+      // The host answers an input only once the turn it starts has settled (EDGE's process object does),
+      // so a command stays queued for the whole turn; held here to observe that window.
+      const release = yield* Deferred.make<void>();
+      const holdInputs = (control: RemoteProcessManager.Control): RemoteProcessManager.Control => ({
+        ...control,
+        submitInput: (target) => Deferred.await(release).pipe(Effect.andThen(control.submitInput(target))),
+      });
+      yield* withHarness(
+        ({ client }) =>
+          Effect.gen(function* () {
+            const { pid } = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key });
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.IDLE);
+
+            // A caller waiting for the turn to settle polls `status`: answered IDLE here, it would return
+            // before the input it just submitted had even reached the host.
+            yield* client.submitInput({ spaceId: SPACE, pid, input: 'one' });
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.RUNNING);
+            expect((yield* client.list({ spaceId: SPACE })).map((info) => info.state)).toEqual([Process.State.RUNNING]);
+
+            yield* Deferred.succeed(release, undefined);
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.IDLE);
+          }),
+        { wrap: holdInputs },
       );
     }),
   );
@@ -378,7 +411,11 @@ interface Harness {
  */
 const withHarness = (
   body: (harness: Harness) => Effect.Effect<void, never, Registry.AtomRegistry | Scope.Scope>,
-  options: { backoff?: QueuedRemoteControl.Backoff } = {},
+  options: {
+    backoff?: QueuedRemoteControl.Backoff;
+    /** Interposes on the channel between the client and the host. */
+    wrap?: (control: RemoteProcessManager.Control) => RemoteProcessManager.Control;
+  } = {},
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -403,7 +440,7 @@ const withHarness = (
     const clients = yield* Scope.make();
     const makeClient = (kvStore: KeyValueStore.KeyValueStore) =>
       QueuedRemoteControl.make({
-        control,
+        control: options.wrap?.(control) ?? control,
         kvStore,
         backoff: options.backoff ?? BACKOFF,
       }).pipe(Effect.provideService(Scope.Scope, clients));
