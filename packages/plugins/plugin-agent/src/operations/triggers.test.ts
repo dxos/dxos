@@ -37,7 +37,7 @@ import {
   TriggerOperation,
 } from '#types';
 
-import { TEST_MEMBERS, makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
+import { TEST_MEMBERS, createLocalAgent, makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
@@ -350,7 +350,7 @@ describe('end-of-turn triggers', () => {
             identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: DIMA }],
           }),
         );
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const { agent: agentRef } = yield* createLocalAgent('Kai');
         const agent = yield* Database.load(agentRef);
         const richChat = yield* Agent.loadChat(agent);
         if (!richChat) {
@@ -415,7 +415,7 @@ describe('end-of-turn triggers', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const { agent: agentRef } = yield* createLocalAgent('Kai');
         const agent = yield* Database.load(agentRef);
         const { chat: josiahChatRef } = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
           agent: agentRef,
@@ -621,7 +621,7 @@ describe('keep me posted', () => {
           }),
         );
         const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const { agent: agentRef } = yield* createLocalAgent('Kai');
         const agent = yield* Database.load(agentRef);
         const chatFor = (person: Person.Person) =>
           Operation.invoke(AgentOperation.EnsureParticipantChat, {
@@ -676,7 +676,7 @@ describe('keep me posted', () => {
           }),
         );
         const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const { agent: agentRef } = yield* createLocalAgent('Kai');
         const agent = yield* Database.load(agentRef);
         const chatFor = (person: Person.Person) =>
           Operation.invoke(AgentOperation.EnsureParticipantChat, {
