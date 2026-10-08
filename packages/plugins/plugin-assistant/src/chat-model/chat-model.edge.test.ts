@@ -18,6 +18,7 @@ import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import {
   ProcessManager,
+  ProcessOperationInvoker,
   RemoteTraceMonitor,
   UnifiedProcessManager,
   configuredCredentialsLayer,
@@ -246,7 +247,7 @@ const timingOf = (prompt: string, recorder: ChatModelRecorder): Omit<TurnTiming,
  */
 const stack = (client: Client, space: Space) =>
   Layer.empty.pipe(
-    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+    Layer.provideMerge(ProcessOperationInvoker.layer),
     Layer.provideMerge(AgentServiceRuntime.layer({ defaultModel: MODEL, provider: Provider.edge.id })),
     Layer.provideMerge(UnifiedProcessManager.layer),
     Layer.provideMerge(

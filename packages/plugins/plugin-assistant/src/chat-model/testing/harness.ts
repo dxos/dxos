@@ -58,17 +58,10 @@ export const makeStubSpaceLayer = (
 export const makeTestRuntime: Effect.Effect<
   Capabilities.ProcessManagerRuntime,
   never,
-  | ProcessManager.Service
-  | Operation.Service
-  | ProcessManager.ProcessOperationInvoker.Service
-  | ServiceResolver.ServiceResolver
-  | Scope.Scope
+  ProcessManager.Service | Operation.Service | ServiceResolver.ServiceResolver | Scope.Scope
 > = Effect.gen(function* () {
   const services = yield* Effect.context<
-    | ProcessManager.Service
-    | Operation.Service
-    | ProcessManager.ProcessOperationInvoker.Service
-    | ServiceResolver.ServiceResolver
+    ProcessManager.Service | Operation.Service | ServiceResolver.ServiceResolver
   >();
   const manager = PluginManager.make({
     pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),

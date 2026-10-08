@@ -28,12 +28,12 @@ import { Person } from '@dxos/types';
 import * as ProcessManager from './ProcessManager.ts';
 import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
 import { credentialsLayerConfig } from './services/credentials.ts';
-import * as TriggerMonitor from './TriggerMonitor.ts';
+import * as TriggerManager from './TriggerManager.ts';
 import { TriggerDispatcher } from './triggers/trigger-dispatcher.ts';
 import { TriggerStateStore } from './triggers/trigger-state-store.ts';
 
 /**
- * Environment providing the {@link TriggerMonitorLayer}'s dependencies
+ * Environment providing the {@link TriggerManagerLayer}'s dependencies
  * ({@link TriggerDispatcher}, {@link Database.Service}, {@link Registry.AtomRegistry}).
  * The monitor itself is built per-test via {@link withMonitor} so that its initial
  * state derivation observes triggers seeded by the test body.
@@ -104,23 +104,23 @@ const registerOperation = (operation: Operation.Definition.Any) =>
   });
 
 /**
- * Build the {@link Trigger.TriggerMonitorService} on top of the already-provided dependencies and
+ * Build the {@link Trigger.ManagerService} on top of the already-provided dependencies and
  * run `body` with it. Building here (rather than in the top-level layer) means the monitor's initial
  * synchronous state derivation observes whatever triggers the test body seeded beforehand. A no-op
  * subscription keeps the derived atom mounted so writes are retained for `registry.get` reads.
  */
-const withMonitor = <A, E, R>(body: (monitor: Trigger.Monitor) => Effect.Effect<A, E, R>) =>
+const withMonitor = <A, E, R>(body: (monitor: Trigger.Manager) => Effect.Effect<A, E, R>) =>
   Effect.gen(function* () {
-    const monitor = yield* Trigger.TriggerMonitorService;
+    const monitor = yield* Trigger.ManagerService;
     const registry = yield* Registry.AtomRegistry;
     yield* Effect.acquireRelease(
       Effect.sync(() => registry.subscribe(monitor.triggers, () => {})),
       (unsubscribe) => Effect.sync(unsubscribe),
     );
     return yield* body(monitor);
-  }).pipe(Effect.provide(TriggerMonitor.layer), Effect.scoped);
+  }).pipe(Effect.provide(TriggerManager.layer), Effect.scoped);
 
-describe('TriggerMonitor', () => {
+describe('TriggerManager', () => {
   it.effect(
     'reports enabled local triggers with their cron schedule',
     Effect.fnUntraced(function* ({ expect }) {

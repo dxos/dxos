@@ -363,15 +363,20 @@ const SPACE = SpaceId.random();
 const BACKOFF = { initial: Duration.seconds(30), max: Duration.seconds(30) };
 
 /** Echoes each input back as an output; the only part of a definition the remote path uses. */
-const EchoProcess = Operation.makeDurable(
-  { key: 'test.queued-echo', input: Schema.String, output: Schema.String, services: [] },
-  (ctx) =>
+const EchoProcess = Operation.makeDurable({
+  key: 'test.queued-echo',
+  input: Schema.String,
+  output: Schema.String,
+  services: [],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.succeed({
       onSpawn: () => Effect.void,
       onInput: (input: string) => Effect.sync(() => ctx.submitOutput(`echo:${input}`)),
       onAlarm: () => Effect.void,
       onChildEvent: () => Effect.void,
     }),
+  ),
 );
 
 const tree = (registry: Registry.AtomRegistry) => {
