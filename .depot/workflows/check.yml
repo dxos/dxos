@@ -73,7 +73,8 @@ jobs:
     permissions:
       contents: read
       packages: read
-    runs-on: depot-ubuntu-24.04-8
+    # 4 vCPU: the compile gate is mostly remote-cache hits and peaks at 12 GB of the 16.
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -398,45 +399,50 @@ jobs:
           DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
         run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'dropping the caller reference releases objects'
 
-  # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
-  # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
-  # jobs split by flavour, which fixed each shard's size to its flavour's total — storybook alone ran
-  # far longer than workerd, and no amount of runners helped. `moon exec --job N --job-total` partitions
-  # the whole target set instead, so the six cells are sized by work rather than by kind and a new
-  # suite lands wherever there is room. File parallelism stays disabled — overloaded runners flake — so
-  # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
-  # default bail drops a failing cell's remaining targets, hiding what they cost.
+  # Vitest, split by runtime because the two halves need different machines. `node` (`:test`,
+  # `:test-workerd`) peaks under 10 GB with no browser, so it runs on 4 vCPU; `browser`
+  # (`:test-browser`, `:test-storybook`) runs four Chromiums at once and peaks near 20 GB, so it keeps
+  # 8 vCPU. Within each suite `moon exec --job N --job-total` partitions the targets by work. File
+  # parallelism stays disabled — overloaded runners flake — so the win is concurrency across machines,
+  # not within one. `--on-failure continue` because moon's default bail drops a failing cell's
+  # remaining targets, hiding what they cost.
   test:
+    name: test (${{ matrix.suite }}, shard=${{ matrix.shard }})
     if: >-
       ${{ inputs.only != 'check' && inputs.only != 'e2e' && (
       github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) }}
     strategy:
       fail-fast: false
+      # Include-only: a top-level key would let every entry merge into one combination. `shard` is
+      # 0-based because `--job` is an index.
       matrix:
-        node-version: ['24.11.1']
-        # 0-based: `--job` is an index. Six cells against the ~13m the three flavour jobs' critical
-        # path took, over ~160s of fixed per-cell setup.
-        shard: [0, 1, 2, 3, 4, 5]
-    runs-on: depot-ubuntu-24.04-8
+        include:
+          - { suite: node, shard: 0, of: 4, runner: depot-ubuntu-24.04-4, targets: ':test :test-workerd' }
+          - { suite: node, shard: 1, of: 4, runner: depot-ubuntu-24.04-4, targets: ':test :test-workerd' }
+          - { suite: node, shard: 2, of: 4, runner: depot-ubuntu-24.04-4, targets: ':test :test-workerd' }
+          - { suite: node, shard: 3, of: 4, runner: depot-ubuntu-24.04-4, targets: ':test :test-workerd' }
+          - { suite: browser, shard: 0, of: 2, runner: depot-ubuntu-24.04-8, targets: ':test-browser :test-storybook' }
+          - { suite: browser, shard: 1, of: 2, runner: depot-ubuntu-24.04-8, targets: ':test-browser :test-storybook' }
+    runs-on: ${{ matrix.runner }}
     container:
-      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ github.token }}
     timeout-minutes: 30
     env:
-      NODE_VERSION: ${{ matrix.node-version }}
+      NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
       # Coverage is unsupported for the workers pool (v8 coverage imports `node:inspector/promises`,
       # absent in workerd), so `vite.base.config.ts` drops it for the `workerd` project type — which is
-      # what lets a cell mix workerd targets with the rest under one flag.
+      # what lets a `node` cell mix workerd targets with the rest under one flag.
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
-      # NOTE: Browser and storybook tests also require a process for chromium. Limiting to 4 provides
-      # headroom for those processes.
+      # One target per core on `node`; on `browser`, half the cores, leaving headroom for each
+      # target's Chromium.
       MOON_CONCURRENCY: 4
       # Exposed so step conditions can branch on token presence without referencing
       # secrets directly (secrets are not allowed in if: expressions).
@@ -457,8 +463,8 @@ jobs:
         uses: ./.depot/actions/affected
 
       - parallel:
-          # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
           - name: Install Playwright
+            if: matrix.suite == 'browser'
             run: pnpm run install-playwright
 
           - name: Clean stale test results
@@ -480,25 +486,25 @@ jobs:
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
           run: >-
-            moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
-            --job ${{ matrix.shard }} --job-total 6 -- --no-file-parallelism
+            moon exec --on-failure continue ${{ matrix.targets }}
+            --job ${{ matrix.shard }} --job-total ${{ matrix.of }} -- --no-file-parallelism
 
       - name: Test (no analytics)
         if: ${{ env.TRUNK_TOKEN == '' }}
         run: >-
-          moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
-          --job ${{ matrix.shard }} --job-total 6 -- --no-file-parallelism
+          moon exec --on-failure continue ${{ matrix.targets }}
+          --job ${{ matrix.shard }} --job-total ${{ matrix.of }} -- --no-file-parallelism
 
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: vitest-report-${{ matrix.node-version }}-${{ matrix.shard }}
+          name: vitest-report-${{ matrix.suite }}-${{ matrix.shard }}
           path: test-results
           retention-days: 7
 
       - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
+        if: ${{ env.VITEST_COVERAGE == 'true' }}
         with:
           directory: ./coverage
           fail_ci_if_error: false
@@ -708,8 +714,8 @@ jobs:
 
   # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
   # former in-job step used `success() || failure()`, which skips on cancellation) and so the test report
-  # can no longer go out green while e2e is still running. `needs.test.result` aggregates the four
-  # shards: one red cell makes the whole matrix red.
+  # can no longer go out green while e2e is still running. `needs.test.result` aggregates every
+  # test cell: one red cell makes the whole matrix red.
   report:
     needs: [test, e2e]
     if: always() && github.event_name == 'schedule'
