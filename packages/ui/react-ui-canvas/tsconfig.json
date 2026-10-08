@@ -39,6 +39,9 @@
       "path": "../react-ui-form"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../ui-editor"
     },
     {

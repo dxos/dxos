@@ -41,6 +41,8 @@ import {
   type ElementId,
   type Endpoint,
   type Intent,
+  type Layer,
+  type LayerId,
   type LinkId,
   MAJOR_GRID_RATIO,
   type Node,
@@ -66,6 +68,14 @@ import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { groupIntoScene } from '../../utils/group.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
+import {
+  activeLayer,
+  createLayer,
+  mergeLayerIntent,
+  moveLayer,
+  sceneLayers,
+  visibleScene,
+} from '../../utils/layers.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
@@ -74,6 +84,7 @@ import { recordScenes, redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
+import { LayersPanel } from '../Layers/Layers.tsx';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
@@ -152,6 +163,7 @@ const SceneViewRoot = ({
   const path = useAtomValue(atoms.path);
   const projection = useSceneProjection({ store, atoms, createProjection, projection: projectionProp });
   const scene = useAtomValue(projection.scene);
+  const visible = useMemo(() => visibleScene(scene), [scene]);
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
@@ -330,7 +342,8 @@ const SceneViewRoot = ({
     registry,
     atoms,
     store,
-    scene,
+    // A hidden layer's elements are not hit: gestures see the scene as drawn.
+    scene: visible,
     nodeRegistry,
     projection,
     capabilities,
@@ -938,6 +951,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     menuAnchorRef,
   } = useSceneViewContext('SceneView.Canvas');
 
+  // Handles and ports belong to what is drawn: a hidden layer's elements show none.
+  const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
+
   return (
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
@@ -985,7 +1001,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           />
         </div>
         <ControlFrame
-          scene={displayScene}
+          scene={shownScene}
           registry={nodeRegistry}
           selection={selection}
           hover={hover}
@@ -1219,6 +1235,63 @@ const SceneViewProperties = ({
 
 SceneViewProperties.displayName = 'SceneView.Properties';
 
+//
+// Layers
+//
+
+export type SceneViewLayersProps = Util.ThemedClassName<{}>;
+
+/** The current scene's layers as a floating panel: each edit is one intent, so one undo step. */
+const SceneViewLayers = ({ classNames = 'absolute bottom-14 right-2 w-64' }: SceneViewLayersProps) => {
+  const { projection, atoms, capabilities } = useSceneViewContext('SceneView.Layers');
+  const registry = useRegistry();
+  const scene = useAtomValue(projection.scene);
+  const active = useAtomValue(atoms.layer);
+  const layers = useMemo(() => sceneLayers(scene), [scene]);
+  const readonly = !capabilities.update;
+  const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
+  const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
+  return (
+    <LayersPanel
+      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      layers={layers}
+      active={activeLayer(scene, active)}
+      readonly={readonly}
+      onActiveChange={(id) => registry.set(atoms.layer, id)}
+      onToggle={(id) => {
+        const layer = byId(id);
+        layer && setLayer({ ...layer, hidden: !layer.hidden });
+      }}
+      onRename={(id, name) => {
+        const layer = byId(id);
+        layer && setLayer({ ...layer, name });
+      }}
+      onMove={(id, index) => {
+        const layer = moveLayer(scene, id, index);
+        layer && setLayer(layer);
+      }}
+      onCreate={() => {
+        const layer = createLayer(scene, createId('layer'));
+        setLayer(layer);
+        registry.set(atoms.layer, layer.id);
+      }}
+      onDelete={capabilities.delete ? (id) => projection.apply({ kind: 'removeLayer', id }) : undefined}
+      onMerge={(id) => {
+        // Down: into the layer under it.
+        const index = layers.findIndex((layer) => layer.id === id);
+        const below = layers[index - 1];
+        const merge = below && mergeLayerIntent(scene, id, below.id);
+        if (merge) {
+          projection.apply(merge);
+          registry.set(atoms.layer, below.id);
+        }
+      }}
+    />
+  );
+};
+
+SceneViewLayers.displayName = 'SceneView.Layers';
+
 export const SceneView = {
   Root: SceneViewRoot,
   Canvas: SceneViewCanvas,
@@ -1227,4 +1300,5 @@ export const SceneView = {
   Debug: SceneViewDebug,
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
+  Layers: SceneViewLayers,
 };

@@ -34,6 +34,7 @@ import {
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
 import { contentBounds } from '../../utils/hit.ts';
 import { type LatticeSpec } from '../../utils/lattice.ts';
+import { layerOrder, sceneLayers, visibleScene } from '../../utils/layers.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
@@ -110,7 +111,7 @@ export type SceneLayerProps = {
 export const SceneLayer = memo(
   ({
     store,
-    scene,
+    scene: sceneProp,
     registry,
     zoom,
     depth,
@@ -130,14 +131,16 @@ export const SceneLayer = memo(
   }: SceneLayerProps) => {
     const inherited = useContext(CellContext);
     const cell = cellProp ?? inherited;
-    // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
-    // hide under a neighbour, while the model's z stays what the user arranged.
+    // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
+    const scene = useMemo(() => visibleScene(sceneProp), [sceneProp]);
+    // Paint order is the layers', then z, with the selection on top of it: a selected node is being worked on and
+    // must not hide under a neighbour, while the model's order stays what the user arranged.
     const nodes = useMemo(() => {
-      const sorted = sortByZ(Object.values(scene.nodes));
+      const sorted = layerOrder(Object.values(scene.nodes), sceneLayers(scene));
       return selected?.size
         ? [...sorted.filter((node) => !selected.has(node.id)), ...sorted.filter((node) => selected.has(node.id))]
         : sorted;
-    }, [scene.nodes, selected]);
+    }, [scene, selected]);
     const links = useMemo(
       () => sceneLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],

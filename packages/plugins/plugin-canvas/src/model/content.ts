@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  Layer,
   LINE_STYLES,
   Link,
   type Node,
@@ -54,6 +55,8 @@ export const SceneRecord = Schema.Struct({
   kind: Schema.Literal('scene'),
   id: Schema.String,
   name: Schema.optional(Schema.String),
+  /** The scene's layers, kept with it since they are few and change together. */
+  layers: Schema.optional(Schema.Record(Schema.String, Layer)),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -324,7 +327,13 @@ export const readScenes = (content: ContentMap): SceneMap => {
   }
   const scenes: Record<SceneId, Scene> = {};
   for (const header of Object.values(headers)) {
-    scenes[header.id] = { id: header.id, name: header.name, nodes: nodes[header.id], links: links[header.id] };
+    scenes[header.id] = {
+      id: header.id,
+      name: header.name,
+      nodes: nodes[header.id],
+      links: links[header.id],
+      ...(header.layers ? { layers: clone(header.layers) } : {}),
+    };
   }
   return scenes;
 };
@@ -340,7 +349,12 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
 
   for (const scene of Object.values(scenes)) {
     const key = sceneKey(scene.id);
-    const record: SceneRecord = { kind: 'scene', id: scene.id, ...(scene.name ? { name: scene.name } : {}) };
+    const record: SceneRecord = {
+      kind: 'scene',
+      id: scene.id,
+      ...(scene.name ? { name: scene.name } : {}),
+      ...(scene.layers ? { layers: clone(scene.layers) } : {}),
+    };
     if (!same(content[key], record)) {
       content[key] = record;
       changed = true;

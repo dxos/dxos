@@ -153,4 +153,13 @@ describe('content', () => {
     writeStyles(target, { kept: { id: 'kept', name: 'Kept' } });
     expect(Object.keys(target).sort()).toEqual(['kept', 'unreadable']);
   });
+
+  test("a scene's layers are kept with its record", ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    const scenes = readScenes(content);
+    const layers = { top: { id: 'top', name: 'Top', z: 'V' } };
+    writeScenes(content, { ...scenes, [ROOT_SCENE_ID]: { ...scenes[ROOT_SCENE_ID], layers } });
+    expect(readScenes(content)[ROOT_SCENE_ID].layers).toEqual(layers);
+  });
 });
