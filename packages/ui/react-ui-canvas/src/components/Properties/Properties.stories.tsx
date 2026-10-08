@@ -7,6 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useLayoutEffect, useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
+import { Panel } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -63,18 +64,10 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const styles = useAtomValue(store.styles);
   const selected = select.flatMap((id) => getElement(scene, id) ?? []);
   return (
-    <Panel.Root>
-      </Panel.Rot>
-
-    <div className='grid grid-cols-2 gap-4 h-[40rem]'>
-      <Properties
-        classNames='border border-separator rounded-sm'
-        projection={projection}
-        atoms={atoms}
-        styles={store.styles}
-      />
+    <Panel.Root classNames='grid grid-cols-2 gap-4'>
+      <Properties projection={projection} atoms={atoms} styles={store.styles} />
       <JsonHighlighter data={{ selected, styles }} />
-    </div>
+    </Panel.Root>
   );
 };
 
@@ -112,5 +105,7 @@ export const Test: Story = {
     // 2. The layer field shows the note's layer.
     const layer = await canvas.findByRole('combobox', { name: 'Layer' });
     await expect(layer).toHaveTextContent('Notes');
+    // 3. The font row shows the face, unset reading as the body face.
+    await expect(await canvas.findByRole('combobox', { name: 'Font' })).toHaveTextContent('Normal');
   },
 };

@@ -92,6 +92,10 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
+/** The typefaces a shape's text may use: the theme's body face, or its fixed-width one. */
+export const FONT_FAMILIES = ['normal', 'monospace'] as const;
+export type FontFamily = (typeof FONT_FAMILIES)[number];
+
 /** Where text sits across a shape, and down it. */
 export const HORIZONTAL_ALIGNS = ['left', 'center', 'right'] as const;
 export const VERTICAL_ALIGNS = ['top', 'middle', 'bottom'] as const;
@@ -130,6 +134,8 @@ export const styleFields = {
   border: Schema.optional(Schema.Boolean),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
+  /** The face of the shape's text; unset is the theme's body face. */
+  fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
   /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */

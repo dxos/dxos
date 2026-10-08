@@ -63,6 +63,7 @@ import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { AlignField } from './AlignField.tsx';
 import { ClassField, StyleClassesContext } from './ClassField.tsx';
+import { FontField } from './FontField.tsx';
 import { LayerField, LayersContext } from './LayerField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
@@ -101,6 +102,7 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
   'style.alignHorizontal': AlignField,
+  'style.fontFamily': FontField,
   'scene': SceneField,
   'class': ClassField,
   'layer': LayerField,
@@ -152,7 +154,7 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.hue': { label: 'Style' },
   'style.tone': { hidden: true },
   'style.alignVertical': { hidden: true },
-  'style.fontSize': { min: 8, max: 80, step: 1 },
+  'style.fontSize': { hidden: true },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
   'scene': { label: 'Scene' },
   'layer': { label: 'Layer' },

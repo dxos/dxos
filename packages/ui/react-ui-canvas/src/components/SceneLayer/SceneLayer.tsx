@@ -437,6 +437,8 @@ const NodeFrame = memo(
           'absolute box-border overflow-hidden',
           // Fading, the border becomes padding of the same width so the contents stay put.
           ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
+          // Every text part inherits the face, as it does `fontSize`.
+          drawn.style?.fontFamily === 'monospace' && 'font-mono',
           interactive && !node.locked && 'cursor-grab',
           ghost && 'opacity-50 border-dashed pointer-events-none',
         )}
