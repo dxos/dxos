@@ -9,32 +9,33 @@ import { Obj, Ref } from '@dxos/echo';
 
 import { wireTriggers } from './wire.ts';
 
-/** The last action of each kind a routine was switched away from. */
-type ActionStash = {
-  readonly instructions?: Ref.Ref<Instructions.Instructions>;
-  readonly operation?: Ref.Ref<Operation.PersistentOperation>;
+/** The last action of each kind the editor switched a routine away from; owned by the editing session. */
+export type ActionStash = {
+  routine?: Routine.Routine;
+  instructions?: Ref.Ref<Instructions.Instructions>;
+  operation?: Ref.Ref<Operation.PersistentOperation>;
 };
-
-// Keyed by routine because the routine editor remounts on every kind switch, which would drop a stash it held.
-const stashes = new WeakMap<Routine.Routine, ActionStash>();
 
 /**
  * Switch the routine's action kind and re-wire its triggers, restoring the action the routine last had of that
  * kind, so a look at the other kind does not leave its triggers with nothing to run.
  */
-export const switchActionKind = (routine: Routine.Routine, next: Routine.Kind): void => {
-  const previous = stashes.get(routine);
-  const stash: ActionStash = {
-    instructions: Routine.instructionsRef(routine) ?? previous?.instructions,
-    operation: Routine.runnableRef(routine) ?? previous?.operation,
-  };
-  stashes.set(routine, stash);
+export const switchActionKind = (routine: Routine.Routine, next: Routine.Kind, stash: ActionStash): void => {
+  // A stash kept for another routine (a form reused for a different subject) holds nothing for this one.
+  if (stash.routine !== routine) {
+    stash.routine = routine;
+    stash.instructions = undefined;
+    stash.operation = undefined;
+  }
+  stash.instructions = Routine.instructionsRef(routine) ?? stash.instructions;
+  stash.operation = Routine.runnableRef(routine) ?? stash.operation;
+  const { instructions, operation } = stash;
   Obj.update(routine, (routine) => {
     if (next === 'runnable') {
       // With no operation to restore the action stays unset until one is picked.
-      routine.spec = stash.operation ? { kind: 'runnable', runnable: stash.operation } : undefined;
+      routine.spec = operation ? { kind: 'runnable', runnable: operation } : undefined;
     } else if (routine.spec?.kind !== 'instructions') {
-      routine.spec = { kind: 'instructions', instructions: stash.instructions ?? Ref.make(Instructions.make({})) };
+      routine.spec = { kind: 'instructions', instructions: instructions ?? Ref.make(Instructions.make({})) };
     }
   });
   wireTriggers(routine);

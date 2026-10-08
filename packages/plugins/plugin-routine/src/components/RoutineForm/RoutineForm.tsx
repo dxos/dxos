@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, type RefObject, useCallback, useMemo, useRef } from 'react';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -19,7 +19,7 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { switchActionKind, wireTriggers } from '../../util/index.ts';
+import { type ActionStash, switchActionKind, wireTriggers } from '../../util/index.ts';
 import { InstructionsEditor } from '../InstructionsEditor/index.ts';
 import {
   TriggerForm,
@@ -116,6 +116,8 @@ export const RoutineForm = Util.composable<HTMLDivElement, RoutineFormProps>((pr
   const [auto] = useObject(routine);
   const trigger = usePrimaryTrigger(routine);
   const [triggerSnapshot] = useObject(trigger);
+  // Held here, above the kind-keyed remount, so switching the action kind and back restores the action.
+  const actionStash = useRef<ActionStash>({});
 
   const formKey = [
     routine.id,
@@ -124,13 +126,16 @@ export const RoutineForm = Util.composable<HTMLDivElement, RoutineFormProps>((pr
     triggerSnapshot?.spec?.kind ?? 'none',
   ].join(':');
 
-  return <RoutineFormImpl key={formKey} {...props} trigger={trigger} forwardedRef={forwardedRef} />;
+  return (
+    <RoutineFormImpl key={formKey} {...props} trigger={trigger} actionStash={actionStash} forwardedRef={forwardedRef} />
+  );
 });
 
 RoutineForm.displayName = 'RoutineForm';
 
 type RoutineFormImplProps = RoutineFormProps & {
   trigger?: Trigger.Trigger;
+  actionStash: RefObject<ActionStash>;
   forwardedRef: React.Ref<HTMLDivElement>;
 };
 
@@ -141,6 +146,7 @@ const RoutineFormImpl = ({
   readonly = false,
   onSave,
   onCancel,
+  actionStash,
   forwardedRef,
   ...props
 }: RoutineFormImplProps) => {
@@ -198,7 +204,7 @@ const RoutineFormImpl = ({
             routine.description = values.description;
           });
         } else if (path === 'action.kind') {
-          switchActionKind(routine, action?.kind ?? 'runnable');
+          switchActionKind(routine, action?.kind ?? 'runnable', actionStash.current);
         } else if (path === 'action.operation') {
           applyActionOperation(routine, action?.operation);
         } else if (path.startsWith('trigger')) {
@@ -206,7 +212,7 @@ const RoutineFormImpl = ({
         }
       }
     },
-    [updateAuto, routine, trigger],
+    [updateAuto, routine, trigger, actionStash],
   );
 
   // Revert the trigger kind selection: clearing the spec changes the remount key, so the form re-seeds
