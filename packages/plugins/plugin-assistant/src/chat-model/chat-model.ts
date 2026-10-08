@@ -31,6 +31,7 @@ import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Process from '@dxos/compute/Process';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
@@ -40,6 +41,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
+import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
@@ -81,6 +83,8 @@ export type ChatModelOptions = {
   system?: string;
   /** Who this chat model's prompts come from, when the chat is one of several people's with one agent. */
   sender?: AgentService.PromptSender;
+  /** Binds {@link TurnReviewSkill} so each turn is reviewed for struggles (opt-in setting). */
+  reportStruggles?: boolean;
 };
 
 const defaultOptions: Partial<ChatModelOptions> = {
@@ -467,6 +471,7 @@ export class ChatModel {
       // that resolve is itself part of the wait the reader is watching.
       this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
+      await this.#ensureTurnReview();
 
       const effect = Effect.gen({ self: this }, function* () {
         // NOTE: Gets or creates a session for the feed.
@@ -870,6 +875,21 @@ export class ChatModel {
   #resetApplied() {
     this.#appliedAt = 0;
     this.#appliedAtByMessage.clear();
+  }
+
+  /**
+   * Binds the turn-review skill before a request while the user is opted in; its background
+   * end-request hook does the review, so nothing here waits on it. Left bound after an opt-out,
+   * since the hook re-checks the setting.
+   */
+  async #ensureTurnReview(): Promise<void> {
+    if (!this._options.reportStruggles) {
+      return;
+    }
+    const bound = this.context.getSkills().some((skill) => Obj.getMeta(skill).key === TurnReviewSkill.key);
+    if (!bound) {
+      await this.context.bind({ skills: [Ref.fromURI(Skill.registryURI(TurnReviewSkill.key))] });
+    }
   }
 
   /**
