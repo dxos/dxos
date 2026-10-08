@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type StyleMap } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
-import { classedLine, classedNode, ownFields } from './style.ts';
+import { classedLine, classedNode, splitClassEdit } from './style.ts';
 
 describe('style classes', () => {
   const styles: StyleMap = {
@@ -32,9 +32,18 @@ describe('style classes', () => {
     expect(classedNode(nodes.b, styles)).toBe(nodes.b);
   });
 
-  test('saving keeps only what the element sets itself', ({ expect }) => {
-    // The panel shows the merged look; an edit of the fill must not copy the class's rounding onto the node.
-    const edited = { hue: 'blue', rounded: true, fill: false };
-    expect(ownFields(edited, styles.warn.style, nodes.a.style)).toEqual({ hue: 'blue', fill: false });
+  test('an edit of a classed look goes to the class, and the element stops overriding it', ({ expect }) => {
+    // A shows blue over the class's red; the user picks green and turns rounding off.
+    const shown = classedNode(nodes.a, styles).style;
+    const edited = { hue: 'green', rounded: false };
+    expect(splitClassEdit(shown, edited, styles.warn.style ?? {}, nodes.a.style)).toEqual({
+      classLook: { hue: 'green', rounded: false },
+      own: {},
+    });
+    // An unchanged field stays where it was: A keeps its own blue, the class its red.
+    expect(splitClassEdit(shown, { ...shown, rounded: false }, styles.warn.style ?? {}, nodes.a.style)).toEqual({
+      classLook: { hue: 'red', rounded: false },
+      own: { hue: 'blue' },
+    });
   });
 });

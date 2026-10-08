@@ -55,7 +55,7 @@ import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
-import { classedLine, classedNode, ownFields, resolveStyle } from '../../utils/style.ts';
+import { classedLine, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { ClassField, StyleClassesContext } from './ClassField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { LineHueField, StyleGridField } from './StyleGrid.tsx';
@@ -136,21 +136,6 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'scene': { label: 'Scene' },
 };
 
-/** An edit's values less the look they only repeat from the element's class (see `ownFields`). */
-const ownValues = (element: Element, values: Record<string, unknown>, styles: StyleMap): Record<string, unknown> => {
-  const styleClass = element.class ? styles[element.class] : undefined;
-  if (!styleClass) {
-    return values;
-  }
-  return isLink(element)
-    ? 'line' in values
-      ? { ...values, line: ownFields(values.line, styleClass.line, element.line) }
-      : values
-    : 'style' in values
-      ? { ...values, style: ownFields(values.style, styleClass.style, element.style) }
-      : values;
-};
-
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /** The selection by kind, e.g. "3 nodes, 2 links". */
@@ -222,16 +207,43 @@ export const Properties = ({
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
       const paths = Object.keys(changed).filter((path) => changed[path as keyof typeof changed]);
-      projection.apply({
-        kind: 'batch',
-        intents: elements.map((element) => ({
-          kind: 'update' as const,
-          id: element.id,
-          values: ownValues(element, patchValues(formValues(nodes, element, styleMap), values, paths), styleMap),
-        })),
+      // A classed element's look is its class's: an edit of it restyles the class, and so every element deriving it.
+      const classes: Record<string, StyleClass> = {};
+      const intents = elements.map((element) => {
+        const shown = formValues(nodes, element, styleMap);
+        const patch = patchValues(shown, values, paths);
+        const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
+        if (styleClass && isLink(element) && 'line' in patch) {
+          const split = splitClassEdit(classedLine(element, styleMap), patch.line, styleClass.line ?? {}, element.line);
+          classes[styleClass.id] = { ...styleClass, line: split.classLook };
+          return { kind: 'update' as const, id: element.id, values: { ...patch, line: split.own } };
+        }
+        if (styleClass && !isLink(element) && 'style' in patch) {
+          const split = splitClassEdit(
+            resolveStyle(classedNode(element, styleMap).style),
+            patch.style,
+            styleClass.style ?? {},
+            element.style,
+          );
+          classes[styleClass.id] = { ...styleClass, style: split.classLook };
+          return { kind: 'update' as const, id: element.id, values: { ...patch, style: split.own } };
+        }
+        // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
+        if (typeof patch.class === 'string') {
+          return {
+            kind: 'update' as const,
+            id: element.id,
+            values: { ...patch, [isLink(element) ? 'line' : 'style']: undefined },
+          };
+        }
+        return { kind: 'update' as const, id: element.id, values: patch };
       });
+      if (styles && Object.keys(classes).length > 0) {
+        registry.set(styles, { ...styleMap, ...classes });
+      }
+      projection.apply({ kind: 'batch', intents });
     },
-    [projection, elements, nodes, styleMap],
+    [projection, elements, nodes, styles, styleMap, registry],
   );
 
   // A new class takes the selected element's look, and the element then follows it rather than carrying its own.

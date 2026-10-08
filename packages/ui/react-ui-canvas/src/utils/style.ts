@@ -197,19 +197,27 @@ const DEFAULT_LINE: LineClasses = { stroke: 'stroke-neutral-500', fill: 'fill-ne
 export const lineClasses = (hue: StyleHue | undefined): LineClasses => (hue ? LINE_CLASSES[hue] : DEFAULT_LINE);
 
 /**
- * An edited style or line (`own`) less the fields it only repeats from its class (`base`) and never set itself
- * (`original`): the panel shows the class's look, and saving it must not copy that look onto the element, which
- * would stop it following the class.
+ * Splits an edit of a classed element's look (`edited`, against what the panel `shown`): every field that changed
+ * goes to the class, so each element of the class derives it, and the element drops its own value for that field,
+ * which would otherwise hide the class's.
  */
-export const ownFields = (own: unknown, base: object | undefined, original: object | undefined): unknown => {
-  if (typeof own !== 'object' || own === null || !base) {
-    return own;
-  }
-  const result = { ...own };
-  for (const key of Object.keys(result)) {
-    if (Reflect.get(original ?? {}, key) === undefined && Reflect.get(base, key) === Reflect.get(result, key)) {
-      Reflect.deleteProperty(result, key);
+export const splitClassEdit = <T extends object>(
+  shown: object | undefined,
+  edited: unknown,
+  classLook: T,
+  own: T | undefined,
+): { classLook: T; own: T | undefined } => {
+  const nextClass = { ...classLook };
+  const nextOwn = own ? { ...own } : undefined;
+  if (typeof edited === 'object' && edited !== null) {
+    for (const [key, value] of Object.entries(edited)) {
+      if (Reflect.get(shown ?? {}, key) !== value) {
+        Reflect.set(nextClass, key, value);
+        if (nextOwn) {
+          Reflect.deleteProperty(nextOwn, key);
+        }
+      }
     }
   }
-  return result;
+  return { classLook: nextClass, own: nextOwn };
 };
