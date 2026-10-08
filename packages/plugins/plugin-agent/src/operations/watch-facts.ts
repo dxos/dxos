@@ -13,7 +13,7 @@ import { Organization, Person } from '@dxos/types';
 import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
 
 import { AgentOperationError } from './errors.ts';
-import { loadMembers, memberByDid, memberByName } from './members.ts';
+import { loadMembers, memberByDid, memberByName, membersNamed } from './members.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
   Operation.withHandler(
@@ -92,12 +92,13 @@ const memberOf = (members: readonly Space.Member[], name: string): Space.Member 
 
 /**
  * The pattern with its speaker (and a subject that names someone) replaced by the member's id, which is what
- * facts are attributed to; a message for the model when the speaker names no one, or more than one person.
+ * facts are attributed to. A speaker who is no member stays a bare name, as `readSource` attributes their words;
+ * a name several members go by is a message for the model.
  */
 const resolvePattern = (members: readonly Space.Member[], when: Trigger.FactPattern): Trigger.FactPattern | string => {
   const speaker = when.speaker === undefined ? undefined : memberOf(members, when.speaker)?.did;
-  if (when.speaker !== undefined && !speaker) {
-    return `No member of the space goes by "${when.speaker}" alone; use the name they are listed under in the space.`;
+  if (when.speaker !== undefined && !speaker && membersNamed(members, when.speaker) > 1) {
+    return `More than one member of the space goes by "${when.speaker}"; use the name they are listed under in the space.`;
   }
   const subject = when.subject === undefined ? undefined : memberOf(members, when.subject)?.did;
   return { ...when, ...(speaker ? { speaker } : {}), ...(subject ? { subject } : {}) };

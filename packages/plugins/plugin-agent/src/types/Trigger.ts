@@ -26,7 +26,7 @@ export const FactPattern = Schema.Struct({
   speaker: Schema.optional(
     Schema.String.annotate({
       description:
-        'The person who must have said it, by name (e.g. "Dima"); it is resolved to that space member, so it must name someone in the space.',
+        'The person who must have said it, by name (e.g. "Dima"); a space member is resolved to that member, anyone else is matched by the name as written.',
     }),
   ),
   subject: Schema.optional(
@@ -170,7 +170,7 @@ export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: 
   if (pattern.before !== undefined && said >= time(pattern.before)) {
     return false;
   }
-  // Watches store the speaker as a member id (`watchFacts` resolves the name), which facts are attributed to.
+  // Watches store the speaker as facts are attributed: a member id (`watchFacts` resolves the name), else a bare name.
   if (pattern.speaker !== undefined && attribution.agent !== pattern.speaker) {
     return false;
   }

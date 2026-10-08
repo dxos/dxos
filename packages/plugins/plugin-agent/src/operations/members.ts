@@ -34,15 +34,24 @@ export const loadMembers: Effect.Effect<readonly Space.Member[], never, Space.Se
 
 const nameKey = (name: string): string => name.trim().replace(/\s+/g, ' ').toLowerCase();
 
-/** The member a name refers to, by display name or its first word; undefined when no one, or more than one, goes by it. */
-export const memberByName = (members: readonly Space.Member[], name: string): Space.Member | undefined => {
+/** The members who go by a name: their display name, or its first word. */
+const membersGoingBy = (members: readonly Space.Member[], name: string): Space.Member[] => {
   const key = nameKey(name);
-  const matches = members.filter(
+  return members.filter(
     ({ did, displayName }) =>
       did !== undefined &&
       displayName !== undefined &&
       [nameKey(displayName), nameKey(displayName).split(' ')[0]].includes(key),
   );
+};
+
+/** How many members go by a name. */
+export const membersNamed = (members: readonly Space.Member[], name: string): number =>
+  membersGoingBy(members, name).length;
+
+/** The member a name refers to, by display name or its first word; undefined when no one, or more than one, goes by it. */
+export const memberByName = (members: readonly Space.Member[], name: string): Space.Member | undefined => {
+  const matches = membersGoingBy(members, name);
   return matches.length === 1 ? matches[0] : undefined;
 };
 

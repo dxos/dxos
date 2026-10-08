@@ -108,6 +108,8 @@ describe('matchesPattern', () => {
   it('matches members by DID, not by name, and bounds the time the fact was said', ({ expect }) => {
     // A name no longer stands for a member: `watchFacts` resolves it to the DID first.
     expect(Trigger.matchesPattern({ speaker: 'Dima' }, fact())).toBe(false);
+    // Someone who is no member is attributed by bare name, and a watch on that name matches them.
+    expect(Trigger.matchesPattern({ speaker: 'Dima' }, fact({ speaker: 'Dima' }))).toBe(true);
     const aboutDima: RDF.Fact = {
       ...fact(),
       assertion: { ...fact().assertion, subject: { kind: 'entity', entity: DIMA, label: 'Dima' } },
