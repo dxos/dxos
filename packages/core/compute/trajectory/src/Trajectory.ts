@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-// Person is referenced in Actor.Actor's inferred type; importing it keeps that type nameable.
-import { Actor, ContentBlock, type Person } from '@dxos/types';
+import { IdentityDid } from '@dxos/keys';
+import { ContentBlock } from '@dxos/types';
 
 /**
  * Id of an earlier event in the same log; events reference each other by id because they are never mutated.
@@ -18,31 +18,38 @@ export const EventId = Obj.ID;
 export type EventId = Schema.Schema.Type<typeof EventId>;
 
 //
+// Sender
+//
+
+/**
+ * `event` marks content from outside the conversation (alarm, webhook, email, background result), which the model
+ * sees as a synthetic user turn rather than as something a person typed.
+ */
+export const Role = Schema.Literals(['user', 'assistant', 'tool', 'event']);
+export type Role = Schema.Schema.Type<typeof Role>;
+
+export const Sender = Schema.Struct({
+  role: Role,
+  /** Writer's identity, which tells participants apart in a multi-tenant chat. */
+  identity: Schema.optional(IdentityDid),
+  /** Object the sender stands for when it is not a person (agent session, service, hook). */
+  subject: Schema.optional(Ref.Ref(Obj.Unknown)),
+  name: Schema.optional(Schema.String),
+});
+export type Sender = Schema.Schema.Type<typeof Sender>;
+
+//
 // Content
 //
 
-export const Role = Schema.Literals(['user', 'assistant', 'tool']);
-export type Role = Schema.Schema.Type<typeof Role>;
-
 /**
- * A complete conversational turn fragment seen by the model.
+ * Content seen by the model, attributed by the event's `sender`. A user message stays out of the prompt until a
+ * {@link PromptConsume} names it, so a prompt typed mid-turn never lands inside a prefix already sent.
  */
 export const Message = Schema.TaggedStruct('message', {
-  role: Role,
   blocks: Schema.Array(ContentBlock.Any),
 });
 export type Message = Schema.Schema.Type<typeof Message>;
-
-/**
- * Content that arrived from outside the conversation (webhook, email, fired alarm, background result).
- * The model sees it as a synthetic user turn, so it is kept distinct from prompts a person typed.
- */
-export const External = Schema.TaggedStruct('external', {
-  /** Origin of the content (e.g. `alarm`, `tool`, `email`). */
-  source: Schema.String,
-  blocks: Schema.Array(ContentBlock.Any),
-});
-export type External = Schema.Schema.Type<typeof External>;
 
 //
 // Turn
@@ -60,9 +67,8 @@ export type Usage = Schema.Schema.Type<typeof Usage>;
  * Start of one model request.
  */
 export const TurnBegin = Schema.TaggedStruct('turnBegin', {
-  model: Schema.String,
-  /** Hash of the serialized prompt, so a cache miss can be traced to the request that caused it. */
-  promptHash: Schema.optional(Schema.String),
+  /** Model DXN, as `SessionConfig.model` stores it. */
+  model: DXN.Schema,
 });
 export type TurnBegin = Schema.Schema.Type<typeof TurnBegin>;
 
@@ -75,21 +81,19 @@ export const TurnEnd = Schema.TaggedStruct('turnEnd', {
 export type TurnEnd = Schema.Schema.Type<typeof TurnEnd>;
 
 //
-// Prompt queue (op-based: pending = enqueued − consumed − cancelled).
+// Prompt queue (pending = user messages with no consume or cancel).
 //
 
-export const PromptEnqueue = Schema.TaggedStruct('promptEnqueue', {
-  blocks: Schema.Array(ContentBlock.Any),
-});
-export type PromptEnqueue = Schema.Schema.Type<typeof PromptEnqueue>;
-
+/**
+ * The agent took a user message into its next turn; the message enters the prompt at this event's position.
+ */
 export const PromptConsume = Schema.TaggedStruct('promptConsume', {
-  enqueue: EventId,
+  message: EventId,
 });
 export type PromptConsume = Schema.Schema.Type<typeof PromptConsume>;
 
 export const PromptCancel = Schema.TaggedStruct('promptCancel', {
-  enqueue: EventId,
+  message: EventId,
 });
 export type PromptCancel = Schema.Schema.Type<typeof PromptCancel>;
 
@@ -182,7 +186,7 @@ export type HookEnd = Schema.Schema.Type<typeof HookEnd>;
 export const Compact = Schema.TaggedStruct('compact', {
   from: EventId,
   to: EventId,
-  summary: Schema.String,
+  summary: Schema.Array(ContentBlock.Any),
 });
 export type Compact = Schema.Schema.Type<typeof Compact>;
 
@@ -217,7 +221,7 @@ export type MergeMode = Schema.Schema.Type<typeof MergeMode>;
 export const ThreadMerge = Schema.TaggedStruct('threadMerge', {
   thread: EventId,
   mode: MergeMode,
-  summary: Schema.optional(Schema.String),
+  summary: Schema.optional(Schema.Array(ContentBlock.Any)),
 });
 export type ThreadMerge = Schema.Schema.Type<typeof ThreadMerge>;
 
@@ -235,7 +239,7 @@ export type ThreadClose = Schema.Schema.Type<typeof ThreadClose>;
 //
 
 export const ModelChange = Schema.TaggedStruct('modelChange', {
-  model: Schema.String,
+  model: DXN.Schema,
 });
 export type ModelChange = Schema.Schema.Type<typeof ModelChange>;
 
@@ -257,10 +261,8 @@ export type Custom = Schema.Schema.Type<typeof Custom>;
 
 export const Payload = Schema.Union([
   Message,
-  External,
   TurnBegin,
   TurnEnd,
-  PromptEnqueue,
   PromptConsume,
   PromptCancel,
   ContextBind,
@@ -299,7 +301,7 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.trajec
     thread: Schema.optional(EventId),
     /** Writer's head of `thread` when appending, so concurrent writers can be detected. */
     prev: Schema.optional(EventId),
-    actor: Actor.Actor,
+    sender: Sender,
     /** ISO timestamp; display only, ordering is by feed position. */
     created: Schema.String.pipe(Annotation.GeneratorAnnotation.set('date.iso8601')),
     payload: Payload,
@@ -313,7 +315,7 @@ export type EventOf<T extends PayloadTag> = Event & { readonly payload: PayloadO
 
 export type MakeProps<T extends Payload = Payload> = {
   payload: T;
-  actor: Actor.Actor;
+  sender: Sender;
   thread?: EventId;
   prev?: EventId;
   created?: string;
@@ -322,11 +324,11 @@ export type MakeProps<T extends Payload = Payload> = {
 /**
  * Creates an event (not yet appended to a feed).
  */
-export const make = <T extends Payload>({ payload, actor, thread, prev, created }: MakeProps<T>): Event =>
+export const make = <T extends Payload>({ payload, sender, thread, prev, created }: MakeProps<T>): Event =>
   Obj.make(Event, {
     thread,
     prev,
-    actor,
+    sender,
     created: created ?? new Date().toISOString(),
     payload,
   });
@@ -335,5 +337,3 @@ export const make = <T extends Payload>({ payload, actor, thread, prev, created 
  * Narrows an event by payload tag.
  */
 export const is = <T extends PayloadTag>(event: Event, tag: T): event is EventOf<T> => event.payload._tag === tag;
-
-export type { Person };

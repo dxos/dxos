@@ -28,6 +28,7 @@
   "dependencies": {
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/types": "workspace:*"
   },
   "devDependencies": {

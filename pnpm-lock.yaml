@@ -5618,6 +5618,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
