@@ -189,7 +189,7 @@ const RegistryWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/CellGrid',
+  title: 'plugins/plugin-sequencer/components/CellGrid',
   component: DefaultStory,
   render: (args) => (
     <RegistryWrapper>

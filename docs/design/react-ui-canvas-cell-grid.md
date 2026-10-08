@@ -2,7 +2,7 @@
 
 Status: Draft
 Date: 2026-05-16
-Package: `@dxos/react-ui-canvas`
+Package: `@dxos/plugin-sequencer` (`src/components/CellGrid`; moved from `@dxos/react-ui-canvas` on 2026-10-08)
 Component: `CellGrid`
 
 ## Summary

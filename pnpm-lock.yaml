@@ -16161,9 +16161,6 @@ importers:
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio
-      '@dxos/react-ui-canvas':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list

@@ -1,6 +1,6 @@
 # Migrating canvas-editor and canvas-compute to the scene engine
 
-Status: M1–M4 done; M5 (retiring the old packages and `src/archive`) planned in §5 (updated 2026-10-08).
+Status: M1–M4 done; M5 (retiring the old packages and `src/archive`) in progress, steps 1–2 of §5.3 done (updated 2026-10-08).
 Original gap analysis and plan: 2026-09-20. Inputs: `DESIGN.md` (the engine), the source of
 `packages/ui/react-ui-canvas-editor` and `packages/ui/react-ui-canvas-compute` on `main`, and their consumers
 (`plugin-conductor`, `plugin-debug`). Every feature the two packages implement is mapped to what the engine has
@@ -211,11 +211,11 @@ either; the archive is re-exported from the package root (`src/index.ts`) and th
 
 ### 5.1 Who still uses `src/archive`
 
-| Consumer                  | What                                                                                                                                                           | Replacement                                                                                                                                                                                                         |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `react-ui-canvas-editor`  | `Canvas`, `useCanvasContext` (7 files), `ProjectionMapper`, `Markers`, `useWheel`, `zoomTo`, `zoomInPlace`, `getRelativePoint`, `Point` / `Dimension` / `Rect` | None: it goes with the editor (§5.3).                                                                                                                                                                               |
-| `plugin-sequencer`        | `CellGrid` (`SequenceGrid`: `createCellGridAtoms`, `toggleCell`, the grid component and its headers), `ToggleMode`                                             | **Blocker.** The scene engine has no cell grid. Move `components/CellGrid` (about half the archive's 2,350 lines) into `plugin-sequencer`, its only user, or into a package of its own if a second user is planned. |
-| `react-ui-canvas-compute` | `Point`, `Dimension` (one file, `testing/`)                                                                                                                    | The engine's `Point` / `Size` from `@dxos/react-ui-canvas/scene`.                                                                                                                                                   |
+| Consumer                  | What                                                                                                                                                           | Replacement                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `react-ui-canvas-editor`  | `Canvas`, `useCanvasContext` (7 files), `ProjectionMapper`, `Markers`, `useWheel`, `zoomTo`, `zoomInPlace`, `getRelativePoint`, `Point` / `Dimension` / `Rect` | None: it goes with the editor (§5.3).                                              |
+| `plugin-sequencer`        | `CellGrid` (`SequenceGrid`: `createCellGridAtoms`, `toggleCell`, the grid component and its headers), `ToggleMode`                                             | _Done:_ moved into `plugin-sequencer` (step 2), its only user.                     |
+| `react-ui-canvas-compute` | `Point`, `Dimension` (one file, `testing/`)                                                                                                                    | _Done:_ the engine's `Point` / `Size` from `@dxos/react-ui-canvas/scene` (step 1). |
 
 ### 5.2 Who still uses `react-ui-canvas-editor`
 
@@ -227,10 +227,11 @@ either; the archive is re-exported from the package root (`src/index.ts`) and th
 
 ### 5.3 Steps (one PR each)
 
-1. **Small imports off the archive.** compute's `testing` takes the engine's `Point` / `Size`; plugin-sequencer's
-   `ToggleMode` moves with the cell grid (step 2). Leaves the editor as the archive's only consumer.
-2. **Move the cell grid.** `archive/components/CellGrid` → `plugin-sequencer` (with its `viewport.test.ts`), and the
-   sequencer imports from there. Verify with the sequencer's stories.
+1. **Small imports off the archive.** _Done (2026-10-08)._ compute's `testing` takes the engine's `Point` / `Size`;
+   plugin-sequencer's `ToggleMode` moved with the cell grid (step 2). The editor is the archive's only consumer.
+2. **Move the cell grid.** _Done (2026-10-08)._ `archive/components/CellGrid` is now
+   `plugin-sequencer/src/components/CellGrid` (with its `viewport.test.ts`), and plugin-sequencer no longer depends on
+   `@dxos/react-ui-canvas`.
 3. **Shapes as `NodeDef`s.** Rewrite the ~30 compute shapes against `NodeViewProps` and `NodeDef` (ports from the
    node's schema, the frame chrome from the def), replacing `ShapeDef` / `ShapeComponentProps` / `createAnchorMap`
    and the editor's `TextBox` (the engine's `TextPart` covers in-place text). `scene/defs.ts`'s adapter and
