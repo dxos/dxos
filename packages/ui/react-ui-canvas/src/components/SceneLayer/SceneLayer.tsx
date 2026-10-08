@@ -144,6 +144,7 @@ export const SceneLayer = memo(
       [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
+    const linkWidth = LINK_WIDTH * lineWeight(depth, zoom);
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
@@ -157,7 +158,13 @@ export const SceneLayer = memo(
         <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
           <defs>
             {lineHues.map((hue) => (
-              <Markers key={hue ?? 'default'} id={`${markerId}-${hue ?? 'default'}`} cell={cell} hue={hue} />
+              <Markers
+                key={hue ?? 'default'}
+                id={`${markerId}-${hue ?? 'default'}`}
+                cell={cell}
+                hue={hue}
+                width={linkWidth}
+              />
             ))}
           </defs>
           {links.map(({ link, path }) => (
@@ -180,8 +187,8 @@ export const SceneLayer = memo(
                   'fill-none',
                   !plain && selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(lines.get(link.id)?.hue).stroke,
                 )}
-                strokeWidth={LINK_WIDTH}
-                strokeDasharray={dashArray(lines.get(link.id)?.dash)}
+                strokeWidth={linkWidth}
+                strokeDasharray={dashArray(lines.get(link.id)?.dash, linkWidth)}
                 strokeLinecap={lines.get(link.id)?.dash === 'dotted' ? 'round' : undefined}
                 data-link-id={link.id}
               />
@@ -235,18 +242,28 @@ const FRAME_BORDER = '--scene-frame-border' as const;
 /** A link's stroke, in scene units like a node's 2px border, so a link keeps its weight beside the shapes at any zoom. */
 const LINK_WIDTH = 2;
 
+/** The most a nested scene's lines thicken by. */
+const MAX_LINE_WEIGHT = 2;
+
+/**
+ * How much thicker a layer draws its lines: a scene seen inside another is small, so its borders and links thicken,
+ * up to double, as it shrinks; at its own size (as it is drilled into) it is back to 1, so nothing jumps at the swap.
+ */
+export const lineWeight = (depth: number, zoom: number): number =>
+  depth > 0 ? Math.min(MAX_LINE_WEIGHT, Math.max(1, 1 / Math.max(zoom, 0.05))) : 1;
+
 /** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
 const CellContext = createContext(DEFAULT_CELL);
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
-const dashArray = (dash: LinkLine['dash']): string | undefined =>
-  dash === 'dashed' ? `${4 * LINK_WIDTH} ${3 * LINK_WIDTH}` : dash === 'dotted' ? `0 ${2.5 * LINK_WIDTH}` : undefined;
+const dashArray = (dash: LinkLine['dash'], width = LINK_WIDTH): string | undefined =>
+  dash === 'dashed' ? `${4 * width} ${3 * width}` : dash === 'dotted' ? `0 ${2.5 * width}` : undefined;
 
 /** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
 const END_BOX = 0.25;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, cell, hue }: { id: string; cell: number; hue: StyleHue | undefined }) => {
+const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: StyleHue | undefined; width: number }) => {
   const line = lineClasses(hue);
   // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
   // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
@@ -255,7 +272,7 @@ const Markers = ({ id, cell, hue }: { id: string; cell: number; hue: StyleHue | 
   const triangle = (box * 12) / 10;
   const circle = (box * 10) / 8;
   // An outline matches the line's width, in its marker's view units.
-  const outline = (size: number, view: number) => (LINK_WIDTH * view) / size;
+  const outline = (size: number, view: number) => (width * view) / size;
   const ends = ['start', 'end'] as const;
   return (
     <>
@@ -369,13 +386,17 @@ const NodeFrame = memo(
     // at once and keeps only its own border, not the selection's or the hover's.
     // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
     // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
+    // The frame's border is 2px, thickened with the layer's lines (`lineWeight`); fading, it is padding instead.
+    const border = 2 * lineWeight(props.depth, props.zoom);
+    const thick = border !== 2;
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
       width: bounds.width,
       height: bounds.height,
       fontSize: drawn.style?.fontSize,
-      [FRAME_BORDER]: chromeFade ? '0px' : '2px',
+      [FRAME_BORDER]: chromeFade ? '0px' : `${border}px`,
+      ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...fade,
     };
     const frameLook = props.opening ? frameClasses(drawn, false).slice(1) : frameClasses(drawn, selected, hovered);
@@ -398,7 +419,7 @@ const NodeFrame = memo(
           <div
             aria-hidden
             className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
-            style={chromeFade}
+            style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
           />
         )}
         <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
