@@ -14,7 +14,6 @@ import * as Ref from 'effect/Ref';
 import * as Tracer from 'effect/Tracer';
 
 import * as Operation from '@dxos/compute/Operation';
-import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import { Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -38,13 +37,11 @@ export class Service extends Context.Service<Service, ProcessOperationInvoker>()
  */
 export const make = ({
   manager,
-  handlerSet,
   origin,
   tracer,
 }: {
   /** Inside a process, the one whose spawns default their parent to that process. */
   manager: Process.Manager;
-  handlerSet: OperationHandlerSet.OperationHandlerSet;
   /** Who the spawned processes attribute their database writes to (see `Database.Origin`). */
   origin?: Database.Origin;
   tracer?: Tracer.Tracer;
@@ -76,7 +73,7 @@ export const make = ({
       if (options?.on === 'edge' && options.spaceId === undefined) {
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
-      const handle = yield* Process.spawn(OperationProcess.make(op, handlerSet), input, {
+      const handle = yield* Process.spawn(OperationProcess.make(op), input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
@@ -181,18 +178,13 @@ export const make = ({
  * Provides `Operation.Service` (and {@link Service}, its full surface) by running every invocation as a
  * process spawned through {@link Process.ManagerService}.
  */
-export const layer: Layer.Layer<
-  Operation.Service | Service,
-  never,
-  Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
-> = Layer.effectContext(
+export const layer: Layer.Layer<Operation.Service | Service, never, Process.ManagerService> = Layer.effectContext(
   Effect.gen(function* () {
     const manager = yield* Process.ManagerService;
-    const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
     // A host provides `Database.Origin` to label what its root invocations write, e.g. `user` for an app's UI.
     const origin = yield* Database.Origin;
     const tracer = yield* Effect.tracer;
-    const invoker = make({ manager, handlerSet, origin, tracer });
+    const invoker = make({ manager, origin, tracer });
     return Context.make(Operation.Service, invoker).pipe(Context.add(Service, invoker));
   }),
 );

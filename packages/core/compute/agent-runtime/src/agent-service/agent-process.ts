@@ -305,8 +305,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {
-                const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
-                const handle = yield* Process.spawn(OperationProcess.make(operation, handlers), input, {
+                const handle = yield* Process.spawn(OperationProcess.make(operation), input, {
                   environment: { conversation: Obj.getURI(feed) },
                   traceMeta: { conversation: Ref.make(feed) },
                 });
@@ -1036,8 +1035,7 @@ const ToolExecutionService = ({
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
             log('invoking operation', { operationDef, input });
-            const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
-            const handle = yield* Process.spawn(OperationProcess.make(operationDef, handlers), input, {
+            const handle = yield* Process.spawn(OperationProcess.make(operationDef), input, {
               environment: {
                 conversation: Obj.getURI(feed),
               },

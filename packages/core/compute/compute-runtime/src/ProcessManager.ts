@@ -265,13 +265,12 @@ export class Impl implements Manager {
           ? Effect.die(new Error('A process cannot attach to a remote process.'))
           : this.attach(childPid),
     };
-    let services = Context.make(Process.ManagerService, manager);
+    // The handler set is always present, so an operation process can look its handler up.
+    let services = Context.make(Process.ManagerService, manager).pipe(
+      Context.add(OperationHandlerSet.OperationHandlerProvider, this.operationHandlerSet),
+    );
     if (this.#handlerSet) {
-      const handlers = this.#handlerSet;
-      services = services.pipe(
-        Context.add(OperationHandlerSet.OperationHandlerProvider, handlers),
-        Context.add(Operation.Service, ProcessOperationInvoker.make({ manager, handlerSet: handlers, tracer })),
-      );
+      services = services.pipe(Context.add(Operation.Service, ProcessOperationInvoker.make({ manager, tracer })));
     }
     return services;
   }

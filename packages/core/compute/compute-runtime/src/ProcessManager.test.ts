@@ -54,15 +54,12 @@ import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
 // Operation definitions.
 //
 
-/** Spawns a plain operation as a process, wrapped with the handler set the caller is provided. */
+/** Spawns a plain operation as a process. */
 const spawnOperation = <I, O>(
   op: Operation.Definition<I, O>,
   input: I,
   options?: Process.SpawnOptions & Process.LocationOptions,
-) =>
-  Effect.flatMap(OperationHandlerSet.OperationHandlerProvider, (provided) =>
-    Process.spawn(OperationProcess.make(op, provided), input, options),
-  );
+) => Process.spawn(OperationProcess.make(op), input, options);
 
 const Double = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
@@ -126,6 +123,15 @@ const SlowChildGate = {
   alarmHandlerFinished: undefined as Deferred.Deferred<void> | undefined,
 };
 
+/** Holds `Gated` until its test releases it. */
+const GatedGate: { gate?: Deferred.Deferred<void>; finished?: Deferred.Deferred<void> } = {};
+
+const Gated = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.gated'), name: 'Gated' },
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
 const SlowChild = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.slowChild'), name: 'SlowChild' },
   input: Schema.Struct({ value: Schema.Number }),
@@ -133,6 +139,16 @@ const SlowChild = Operation.make({
 });
 
 const handlers = OperationHandlerSet.make(
+  Gated.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const { gate, finished } = GatedGate;
+        invariant(gate && finished, 'GatedGate not armed');
+        yield* Deferred.await(gate);
+        yield* Deferred.succeed(finished, undefined);
+      }),
+    ),
+  ),
   Double.pipe(
     Operation.withHandler(
       Effect.fn(function* (input) {
@@ -429,7 +445,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
 
-      const executable = OperationProcess.make(Double, handlers);
+      const executable = OperationProcess.make(Double);
 
       const handle = yield* manager.spawn(executable);
       expect(handle.pid).toBeDefined();
@@ -448,7 +464,7 @@ describe('ManagerImpl', () => {
     Effect.fn(
       function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(OperationProcess.make(Traced, handlers));
+        const handle = yield* manager.spawn(OperationProcess.make(Traced));
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
         expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
       },
@@ -461,7 +477,7 @@ describe('ManagerImpl', () => {
     Effect.fn(
       function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(OperationProcess.make(Traced, handlers), {
+        const handle = yield* manager.spawn(OperationProcess.make(Traced), {
           environment: { space: 'B7777777777777777777777777' as any },
         });
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
@@ -562,7 +578,7 @@ describe('ManagerImpl', () => {
             ),
           ),
         );
-        const child = yield* manager.spawn(OperationProcess.make(Double, handlers), {
+        const child = yield* manager.spawn(OperationProcess.make(Double), {
           parentProcessId: parent.pid,
         });
         yield* child.runAndExit({ inputs: [{ value: 1 }] }).pipe(Stream.runCollect);
@@ -622,7 +638,7 @@ describe('ManagerImpl', () => {
     'runAndExit submits inputs and completes the stream at IDLE or SUCCEEDED',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationProcess.make(Double, handlers));
+      const handle = yield* manager.spawn(OperationProcess.make(Double));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([14]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
@@ -1060,7 +1076,7 @@ describe('ManagerImpl', () => {
         const manager = yield* ProcessManager.Service;
         const entries = yield* captureLogEntries(() =>
           Effect.gen(function* () {
-            const handle = yield* manager.spawn(OperationProcess.make(Failing, handlers));
+            const handle = yield* manager.spawn(OperationProcess.make(Failing));
             yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
           }),
         );
@@ -1128,7 +1144,7 @@ describe('ManagerImpl', () => {
     'runAndExit on successful operation',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationProcess.make(Double, handlers));
+      const handle = yield* manager.spawn(OperationProcess.make(Double));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([22]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
@@ -1140,7 +1156,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
 
-      const handle = yield* manager.spawn(OperationProcess.make(ParentInvoker, handlers));
+      const handle = yield* manager.spawn(OperationProcess.make(ParentInvoker));
       const outputs = yield* handle.runAndExit({ inputs: [7] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([7]);
 
@@ -1159,7 +1175,7 @@ describe('ManagerImpl', () => {
     'runAndExit on failing operation',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationProcess.make(Failing, handlers));
+      const handle = yield* manager.spawn(OperationProcess.make(Failing));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
       // Compared by defect rather than by deep-equal Exit: v4 annotates causes with a stack trace,
@@ -1173,7 +1189,7 @@ describe('ManagerImpl', () => {
     'runAndExit propagates the process failure cause without stringifying or nesting',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationProcess.make(RunAgain, handlers));
+      const handle = yield* manager.spawn(OperationProcess.make(RunAgain));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
 
       expect(Exit.isFailure(exit)).toBe(true);
@@ -1201,7 +1217,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       capturedTraceMessages.length = 0;
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationProcess.make(RunAgain, handlers));
+      const handle = yield* manager.spawn(OperationProcess.make(RunAgain));
       yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
 
       // `isOfType` inside the map narrows `event.data` to the OperationEnd payload without a cast.
@@ -1323,24 +1339,15 @@ describe('Process.spawn', () => {
 //
 
 describe('ProcessOperationInvoker schedule', () => {
-  const Gated = Operation.make({
-    meta: { key: DXN.make('com.example.operation.test.gated'), name: 'Gated' },
-    input: Schema.Void,
-    output: Schema.Void,
-  });
-
   it.effect(
     'awaitFollowups waits for a scheduled operation to finish, not just to start',
     Effect.fn(function* ({ expect }) {
       const gate = yield* Deferred.make<void>();
       const finished = yield* Deferred.make<void>();
-      const gatedHandlers = OperationHandlerSet.make(
-        Gated.pipe(
-          Operation.withHandler(() => Deferred.await(gate).pipe(Effect.andThen(Deferred.succeed(finished, undefined)))),
-        ),
-      );
+      GatedGate.gate = gate;
+      GatedGate.finished = finished;
       const manager = yield* Process.ManagerService;
-      const invoker = ProcessOperationInvoker.make({ manager, handlerSet: gatedHandlers });
+      const invoker = ProcessOperationInvoker.make({ manager });
 
       yield* invoker.schedule(Gated, undefined);
       const followups = yield* Effect.forkChild(invoker.awaitFollowups);
@@ -1369,7 +1376,7 @@ describe('ProcessOperationInvoker edge dispatch', () => {
         return manager.spawn(definition, options);
       },
     };
-    return ProcessOperationInvoker.make({ manager: recording, handlerSet: handlers });
+    return ProcessOperationInvoker.make({ manager: recording });
   });
 
   it.effect(
@@ -2339,8 +2346,8 @@ describe('durability', () => {
           ),
         ),
       );
-      const opProcess = OperationProcess.make(SlowOp, opHandlers);
-      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const opProcess = OperationProcess.make(SlowOp);
+      const managerA = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       // `submitInput` returns once the input and the operation's durable "started" marker are
       // persisted, without waiting on the handler, so awaiting it already captures both before shutdown.
@@ -2349,7 +2356,7 @@ describe('durability', () => {
 
       // Restore: the operation observes its durable "started" marker → fails instead of retrying.
       gate = false;
-      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const managerB = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
       const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
       // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
       // progresses before awaiting its result (same idiom as the DX-999 test above).
@@ -2396,8 +2403,8 @@ describe('durability', () => {
           ),
         ),
       );
-      const opProcess = OperationProcess.make(SlowOp, opHandlers);
-      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const opProcess = OperationProcess.make(SlowOp);
+      const managerA = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       // See the sibling durability test above for why a plain, non-forked `submitInput` already
       // guarantees the pending input is durably captured before shutdown.
@@ -2406,7 +2413,7 @@ describe('durability', () => {
 
       // Restore: idempotent operations skip the marker and are simply re-run to completion.
       gate = false;
-      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const managerB = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
       const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
       // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
       // progresses before awaiting its result (same idiom as the DX-999 test above).
@@ -2558,7 +2565,7 @@ describe('durability', () => {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const traceSink = yield* Trace.TraceSink;
 
-      const opProcess = OperationProcess.make(Double, handlers);
+      const opProcess = OperationProcess.make(Double);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 5 }] }).pipe(Stream.runCollect);

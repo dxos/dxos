@@ -214,8 +214,7 @@ const StubDelegationStrategy: DelegationStrategy = {
         .map((work) => ({
           id: work.id,
           spawn: Effect.gen(function* () {
-            const provided = yield* OperationHandlerSet.OperationHandlerProvider;
-            const handle = yield* Process.spawn(OperationProcess.make(DelegatedWork, provided), work.input);
+            const handle = yield* Process.spawn(OperationProcess.make(DelegatedWork), work.input);
             return handle.pid;
           }),
         })),

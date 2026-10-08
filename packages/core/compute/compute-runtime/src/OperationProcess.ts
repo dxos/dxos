@@ -27,31 +27,31 @@ const OperationStartedCell = StorageService.cell(Schema.fromJsonString(Schema.Bo
 );
 
 /**
- * Runs a (non-durable) operation as a durable one: a single-input process that invokes the operation's handler.
- * Spawn the result with `Process.spawn`.
+ * Runs a (non-durable) operation as a durable one: a single-input process that invokes the operation's handler,
+ * found in the handler set of the manager that runs it. Spawn the result with `Process.spawn`.
  */
 export const make = <const Op extends Operation.Definition.Any>(
   op: Op,
-  handlers: OperationHandlerSet.OperationHandlerSet,
 ): Operation.Durable<
   Operation.Definition.Input<Op>,
   Operation.Definition.Output<Op>,
-  Operation.Definition.Services<Op>
+  Operation.Definition.Services<Op> | OperationHandlerSet.OperationHandlerProvider
 > => {
   const definition: Operation.DurableDefinition<
     Operation.Definition.Input<Op>,
     Operation.Definition.Output<Op>,
-    Operation.Definition.Services<Op>
+    Operation.Definition.Services<Op> | OperationHandlerSet.OperationHandlerProvider
   > = Operation.makeDurable({
     key: DXN.getName(op.meta.key),
     name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
     input: op.input,
     output: op.output,
-    services: op.services,
+    services: [...op.services, OperationHandlerSet.OperationHandlerProvider],
   });
 
   return Operation.withDurableHandler(definition, (ctx) =>
     Effect.gen(function* () {
+      const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
       const semaphore = yield* Semaphore.make(1);
       // The process runtime assumes handlers are idempotent and always re-delivers an input
       // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
