@@ -10,21 +10,19 @@ name: Agentic Review
 # Draft PRs skip this unless labeled `ci`, the same gate as `Check`.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
 
 concurrency:
-  group: >-
-    ${{ github.workflow }}-${{ github.event.pull_request.number
-    }}-${{ github.event.action == 'labeled' && github.event.label.name != 'ci' && github.run_id || '' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   review-present:
     if: >-
-      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))
+      github.event_name != 'pull_request' || !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')
     runs-on: depot-ubuntu-24.04
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

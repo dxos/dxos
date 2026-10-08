@@ -7,7 +7,7 @@ name: Model Fixture
 # Draft PRs skip this unless labeled `ci`, the same gate as `Check`.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    types: [opened, synchronize, reopened, ready_for_review]
 
   push:
     branches:
@@ -27,15 +27,13 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 concurrency:
-  group: >-
-    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
-    }}-${{ github.event.action == 'labeled' && github.event.label.name != 'ci' && github.run_id || '' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   model-fixture:
     if: >-
-      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))
+      github.event_name != 'pull_request' || !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
