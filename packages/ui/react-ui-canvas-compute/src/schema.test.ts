@@ -9,9 +9,14 @@ import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { CanvasBoard, CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createSwitch } from './shapes/index.ts';
+import { ComputeShape, createReducer, createSwitch } from './shapes/index.ts';
 
 describe('compute', () => {
+  test('a reducer keeps the id it is created with', ({ expect }) => {
+    const reducer = createReducer({ id: 'reducer-1', center: { x: 0, y: 0 } });
+    expect(reducer.id).toBe('reducer-1');
+  });
+
   test('model', ({ expect }) => {
     const model = CanvasGraphModel.create<ComputeShape>();
     const node = createSwitch({ id: 'x', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } });
