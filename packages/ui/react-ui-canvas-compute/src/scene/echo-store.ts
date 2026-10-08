@@ -72,7 +72,8 @@ export const sceneFromLayout = (id: SceneId, layout: Partial<Layout> | undefined
 };
 
 const nodeFromShape = (shape: CanvasBoard.Shape, z: string): Node => {
-  const { guide: _guide, classNames: _classNames, ...rest } = shape as CanvasBoard.Shape & { style?: NodeStyle };
+  // `classNames` rides through on the node untouched: the old editor reads it, the engine draws no host classes.
+  const { guide: _guide, ...rest } = shape as CanvasBoard.Shape & { style?: NodeStyle };
   const style = styleFromShape(shape);
   return {
     ...(rest as unknown as Node),
@@ -81,13 +82,10 @@ const nodeFromShape = (shape: CanvasBoard.Shape, z: string): Node => {
   };
 };
 
-/** A shape's look: its own `style` when the engine wrote one, else the editor's two top-level fields. */
+/** A shape's look: its own `style` when the engine wrote one, else the editor's top-level `guide`. */
 const styleFromShape = (shape: CanvasBoard.Shape): NodeStyle | undefined => {
-  const { style, guide, classNames } = shape as CanvasBoard.Shape & { style?: NodeStyle };
-  const legacy: NodeStyle = {
-    ...(guide !== undefined ? { guide } : {}),
-    ...(classNames !== undefined ? { className: classNames } : {}),
-  };
+  const { style, guide } = shape as CanvasBoard.Shape & { style?: NodeStyle };
+  const legacy: NodeStyle = guide !== undefined ? { guide } : {};
   const merged = { ...legacy, ...style };
   return Object.keys(merged).length > 0 ? merged : undefined;
 };
@@ -165,9 +163,8 @@ const shapeFromNode = (node: Node): CanvasBoard.Shape => {
   return {
     ...(rest as unknown as CanvasBoard.Shape),
     ...(style ? { style } : {}),
-    // The old editor reads these two, so a board stays readable by it (M5 retires them with the package).
+    // The old editor reads `guide`, so a board stays readable by it (M5 retires it with the package).
     ...(style?.guide !== undefined ? { guide: style.guide } : {}),
-    ...(style?.className !== undefined ? { classNames: style.className } : {}),
   } as CanvasBoard.Shape;
 };
 
