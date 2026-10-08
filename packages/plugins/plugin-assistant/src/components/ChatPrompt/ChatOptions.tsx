@@ -7,6 +7,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as McpServer from '@dxos/compute/McpServer';
 import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
@@ -211,10 +212,17 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   // Offered only where an edge service is configured, which is the same condition that decides
   // whether `RemoteProcessManager` is the real manager or `layerNoop`: against the noop a spawn has
   // no `list` or `spawn`, so choosing `remote` would persist a flag the next prompt cannot honour.
-  const environments = client?.config.values.runtime?.services?.edge?.url
-    ? CHAT_ENVIRONMENTS
-    : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
-  const value: ChatEnvironment = remote ? 'remote' : 'local';
+  // An agent's chat runs on EDGE (`Agent.chatLocation`) unless explicitly kept local: with EDGE configured local is
+  // no choice there, and without it local stays offered so the chat can be moved somewhere it can run.
+  const edgeConfigured = Boolean(client?.config.values.runtime?.services?.edge?.url);
+  const agentOnEdge = chat !== undefined && Agent.isAgentChat(chat) && chat.remote !== false;
+  const environments =
+    agentOnEdge && edgeConfigured
+      ? CHAT_ENVIRONMENTS.filter((environment) => environment === 'remote')
+      : agentOnEdge || edgeConfigured
+        ? CHAT_ENVIRONMENTS
+        : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
+  const value: ChatEnvironment = remote || agentOnEdge ? 'remote' : 'local';
   const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
 
   return (

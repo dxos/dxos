@@ -13,6 +13,7 @@ import { Person } from '@dxos/types';
 import { BrainService, type Trigger } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
+import { TEST_MEMBERS } from './testing.ts';
 
 const AGENT = 'kai';
 const STARTED = '2026-10-07T10:00:00.000Z';
@@ -25,7 +26,11 @@ const agents: AgentService.Service = {
 
 const fact = (
   id: string,
-  { speaker = 'dima', quote = 'I am working on the indexer migration.', saidAt = '2026-10-07T11:00:00.000Z' } = {},
+  {
+    speaker = TEST_MEMBERS.dima,
+    quote = 'I am working on the indexer migration.',
+    saidAt = '2026-10-07T11:00:00.000Z',
+  }: { speaker?: string; quote?: string; saidAt?: string } = {},
 ): RDF.Fact => ({
   id,
   assertion: {
@@ -58,11 +63,11 @@ describe('BrainMemory', () => {
   it.effect('push stores facts and queues an event in each matching subscription', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents);
-      yield* brain.subscribe(subscription('dima', { speaker: 'Dima' }));
-      yield* brain.subscribe(subscription('rich', { speaker: 'Rich' }));
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }));
+      yield* brain.subscribe(subscription('rich', { speaker: TEST_MEMBERS.rich }));
 
       expect(yield* brain.push(AGENT, [fact('f1')])).toBe(1);
-      expect((yield* brain.query(AGENT, { subjectEntity: 'dima' })).map(({ id }) => id)).toEqual(['f1']);
+      expect((yield* brain.query(AGENT, { subjectEntity: TEST_MEMBERS.dima })).map(({ id }) => id)).toEqual(['f1']);
       expect((yield* brain.take('dima')).map(({ id }) => id)).toEqual([BrainService.eventId('dima', 'f1')]);
       expect(yield* brain.take('rich')).toEqual([]);
     }),
@@ -71,7 +76,7 @@ describe('BrainMemory', () => {
   it.effect('events stay queued until acknowledged', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents);
-      yield* brain.subscribe(subscription('dima', { speaker: 'Dima' }, { ongoing: true }));
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }, { ongoing: true }));
       yield* brain.push(AGENT, [fact('f1'), fact('f2', { quote: 'The migration is half done.' })]);
 
       const events = yield* brain.take('dima');
@@ -87,7 +92,7 @@ describe('BrainMemory', () => {
   it.effect('a fact pushed again queues nothing new, even after it was acknowledged', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents);
-      yield* brain.subscribe(subscription('dima', { speaker: 'Dima' }));
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }));
       expect(yield* brain.push(AGENT, [fact('f1')])).toBe(1);
       yield* brain.ack('dima', [BrainService.eventId('dima', 'f1')]);
 
@@ -121,7 +126,7 @@ describe('BrainMemory', () => {
   it.effect('unsubscribe drops the outbox and reports whether it removed anything', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents);
-      yield* brain.subscribe(subscription('dima', { speaker: 'Dima' }));
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }));
       yield* brain.push(AGENT, [fact('f1')]);
 
       expect(yield* brain.unsubscribe('dima')).toBe(true);
@@ -136,10 +141,10 @@ describe('BrainMemory', () => {
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents);
       for (let index = 0; index < BrainService.MAX_TRIGGERS; index++) {
-        expect(yield* brain.subscribe(subscription(`s${index}`, { speaker: 'Dima' }))).toBe(true);
+        expect(yield* brain.subscribe(subscription(`s${index}`, { speaker: TEST_MEMBERS.dima }))).toBe(true);
       }
-      expect(yield* brain.subscribe(subscription('overflow', { speaker: 'Dima' }))).toBe(false);
-      expect(yield* brain.subscribe(subscription('s0', { speaker: 'Rich' }))).toBe(true);
+      expect(yield* brain.subscribe(subscription('overflow', { speaker: TEST_MEMBERS.dima }))).toBe(false);
+      expect(yield* brain.subscribe(subscription('s0', { speaker: TEST_MEMBERS.rich }))).toBe(true);
       expect(yield* brain.subscriptions(AGENT)).toHaveLength(BrainService.MAX_TRIGGERS);
     }),
   );
@@ -147,7 +152,7 @@ describe('BrainMemory', () => {
   it.effect('events round-trip through JSON, as across a wire', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents);
-      yield* brain.subscribe(subscription('dima', { speaker: 'Dima' }));
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }));
       yield* brain.push(AGENT, [fact('f1')]);
       const [event] = yield* brain.take('dima');
       expect(BrainService.decodeEvent(JSON.parse(JSON.stringify(BrainService.encodeEvent(event))))).toEqual(event);

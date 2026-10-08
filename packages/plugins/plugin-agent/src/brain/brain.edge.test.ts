@@ -180,7 +180,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
     );
 
   const watchesOn = (state: BrainState, speaker: string) =>
-    state.triggers.filter(({ when }) => when.speaker?.toLowerCase().startsWith(speaker) ?? false);
+    state.triggers.filter(({ when }) => when.speaker === speaker);
 
   test('Goals 1: "keep me updated about what Alice is working on" becomes a goal and a watch in the brain', async () => {
     const { agent, bobChat } = await setupOnEdge();
@@ -188,9 +188,9 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
 
     const state = await eventually(
       () => brainState(agent),
-      (state) => watchesOn(state, 'alice').length > 0,
+      (state) => watchesOn(state, SCENARIO.alice.did).length > 0,
     );
-    expect(watchesOn(state, 'alice')[0].ongoing).toBe(true);
+    expect(watchesOn(state, SCENARIO.alice.did)[0].ongoing).toBe(true);
     const goals = await eventually(
       () => space.db.query(Filter.type(Goal.Goal)).run(),
       (goals) => goals.some(({ title }) => title.toLowerCase().includes('alice')),
@@ -207,7 +207,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       ({ facts }) => facts.some((fact) => JSON.stringify(fact.assertion).toLowerCase().includes('indexer')),
     );
     const fact = state.facts.find((fact) => JSON.stringify(fact.assertion).toLowerCase().includes('indexer'));
-    expect(fact?.attribution.agent).toBe('bob');
+    expect(fact?.attribution.agent).toBe(SCENARIO.bob.did);
   });
 
   test('E2E 1: Alice asks to be kept posted on Bob; Bob says what he is working on; Alice is told', async () => {
@@ -216,7 +216,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
     await run(say(aliceChat, 'Alice', SCENARIO.alice.ask));
     await eventually(
       () => brainState(agent),
-      (state) => watchesOn(state, 'bob').length > 0,
+      (state) => watchesOn(state, SCENARIO.bob.did).length > 0,
     );
     const before = (await replies(aliceChat)).length;
 

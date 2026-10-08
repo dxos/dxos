@@ -37,7 +37,7 @@ import {
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { makeTestBrain } from './testing.ts';
+import { makeTestBrain, makeTestSpaceLayer } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -110,12 +110,16 @@ const makeScript =
 
 const refs: Refs = {};
 const brain = makeTestBrain();
+const testSpaceLayer = makeTestSpaceLayer([
+  { did: SCENARIO.alice.did, displayName: 'Alice' },
+  { did: SCENARIO.bob.did, displayName: 'Bob' },
+]);
 
-const TestLayer = brain.layer.pipe(
+const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
-      extraServices: brain.layer,
+      extraServices: Layer.merge(brain.layer, testSpaceLayer),
       types: [
         Agent.Agent,
         Chat.Chat,
@@ -198,7 +202,7 @@ describe('agent brain (local)', () => {
         expect(ChatParticipant.getOwner(bob.chat)).toBe(SCENARIO.bob.did);
 
         yield* say(alice.chat, 'Alice', SCENARIO.alice.ask);
-        expect(watchesOn(brain.triggers.list(agent.id), 'Bob')).toHaveLength(1);
+        expect(watchesOn(brain.triggers.list(agent.id), SCENARIO.bob.did)).toHaveLength(1);
 
         yield* say(bob.chat, 'Bob', SCENARIO.bob.working);
         yield* settle(alice.chat);
@@ -229,16 +233,16 @@ describe('agent brain (local)', () => {
 
         const store = brain.facts(agent.id);
         expect(store).toBeDefined();
-        const facts = store ? yield* store.query({ subjectEntity: 'bob' }) : [];
+        const facts = store ? yield* store.query({ subjectEntity: SCENARIO.bob.did }) : [];
         expect(facts.map(({ assertion, attribution }) => ({ assertion, speaker: attribution.agent }))).toEqual([
           {
             assertion: expect.objectContaining({
-              subject: expect.objectContaining({ entity: 'bob' }),
+              subject: expect.objectContaining({ entity: SCENARIO.bob.did }),
               predicate: 'works on',
               object: expect.objectContaining({ entity: SCENARIO.workEntity }),
               quote: SCENARIO.bob.working,
             }),
-            speaker: 'bob',
+            speaker: SCENARIO.bob.did,
           },
         ]);
       },
@@ -261,7 +265,7 @@ describe('agent brain (local)', () => {
         ]);
         expect(goals[0].owners.map((owner) => owner.target?.id)).toEqual([bob.person.id]);
 
-        const [watch, ...others] = watchesOn(brain.triggers.list(agent.id), 'Alice');
+        const [watch, ...others] = watchesOn(brain.triggers.list(agent.id), SCENARIO.alice.did);
         expect(others).toHaveLength(0);
         expect(watch.goal?.target?.id).toBe(goals[0].id);
       },

@@ -257,7 +257,7 @@ export const PlaygroundScripted: Story = {
       (facts) =>
         facts.some(
           ({ assertion, attribution, illocution }) =>
-            assertion.quote?.includes('6pm') && attribution.agent === 'dima' && illocution?.force === 'directive',
+            assertion.quote?.includes('6pm') && attribution.agentLabel === 'Dima' && illocution?.force === 'directive',
         ),
     );
 

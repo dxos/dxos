@@ -27,7 +27,7 @@ const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 export type ParticipantChatOptions = {
   /** The DID of the identity the chat is private to. */
   owner?: string;
-  /** Whether a chat created here runs on EDGE. */
+  /** Whether a chat created here runs on EDGE; unset, it runs where the agent's own chat does. */
   remote?: boolean;
 };
 
@@ -60,6 +60,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const skills = yield* Effect.forEach(BASE_SKILL_KEYS, (key) => skillRef(agent, key));
 
   const primary = yield* Agent.loadChat(agent);
+  const location = remote ?? primary?.remote;
   const feed = yield* Database.add(Feed.make());
   const draft = Chat.make({
     [Obj.Meta]: { keys: [key] },
@@ -67,7 +68,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
     name: person.preferredName ?? person.fullName,
     feed: Ref.make(feed),
     instructions: agent.instructions,
-    ...(remote ? { remote } : {}),
+    ...(location !== undefined ? { remote: location } : {}),
   });
   // Runs on the same model as the agent's own conversation.
   Chat.seedSession(draft, primary?.session);

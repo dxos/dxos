@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
-import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 
 import * as FactEntry from './FactEntry.ts';
 import * as Goal from './Goal.ts';
@@ -24,10 +24,16 @@ export type Force = Schema.Schema.Type<typeof Force>;
  */
 export const FactPattern = Schema.Struct({
   speaker: Schema.optional(
-    Schema.String.annotate({ description: 'The name of the person who must have said it, e.g. "Dima".' }),
+    Schema.String.annotate({
+      description:
+        'The person who must have said it, by name (e.g. "Dima"); a space member is resolved to that member, anyone else is matched by the name as written.',
+    }),
   ),
   subject: Schema.optional(
-    Schema.String.annotate({ description: 'Words the fact\'s subject must contain, e.g. "indexer PR".' }),
+    Schema.String.annotate({
+      description:
+        'What the fact must be about: a space member by name (e.g. "Dima"), matched as that member, or words its subject must contain (e.g. "indexer PR").',
+    }),
   ),
   about: Schema.optional(
     Schema.String.annotate({
@@ -95,9 +101,22 @@ export const agentOf = (id: string): string | undefined => {
   return separator > 0 ? id.slice(0, separator) : undefined;
 };
 
-/** A pattern as one line, e.g. `Dima · assertive · + · about "indexer PR"`. */
-export const describePattern = ({ speaker, subject, about, force, polarity, text }: FactPattern): string =>
-  [speaker, force, polarity, subject && `subject "${subject}"`, about && `about "${about}"`, text && `says "${text}"`]
+/**
+ * A pattern as one line, e.g. `Dima · assertive · + · about "indexer PR"`; `labelOf` names the members a
+ * resolved pattern holds by id.
+ */
+export const describePattern = (
+  { speaker, subject, about, force, polarity, text }: FactPattern,
+  labelOf: (id: string) => string = (id) => id,
+): string =>
+  [
+    speaker && labelOf(speaker),
+    force,
+    polarity,
+    subject && `subject "${labelOf(subject)}"`,
+    about && `about "${about}"`,
+    text && `says "${text}"`,
+  ]
     .filter((part) => part !== undefined && part.length > 0)
     .join(' · ');
 
@@ -129,14 +148,17 @@ const mentions = (haystack: string, needle: string): boolean => {
   );
 };
 
-/** A speaker's slug names a person by their whole name or its first word: "rich" is "Rich Burdon". */
-const isSpeaker = (name: string, speaker: string | undefined): boolean => {
-  if (speaker === undefined) {
-    return false;
-  }
-  const slug = normalizeEntityId(name);
-  return speaker === slug || speaker.startsWith(`${slug}-`) || slug.startsWith(`${speaker}-`);
-};
+/** A subject given as a member id matches that entity; otherwise its words must occur in the subject. */
+const isSubject = (term: RDF.Term, subject: string): boolean =>
+  (term.kind === 'entity' && term.entity === subject) || mentions(FactEntry.termText(term), subject);
+
+const nameKey = (name: string): string => name.trim().replace(/\s+/g, ' ').toLowerCase();
+
+/** A member id matches exactly; a bare name (someone who is no member) matches however it is cased or spaced. */
+const isSpeaker = (agent: string | undefined, speaker: string): boolean =>
+  agent !== undefined &&
+  (agent === speaker ||
+    (!speaker.startsWith('did:') && !agent.startsWith('did:') && nameKey(agent) === nameKey(speaker)));
 
 const time = (iso: string): number => Date.parse(iso);
 
@@ -156,7 +178,8 @@ export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: 
   if (pattern.before !== undefined && said >= time(pattern.before)) {
     return false;
   }
-  if (pattern.speaker !== undefined && !isSpeaker(pattern.speaker, attribution.agent)) {
+  // Watches store the speaker as facts are attributed: a member id (`watchFacts` resolves the name), else a bare name.
+  if (pattern.speaker !== undefined && !isSpeaker(attribution.agent, pattern.speaker)) {
     return false;
   }
   // pipeline-rdf records no illocution for a plain assertion.
@@ -166,7 +189,7 @@ export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: 
   if (pattern.polarity !== undefined && factuality.polarity !== pattern.polarity) {
     return false;
   }
-  if (pattern.subject !== undefined && !mentions(FactEntry.termText(assertion.subject), pattern.subject)) {
+  if (pattern.subject !== undefined && !isSubject(assertion.subject, pattern.subject)) {
     return false;
   }
   if (pattern.about !== undefined && !mentions(`${FactEntry.factText(fact)} ${assertion.quote ?? ''}`, pattern.about)) {
