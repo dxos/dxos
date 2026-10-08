@@ -285,10 +285,8 @@ export default Capability.makeModule(
     // Holds the stack's application slice that the manager resolves from, for the module's lifetime.
     const stackScope = yield* Scope.make();
     yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));
-    const unifiedProcessManagerLayer = Layer.succeed(
-      Process.ManagerService,
-      fromStack(serviceResolver, stackScope, atomRegistry),
-    );
+    const unifiedProcessManager = fromStack(serviceResolver, stackScope, atomRegistry);
+    const unifiedProcessManagerLayer = Layer.succeed(Process.ManagerService, unifiedProcessManager);
     const operationInvokerLayer = ProcessOperationInvoker.layer.pipe(
       // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
       Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
@@ -316,12 +314,6 @@ export default Capability.makeModule(
       runFork: (effect, options) => managedRuntime.runFork(effect as Effect.Effect<any, any, any>, options),
       runSync: (effect) => managedRuntime.runSync(effect as Effect.Effect<any, any, any>),
     };
-
-    // Eagerly extract the process manager. Safe because it does not require a
-    // fresh scope and is a stable reference for the lifetime of the runtime.
-    const unifiedProcessManager = managedRuntime.runSync(
-      Effect.flatMap(Process.ManagerService, Effect.succeed) as Effect.Effect<Process.Manager, never, never>,
-    );
 
     // Publish the manager into the ambient-layer holder so that
     // `ProcessManager.ProcessManagerService` becomes resolvable through the
