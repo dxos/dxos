@@ -202,6 +202,8 @@ const runTurns = (client: Client, space: Space, calls: EdgeCall[]) =>
       recorder.dispose();
 
       expect(recorder.state.error).toBe('-');
+      // A hosted turn that streams nothing is the defect this suite exists for, not a slow turn.
+      expect(recorder.firstAt('streaming', 'true')).toBeDefined();
       // Ignore the client's own idle reading before the first event of the turn.
       expect(recorder.violations.filter((violation) => violation.at > 0)).toEqual([]);
       timings.push({

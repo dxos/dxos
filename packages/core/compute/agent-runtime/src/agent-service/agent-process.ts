@@ -456,9 +456,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               markWork('agent.wake');
 
               // Earliest point the agent can report to a reader who is already waiting: draining the
-              // queue below reads the feed, which is itself part of the wait. An empty wake emits it
-              // too, but that path returns in milliseconds and the turn settling clears the line.
-              yield* Trace.emitRequestPhase('preparing');
+              // queue below reads the feed, which is itself part of the wait. Only for a wake with known
+              // work — the re-check after every turn finds none, and on a hosted agent that read takes
+              // long enough for the line to read as another request starting after the reply.
+              const announced = toolResults.length > 0 || unseenWriteIds.size > 0;
+              if (announced) {
+                yield* Trace.emitRequestPhase('preparing');
+              }
 
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
@@ -566,6 +570,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   yield* maybeCompleteWith(state);
                   return;
                 }
+              }
+
+              if (!announced) {
+                yield* Trace.emitRequestPhase('preparing');
               }
 
               // The MCP servers are read concurrently with the writes below: neither depends on the
