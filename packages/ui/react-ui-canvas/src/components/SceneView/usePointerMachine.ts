@@ -39,7 +39,7 @@ import {
 import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting } from '../../utils/hit.ts';
-import { activeLayer } from '../../utils/layers.ts';
+import { DEFAULT_LAYER, activeLayer } from '../../utils/layers.ts';
 import { topZ } from '../../utils/order.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { resizeBounds } from '../../utils/resize.ts';
@@ -677,7 +677,13 @@ export const usePointerMachine = ({
       if (isPortalNode(node)) {
         registry.set(store.scenes, {
           ...registry.get(store.scenes),
-          [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
+          [node.scene]: {
+            id: node.scene,
+            name: 'Untitled',
+            nodes: {},
+            links: {},
+            layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+          },
         });
       }
       projection.apply({ kind: 'create', node: { ...node, layer: activeLayer(scene, registry.get(atoms.layer)) } });
