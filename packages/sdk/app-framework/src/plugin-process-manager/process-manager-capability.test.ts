@@ -6,17 +6,21 @@ import { describe, expect, it, test } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents, Capabilities } from '../common/index.ts';
 import { ActivationEvent, Capability, Plugin, PluginManager } from '../core/index.ts';
-import { makeDynamicTraceSink } from './process-manager-capability.ts';
+import { makeDynamicTraceSink, routeEdgeToStack } from './process-manager-capability.ts';
 import * as ProcessManagerPlugin from './ProcessManagerPlugin.ts';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
@@ -280,4 +284,52 @@ describe('dynamic trace sink', () => {
     makeDynamicTraceSink(() => factories, ServiceResolver.empty).write(message);
     expect(reached).toEqual(['second']);
   });
+});
+
+describe('edge routing to the stack', () => {
+  /** A manager that records which one answered `handles`. */
+  const fakeManager = (calls: string[], name: string): Process.Manager => ({
+    processTree: Effect.succeed([]),
+    processTreeAtom: Atom.make<readonly Process.Process[]>([]),
+    list: () => Effect.succeed([]),
+    subscribeToTraceMessages: () => Stream.empty,
+    spawn: () => Effect.die(new Error('unused')),
+    handles: () =>
+      Effect.sync(() => {
+        calls.push(name);
+        return [];
+      }),
+    attach: () => Effect.die(new Error('unused')),
+  });
+
+  const edge = { location: { kind: 'edge', space: SpaceId.random() } } as const;
+
+  it.effect('sends edge control to the stack manager and keeps local control local', () =>
+    Effect.gen(function* () {
+      const calls: string[] = [];
+      const resolver = ServiceResolver.succeed(Process.ManagerService, () =>
+        Effect.succeed(fakeManager(calls, 'stack')),
+      );
+      const routed = routeEdgeToStack(fakeManager(calls, 'local'), resolver, yield* Scope.make());
+
+      yield* routed.handles(edge);
+      yield* routed.handles();
+      expect(calls).toEqual(['stack', 'local']);
+    }),
+  );
+
+  it.effect('falls back to the local manager until the stack provides one', () =>
+    Effect.gen(function* () {
+      const calls: string[] = [];
+      let current: ServiceResolver.ServiceResolver = ServiceResolver.empty;
+      const resolver = ServiceResolver.make((tag, context) => current.resolve(tag, context));
+      const routed = routeEdgeToStack(fakeManager(calls, 'local'), resolver, yield* Scope.make());
+
+      yield* routed.handles(edge);
+      // A plugin enabled after boot contributes the spec; the next edge call must reach it.
+      current = ServiceResolver.succeed(Process.ManagerService, () => Effect.succeed(fakeManager(calls, 'stack')));
+      yield* routed.handles(edge);
+      expect(calls).toEqual(['local', 'stack']);
+    }),
+  );
 });

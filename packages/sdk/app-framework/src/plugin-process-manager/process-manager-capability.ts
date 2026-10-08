@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Scope from 'effect/Scope';
 import * as Tracer from 'effect/Tracer';
 
 import {
@@ -86,6 +88,49 @@ export const makeDynamicTraceSink = (
 
   // `mergeSinks` per write, for its guarantee that one throwing sink cannot break the chain.
   return { write: (message) => Trace.mergeSinks(resolve()).write(message) };
+};
+
+/**
+ * `local` with its edge-located control verbs answered by the stack's {@link Process.ManagerService}: the one a
+ * host composes over its real remote manager (and `AgentService` runs on), where this module only has the noop.
+ * Resolved on first use, since the spec providing it may be contributed after boot; absent one, `local` answers.
+ */
+export const routeEdgeToStack = (
+  local: Process.Manager,
+  resolver: ServiceResolver.ServiceResolver,
+  scope: Scope.Scope,
+): Process.Manager => {
+  let resolved: Process.Manager | undefined;
+  const edge: Effect.Effect<Process.Manager> = Effect.suspend(() =>
+    resolved !== undefined
+      ? Effect.succeed(resolved)
+      : resolver.resolve(Process.ManagerService, {}).pipe(
+          Scope.provide(scope),
+          Effect.tap((manager) =>
+            Effect.sync(() => {
+              resolved = manager;
+            }),
+          ),
+          // Not cached, so a stack that gains the spec later is picked up on the next call.
+          Effect.catch(() => Effect.succeed(local)),
+        ),
+  );
+
+  return {
+    ...local,
+    spawn: (definition, options = {}) =>
+      options.location?.kind === 'edge'
+        ? Effect.flatMap(edge, (manager) => manager.spawn(definition, options))
+        : local.spawn(definition, options),
+    handles: (options = {}) =>
+      options.location?.kind === 'edge'
+        ? Effect.flatMap(edge, (manager) => manager.handles(options))
+        : local.handles(options),
+    attach: (pid, options = {}) =>
+      options.location?.kind === 'edge'
+        ? Effect.flatMap(edge, (manager) => manager.attach(pid, options))
+        : local.attach(pid, options),
+  };
 };
 
 export default Capability.makeModule(
@@ -196,8 +241,8 @@ export default Capability.makeModule(
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
       Layer.provide(baseLayer),
     );
-    // App-framework has no EDGE runtime, so the remote process view is empty;
-    // the aggregate manager therefore equals the local process tree.
+    // App-framework has no EDGE runtime of its own, so this manager's remote view is empty: edge control
+    // reaches the host's remote manager through `routeEdgeToStack` below.
     const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
     // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
     const remoteTraceMonitorLayer =
@@ -207,9 +252,20 @@ export default Capability.makeModule(
     const unifiedProcessManagerLayer = UnifiedProcessManager.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
     );
+
+    // Holds the stack's application slices that edge invocations resolve, for the module's lifetime.
+    const stackScope = yield* Scope.make();
+    yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));
+    const routedProcessManagerLayer = Layer.effect(
+      Process.ManagerService,
+      Effect.gen(function* () {
+        const local = yield* Process.ManagerService;
+        return routeEdgeToStack(local, serviceResolver, stackScope);
+      }),
+    ).pipe(Layer.provide(unifiedProcessManagerLayer));
     const operationInvokerLayer = ProcessOperationInvoker.layer.pipe(
       // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
-      Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
+      Layer.provide(Layer.mergeAll(routedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
     );
 
     const runtimeLayer = Layer.mergeAll(
