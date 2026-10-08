@@ -26,7 +26,7 @@ import { PluginManagerSkill } from '#skills';
 import { AssistantCapabilities } from '#types';
 
 import { getChatPath } from '../../paths.ts';
-import { defaultChatSkills } from '../../util/default-skills.ts';
+import { bindChatDefaults } from '../../util/default-skills.ts';
 
 type SpaceScopedProps = {
   space?: Space;
@@ -125,7 +125,7 @@ type UseDraftContextProps = {
   pluginManager: boolean;
 };
 
-/** Binds a draft's default skills and the chat itself, as `CreateChat` does, held in memory until flushed. */
+/** Opens a binder over a draft's in-memory feed with the new-chat defaults bound, held in memory until flushed. */
 const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContextProps) => {
   const [context, setContext] = useState<AiContext.Binder>();
   UiHooks.useAsyncEffect(
@@ -138,7 +138,7 @@ const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContext
       );
       const binder = new AiContext.Binder({ feed: draft.feed, runtime, registry });
       await binder.open();
-      await binder.bind({ skills: defaultChatSkills({ pluginManager }), objects: [Ref.make(draft.chat)] });
+      await bindChatDefaults(binder, { chat: draft.chat, pluginManager });
       // The effect's cleanup is only registered once this returns, so an unmount mid-open closes here.
       if (controller.signal.aborted) {
         void binder.close();
