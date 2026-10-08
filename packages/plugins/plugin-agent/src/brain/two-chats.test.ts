@@ -47,6 +47,9 @@ const LINE = {
   bobShipped: 'The indexer migration has shipped.',
   aliceWorking: "I'm reviewing the release notes.",
   aliceAboutBob: 'Bob is busy with the indexer migration.',
+  aliceWatchesBobTopic: 'Keep me posted on anything about Bob.',
+  aliceWatchesBobMixedUp: 'What is Bob working on? Keep me posted.',
+  aliceHearsBobMixedUp: 'Tell me whatever Bob says.',
 } as const;
 
 /** What a scripted extractor finds in each line. */
@@ -71,6 +74,25 @@ const WATCHES: Readonly<
     requester: 'bob',
     outcome: "Bob is kept posted on Alice's work",
     when: { speaker: 'Alice' },
+    ongoing: true,
+  },
+  [LINE.aliceWatchesBobTopic]: {
+    requester: 'alice',
+    outcome: 'Alice is kept posted on Bob',
+    when: { subject: 'Bob' },
+    ongoing: true,
+  },
+  // The mix-up in a user's export: the model passed the person watched as the requester.
+  [LINE.aliceWatchesBobMixedUp]: {
+    requester: 'bob',
+    outcome: "Alice is kept posted on Bob's work",
+    when: { subject: 'Bob' },
+    ongoing: true,
+  },
+  [LINE.aliceHearsBobMixedUp]: {
+    requester: 'bob',
+    outcome: 'Alice hears what Bob says',
+    when: { speaker: 'Bob' },
     ongoing: true,
   },
   [LINE.aliceAwaitsShip]: {
@@ -118,6 +140,9 @@ const TIMELINE = JSON.stringify({
 /** What the scripted compiler answers; `off` replies with no rules, as a model that ignored the format. */
 let compiler: 'off' | 'good' | 'wrong' = 'off';
 
+/** Cancels every watch while an update is being composed, as a cancel from another chat can land mid-delivery. */
+let cancelWhileComposing = false;
+
 const { text, toolCall } = ScriptedLanguageModel;
 
 const lastUserText = (request: ScriptedLanguageModel.ScriptedRequest): string => {
@@ -134,6 +159,9 @@ const makeScript =
   (refs: Refs): ScriptedLanguageModel.ScriptedTurnGenerator =>
   (request) => {
     if (request.text.startsWith(COMPOSE_PROMPT)) {
+      if (cancelWhileComposing) {
+        brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+      }
       // Only the facts being passed on: the transcript and the draft also quote lines.
       const facts = request.text.split('What changed:')[1]?.split('A draft')[0] ?? '';
       return { parts: [text(update(...Object.keys(FACTS).filter((line) => facts.includes(line))))] };
@@ -272,6 +300,7 @@ describe('local brain: two private chats', () => {
     brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
     offset = 0;
     compiler = 'off';
+    cancelWhileComposing = false;
   });
 
   it.effect(
@@ -367,6 +396,81 @@ describe('local brain: two private chats', () => {
 
         expect(yield* updates(alice)).toEqual([update(LINE.bobWorking)]);
         expect(yield* updates(bob)).toEqual([update(LINE.aliceWorking)]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'a watch on what is said about Bob passes on what Bob says, never what Alice herself says',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { alice, bob } = yield* setup();
+        yield* say(alice, LINE.aliceWatchesBobTopic);
+
+        // Alice's own words about Bob match the pattern, but she said them.
+        yield* say(alice, LINE.aliceAboutBob);
+        expect(yield* updates(alice)).toEqual([]);
+
+        yield* say(bob, LINE.bobWorking);
+        yield* settle(alice);
+        expect(yield* updates(alice)).toEqual([update(LINE.bobWorking)]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'a watch set up with the watched person as its requester never tells them what they said',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, alice, bob } = yield* setup();
+        yield* say(alice, LINE.aliceWatchesBobMixedUp);
+        const [watch] = yield* (yield* BrainService.BrainService).subscriptions(agent.id);
+        expect(watch.when.subject).toBe(BOB);
+
+        yield* say(bob, LINE.bobWorking);
+        yield* settle(bob);
+        expect(yield* updates(bob)).toEqual([]);
+        expect(yield* updates(alice)).toEqual([]);
+        expect(yield* pending(agent)).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'a watch that would tell its requester what they say themselves is refused',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, alice } = yield* setup();
+        yield* say(alice, LINE.aliceHearsBobMixedUp);
+        expect(yield* (yield* BrainService.BrainService).subscriptions(agent.id)).toEqual([]);
+        expect(yield* Database.query(Filter.type(Goal.Goal)).run).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'a watch cancelled while its update is composed sends nothing',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { alice, bob } = yield* setup();
+        yield* say(alice, LINE.aliceWatchesBob);
+        cancelWhileComposing = true;
+
+        yield* say(bob, LINE.bobWorking);
+        yield* settle(alice);
+        expect(yield* updates(alice)).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
