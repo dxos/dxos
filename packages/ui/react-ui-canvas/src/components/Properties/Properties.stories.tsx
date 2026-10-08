@@ -63,7 +63,10 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const styles = useAtomValue(store.styles);
   const selected = select.flatMap((id) => getElement(scene, id) ?? []);
   return (
-    <div className='grid grid-cols-2 gap-4 w-[56rem] h-[40rem]'>
+    <Panel.Root>
+      </Panel.Rot>
+
+    <div className='grid grid-cols-2 gap-4 h-[40rem]'>
       <Properties
         classNames='border border-separator rounded-sm'
         projection={projection}
@@ -76,9 +79,9 @@ const DefaultStory = ({ select }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/scene/Properties',
+  title: 'ui/react-ui-canvas/Properties',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column', classNames: 'w-[56rem]' })],
   args: { select: ['a'] },
   parameters: { translations: [...uiTranslations, ...formTranslations] },
 };

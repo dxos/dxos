@@ -36,7 +36,7 @@ const DefaultStory = ({ indeterminate, readonly }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/scene/StyleGrid',
+  title: 'ui/react-ui-canvas/StyleGrid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   args: {

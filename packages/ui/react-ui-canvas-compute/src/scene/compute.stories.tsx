@@ -185,7 +185,7 @@ const SidebarJson = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-canvas-compute/scene',
+  title: 'ui/react-ui-canvas-compute/Circuits',
   render: DefaultStory,
   decorators: [
     withRegistry,

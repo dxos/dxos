@@ -728,7 +728,7 @@ test QA-1: The editor surface end to end
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-5.1, T-1, T-3, T-4]
   status: partially-automated
   given:
-    - a storybook serving `ui/react-ui-canvas/scene/SceneView`
+    - a storybook serving `ui/react-ui-canvas/SceneView`
   steps:
     - name: Open Freehand
       do: Open the Freehand story at 1400×800.

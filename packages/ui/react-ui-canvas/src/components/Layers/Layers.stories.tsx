@@ -67,7 +67,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/scene/Layers',
+  title: 'ui/react-ui-canvas/Layers',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: [...uiTranslations, ...formTranslations] },

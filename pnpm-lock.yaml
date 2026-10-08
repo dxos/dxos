@@ -22329,9 +22329,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
