@@ -21,6 +21,7 @@ import { Database, EID, Filter, type Key, Obj, Query, Ref, Type } from '@dxos/ec
 import { invariant } from '@dxos/invariant';
 import { type AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
 import * as Wire from '@dxos/plugin-routine/Wire';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -31,6 +32,7 @@ import { connectionDeckSubject } from './constants.ts';
 import {
   ConnectionAuthExpiredError,
   ConnectionSyncError,
+  SyncRoutineDisabledError,
   SyncRoutineMissingError,
   TargetAccountMismatchError,
   isUnauthorizedError,
@@ -306,7 +308,7 @@ export const triggerMonitorLayer = (
 export const fireTrigger = (
   trigger: Trigger.Trigger,
   data?: TriggerEvent.DirectEvent['data'],
-): Effect.Effect<void, never, Trigger.ManagerService> =>
+): Effect.Effect<void, Trigger.TriggerDisabledError, Trigger.ManagerService> =>
   Effect.gen(function* () {
     const monitor = yield* Trigger.ManagerService;
     // `data` (the pressed binding, for pressed-first ordering) rides on a `DirectEvent` so the
@@ -529,7 +531,7 @@ export const runSync = ({
   priority?: string;
 }): Effect.Effect<
   void,
-  ConnectionSyncError | SyncRoutineMissingError,
+  ConnectionSyncError | SyncRoutineMissingError | SyncRoutineDisabledError,
   Database.Service | Operation.Service | Capability.Service
 > =>
   Effect.gen(function* () {
@@ -560,13 +562,20 @@ export const runSync = ({
       return yield* Effect.fail(new SyncRoutineMissingError({ connectorId: connector.id }));
     }
 
-    yield* fireTrigger(trigger, priority ? { priority } : undefined).pipe(Effect.provide(triggerMonitorLayer(spaceId)));
+    yield* fireTrigger(trigger, priority ? { priority } : undefined).pipe(
+      Effect.provide(triggerMonitorLayer(spaceId)),
+      Effect.catchTag('TriggerDisabledError', () =>
+        Effect.fail(new SyncRoutineDisabledError({ connectorId: connector.id })),
+      ),
+    );
   }).pipe(
     // A missing sync handler or an unresolvable trigger monitor both mean the sync never started; the
-    // connector is the only context a caller can act on. The missing-routine signal stays distinct so
-    // callers can offer the create-routine form instead of reporting a failure.
+    // connector is the only context a caller can act on. A missing or switched-off routine stays
+    // distinct so callers can offer the create-routine form or point at the routine instead.
     Effect.mapError((cause) =>
-      cause instanceof SyncRoutineMissingError ? cause : new ConnectionSyncError({ connectorId: connector.id, cause }),
+      cause instanceof SyncRoutineMissingError || cause instanceof SyncRoutineDisabledError
+        ? cause
+        : new ConnectionSyncError({ connectorId: connector.id, cause }),
     ),
   );
 
@@ -574,7 +583,8 @@ export const runSync = ({
  * {@link runSync} with the sync button's recreation path: when the account's sync Routine is missing
  * (deleted, or declined at creation), the seeded create-routine form opens instead — over `subject` (a
  * bound target, or the connection itself) — and saving it runs the sync the press asked for.
- * Cancelling runs nothing. Shared by every sync affordance: a target's sync button, the connection
+ * Cancelling runs nothing. A routine that exists but is switched off gets a toast pointing at the
+ * routines panel instead. Shared by every sync affordance: a target's sync button, the connection
  * article, and the connection's nav-tree action.
  */
 export const syncOrOfferRoutine = ({
@@ -620,8 +630,31 @@ export const syncOrOfferRoutine = ({
         }
       }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('offer sync routine failed', { error })))),
     ),
+    Effect.catchTag('SyncRoutineDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
     Effect.provide(Database.layer(db)),
   );
+
+/**
+ * Tells the user a sync did nothing because the routine that drives it is switched off, with a button to
+ * the routines panel where it can be switched back on.
+ */
+const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, never, Operation.Service> =>
+  Effect.gen(function* () {
+    const invoker = yield* Operation.Service;
+    yield* Operation.invoke(LayoutOperation.AddToast, {
+      id: `${meta.profile.key}.sync-routine-disabled`,
+      icon: 'ph--warning--regular',
+      title: ['sync-routine-disabled.title', { ns: meta.profile.key }],
+      description: ['sync-routine-disabled.description', { ns: meta.profile.key }],
+      actionLabel: ['open-routines.label', { ns: meta.profile.key }],
+      actionAlt: ['open-routines.label', { ns: meta.profile.key }],
+      onAction: () =>
+        void invoker.invokePromise(LayoutOperation.Open, {
+          subject: [RoutinePath.getRoutinesSettingsPath(spaceId)],
+          workspace: GraphPath.getSpacePath(spaceId),
+        }),
+    });
+  }).pipe(Effect.ignore);
 
 /**
  * Runs the sync the user asked for by saving the offered create-routine form — the Sync button's

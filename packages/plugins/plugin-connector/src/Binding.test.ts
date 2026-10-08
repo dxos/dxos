@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -32,6 +33,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Expando } from '@dxos/schema';
 
+import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
@@ -257,11 +259,22 @@ describe('Binding.sync', () => {
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
+  /** Ids of the toasts the sync raised. */
+  const toasts: string[] = [];
+
   const recordingMonitor: Trigger.Manager = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
-    invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
+    // Refuses a switched-off trigger the way the real monitor does.
+    invokeTrigger: ({ trigger }) =>
+      trigger.enabled
+        ? Effect.sync(() => void fired.push(trigger.id))
+        : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
   };
+
+  const toastHandler = LayoutOperation.AddToast.pipe(
+    Operation.withHandler((toast) => Effect.sync(() => void toasts.push(toast.id))),
+  );
 
   test('force-runs the sync trigger of the target’s account', async ({ expect }) => {
     const { target, trigger } = await setup();
@@ -269,6 +282,27 @@ describe('Binding.sync', () => {
     await run(target);
 
     expect(fired).toEqual([trigger.id]);
+  });
+
+  test('says the routine is switched off instead of running a disabled trigger', async ({ expect }) => {
+    const { db, target, trigger } = await setup();
+    Obj.update(trigger, (trigger) => {
+      trigger.enabled = false;
+    });
+    await db.flush({ indexes: true });
+
+    await using runtime = ManagedRuntime.make(Layer.succeed(Capability.Service, capabilities()));
+    await Binding.sync(target).pipe(
+      Effect.provideService(Capability.Service, capabilities()),
+      Effect.provideService(
+        Operation.Service,
+        OperationInvoker.make(() => Effect.succeed([toastHandler]), runtime),
+      ),
+      EffectEx.runPromise,
+    );
+
+    expect(fired).toEqual([]);
+    expect(toasts).toEqual([`${meta.profile.key}.sync-routine-disabled`]);
   });
 
   test('does nothing for an object with no binding', async ({ expect }) => {
@@ -294,6 +328,7 @@ describe('Binding.sync', () => {
 
   const setup = async () => {
     fired.length = 0;
+    toasts.length = 0;
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,

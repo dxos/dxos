@@ -21,6 +21,7 @@ const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
 
 const SYNC_ROUTINE_MISSING_MESSAGE = 'No sync routine exists for the connection.' as const;
+const SYNC_ROUTINE_DISABLED_MESSAGE = 'The sync routine for the connection is switched off.' as const;
 const ACCOUNT_MISMATCH_MESSAGE = 'Target is already synced from a different account.' as const;
 
 const SYNC_SCAFFOLD_MESSAGE = 'Sync routine could not be scaffolded.' as const;
@@ -49,6 +50,19 @@ export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError',
  * (see `Binding.syncOrOfferRoutine`), headless callers skip the connection.
  */
 export class SyncRoutineMissingError extends BaseError.extend('SyncRoutineMissingError', SYNC_ROUTINE_MISSING_MESSAGE) {
+  constructor(input: { connectorId?: string } = {}) {
+    super({ context: { connectorId: input.connectorId } });
+  }
+}
+
+/**
+ * The connection's sync routine exists but its trigger is switched off, so a manual sync would run
+ * nothing. UI callers say so and point at the routine (see `Binding.syncOrOfferRoutine`).
+ */
+export class SyncRoutineDisabledError extends BaseError.extend(
+  'SyncRoutineDisabledError',
+  SYNC_ROUTINE_DISABLED_MESSAGE,
+) {
   constructor(input: { connectorId?: string } = {}) {
     super({ context: { connectorId: input.connectorId } });
   }

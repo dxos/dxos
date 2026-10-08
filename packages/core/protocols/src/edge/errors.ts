@@ -19,6 +19,7 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
     const error = new EdgeCallFailedError({
       message: body.message,
       data: body.data,
+      status: response.status,
       isRetryable: body.data == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
       cause: body.error ? ErrorCodec.decode(body.error) : undefined,
@@ -30,6 +31,7 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
   public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
     return new EdgeCallFailedError({
       message: `HTTP code ${response.status}: ${response.statusText}.`,
+      status: response.status,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
       cause: await EdgeHttpErrorCodec.decode(response),
@@ -45,6 +47,8 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
   }
 
   readonly data?: EdgeErrorData;
+  /** HTTP status of the response; absent when the request failed before one arrived. */
+  readonly status?: number;
   readonly isRetryable?: boolean;
   readonly retryAfterMs?: number;
 
@@ -52,11 +56,13 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
     message: string;
     isRetryable?: boolean;
     data?: EdgeErrorData;
+    status?: number;
     retryAfterMs?: number;
     cause?: Error;
   }) {
     super({ message: args.message, cause: args.cause });
     this.data = args.data;
+    this.status = args.status;
     this.retryAfterMs = args.retryAfterMs;
     this.isRetryable = Boolean(args.isRetryable);
   }
