@@ -25,19 +25,16 @@ const LAYERS: Layer[] = (() => {
 /** The panel over local state, as a host keeps the scene's layers. */
 const DefaultStory = () => {
   const [layers, setLayers] = useState(LAYERS);
-  const [active, setActive] = useState<LayerId>('diagram');
+  const [selected, setSelected] = useState<LayerId[]>(['diagram']);
   const update = (id: LayerId, values: Partial<Layer>) =>
     setLayers((layers) => layers.map((layer) => (layer.id === id ? { ...layer, ...values } : layer)));
-  const remove = (id: LayerId) => {
-    setLayers((layers) => layers.filter((layer) => layer.id !== id));
-    setActive((current) => (current === id ? '' : current));
-  };
+  const remove = (ids: LayerId[]) => setLayers((layers) => layers.filter((layer) => !ids.includes(layer.id)));
   return (
     <LayersPanel
       classNames='w-72 border border-separator rounded-sm'
       layers={layers}
-      active={active}
-      onActiveChange={setActive}
+      selected={selected}
+      onSelectedChange={setSelected}
       onToggle={(id) => update(id, { hidden: !layers.find((layer) => layer.id === id)?.hidden })}
       onRename={(id, name) => update(id, { name })}
       onMove={(id, index) =>
@@ -50,12 +47,18 @@ const DefaultStory = () => {
       onCreate={() => {
         const id = `layer-${layers.length + 1}`;
         setLayers((layers) => [...layers, { id, name: `Layer ${layers.length + 1}`, z: topZ(layers) }]);
-        setActive(id);
+        setSelected([id]);
         return id;
       }}
       // In a scene, deleting takes the layer's shapes and merging moves them down; here there are none.
-      onDelete={remove}
-      onMerge={remove}
+      onDelete={(ids) => {
+        remove(ids);
+        setSelected([]);
+      }}
+      onMerge={(ids, into) => {
+        remove(ids.filter((id) => id !== into));
+        setSelected([into]);
+      }}
     />
   );
 };
@@ -97,13 +100,21 @@ export const Test: Story = {
     await userEvent.click(canvas.getByTestId('layer-toggle-notes'));
     await expect(canvas.getByTestId('layer-toggle-notes')).toHaveAccessibleName('Hide layer');
 
-    // 5. Merge down and delete each take the active layer.
+    // 5. Merge needs two layers: a Cmd-click adds one to the selection, and merging keeps the top-most.
+    await expect(canvas.getByTestId('layers-merge')).toBeDisabled();
+    await userEvent.click(canvas.getByTestId('layer-name-diagram'));
+    // One session, so the held key is still down for the click.
+    const user = userEvent.setup();
+    await user.keyboard('{Meta>}');
+    await user.click(canvas.getByTestId('layer-name-notes'));
+    await user.keyboard('{/Meta}');
+    await waitFor(() => expect(canvas.getByTestId('layers-merge')).toBeEnabled());
     await userEvent.click(canvas.getByTestId('layers-merge'));
-    await waitFor(() => expect(names()).toEqual(['Diagram', 'Notes', 'Background']));
+    await waitFor(() => expect(names()).toEqual(['Sketch', 'Diagram', 'Background']));
 
     // 6. The arrows move along the list, and Enter opens the current row's name.
     await userEvent.click(canvas.getByTestId('layer-name-diagram'));
     await userEvent.keyboard('{ArrowDown}{Enter}');
-    await waitFor(() => expect(canvas.getByTestId('layer-input-notes')).toHaveFocus());
+    await waitFor(() => expect(canvas.getByTestId('layer-input-background')).toHaveFocus());
   },
 };

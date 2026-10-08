@@ -12,7 +12,7 @@ import {
   createLayer,
   elementLayer,
   layerOrder,
-  mergeLayerIntent,
+  mergeLayersIntent,
   moveLayer,
   sceneLayers,
   visibleScene,
@@ -81,7 +81,7 @@ describe('layers', () => {
 
   test('merging a layer moves its elements onto the other and removes it', ({ expect }) => {
     const scene = layered();
-    const merge = mergeLayerIntent(scene, 'top', DEFAULT_LAYER.id);
+    const merge = mergeLayersIntent(scene, ['top', DEFAULT_LAYER.id], DEFAULT_LAYER.id);
     expect(merge).toBeDefined();
     const merged = merge ? reduceIntent(scene, merge) : scene;
     expect(sceneLayers(merged).map((layer) => layer.id)).toEqual([DEFAULT_LAYER.id]);

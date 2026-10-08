@@ -16,10 +16,10 @@ import { type Layer, type LayerId } from '../../model/types.ts';
 export type LayersPanelProps = Util.ThemedClassName<{
   /** The scene's layers, bottom first (`sceneLayers`); the panel lists them top first, as they stack. */
   layers: readonly Layer[];
-  /** The layer new shapes go on. */
-  active?: LayerId;
+  /** The selected layers; the top-most of them is the one new shapes go on. */
+  selected?: readonly LayerId[];
   readonly?: boolean;
-  onActiveChange?: (id: LayerId) => void;
+  onSelectedChange?: (ids: LayerId[]) => void;
   /** Shows or hides a layer. */
   onToggle?: (id: LayerId) => void;
   onRename?: (id: LayerId, name: string) => void;
@@ -27,10 +27,10 @@ export type LayersPanelProps = Util.ThemedClassName<{
   onMove?: (id: LayerId, index: number) => void;
   /** Adds a layer; the panel opens the name of the one whose id it returns. */
   onCreate?: () => LayerId | void;
-  /** Removes a layer and its shapes; offered while there is more than one. */
-  onDelete?: (id: LayerId) => void;
-  /** Merges a layer into the one below it; offered for every layer but the bottom one. */
-  onMerge?: (id: LayerId) => void;
+  /** Removes the selected layers and their shapes; offered while at least one layer would remain. */
+  onDelete?: (ids: LayerId[]) => void;
+  /** Merges the selected layers into the top-most of them; offered while two or more are selected. */
+  onMerge?: (ids: LayerId[], into: LayerId) => void;
 }>;
 
 type LayerNameProps = {
@@ -79,9 +79,9 @@ const LayerName = ({ layer, readonly, editing, onEditingChange, onRename }: Laye
 export const LayersPanel = ({
   classNames,
   layers,
-  active: activeProp,
+  selected: selectedProp,
   readonly,
-  onActiveChange,
+  onSelectedChange,
   onToggle,
   onRename,
   onMove,
@@ -92,8 +92,12 @@ export const LayersPanel = ({
   const items = useMemo(() => [...layers].reverse(), [layers]);
   // The row whose name is open; a new layer opens its own, so it is named as it is made.
   const [editingId, setEditingId] = useState<LayerId>();
-  const active = layers.find((layer) => layer.id === activeProp) ?? layers[layers.length - 1];
-  const bottom = layers[0];
+  // Bottom first, as `layers`, so the last is the top-most selected.
+  const selected = useMemo(
+    () => layers.filter((layer) => selectedProp?.includes(layer.id)).map((layer) => layer.id),
+    [layers, selectedProp],
+  );
+  const top = selected[selected.length - 1];
   return (
     <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='layers'>
       <Toolbar.Root data-testid='layers-toolbar'>
@@ -115,33 +119,36 @@ export const LayersPanel = ({
           variant='ghost'
           iconOnly
           icon='ph--trash--regular'
-          label='Delete layer'
-          disabled={readonly || !onDelete || !active || layers.length < 2}
+          label='Delete layers'
+          disabled={readonly || !onDelete || selected.length === 0 || selected.length >= layers.length}
           data-testid='layers-delete'
-          onClick={() => active && onDelete?.(active.id)}
+          onClick={() => onDelete?.(selected)}
         />
         <Button.Root
           variant='ghost'
           iconOnly
           icon='ph--arrow-line-down--regular'
-          label='Merge down'
-          disabled={readonly || !onMerge || !active || active.id === bottom?.id}
+          label='Merge layers'
+          disabled={readonly || !onMerge || selected.length < 2}
           data-testid='layers-merge'
-          onClick={() => active && onMerge?.(active.id)}
+          onClick={() => top && onMerge?.(selected, top)}
         />
       </Toolbar.Root>
       <OrderedList.Root
         items={items}
         getLabel={(layer) => layer.name}
         readonly={readonly || !onMove}
-        value={active?.id}
-        onValueChange={(id) => onActiveChange?.(id)}
+        multiple
+        value={selected}
+        onValueChange={(ids) => onSelectedChange?.(ids)}
         // The list is top first; the order the model keeps is bottom first.
         onMove={(from, to) => onMove?.(items[from].id, items.length - 1 - to)}
       >
         {({ items }) => (
           <OrderedList.Content
             aria-label='Layers'
+            // The gutter is inline only; the same space above and below frames the rows evenly.
+            classNames='py-[var(--dx-gutter)]'
             onKeyDown={(event) => {
               // Enter on the list (as well as selecting the highlighted row) opens that row's name.
               if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
@@ -174,7 +181,7 @@ export const LayersPanel = ({
                   disabled={readonly || !onToggle}
                   data-testid={`layer-toggle-${layer.id}`}
                   onClick={(event) => {
-                    // The row's own click selects it; showing or hiding a layer leaves the active one alone.
+                    // The row's own click selects it; showing or hiding a layer leaves the selection alone.
                     event.stopPropagation();
                     onToggle?.(layer.id);
                   }}

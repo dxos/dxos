@@ -118,24 +118,26 @@ export const moveLayer = (scene: Scene, id: LayerId, index: number): Layer | und
 };
 
 /**
- * Merging `from` into `into`, as one batch: `from`'s elements move onto `into`, keeping their own order, and `from`
- * is removed. None when either is not a layer of the scene.
+ * Merging layers into `into`, as one batch: the elements of every layer in `from` move onto `into`, keeping their own
+ * order, and those layers are removed. None unless `into` and at least one other of `from` are layers of the scene.
  */
-export const mergeLayerIntent = (scene: Scene, from: LayerId, into: LayerId): Intent | undefined => {
+export const mergeLayersIntent = (scene: Scene, from: readonly LayerId[], into: LayerId): Intent | undefined => {
   const layers = sceneLayers(scene);
-  if (from === into || !layers.some((layer) => layer.id === from) || !layers.some((layer) => layer.id === into)) {
+  const ids = new Set(layers.map((layer) => layer.id));
+  const merged = new Set(from.filter((id) => id !== into && ids.has(id)));
+  if (!ids.has(into) || merged.size === 0) {
     return undefined;
   }
-  const moved = [...Object.values(scene.nodes), ...Object.values(scene.links)].filter(
-    (element) => elementLayer(element, layers) === from,
+  const moved = [...Object.values(scene.nodes), ...Object.values(scene.links)].filter((element) =>
+    merged.has(elementLayer(element, layers)),
   );
   return {
     kind: 'batch',
     intents: [
-      // The implicit layer is made real first, so the elements left on it keep it once `from` is gone.
+      // The implicit layer is made real first, so the elements left on it keep it once the others are gone.
       ...(scene.layers ? [] : layers.map((layer): Intent => ({ kind: 'layer', layer }))),
       ...moved.map((element): Intent => ({ kind: 'update', id: element.id, values: { layer: into } })),
-      { kind: 'removeLayer', id: from },
+      ...[...merged].map((id): Intent => ({ kind: 'removeLayer', id })),
     ],
   };
 };

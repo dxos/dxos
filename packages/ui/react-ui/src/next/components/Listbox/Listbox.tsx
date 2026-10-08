@@ -45,7 +45,7 @@ type ListboxOption = {
 };
 
 /** `none` keeps zag's focus, keyboard and typeahead with no selection (AUDIT §6 group B: every list runs the machine). */
-type ListboxSelectionMode = 'single' | 'multiple' | 'none';
+type ListboxSelectionMode = 'single' | 'multiple' | 'extended' | 'none';
 
 type RootContextValue = {
   items: readonly ListboxOption[];
@@ -72,7 +72,10 @@ const useRootContext = (part: string) => {
 
 type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'onSelect'>> & {
   items: readonly ListboxOption[];
-  /** `single` by default; `multiple` toggles each item; `none` selects nothing but keeps navigation and typeahead. */
+  /**
+   * `single` by default; `multiple` toggles each item; `extended` selects one on a click and adds with Cmd/Ctrl or a
+   * Shift range, as a desktop list does; `none` selects nothing but keeps navigation and typeahead.
+   */
   selectionMode?: ListboxSelectionMode;
   value?: string[];
   defaultValue?: string[];

@@ -71,7 +71,7 @@ import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import {
   activeLayer,
   createLayer,
-  mergeLayerIntent,
+  mergeLayersIntent,
   moveLayer,
   sceneLayers,
   visibleScene,
@@ -1257,6 +1257,21 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
   const readonly = !capabilities.update;
   const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
   const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
+  // The layers picked in the panel; the active layer (the top-most of them) is the one new shapes go on.
+  const [picked, setPicked] = useState<LayerId[]>([]);
+  const top = activeLayer(scene, active);
+  const selected = useMemo(() => {
+    const ids = picked.filter((id) => byId(id));
+    return ids.includes(top) ? ids : [top];
+  }, [picked, byId, top]);
+  const select = useCallback(
+    (ids: LayerId[]) => {
+      setPicked(ids);
+      const topMost = [...layers].reverse().find((layer) => ids.includes(layer.id));
+      topMost && registry.set(atoms.layer, topMost.id);
+    },
+    [layers, registry, atoms],
+  );
   if (selection.size > 0) {
     return null;
   }
@@ -1265,9 +1280,9 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
     <LayersPanel
       classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
       layers={layers}
-      active={activeLayer(scene, active)}
+      selected={selected}
       readonly={readonly}
-      onActiveChange={(id) => registry.set(atoms.layer, id)}
+      onSelectedChange={select}
       onToggle={(id) => {
         const layer = byId(id);
         layer && setLayer({ ...layer, hidden: !layer.hidden });
@@ -1283,18 +1298,22 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
       onCreate={() => {
         const layer = createLayer(scene, createId('layer'));
         setLayer(layer);
-        registry.set(atoms.layer, layer.id);
+        select([layer.id]);
         return layer.id;
       }}
-      onDelete={capabilities.delete ? (id) => projection.apply({ kind: 'removeLayer', id }) : undefined}
-      onMerge={(id) => {
-        // Down: into the layer under it.
-        const index = layers.findIndex((layer) => layer.id === id);
-        const below = layers[index - 1];
-        const merge = below && mergeLayerIntent(scene, id, below.id);
+      onDelete={
+        capabilities.delete
+          ? (ids) => {
+              projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+              setPicked([]);
+            }
+          : undefined
+      }
+      onMerge={(ids, into) => {
+        const merge = mergeLayersIntent(scene, ids, into);
         if (merge) {
           projection.apply(merge);
-          registry.set(atoms.layer, below.id);
+          select([into]);
         }
       }}
     />
