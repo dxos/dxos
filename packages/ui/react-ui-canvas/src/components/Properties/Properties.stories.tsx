@@ -70,7 +70,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
         atoms={atoms}
         styles={store.styles}
       />
-      <JsonHighlighter classNames='overflow-auto' data={{ selected, styles }} />
+      <JsonHighlighter data={{ selected, styles }} />
     </div>
   );
 };
