@@ -19,16 +19,16 @@ Related docs (not duplicated here):
 
 ### 1.1 Layers
 
-| #   | Layer               | Key symbols                                                           | Where                                                                                                                                                     |
-| --- | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Container / surface | `ChatArticle`, `useChatProcessor`, `useChatServices`                  | [`containers/ChatArticle`](../src/containers/ChatArticle/ChatArticle.tsx), [`hooks`](../src/hooks/useChatProcessor.ts)                                    |
-| 2   | Chat composite      | `Chat.Root/Toolbar/Thread/Prompt/Minimap/TaskList`, event bus         | [`components/Chat`](../src/components/Chat/Chat.tsx)                                                                                                      |
-| 3   | Processor           | `AiChatProcessor` (atoms: `messages`, `streaming`, `active`, `error`) | [`processor`](../src/processor/processor.ts)                                                                                                              |
-| 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../../core/compute/agent-runtime/src/agent-service)                                                                            |
-| 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../../core/compute/assistant/src)                                                                                                  |
-| 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../../core/compute/ai/src)                                                                                                                |
-| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](../src/components/ChatThread/sync/sync.ts), [`registry.tsx`](../src/components/ChatThread/registry.tsx)                    |
-| 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes      | [`@dxos/react-ui-markdown`](../../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../../ui/ui-editor/src/extensions/language/xml) |
+| #   | Layer               | Key symbols                                                      | Where                                                                                                                                                     |
+| --- | ------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Container / surface | `ChatArticle`, `useChatModel`, `useChatServices`                 | [`containers/ChatArticle`](../src/containers/ChatArticle/ChatArticle.tsx), [`hooks`](../src/hooks/useChatModel.ts)                                        |
+| 2   | Chat composite      | `Chat.Root/Toolbar/Thread/Prompt/Minimap/TaskList`, event bus    | [`components/Chat`](../src/components/Chat/Chat.tsx)                                                                                                      |
+| 3   | Chat model          | `ChatModel` (atoms: `messages`, `streaming`, `active`, `error`)  | [`chat-model`](../src/chat-model/chat-model.ts)                                                                                                           |
+| 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation) | [`@dxos/agent-runtime`](../../../core/compute/agent-runtime/src/agent-service)                                                                            |
+| 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`     | [`@dxos/assistant`](../../../core/compute/assistant/src)                                                                                                  |
+| 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`            | [`@dxos/ai`](../../../core/compute/ai/src)                                                                                                                |
+| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)             | [`components/ChatThread/sync`](../src/components/ChatThread/sync/sync.ts), [`registry.tsx`](../src/components/ChatThread/registry.tsx)                    |
+| 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes | [`@dxos/react-ui-markdown`](../../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../../ui/ui-editor/src/extensions/language/xml) |
 
 ### 1.2 Sequence
 
@@ -40,7 +40,7 @@ sequenceDiagram
   autonumber
   actor U as User
   participant UI as Chat.Root / Chat.Thread<br/>(ChatArticle)
-  participant P as AiChatProcessor
+  participant P as ChatModel
   participant AS as AgentService
   participant AP as AgentProcess<br/>(process-backed agent)
   participant RQ as AiSession / AiRequest
@@ -81,18 +81,18 @@ sequenceDiagram
 ### 1.3 Submit path (down)
 
 1. **`ChatArticle`** resolves the space, the shared `ProcessManagerRuntime`
-   (`useChatServices`), and builds an **`AiChatProcessor`** (`useChatProcessor`): it opens a
+   (`useChatServices`), and builds an **`ChatModel`** (`useChatModel`): it opens a
    client-side `AiSession.Session` over the chat's `Feed` (used only for context binding /
    system-prompt preview — the turn itself runs elsewhere, see 3) and a _space layer_
    (`ServiceResolver.provide(Database, Credentials, AiService, AgentService, Registry, OpaqueToolkitProvider)`)
-   that every processor effect is provided with.
+   that every chat model effect is provided with.
 
 2. **`Chat.Prompt`** (CodeMirror editor) emits `{ type: 'submit', text }` on the `Chat.Root`
    event bus. `Chat.Root` awaits `onSubmit` (lets a transient chat persist its feed first),
    captures ephemeral context (`getContext` — e.g. companion-document selection), then calls
-   `processor.request({ message, context })`.
+   `chatModel.request({ message, context })`.
 
-3. **`AiChatProcessor.request`** → `AgentService.getSession(feed, { model, provider, instructions })`
+3. **`ChatModel.request`** → `AgentService.getSession(feed, { model, provider, instructions })`
    spawns (or reuses) a durable, process-backed **`AgentProcess`** keyed on the
    conversation feed; forks `session.subscribeEphemeral()`; `session.submitPrompt(...)` pushes
    the prompt onto the agent's persisted input queue; `session.waitForCompletion()` awaits the
@@ -124,11 +124,11 @@ sequenceDiagram
 
 1. Ephemeral `PartialBlock` events cross the process boundary via
    `session.subscribeEphemeral(): Stream<Trace.Message>`.
-2. `AiChatProcessor.#handleEphemeralMessage` upserts them into the `#streaming` atom; complete
+2. `ChatModel.#handleEphemeralMessage` upserts them into the `#streaming` atom; complete
    blocks move to `#pending`, deduped by message id against feed replication (the same message
    arrives via both channels).
 3. `Chat.Root` merges the durable feed query (`useQuery(...Filter.type(Message)...from(feed))`)
-   with `processor.messages` into one flat, deduped `Message[]`.
+   with `chatModel.messages` into one flat, deduped `Message[]`.
 4. **`MessageSyncer.update(messages)`** walks the flat block list past its `_completed` cursor,
    invokes the **`BlockRenderer`** per block, and appends only the delta. Contract: a streaming
    block's rendered output must be a monotonic string extension of its previous render; blocks
@@ -175,9 +175,9 @@ AI service (manual only).
 **Verdict: strong.** The `BlockRenderer` contract is the load-bearing invariant and has both
 unit and story coverage.
 
-### 2.3 Processor (level 3)
+### 2.3 Chat model (level 3)
 
-- `processor.node.test.ts` — constructs a processor and unit-tests `parseError`; the
+- `chat-model.node.test.ts` — constructs a chat model and unit-tests `parseError`; the
   **streaming state machine (`#handleEphemeralMessage` dedupe/finalize/flush) has no direct
   test** and is only exercised via live stories.
 - `Chat.stories.tsx` — det, but covers only the failure toast.
@@ -235,14 +235,14 @@ to add more live tests.
      `WithSubAgentsTest2` scripted, §4.4).
      This turns the storybook from "manual demo against the network" into a regression suite for
      everything except comprehension/tool-selection (which belong to the evals tier anyway).
-2. **Headless-first iteration at the `AgentService` seam.** The processor's entry point
+2. **Headless-first iteration at the `AgentService` seam.** The chat model's entry point
    (`getSession` → `submitPrompt` → `subscribeEphemeral`/`waitForCompletion`) is exactly what
    `AssistantTestLayer` provides in node. For pipeline work (streaming, tool loop, delegation),
    prefer a vitest + scripted-model test at this seam and open storybook only for the visual
    layers. §4 supplies the missing harness pieces.
-3. **Processor streaming harness.** **Done** —
-   [`processor/streaming.node.test.ts`](../src/processor/streaming.node.test.ts) feeds a scripted
-   `PartialBlock` trace sequence through a real `AiChatProcessor` (stub `AgentService.Session`
+3. **Chat model streaming harness.** **Done** —
+   [`chat-model/streaming.node.test.ts`](../src/chat-model/streaming.node.test.ts) feeds a scripted
+   `PartialBlock` trace sequence through a real `ChatModel` (stub `AgentService.Session`
    replaying the fixture) and asserts the atom transitions: in-place partial upserts,
    finalization, stale-partial drop after finalize, and end-of-request flush. Two learnings for
    harness authors: atoms hold state only while mounted, so subscribe with `immediate: true`
@@ -251,7 +251,7 @@ to add more live tests.
 4. **Record/replay fixtures from live sessions.** `stories-assistant/testing/snapshot.ts` and
    the `tracing: 'feed'` sink already capture durable state; add a "dump conversation" debug
    action (the `Chat` debug event exists) that exports feed messages + trace events as a
-   fixture consumable by the `ChatThread` story generator and the processor harness. A bug seen
+   fixture consumable by the `ChatThread` story generator and the chat model harness. A bug seen
    live once becomes a deterministic repro.
 5. **Continue the TESTING.md migration.** Convert the remaining memoized agent-runtime/G3
    fixtures to scripted-model tests and delete the fixtures; un-skip or delete stale memoized
@@ -375,4 +375,4 @@ remains the only place a real model is consulted.
    shift the shared deterministic ID stream).
 4. ~~`scripted` decorator support in `stories-assistant`; `WithSubAgentsTest2` play
    story (4.4).~~ **Done.**
-5. ~~Processor streaming harness (§3.3).~~ **Done** (`processor/streaming.node.test.ts`).
+5. ~~Chat model streaming harness (§3.3).~~ **Done** (`chat-model/streaming.node.test.ts`).
