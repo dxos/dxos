@@ -52,6 +52,27 @@ export const pushFacts: (
   if (queued === 0) {
     return { fired, undelivered };
   }
+  return yield* deliver(agent, transcript);
+});
+
+/**
+ * Delivers what the agent's subscriptions have queued — after a push, or after a clock tick: each
+ * subscription with events sends one update, composed by the model from the facts behind its wakes
+ * (and the conversation `transcript`, when a turn caused them) under the relay rules. A one-time
+ * subscription also marks its goal achieved and is removed; an ongoing one acknowledges its events and
+ * keeps watching. Subscriptions whose goal closed meanwhile are removed undelivered.
+ */
+export const deliver: (
+  agent: Agent.Agent,
+  transcript?: string,
+) => Effect.Effect<
+  { fired: string[]; undelivered: string[] },
+  BrainService.BrainError,
+  AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
+> = Effect.fnUntraced(function* (agent, transcript) {
+  const brain = yield* BrainService.BrainService;
+  const fired: string[] = [];
+  const undelivered: string[] = [];
 
   for (const subscription of yield* brain.subscriptions(agent.id)) {
     const events = yield* brain.take(subscription.id);
@@ -65,12 +86,16 @@ export const pushFacts: (
       yield* brain.unsubscribe(subscription.id);
       continue;
     }
-    // A one-time subscription is removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
-    if (!subscription.ongoing && !(yield* brain.unsubscribe(subscription.id))) {
+    // A one-time subscription closes when its outcome happened: compiled rules say so with `achieved`,
+    // a translated pattern with its single wake. Other wakes (a follow-up, a reply) pass on and keep it open.
+    const closes =
+      !subscription.ongoing && events.some(({ label }) => label === 'achieved' || label === Trigger.MATCH_LABEL);
+    // Removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
+    if (closes && !(yield* brain.unsubscribe(subscription.id))) {
       continue;
     }
 
-    const matched = events.map(({ fact }) => fact);
+    const matched = uniqueFacts(events);
     const [first] = matched;
     // Through the database: a subscription read back from the brain carries refs with no resolver of their own.
     // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
@@ -82,7 +107,12 @@ export const pushFacts: (
       request: subscription.request ?? goal?.title ?? subscription.then.message,
       facts: matched,
       transcript,
-      hint: Trigger.renderMessage(subscription, first.assertion.quote ?? FactEntry.factText(first)),
+      hint: Trigger.renderMessage(
+        subscription,
+        first
+          ? (first.assertion.quote ?? FactEntry.factText(first))
+          : (subscription.request ?? subscription.then.message),
+      ),
     });
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
@@ -92,7 +122,7 @@ export const pushFacts: (
     if (!delivery.delivered) {
       undelivered.push(delivery.reason ?? 'The message could not be delivered.');
     }
-    if (subscription.ongoing) {
+    if (!closes) {
       // Acknowledged even when undelivered: the failure is reported to this turn, and a retry would resend on every turn.
       yield* brain.ack(
         subscription.id,
@@ -108,6 +138,17 @@ export const pushFacts: (
   yield* Database.flush();
   return { fired, undelivered };
 });
+
+/** The facts behind the events, each once, in the order they were queued. */
+const uniqueFacts = (events: readonly BrainService.Event[]): RDF.Fact[] => {
+  const seen = new Map<string, RDF.Fact>();
+  for (const { facts } of events) {
+    for (const fact of facts) {
+      seen.set(fact.id, seen.get(fact.id) ?? fact);
+    }
+  }
+  return [...seen.values()];
+};
 
 const handler: Operation.WithHandler<typeof BrainSkill.RunTriggers> = BrainSkill.RunTriggers.pipe(
   Operation.withHandler(
