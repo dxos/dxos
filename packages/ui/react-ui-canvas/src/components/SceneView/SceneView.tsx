@@ -109,6 +109,9 @@ const LINK_HOVER_GRACE_MS = 150;
 /** How long a move's pointer rests before the shapes snap to where they will land. */
 const SETTLE_MS = 100;
 
+/** Where the properties and layers panels float: the top right, one at a time (properties with a selection). */
+const PANEL_CLASSES = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]';
+
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
@@ -1175,7 +1178,7 @@ export type SceneViewPropertiesProps = Util.ThemedClassName<
 
 /** The selected element's properties as a floating panel; absent while nothing is selected. */
 const SceneViewProperties = ({
-  classNames = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]',
+  classNames = PANEL_CLASSES,
   fields,
   db,
   getOptions,
@@ -1241,9 +1244,12 @@ SceneViewProperties.displayName = 'SceneView.Properties';
 
 export type SceneViewLayersProps = Util.ThemedClassName<{}>;
 
-/** The current scene's layers as a floating panel: each edit is one intent, so one undo step. */
-const SceneViewLayers = ({ classNames = 'absolute bottom-14 right-2 w-64' }: SceneViewLayersProps) => {
-  const { projection, atoms, capabilities } = useSceneViewContext('SceneView.Layers');
+/**
+ * The current scene's layers as a floating panel where the properties panel goes, shown while nothing is selected
+ * (the two take turns). Each edit is one intent, so one undo step.
+ */
+const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
+  const { projection, atoms, capabilities, selection } = useSceneViewContext('SceneView.Layers');
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -1251,6 +1257,10 @@ const SceneViewLayers = ({ classNames = 'absolute bottom-14 right-2 w-64' }: Sce
   const readonly = !capabilities.update;
   const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
   const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
+  if (selection.size > 0) {
+    return null;
+  }
+
   return (
     <LayersPanel
       classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
