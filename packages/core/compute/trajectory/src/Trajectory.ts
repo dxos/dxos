@@ -250,7 +250,7 @@ export const Custom = Schema.TaggedStruct('custom', {
   /** Namespaced extension type (e.g. `org.example.checkpoint`). */
   type: Schema.String,
   visible: Schema.Boolean,
-  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  data: Schema.optional(Schema.Unknown),
   blocks: Schema.optional(Schema.Array(ContentBlock.Any)),
 });
 export type Custom = Schema.Schema.Type<typeof Custom>;
