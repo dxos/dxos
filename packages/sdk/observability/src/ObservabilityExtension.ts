@@ -184,8 +184,13 @@ export type Mcp = {
  */
 export type SupportLogTags = { ticketId: string } | { reportId: string };
 
+/** What an uploaded NDJSON bundle is, which decides where it is filed in storage. */
+export type SupportUploadKind = 'logs' | 'trajectory';
+
 export type Support = {
   uploadLogs(): Promise<string | undefined>;
+  /** Uploads an NDJSON bundle the caller built (e.g. an agent trajectory), returning its storage key. */
+  uploadNdjson(ndjson: string, kind: SupportUploadKind): Promise<string | undefined>;
   sessionContext(): SupportSessionContext | undefined;
   flushLogs(attributes: SupportLogTags): Promise<void>;
 };

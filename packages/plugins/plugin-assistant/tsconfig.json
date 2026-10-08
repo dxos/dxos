@@ -112,6 +112,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -212,6 +215,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-preview"
