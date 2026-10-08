@@ -126,7 +126,11 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
     case 'spline':
       return splinePath([from.point, ...link.points, to.point]);
     case 'smart':
-      return splinePath((lattice && gutterRoute(lattice.nodes, lattice.spec, from, to)) ?? smartPoints(from, to));
+      // A free end (one being dragged) takes no gutter: the route runs straight to it.
+      return splinePath(
+        (lattice && !from.free && !to.free && gutterRoute(lattice.nodes, lattice.spec, from, to)) ||
+          smartPoints(from, to),
+      );
     default:
       // A link type this engine does not know (saved by a newer one) draws as the core base: a straight line.
       return linePath(from.point, to.point);

@@ -288,7 +288,7 @@ export const ControlFrame = memo(
         })}
         {band && (
           <path
-            d={curvePath(band.from, { point: band.to, side: oppositeSide(band.from.side) })}
+            d={curvePath(band.from, { point: band.to, side: oppositeSide(band.from.side), free: true })}
             className='fill-none stroke-focus'
             strokeWidth={2 * unit}
             strokeDasharray={`${6 * unit} ${4 * unit}`}

@@ -459,7 +459,8 @@ const SceneViewRoot = ({
         : {
             displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
             blocked: landed.blocked,
-            landing: moved.map(nodeBounds),
+            // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
+            landing: landed.blocked ? moved.map(nodeBounds) : undefined,
           };
     }
     if (drag?.kind === 'resize') {

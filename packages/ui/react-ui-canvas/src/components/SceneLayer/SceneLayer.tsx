@@ -8,7 +8,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo } from 'react';
+import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -143,6 +143,8 @@ export const SceneLayer = memo(
       [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
+    // A link under the pointer is outlined as a hovered shape is; only an interactive layer tracks it.
+    const [hoveredLink, setHoveredLink] = useState<ElementId>();
     const linkWidth = LINK_WIDTH * lineWeight(depth, zoom);
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
@@ -176,6 +178,8 @@ export const SceneLayer = memo(
                   style={{ pointerEvents: 'stroke' }}
                   strokeWidth={12 * unit}
                   onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                  onPointerEnter={() => setHoveredLink(link.id)}
+                  onPointerLeave={() => setHoveredLink((current) => (current === link.id ? undefined : current))}
                   onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
                   onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
                 />
@@ -184,7 +188,13 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx(
                   'fill-none',
-                  !plain && selected?.has(link.id) ? 'stroke-focus' : lineClasses(lines.get(link.id)?.hue).stroke,
+                  plain
+                    ? lineClasses(lines.get(link.id)?.hue).stroke
+                    : selected?.has(link.id)
+                      ? 'stroke-focus'
+                      : hoveredLink === link.id
+                        ? 'stroke-focus/50'
+                        : lineClasses(lines.get(link.id)?.hue).stroke,
                 )}
                 strokeWidth={linkWidth}
                 strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
