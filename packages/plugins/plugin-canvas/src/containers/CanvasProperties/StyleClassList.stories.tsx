@@ -13,7 +13,7 @@ import { StyleClassList } from './StyleClassList.tsx';
 const CLASSES: StyleClass[] = [
   { id: 'warn', name: 'Warning', style: { hue: 'red' } },
   { id: 'ok', name: 'Done', style: { hue: 'green', tone: 3 } },
-  { id: 'flow', name: 'Flow', line: { hue: 'blue', dash: 'dashed' } },
+  { id: 'flow', name: 'Flow', style: { hue: 'blue', lineStyle: 'dashed', tone: 0 } },
 ];
 
 const DefaultStory = () => {

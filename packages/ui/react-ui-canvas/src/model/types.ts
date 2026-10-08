@@ -92,13 +92,31 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
+/** How a line is drawn: a link's stroke, or a node's border. */
+export const LINE_STYLES = ['solid', 'dashed', 'dotted'] as const;
+
 /**
- * The common base style: the presentation every shape shares (colour, frame and text), each field optional with the
- * frame supplying the default look. A shape with more to style extends it (`Schema.Struct({ ...styleFields, … })`).
+ * The common base style every element shares, nodes and links alike: its colour and its line. Each kind extends it
+ * (`NodeStyle`), and a selection of several kinds edits only what they share. One field object per property, so
+ * the kinds declare the same field and the properties panel sees it as shared.
+ */
+export const lineStyleFields = {
+  /** One of the theme's hues: a link's stroke; a node's fill, text and border together. */
+  hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  /** Solid, dashed or dotted: a link's stroke, or a node's border. */
+  lineStyle: Schema.optional(Schema.Literals(LINE_STYLES).annotate({ title: 'Line style' })),
+};
+
+/** A link's style: the common base, unset drawn neutral and solid. */
+export const LineStyle = Schema.Struct(lineStyleFields);
+export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
+
+/**
+ * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
+ * (`Schema.Struct({ ...styleFields, … })`).
  */
 export const styleFields = {
-  /** One of the theme's hues, colouring fill, text and border together. */
-  hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  ...lineStyleFields,
   /** The hue's fill; unset is 2, the look a hue had before tones. */
   tone: Schema.optional(NodeTone),
   rounded: Schema.optional(Schema.Boolean),
@@ -110,7 +128,7 @@ export const styleFields = {
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
 };
 
-/** Presentation choices a node carries: the common base style plus the host's own frame classes. */
+/** Presentation choices a node carries: the shape style plus the host's own frame classes. */
 export const NodeStyle = Schema.Struct({
   ...styleFields,
   /** Extra classes on the frame, for a host's own look. */
@@ -244,22 +262,14 @@ export const LinkEnds = Schema.Struct({
 }).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
 export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 
-/** How a link's line is drawn; unset draws it neutral and solid. */
-export const LinkLine = Schema.Struct({
-  hue: Schema.optional(StyleHue.annotate({ title: 'Color' })),
-  dash: Schema.optional(Schema.Literals(['solid', 'dashed', 'dotted']).annotate({ title: 'Pattern' })),
-});
-export type LinkLine = Schema.Schema.Type<typeof LinkLine>;
-
 /**
- * A named look of a drawing, kept beside its scenes: the nodes and links naming it take its style and line, and any
- * field they set themselves wins, so changing the class restyles every element that has not overridden it.
+ * A named look of a drawing, kept beside its scenes: the nodes and links naming it derive their `style` from it (a
+ * link takes the common base, its colour and line style), so one class restyles both together.
  */
 export const StyleClass = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   style: Schema.optional(NodeStyle),
-  line: Schema.optional(LinkLine),
 });
 export type StyleClass = Schema.Schema.Type<typeof StyleClass>;
 
@@ -274,9 +284,9 @@ const linkBase = {
   target: Endpoint,
   /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
-  /** A style class of the drawing the link takes its line from; its own `line` wins over it. */
+  /** A style class of the drawing the link takes its style from; its own `style` wins over it. */
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
-  line: Schema.optional(LinkLine.annotate({ title: 'Line' })),
+  style: Schema.optional(LineStyle),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });

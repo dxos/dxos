@@ -9,7 +9,6 @@
 
 import {
   type Link,
-  type LinkLine,
   type Node,
   type NodeStyle,
   type NodeTone,
@@ -97,7 +96,7 @@ const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
   },
 };
 
-const isStyleHue = (hue: string): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
+const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 
 /** The default look: the base surface, the base text and the separator border. */
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
@@ -140,9 +139,12 @@ export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   return style ? { ...node, style: overlay(style, node.style) } : node;
 };
 
-/** A link's line as drawn: its class's line under its own. */
-export const classedLine = (link: Link, styles: StyleMap | undefined): LinkLine | undefined =>
-  overlay(link.class ? styles?.[link.class]?.line : undefined, link.line);
+/** A link as drawn: its class's colour and line style under its own. */
+export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
+  const style = link.class ? styles?.[link.class]?.style : undefined;
+  // A link draws only the common base (`LineStyle`) of its class's style.
+  return style ? { ...link, style: overlay({ hue: style.hue, lineStyle: style.lineStyle }, link.style) } : link;
+};
 
 /**
  * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
@@ -177,7 +179,7 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
         : style.border === false && !style.guide
           ? 'border-transparent'
           : hue.border,
-    style.guide ? 'border-dashed' : '',
+    style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',
     isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
     style.className ?? '',
   ];
@@ -201,7 +203,8 @@ const LINE_CLASSES: Record<StyleHue, LineClasses> = {
 /** The default line: the grey every link drew before lines took a hue. */
 const DEFAULT_LINE: LineClasses = { stroke: 'stroke-neutral-500', fill: 'fill-neutral-500' };
 
-export const lineClasses = (hue: StyleHue | undefined): LineClasses => (hue ? LINE_CLASSES[hue] : DEFAULT_LINE);
+export const lineClasses = (hue: string | undefined): LineClasses =>
+  isStyleHue(hue) ? LINE_CLASSES[hue] : DEFAULT_LINE;
 
 /**
  * Splits an edit of a classed element's look (`edited`, against what the panel `shown`): every field that changed

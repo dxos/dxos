@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { type StyleMap } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
-import { classedLine, classedNode, splitClassEdit } from './style.ts';
+import { classedLink, classedNode, frameClasses, splitClassEdit } from './style.ts';
 
 describe('style classes', () => {
   const styles: StyleMap = {
-    warn: { id: 'warn', name: 'Warning', style: { hue: 'red', rounded: true }, line: { hue: 'red', dash: 'dashed' } },
+    warn: { id: 'warn', name: 'Warning', style: { hue: 'red', lineStyle: 'dashed', rounded: true } },
   };
   const box = { x: 0, y: 0, width: 200, height: 100 };
   const {
@@ -20,12 +20,17 @@ describe('style classes', () => {
     SceneBuilder.rect('b', { ...box, x: 400 }).properties({ class: 'gone' }),
     SceneBuilder.link('line', 'a', 'b')
       .id('l')
-      .properties({ class: 'warn', line: { dash: 'solid' } }),
+      .properties({ class: 'warn', style: { lineStyle: 'solid' } }),
   ]).build();
 
   test('an element takes its class look under its own', ({ expect }) => {
-    expect(classedNode(nodes.a, styles).style).toEqual({ hue: 'blue', rounded: true });
-    expect(classedLine(links.l, styles)).toEqual({ hue: 'red', dash: 'solid' });
+    expect(classedNode(nodes.a, styles).style).toEqual({ hue: 'blue', lineStyle: 'dashed', rounded: true });
+    // A link takes only the common base of the class's style: its colour and line style.
+    expect(classedLink(links.l, styles).style).toEqual({ hue: 'red', lineStyle: 'solid' });
+  });
+
+  test("a node's line style draws its border", ({ expect }) => {
+    expect(frameClasses(classedNode(nodes.a, styles), false)).toEqual(expect.arrayContaining(['border-dashed']));
   });
 
   test('a missing class leaves the element as it is', ({ expect }) => {
@@ -37,12 +42,12 @@ describe('style classes', () => {
     const shown = classedNode(nodes.a, styles).style;
     const edited = { hue: 'green', rounded: false };
     expect(splitClassEdit(shown, edited, styles.warn.style ?? {}, nodes.a.style)).toEqual({
-      classLook: { hue: 'green', rounded: false },
+      classLook: { hue: 'green', lineStyle: 'dashed', rounded: false },
       own: {},
     });
     // An unchanged field stays where it was: A keeps its own blue, the class its red.
     expect(splitClassEdit(shown, { ...shown, rounded: false }, styles.warn.style ?? {}, nodes.a.style)).toEqual({
-      classLook: { hue: 'red', rounded: false },
+      classLook: { hue: 'red', lineStyle: 'dashed', rounded: false },
       own: { hue: 'blue' },
     });
   });

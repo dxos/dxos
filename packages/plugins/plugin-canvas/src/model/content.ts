@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  LINE_STYLES,
   Link,
   type Node,
   NodeBase,
@@ -208,7 +209,6 @@ const withLegacyDirection = (link: Link): Link => {
   return legacy === true && !link.ends ? { ...link, ends: { end: 'arrow' } } : link;
 };
 
-/** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 /** The drawing's style classes; a record that is not one (written by a newer host) is left out. */
 export const readStyles = (styles: Record<string, unknown> | undefined): StyleMap => {
   const result: Record<string, StyleClass> = {};
@@ -268,12 +268,39 @@ export const deleteStyleClass = (content: ContentMap, styles: Record<string, unk
       content[key] = { ...record, node: { ...node, ...(Object.keys(style).length > 0 ? { style } : {}) } };
     } else if (isLinkRecord(record) && record.link.class === id) {
       const { class: _, ...link } = record.link;
-      const line = { ...styleClass?.line, ...link.line };
-      content[key] = { ...record, link: { ...link, ...(Object.keys(line).length > 0 ? { line } : {}) } };
+      // A link keeps the common base of the class's style, all it ever drew.
+      const base = styleClass?.style;
+      const style = {
+        ...(base?.hue ? { hue: base.hue } : {}),
+        ...(base?.lineStyle ? { lineStyle: base.lineStyle } : {}),
+        ...link.style,
+      };
+      content[key] = { ...record, link: { ...link, ...(Object.keys(style).length > 0 ? { style } : {}) } };
     }
   }
 };
 
+/**
+ * A link saved with the retired `line` (`{ hue, dash }`) reads as its `style`; the next write stores it so. Takes a
+ * fresh clone, which it edits in place.
+ */
+const withLegacyLine = (link: Link): Link => {
+  const legacy: unknown = Reflect.get(link, 'line');
+  if (legacy === undefined) {
+    return link;
+  }
+  Reflect.deleteProperty(link, 'line');
+  if (typeof legacy !== 'object' || legacy === null || link.style) {
+    return link;
+  }
+  const hue: unknown = Reflect.get(legacy, 'hue');
+  const dash: unknown = Reflect.get(legacy, 'dash');
+  const lineStyle = LINE_STYLES.find((candidate) => candidate === dash);
+  const style = { ...(typeof hue === 'string' ? { hue } : {}), ...(lineStyle ? { lineStyle } : {}) };
+  return Object.keys(style).length > 0 ? { ...link, style } : link;
+};
+
+/** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
   const nodes: Record<SceneId, Record<string, Node>> = {};
@@ -289,7 +316,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
     if (isNodeRecord(record) && nodes[record.scene]) {
       nodes[record.scene][record.node.id] = clone(record.node);
     } else if (isLinkRecord(record) && links[record.scene]) {
-      links[record.scene][record.link.id] = withLegacyDirection(clone(record.link));
+      links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
     }
   }
   const scenes: Record<SceneId, Scene> = {};

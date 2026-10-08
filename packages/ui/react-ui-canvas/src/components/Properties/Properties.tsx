@@ -55,10 +55,10 @@ import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
-import { classedLine, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
+import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { ClassField, StyleClassesContext } from './ClassField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
-import { LineHueField, StyleGridField } from './StyleGrid.tsx';
+import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
@@ -93,7 +93,6 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 /** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
-  'line.hue': LineHueField,
   'scene': SceneField,
   'class': ClassField,
 };
@@ -115,7 +114,7 @@ const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any>
  */
 const formValues = (nodes: NodeRegistry, element: Element, styles: StyleMap): Record<string, unknown> =>
   isLink(element)
-    ? { ...element, line: classedLine(element, styles) }
+    ? { ...element, style: classedLink(element, styles).style }
     : {
         ...element,
         style: resolveStyle(classedNode(element, styles).style),
@@ -216,30 +215,20 @@ export const Properties = ({
         const shown = formValues(nodes, element, styleMap);
         const patch = patchValues(shown, values, paths);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
-        if (styleClass && isLink(element) && 'line' in patch) {
-          const split = splitClassEdit(classedLine(element, styleMap), patch.line, styleClass.line ?? {}, element.line);
-          classes[styleClass.id] = { ...styleClass, line: split.classLook };
-          return { kind: 'update' as const, id: element.id, values: { ...patch, line: split.own } };
-        }
-        if (styleClass && !isLink(element) && 'style' in patch) {
-          const split = splitClassEdit(
-            resolveStyle(classedNode(element, styleMap).style),
-            patch.style,
-            styleClass.style ?? {},
-            element.style,
-          );
-          classes[styleClass.id] = { ...styleClass, style: split.classLook };
-          return { kind: 'update' as const, id: element.id, values: { ...patch, style: split.own } };
-        }
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
         if (typeof patch.class === 'string') {
-          return {
-            kind: 'update' as const,
-            id: element.id,
-            values: { ...patch, [isLink(element) ? 'line' : 'style']: undefined },
-          };
+          return { kind: 'update' as const, id: element.id, values: { ...patch, style: undefined } };
         }
-        return { kind: 'update' as const, id: element.id, values: patch };
+        if (!styleClass || !('style' in patch)) {
+          return { kind: 'update' as const, id: element.id, values: patch };
+        }
+        // A link's look is the common base of its class's style; a node's, the whole of it.
+        const look = isLink(element)
+          ? classedLink(element, styleMap).style
+          : resolveStyle(classedNode(element, styleMap).style);
+        const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
+        classes[styleClass.id] = { ...styleClass, style: split.classLook };
+        return { kind: 'update' as const, id: element.id, values: { ...patch, style: split.own } };
       });
       if (styles && Object.keys(classes).length > 0) {
         registry.set(styles, { ...styleMap, ...classes });
@@ -257,15 +246,10 @@ export const Properties = ({
     }
     const id = `class-${Math.random().toString(36).slice(2, 10)}`;
     const name = `Class ${Object.keys(styleMap).length + 1}`;
-    const styleClass: StyleClass = isLink(single)
-      ? { id, name, line: classedLine(single, styleMap) }
-      : { id, name, style: classedNode(single, styleMap).style };
+    const style = isLink(single) ? classedLink(single, styleMap).style : classedNode(single, styleMap).style;
+    const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
     registry.set(styles, { ...styleMap, [id]: styleClass });
-    projection.apply({
-      kind: 'update',
-      id: single.id,
-      values: isLink(single) ? { class: id, line: undefined } : { class: id, style: undefined },
-    });
+    projection.apply({ kind: 'update', id: single.id, values: { class: id, style: undefined } });
   }, [styles, single, styleMap, registry, projection]);
 
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
@@ -279,10 +263,12 @@ export const Properties = ({
     registry.set(atoms.point, undefined);
   }, [projection, links, registry, atoms.point]);
 
-  // The selected node types' own renderers over the panel's; a host's `fields` win over both.
+  // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
+  // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
   const fieldMap = useMemo(
     () => ({
       ...DEFAULT_FIELDS,
+      ...(elements.some(isLink) ? { 'style.hue': OutlineStyleField } : {}),
       ...Object.assign(
         {},
         ...elements.map((element) => (isLink(element) ? {} : (nodeDef(nodes, element)?.fields ?? {}))),

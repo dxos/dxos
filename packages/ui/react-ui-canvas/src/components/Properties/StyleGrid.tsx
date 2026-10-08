@@ -100,57 +100,47 @@ export const StyleGrid = ({
   );
 };
 
-/**
- * The properties panel's style field, rendered at `style.hue`: one pick sets the hue and its tone together,
- * so it writes the enclosing `style`.
- */
-export const StyleGridField: FormFieldRenderer = ({ label, jsonPath, readonly, indeterminate, getValue, onBlur }) => {
-  // Hue and tone change together, so the pick writes their parent once; two field writes would race.
-  const stylePath = (jsonPath ?? 'style.hue').split('.').slice(0, -1);
-  const styleField = useFormFieldState('StyleGridField', stylePath);
-  const style: NodeStyle = styleField.getValue() ?? {};
-  return (
-    <Form.Field path={jsonPath} label={label} readonly={readonly}>
-      <StyleGrid
-        hue={getValue()}
-        tone={style.tone}
-        indeterminate={indeterminate}
-        readonly={!!readonly}
-        onValueChange={({ hue, tone }) => {
-          // A pick is a commit: the grid never blurs, so it commits itself.
-          styleField.onValueChange(NodeStyle.ast, { ...style, hue, tone });
-          onBlur();
-        }}
-      />
-    </Form.Field>
-  );
+/** The outline row alone: a link takes a hue but no fill, so its colour is the hue's border. */
+const OUTLINE_TONES: readonly NodeTone[] = [0];
+
+export type StyleFieldOptions = {
+  /** Offer the fill rows (tones 1–3) as well as the outline; a link, or a selection with one, has no fill. */
+  fills: boolean;
 };
 
-/** The outline row alone: a line takes a hue but no fill, so its colour is the hue's border. */
-const LINE_TONES: readonly NodeTone[] = [0];
+/**
+ * The properties panel's style picker, rendered at `style.hue`, for every kind of element: with `fills`, one pick
+ * sets the hue and its tone together (a node); without, the outline row sets the hue alone (a link, or a
+ * selection mixing kinds, which edits only the style they share).
+ */
+export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRenderer => {
+  const StyleField: FormFieldRenderer = ({ label, jsonPath, readonly, indeterminate, getValue, onBlur }) => {
+    // Hue and tone change together, so the pick writes their parent once; two field writes would race.
+    const stylePath = (jsonPath ?? 'style.hue').split('.').slice(0, -1);
+    const styleField = useFormFieldState('StyleField', stylePath);
+    const style: NodeStyle = styleField.getValue() ?? {};
+    return (
+      <Form.Field path={jsonPath} label={label} readonly={readonly}>
+        <StyleGrid
+          hue={getValue()}
+          tone={fills ? style.tone : 0}
+          tones={fills ? TONES : OUTLINE_TONES}
+          indeterminate={indeterminate}
+          readonly={!!readonly}
+          onValueChange={({ hue, tone }) => {
+            // A pick is a commit: the grid never blurs, so it commits itself.
+            styleField.onValueChange(NodeStyle.ast, fills ? { ...style, hue, tone } : { ...style, hue });
+            onBlur();
+          }}
+        />
+      </Form.Field>
+    );
+  };
+  return StyleField;
+};
 
-/** A line's colour, rendered at `line.hue`: the style grid's outline row, which writes just the hue. */
-export const LineHueField: FormFieldRenderer = ({
-  type,
-  label,
-  jsonPath,
-  readonly,
-  indeterminate,
-  getValue,
-  onValueChange,
-  onBlur,
-}) => (
-  <Form.Field path={jsonPath} label={label} readonly={readonly}>
-    <StyleGrid
-      hue={getValue()}
-      tone={0}
-      tones={LINE_TONES}
-      indeterminate={indeterminate}
-      readonly={!!readonly}
-      onValueChange={({ hue }) => {
-        onValueChange(type, hue);
-        onBlur();
-      }}
-    />
-  </Form.Field>
-);
+/** The style picker with its fill rows: a node's, or a selection of nodes. */
+export const StyleGridField = createStyleField({ fills: true });
+
+/** The style picker's outline row alone: a link's, or a selection with a link in it. */
+export const OutlineStyleField = createStyleField({ fills: false });

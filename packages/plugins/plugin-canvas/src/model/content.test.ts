@@ -70,6 +70,26 @@ describe('content', () => {
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
   });
 
+  test('a link saved with a line reads it as its style', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    content['link:l'] = {
+      kind: 'link',
+      scene: ROOT_SCENE_ID,
+      link: {
+        type: 'line',
+        id: 'l',
+        z: 'a',
+        source: { point: { x: 0, y: 0 } },
+        target: { point: { x: 1, y: 0 } },
+        line: { hue: 'red', dash: 'dotted' },
+      },
+    };
+    const link = readScenes(content)[ROOT_SCENE_ID].links.l;
+    expect(link.style).toEqual({ hue: 'red', lineStyle: 'dotted' });
+    expect('line' in link).toBe(false);
+  });
+
   test('a link saved as directed reads as an arrow at its end', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
@@ -108,7 +128,7 @@ describe('content', () => {
       link: { id: 'l', type: 'line', z: 'a0', source: { node: 'a' }, target: { node: 'b' }, class: 'warn' },
     };
     const styles: Record<string, unknown> = {
-      warn: { id: 'warn', name: 'Warning', style: { hue: 'red' }, line: { dash: 'dashed' } },
+      warn: { id: 'warn', name: 'Warning', style: { hue: 'red', lineStyle: 'dashed', rounded: true } },
     };
     expect(styleClassUses(content)).toEqual({ warn: 3 });
 
@@ -116,9 +136,10 @@ describe('content', () => {
     expect(styles).toEqual({});
     expect(styleClassUses(content)).toEqual({});
     const { nodes, links } = readScenes(content)[ROOT_SCENE_ID];
-    expect(nodes.a.style).toEqual({ hue: 'red', rounded: true });
-    expect(nodes.b.style).toEqual({ hue: 'red' });
+    expect(nodes.a.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
+    expect(nodes.b.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
     expect(nodes.c.style).toBeUndefined();
-    expect(links.l.line).toEqual({ dash: 'dashed' });
+    // A link keeps only the common base of the class's style.
+    expect(links.l.style).toEqual({ hue: 'red', lineStyle: 'dashed' });
   });
 });

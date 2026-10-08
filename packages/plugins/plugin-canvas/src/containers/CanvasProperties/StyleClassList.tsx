@@ -35,7 +35,7 @@ export const StyleClassList = ({ classes, uses, readonly, onRename, onDelete }: 
           <OrderedList.Label>Classes</OrderedList.Label>
           <OrderedList.Content data-testid='style-classes'>
             {items.map((styleClass) => {
-              const hue = hueClasses(styleClass.style?.hue ?? styleClass.line?.hue, styleClass.style?.tone);
+              const hue = hueClasses(styleClass.style?.hue, styleClass.style?.tone);
               const count = uses[styleClass.id] ?? 0;
               return (
                 <OrderedList.Item

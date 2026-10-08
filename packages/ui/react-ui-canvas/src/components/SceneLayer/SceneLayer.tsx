@@ -18,13 +18,12 @@ import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
 import { NO_STYLES, type SceneStore } from '../../model/store.ts';
 import {
   type ElementId,
+  type LineStyle,
   type Link,
-  type LinkLine,
   type Marker,
   type Node,
   type NodeId,
   type Scene,
-  type StyleHue,
   type StyleMap,
   isNoteNode,
   isPortalNode,
@@ -38,7 +37,7 @@ import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
 import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
-import { classedLine, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
+import { classedLink, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
@@ -140,7 +139,7 @@ export const SceneLayer = memo(
     // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
     const styles = useAtomValue(store.styles ?? NO_STYLES);
     const lines = useMemo(
-      () => new Map(links.map(({ link }) => [link.id, classedLine(link, styles)])),
+      () => new Map(links.map(({ link }) => [link.id, classedLink(link, styles).style])),
       [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
@@ -150,7 +149,7 @@ export const SceneLayer = memo(
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
     const lineHues = useMemo(() => [...new Set([...lines.values()].map((line) => line?.hue))], [lines]);
-    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: StyleHue | undefined) =>
+    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: string | undefined) =>
       marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
 
     return (
@@ -188,8 +187,8 @@ export const SceneLayer = memo(
                   !plain && selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(lines.get(link.id)?.hue).stroke,
                 )}
                 strokeWidth={linkWidth}
-                strokeDasharray={dashArray(lines.get(link.id)?.dash, linkWidth)}
-                strokeLinecap={lines.get(link.id)?.dash === 'dotted' ? 'round' : undefined}
+                strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
+                strokeLinecap={lines.get(link.id)?.lineStyle === 'dotted' ? 'round' : undefined}
                 data-link-id={link.id}
               />
             </g>
@@ -256,14 +255,14 @@ export const lineWeight = (depth: number, zoom: number): number =>
 const CellContext = createContext(DEFAULT_CELL);
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
-const dashArray = (dash: LinkLine['dash'], width = LINK_WIDTH): string | undefined =>
+const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
   dash === 'dashed' ? `${4 * width} ${3 * width}` : dash === 'dotted' ? `0 ${2.5 * width}` : undefined;
 
 /** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
 const END_BOX = 0.25;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: StyleHue | undefined; width: number }) => {
+const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: string | undefined; width: number }) => {
   const line = lineClasses(hue);
   // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
   // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
