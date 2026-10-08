@@ -28,8 +28,8 @@ describe('properties', () => {
     expect(rectNote).toContain('style');
     expect(rectNote).not.toContain('label');
 
-    // A node and a link share only what both declare: here `locked` (and the hidden `id`/`z`).
-    expect(names(commonSchema([RectNode, LineLink]))).toEqual(['id', 'z', 'locked']);
+    // A node and a link share only what both declare: here `locked` and `class` (and the hidden `id`/`z`).
+    expect(names(commonSchema([RectNode, LineLink]))).toEqual(['id', 'z', 'locked', 'class']);
     expect(commonSchema([Schema.Struct({ a: Schema.String }), Schema.Struct({ b: Schema.String })])).toBeUndefined();
   });
 

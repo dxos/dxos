@@ -15,7 +15,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { nodeDef } from '../../model/node-def.ts';
 import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
-import { type SceneStore } from '../../model/store.ts';
+import { NO_STYLES, type SceneStore } from '../../model/store.ts';
 import {
   type ElementId,
   type Link,
@@ -25,6 +25,7 @@ import {
   type NodeId,
   type Scene,
   type StyleHue,
+  type StyleMap,
   isBoxNode,
   isEllipseNode,
   isNoteNode,
@@ -39,7 +40,7 @@ import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
 import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
-import { frameClasses, lineClasses } from '../../utils/style.ts';
+import { classedLine, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
@@ -135,12 +136,18 @@ export const SceneLayer = memo(
       () => sceneLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],
     );
+    // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
+    const styles = useAtomValue(store.styles ?? NO_STYLES);
+    const lines = useMemo(
+      () => new Map(links.map(({ link }) => [link.id, classedLine(link, styles)])),
+      [links, styles],
+    );
     const unit = 1 / Math.max(zoom, 0.05);
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
-    const lineHues = useMemo(() => [...new Set(links.map(({ link }) => link.line?.hue))], [links]);
+    const lineHues = useMemo(() => [...new Set([...lines.values()].map((line) => line?.hue))], [lines]);
     const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: StyleHue | undefined) =>
       marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
 
@@ -170,11 +177,11 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx(
                   'fill-none',
-                  selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(link.line?.hue).stroke,
+                  selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(lines.get(link.id)?.hue).stroke,
                 )}
                 strokeWidth={LINK_WIDTH}
-                strokeDasharray={dashArray(link.line?.dash)}
-                strokeLinecap={link.line?.dash === 'dotted' ? 'round' : undefined}
+                strokeDasharray={dashArray(lines.get(link.id)?.dash)}
+                strokeLinecap={lines.get(link.id)?.dash === 'dotted' ? 'round' : undefined}
                 data-link-id={link.id}
               />
             </g>
@@ -187,6 +194,7 @@ export const SceneLayer = memo(
             scene={scene}
             registry={registry}
             node={node}
+            styles={styles}
             zoom={zoom}
             depth={depth}
             liveDepth={liveDepth}
@@ -208,8 +216,8 @@ export const SceneLayer = memo(
               key={link.id}
               d={path}
               className='fill-none stroke-none'
-              markerStart={markerUrl(linkMarkers(link).start, 'start', link.line?.hue)}
-              markerEnd={markerUrl(linkMarkers(link).end, 'end', link.line?.hue)}
+              markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+              markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
             />
           ))}
         </svg>
@@ -327,12 +335,15 @@ type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
   fade?: CSSProperties;
   /** The fade of this node's own frame (fill and border) while it is zoomed into; its contents stay. */
   chromeFade?: CSSProperties;
+  /** The drawing's style classes, under the node's own style. */
+  styles?: StyleMap;
 };
 
 /** Positions a node, owns its frame styling and pointer events; the node definition renders the body. */
 const NodeFrame = memo(
-  ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, ...props }: NodeFrameProps) => {
+  ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, ...props }: NodeFrameProps) => {
     const { node, registry, selected } = props;
+    const drawn = useMemo(() => classedNode(node, styles), [node, styles]);
     const bounds = nodeBounds(node);
     const interactive = handlers !== undefined && !ghost;
     // A type the registry does not know is drawn as the core base: a box with its label.
@@ -362,11 +373,11 @@ const NodeFrame = memo(
       top: bounds.y,
       width: bounds.width,
       height: bounds.height,
-      fontSize: node.style?.fontSize,
+      fontSize: drawn.style?.fontSize,
       [FRAME_BORDER]: chromeFade ? '0px' : '2px',
       ...fade,
     };
-    const frameLook = props.opening ? frameClasses(node, false).slice(1) : frameClasses(node, selected, hovered);
+    const frameLook = props.opening ? frameClasses(drawn, false).slice(1) : frameClasses(drawn, selected, hovered);
     return (
       <div
         className={mx(
@@ -389,7 +400,7 @@ const NodeFrame = memo(
             style={chromeFade}
           />
         )}
-        <Component {...props} editing={editing} onOpen={onOpen} />
+        <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
         {debug && (
           <div
             className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'

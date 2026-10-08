@@ -7,7 +7,17 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, type NodeStyle, type NodeTone, STYLE_HUES, type StyleHue, isEllipseNode } from '../model/types.ts';
+import {
+  type Link,
+  type LinkLine,
+  type Node,
+  type NodeStyle,
+  type NodeTone,
+  STYLE_HUES,
+  type StyleHue,
+  type StyleMap,
+  isEllipseNode,
+} from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -108,6 +118,30 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
   return base;
 };
 
+/** `base` with every field `own` sets over it; an `undefined` field of `own` is unset, so it leaves the base's. */
+const overlay = <T extends object>(base: T | undefined, own: T | undefined): T | undefined => {
+  if (!base || !own) {
+    return own ?? base;
+  }
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(own)) {
+    if (value !== undefined) {
+      Reflect.set(merged, key, value);
+    }
+  }
+  return merged;
+};
+
+/** A node as drawn: its class's style under its own (`StyleClass`). */
+export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
+  const style = node.class ? styles?.[node.class]?.style : undefined;
+  return style ? { ...node, style: overlay(style, node.style) } : node;
+};
+
+/** A link's line as drawn: its class's line under its own. */
+export const classedLine = (link: Link, styles: StyleMap | undefined): LinkLine | undefined =>
+  overlay(link.class ? styles?.[link.class]?.line : undefined, link.line);
+
 /**
  * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
  * the properties panel must show it as on rather than as an unset (off) toggle.
@@ -161,3 +195,21 @@ const LINE_CLASSES: Record<StyleHue, LineClasses> = {
 const DEFAULT_LINE: LineClasses = { stroke: 'stroke-neutral-500', fill: 'fill-neutral-500' };
 
 export const lineClasses = (hue: StyleHue | undefined): LineClasses => (hue ? LINE_CLASSES[hue] : DEFAULT_LINE);
+
+/**
+ * An edited style or line (`own`) less the fields it only repeats from its class (`base`) and never set itself
+ * (`original`): the panel shows the class's look, and saving it must not copy that look onto the element, which
+ * would stop it following the class.
+ */
+export const ownFields = (own: unknown, base: object | undefined, original: object | undefined): unknown => {
+  if (typeof own !== 'object' || own === null || !base) {
+    return own;
+  }
+  const result = { ...own };
+  for (const key of Object.keys(result)) {
+    if (Reflect.get(original ?? {}, key) === undefined && Reflect.get(base, key) === Reflect.get(result, key)) {
+      Reflect.deleteProperty(result, key);
+    }
+  }
+  return result;
+};

@@ -92,8 +92,11 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
-/** Presentation choices a node carries; every field is optional and the frame supplies the default look. */
-export const NodeStyle = Schema.Struct({
+/**
+ * The common base style: the presentation every shape shares (colour, frame and text), each field optional with the
+ * frame supplying the default look. A shape with more to style extends it (`Schema.Struct({ ...styleFields, … })`).
+ */
+export const styleFields = {
   /** One of the theme's hues, colouring fill, text and border together. */
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
   /** The hue's fill; unset is 2, the look a hue had before tones. */
@@ -105,6 +108,11 @@ export const NodeStyle = Schema.Struct({
   guide: Schema.optional(Schema.Boolean),
   /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
+};
+
+/** Presentation choices a node carries: the common base style plus the host's own frame classes. */
+export const NodeStyle = Schema.Struct({
+  ...styleFields,
   /** Extra classes on the frame, for a host's own look. */
   className: Schema.optional(Schema.String),
 });
@@ -123,6 +131,8 @@ export const nodeBase = {
   ports: Schema.optional(Schema.Array(Port)),
   /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
   portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
+  /** A style class of the drawing (`StyleClass`) the node takes its look from; its own `style` wins over it. */
+  class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(NodeStyle),
 };
 
@@ -241,6 +251,21 @@ export const LinkLine = Schema.Struct({
 });
 export type LinkLine = Schema.Schema.Type<typeof LinkLine>;
 
+/**
+ * A named look of a drawing, kept beside its scenes: the nodes and links naming it take its style and line, and any
+ * field they set themselves wins, so changing the class restyles every element that has not overridden it.
+ */
+export const StyleClass = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  style: Schema.optional(NodeStyle),
+  line: Schema.optional(LinkLine),
+});
+export type StyleClass = Schema.Schema.Type<typeof StyleClass>;
+
+/** A drawing's style classes by id. */
+export type StyleMap = Readonly<Record<string, StyleClass>>;
+
 const linkBase = {
   id: Schema.String,
   z: Schema.String,
@@ -249,6 +274,8 @@ const linkBase = {
   target: Endpoint,
   /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
+  /** A style class of the drawing the link takes its line from; its own `line` wins over it. */
+  class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   line: Schema.optional(LinkLine.annotate({ title: 'Line' })),
 };
 

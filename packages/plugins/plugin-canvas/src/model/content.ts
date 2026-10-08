@@ -19,6 +19,8 @@ import {
   type Scene,
   type SceneId,
   type SceneMap,
+  StyleClass,
+  type StyleMap,
   isPortalNode,
 } from '@dxos/react-ui-canvas/scene';
 
@@ -207,6 +209,31 @@ const withLegacyDirection = (link: Link): Link => {
 };
 
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
+/** The drawing's style classes; a record that is not one (written by a newer host) is left out. */
+export const readStyles = (styles: Record<string, unknown> | undefined): StyleMap => {
+  const result: Record<string, StyleClass> = {};
+  for (const [id, record] of Object.entries(clone(styles ?? {}))) {
+    if (Schema.is(StyleClass)(record)) {
+      result[id] = record;
+    }
+  }
+  return result;
+};
+
+/** Writes `styles` over the canvas's classes record by record, so ECHO merges concurrent edits per class. */
+export const writeStyles = (target: Record<string, unknown>, styles: StyleMap): void => {
+  for (const id of Object.keys(target)) {
+    if (!(id in styles)) {
+      delete target[id];
+    }
+  }
+  for (const [id, styleClass] of Object.entries(styles)) {
+    if (JSON.stringify(target[id]) !== JSON.stringify(styleClass)) {
+      target[id] = clone(styleClass);
+    }
+  }
+};
+
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
   const nodes: Record<SceneId, Record<string, Node>> = {};

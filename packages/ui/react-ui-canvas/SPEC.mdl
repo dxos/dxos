@@ -519,6 +519,12 @@ feat F-3: Selection and editing
   req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
   req F-3.10: The properties panel edits the selected element's own schema through `update` intents,
     `style.fontSize` among them: set, it overrides the view's own size class for every text part.
+  req F-3.11: A scene shape's Scene picks any scene of the store for it to open, so several shapes may
+    share one scene; a scene that would open the current path again is not offered (`sceneOptions`).
+  req F-3.12: Style classes are named looks kept beside the scenes (`SceneStore.styles`): an element
+    naming one in `class` is drawn with the class's style or line under its own, and the panel saves
+    only the fields the element sets itself, so it keeps following the class. "New class from
+    selection" makes a class of the selected element's look and moves the element onto it.
 ```
 
 ```mdl

@@ -1107,6 +1107,7 @@ const SceneViewProperties = ({
       getOptions={getOptions}
       overrides={overrides}
       sceneOptions={options}
+      styles={store.styles}
       readonly={!capabilities.update}
     />
   );

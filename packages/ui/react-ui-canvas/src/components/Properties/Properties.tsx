@@ -10,6 +10,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
@@ -34,6 +35,7 @@ import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type NodeRegistry, defaultNodeRegistry } from '../../model/registry.ts';
+import { NO_STYLES } from '../../model/store.ts';
 import {
   BaseNode,
   CurveLink,
@@ -42,6 +44,8 @@ import {
   type LinkType,
   SmartLink,
   SplineLink,
+  type StyleClass,
+  type StyleMap,
   getElement,
   isLink,
   isPortalNode,
@@ -51,7 +55,8 @@ import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
-import { resolveStyle } from '../../utils/style.ts';
+import { classedLine, classedNode, ownFields, resolveStyle } from '../../utils/style.ts';
+import { ClassField, StyleClassesContext } from './ClassField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { LineHueField, StyleGridField } from './StyleGrid.tsx';
 
@@ -90,6 +95,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
   'line.hue': LineHueField,
   'scene': SceneField,
+  'class': ClassField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -104,15 +110,15 @@ const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any>
   isLink(element) ? (LINK_SCHEMAS[element.type] ?? LineLink) : (nodeDef(nodes, element)?.schema ?? BaseNode);
 
 /**
- * What the form shows for an element: what the view draws, so an unset fill, border or Show contents reads as it
- * looks and an unset port count as the type's.
+ * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
+ * contents read as they look and an unset port count as the type's.
  */
-const formValues = (nodes: NodeRegistry, element: Element): Record<string, unknown> =>
+const formValues = (nodes: NodeRegistry, element: Element, styles: StyleMap): Record<string, unknown> =>
   isLink(element)
-    ? element
+    ? { ...element, line: classedLine(element, styles) }
     : {
         ...element,
-        style: resolveStyle(element.style),
+        style: resolveStyle(classedNode(element, styles).style),
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
       };
@@ -128,6 +134,21 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.fontSize': { min: 8, max: 80, step: 1 },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
   'scene': { label: 'Scene' },
+};
+
+/** An edit's values less the look they only repeat from the element's class (see `ownFields`). */
+const ownValues = (element: Element, values: Record<string, unknown>, styles: StyleMap): Record<string, unknown> => {
+  const styleClass = element.class ? styles[element.class] : undefined;
+  if (!styleClass) {
+    return values;
+  }
+  return isLink(element)
+    ? 'line' in values
+      ? { ...values, line: ownFields(values.line, styleClass.line, element.line) }
+      : values
+    : 'style' in values
+      ? { ...values, style: ownFields(values.style, styleClass.style, element.style) }
+      : values;
 };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -154,6 +175,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   overrides?: (elements: readonly Element[]) => Record<string, FormFieldOverride>;
   /** The scenes a scene shape may open (`sceneOptions`); without them its scene is not editable here. */
   sceneOptions?: readonly SceneOption[];
+  /** The drawing's style classes (`SceneStore.styles`); without them elements take no class. */
+  styles?: Atom.Writable<StyleMap>;
 }>;
 
 export const Properties = ({
@@ -167,31 +190,34 @@ export const Properties = ({
   getOptions,
   overrides,
   sceneOptions,
+  styles,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
   const elements = useMemo(() => [...selection].flatMap((id) => getElement(scene, id) ?? []), [scene, selection]);
   const readonly = readonlyProp || !projection.capabilities.update;
+  const styleMap = useAtomValue(styles ?? NO_STYLES);
 
   // Keyed by the selected types, so the schema (and the form built on it) holds while values change under it.
   const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
   const { values, fieldOverrides } = useMemo(() => {
-    const shown = elements.map((element) => formValues(nodes, element));
+    const shown = elements.map((element) => formValues(nodes, element, styleMap));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
     const fieldOverrides: Record<string, FormFieldOverride> = {
       ...FIELD_OVERRIDES,
       ...(sceneOptions ? {} : { scene: { hidden: true } }),
+      ...(styles ? {} : { class: { hidden: true } }),
       ...overrides?.(elements),
     };
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, sceneOptions]);
+  }, [elements, nodes, overrides, sceneOptions, styles, styleMap]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -201,12 +227,31 @@ export const Properties = ({
         intents: elements.map((element) => ({
           kind: 'update' as const,
           id: element.id,
-          values: patchValues(formValues(nodes, element), values, paths),
+          values: ownValues(element, patchValues(formValues(nodes, element, styleMap), values, paths), styleMap),
         })),
       });
     },
-    [projection, elements, nodes],
+    [projection, elements, nodes, styleMap],
   );
+
+  // A new class takes the selected element's look, and the element then follows it rather than carrying its own.
+  const single = elements.length === 1 ? elements[0] : undefined;
+  const onCreateClass = useCallback(() => {
+    if (!styles || !single) {
+      return;
+    }
+    const id = `class-${Math.random().toString(36).slice(2, 10)}`;
+    const name = `Class ${Object.keys(styleMap).length + 1}`;
+    const styleClass: StyleClass = isLink(single)
+      ? { id, name, line: classedLine(single, styleMap) }
+      : { id, name, style: classedNode(single, styleMap).style };
+    registry.set(styles, { ...styleMap, [id]: styleClass });
+    projection.apply({
+      kind: 'update',
+      id: single.id,
+      values: isLink(single) ? { class: id, line: undefined } : { class: id, style: undefined },
+    });
+  }, [styles, single, styleMap, registry, projection]);
 
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
   const links = useMemo(() => elements.filter(isLink), [elements]);
@@ -253,6 +298,17 @@ export const Properties = ({
       {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
     >
       <Toolbar.Root data-testid='properties-toolbar'>
+        {styles && single && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--swatches--regular'
+            label='New class from selection'
+            disabled={readonly}
+            data-testid='properties-new-class'
+            onClick={onCreateClass}
+          />
+        )}
         {links.length > 0 && links.length === elements.length && (
           <Button.Root
             variant='ghost'
@@ -266,32 +322,34 @@ export const Properties = ({
         )}
       </Toolbar.Root>
       {schema ? (
-        <SceneOptionsContext.Provider value={sceneOptions ?? []}>
-          <Form.Root
-            key={[...selection].join()}
-            schema={schema}
-            values={values}
-            fieldOverrides={fieldOverrides}
-            fieldMap={fieldMap}
-            db={db}
-            getOptions={getOptions}
-            readonly={readonly}
-            autoSave
-            onSave={onSave}
-          >
-            {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
-            <Form.Viewport scroll>
-              <Form.Content>
-                <Form.Fields exclude={HIDDEN} />
-                {summary && (
-                  <p className='text-sm text-fg-muted' data-testid='properties-summary'>
-                    {summary}
-                  </p>
-                )}
-              </Form.Content>
-            </Form.Viewport>
-          </Form.Root>
-        </SceneOptionsContext.Provider>
+        <StyleClassesContext.Provider value={styleMap}>
+          <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+            <Form.Root
+              key={[...selection].join()}
+              schema={schema}
+              values={values}
+              fieldOverrides={fieldOverrides}
+              fieldMap={fieldMap}
+              db={db}
+              getOptions={getOptions}
+              readonly={readonly}
+              autoSave
+              onSave={onSave}
+            >
+              {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
+              <Form.Viewport scroll>
+                <Form.Content>
+                  <Form.Fields exclude={HIDDEN} />
+                  {summary && (
+                    <p className='text-sm text-fg-muted' data-testid='properties-summary'>
+                      {summary}
+                    </p>
+                  )}
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
+          </SceneOptionsContext.Provider>
+        </StyleClassesContext.Provider>
       ) : (
         <p className='p-2 text-sm text-fg-muted' data-testid='properties-summary'>
           {summary}
