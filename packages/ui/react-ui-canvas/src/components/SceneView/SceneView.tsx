@@ -67,7 +67,7 @@ import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
-import { redo, undo } from '../../utils/undo.ts';
+import { recordScenes, redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -266,15 +266,15 @@ const SceneViewRoot = ({
 
   // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
   const onUndo = useCallback(() => {
-    if (!readonly && undo(projection, registry, atoms.undo, sceneId)) {
+    if (!readonly && undo(projection, registry, atoms.undo, sceneId, store)) {
       select([]);
     }
-  }, [readonly, projection, registry, atoms.undo, sceneId, select]);
+  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
   const onRedo = useCallback(() => {
-    if (!readonly && redo(projection, registry, atoms.undo, sceneId)) {
+    if (!readonly && redo(projection, registry, atoms.undo, sceneId, store)) {
       select([]);
     }
-  }, [readonly, projection, registry, atoms.undo, sceneId, select]);
+  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
 
   //
   // Pointer state machine.
@@ -1102,11 +1102,14 @@ const SceneViewProperties = ({
     if (!group) {
       return;
     }
-    registry.set(store.scenes, { ...registry.get(store.scenes), [id]: { ...group.child, name: 'Untitled' } });
+    const before = registry.get(store.scenes);
+    registry.set(store.scenes, { ...before, [id]: { ...group.child, name: 'Untitled' } });
     projection.apply({ kind: 'batch', intents: group.intents });
+    // One undo step takes the new scene away with the shape that opens it.
+    recordScenes(registry, atoms.undo, path[path.length - 1], before);
     registry.set(atoms.selection, new Set([id]));
     registry.set(atoms.point, undefined);
-  }, [registry, projection, selection, store.scenes, atoms.selection, atoms.point]);
+  }, [registry, projection, selection, store.scenes, atoms.selection, atoms.point, atoms.undo, path]);
 
   if (selection.size === 0) {
     return null;
