@@ -386,12 +386,16 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const project = space.db.add(Project.make({ name: agentOptions.project }));
           Obj.setParent(agent, project);
         }
+        const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+        invariant(chat, 'Agent chat not found.');
+        // An agent's chat runs on EDGE unless told otherwise; the harness runs its agents in the story.
+        Obj.update(chat, (chat) => {
+          chat.remote = false;
+        });
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
-          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
-          invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });

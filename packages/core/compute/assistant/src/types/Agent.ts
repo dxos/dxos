@@ -129,11 +129,12 @@ export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =
   });
 
 /**
- * Where a chat's turns run. An agent's chats always run on EDGE: they share the agent's one brain, which
- * only EDGE holds, so a turn run in a client would read and write a brain no other chat sees.
+ * Where a chat's turns run: as its `remote` flag says, else on EDGE for an agent's chat, since its chats share
+ * the agent's one brain, which only EDGE holds. An explicit `remote: false` keeps an agent's chats local, for
+ * a runtime with no EDGE to reach (a story or test), where every chat shares the client's brain instead.
  */
 export const chatLocation = (chat: Chat.Chat): AgentService.AgentLocation =>
-  chat.remote || isAgentChat(chat) ? 'edge' : 'local';
+  (chat.remote ?? isAgentChat(chat)) ? 'edge' : 'local';
 
 /** Whether the chat runs as an agent (the agent parents it); synchronous, like {@link loadForChat}. */
 export const isAgentChat = (chat: Chat.Chat): boolean => {

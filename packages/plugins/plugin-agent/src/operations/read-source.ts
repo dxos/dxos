@@ -237,7 +237,8 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
     },
     attribution: {
       ...fact.attribution,
-      ...(segment.speakerId ? { agent: segment.speakerId } : {}),
+      // Someone who is no member is attributed by the name they go by, which is what a watch on them names.
+      ...((segment.speakerId ?? segment.speakerLabel) ? { agent: segment.speakerId ?? segment.speakerLabel } : {}),
       ...(segment.speakerLabel ? { agentLabel: segment.speakerLabel } : {}),
       ...(segment.source ? { source: segment.source } : {}),
       ...(segment.at ? { generatedAtTime: segment.at } : {}),

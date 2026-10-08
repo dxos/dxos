@@ -212,14 +212,14 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   // Offered only where an edge service is configured, which is the same condition that decides
   // whether `RemoteProcessManager` is the real manager or `layerNoop`: against the noop a spawn has
   // no `list` or `spawn`, so choosing `remote` would persist a flag the next prompt cannot honour.
-  // An agent's chat always runs on EDGE (`Agent.chatLocation`), so local is not a choice there.
-  const agentChat = chat !== undefined && Agent.isAgentChat(chat);
-  const environments = agentChat
+  // An agent's chat runs on EDGE (`Agent.chatLocation`) unless explicitly kept local, so local is no choice there.
+  const agentOnEdge = chat !== undefined && Agent.isAgentChat(chat) && chat.remote !== false;
+  const environments = agentOnEdge
     ? CHAT_ENVIRONMENTS.filter((environment) => environment === 'remote')
     : client?.config.values.runtime?.services?.edge?.url
       ? CHAT_ENVIRONMENTS
       : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
-  const value: ChatEnvironment = remote || agentChat ? 'remote' : 'local';
+  const value: ChatEnvironment = remote || agentOnEdge ? 'remote' : 'local';
   const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
 
   return (
