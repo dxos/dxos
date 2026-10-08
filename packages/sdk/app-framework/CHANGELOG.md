@@ -1,5 +1,82 @@
 # @dxos/app-framework
 
+## 0.13.0
+
+### Minor Changes
+
+- 9ab98cd: The roots of `@dxos/app-framework`, `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`, `@dxos/effect`, `@dxos/graph`, `@dxos/observability` and every plugin now export namespaces only, and every namespace has its own subpath: import it with `import * as Hooks from '@dxos/app-framework/Hooks'` and call `Hooks.useOperationInvoker()`. A compound component exports its parts (`<ObjectCard.Root>`, `<ObjectCard.Header>`), a single component keeps its own name (`<TracePanel.TracePanel>`), and errors live in the namespace that owns them (`Operation.NoHandlerError`, `Capability.NotFoundError`, `ConnectorSync.DatabaseMissingError`) or in a `<Domain>Error` module (`FunctionsAiError`, `ConnectorError`).
+
+  Breaking: names that were exported flat from a root moved into namespaces, e.g. `ProcessManagerPlugin.make()`, `PluginManager.Context`, `PluginManifest.DEV_SERVER_PORT`, `Progress.makeTraceSink`, `SpaceSurface.RENAME_POPOVER`, `Calendar.getRangeSelectionId`, `AgentSkill.Handlers`, `SlashCommand.resolveSlashCommand`, `SelectionModel.SelectionModel`, `HaloServices.layer`, `PluginStorage.loadPlugins`, `CorePlugins.make()`, `KvsStore.make` (formerly `createKvsStore`), `CardSlot.IconSlot` and `CardSlot.MenuSlot` (formerly `CardIconSlot` and `CardMenuSlot`), `Hooks.useUpdateRow` in `@dxos/app-toolkit` and `OtelTracer.make`/`OtelTracer.layer` in `@dxos/effect`; a plugin's `meta` is `<Name>Plugin.meta`. Flat names nothing imported outside their package are no longer exported. `@dxos/compute/Errors` is removed, `@dxos/app-solid` no longer re-exports `@dxos/app-framework`, and `@dxos/util/Position` is a subpath.
+
+  `HomeSection` and `NamePopover` move from `@dxos/app-framework` to `@dxos/app-toolkit` (`@dxos/app-toolkit/HomeSection`, `@dxos/app-toolkit/NamePopover`), so app-framework no longer depends on `@dxos/react-ui`. A `check-module-structure` guard fails if any app-framework export reaches react-ui again.
+
+### Patch Changes
+
+- 246ee3c: Add `@dxos/plugin-agent`, an agent that talks to people through any channel, remembers them as ECHO objects, reads every conversation turn into facts, relays messages, and keeps one-time and ongoing ("keep me posted") watches whose updates it writes from the conversation's context. Every subpath of the package is a namespace: `AgentState` and `AgentKnowledge` (each with a `Root` container), one per skill (`ConversationSkill`, `GoalsSkill`, `InterviewSkill`, `ModesSkill`, `NoteTakerSkill`, `RelaySkill`), and one per type and operation set.
+
+  `@dxos/plugin-thread` channel backends can now open direct conversations (`openDirect`), post into threads (`threads.send`), run a connection (`connection.start`/`stop`/`status`), and return a send receipt. New operations `sendToChannel`, `openDirect`, `connectChannel`, `disconnectChannel` and `getChannelStatus` dispatch to them, and the handlers are published as the `ThreadOperationHandlerSet` subpath. The Discord and Slack plugins implement these backends.
+
+  An agent prompt can name its sender: `AgentProcess` accepts `{ prompt, sender?, properties? }` as well as a bare prompt (`AgentInput`, `makeInputMessage`), `AgentService.Session.submitPrompt` and the assistant's request and session take a `sender`, and the model sees a named sender as `[From: <name>]`. `useChatProcessor` and `AiChatProcessor` take a `sender`, and `ChatThread` takes a `userHue`.
+
+  `Agent.loadChat` no longer picks a chat bridged from an external conversation as the agent's primary chat, and finds chats with a child-of filter so it also works on EDGE. `Agent.makeInitialized` accepts a skill ref, and `Skill.makeRef` binds a database skill as-is and any other by registry URI.
+
+  The `ProfileOf` relation moves from `@dxos/plugin-crm` to `@dxos/types` with its typename unchanged, so existing profiles still resolve. `EdgeHttpClient.request` makes an authenticated call to any EDGE route. `pipeline-rdf` exports `DEFAULT_MODEL`. `FormInlineAnnotation` now survives the JSON-schema round trip. A plugin that declares two modules with the same id now fails when it is constructed instead of silently dropping one.
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [fe08304]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [0ee5ecf]
+- Updated dependencies [596728d]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/compute@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/operation@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-error-boundary@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/web-context@0.13.0
+  - @dxos/web-context-react@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

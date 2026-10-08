@@ -1,6 +1,6 @@
 {
   "name": "@dxos/datalog",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Datalog engine with no third-party dependencies: parser, static checks, incremental stratified semi-naive evaluation with provenance and pluggable built-ins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

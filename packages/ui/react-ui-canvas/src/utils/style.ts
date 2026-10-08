@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, type NodeStyle, type NodeTone, isEllipseNode } from '../model/types.ts';
+import { type Node, type NodeStyle, type NodeTone, STYLE_HUES, type StyleHue, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -32,14 +32,10 @@ const HUES: Record<string, HueClasses> = {
   rose: { surface: 'bg-rose-surface', text: 'text-rose-fg', border: 'border-rose-border' },
 };
 
-/** The hues the style picker offers, neutral first; any theme hue still renders, at its `medium` tone. */
-export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'violet', 'pink'] as const;
-export type StyleHue = (typeof STYLE_HUES)[number];
-
 export const TONES: readonly NodeTone[] = [0, 1, 2, 3];
 
 /** What each tone is called, for labels. */
-export const TONE_NAMES: Record<NodeTone, string> = { 0: 'outline', 1: 'light', 2: 'medium', 3: 'strong' };
+export const TONE_NAMES: Record<NodeTone, string> = { 0: 'outline', 1: 'strong', 2: 'medium', 3: 'light' };
 
 /** The tone a hue without one draws at: the look a hue had before tones. */
 export const DEFAULT_TONE: NodeTone = 2;
@@ -47,45 +43,45 @@ export const DEFAULT_TONE: NodeTone = 2;
 type ToneClasses = { surface: string; text: string };
 
 /**
- * The fills lighter and stronger than a hue's `surface` role: the scale's 200 under its darkest text, and the
- * hue's solid `bg` role under light text (tones 1 and 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
+ * The fills either side of a hue's `surface` role (its 400): the scale's 500 under light text (tone 1), and its
+ * 300 under its darkest text (tone 3). Tone 2 is the role pair in `HUES`; tone 0 has no fill.
  */
-const TONE_FILLS: Record<StyleHue, Record<1 | 3, ToneClasses>> = {
+const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
   neutral: {
-    1: { surface: 'bg-neutral-200', text: 'text-neutral-900' },
-    3: { surface: 'bg-neutral-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-neutral-300', text: 'text-neutral-900' },
+    strong: { surface: 'bg-neutral-500', text: 'text-neutral-50' },
   },
   red: {
-    1: { surface: 'bg-red-200', text: 'text-red-900' },
-    3: { surface: 'bg-red-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-red-300', text: 'text-red-900' },
+    strong: { surface: 'bg-red-500', text: 'text-neutral-50' },
   },
   orange: {
-    1: { surface: 'bg-orange-200', text: 'text-orange-900' },
-    3: { surface: 'bg-orange-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-orange-300', text: 'text-orange-900' },
+    strong: { surface: 'bg-orange-500', text: 'text-neutral-50' },
   },
   amber: {
-    1: { surface: 'bg-amber-200', text: 'text-amber-900' },
-    3: { surface: 'bg-amber-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-amber-300', text: 'text-amber-900' },
+    strong: { surface: 'bg-amber-500', text: 'text-neutral-50' },
   },
   green: {
-    1: { surface: 'bg-green-200', text: 'text-green-900' },
-    3: { surface: 'bg-green-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-green-300', text: 'text-green-900' },
+    strong: { surface: 'bg-green-500', text: 'text-neutral-50' },
   },
   teal: {
-    1: { surface: 'bg-teal-200', text: 'text-teal-900' },
-    3: { surface: 'bg-teal-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-teal-300', text: 'text-teal-900' },
+    strong: { surface: 'bg-teal-500', text: 'text-neutral-50' },
+  },
+  sky: {
+    light: { surface: 'bg-sky-300', text: 'text-sky-900' },
+    strong: { surface: 'bg-sky-500', text: 'text-neutral-50' },
   },
   blue: {
-    1: { surface: 'bg-blue-200', text: 'text-blue-900' },
-    3: { surface: 'bg-blue-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-blue-300', text: 'text-blue-900' },
+    strong: { surface: 'bg-blue-500', text: 'text-neutral-50' },
   },
   violet: {
-    1: { surface: 'bg-violet-200', text: 'text-violet-900' },
-    3: { surface: 'bg-violet-bg', text: 'text-neutral-50' },
-  },
-  pink: {
-    1: { surface: 'bg-pink-200', text: 'text-pink-900' },
-    3: { surface: 'bg-pink-bg', text: 'text-neutral-50' },
+    light: { surface: 'bg-violet-300', text: 'text-violet-900' },
+    strong: { surface: 'bg-violet-500', text: 'text-neutral-50' },
   },
 };
 
@@ -96,7 +92,7 @@ const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'bor
 
 /**
  * The classes a hue at a tone draws with. Every tone keeps the hue's border; tone 0 drops the fill and
- * keeps the default text, and a tone a hue has no fills for draws as `medium`.
+ * keeps the default text, and a tone a hue has no fills for draws as `medium` (its role pair).
  */
 export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TONE): HueClasses => {
   const base = (hue && HUES[hue]) || DEFAULT;
@@ -107,7 +103,7 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
     return { surface: 'bg-transparent', text: '', border: base.border };
   }
   if ((tone === 1 || tone === 3) && isStyleHue(hue)) {
-    return { ...TONE_FILLS[hue][tone], border: base.border };
+    return { ...TONE_FILLS[hue][tone === 1 ? 'strong' : 'light'], border: base.border };
   }
   return base;
 };
@@ -145,3 +141,23 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
     style.className ?? '',
   ];
 };
+
+export type LineClasses = { stroke: string; fill: string };
+
+/** A link's stroke and its end markers' fill, in the hue's border colour so a link matches a node of its hue. */
+const LINE_CLASSES: Record<StyleHue, LineClasses> = {
+  neutral: { stroke: 'stroke-neutral-border', fill: 'fill-neutral-border' },
+  red: { stroke: 'stroke-red-border', fill: 'fill-red-border' },
+  orange: { stroke: 'stroke-orange-border', fill: 'fill-orange-border' },
+  amber: { stroke: 'stroke-amber-border', fill: 'fill-amber-border' },
+  green: { stroke: 'stroke-green-border', fill: 'fill-green-border' },
+  teal: { stroke: 'stroke-teal-border', fill: 'fill-teal-border' },
+  sky: { stroke: 'stroke-sky-border', fill: 'fill-sky-border' },
+  blue: { stroke: 'stroke-blue-border', fill: 'fill-blue-border' },
+  violet: { stroke: 'stroke-violet-border', fill: 'fill-violet-border' },
+};
+
+/** The default line: the grey every link drew before lines took a hue. */
+const DEFAULT_LINE: LineClasses = { stroke: 'stroke-neutral-500', fill: 'fill-neutral-500' };
+
+export const lineClasses = (hue: StyleHue | undefined): LineClasses => (hue ? LINE_CLASSES[hue] : DEFAULT_LINE);

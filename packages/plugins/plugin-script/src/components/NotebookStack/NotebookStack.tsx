@@ -9,6 +9,7 @@ import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
@@ -139,7 +140,7 @@ const NotebookSection = ({
       )}
     >
       {/* Side rail */}
-      <div className='flex flex-col p-1 border-e border-separator-subtle dx-attention-surface'>
+      <Layout.Flex column classNames='p-1 border-e border-separator-subtle dx-attention-surface'>
         <Button.Root
           ref={setDragHandle}
           variant='ghost'
@@ -158,7 +159,7 @@ const NotebookSection = ({
           </Menu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </Menu.Root>
-      </div>
+      </Layout.Flex>
 
       <NotebookCell db={db} cell={cell} env={env} graph={graph} promptResults={promptResults} />
     </Mosaic.Tile>

@@ -21,9 +21,23 @@ export const Breadcrumbs = ({ path, nameOf, onSelect }: BreadcrumbsProps) => (
     {path.map((id, index) => (
       <Fragment key={`${index}:${id}`}>
         {index > 0 && <span className='text-fg-subtle'>›</span>}
-        <Button.Root variant='ghost' size='sm' disabled={index === path.length - 1} onClick={() => onSelect(index)}>
-          {nameOf(id)}
-        </Button.Root>
+        {/* The root is home whatever its scene is called. */}
+        {index === 0 ? (
+          <Button.Root
+            variant='ghost'
+            size='sm'
+            iconOnly
+            icon='ph--house--regular'
+            label={nameOf(id)}
+            disabled={index === path.length - 1}
+            data-testid='breadcrumb-root'
+            onClick={() => onSelect(index)}
+          />
+        ) : (
+          <Button.Root variant='ghost' size='sm' disabled={index === path.length - 1} onClick={() => onSelect(index)}>
+            {nameOf(id)}
+          </Button.Root>
+        )}
       </Fragment>
     ))}
   </nav>

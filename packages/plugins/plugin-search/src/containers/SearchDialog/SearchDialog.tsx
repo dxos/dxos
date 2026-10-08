@@ -84,7 +84,6 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
             {allResults.map((result) => (
               <SearchList.Item
                 key={result.id}
-                classNames='flex gap-2 items-center'
                 icon={result.icon}
                 value={result.id}
                 label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}

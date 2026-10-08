@@ -37,15 +37,12 @@ test.describe('SceneView lattice', () => {
     await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
   });
 
-  test('the guides toggle hides and restores the page frame and the lattice cells', async () => {
-    await expect(page.getByTestId('scene-frame')).toHaveCount(1);
+  test('the guides toggle hides and restores the lattice cells', async () => {
     await page.getByTestId('toolbar-guides').click();
     await expect(page.getByTestId('lattice-grid')).toHaveCount(0);
-    await expect(page.getByTestId('scene-frame')).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press(';');
     await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
-    await expect(page.getByTestId('scene-frame')).toHaveCount(1);
   });
 
   test('a drag onto occupied cells previews in red and is refused', async () => {
@@ -107,6 +104,8 @@ test.describe('SceneView lattice', () => {
   });
 
   test('dragging a face steps it one cell and leaves the opposite face where it was', async () => {
+    // Fit frames the shapes tightly, so step out to leave room below E for the drag.
+    await scene.zoomOut();
     await scene.clickNode('e');
     const before = await scene.box(scene.node('e'));
     // E's east neighbour is F, so grow downwards: the south face most of a row down.

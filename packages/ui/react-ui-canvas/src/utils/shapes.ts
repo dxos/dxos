@@ -12,19 +12,18 @@ import {
   type Bounds,
   type BuiltinNode,
   type BuiltinNodeType,
+  DEFAULT_GRID,
   type Endpoint,
   type Link,
   type LinkEnds,
   type LinkType,
+  type LinkValues,
+  MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Size,
-  isClassNode,
-  isEllipseNode,
-  isNoteNode,
-  isRectNode,
 } from '../model/types.ts';
-import { partKey } from './parts.ts';
+import { type PartField } from './parts.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
 export const nodeBounds = (node: Node): Bounds => ({
@@ -43,16 +42,36 @@ export const resizeNode = <N extends Node>(node: N, bounds: Bounds): N => ({
   size: { width: bounds.width, height: bounds.height },
 });
 
-/** The bounding box a new basic shape gets: rectangle, ellipse and class share it, so a new circle matches a new square. */
-export const DEFAULT_SHAPE_SIZE: Size = { width: 256, height: 256 };
+/** Scene px of one nominal unit (a major grid cell) at the default grid. */
+export const DEFAULT_CELL = DEFAULT_GRID * MAJOR_GRID_RATIO;
 
+/** A nominal size (in major grid cells) in scene px, for a drawing whose major cell is `cell` px. */
+export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
+  width: size.width * cell,
+  height: size.height * cell,
+});
+
+/**
+ * The built-in types' sizes when created, in nominal units: one unit is the drawing's major grid cell, so a
+ * new shape scales with the drawing's grid.
+ */
+export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
+  rect: { width: 2, height: 1 },
+  ellipse: { width: 2, height: 2 },
+  note: { width: 2, height: 2 },
+  scene: { width: 4, height: 2 },
+};
+
+/** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: DEFAULT_SHAPE_SIZE,
-  ellipse: DEFAULT_SHAPE_SIZE,
-  class: DEFAULT_SHAPE_SIZE,
+  rect: { width: 256, height: 256 },
+  ellipse: { width: 256, height: 256 },
   note: { width: 256, height: 128 },
   scene: { width: 512, height: 256 },
 };
+
+/** The bounding box a new basic shape gets at the default grid. */
+export const DEFAULT_SHAPE_SIZE: Size = DEFAULT_SIZES.rect;
 
 export type CreateNodeProps = {
   type: BuiltinNodeType;
@@ -79,8 +98,6 @@ export const createNode = ({
       return { type, id, z, center, size };
     case 'ellipse':
       return { type, id, z, center, size };
-    case 'class':
-      return { type, id, z, center, size, name: 'Class', attributes: ['id: string'], methods: ['save(): void'] };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'scene':
@@ -95,23 +112,12 @@ const OWN_FIELDS = new Set(['id', 'type', 'z', 'center', 'scene']);
  * A new shape like `source` (its size, look and ports) built on `fresh`, the type's own new node at the
  * new place: it keeps its own identity and child scene, and the type's text rather than the source's.
  */
-export const cloneShape = (source: Node, fresh: Node): Node => ({
-  ...fresh,
-  ...Object.fromEntries(Object.entries(source).filter(([key]) => !OWN_FIELDS.has(key) && !partKey(key))),
-});
-
-/** The node's display text, in the field its type uses for it; a type without one is returned as is. */
-export const withLabel = <N extends Node>(node: N, label: string): N => {
-  if (isRectNode(node) || isEllipseNode(node)) {
-    return { ...node, label };
-  }
-  if (isClassNode(node)) {
-    return { ...node, name: label };
-  }
-  if (isNoteNode(node)) {
-    return { ...node, text: label };
-  }
-  return node;
+export const cloneShape = (source: Node, fresh: Node, parts: readonly PartField[] = []): Node => {
+  const text = new Set(parts.map(({ field }) => field));
+  return {
+    ...fresh,
+    ...Object.fromEntries(Object.entries(source).filter(([key]) => !OWN_FIELDS.has(key) && !text.has(key))),
+  };
 };
 
 export type CreateLinkProps = {
@@ -122,13 +128,12 @@ export type CreateLinkProps = {
   target: Endpoint;
   /** Where a new spline gets its first control point; ignored by the other types. */
   midpoint?: Point;
-  directed?: boolean;
   ends?: LinkEnds;
 };
 
 /** A new link of `type`; a spline starts with one control point so it is editable at once. */
-export const createLink = ({ type, id, z, source, target, midpoint, directed, ends }: CreateLinkProps): Link => {
-  const base = { id, z, source, target, ...(directed ? { directed } : {}), ...(ends ? { ends } : {}) };
+export const createLink = ({ type, id, z, source, target, midpoint, ends }: CreateLinkProps): Link => {
+  const base = { id, z, source, target, ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
     case 'curve':
@@ -138,3 +143,14 @@ export const createLink = ({ type, id, z, source, target, midpoint, directed, en
       return { type, ...base, points: midpoint ? [midpoint] : [] };
   }
 };
+
+/**
+ * The `update` values that reverse a link: source and target swap while the markers stay at the start and
+ * end, so an arrow comes to point the other way; a spline's control points run the other way, so the drawn
+ * path keeps its shape.
+ */
+export const flipLink = (link: Link): LinkValues => ({
+  source: link.target,
+  target: link.source,
+  ...(link.type === 'spline' ? { points: [...link.points].reverse() } : {}),
+});
