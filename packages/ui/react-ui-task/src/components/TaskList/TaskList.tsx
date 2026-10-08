@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Tag as EchoTag, Filter, Obj } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useLabel, useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
@@ -757,24 +757,11 @@ TaskListItemTags.displayName = 'TaskList.ItemTags';
  * markdown — so a row reads the same as the text that references it.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
-  const [snapshot] = useObject(artifact);
-  const label = Obj.getLabel(snapshot) ?? Obj.getTypename(snapshot) ?? '';
+  const label = useLabel(artifact, { fallback: 'typename' }) ?? '';
   const anchor = usePreviewAnchor({ eid: Obj.getURI(artifact).toString(), label });
 
-  if (Obj.snapshotOf(PullRequest.PullRequest, snapshot)) {
-    return (
-      <Button.Root
-        {...anchor}
-        hue='neutral'
-        size='sm'
-        // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
-        classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
-        icon='ph--git-pull-request--regular'
-        iconClassNames={pullRequestStateStyle[snapshot.state]}
-        label={`#${snapshot.number}`}
-        tabIndex={-1}
-      />
-    );
+  if (Obj.instanceOf(PullRequest.PullRequest, artifact)) {
+    return <PullRequestTag pullRequest={artifact} anchor={anchor} />;
   }
 
   return (
@@ -785,6 +772,32 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 };
 
 ArtifactTag.displayName = 'TaskList.ArtifactTag';
+
+const PullRequestTag = ({
+  pullRequest,
+  anchor,
+}: {
+  pullRequest: PullRequest.PullRequest;
+  anchor: ReturnType<typeof usePreviewAnchor>;
+}) => {
+  const [state] = useObject(pullRequest, 'state');
+  const [number] = useObject(pullRequest, 'number');
+  return (
+    <Button.Root
+      {...anchor}
+      hue='neutral'
+      size='sm'
+      // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
+      classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
+      icon='ph--git-pull-request--regular'
+      iconClassNames={pullRequestStateStyle[state]}
+      label={`#${number}`}
+      tabIndex={-1}
+    />
+  );
+};
+
+PullRequestTag.displayName = 'TaskList.PullRequestTag';
 
 /** GitHub's own state colours, so the icon reads as open, merged or closed at a glance. */
 const pullRequestStateStyle: Record<PullRequest.State, string> = {

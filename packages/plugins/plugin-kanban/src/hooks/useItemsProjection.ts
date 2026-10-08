@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useObject } from '@dxos/echo-react';
+import { Obj } from '@dxos/echo';
 import type { ProjectionModel } from '@dxos/schema';
+import { shallowEqual } from '@dxos/util';
 
 import { Kanban } from '#types';
 
@@ -17,13 +19,22 @@ import { Kanban } from '#types';
  * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */
 export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel => {
-  const [{ pivotField }] = useObject(kanban, 'spec');
-  const [arrangement] = useObject(kanban, 'arrangement');
-  // Serialized so the memo keys on the column ids, not the arrangement record (a fresh copy on every change).
-  const optionIdsKey = JSON.stringify(Object.keys(arrangement?.columns ?? {}));
+  // Derived rather than `useObject` on `spec` and `arrangement`: records re-emit on every kanban write, so each
+  // drag would re-render the board.
+  const pivotField = useAtomValue(
+    useMemo(() => Atom.make((get) => get(Obj.atomProperty(kanban, 'spec')).pivotField), [kanban]),
+  );
+  const optionIds = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make((get) => Object.keys(get(Obj.atomProperty(kanban, 'arrangement'))?.columns ?? {})).pipe(
+          Atom.withEquality<string[]>(shallowEqual),
+        ),
+      [kanban],
+    ),
+  );
 
   return useMemo(() => {
-    const optionIds: string[] = JSON.parse(optionIdsKey);
     const options = optionIds.map((id) => ({ id, title: id, color: 'neutral' as const }));
 
     const fieldProjection: any = {
@@ -44,5 +55,5 @@ export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel 
 
     // TODO(wittjosiah): Refactor ProjectionModel to be an interface that we can fulfill.
     return stub as unknown as ProjectionModel;
-  }, [optionIdsKey, pivotField]);
+  }, [optionIds, pivotField]);
 };

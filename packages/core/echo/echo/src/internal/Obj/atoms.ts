@@ -299,12 +299,9 @@ export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<st
 
 const readTags = (entity: Entity.Unknown): readonly Ref.Ref<Tag.Tag>[] => [...getMeta(entity).tags];
 
-const sameRefs = (a: readonly Ref.Ref<any>[], b: readonly Ref.Ref<any>[]): boolean =>
-  a.length === b.length && a.every((ref, index) => ref.uri === b[index].uri);
-
 /**
  * Atom family for an entity's meta tags.
- * Fires only when the tag list changes, compared by ref URI, since every mutation of the entity re-reads it.
+ * Fires only when the tag list changes (see `snapshotEquals`), since every mutation of the entity re-reads it.
  */
 const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Ref.Ref<Tag.Tag>[]> => {
   return Atom.make<readonly Ref.Ref<Tag.Tag>[]>((get) => {
@@ -312,7 +309,7 @@ const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.A
 
     const unsubscribe = subscribe(entity, () => {
       const next = readTags(entity);
-      if (!sameRefs(next, previous)) {
+      if (!snapshotEquals(next, previous)) {
         previous = next;
         get.setSelf(next);
       }

@@ -106,6 +106,8 @@ export type ObjectPickerProps = PickerBaseProps & {
   trigger?: ReactElement;
   /** Called with the picked id, or `undefined` when the selected option is picked again. */
   onSelect: (id: string | undefined) => void;
+  /** Called as the popup opens and closes, so a caller can build `options` only while it is open. */
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -124,6 +126,7 @@ export const ObjectPicker = ({
   createIcon,
   onCreate,
   onSelect,
+  onOpenChange,
   options,
 }: ObjectPickerProps) => {
   const { setOpen, creating, setCreating, items, open, handleOpenChange, startCreate } = usePickerState({
@@ -131,13 +134,21 @@ export const ObjectPicker = ({
     createSchema,
     onCreate,
   });
+  const handleRootOpenChange = useCallback(
+    (details: { open: boolean }) => {
+      handleOpenChange(details);
+      onOpenChange?.(details.open);
+    },
+    [handleOpenChange, onOpenChange],
+  );
   const handleSave = useCallback(
     async (values: any) => {
       await onCreate?.(values);
       setCreating(undefined);
       setOpen(false);
+      onOpenChange?.(false);
     },
-    [onCreate],
+    [onCreate, onOpenChange],
   );
 
   return (
@@ -145,7 +156,7 @@ export const ObjectPicker = ({
       items={items}
       loading={loading}
       open={open}
-      onOpenChange={handleOpenChange}
+      onOpenChange={handleRootOpenChange}
       value={value ? [value] : []}
       onSelect={({ itemValue }) => {
         if (options.some((option) => option.id === itemValue)) {

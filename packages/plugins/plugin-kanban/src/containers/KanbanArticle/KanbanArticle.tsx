@@ -3,14 +3,13 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -19,6 +18,8 @@ import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
 import { Kanban, KanbanOperation } from '#types';
+
+import { makeItemsAtom } from '../../util/index.ts';
 
 export type KanbanArticleProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 
@@ -129,35 +130,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //       for items-variant (no pivot-value fallback, since refs don't expose
   //       the pivot field without loading).
   //     - `Mosaic.isItem` to accept the ref wrapper alongside `Obj.isObject`.
-  // Keyed on the item refs: `spec` is a record, which re-reads on every kanban write (each drag's arrangement update).
-  // Copied, because the record's snapshot is shallow and `items` is still the live array.
-  const itemRefsAtom = useMemo(
-    () =>
-      Atom.make((get) => [...get(Obj.atomProperty(object, 'spec')).items]).pipe(
-        Atom.withEquality<readonly Ref.Ref<Obj.Unknown>[]>(
-          (a, b) => a.length === b.length && a.every((ref, index) => ref.uri === b[index].uri),
-        ),
-      ),
-    [object],
-  );
-  const itemsAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        const out: Obj.Unknown[] = [];
-        for (const ref of get(itemRefsAtom)) {
-          // The snapshot re-runs this on a card edit, which re-buckets it by its pivot field; the live object
-          // alone keeps one identity across edits.
-          get(Obj.atom(ref));
-          // Soft-deleted cards (e.g. Trello-closed) resolve to undefined; their refs stay so arrangement holds.
-          const target = get(Obj.atomReactive(ref));
-          if (target) {
-            out.push(target);
-          }
-        }
-        return out;
-      }),
-    [itemRefsAtom],
-  );
+  const itemsAtom = useMemo(() => makeItemsAtom(object), [object]);
 
   const handleCardRemove = useCallback(() => undefined, []);
 

@@ -22,8 +22,9 @@ export type MediaArtifactCardProps = {
  * `GalleryImage` instead.
  */
 export const MediaArtifactCard = ({ subject }: MediaArtifactCardProps) => {
-  const [snapshot] = useObject(subject);
-  const { src, contentType } = useMediaArtifactCoverSource(snapshot);
+  const [cover] = useObject(subject, 'cover');
+  const [variants] = useObject(subject, 'variants');
+  const { src, contentType } = useMediaArtifactCoverSource({ cover, variants });
   const label = useLabel(subject) ?? '';
   const isVideo = contentType?.startsWith('video/') ?? false;
   return (

@@ -54,7 +54,6 @@ export type BoardArticleProps = AppSurface.ObjectArticleProps<Board.Board>;
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const { hasAttention } = useAttention(attendableId);
-  const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');
   const itemsAtom = useMemo(
     () =>
@@ -214,10 +213,11 @@ type BoardObjectPickerProps = {
   trigger: ObjectPickerProps['trigger'];
 };
 
-/** The space's objects as picker options; owns their label subscriptions, so a rename re-renders only the picker. */
+/** The space's objects as picker options, queried and labelled only while the popup is open. */
 const BoardObjectPicker = ({ board, onSelect, trigger }: BoardObjectPickerProps) => {
+  const [open, setOpen] = useState(false);
   // TODO(burdon): Use search.
-  const objects = useQuery(Obj.getDatabase(board), Filter.everything());
+  const objects = useQuery(open ? Obj.getDatabase(board) : undefined, Filter.everything());
   const optionsAtom = useMemo(
     () =>
       Atom.make((get): ObjectPickerProps['options'] =>
@@ -243,5 +243,5 @@ const BoardObjectPicker = ({ board, onSelect, trigger }: BoardObjectPickerProps)
     [objects, onSelect],
   );
 
-  return <ObjectPicker options={options} onSelect={handleSelect} trigger={trigger} />;
+  return <ObjectPicker options={options} onSelect={handleSelect} onOpenChange={setOpen} trigger={trigger} />;
 };

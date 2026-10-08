@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Entity, Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useLabel, useObject } from '@dxos/echo-react';
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
 import * as Icon from '@dxos/react-ui/Icon';
 import { getStyles } from '@dxos/ui-theme';
@@ -23,13 +23,14 @@ import { nameToHue } from './avatar-name.ts';
  */
 const IMAGE_PROPERTY = 'image';
 
+const asImage = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? value : undefined;
+
 /** The object's picture URL, or `undefined` when it has none. */
-export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string | undefined => {
+export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string | undefined =>
   // Read through `unknown`: the property is a convention across unrelated types rather than part of
   // any shared interface, so there is no structural overlap for TypeScript to check against.
-  const image = (entity as unknown as Record<string, unknown>)[IMAGE_PROPERTY];
-  return typeof image === 'string' && image.length > 0 ? image : undefined;
-};
+  asImage((entity as unknown as Record<string, unknown>)[IMAGE_PROPERTY]);
 
 export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & {
   /** Any ECHO object — the avatar is derived entirely from it. */
@@ -47,11 +48,11 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
  * that away; the type glyph stays the default.
  */
 export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
-  const [snapshot] = useObject(Obj.isObject(object) ? object : undefined);
-  const current = snapshot ?? object;
-  const image = getObjectImage(current);
-  const label = Entity.getLabel(current);
-  const iconAnnotation = Entity.getIcon(current);
+  const live = Obj.isObject(object) ? (object as Obj.Unknown & { [IMAGE_PROPERTY]?: unknown }) : undefined;
+  const [liveImage] = useObject(live, IMAGE_PROPERTY);
+  const image = live ? asImage(liveImage) : getObjectImage(object);
+  const label = useLabel(object);
+  const iconAnnotation = Entity.getIcon(object);
 
   // No picture and no label leaves initials with nothing to derive from, so the type's own glyph is
   // the only honest thing left — a blank disc would read as a failed image rather than as an object

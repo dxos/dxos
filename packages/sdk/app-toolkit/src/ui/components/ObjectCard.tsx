@@ -2,11 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, forwardRef, useMemo } from 'react';
+import React, { type ReactNode, forwardRef } from 'react';
 
 import { Entity } from '@dxos/echo';
+import { useLabel } from '@dxos/react-client/echo';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -54,14 +53,7 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
     const iconAnnotation = entity && Entity.getIcon(entity);
     const icon = iconProp ?? iconAnnotation?.icon ?? DEFAULT_ICON;
     const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
-    const labelAtom = useMemo(
-      () =>
-        Entity.isEntity(subject)
-          ? Entity.labelAtom(subject)
-          : Atom.make<string | undefined>(() => entity && Entity.getLabel(entity)),
-      [subject, entity],
-    );
-    const label = useAtomValue(labelAtom) ?? (entity && Entity.getTypename(entity));
+    const label = useLabel(entity, { fallback: 'typename' });
 
     return (
       <Card.Header ref={forwardedRef}>

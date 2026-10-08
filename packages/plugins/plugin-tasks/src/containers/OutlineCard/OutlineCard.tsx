@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useResolveRef } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 import * as Show from '@dxos/react-ui/Show';
 import { type Outline as OutlineType } from '@dxos/types';
@@ -15,7 +15,8 @@ import { Outline } from '#components';
 export type OutlineCardProps = AppSurface.ObjectCardProps<OutlineType.Outline>;
 
 export const OutlineCard = ({ subject }: OutlineCardProps) => {
-  const content = useResolveRef(subject.content);
+  const [contentRef] = useObject(subject, 'content');
+  const content = useResolveRef(contentRef);
 
   return (
     <Show.Show when={content}>

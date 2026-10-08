@@ -3,3 +3,4 @@
 //
 
 export * from './arrangement.ts';
+export * from './items-atom.ts';

@@ -23,9 +23,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
   const { invoke } = Hooks.useOperationInvoker();
   // Card.Action's onClick carries no event, so resolve the origin plank from the card element itself.
   const cardRef = useRef<HTMLDivElement>(null);
-  const [{ image, emails = [] }] = useObject(subject);
-  // From the property atom, not the snapshot: a ref copied into a snapshot carries no resolver, so it never loads.
-  const [organizationRef] = useObject(subject, 'organization');
+  const [{ image, emails = [], organization: organizationRef }] = useObject(subject);
   const [organizationName] = useObject(organizationRef, 'name');
 
   const handleOrganizationClick = useCallback(() => {
