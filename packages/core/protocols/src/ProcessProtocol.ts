@@ -9,7 +9,7 @@ import type { SerializedError } from './edge/index.ts';
 /**
  * Wire protocol for controlling processes hosted by a remote runtime (EDGE).
  *
- * Mirrors the local `ProcessManager.Manager` / `Process.Handle` surface in
+ * Mirrors the local `ProcessManager.Manager` / `Process.Process` surface in
  * `@dxos/compute-runtime` over HTTP. Declared here rather than in `@dxos/compute` so that both the
  * client (`@dxos/edge-client`, which depends only on this package) and the EDGE worker can share one
  * definition instead of structurally re-declaring it on each side.
