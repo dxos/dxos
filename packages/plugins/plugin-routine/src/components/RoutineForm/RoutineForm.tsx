@@ -12,8 +12,8 @@ import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -268,6 +268,7 @@ const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
 //
 
 const ACTION_PATH = ['action'];
+const TRIGGER_PATH = ['trigger'];
 
 /**
  * The action section: the kind toggle and operation picker are the `action` field set; the owned
@@ -283,17 +284,26 @@ const ActionSection = ({
   routine: Routine.Routine;
   readonly?: boolean;
 }) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const action = useFormValues<ActionFormInput>('RoutineForm.ActionSection', ACTION_PATH);
+  const trigger = useFormValues<TriggerFormInput>('RoutineForm.ActionSection', TRIGGER_PATH);
   const kind = action?.kind ?? 'runnable';
   const instructions = Routine.instructionsRef(routine)?.target;
+  // An enabled trigger with no action is skipped on every tick, so say so where the action is picked.
+  const unset = kind === 'runnable' && !action?.operation && trigger?.enabled === true;
 
   return (
-    <Layout.Flex column>
+    <>
       <Form.Fields path={ACTION_PATH} schema={ActionForm} />
+      {unset && !readonly ? (
+        <Banner.Root valence='warning' data-testid='routine-form.action-unset'>
+          <Banner.Title>{t('action-unset.message')}</Banner.Title>
+        </Banner.Root>
+      ) : null}
       {kind === 'instructions' && instructions ? (
         <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}
-    </Layout.Flex>
+    </>
   );
 };
 

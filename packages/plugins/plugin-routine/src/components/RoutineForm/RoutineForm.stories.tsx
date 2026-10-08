@@ -146,5 +146,21 @@ export const OperationRoundTrip: Story = {
     await userEvent.click(await canvas.findByText('Operation'));
     await waitFor(() => expect(primaryTrigger()?.runnable?.uri).toBe(syncOperation.uri));
     await expect(liveAutomation && Routine.runnableRef(liveAutomation)?.uri).toBe(syncOperation.uri);
+    await expect(canvas.queryByTestId('routine-form.action-unset')).toBeNull();
+  },
+};
+
+/** Switching an enabled routine with no operation to restore leaves it with nothing to run, which the editor flags. */
+export const ActionUnsetWarning: Story = {
+  decorators: [
+    withSeededSpace((space) => {
+      const trigger = Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *') });
+      space.db.add(makeRoutine({ name: 'Digest', instructions: Instructions.make({}), trigger }));
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByText('Operation', {}, { timeout: 10_000 }));
+    await expect(await canvas.findByTestId('routine-form.action-unset')).toBeInTheDocument();
   },
 };
