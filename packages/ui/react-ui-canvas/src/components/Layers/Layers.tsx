@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Input from '@dxos/react-ui/Input';
+import * as Editable from '@dxos/react-ui/Editable';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -34,48 +34,30 @@ export type LayersPanelProps = Util.ThemedClassName<{
 
 type LayerNameProps = { layer: Layer; readonly?: boolean; onRename?: (name: string) => void };
 
-/** A layer's name, edited in place on a double-click: Enter or leaving it commits, Escape keeps the old name. */
-const LayerName = ({ layer, readonly, onRename }: LayerNameProps) => {
-  const [draft, setDraft] = useState<string>();
-  if (draft === undefined) {
-    return (
-      <OrderedList.ItemText
-        data-testid={`layer-name-${layer.id}`}
-        onDoubleClick={readonly || !onRename ? undefined : () => setDraft(layer.name)}
-      >
-        {layer.name}
-      </OrderedList.ItemText>
-    );
-  }
-  const commit = () => {
-    const name = draft.trim();
-    if (name && name !== layer.name) {
-      onRename?.(name);
-    }
-    setDraft(undefined);
-  };
-  return (
-    <OrderedList.ItemText>
-      <Input.Root
-        autoFocus
-        value={draft}
-        aria-label='Layer name'
-        data-testid={`layer-input-${layer.id}`}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={commit}
-        // The list's own keys (typeahead, selection) would take the ones typed into the name.
-        onKeyDown={(event) => {
-          event.stopPropagation();
-          if (event.key === 'Enter') {
-            commit();
-          } else if (event.key === 'Escape') {
-            setDraft(undefined);
-          }
-        }}
-      />
-    </OrderedList.ItemText>
-  );
-};
+/**
+ * A layer's name, edited in place on a double-click (`Editable`: the input takes the preview's cell, so the row does
+ * not move). Enter or leaving it commits, Escape keeps the old name. It is the row's text part, so it carries that
+ * part's class for the row's layout.
+ */
+const LayerName = ({ layer, readonly, onRename }: LayerNameProps) => (
+  <Editable.Root
+    classNames='dx-listbox-item-text'
+    value={layer.name}
+    activation='dblclick'
+    disabled={readonly || !onRename}
+    onValueChange={(next) => {
+      const name = next.trim();
+      if (name && name !== layer.name) {
+        onRename?.(name);
+      }
+    }}
+    // The list's own keys (typeahead, selection) would take the ones typed into the name.
+    onKeyDown={(event) => event.stopPropagation()}
+  >
+    <Editable.Preview data-testid={`layer-name-${layer.id}`} />
+    <Editable.Input aria-label='Layer name' data-testid={`layer-input-${layer.id}`} />
+  </Editable.Root>
+);
 
 /**
  * A scene's layers, top first as they stack: the active one is selected, each shows or hides from its eye, renames on
