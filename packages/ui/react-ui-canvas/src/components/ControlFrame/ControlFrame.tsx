@@ -320,6 +320,17 @@ export const ControlFrame = memo(
             strokeDasharray={`${6 * unit} ${4 * unit}`}
           />
         )}
+        {/* A link end over empty canvas carries a connection circle, as an end on a port does. */}
+        {(drag?.kind === 'link' || drag?.kind === 'end') && !drag.target && (
+          <circle
+            data-testid='free-end'
+            cx={drag.to.x}
+            cy={drag.to.y}
+            r={portRadius}
+            className='fill-focus stroke-focus pointer-events-none'
+            strokeWidth={unit}
+          />
+        )}
         {marquee && (
           <rect
             x={marquee.x}
