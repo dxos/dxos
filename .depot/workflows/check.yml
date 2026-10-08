@@ -518,24 +518,38 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+  # Chromium gates PRs and the merge queue. A push to main runs only Firefox and WebKit, since the
+  # queue already ran Chromium on the same tree. The nightly, dispatches and `ci/*` run all three.
+  # Decided in shell: an expression inside `strategy.matrix` does not see the event on Depot.
+  e2e-plan:
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'test' && (
+      github.event_name != 'pull_request' || !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) }}
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      browsers: ${{ steps.plan.outputs.browsers }}
+    steps:
+      - id: plan
+        run: |
+          case "$GITHUB_EVENT_NAME:$GITHUB_REF" in
+            pull_request:* | merge_group:*) browsers='["chromium"]' ;;
+            push:refs/heads/main) browsers='["firefox","webkit"]' ;;
+            *) browsers='["chromium","firefox","webkit"]' ;;
+          esac
+          echo "browsers=$browsers" >> "$GITHUB_OUTPUT"
+
   # Sharded browser × cell, two cells per browser: a cell costs ~160s of fixed setup against
   # ~450-590s of test work, so more cells buy less than they cost. Cells are `moon exec --job`, so moon
   # packs whichever targets it assigns and no target list is hand-maintained. `--on-failure continue`
   # because moon's default bail drops a failing cell's remaining targets, hiding what they cost. The
   # shape, and the alternatives measured against it, are in `.agents/projects/ci/DESIGN.md`.
   e2e:
-    if: >-
-      ${{ inputs.only != 'check' && inputs.only != 'test' && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) }}
+    needs: e2e-plan
     strategy:
       fail-fast: false
       matrix:
-        # Chromium gates PRs and the merge queue. A push to main runs only Firefox and WebKit, since the
-        # queue already ran Chromium on the same tree. The nightly, dispatches and `ci/*` run all three.
-        browser: >-
-          ${{ fromJSON((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
-          '["chromium"]' || (github.event_name == 'push' && github.ref == 'refs/heads/main') &&
-          '["firefox","webkit"]' || '["chromium","firefox","webkit"]') }}
+        browser: ${{ fromJSON(needs.e2e-plan.outputs.browsers) }}
         # `composer` gets a dedicated cell (it dwarfs every other suite); `rest` runs the pool.
         # Explicit here rather than via `moon --job`, whose partitioner co-located composer's former
         # halves and (at --concurrency=1) ran them serially — measured in .agents/projects/ci/DESIGN.md.
