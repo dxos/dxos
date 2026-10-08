@@ -14,6 +14,7 @@ import {
   layerOrder,
   mergeLayersIntent,
   moveLayer,
+  pinLayers,
   sceneLayers,
   visibleScene,
 } from './layers.ts';
@@ -47,6 +48,39 @@ describe('layers', () => {
     const added = reduceIntent(scene, { kind: 'layer', layer });
     expect(layer.name).toBe('Layer 3');
     expect(sceneLayers(added).map((layer) => layer.id)).toEqual(['new', DEFAULT_LAYER.id, 'top']);
+  });
+
+  /** The base scene as a drawing saved before layers: no layers, and no element naming one. */
+  const legacy = (): Scene => {
+    const { layers: _, ...scene } = base;
+    return {
+      ...scene,
+      nodes: Object.fromEntries(Object.entries(scene.nodes).map(([id, node]) => [id, { ...node, layer: undefined }])),
+      links: Object.fromEntries(Object.entries(scene.links).map(([id, link]) => [id, { ...link, layer: undefined }])),
+    };
+  };
+
+  test('adding a layer below keeps elements that name no layer where they were drawn', ({ expect }) => {
+    const below = createLayer(legacy(), 'below');
+    const scene = reduceIntent(legacy(), { kind: 'layer', layer: below });
+    expect(sceneLayers(scene).map((layer) => layer.id)).toEqual(['below', DEFAULT_LAYER.id]);
+    expect([scene.nodes.a.layer, scene.nodes.b.layer, scene.links.ab.layer]).toEqual([
+      DEFAULT_LAYER.id,
+      DEFAULT_LAYER.id,
+      DEFAULT_LAYER.id,
+    ]);
+  });
+
+  test("pinning names the layers and each element's, and leaves a pinned scene as it is", ({ expect }) => {
+    expect(legacy().layers).toBeUndefined();
+    expect(legacy().nodes.a.layer).toBeUndefined();
+    const pinned = pinLayers(legacy());
+    expect(pinned.layers).toEqual({ [DEFAULT_LAYER.id]: DEFAULT_LAYER });
+    expect(Object.values(pinned.nodes).every((node) => node.layer === DEFAULT_LAYER.id)).toBe(true);
+    expect(pinLayers(pinned)).toBe(pinned);
+    // A layer the scene does not have resolves to the bottom one.
+    const stray = { ...pinned, nodes: { ...pinned.nodes, a: { ...pinned.nodes.a, layer: 'gone' } } };
+    expect(pinLayers(stray).nodes.a.layer).toBe(DEFAULT_LAYER.id);
   });
 
   test('a new layer takes a name no other layer has', ({ expect }) => {

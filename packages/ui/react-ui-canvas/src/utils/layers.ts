@@ -74,10 +74,37 @@ export const visibleScene = (scene: Scene): Scene => {
 const layerRecord = (scene: Scene): Record<LayerId, Layer> =>
   scene.layers && Object.keys(scene.layers).length > 0 ? { ...scene.layers } : { [DEFAULT_LAYER.id]: DEFAULT_LAYER };
 
+/**
+ * The scene with its layers named and every element on one by name: an element with no layer, or one the scene does not
+ * have, takes the layer it is drawn on (`elementLayer`). The same scene when nothing changes, so a memo over it holds.
+ */
+export const pinLayers = (scene: Scene): Scene => {
+  const layers = sceneLayers(scene);
+  const pin = <T extends Element>(record: Record<string, T>): Record<string, T> | undefined => {
+    const loose = Object.values(record).filter((element) => element.layer !== elementLayer(element, layers));
+    return loose.length === 0
+      ? undefined
+      : {
+          ...record,
+          ...Object.fromEntries(
+            loose.map((element) => [element.id, { ...element, layer: elementLayer(element, layers) }]),
+          ),
+        };
+  };
+  const named = scene.layers && Object.keys(scene.layers).length > 0;
+  const nodes = pin(scene.nodes);
+  const links = pin(scene.links);
+  return named && !nodes && !links
+    ? scene
+    : { ...scene, layers: layerRecord(scene), nodes: nodes ?? scene.nodes, links: links ?? scene.links };
+};
+
 /** Applies a layer intent to the scene (`reduceIntent` delegates here). */
 export const reduceLayerIntent = (scene: Scene, intent: Extract<Intent, { kind: 'layer' | 'removeLayer' }>): Scene => {
   if (intent.kind === 'layer') {
-    return { ...scene, layers: { ...layerRecord(scene), [intent.layer.id]: intent.layer } };
+    // Pinned first: an element without a layer is on the bottom one, so a layer added below would otherwise take it.
+    const pinned = pinLayers(scene);
+    return { ...pinned, layers: { ...layerRecord(pinned), [intent.layer.id]: intent.layer } };
   }
   const layers = sceneLayers(scene);
   if (layers.length < 2 || !layers.some((layer) => layer.id === intent.id)) {
