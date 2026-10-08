@@ -147,6 +147,19 @@ describe('Reducer', () => {
       ]);
       expect(texts(state.entries)).to.deep.eq(['one and two', 'three']);
     });
+
+    test('a reversed compact range leaves the prompt unchanged', ({ expect }) => {
+      const first = message('one');
+      const second = message('two');
+      const third = message('three');
+      const { state } = Reducer.run(Reducer.prompt, [
+        first,
+        second,
+        third,
+        event({ _tag: 'compact', from: third.id, to: first.id, summary: text('reversed') }),
+      ]);
+      expect(texts(state.entries)).to.deep.eq(['one', 'two', 'three']);
+    });
   });
 
   describe('properties', () => {

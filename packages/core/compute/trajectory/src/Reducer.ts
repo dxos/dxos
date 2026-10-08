@@ -231,6 +231,10 @@ const compact = (entries: readonly PromptEntry[], payload: Trajectory.Compact, i
 
   // A range that starts before the loaded checkpoint is folded from the start of what is held.
   const start = first === -1 ? 0 : first;
+  if (start > last) {
+    return entries;
+  }
+
   const summary: PromptEntry = { role: 'event', blocks: payload.summary, source: [id] };
   return [...entries.slice(0, start), summary, ...entries.slice(last + 1)];
 };
