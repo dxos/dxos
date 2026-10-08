@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Media from '@dxos/react-ui/Media';
@@ -25,6 +26,7 @@ export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
 export const FileCard = ({ subject: file }: FileCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
 
+  const [name] = useObject(file, 'name');
   const [fit, setFit] = useState<Media.ImageProps['fit']>('contain');
 
   const rendered = useFileUrl(file);
@@ -37,7 +39,7 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
     <Card.Body>
       {type.startsWith('image/') ? (
         <Card.Poster
-          alt={file.name ?? ''}
+          alt={name ?? ''}
           src={url}
           fit={fit}
           onClick={() => setFit(fit === 'contain' ? 'cover' : 'contain')}

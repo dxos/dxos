@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { isNonNullable } from '@dxos/util';
 
 /**
@@ -27,6 +27,8 @@ export const useRelatedObjects = (
   } = {},
 ) => {
   const objects = useQuery(db, Filter.everything());
+  // Recomputes when the subject's own reference fields change.
+  const [snapshot] = useObject(subject);
   return useMemo(() => {
     if (!subject) {
       return [];
@@ -79,5 +81,5 @@ export const useRelatedObjects = (
         .filter((obj) => obj !== subject)
         .filter((obj) => !Obj.isObject(obj) || TypeOptions.isUserObject(obj))
     );
-  }, [subject, objects, options.references, options.relations]);
+  }, [subject, snapshot, objects, options.references, options.relations]);
 };

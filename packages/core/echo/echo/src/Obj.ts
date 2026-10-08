@@ -1225,6 +1225,13 @@ export const atomProperty = objInternal.makeProperty;
  */
 export const labelAtom = objInternal.makeLabelAtom;
 /**
+ * Create a reactive atom for the meta tags of an object.
+ *
+ * @performance O(1) memoized atom-family lookup; re-reads the tags on every entity change, emitting only when the
+ * tag list changes.
+ */
+export const tagsAtom = objInternal.makeTagsAtom;
+/**
  * Get the name of the property that holds the label of an object.
  *
  * @performance O(1); reads the first accessor of the schema `LabelAnnotation`.

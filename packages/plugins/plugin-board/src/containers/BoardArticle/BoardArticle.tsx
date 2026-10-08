@@ -82,24 +82,6 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
     [boardLayout.size.width, boardLayout.size.height],
   );
 
-  // TODO(burdon): Use search.
-  const objects = useQuery(db, Filter.everything());
-  const optionsAtom = useMemo(
-    () =>
-      Atom.make((get): ObjectPickerProps['options'] =>
-        objects
-          .filter((obj) => obj.id !== board.id)
-          .map((obj) => {
-            const label = get(Obj.labelAtom(obj));
-            return label ? { id: obj.id, label, hue: 'neutral' as const } : undefined;
-          })
-          .filter(isNonNullable)
-          .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
-      ),
-    [objects, board.id],
-  );
-  const options = useAtomValue(optionsAtom);
-
   const handleChange = useCallback<NonNullable<BoardRootProps['onChange']>>(
     (next) => {
       Obj.update(board, (board) => {
@@ -143,18 +125,13 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
 
   // Toolbar "+" adds an existing object via the picker.
   const handleSelect = useCallback(
-    (id: string | undefined) => {
-      const position = DEFAULT_POSITION;
-      const selected = objects.find((obj) => obj.id === id);
-      if (!Obj.isObject(selected)) {
-        return;
-      }
+    (selected: Obj.Unknown) => {
       Obj.update(board, (board) => {
         board.items.push(Ref.make(selected));
-        board.layout.cells[selected.id.toString()] = position;
+        board.layout.cells[selected.id.toString()] = DEFAULT_POSITION;
       });
     },
-    [objects, board],
+    [board],
   );
 
   return (
@@ -187,8 +164,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
               disabled={!hasAttention}
               onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
             />
-            <ObjectPicker
-              options={options}
+            <BoardObjectPicker
+              board={board}
               onSelect={handleSelect}
               trigger={
                 <Button.Root
@@ -230,3 +207,41 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
 };
 
 BoardArticle.displayName = 'BoardArticle';
+
+type BoardObjectPickerProps = {
+  board: Board.Board;
+  onSelect: (object: Obj.Unknown) => void;
+  trigger: ObjectPickerProps['trigger'];
+};
+
+/** The space's objects as picker options; owns their label subscriptions, so a rename re-renders only the picker. */
+const BoardObjectPicker = ({ board, onSelect, trigger }: BoardObjectPickerProps) => {
+  // TODO(burdon): Use search.
+  const objects = useQuery(Obj.getDatabase(board), Filter.everything());
+  const optionsAtom = useMemo(
+    () =>
+      Atom.make((get): ObjectPickerProps['options'] =>
+        objects
+          .filter((obj) => obj.id !== board.id)
+          .map((obj) => {
+            const label = get(Obj.labelAtom(obj));
+            return label ? { id: obj.id, label, hue: 'neutral' as const } : undefined;
+          })
+          .filter(isNonNullable)
+          .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
+      ),
+    [objects, board.id],
+  );
+  const options = useAtomValue(optionsAtom);
+  const handleSelect = useCallback(
+    (id: string | undefined) => {
+      const selected = objects.find((obj) => obj.id === id);
+      if (Obj.isObject(selected)) {
+        onSelect(selected);
+      }
+    },
+    [objects, onSelect],
+  );
+
+  return <ObjectPicker options={options} onSelect={handleSelect} trigger={trigger} />;
+};

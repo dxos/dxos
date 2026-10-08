@@ -6,7 +6,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useLabel, useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -123,8 +123,8 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
-    const [item] = useObject(data);
-    const icon = Obj.getIcon(item)?.icon ?? 'ph--circle-dashed--regular';
+    const label = useLabel(data, { fallback: 'typename' });
+    const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
     // The card's own menu has no items; the item contributes them.
     const menu = useMenuActions();
 
@@ -136,7 +136,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
               <Layout.Block>
                 <Icon.Icon icon={icon} />
               </Layout.Block>
-              <Card.Title>{Obj.getLabel(item, { fallback: 'typename' })}</Card.Title>
+              <Card.Title>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu>

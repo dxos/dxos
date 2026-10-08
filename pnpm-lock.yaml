@@ -12912,6 +12912,9 @@ importers:
       '@dxos/echo-panproto':
         specifier: workspace:*
         version: link:../../core/echo/echo-panproto
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

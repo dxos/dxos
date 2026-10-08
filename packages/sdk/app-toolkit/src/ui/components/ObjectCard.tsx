@@ -54,19 +54,14 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
     const iconAnnotation = entity && Entity.getIcon(entity);
     const icon = iconProp ?? iconAnnotation?.icon ?? DEFAULT_ICON;
     const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
-    const label = useAtomValue(
-      useMemo(
-        () =>
-          Atom.make((get) =>
-            Entity.isEntity(subject)
-              ? (get(Entity.labelAtom(subject)) ?? Entity.getTypename(subject))
-              : Entity.isSnapshot(subject)
-                ? Entity.getLabel(subject, { fallback: 'typename' })
-                : undefined,
-          ),
-        [subject],
-      ),
+    const labelAtom = useMemo(
+      () =>
+        Entity.isEntity(subject)
+          ? Entity.labelAtom(subject)
+          : Atom.make<string | undefined>(() => entity && Entity.getLabel(entity)),
+      [subject, entity],
     );
+    const label = useAtomValue(labelAtom) ?? (entity && Entity.getTypename(entity));
 
     return (
       <Card.Header ref={forwardedRef}>

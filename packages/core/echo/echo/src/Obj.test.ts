@@ -15,6 +15,7 @@ import { RefTypeId, SnapshotKindId } from './internal/index.ts';
 import * as Obj from './Obj.ts';
 import * as Ref from './Ref.ts';
 import * as Relation from './Relation.ts';
+import * as Tag from './Tag.ts';
 import { TestSchema } from './testing/index.ts';
 import type * as Type from './Type.ts';
 
@@ -716,6 +717,46 @@ describe('Obj', () => {
         obj.employer = Ref.make(org).noInline();
       });
       expect(fires).toBe(baseline + 1);
+    });
+  });
+
+  describe('tagsAtom', () => {
+    test('fires only when the tag list changes', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const urgent = Tag.make({ label: 'urgent' });
+      const later = Tag.make({ label: 'later' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+
+      const tagsAtom = Obj.tagsAtom(obj);
+      let fires = 0;
+      registry.subscribe(tagsAtom, () => {
+        fires++;
+      });
+      expect(registry.get(tagsAtom)).toEqual([]);
+      const baseline = fires;
+
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      expect(fires).toBe(baseline);
+
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).tags.push(Ref.make(urgent));
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(tagsAtom).map((ref) => ref.uri.toString())).toEqual([Ref.make(urgent).uri.toString()]);
+
+      // A rewrite to the same list is not a change.
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).tags.splice(0, 1, Ref.make(urgent));
+      });
+      expect(fires).toBe(baseline + 1);
+
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).tags.push(Ref.make(later));
+      });
+      expect(fires).toBe(baseline + 2);
+      expect(registry.get(tagsAtom)).toHaveLength(2);
     });
   });
 

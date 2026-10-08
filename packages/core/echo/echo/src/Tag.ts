@@ -81,8 +81,10 @@ export const isProviderTag = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<
  *
  * @performance O(label length) locale comparison.
  */
-export const sortTags = ({ label: a }: Type.InstanceType<typeof Tag>, { label: b }: Type.InstanceType<typeof Tag>) =>
-  a.localeCompare(b);
+export const sortTags = (
+  { label: a }: Pick<Type.InstanceType<typeof Tag>, 'label'>,
+  { label: b }: Pick<Type.InstanceType<typeof Tag>, 'label'>,
+) => a.localeCompare(b);
 
 /**
  * Convert a tag map into a list sorted by label.

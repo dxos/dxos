@@ -709,16 +709,7 @@ TaskTags.displayName = 'TaskList.Tags';
  */
 const TaskListItemTags = ({ task }: { task: Task.Task }) => {
   const db = Obj.getDatabase(task);
-  // Meta has no property atom; the object's atom fires on meta writes too.
-  const tagsAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        get(Obj.atom(task));
-        return [...Obj.getMeta(task).tags];
-      }),
-    [task],
-  );
-  const tags = useAtomValue(tagsAtom);
+  const tags = useAtomValue(Obj.tagsAtom(task));
   const ids = useMemo(
     () =>
       tags.flatMap((ref) => {
@@ -738,7 +729,7 @@ const TaskListItemTags = ({ task }: { task: Task.Task }) => {
         resolved
           .filter((object) => Obj.instanceOf(EchoTag.Tag, object))
           .map((tag) => get(Obj.atom(tag)))
-          .sort((a, b) => a.label.localeCompare(b.label)),
+          .sort(EchoTag.sortTags),
       ),
     [resolved],
   );

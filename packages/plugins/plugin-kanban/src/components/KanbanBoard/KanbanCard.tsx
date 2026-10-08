@@ -7,8 +7,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useLabel } from '@dxos/echo-react';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 import * as Button from '@dxos/react-ui/Button';
@@ -33,7 +32,7 @@ const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
-    const [card] = useObject(data);
+    const label = useLabel(data);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
@@ -72,7 +71,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
           <Card.Root grid ref={forwardedRef} data-testid='board-item'>
             <Card.Header ref={cardRef}>
               <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(card)}</Card.Title>
+              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>

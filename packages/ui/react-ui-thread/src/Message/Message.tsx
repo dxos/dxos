@@ -158,7 +158,7 @@ export type MessageBodyProps = {
  */
 const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) => {
   const { components } = useThreadContext('Message.Body');
-  const [{ blocks }] = useObject(message);
+  const [blocks] = useObject(message, 'blocks');
   const textBlockIndex = blocks.findIndex((block) => block._tag === 'text');
   const textBlock = textBlockIndex !== -1 ? (blocks[textBlockIndex] as ContentBlock.Text) : undefined;
   const proposalBlock = blocks.find((block) => block._tag === 'proposal') as ContentBlock.Proposal | undefined;
@@ -369,7 +369,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
   } = useThreadContext('Message.Tile');
   const [editing, setEditing] = useState(false);
 
-  const [{ blocks }] = useObject(message);
+  const [blocks] = useObject(message, 'blocks');
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
   const hasProposal = blocks.some((block) => block._tag === 'proposal');
@@ -510,7 +510,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
   const [editing, setEditing] = useState(false);
 
   const first = messages[0];
-  const [{ blocks }] = useObject(first);
+  const [blocks] = useObject(first, 'blocks');
   const metadata = getMetadata(first);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
   const hasProposal = blocks.some((block) => block._tag === 'proposal');

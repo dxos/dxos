@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -12,7 +11,7 @@ import * as HomeSection from '@dxos/app-toolkit/HomeSection';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useLabel, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as Card from '@dxos/react-ui/Card';
@@ -81,7 +80,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
-  const objectLabel = useAtomValue(Obj.labelAtom(data));
+  const objectLabel = useLabel(data);
   const label = Theme.toLocalizedString(
     objectLabel ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,

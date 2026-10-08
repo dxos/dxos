@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
+import { useLabel, useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 
 import { type MediaArtifact } from '#types';
@@ -22,8 +22,9 @@ export type MediaArtifactCardProps = {
  * `GalleryImage` instead.
  */
 export const MediaArtifactCard = ({ subject }: MediaArtifactCardProps) => {
-  const { src, contentType } = useMediaArtifactCoverSource(subject);
-  const label = Obj.getLabel(subject) ?? '';
+  const [snapshot] = useObject(subject);
+  const { src, contentType } = useMediaArtifactCoverSource(snapshot);
+  const label = useLabel(subject) ?? '';
   const isVideo = contentType?.startsWith('video/') ?? false;
   return (
     <Card.Body>

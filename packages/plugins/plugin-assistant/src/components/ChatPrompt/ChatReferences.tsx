@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
+import { useLabel } from '@dxos/echo-react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -43,7 +43,7 @@ const ChatReference = ({ object, onUpdateObject }: ChatReferenceProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const uri = Obj.getURI(object);
   const typename = Obj.getTypename(object);
-  const objectLabel = useAtomValue(Obj.labelAtom(object));
+  const objectLabel = useLabel(object);
   const label: Theme.Label = objectLabel ?? (typename ? ['object-name.placeholder', { ns: typename }] : object.id);
   const { icon } = Obj.getIcon(object) ?? { icon: DEFAULT_OBJECT_ICON };
 
