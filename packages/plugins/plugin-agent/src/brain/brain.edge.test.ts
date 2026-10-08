@@ -189,9 +189,12 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
     const agent = await run(alice, makeAgent);
     await space.internal.syncToEdge();
 
-    await Promise.all(
+    // A failed invitation resolves with its error rather than rejecting.
+    const [hosted, accepted] = await Promise.all(
       performInvitation({ host: space, guest: bob.client.spaces, options: { authMethod: Invitation_AuthMethod.NONE } }),
     );
+    expect(hosted.error).toBeUndefined();
+    expect(accepted.error).toBeUndefined();
     const joined = await eventually(
       async () => bob.client.spaces.get(space.id),
       (joined) => joined !== undefined,
