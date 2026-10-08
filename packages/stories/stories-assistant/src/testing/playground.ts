@@ -162,11 +162,11 @@ export const setupPlayground = async ({ db, invoker, model, read, refs, remote }
       primary.session = { ...primary.session, model };
     });
   }
-  if (remote) {
-    Obj.update(primary, (primary) => {
-      primary.remote = true;
-    });
-  }
+  // Set before the participant chats exist: they run where the primary chat does. An agent's chat runs on EDGE
+  // unless told otherwise, and a story without `remote` has no EDGE to reach.
+  Obj.update(primary, (primary) => {
+    primary.remote = remote ?? false;
+  });
 
   // Rich speaks in the agent's own chat; Dima and Josiah each get one.
   await invoke(invoker, db, RelayOperation.AssignChatParticipant, {

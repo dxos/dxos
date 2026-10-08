@@ -27,6 +27,7 @@ import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } fro
 import {
   AgentOperation,
   BrainService,
+  ChatParticipant,
   FactEntry,
   Goal,
   Memory,
@@ -38,7 +39,7 @@ import {
   TriggerOperation,
 } from '#types';
 
-import { makeTestBrain } from '../brain/testing.ts';
+import { TEST_MEMBERS, makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
@@ -51,11 +52,15 @@ const brain = makeTestBrain();
 
 const SAID_AT = '2026-10-03T12:00:00.000Z';
 
+/** Space members' identity DIDs, which facts are attributed to and watches match on. */
+const DIMA = TEST_MEMBERS.dima;
+const RICH = TEST_MEMBERS.rich;
+
 /** A fact as `readSource` records it from a chat message. */
 const entityTerm = (label: string): RDF.Term => ({ kind: 'entity', entity: normalizeEntityId(label), label });
 
 const fact = ({
-  speaker = 'dima',
+  speaker = DIMA,
   subject = 'indexer PR',
   predicate = 'is',
   object = 'up',
@@ -83,19 +88,16 @@ const fact = ({
   sourceHash: 'hash',
 });
 
-const PR_IS_UP: Trigger.FactPattern = { speaker: 'Dima', about: 'indexer PR', force: 'assertive', polarity: '+' };
+const PR_IS_UP: Trigger.FactPattern = { speaker: DIMA, about: 'indexer PR', force: 'assertive', polarity: '+' };
 
 /** Whether the pattern, translated to rules and evaluated by the brain, wakes on the fact. */
 const wakes = (
   pattern: Trigger.FactPattern,
   subject: RDF.Fact,
-  {
-    after = '2026-10-03T00:00:00.000Z',
-    person,
-  }: { after?: string; person?: (name: string) => string | undefined } = {},
+  { after = '2026-10-03T00:00:00.000Z' }: { after?: string } = {},
 ): boolean => {
   const evaluator = Evaluator.make();
-  evaluator.add({ id: 'watch', rules: Trigger.toRules(pattern, { createdAt: after, person }), createdAt: after });
+  evaluator.add({ id: 'watch', rules: Trigger.toRules(pattern, { createdAt: after }), createdAt: after });
   return evaluator.push([subject], { at: Date.parse(subject.attribution.generatedAtTime) }).length > 0;
 };
 
@@ -104,7 +106,7 @@ describe('toRules', () => {
     expect(wakes(PR_IS_UP, fact())).toBe(true);
     // A plain assertion records no illocution; a commitment is not the PR being up.
     expect(wakes(PR_IS_UP, fact({ force: 'commissive' }))).toBe(false);
-    expect(wakes(PR_IS_UP, fact({ speaker: 'rich' }))).toBe(false);
+    expect(wakes(PR_IS_UP, fact({ speaker: RICH }))).toBe(false);
     expect(wakes(PR_IS_UP, fact({ polarity: '-' }))).toBe(false);
     expect(wakes(PR_IS_UP, fact({ subject: 'release', quote: 'The release is up.' }))).toBe(false);
     // Words match anywhere in the fact, stemmed, and as prefixes from four letters.
@@ -114,28 +116,23 @@ describe('toRules', () => {
     expect(wakes({ subject: 'indexer', text: 'is up' }, fact())).toBe(true);
   });
 
-  it('names a known person by their identity and bounds the time the fact was said', ({ expect }) => {
-    const rich = 'did:halo:RICH';
-    const person = (name: string) => (['rich', 'rich-burdon'].includes(normalizeEntityId(name)) ? rich : undefined);
-    expect(wakes({ speaker: 'Rich' }, fact({ speaker: rich }), { person })).toBe(true);
-    expect(wakes({ speaker: 'Rich Burdon' }, fact({ speaker: rich }), { person })).toBe(true);
-    expect(wakes({ speaker: 'Richard' }, fact({ speaker: rich }), { person })).toBe(false);
-    // Someone the roster does not know is named by the slug of their name.
-    expect(wakes({ speaker: 'Dima' }, fact())).toBe(true);
+  it('matches members by DID, not by name, and bounds the time the fact was said', ({ expect }) => {
+    // A name no longer stands for a member: `watchFacts` resolves it to the DID first.
+    expect(wakes({ speaker: 'Dima' }, fact())).toBe(false);
+    // Someone who is no member is attributed by bare name, and a watch on that name matches them.
+    expect(wakes({ speaker: 'Dima' }, fact({ speaker: 'Dima' }))).toBe(true);
+    expect(wakes({ speaker: DIMA.toLowerCase() }, fact())).toBe(false);
+    const aboutDima: RDF.Fact = {
+      ...fact(),
+      assertion: { ...fact().assertion, subject: { kind: 'entity', entity: DIMA, label: 'Dima' } },
+    };
+    expect(wakes({ subject: DIMA }, aboutDima)).toBe(true);
+    expect(wakes({ subject: RICH }, aboutDima)).toBe(false);
+    // `about` still finds a person by the name their entity carries as its label.
+    expect(wakes({ about: 'Dima' }, aboutDima)).toBe(true);
     expect(wakes(PR_IS_UP, fact(), { after: '2026-10-03T13:00:00.000Z' })).toBe(false);
     expect(wakes({ ...PR_IS_UP, before: '2026-10-03T11:00:00.000Z' }, fact())).toBe(false);
     expect(wakes({ ...PR_IS_UP, after: '2026-10-03T11:00:00.000Z' }, fact(), { after: SAID_AT })).toBe(true);
-  });
-
-  it('matches a known person as the subject by identity', ({ expect }) => {
-    const dima = 'did:halo:DIMA';
-    const subject: RDF.Fact = {
-      ...fact(),
-      assertion: { ...fact().assertion, subject: { kind: 'entity', entity: dima, label: 'Dima' } },
-    };
-    expect(wakes({ subject: 'Dima' }, subject, { person: (name) => (name === 'Dima' ? dima : undefined) })).toBe(true);
-    // `about` still finds a person by the name their entity carries as its label.
-    expect(wakes({ about: 'Dima' }, subject)).toBe(true);
   });
 });
 
@@ -300,7 +297,7 @@ const makeScript =
 
 const refs: Refs = {};
 
-const TestLayer = brain.layer.pipe(
+const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
@@ -323,7 +320,7 @@ const TestLayer = brain.layer.pipe(
         FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      extraServices: brain.layer,
+      extraServices: Layer.merge(brain.layer, testSpaceLayer),
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
   ),
@@ -358,7 +355,13 @@ describe('end-of-turn triggers', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const rich = yield* Database.add(Person.make({ fullName: 'Rich Burdon', preferredName: 'Rich' }));
-        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dima',
+            preferredName: 'Dima',
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: DIMA }],
+          }),
+        );
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
         const richChat = yield* Agent.loadChat(agent);
@@ -445,7 +448,7 @@ describe('end-of-turn triggers', () => {
             id: 'posted',
             agent: agent.id,
             goal: Ref.make(goal),
-            when: { speaker: 'Dima', after: '2026-10-03T00:00:00.000Z' },
+            when: { speaker: DIMA, after: '2026-10-03T00:00:00.000Z' },
             then: { _tag: 'notify', recipient: Ref.make<Obj.Unknown>(josiah), message: 'Update on Dima: {fact}' },
             ongoing: true,
             createdAt: '2026-10-03T00:00:00.000Z',
@@ -468,7 +471,7 @@ describe('end-of-turn triggers', () => {
         expect(goal.status).toBe('active');
 
         // 2. Someone else's fact does not match the speaker.
-        yield* pushFacts(agent, [fact({ speaker: 'rich', quote: 'I am reviewing it.' })]);
+        yield* pushFacts(agent, [fact({ speaker: RICH, quote: 'I am reviewing it.' })]);
         yield* settle(josiahChat);
         expect(yield* texts(josiahChat)).toHaveLength(sent.length);
       },
@@ -571,7 +574,7 @@ const makePostedScript =
 
 const postedRefs: PostedRefs = {};
 
-const PostedTestLayer = brain.layer.pipe(
+const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
@@ -594,7 +597,7 @@ const PostedTestLayer = brain.layer.pipe(
         FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      extraServices: brain.layer,
+      extraServices: Layer.merge(brain.layer, testSpaceLayer),
       aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
     }),
   ),
@@ -624,7 +627,13 @@ describe('keep me posted', () => {
     'records every turn as facts, recalls an earlier update, and forwards only updates said after the watch',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dima',
+            preferredName: 'Dima',
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: DIMA }],
+          }),
+        );
         const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
@@ -652,7 +661,7 @@ describe('keep me posted', () => {
         yield* say(josiahChat, 'Josiah', POSTED.keepPosted);
         const [trigger, ...others] = brain.triggers.list(agent.id);
         expect(others).toHaveLength(0);
-        expect(trigger).toMatchObject({ ongoing: true, when: { speaker: 'Dima' } });
+        expect(trigger).toMatchObject({ ongoing: true, when: { speaker: DIMA } });
         expect(yield* updates).toEqual([]);
 
         // 3. Dima's next update reaches Josiah, composed; the watch stays and its goal stays open.
@@ -673,7 +682,13 @@ describe('keep me posted', () => {
     'resolves a reply from the conversation before it and tells the watcher what it means, not what was said',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dima',
+            preferredName: 'Dima',
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: DIMA }],
+          }),
+        );
         const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);

@@ -48,7 +48,7 @@ type ObjectCardHeaderProps = {
 /** The object's icon (overridable by a `CardIcon` contribution), its title, and an optional menu. */
 export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps>(
   ({ subject, icon: iconProp, children, lines, menu }, forwardedRef) => {
-    const entity = Entity.isEntity(subject) ? subject : undefined;
+    const entity = Entity.isEntity(subject) || Entity.isSnapshot(subject) ? subject : undefined;
     const iconAnnotation = entity && Entity.getIcon(entity);
     const icon = iconProp ?? iconAnnotation?.icon ?? DEFAULT_ICON;
     const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;

@@ -27,26 +27,16 @@ export type ComposeUpdateProps = {
   transcript?: string;
   /** The templated message, sent instead when composing fails. */
   hint: string;
-  /** How to name a speaker the facts identify by entity id (a person's DID); the id itself by default. */
-  speakerName?: (entity: string) => string;
 };
 
-const factLine = (fact: RDF.Fact, speakerName: (entity: string) => string): string => {
+const factLine = (fact: RDF.Fact): string => {
   const quote = fact.assertion.quote ? ` — "${fact.assertion.quote}"` : '';
-  const speaker = fact.attribution.agent ? ` (said by ${speakerName(fact.attribution.agent)})` : '';
+  const speaker = fact.attribution.agentLabel ? ` (said by ${fact.attribution.agentLabel})` : '';
   return `- ${FactEntry.factText(fact)}${quote}${speaker}`;
 };
 
 /** The prompt for one update; exported so tests can assert what the model is told. */
-export const composePrompt = ({
-  agentName,
-  recipientName,
-  request,
-  facts,
-  transcript,
-  hint,
-  speakerName = (entity) => entity,
-}: ComposeUpdateProps) =>
+export const composePrompt = ({ agentName, recipientName, request, facts, transcript, hint }: ComposeUpdateProps) =>
   [
     `${COMPOSE_PROMPT} ${recipientName}. You are ${agentName}, passing on something said in a conversation ${recipientName} was not part of.`,
     '',
@@ -57,7 +47,7 @@ export const composePrompt = ({
     ...(transcript ? ['', 'The conversation where it was said (oldest first):', transcript] : []),
     '',
     'What changed:',
-    ...facts.map((fact) => factLine(fact, speakerName)),
+    ...facts.map(factLine),
     '',
     `A draft that only repeats the words (rewrite it so it stands alone): ${hint}`,
     '',

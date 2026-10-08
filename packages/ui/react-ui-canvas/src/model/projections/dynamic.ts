@@ -16,8 +16,10 @@ import { Layout } from '@dxos/diagram';
 
 import { centeredOrigin } from '../../utils/layout.ts';
 import { initialKeys } from '../../utils/order.ts';
-import { createNode, withLabel } from '../../utils/shapes.ts';
+import { withTitle } from '../../utils/parts.ts';
+import { createNode } from '../../utils/shapes.ts';
 import { type Projection } from '../projection.ts';
+import { defaultNodeRegistry } from '../registry.ts';
 import {
   type BuiltinNodeType,
   type Capabilities,
@@ -94,7 +96,8 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
       x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
       y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
     };
-    nodes[node.id] = withLabel(
+    nodes[node.id] = withTitle(
+      defaultNodeRegistry,
       createNode({ type: node.type ?? 'rect', id: node.id, z: keys[graph.edges.length + index], center, size }),
       node.label ?? node.id,
     );

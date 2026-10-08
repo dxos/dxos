@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
-import { normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import * as Goal from './Goal.ts';
 
@@ -23,10 +22,16 @@ export type Force = Schema.Schema.Type<typeof Force>;
  */
 export const FactPattern = Schema.Struct({
   speaker: Schema.optional(
-    Schema.String.annotate({ description: 'The name of the person who must have said it, e.g. "Dima".' }),
+    Schema.String.annotate({
+      description:
+        'The person who must have said it, by name (e.g. "Dima"); a space member is resolved to that member, anyone else is matched by the name as written.',
+    }),
   ),
   subject: Schema.optional(
-    Schema.String.annotate({ description: 'Words the fact\'s subject must contain, e.g. "indexer PR".' }),
+    Schema.String.annotate({
+      description:
+        'What the fact must be about: a space member by name (e.g. "Dima"), matched as that member, or words its subject must contain (e.g. "indexer PR").',
+    }),
   ),
   about: Schema.optional(
     Schema.String.annotate({
@@ -99,9 +104,22 @@ export const agentOf = (id: string): string | undefined => {
   return separator > 0 ? id.slice(0, separator) : undefined;
 };
 
-/** A pattern as one line, e.g. `Dima · assertive · + · about "indexer PR"`. */
-export const describePattern = ({ speaker, subject, about, force, polarity, text }: FactPattern): string =>
-  [speaker, force, polarity, subject && `subject "${subject}"`, about && `about "${about}"`, text && `says "${text}"`]
+/**
+ * A pattern as one line, e.g. `Dima · assertive · + · about "indexer PR"`; `labelOf` names the members a
+ * resolved pattern holds by id.
+ */
+export const describePattern = (
+  { speaker, subject, about, force, polarity, text }: FactPattern,
+  labelOf: (id: string) => string = (id) => id,
+): string =>
+  [
+    speaker && labelOf(speaker),
+    force,
+    polarity,
+    subject && `subject "${labelOf(subject)}"`,
+    about && `about "${about}"`,
+    text && `says "${text}"`,
+  ]
     .filter((part) => part !== undefined && part.length > 0)
     .join(' · ');
 
@@ -138,23 +156,26 @@ export const MATCH_LABEL = 'match';
 export type RulesOptions = {
   /** When the watch began: facts said earlier never wake it, unless the pattern sets its own `after`. */
   createdAt: string;
-  /** A person's entity id (their identity DID) by name, when known; others are named by the slug of the name. */
-  person?: (name: string) => string | undefined;
 };
+
+/** A member's id, as `watchFacts` resolves a name to; anything else is a bare name or words. */
+const isMemberId = (value: string): boolean => value.startsWith('did:');
 
 /**
  * Translates a pattern into goal rules (`@dxos/brain`): one `wake` rule binding the fact, so every new
- * matching fact wakes the subscription once. Content (`about`, `text`, and a `subject` that is not a
- * known person) is matched by `about`, the brain's stemmed keyword match over the quote and the triple.
+ * matching fact wakes the subscription once. The speaker is matched as facts are attributed (a member's id,
+ * else the name as written); content (`about`, `text`, and a `subject` that is no member) is matched by
+ * `about`, the brain's stemmed keyword match over the quote and the triple.
  */
-export const toRules = (pattern: FactPattern, { createdAt, person }: RulesOptions): string => {
+export const toRules = (pattern: FactPattern, { createdAt }: RulesOptions): string => {
   const body = ['fact(F, _, _, _)'];
   if (pattern.speaker !== undefined) {
-    body.push(`speaker(F, ${quote(person?.(pattern.speaker) ?? normalizeEntityId(pattern.speaker))})`);
+    body.push(`speaker(F, ${quote(pattern.speaker)})`);
   }
   if (pattern.subject !== undefined) {
-    const entity = person?.(pattern.subject);
-    body.push(entity === undefined ? `about(F, ${quote(pattern.subject)})` : `fact(F, ${quote(entity)}, _, _)`);
+    body.push(
+      isMemberId(pattern.subject) ? `fact(F, ${quote(pattern.subject)}, _, _)` : `about(F, ${quote(pattern.subject)})`,
+    );
   }
   for (const words of [pattern.about, pattern.text]) {
     if (words !== undefined && words.trim().length > 0) {
@@ -174,6 +195,6 @@ export const toRules = (pattern: FactPattern, { createdAt, person }: RulesOption
   return `wake(${MATCH_LABEL}) :- ${body.join(', ')}.`;
 };
 
-/** The rules a trigger is evaluated by: its own, or its pattern translated with names as slugs. */
+/** The rules a trigger is evaluated by: its own, or its pattern translated. */
 export const rulesOf = (trigger: Trigger): string =>
   trigger.rules ?? toRules(trigger.when, { createdAt: trigger.createdAt });

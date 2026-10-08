@@ -25,7 +25,7 @@ import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } fro
 import { AgentOperation, BrainService, FactEntry, Goal, Memory, Mode, Relay, Trigger, TriggerOperation } from '#types';
 
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
-import { makeTestBrain } from './testing.ts';
+import { TEST_MEMBERS, makeTestBrain, testSpaceLayer } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -35,8 +35,8 @@ EntityId.dangerouslyDisableRandomness();
  * brain made of them: who is known by which identity, which watch woke, and which chat was told.
  */
 
-const ALICE = 'did:halo:BALICEALICEALICEALICEALICEALICEALI';
-const BOB = 'did:halo:BBOBBOBBOBBOBBOBBOBBOBBOBBOBBOBBOB';
+const ALICE = TEST_MEMBERS.alice;
+const BOB = TEST_MEMBERS.bob;
 
 /** What people say, verbatim: the script extracts facts from these quotes and composes updates from them. */
 const LINE = {
@@ -191,11 +191,11 @@ const refs: Refs = {};
 let offset = 0;
 const brain = makeTestBrain({ now: () => Date.now() + offset });
 
-const TestLayer = brain.layer.pipe(
+const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
-      extraServices: brain.layer,
+      extraServices: Layer.merge(brain.layer, testSpaceLayer),
       types: [
         Agent.Agent,
         Chat.Chat,

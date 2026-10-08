@@ -255,12 +255,9 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       }),
     );
 
+  /** Watches on a peer: a translated pattern names them as its speaker, compiled rules by their DID. */
   const watchesOn = (state: BrainState, peer: Peer) =>
-    state.triggers.filter(
-      ({ when, rules }) =>
-        (when.speaker?.toLowerCase().startsWith(peer.name.toLowerCase()) ?? false) ||
-        (rules?.includes(peer.did) ?? false),
-    );
+    state.triggers.filter(({ when, rules }) => when.speaker === peer.did || (rules?.includes(peer.did) ?? false));
 
   test('Goals 1: "keep me updated about what Alice is working on" becomes a goal and a watch in the brain', async () => {
     const { agent, bobChat } = await setupOnEdge();

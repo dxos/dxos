@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Media from '@dxos/react-ui/Media';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -85,8 +86,8 @@ export const StoryboardPlayer = ({
           {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
               than a grid on the root: the root brackets its children with focus sentinels, which
               would take the first and last cells. */}
-          <div className='grow grid grid-cols-[auto_1fr_auto] items-center gap-1'>
-            <div className='flex items-center gap-1'>
+          <Layout.Grid cols={['auto', 'fill', 'auto']} align='center' gap='xs' classNames='grow'>
+            <Layout.Flex align='center' gap='xs'>
               <Button.Root
                 iconOnly
                 icon='ph--caret-left--regular'
@@ -107,9 +108,9 @@ export const StoryboardPlayer = ({
                 disabled={index + 1 >= clips.length}
                 onClick={advance}
               />
-            </div>
+            </Layout.Flex>
             <span className='min-w-0 truncate text-center'>{clip.name}</span>
-            <div className='flex justify-end'>
+            <Layout.Flex justify='end'>
               <Button.Root
                 iconOnly
                 icon='ph--x--regular'
@@ -117,8 +118,8 @@ export const StoryboardPlayer = ({
                 disabled={!onClose}
                 onClick={() => onClose?.()}
               />
-            </div>
-          </div>
+            </Layout.Flex>
+          </Layout.Grid>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='bg-scrim-surface'>

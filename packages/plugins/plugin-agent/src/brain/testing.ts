@@ -4,8 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Stream from 'effect/Stream';
 
 import * as AgentService from '@dxos/compute/AgentService';
+import { Space } from '@dxos/halo';
+import { IdentityDid } from '@dxos/keys';
 
 import { BrainService } from '#types';
 
@@ -66,3 +70,53 @@ export const makeTestBrain = ({ wake = 'session', now }: TestBrainOptions = {}) 
     facts: (agent: string) => stores.get(agent),
   };
 };
+
+const memberDid = (seed: number): IdentityDid => IdentityDid.encode(new Uint8Array(IdentityDid.byteLength).fill(seed));
+
+/** The space members tests speak as, by first name; facts are attributed to their DIDs. */
+export const TEST_MEMBERS = {
+  dima: memberDid(1),
+  rich: memberDid(2),
+  josiah: memberDid(3),
+  alice: memberDid(4),
+  bob: memberDid(5),
+} as const;
+
+const unsupported = () => Effect.die(new Error('Not available in the test space service.'));
+
+/** HALO's `Space.Service` answering only membership, with the given members. */
+export const makeTestSpaceLayer = (
+  members: readonly { did: string; displayName: string }[],
+): Layer.Layer<Space.Service> =>
+  Layer.succeed(Space.Service, {
+    members: () =>
+      Stream.make(
+        members.map(({ did, displayName }): Space.Member => ({
+          did: IdentityDid.make(did),
+          displayName,
+          role: 'edit',
+          online: true,
+        })),
+      ),
+    get: (id) => Effect.succeed(Option.some({ id, state: 'ready' as const })),
+    spaces: Stream.empty,
+    create: unsupported,
+    waitReady: () => Effect.void,
+    setEdgeReplication: unsupported,
+    updateMemberRole: unsupported,
+    removeMember: unsupported,
+    share: unsupported,
+    join: unsupported,
+    invitations: () => Stream.empty,
+    export: unsupported,
+    import: unsupported,
+  });
+
+/** {@link makeTestSpaceLayer} over {@link TEST_MEMBERS}. */
+export const testSpaceLayer = makeTestSpaceLayer([
+  { did: TEST_MEMBERS.dima, displayName: 'Dima' },
+  { did: TEST_MEMBERS.rich, displayName: 'Rich Burdon' },
+  { did: TEST_MEMBERS.josiah, displayName: 'Josiah' },
+  { did: TEST_MEMBERS.alice, displayName: 'Alice' },
+  { did: TEST_MEMBERS.bob, displayName: 'Bob' },
+]);

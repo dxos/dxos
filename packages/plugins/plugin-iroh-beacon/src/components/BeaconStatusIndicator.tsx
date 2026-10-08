@@ -9,6 +9,7 @@ import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
@@ -25,7 +26,8 @@ export const BeaconStatusIndicator = () => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
-  const iconClass = onlineCount > 0 ? 'text-green-500' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
+  const iconClass =
+    onlineCount > 0 ? 'text-success-text' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
 
   return (
     <Popover.Root positioning={{ placement: 'left' }}>
@@ -40,7 +42,7 @@ export const BeaconStatusIndicator = () => {
           />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Content classNames=''>
+      <Popover.Content>
         <BeaconPopover />
       </Popover.Content>
     </Popover.Root>
@@ -57,59 +59,59 @@ const BeaconPopover = () => {
   }
 
   return (
-    <div className='flex flex-col gap-2 w-popover-min-width p-2'>
+    <Layout.Flex column gap='sm' classNames='w-popover-min-width p-2'>
       {/* Header. */}
-      <div className='flex items-center gap-2 mb-1'>
+      <Layout.Flex align='center' gap='sm' classNames='mb-1'>
         <Icon.Icon
           icon='ph--broadcast--regular'
-          classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-fg-muted')}
+          classNames={mx(onlineCount > 0 ? 'text-success-text' : 'text-fg-muted')}
         />
         <span className='font-medium text-sm'>{t('beacon-title.label')}</span>
-      </div>
+      </Layout.Flex>
 
       {/* Peer list. */}
       {state.peers.length === 0 ? (
         <span className='text-sm text-fg-muted'>{t('no-peers.label')}</span>
       ) : (
-        <div className='flex flex-col gap-1'>
+        <Layout.Flex column gap='xs'>
           {state.peers.map((peer) => (
             <PeerRow key={peer.peerId} peer={peer} />
           ))}
-        </div>
+        </Layout.Flex>
       )}
 
       {/* Footer. */}
-      <div className='border-t border-separator pt-2 mt-1 text-xs text-fg-muted flex flex-col gap-0.5'>
-        <div className='flex justify-between'>
+      <Layout.Flex column classNames='border-t border-separator pt-2 mt-1 text-xs text-fg-muted gap-0.5'>
+        <Layout.Flex justify='between'>
           <span>{t('transport.label')}</span>
           <span className='font-mono'>{state.transport}</span>
-        </div>
-        <div className='flex justify-between'>
+        </Layout.Flex>
+        <Layout.Flex justify='between'>
           <span>{t('peers-summary.label')}</span>
           <span className='font-mono'>
             {onlineCount} / {state.peers.length}
           </span>
-        </div>
-        <div className='flex justify-between'>
+        </Layout.Flex>
+        <Layout.Flex justify='between'>
           <span>{t('beacon-counter.label')}</span>
           <span className='font-mono'>#{state.localCounter}</span>
-        </div>
-      </div>
-    </div>
+        </Layout.Flex>
+      </Layout.Flex>
+    </Layout.Flex>
   );
 };
 
 const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
   return (
-    <div className='flex items-center gap-2 text-sm'>
+    <Layout.Flex align='center' gap='sm' classNames='text-sm'>
       <Icon.Icon
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
-        classNames={mx(peer.online ? 'text-green-500' : 'text-fg-muted')}
+        classNames={mx(peer.online ? 'text-success-text' : 'text-fg-muted')}
         size='xs'
       />
       <span className='truncate flex-1'>{peer.displayName ?? peer.peerId.slice(0, 8)}</span>
       <span className='font-mono text-xs text-fg-muted'>#{peer.counter}</span>
       <span className='font-mono text-xs text-fg-muted'>{peer.transport}</span>
-    </div>
+    </Layout.Flex>
   );
 };

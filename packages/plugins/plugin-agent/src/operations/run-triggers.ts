@@ -16,8 +16,8 @@ import { BrainSkill } from '#skills';
 import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
-import * as Identity from './identity.ts';
-import { agentEntity, readSource } from './read-source.ts';
+import { agentId } from './members.ts';
+import { readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
@@ -47,8 +47,8 @@ export const pushFacts: (
   if (facts.length === 0) {
     return { fired, undelivered };
   }
-  // The same entity `readSource` attributes the agent's own messages to, unnamed agents included.
-  const queued = yield* brain.push(agent.id, facts, { quiet: [agentEntity(agent)] });
+  // The id `readSource` attributes the agent's own messages to.
+  const queued = yield* brain.push(agent.id, facts, { quiet: [agentId(agent)] });
   if (queued === 0) {
     return { fired, undelivered };
   }
@@ -73,7 +73,6 @@ export const deliver: (
   const brain = yield* BrainService.BrainService;
   const fired: string[] = [];
   const undelivered: string[] = [];
-  const roster = yield* Identity.loadRoster;
 
   for (const subscription of yield* brain.subscriptions(agent.id)) {
     const events = yield* brain.take(subscription.id);
@@ -108,7 +107,6 @@ export const deliver: (
       request: subscription.request ?? goal?.title ?? subscription.then.message,
       facts: matched,
       transcript,
-      speakerName: (entity) => Identity.displayName(roster, entity),
       hint: Trigger.renderMessage(
         subscription,
         first

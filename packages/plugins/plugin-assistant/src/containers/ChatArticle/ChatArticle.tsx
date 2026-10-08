@@ -12,6 +12,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { useIdentity } from '@dxos/halo-react';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
 import { type ChatView } from '@dxos/react-ui-assistant';
@@ -47,7 +48,16 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings, chat);
-    const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
+    // Every prompt carries the member's DID, so what they say is attributed to them rather than to a name.
+    const identity = useIdentity();
+    const sender = useMemo(
+      () =>
+        identity
+          ? { identityDid: identity.did, ...(identity.displayName ? { name: identity.displayName } : {}) }
+          : undefined,
+      [identity?.did, identity?.displayName],
+    );
+    const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings, sender });
     const getContext = useSelectionContext(companionTo);
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;

@@ -10,6 +10,7 @@ import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
+import { Space } from '@dxos/halo';
 
 import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
@@ -27,7 +28,7 @@ export const WatchFacts = Operation.make({
       'Waits for something to happen ("let me know when X") and tells the requester when a fact says it did. Records the outcome as a goal the requester owns.',
     icon: 'ph--binoculars--regular',
   },
-  services: [Database.Service, AiService.AiService, BrainService.BrainService],
+  services: [Database.Service, AiService.AiService, BrainService.BrainService, Space.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that watches.' }),
     requester: Ref.Ref(Obj.Unknown).annotate({
@@ -86,7 +87,7 @@ export const ListTriggers = Operation.make({
     description: 'Lists what the agent is waiting for and who it will tell.',
     icon: 'ph--list-checks--regular',
   },
-  services: [Database.Service, BrainService.BrainService],
+  services: [Database.Service, BrainService.BrainService, Space.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
   }),

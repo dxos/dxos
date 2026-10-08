@@ -41,7 +41,7 @@ export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChat
   return (
     <Panel.Root role={role}>
       {failed && (
-        <Layout.Flex column center classNames='gap-2 p-4 text-fg-muted' role='alert'>
+        <Layout.Flex column center gap='sm' classNames='p-4 text-fg-muted' role='alert'>
           {t('private-chat-failed.message')}
           <Button.Root icon='ph--arrow-clockwise--regular' label={t('private-chat-retry.label')} onClick={retry} />
         </Layout.Flex>

@@ -351,6 +351,7 @@
       "@dxos/plugin-trip",
       "@dxos/plugin-typefully",
       "@dxos/plugin-typesafe",
+      "@dxos/plugin-uml",
       "@dxos/plugin-video",
       "@dxos/plugin-voxel",
       "@dxos/plugin-wnfs",
