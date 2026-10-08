@@ -60,11 +60,15 @@ const LayerName = ({ layer, readonly, editing, onEditingChange, onRename }: Laye
         onRename?.(name);
       }
     }}
-    // The list's own keys (typeahead, selection) would take the ones typed into the name.
-    onKeyDown={(event) => event.stopPropagation()}
   >
     <Editable.Preview data-testid={`layer-name-${layer.id}`} />
-    <Editable.Input aria-label='Layer name' data-testid={`layer-input-${layer.id}`} />
+    <Editable.Input
+      aria-label='Layer name'
+      data-testid={`layer-input-${layer.id}`}
+      // While a name is typed, the list's keys (typeahead, arrows, selection) must not take its keys; otherwise the
+      // list keeps them, so the arrows move between rows.
+      onKeyDown={(event) => event.stopPropagation()}
+    />
   </Editable.Root>
 );
 
