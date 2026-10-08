@@ -190,6 +190,15 @@ export const listFromTree =
   (filter?: Filter): Effect.Effect<readonly Process[]> =>
     Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
+export interface SubscribeEphemeralOptions {
+  /**
+   * Replay the buffered events before streaming new ones (the default), so a reader attaching mid-turn
+   * sees the turn so far. A reader that subscribes BEFORE causing the work it wants to follow passes
+   * `false`: the buffer then holds only earlier turns, which would read as the new one.
+   */
+  readonly replay?: boolean;
+}
+
 /**
  * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
  */
@@ -299,7 +308,7 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
    * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).
    */
-  subscribeEphemeral(): Stream.Stream<Trace.Message>;
+  subscribeEphemeral(options?: SubscribeEphemeralOptions): Stream.Stream<Trace.Message>;
 
   terminate(): Effect.Effect<void>;
   readonly status: Status;

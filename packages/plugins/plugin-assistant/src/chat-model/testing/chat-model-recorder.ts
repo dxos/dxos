@@ -132,7 +132,8 @@ export class ChatModelRecorder {
       };
       const timer = setTimeout(() => {
         cleanup();
-        reject(new Error(`ChatModelRecorder.until timed out; state=${JSON.stringify(this.#state)}`));
+        const log = this.events.map(({ at, signal, value }) => `  ${at}ms ${signal}=${value}`).join('\n');
+        reject(new Error(`ChatModelRecorder.until timed out; state=${JSON.stringify(this.#state)}\n${log}`));
       }, timeout);
       const cleanup = () => {
         clearTimeout(timer);

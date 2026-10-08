@@ -62,6 +62,14 @@ export interface AgentProcessOptions {
   defaultModel?: DXN.DXN;
 
   /**
+   * Stay resident (IDLE) once the work is done rather than succeeding, so the next prompt lands on this
+   * process instead of a new one. For a host where a spawn is expensive — on EDGE it is a fresh Durable
+   * Object that opens the space and loads the toolkit before the turn can start.
+   * @default false
+   */
+  resident?: boolean;
+
+  /**
    * The catalog's shared model ids are served by several providers, so resolution needs the provider
    * alongside the id; without it a local model id cannot be claimed by any resolver.
    */
@@ -384,6 +392,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('agent work enqueued by end-request hook, continuing');
               yield* reconcileAlarmWith(after);
               yield* reportSleeping(after);
+              return;
+            }
+
+            if (options.resident) {
+              log('agent work complete, staying resident');
               return;
             }
 

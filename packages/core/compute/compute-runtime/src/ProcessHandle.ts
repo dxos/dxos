@@ -310,10 +310,10 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
       Queue.offerUnsafe(queue, Option.some(event));
     }
   }
-  subscribeEphemeral(): Stream.Stream<Trace.Message> {
+  subscribeEphemeral({ replay = true }: Process.SubscribeEphemeralOptions = {}): Stream.Stream<Trace.Message> {
     return Stream.unwrap(
       Effect.gen({ self: this }, function* () {
-        const snapshot = [...this.#ephemeralBuffer.buffer];
+        const snapshot = replay ? [...this.#ephemeralBuffer.buffer] : [];
         const queue = yield* Queue.unbounded<Option.Option<Trace.Message>>();
         this.#ephemeralSubscribers.push(queue);
         return Stream.concat(

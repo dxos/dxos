@@ -196,9 +196,12 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         if (local?.state === Process.State.TERMINATING) {
           return { ...snapshot, state: Process.State.TERMINATING };
         }
-        // An input the host has not taken yet is work in flight: reported idle, a caller waiting for
-        // the turn to settle would return before the turn has even started.
-        if (pendingInputs.has(localPid) && snapshot.state === Process.State.IDLE) {
+        // An input the host has not acknowledged is work in flight: reported idle or hybernating, a
+        // caller waiting for the turn to settle would return before the turn has even started.
+        if (
+          pendingInputs.has(localPid) &&
+          (snapshot.state === Process.State.IDLE || snapshot.state === Process.State.HYBERNATING)
+        ) {
           return { ...snapshot, state: Process.State.RUNNING };
         }
         return snapshot;

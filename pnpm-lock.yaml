@@ -8176,6 +8176,9 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
     devDependencies:
+      '@dxos/edge-compute':
+        specifier: workspace:*
+        version: link:../../core/compute/edge-compute
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -8191,6 +8194,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

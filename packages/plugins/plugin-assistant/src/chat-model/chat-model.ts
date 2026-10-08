@@ -29,6 +29,7 @@ import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import type * as Process from '@dxos/compute/Process';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
@@ -472,7 +473,9 @@ export class ChatModel {
         });
         const session = yield* this.#getSession();
         markWork('chat.session-ready');
-        yield* this.#forkEphemeralCollector(session);
+        // Subscribed before the prompt is submitted, so nothing of this turn needs replaying, and a
+        // replay would carry the process's earlier turns.
+        yield* this.#forkEphemeralCollector(session, { replay: false });
 
         log('chat model submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
@@ -613,7 +616,8 @@ export class ChatModel {
       this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
       const effect = Effect.gen({ self: this }, function* () {
-        yield* this.#forkEphemeralCollector(session);
+        // Replayed: the turn being adopted is already under way.
+        yield* this.#forkEphemeralCollector(session, { replay: true });
         yield* session.waitForCompletion();
         this.#flushStreaming();
       });
@@ -667,8 +671,11 @@ export class ChatModel {
    * Forks the collector for the session's ephemeral trace events (streaming blocks and MCP
    * failures) as a child of the calling fiber.
    */
-  #forkEphemeralCollector(session: AgentService.Session): Effect.Effect<void> {
-    return session.subscribeEphemeral().pipe(
+  #forkEphemeralCollector(
+    session: AgentService.Session,
+    options: Process.SubscribeEphemeralOptions,
+  ): Effect.Effect<void> {
+    return session.subscribeEphemeral(options).pipe(
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
