@@ -22,12 +22,12 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor.ts';
+import { AiUsageQuotaError, ChatModel, parseError } from './chat-model.ts';
 import { type ThreadProjection } from './thread.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed, Message.Message] });
 
-describe('Chat processor', () => {
+describe('ChatModel', () => {
   it.effect(
     'basic',
     Effect.fn(
@@ -38,19 +38,19 @@ describe('Chat processor', () => {
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
         const registry = AtomRegistry.make();
-        const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any, {
+        const chatModel = new ChatModel(session, managedRuntime, feed, Layer.empty as any, {
           observableRegistry: registry,
         });
-        expect(processor).toBeDefined();
-        expect(processor.active).toBeDefined();
+        expect(chatModel).toBeDefined();
+        expect(chatModel.active).toBeDefined();
 
-        // The thread is the processor's one view: a feed append and a sent prompt both arrive through it.
+        // The thread is the chat model's one view: a feed append and a sent prompt both arrive through it.
         const rows = (predicate: (thread: ThreadProjection) => boolean) =>
           Effect.promise(
             () =>
               new Promise<ThreadProjection>((resolve) => {
                 const unsubscribe = registry.subscribe(
-                  processor.thread,
+                  chatModel.thread,
                   (thread) => {
                     if (predicate(thread)) {
                       queueMicrotask(() => unsubscribe());
@@ -68,8 +68,8 @@ describe('Chat processor', () => {
         const appended = yield* rows((thread) => thread.messages.length === 1);
         expect(appended.tail).toBe(0);
 
-        const id = processor.send({ message: 'hello' });
-        const sent = registry.get(processor.thread);
+        const id = chatModel.send({ message: 'hello' });
+        const sent = registry.get(chatModel.thread);
         expect(sent.messages.map((message) => message.id)).toEqual([appended.messages[0].id, id]);
         expect(sent.delivery.get(id)?.outboxId).toBe(id);
         expect(sent.tail).toBe(1);
@@ -157,6 +157,16 @@ describe('parseError', () => {
       reason: new AiError.UnknownError({ description: 'Connection refused' }),
     });
     expect(parseError(err).message).toBe('Connection refused');
+  });
+
+  // A provider failure inside the agent process reaches the chat as the process's stringified failure,
+  // so its typed reason is gone but the provider's own description is still in the text.
+  test('passes through the detail of an AiError stringified by the process boundary', ({ expect }) => {
+    const err = new Error('Process failed', {
+      cause:
+        'effect/ai/AiError/AiError: AnthropicClient.streamText: Invalid request. prompt is too long\n    at stack (file.ts:1:1)',
+    });
+    expect(parseError(err).message).toBe('Invalid request. prompt is too long');
   });
 
   test('falls back to a generic message for unrecognized errors', ({ expect }) => {

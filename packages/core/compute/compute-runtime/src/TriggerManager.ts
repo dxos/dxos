@@ -18,7 +18,7 @@ import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
 import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger-dispatcher.ts';
 
 /**
- * Aggregate {@link Trigger.TriggerMonitorService} that merges the local
+ * Aggregate {@link Trigger.ManagerService} that merges the local
  * {@link TriggerDispatcher} view with the remote
  * ({@link RemoteTriggerManager.Service}) one, providing a unified view of
  * triggers across local and edge environments. Provide
@@ -28,11 +28,11 @@ import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger
  * dispatched via the remote manager, local ones via the local dispatcher.
  */
 export const layer: Layer.Layer<
-  Trigger.TriggerMonitorService,
+  Trigger.ManagerService,
   never,
   TriggerDispatcher | Database.Service | Registry.AtomRegistry | RemoteTriggerManager.Service
 > = Layer.effect(
-  Trigger.TriggerMonitorService,
+  Trigger.ManagerService,
   Effect.gen(function* () {
     const dispatcher = yield* TriggerDispatcher;
     const database = yield* Database.Service;
@@ -52,7 +52,7 @@ export const layer: Layer.Layer<
       );
 
       const allTriggers = yield* Database.query(
-        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerMonitor.deriveState'),
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerManager.deriveState'),
       ).run;
 
       const states: Trigger.State[] = allTriggers
@@ -102,7 +102,7 @@ export const layer: Layer.Layer<
     });
     registry.mount(triggersAtom);
 
-    const monitor: Trigger.Monitor = {
+    const monitor: Trigger.Manager = {
       triggers: triggersAtom,
 
       get localDispatcherEnabled() {

@@ -6,7 +6,7 @@ import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /** Ephemeral, per-request context captured at submit time (not part of the durable chat state). */
-export type ProcessorRequestContext = {
+export type ChatRequestContext = {
   selection?: {
     /** Anchor strings (`"${from}:${to}"` cursor pairs) the text was resolved from; enables future in-place actions. */
     anchors: string[];
@@ -23,7 +23,7 @@ export type ProcessorRequestContext = {
 export const createPromptContent = (request: {
   message: string;
   disposition?: ContentBlock.Text['disposition'];
-  context?: ProcessorRequestContext;
+  context?: ChatRequestContext;
 }): string | ContentBlock.Any[] => {
   if (request.disposition === 'synthetic') {
     return [ContentBlock.Text.make({ text: request.message, disposition: 'synthetic' })];

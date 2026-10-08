@@ -29,7 +29,9 @@ import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import type * as Process from '@dxos/compute/Process';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
@@ -39,18 +41,19 @@ import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
+import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
-import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
+import { type ChatRequestContext, createPromptContent } from './prompt.ts';
 import { EMPTY_THREAD, type ThreadProjection, projectThread } from './thread.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
- * {@link AiChatProcessor}. Mirrors the tag list that
- * {@link useChatProcessor} passes to {@link ServiceResolver.provide}.
+ * {@link ChatModel}. Mirrors the tag list that
+ * {@link useChatModel} passes to {@link ServiceResolver.provide}.
  */
 export type SpaceServices =
   | Database.Service
@@ -60,7 +63,7 @@ export type SpaceServices =
   | Registry.Service
   | OpaqueToolkit.OpaqueToolkitProvider;
 
-export type AiChatProcessorOptions = {
+export type ChatModelOptions = {
   /**
    * The model the chat's picker shows selected. The agent process reads the model off the chat, so
    * this is stamped onto a chat that has not selected one before its first request — otherwise the
@@ -78,26 +81,28 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
-  /** Who this processor's prompts come from, when the chat is one of several people's with one agent. */
+  /** Who this chat model's prompts come from, when the chat is one of several people's with one agent. */
   sender?: AgentService.PromptSender;
+  /** Binds {@link TurnReviewSkill} so each turn is reviewed for struggles (opt-in setting). */
+  reportStruggles?: boolean;
 };
 
-const defaultOptions: Partial<AiChatProcessorOptions> = {
+const defaultOptions: Partial<ChatModelOptions> = {
   model: Model.DEFAULT_EDGE,
 };
 
-export type ProcessorRequestOptions = {};
+export type ChatRequestOptions = {};
 
-export type ProcessorRequest = {
+export type ChatRequest = {
   message: string;
   /** `synthetic` marks system-generated turn content (e.g. a completed inline flow reporting itself). */
   disposition?: ContentBlock.Text['disposition'];
   /** Ephemeral context (e.g. companion-document selection) captured at submit time. */
-  context?: ProcessorRequestContext;
-  options?: ProcessorRequestOptions;
+  context?: ChatRequestContext;
+  options?: ChatRequestOptions;
 };
 
-export type ProcessorSendOptions = {
+export type ChatSendOptions = {
   /**
    * Runs before the prompt is dispatched — after it is already showing — and a rejection fails the
    * prompt. Lets a transient chat persist and flush its conversation feed so the agent can resolve it.
@@ -108,7 +113,7 @@ export type ProcessorSendOptions = {
 /** Settles the dispatch of one prompt: resolved once the agent holds it, rejected if it never will. */
 export type PromptSubmission = { resolve: () => void; reject: (error: unknown) => void };
 
-type OutboxPayload = { request: ProcessorRequest; prepare?: () => Promise<void> | void };
+type OutboxPayload = { request: ChatRequest; prepare?: () => Promise<void> | void };
 
 /** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
 const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
@@ -158,6 +163,30 @@ const describeAiError = (err: AiError.AiError): string =>
  */
 const MODEL_UNAVAILABLE_PATTERN = /AI Model not available:\s*(\S+?):?(?=\s|$)/i;
 
+/**
+ * Matches the first line of a stringified {@link AiError.AiError} ("…AiError: Module.method: detail"), the
+ * form a provider failure takes once it has crossed the agent-process boundary.
+ */
+const AI_ERROR_PATTERN = /AiError: [\w$.]+: ([^\n]+)/;
+
+/** The provider's own description of a failure that arrived stringified, anywhere in the cause chain. */
+const stringifiedAiErrorText = (err: unknown): string | undefined => {
+  const visited = new Set<unknown>();
+  for (
+    let current = err;
+    current && !visited.has(current);
+    current = current instanceof Error ? current.cause : undefined
+  ) {
+    visited.add(current);
+    const text = typeof current === 'string' ? current : current instanceof Error ? current.message : '';
+    const detail = text.match(AI_ERROR_PATTERN)?.[1]?.trim();
+    if (detail) {
+      return detail;
+    }
+  }
+  return undefined;
+};
+
 /** The displayable text of a failure, which reaches the chat either typed or already stringified. */
 const errorText = (err: unknown): string => (typeof err === 'string' ? err : err instanceof Error ? err.message : '');
 
@@ -206,6 +235,10 @@ export const parseError = (err: unknown): Error => {
   }
 
   if (!message) {
+    message = stringifiedAiErrorText(err);
+  }
+
+  if (!message) {
     message = 'An unexpected error occurred.';
   }
 
@@ -216,7 +249,7 @@ export const parseError = (err: unknown): Error => {
  * Handles interactions with the AI service.
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
-export class AiChatProcessor {
+export class ChatModel {
   readonly #registry: AtomRegistry.AtomRegistry;
 
   /** Pending messages (finalized, non-streaming). */
@@ -228,14 +261,18 @@ export class AiChatProcessor {
   /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
   readonly #finalizedIds = new Set<string>();
 
+  /** Timestamp of the newest trace event applied this turn, overall and per streamed message. */
+  #appliedAt = 0;
+  readonly #appliedAtByMessage = new Map<string, number>();
+
   /** Currently active request fiber. */
   #requestFiber: Fiber.Fiber<void, unknown> | undefined;
 
-  /** Fiber following a turn this processor did not issue ({@link adopt}). */
+  /** Fiber following a turn this chat model did not issue ({@link adopt}). */
   #observeFiber: Fiber.Fiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
-  #lastRequest: ProcessorRequest | undefined;
+  #lastRequest: ChatRequest | undefined;
 
   /** Streaming state. */
   public readonly streaming = Atom.make<boolean>((get) => get(this.#streaming).length > 0);
@@ -288,16 +325,16 @@ export class AiChatProcessor {
      * {@link ServiceResolver.provide} with the {@link ServiceResolver} already
      * supplied (hence `RIn = never`); the {@link ServiceNotAvailableError}
      * error channel surfaces when a tag is not available for the space.
-     * Provided to every effect run by the processor so the underlying
+     * Provided to every effect run by the chat model so the underlying
      * {@link ProcessManagerRuntime} has access to space-affinity services.
      */
     private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceResolver.ServiceNotAvailableError, never>,
-    private readonly _options: AiChatProcessorOptions = defaultOptions,
+    private readonly _options: ChatModelOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     this.#outbox = new Outbox(this.#registry, (payload) => this.#dispatch(payload));
     this.outbox = this.#outbox.entries;
-    // Held for the processor's life: a query's atom is memoized per result, so the query must be too.
+    // Held for the chat model's life: a query's atom is memoized per result, so the query must be too.
     const db = Obj.getDatabase(this._feed);
     this.#feedMessages = db
       ? db.query(Query.select(Filter.type(Message.Message)).from(this._feed)).atom
@@ -380,7 +417,7 @@ export class AiChatProcessor {
    *
    * Returns the outbox id, which is the prompt's thread row for its whole life.
    */
-  send(request: ProcessorRequest, { prepare }: ProcessorSendOptions = {}): string {
+  send(request: ChatRequest, { prepare }: ChatSendOptions = {}): string {
     const content = createPromptContent(request);
     const blocks = typeof content === 'string' ? [ContentBlock.Text.make({ text: content })] : content;
     // What the feed holds now cannot be this prompt's echo, however alike it reads.
@@ -421,7 +458,7 @@ export class AiChatProcessor {
    * `submission` settles once the prompt is submitted (or cannot be), which is long before the turn
    * this resolves after.
    */
-  async request(requestProp: ProcessorRequest, submission?: PromptSubmission): Promise<void> {
+  async request(requestProp: ChatRequest, submission?: PromptSubmission): Promise<void> {
     if (this.#requestFiber) {
       await this.cancel();
     }
@@ -434,6 +471,7 @@ export class AiChatProcessor {
       // that resolve is itself part of the wait the reader is watching.
       this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
+      await this.#ensureTurnReview();
 
       const effect = Effect.gen({ self: this }, function* () {
         // NOTE: Gets or creates a session for the feed.
@@ -444,13 +482,15 @@ export class AiChatProcessor {
         });
         const session = yield* this.#getSession();
         markWork('chat.session-ready');
-        yield* this.#forkEphemeralCollector(session);
+        // Subscribed before the prompt is submitted, so nothing of this turn needs replaying, and a
+        // replay would carry the process's earlier turns.
+        yield* this.#forkEphemeralCollector(session, { replay: false });
 
-        log('chat processor submitting prompt', { length: requestProp.message.length });
+        log('chat model submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
         markWork('chat.prompt-submitted');
         submission?.resolve();
-        log('chat processor submitPrompt returned, waiting for agent', {});
+        log('chat model submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
         // runs concurrently with the AI response rather than waiting for completion. A synthetic
@@ -508,7 +548,7 @@ export class AiChatProcessor {
    * `waitForCompletion` already covers the queued turn, since the agent does not report completion
    * while its queue is non-empty.
    */
-  async enqueue(requestProp: ProcessorRequest): Promise<void> {
+  async enqueue(requestProp: ChatRequest): Promise<void> {
     try {
       await this.#enqueue(requestProp);
     } catch (err) {
@@ -517,7 +557,7 @@ export class AiChatProcessor {
     }
   }
 
-  async #enqueue(requestProp: ProcessorRequest): Promise<void> {
+  async #enqueue(requestProp: ChatRequest): Promise<void> {
     await this._runtime.runPromise(
       Effect.gen({ self: this }, function* () {
         const session = yield* this.#getSession();
@@ -528,8 +568,8 @@ export class AiChatProcessor {
   }
 
   /**
-   * Mirrors turns this processor did not initiate into its own state: active/streaming state is
-   * per-processor ({@link useChatProcessor} builds one per mount) while the agent process outlives
+   * Mirrors turns this chat model did not initiate into its own state: active/streaming state is
+   * per-chat model ({@link useChatModel} builds one per mount) while the agent process outlives
    * the mount, so a chat remounted mid-turn would otherwise render as idle.
    *
    * Returns a disposer that stops observing.
@@ -572,7 +612,7 @@ export class AiChatProcessor {
 
   /**
    * Follows a turn started elsewhere to completion, surfacing its streamed blocks here.
-   * A turn this processor issued is owned by {@link request}, which reports its own errors.
+   * A turn this chat model issued is owned by {@link request}, which reports its own errors.
    */
   async #observe(session: AgentService.Session): Promise<void> {
     if (this.#requestFiber || this.#observeFiber || this.#registry.get(this.active)) {
@@ -581,9 +621,12 @@ export class AiChatProcessor {
 
     log.info('observing agent turn', { feed: Obj.getURI(this._feed) });
     try {
+      // Attaching is the `starting` phase; the agent's next report names the real one.
+      this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
       const effect = Effect.gen({ self: this }, function* () {
-        yield* this.#forkEphemeralCollector(session);
+        // Replayed: the turn being adopted is already under way.
+        yield* this.#forkEphemeralCollector(session, { replay: true });
         yield* session.waitForCompletion();
         this.#flushStreaming();
       });
@@ -613,9 +656,9 @@ export class AiChatProcessor {
     return Effect.gen({ self: this }, function* () {
       const chat = this._options.chat?.target;
       if (!chat) {
-        // The agent process is bound to a chat; a processor constructed without one has no
+        // The agent process is bound to a chat; a chat model constructed without one has no
         // conversation to run.
-        return yield* Effect.die(new Error('Chat processor requires a chat.'));
+        return yield* Effect.die(new Error('Chat model requires a chat.'));
       }
       const selected = this._options.model;
       if (!chat.session?.model && selected) {
@@ -637,14 +680,28 @@ export class AiChatProcessor {
    * Forks the collector for the session's ephemeral trace events (streaming blocks and MCP
    * failures) as a child of the calling fiber.
    */
-  #forkEphemeralCollector(session: AgentService.Session): Effect.Effect<void> {
-    return session.subscribeEphemeral().pipe(
+  #forkEphemeralCollector(
+    session: AgentService.Session,
+    options: Process.SubscribeEphemeralOptions,
+  ): Effect.Effect<void> {
+    return session.subscribeEphemeral(options).pipe(
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
+            // A remote agent's trace is relayed over the swarm, which does not preserve order, so a
+            // phase or partial older than one already applied is stale rather than news.
             if (Trace.isOfType(Trace.PartialBlock, event)) {
-              this.#handleEphemeralMessage(event.data);
+              // Read before `#isStale` records it: a block can be news for its message yet older than a
+              // phase already shown, which it must not turn back into `generating`.
+              const current = event.timestamp >= this.#appliedAt;
+              if (this.#isStale(event.timestamp, event.data.messageId)) {
+                continue;
+              }
+              this.#handleEphemeralMessage(event.data, current);
             } else if (Trace.isOfType(Trace.RequestPhase, event)) {
+              if (this.#isStale(event.timestamp)) {
+                continue;
+              }
               this.#registry.set(this.activity, event.data);
             } else if (Trace.isOfType(Trace.McpServerError, event)) {
               this.#handleMcpError(event.data);
@@ -714,16 +771,34 @@ export class AiChatProcessor {
   }
 
   /**
+   * Whether a trace event is older than one already applied (per message for a streamed block, whose
+   * text is the whole reply so far), recording it as the newest when it is not.
+   */
+  #isStale(timestamp: number, messageId?: string): boolean {
+    const appliedAt = messageId === undefined ? this.#appliedAt : (this.#appliedAtByMessage.get(messageId) ?? 0);
+    if (timestamp < appliedAt) {
+      return true;
+    }
+    this.#appliedAt = Math.max(this.#appliedAt, timestamp);
+    if (messageId !== undefined) {
+      this.#appliedAtByMessage.set(messageId, timestamp);
+    }
+    return false;
+  }
+
+  /**
    * Handles an ephemeral message from the agent process.
    * Both pending and completed blocks arrive here. Completed blocks are deduped
    * against messages already written to the feed queue to handle the race between
    * ephemeral delivery and feed replication.
    */
-  #handleEphemeralMessage(event: Trace.PayloadType<typeof Trace.PartialBlock>) {
+  #handleEphemeralMessage(event: Trace.PayloadType<typeof Trace.PartialBlock>, current = true) {
     // Content arriving is what "generating" means, and deriving it here keeps it out of the agent's
     // streaming pipeline, where the extra yield a trace write costs is observable to the turn's
     // tools. A tool call the agent reports supersedes it for as long as the tool runs.
-    this.#registry.set(this.activity, { phase: 'generating' });
+    if (current) {
+      this.#registry.set(this.activity, { phase: 'generating' });
+    }
 
     const isPending = event.block.pending;
     const message = Obj.make(Message.Message, {
@@ -779,19 +854,42 @@ export class AiChatProcessor {
     this.#registry.set(this.#streaming, []);
     this.#registry.set(this.activity, undefined);
     this.#finalizedIds.clear();
+    this.#resetApplied();
   }
 
   /**
    * Move remaining streaming messages to pending (called when agent completes).
    */
   #flushStreaming() {
-    this.#registry.set(this.activity, undefined);
+    // The activity line is left to the settle that clears `active`: cleared here, it would vanish a tick
+    // before the turn reads as finished.
     const remaining = this.#registry.get(this.#streaming);
     if (remaining.length > 0) {
       this.#registry.update(this.#pending, (pending) => [...pending, ...remaining]);
       this.#registry.set(this.#streaming, []);
     }
     this.#finalizedIds.clear();
+    this.#resetApplied();
+  }
+
+  #resetApplied() {
+    this.#appliedAt = 0;
+    this.#appliedAtByMessage.clear();
+  }
+
+  /**
+   * Binds the turn-review skill before a request while the user is opted in; its background
+   * end-request hook does the review, so nothing here waits on it. Left bound after an opt-out,
+   * since the hook re-checks the setting.
+   */
+  async #ensureTurnReview(): Promise<void> {
+    if (!this._options.reportStruggles) {
+      return;
+    }
+    const bound = this.context.getSkills().some((skill) => Obj.getMeta(skill).key === TurnReviewSkill.key);
+    if (!bound) {
+      await this.context.bind({ skills: [Ref.fromURI(Skill.registryURI(TurnReviewSkill.key))] });
+    }
   }
 
   /**
@@ -814,12 +912,9 @@ export class AiChatProcessor {
   }
 }
 
-export type AiChatProcessorState = Pick<
-  AiChatProcessor,
-  'streaming' | 'active' | 'thread' | 'error' | 'mcpErrors' | 'activity'
->;
+export type ChatModelState = Pick<ChatModel, 'streaming' | 'active' | 'thread' | 'error' | 'mcpErrors' | 'activity'>;
 
-const idleProcessorState: AiChatProcessorState = {
+const idleChatModelState: ChatModelState = {
   streaming: Atom.make(false),
   active: Atom.make(false),
   thread: Atom.make<ThreadProjection>(EMPTY_THREAD),
@@ -828,5 +923,4 @@ const idleProcessorState: AiChatProcessorState = {
   activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),
 };
 
-export const getProcessorState = (processor: AiChatProcessor | undefined): AiChatProcessorState =>
-  processor ?? idleProcessorState;
+export const getChatModelState = (chatModel: ChatModel | undefined): ChatModelState => chatModel ?? idleChatModelState;

@@ -38,7 +38,7 @@ const useNow = (active: boolean): number => {
 
 export type ProcessCardProps = PropsWithChildren<{
   location: Process.Location;
-  handle: Process.Handle.Any;
+  handle: Process.Any;
   /** Progress shown beside the elapsed time. */
   progress?: ReactNode;
   /** Removes the card once its process has ended. */

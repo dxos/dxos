@@ -81,7 +81,7 @@ in M1, browser round-trip later. Layer swap, not rewrite.
 
 Two earlier conclusions in this document's history were wrong and are retracted:
 
-1. ~~"`AiChatProcessor.messages` reads in-memory atoms, never the feed, so an
+1. ~~"`ChatModel.messages` reads in-memory atoms, never the feed, so an
    external writer cannot render."~~ **False.** `Chat.tsx` composes _both_:
 
    ```ts
@@ -97,7 +97,7 @@ Two earlier conclusions in this document's history were wrong and are retracted:
    from (1). `AgentService` is how the _assistant_ drives a turn; it is not a
    precondition for a message appearing.
 
-`AiChatProcessor.present()` was added to work around (1). It is therefore
+`ChatModel.present()` was added to work around (1). It is therefore
 probably unnecessary — but it is harmless and still correct for messages that
 have not reached the feed yet, so it stays until the real cause is known.
 

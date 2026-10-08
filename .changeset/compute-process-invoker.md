@@ -1,0 +1,5 @@
+---
+'@dxos/compute': minor
+---
+
+Operations now run as processes through `Process.Manager`, and durable operations are declared in two stages: `Operation.makeDurable({ ... })` (which accepts an optional `name`) followed by `Operation.withDurableHandler(...)`. Breaking: spawn a durable operation with `Process.spawn(durable, input)` and read its result with `Process.awaitOutput`, wrap a plain operation with `OperationProcess.make(op)` from `@dxos/compute-runtime` (which replaces `DurableOperation.fromOperation` and finds its handler in the process context), and reattach with the new `Process.Manager.attach`; `invokeFiber`/`attachFiber`/`OperationFiber` are removed. `Process.Handle` is merged into `Process.Process` (`parentId` → `parentPid`, `Process.Handle.Any` → `Process.Any`); processes are built only by the runtime, so fixtures use `makeTestProcess` from `@dxos/compute-runtime/testing`. `Trigger.Monitor`/`Trigger.TriggerMonitorService` are renamed `Trigger.Manager`/`Trigger.ManagerService`, and compute-runtime's `TriggerMonitor` module is now `TriggerManager`.
