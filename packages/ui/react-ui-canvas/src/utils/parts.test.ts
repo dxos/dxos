@@ -70,6 +70,19 @@ describe('parts', () => {
     expect(frameClasses(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm', 'shadow']);
   });
 
+  test('a scene shape showing its contents is opaque even in outline', ({ expect }) => {
+    const { scenes } = SceneBuilder.scene('s', [
+      SceneBuilder.scene('open')
+        .at(box)
+        .properties({ style: { hue: 'green', tone: 0 } }),
+      SceneBuilder.scene('closed')
+        .at(box)
+        .properties({ label: 'Closed', style: { hue: 'green', tone: 0 } }),
+    ]).build();
+    expect(frameClasses(scenes[0].nodes.open, false)[0]).toBe('bg-base-surface');
+    expect(frameClasses(scenes[0].nodes.closed, false)[0]).toBe('bg-transparent');
+  });
+
   test('every tone keeps the hue border; tone 0 drops the fill, unset is tone 2', ({ expect }) => {
     expect(hueClasses('blue', 0)).toEqual({
       surface: 'bg-transparent',

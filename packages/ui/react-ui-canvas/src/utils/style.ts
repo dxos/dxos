@@ -17,6 +17,8 @@ import {
   type StyleHue,
   type StyleMap,
   isEllipseNode,
+  isPortalNode,
+  showsContents,
 } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
@@ -160,8 +162,13 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
   const style = resolveStyle(node.style);
   const hue = hueClasses(style.hue, style.tone);
   const filled = style.fill && !style.guide;
+  // A scene shape drawing its contents is a window onto another canvas, so it is opaque even in outline: the
+  // grid behind it would read as part of the child scene.
+  const opaque = isPortalNode(node) && showsContents(node);
+  const clear = !filled || hue.surface === 'bg-transparent';
+  const surface = opaque && clear ? 'bg-base-surface' : filled ? hue.surface : '';
   return [
-    filled ? hue.surface : '',
+    surface,
     hue.text,
     selected
       ? 'border-primary-500'
