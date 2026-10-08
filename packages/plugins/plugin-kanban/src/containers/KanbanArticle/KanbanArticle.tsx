@@ -130,9 +130,10 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //       the pivot field without loading).
   //     - `Mosaic.isItem` to accept the ref wrapper alongside `Obj.isObject`.
   // Keyed on the item refs: `spec` is a record, which re-reads on every kanban write (each drag's arrangement update).
+  // Copied, because the record's snapshot is shallow and `items` is still the live array.
   const itemRefsAtom = useMemo(
     () =>
-      Atom.make((get) => get(Obj.atomProperty(object, 'spec')).items).pipe(
+      Atom.make((get) => [...get(Obj.atomProperty(object, 'spec')).items]).pipe(
         Atom.withEquality<readonly Ref.Ref<Obj.Unknown>[]>(
           (a, b) => a.length === b.length && a.every((ref, index) => ref.uri === b[index].uri),
         ),
