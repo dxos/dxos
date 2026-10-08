@@ -38,9 +38,11 @@ import {
   migrateContent,
   nodeKey,
   readScenes,
+  readStyles,
   rootOf,
   seedContent,
   writeScenes,
+  writeStyles,
 } from './content.ts';
 import { UNTITLED_DRAWING, drawingUri, linkedSceneId, parseLinkedSceneId } from './scene-node.ts';
 
@@ -149,13 +151,26 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
     }
   };
 
-  const store = createMemoryStore(Object.values(read()));
+  // A linked drawing's classes stay its own: its shapes show here without them.
+  const store = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
+  const { styles } = store;
 
   // Our own writes notify ECHO synchronously; the flag keeps them from bouncing back into the atom.
   let writing = false;
+  // Classes read from the canvas are not written back to it.
+  let reading = false;
   const refresh = () => {
     if (!writing && !disposed) {
       registry.set(store.scenes, read());
+      const next = readStyles(canvas.styles);
+      if (JSON.stringify(next) !== JSON.stringify(registry.get(styles))) {
+        reading = true;
+        try {
+          registry.set(styles, next);
+        } finally {
+          reading = false;
+        }
+      }
     }
   };
 
@@ -190,6 +205,20 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   }
 
   const unsubscribeCanvas = Obj.subscribe(canvas, refresh);
+  const unsubscribeStyles = registry.subscribe(styles, (next) => {
+    if (reading) {
+      return;
+    }
+    writing = true;
+    try {
+      Obj.update(canvas, (canvas) => {
+        canvas.styles ??= {};
+        writeStyles(canvas.styles, next);
+      });
+    } finally {
+      writing = false;
+    }
+  });
   const unsubscribeStore = registry.subscribe(store.scenes, (scenes) => {
     writing = true;
     try {
@@ -206,6 +235,7 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
       disposed = true;
       unsubscribeCanvas();
       unsubscribeStore();
+      unsubscribeStyles();
       for (const link of linked.values()) {
         link.dispose();
       }

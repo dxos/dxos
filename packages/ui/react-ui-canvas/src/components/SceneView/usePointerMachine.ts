@@ -532,6 +532,7 @@ export const usePointerMachine = ({
           const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
             ...current,
+            raw,
             delta: {
               x: snapMinor(current.anchor.x + raw.x) - current.anchor.x,
               y: snapMinor(current.anchor.y + raw.y) - current.anchor.y,

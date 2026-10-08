@@ -1,0 +1,6 @@
+---
+'@dxos/react-ui-canvas': minor
+'@dxos/plugin-illustrator': minor
+---
+
+Nodes and links share one `style`: a link's `LineStyle` (colour and `lineStyle`) is the common base a node's `NodeStyle` extends with fill, tone, frame, font size and text alignment (`alignHorizontal`, `alignVertical`); `styleFields` lets a shape extend it further. The properties panel edits the fields a mixed selection shares with one style picker. Drawings gain style classes (`StyleClass`, `SceneStore.styles`, kept in a new optional `Canvas.styles` map beside `content`): an element naming a class derives its style from it, and editing a classed element's look edits the class. Shapes and links of an unregistered type render as the core base (`BaseNode`): a box showing its `label`, or a straight line. A scene shape can open any scene of its drawing, and "New scene from selection" (`groupIntoScene`) moves the selected nodes into a new scene behind one scene shape. Breaking: a link's `line` (`{ hue, dash }`, `LinkLine`) is now `style` (`{ hue, lineStyle }`), which plugin-canvas reads from drawings saved the old way; a node style's `className` is removed; the UML class shape keeps its name in `label` instead of `name`.
