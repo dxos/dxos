@@ -1,5 +1,7 @@
 ---
 '@dxos/app-framework': patch
+'@dxos/compute-runtime': patch
+'@dxos/plugin-routine': patch
 ---
 
-Operations the app invokes with `on: 'edge'` now run on EDGE. The app's operation invoker sends edge-located spawns to the process manager the plugin `LayerStack` provides, the same one `AgentService` uses, instead of a remote manager with no process control. Before, every such call died with "Remote process requested, but RemoteProcessManager offers no process control", which is what an agent's watches and Brain store views logged every three seconds.
+An app now has one process manager: the stack's `Process.ManagerService`, which the app's operation invoker, `Capabilities.ProcessManager` and `AgentService` all use. Operations the app invokes with `on: 'edge'` therefore run on EDGE instead of dying with "Remote process requested, but RemoteProcessManager offers no process control", which an agent's watches and Brain store views logged every three seconds. `@dxos/app-framework` now owns the unified-manager spec that `@dxos/plugin-routine` used to contribute, with a no-op remote manager as a fallback, and a `LayerStack` spec now outranks an ambient service of the same tag.

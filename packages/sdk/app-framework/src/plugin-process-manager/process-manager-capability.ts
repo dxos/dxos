@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
 
 import {
@@ -91,45 +94,58 @@ export const makeDynamicTraceSink = (
 };
 
 /**
- * `local` with its edge-located control verbs answered by the stack's {@link Process.ManagerService}: the one a
- * host composes over its real remote manager (and `AgentService` runs on), where this module only has the noop.
- * Resolved on first use, since the spec providing it may be contributed after boot; absent one, `local` answers.
+ * The application's one {@link Process.ManagerService}, as built by the stack. Every built-in and plugin
+ * consumer sees the same manager, so a host's remote manager (e.g. EDGE) reaches the app's invoker too.
  */
-export const routeEdgeToStack = (
-  local: Process.Manager,
+const ProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      ProcessManager.ProcessManagerService,
+      RemoteProcessManager.Service,
+      RemoteTraceMonitor.Service,
+      Registry.AtomRegistry,
+    ],
+    provides: [Process.ManagerService],
+  },
+  () => UnifiedProcessManager.layer,
+);
+
+/**
+ * A {@link Process.Manager} that is the stack's {@link Process.ManagerService}, resolved on first use: building it
+ * resolves the host's remote manager, which may need services (the client) that are not ready at activation.
+ * The process tree reads empty until then.
+ */
+export const fromStack = (
   resolver: ServiceResolver.ServiceResolver,
   scope: Scope.Scope,
+  registry: Registry.AtomRegistry,
 ): Process.Manager => {
-  let resolved: Process.Manager | undefined;
-  const edge: Effect.Effect<Process.Manager> = Effect.suspend(() =>
-    resolved !== undefined
+  const resolvedAtom = Atom.make<Process.Manager | undefined>(undefined).pipe(Atom.keepAlive);
+  const manager: Effect.Effect<Process.Manager> = Effect.suspend(() => {
+    const resolved = registry.get(resolvedAtom);
+    return resolved !== undefined
       ? Effect.succeed(resolved)
       : resolver.resolve(Process.ManagerService, {}).pipe(
           Scope.provide(scope),
-          Effect.tap((manager) =>
-            Effect.sync(() => {
-              resolved = manager;
-            }),
-          ),
-          // Not cached, so a stack that gains the spec later is picked up on the next call.
-          Effect.catch(() => Effect.succeed(local)),
-        ),
-  );
+          Effect.tap((stackManager) => Effect.sync(() => registry.set(resolvedAtom, stackManager))),
+          // The framework's own spec provides it, so a failure here is a broken stack, not a missing plugin.
+          Effect.orDie,
+        );
+  });
 
   return {
-    ...local,
-    spawn: (definition, options = {}) =>
-      options.location?.kind === 'edge'
-        ? Effect.flatMap(edge, (manager) => manager.spawn(definition, options))
-        : local.spawn(definition, options),
-    handles: (options = {}) =>
-      options.location?.kind === 'edge'
-        ? Effect.flatMap(edge, (manager) => manager.handles(options))
-        : local.handles(options),
-    attach: (pid, options = {}) =>
-      options.location?.kind === 'edge'
-        ? Effect.flatMap(edge, (manager) => manager.attach(pid, options))
-        : local.attach(pid, options),
+    processTree: Effect.flatMap(manager, (stackManager) => stackManager.processTree),
+    processTreeAtom: Atom.make((get) => {
+      const stackManager = get(resolvedAtom);
+      return stackManager === undefined ? [] : get(stackManager.processTreeAtom);
+    }),
+    list: (filter) => Effect.flatMap(manager, (stackManager) => stackManager.list(filter)),
+    subscribeToTraceMessages: (filter) =>
+      Stream.unwrap(Effect.map(manager, (stackManager) => stackManager.subscribeToTraceMessages(filter))),
+    spawn: (definition, options) => Effect.flatMap(manager, (stackManager) => stackManager.spawn(definition, options)),
+    handles: (options) => Effect.flatMap(manager, (stackManager) => stackManager.handles(options)),
+    attach: (pid, options) => Effect.flatMap(manager, (stackManager) => stackManager.attach(pid, options)),
   };
 };
 
@@ -189,7 +205,32 @@ export default Capability.makeModule(
         ),
     );
 
-    const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
+    // Fallbacks for a host with no remote runtime; a plugin spec providing either tag (e.g. EDGE's) wins.
+    const fallbacks = Effect.runSync(
+      Effect.gen(function* () {
+        const remoteProcessManager = yield* RemoteProcessManager.Service;
+        const remoteTraceMonitor = yield* RemoteTraceMonitor.Service;
+        return Context.make(RemoteProcessManager.Service, remoteProcessManager).pipe(
+          Context.add(RemoteTraceMonitor.Service, remoteTraceMonitor),
+        );
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            RemoteProcessManager.layerNoop,
+            // Remote ephemeral trace (DX-1125): the first contributed swarm-backed monitor, else no-op.
+            remoteTraceMonitors.length > 0
+              ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
+              : RemoteTraceMonitor.layerNoop,
+          ),
+        ),
+        Effect.provideService(Registry.AtomRegistry, atomRegistry),
+      ),
+    );
+
+    const layerStack = new LayerStack.LayerStack({
+      layers: [ambientLayerSpec, ProcessManagerSpec, ...layerSpecs],
+      services: fallbacks,
+    });
     const serviceResolver = layerStack.getServiceResolver();
 
     // The stack extends built slices in place, so admitting a late spec costs no live service.
@@ -241,31 +282,16 @@ export default Capability.makeModule(
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
       Layer.provide(baseLayer),
     );
-    // App-framework has no EDGE runtime of its own, so this manager's remote view is empty: edge control
-    // reaches the host's remote manager through `routeEdgeToStack` below.
-    const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
-    // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
-    const remoteTraceMonitorLayer =
-      remoteTraceMonitors.length > 0
-        ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
-        : RemoteTraceMonitor.layerNoop;
-    const unifiedProcessManagerLayer = UnifiedProcessManager.layer.pipe(
-      Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
-    );
-
-    // Holds the stack's application slices that edge invocations resolve, for the module's lifetime.
+    // Holds the stack's application slice that the manager resolves from, for the module's lifetime.
     const stackScope = yield* Scope.make();
     yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));
-    const routedProcessManagerLayer = Layer.effect(
+    const unifiedProcessManagerLayer = Layer.succeed(
       Process.ManagerService,
-      Effect.gen(function* () {
-        const local = yield* Process.ManagerService;
-        return routeEdgeToStack(local, serviceResolver, stackScope);
-      }),
-    ).pipe(Layer.provide(unifiedProcessManagerLayer));
+      fromStack(serviceResolver, stackScope, atomRegistry),
+    );
     const operationInvokerLayer = ProcessOperationInvoker.layer.pipe(
       // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
-      Layer.provide(Layer.mergeAll(routedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
+      Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
     );
 
     const runtimeLayer = Layer.mergeAll(
@@ -307,6 +333,10 @@ export default Capability.makeModule(
         never
       >,
     );
+
+    // Resolved in the background rather than on first spawn, so a view that only reads the tree still fills in;
+    // after the holder above, which the stack's manager is built over.
+    managedRuntime.runFork(unifiedProcessManager.processTree);
 
     // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer, via its own tag so the
     // contributed value carries the full OperationInvoker interface (`invocations`, `pendingFollowups`,
