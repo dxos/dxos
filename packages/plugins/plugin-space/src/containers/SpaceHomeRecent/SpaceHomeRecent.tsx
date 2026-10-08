@@ -42,38 +42,7 @@ type SpaceScopedProps = {
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
-  const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
-  const filter = useMemo(() => {
-    const collectionTypename = Type.getTypename(Collection.Collection);
-    const types = Array.dedupeWith(
-      schemas
-        .flat()
-        .filter(Type.isType)
-        .filter((type) => TypeOptions.isUserType(type))
-        .filter((type) => Type.getTypename(type) !== collectionTypename),
-      (a, b) => Type.getURI(a) === Type.getURI(b),
-    );
-    return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
-  }, [schemas]);
-
-  const query = useMemo(
-    () =>
-      Query.select(filter ?? Filter.everything())
-        .orderBy(Order.updated('desc'))
-        .limit(RECENT_LIMIT),
-    [filter],
-  );
-
-  // Index-only, so it settles before the recent objects' documents load; it sizes the placeholders.
-  const countQuery = useMemo(
-    () => Query.select(filter ?? Filter.everything()).aggregate({ count: Aggregate.count() }),
-    [filter],
-  );
-
-  const db = filter && space ? space.db : undefined;
-  const recent = useQuery(db, query);
-  const [total] = useQuery(db, countQuery);
-  const pending = recent.length === 0 ? Math.min(total?.count ?? 0, RECENT_LIMIT) : 0;
+  const { recent, pending } = useRecentObjects(space);
   const placeholders = useMemo(
     () => (pending > 0 ? Array.makeBy(pending, (index) => `placeholder-${index}`) : []),
     [pending],
@@ -100,6 +69,45 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
       )}
     </HomeSection.Root>
   );
+};
+
+/**
+ * The space's most recently modified user objects, and while none has loaded yet, how many the index
+ * says are coming (capped at {@link RECENT_LIMIT}).
+ */
+const useRecentObjects = (space?: Space): { recent: Obj.Unknown[]; pending: number } => {
+  const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
+  const filter = useMemo(() => recentObjectsFilter(schemas.flat()), [schemas]);
+  const query = useMemo(
+    () =>
+      Query.select(filter ?? Filter.everything())
+        .orderBy(Order.updated('desc'))
+        .limit(RECENT_LIMIT),
+    [filter],
+  );
+  // Index-only, so it settles before the recent objects' documents load; it sizes the placeholders.
+  const countQuery = useMemo(
+    () => Query.select(filter ?? Filter.everything()).aggregate({ count: Aggregate.count() }),
+    [filter],
+  );
+
+  const db = filter && space ? space.db : undefined;
+  const recent = useQuery(db, query);
+  const [total] = useQuery(db, countQuery);
+  return { recent, pending: recent.length === 0 ? Math.min(total?.count ?? 0, RECENT_LIMIT) : 0 };
+};
+
+/** Matches registered user types other than collections, each once; undefined when there are none. */
+const recentObjectsFilter = (schemas: readonly unknown[]) => {
+  const collectionTypename = Type.getTypename(Collection.Collection);
+  const types = Array.dedupeWith(
+    schemas
+      .filter(Type.isType)
+      .filter((type) => TypeOptions.isUserType(type))
+      .filter((type) => Type.getTypename(type) !== collectionTypename),
+    (a, b) => Type.getURI(a) === Type.getURI(b),
+  );
+  return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
 };
 
 const PlaceholderTile = () => (
