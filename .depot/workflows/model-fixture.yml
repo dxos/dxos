@@ -4,8 +4,10 @@ name: Model Fixture
 # shifts a prompt is caught before it silently rots the cache. Deliberately a SEPARATE, non-required
 # workflow (not a job in check.yml): it reports on the PR but is not in the required-checks set, so a
 # fixture drift never blocks merge. Fixtures are committed, so replay needs no API key or build step.
+# Draft PRs skip this unless labeled `ci`, the same gate as `Check`.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
   push:
     branches:
@@ -30,6 +32,8 @@ concurrency:
 
 jobs:
   model-fixture:
+    if: >-
+      github.event_name != 'pull_request' || !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
