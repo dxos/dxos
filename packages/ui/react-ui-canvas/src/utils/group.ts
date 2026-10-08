@@ -27,13 +27,15 @@ const reattach = (end: Endpoint, inside: ReadonlySet<string>, portal: string): E
 /**
  * Moves the selected nodes into a new scene `id`, opened by a scene shape of the same id where they were. A link
  * between two grouped nodes moves with them; one crossing out of the group stays here, re-attached to the shape.
- * The nodes keep their coordinates: the shape frames whatever the child holds. None when no node is selected.
+ * The nodes keep their coordinates: the shape frames whatever the child holds. None when no node is selected, or
+ * when a selected node is locked.
  */
 export const groupIntoScene = (scene: Scene, ids: Iterable<ElementId>, id: string): SceneGroup | undefined => {
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
   const bounds = unionBounds(nodes.map(nodeBounds));
-  if (nodes.length === 0 || !bounds) {
+  // A locked node may not leave its scene, so a selection holding one is not grouped at all.
+  if (nodes.length === 0 || !bounds || nodes.some((node) => node.locked)) {
     return undefined;
   }
 

@@ -220,10 +220,13 @@ export const readStyles = (styles: Record<string, unknown> | undefined): StyleMa
   return result;
 };
 
-/** Writes `styles` over the canvas's classes record by record, so ECHO merges concurrent edits per class. */
+/**
+ * Writes `styles` over the canvas's classes record by record, so ECHO merges concurrent edits per class. A record
+ * `readStyles` left out (written by a newer host) is kept, since this host never saw it to delete it.
+ */
 export const writeStyles = (target: Record<string, unknown>, styles: StyleMap): void => {
   for (const id of Object.keys(target)) {
-    if (!(id in styles)) {
+    if (!(id in styles) && Schema.is(StyleClass)(target[id])) {
       delete target[id];
     }
   }

@@ -45,4 +45,9 @@ describe('groupIntoScene', () => {
   test('a selection of links alone groups nothing', ({ expect }) => {
     expect(groupIntoScene(scene, ['ab'], 'g')).toBeUndefined();
   });
+
+  test('a selection holding a locked node is not grouped', ({ expect }) => {
+    const locked = { ...scene, nodes: { ...scene.nodes, a: { ...scene.nodes.a, locked: true } } };
+    expect(groupIntoScene(locked, ['a', 'b'], 'g')).toBeUndefined();
+  });
 });

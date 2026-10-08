@@ -1182,6 +1182,13 @@ const SceneViewProperties = ({
     const before = registry.get(store.scenes);
     registry.set(store.scenes, { ...before, [id]: { ...group.child, name: 'Untitled' } });
     projection.apply({ kind: 'batch', intents: group.intents });
+    // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
+    // it the new scene would be an orphan, so it goes and the selection stays.
+    if (!registry.get(projection.scene).nodes[id]) {
+      const { [id]: _, ...scenes } = registry.get(store.scenes);
+      registry.set(store.scenes, scenes);
+      return;
+    }
     // One undo step takes the new scene away with the shape that opens it.
     recordScenes(registry, atoms.undo, path[path.length - 1], before);
     registry.set(atoms.selection, new Set([id]));

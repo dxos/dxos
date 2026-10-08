@@ -244,7 +244,7 @@ export const Properties = ({
     if (!styles || !single) {
       return;
     }
-    const id = `class-${Math.random().toString(36).slice(2, 10)}`;
+    const id = `class-${crypto.randomUUID()}`;
     const name = `Class ${Object.keys(styleMap).length + 1}`;
     const style = isLink(single) ? classedLink(single, styleMap).style : classedNode(single, styleMap).style;
     const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };

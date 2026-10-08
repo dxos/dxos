@@ -18,6 +18,7 @@ import {
   styleClassUses,
   updateCanvasRecord,
   writeScenes,
+  writeStyles,
 } from './content.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
@@ -141,5 +142,15 @@ describe('content', () => {
     expect(nodes.c.style).toBeUndefined();
     // A link keeps only the common base of the class's style.
     expect(links.l.style).toEqual({ hue: 'red', lineStyle: 'dashed' });
+  });
+
+  test('writing classes keeps a record this host cannot read', ({ expect }) => {
+    // A record that fails this host's schema (a newer host's) never reaches the view, so its absence there is no delete.
+    const target: Record<string, unknown> = {
+      removed: { id: 'removed', name: 'Removed' },
+      unreadable: { id: 'unreadable', title: 'Written by a newer host' },
+    };
+    writeStyles(target, { kept: { id: 'kept', name: 'Kept' } });
+    expect(Object.keys(target).sort()).toEqual(['kept', 'unreadable']);
   });
 });
