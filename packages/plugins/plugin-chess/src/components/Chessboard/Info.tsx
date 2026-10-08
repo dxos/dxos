@@ -32,11 +32,9 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
   const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
 
   return (
-    <div
-      className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] w-full min-w-[18rem] p-2 overflow-hidden dx-group-surface rounded-xs',
-        classNames,
-      )}
+    <Layout.Grid
+      rows={['min', 'fill', 'min']}
+      classNames={['w-full min-w-[18rem] p-2 overflow-hidden dx-group-surface rounded-xs', classNames]}
     >
       <PlayerIndicator
         model={model}
@@ -73,7 +71,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
           )
         }
       />
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -149,7 +147,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {a && (
             <div
               data-index={a.index}
-              className={mx('ps-2 text-sm cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 text-sm cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-bg')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -158,7 +156,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('ps-2 text-sm cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 text-sm cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-bg')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}
@@ -197,7 +195,7 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
           classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}
         />
       </div>
-      <div className='truncate overflow-hidden items-center'>{children}</div>
+      <div className='truncate'>{children}</div>
       {icon}
     </Layout.Grid>
   );

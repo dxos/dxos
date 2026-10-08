@@ -48,10 +48,10 @@ import { getProjectChatPath } from '../../paths.ts';
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
-type HeaderValues = Pick<Project.Project, 'name' | 'description'>;
+type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories'>;
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
-  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description']),
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories']),
 );
 
 // The Context section edits only the instructions' standing context objects.
@@ -188,7 +188,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
-    () => ({ name: project.name, description: project.description }),
+    () => ({ name: project.name, description: project.description, repositories: project.repositories }),
     [subject],
   );
 
@@ -240,6 +240,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       updateProject((project) => {
         project.name = values.name;
         project.description = values.description;
+        project.repositories = values.repositories && [...values.repositories];
       });
     },
     [updateProject],
@@ -265,7 +266,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               hidden for a frame, and the artifact gallery's masonry measures zero there and
               never recovers. The tablist still owns the switching. */}
           {tab === 'overview' && (
-            <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+            <Form.Root
+              db={db}
+              schema={HeaderValues}
+              defaultValues={defaultValues}
+              onValuesChanged={handleValuesChanged}
+            >
               <Form.Viewport scroll>
                 <Form.Content>
                   <Form.Fields />

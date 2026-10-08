@@ -10,10 +10,9 @@ import * as Layer from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
 
-import { AiContext } from '@dxos/assistant';
+import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
-import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -22,24 +21,12 @@ import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
 
-import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process.ts';
+import { AGENT_PROCESS_KEY, type AgentInput, AgentProcess, type AgentProcessDefinition } from './agent-process.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
-/** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
-type AgentRpcs = ReturnType<typeof AgentProcess> extends Operation.Durable<any, any, any, infer Rpcs> ? Rpcs : never;
-
-/**
- * Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface.
- *
- * Derived from the definition rather than restated: `Process` exposes its input/output codecs, which
- * puts `_Input` in an invariant position, so a hand-written `ContentBlock.Any[]` no longer relates to
- * the `readonly` array the process's own schema yields.
- */
-type AgentHandle =
-  ReturnType<typeof AgentProcess> extends Operation.Durable<infer Input, infer Output, any, infer Rpcs>
-    ? Process.Handle<Input, Output, Rpcs>
-    : never;
+/** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
+type AgentHandle = Process.Process<AgentInput, void, HarnessControlRpcs>;
 
 // TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
@@ -111,6 +98,15 @@ export interface Options {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Process definitions a chat can name in `chat.session.process` to run on instead of
+   * {@link AgentProcess}. Read per session, so a definition contributed after the layer was built
+   * is still found.
+   */
+  processes?: () => readonly AgentProcessDefinition[];
+  /** Keep each session's process resident between turns (see `AgentProcessOptions.resident`). */
+  resident?: boolean;
 }
 
 /**
@@ -159,6 +155,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
           location: AgentService.AgentLocation;
+          process: string;
           handle: AgentHandle;
           session: AgentService.Session;
         }
@@ -187,25 +184,52 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           provider: provider ?? opts?.provider,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
+          resident: opts?.resident,
         });
+
+      /**
+       * The process a chat runs on: the one its session names, or ours. A name nothing contributed
+       * (its plugin was removed) falls back to ours rather than leaving the chat unable to run.
+       */
+      const executableFor = (chat: AgentService.Conversation, provider?: DXN.DXN): AgentProcessDefinition => {
+        const key = chat.session?.process;
+        if (key === undefined || key === AGENT_PROCESS_KEY) {
+          return makeExecutable(provider);
+        }
+        const definition = opts?.processes?.().find((candidate) => candidate.key === key);
+        if (!definition) {
+          log.warn('agent process not contributed; running the default', { key });
+          return makeExecutable(provider);
+        }
+        return definition;
+      };
 
       const hydrateAgents = Effect.fnUntraced(function* () {
         // Handles cached before shutdown are suspended and no longer registered with the manager.
         sessionCache.clear();
 
+        // Contributed processes run only locally (see `getSession`), so only ours is looked for on edge.
+        const contributed = (opts?.processes?.() ?? []).filter(({ key }) => key !== AGENT_PROCESS_KEY);
         const executable = makeExecutable();
         // Local, plus every space a session has already been opened on this run. A fresh client knows
         // no edge spaces yet and cannot enumerate them (one manager spans them all), but an edge agent
         // does not need the pre-warm: `getSession` reattaches to a process still running for its
         // chat, which is the path opening one takes.
         const agents = [
-          ...(yield* processManager.handles({ key: AGENT_PROCESS_KEY })),
+          ...(yield* processManager.handles({ key: AGENT_PROCESS_KEY })).map((agent) => ({ agent, executable })),
+          ...(yield* Effect.forEach(contributed, (definition) =>
+            processManager
+              .handles({ key: definition.key })
+              .pipe(Effect.map((agents) => agents.map((agent) => ({ agent, executable: definition })))),
+          )).flat(),
           ...(yield* Effect.forEach([...remoteSpaces], (space) =>
             processManager.handles({ key: AGENT_PROCESS_KEY, location: { kind: 'edge', space } }),
-          )).flat(),
+          ))
+            .flat()
+            .map((agent) => ({ agent, executable })),
         ];
         log('agent hydrate', { count: agents.length });
-        for (const agent of agents) {
+        for (const { agent, executable } of agents) {
           yield* agent
             .hydrate(executable)
             .pipe(
@@ -227,6 +251,13 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 const model = chat.session?.model;
                 const instructions = chat.instructions?.uri;
                 const location: AgentService.AgentLocation = options?.location ?? 'local';
+                const executable = executableFor(chat, provider);
+                if (location === 'edge' && executable.key !== AGENT_PROCESS_KEY) {
+                  // EDGE spawns by key from its own registry, which holds no process a plugin contributed.
+                  return yield* Effect.die(
+                    new Error(`Agent process ${executable.key} runs only locally, but the chat asked for edge.`),
+                  );
+                }
                 const cached = sessionCache.get(chat.id);
                 if (cached) {
                   if (
@@ -234,13 +265,14 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                     cached.provider === provider &&
                     cached.instructions === instructions &&
                     cached.location === location &&
+                    cached.process === executable.key &&
                     !Process.isTerminal(cached.handle.status.state)
                   ) {
                     return cached.session;
                   }
 
                   if (!Process.isTerminal(cached.handle.status.state)) {
-                    // Model, provider, steering instructions or location changed (e.g. the user
+                    // Model, provider, steering instructions, location or process changed (e.g. the user
                     // toggled online/offline, or moved the chat to the cloud): terminate the
                     // existing process so the conversation continues on a fresh process bound to the new
                     // configuration. Conversation history is preserved via the feed, which the new
@@ -255,7 +287,6 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 const parsedEchoUri = EID.tryParse(target);
                 const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
                 const processLocation = locationFor(options?.location, spaceId);
-                const executable = makeExecutable(provider);
 
                 // Reuse a still-running process for this feed only when there was no cached session
                 // (e.g. after the UI remounted). A process adopted this way re-reads the chat when it
@@ -330,7 +361,15 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                     Effect.provide(databaseContext),
                   );
                 const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
-                sessionCache.set(chat.id, { model, provider, instructions, location, handle, session });
+                sessionCache.set(chat.id, {
+                  model,
+                  provider,
+                  instructions,
+                  location,
+                  process: executable.key,
+                  handle,
+                  session,
+                });
                 return session;
               }),
             ),
@@ -390,5 +429,5 @@ const makeSession = (
   // turn open, so anything it did afterwards would land after the reader's next prompt. The next
   // process to spawn on this feed discards what it inherits instead (see `onSpawn` in agent-process).
   terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
-  subscribeEphemeral: () => process.subscribeEphemeral(),
+  subscribeEphemeral: (options) => process.subscribeEphemeral(options),
 });

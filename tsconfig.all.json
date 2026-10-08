@@ -694,6 +694,9 @@
       "path": "packages/plugins/plugin-typesafe/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-uml/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {

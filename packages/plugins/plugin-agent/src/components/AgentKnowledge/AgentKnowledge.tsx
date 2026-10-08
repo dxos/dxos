@@ -342,8 +342,8 @@ const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
       </Layout.Flex>
     </Panel.Body>
   ) : (
-    <Panel.Body>
-      <ForceGraph.Root classNames='h-full' model={model} />
+    <Panel.Body asChild>
+      <ForceGraph.Root model={model} />
     </Panel.Body>
   );
 };

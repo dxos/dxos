@@ -66,8 +66,8 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
   if (!containers || containers.length === 0) {
     return (
       <Panel.Root>
-        <Panel.Body>
-          <Layout.Flex center classNames='h-full text-fg-subtle' role='status'>
+        <Panel.Body asChild>
+          <Layout.Flex center classNames='text-fg-subtle' role='status'>
             {t(inboxStatus === 'account-required' ? 'account-required.message' : 'empty.message')}
           </Layout.Flex>
         </Panel.Body>

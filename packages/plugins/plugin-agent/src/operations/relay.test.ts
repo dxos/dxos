@@ -25,7 +25,7 @@ import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentChannels, AgentOperation, ChatParticipant, MemoryOperation, Mode, Relay, RelayOperation } from '#types';
 
-import { makeTestBrain } from '../brain/testing.ts';
+import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 import { TEST_HANDLE_LABEL, makeChannelCapabilities, makeTestChannel, makeTestChannelBackend } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -42,6 +42,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.merge(AgentOperationHandlerSet, ThreadOperationHandlerSet.handlers),
   // plugin-thread's channel operations resolve the backend from the capability registry.
   extraServices: Layer.mergeAll(
+    testSpaceLayer,
     Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider)),
     brain.layer,
   ),

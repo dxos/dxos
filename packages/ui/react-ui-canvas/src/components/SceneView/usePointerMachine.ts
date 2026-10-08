@@ -43,7 +43,7 @@ import { topZ } from '../../utils/order.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { resizeBounds } from '../../utils/resize.ts';
 import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
-import { DEFAULT_SIZES, cloneShape, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
+import { NOMINAL_SIZES, cloneShape, createLink, createNode, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { type LinkEnd, handlePoint } from '../ControlFrame/ControlFrame.tsx';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
@@ -91,6 +91,8 @@ export type UsePointerMachineOptions = {
   /** Set once the user takes the camera over, which stops the view re-fitting itself. */
   interactedRef: MutableRefObject<boolean>;
   select: (ids: Iterable<ElementId>) => void;
+  /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
+  cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
   Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor'>;
 
@@ -153,6 +155,7 @@ export const usePointerMachine = ({
   setCamera,
   cancelAnimation,
   isNavigating,
+  cell,
   minor,
   major,
   snap,
@@ -652,7 +655,7 @@ export const usePointerMachine = ({
       if (!drag.dropped && (drawn.width === 0 || drawn.height === 0)) {
         return undefined;
       }
-      const size = drag.dropped ? { ...def.defaultSize } : { ...drawn };
+      const size = drag.dropped ? nominalSize(def.defaultSize, cell) : { ...drawn };
       const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
@@ -663,7 +666,7 @@ export const usePointerMachine = ({
       pendingRef.current = { type: drag.type, node };
       return node;
     },
-    [nodeRegistry, scene.nodes],
+    [nodeRegistry, scene.nodes, cell],
   );
 
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
@@ -750,27 +753,34 @@ export const usePointerMachine = ({
             break;
           }
           let target = current.target;
+          let created: Node | undefined;
           if (!target && isPointEndpoint(current.source)) {
             // A free-ended link that never reached a node ends free too.
             target = { point: current.to };
           } else if (!target && capabilities.create) {
             // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
-            // behaviour): a copy of the shape it left, without its text, else a rectangle. Its top-left is
-            // what snaps, so the edges land on the grid.
+            // behaviour): a copy of the shape it left, without its text, else a rectangle. It is centred on
+            // the release point (not the settled end, already snapped to the coarse grid) with its top-left
+            // on the minor grid, as a palette drop lands.
+            const drop = raw.kind === 'link' ? raw.to : current.to;
             const source = scene.nodes[endpointNode(current.source) ?? ''];
             const def = source ? nodeRegistry[source.type] : undefined;
-            const size = source?.size ?? DEFAULT_SIZES.rect;
+            const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
             const props = {
               id: createId(source?.type ?? 'rect'),
               z: topZ(Object.values(scene.nodes)),
               center: {
-                x: snap(current.to.x - size.width / 2) + size.width / 2,
-                y: snap(current.to.y - size.height / 2) + size.height / 2,
+                x: snapMinor(drop.x - size.width / 2) + size.width / 2,
+                y: snapMinor(drop.y - size.height / 2) + size.height / 2,
               },
               size,
             };
-            const node = source && def ? cloneShape(source, def.create(props)) : createNode({ type: 'rect', ...props });
+            const node =
+              source && def
+                ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
+                : createNode({ type: 'rect', ...props });
             addNode(node);
+            created = node;
             target = { node: node.id };
           }
           if (target) {
@@ -782,11 +792,12 @@ export const usePointerMachine = ({
               target,
               midpoint: { x: snap((current.from.x + current.to.x) / 2), y: snap((current.from.y + current.to.y) / 2) },
               // A link between ports that declare a direction is drawn with one.
-              directed: isDirected(scene, nodeRegistry, current.source, target),
+              ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
             });
             projection.apply({ kind: 'link', link });
-            // The new link is what the user just made, so it is what they act on next (style, delete).
-            select([link.id]);
+            // What the user just made is what they act on next (style, delete): the link, and the node
+            // the drop created with it.
+            select(created ? [link.id, created.id] : [link.id]);
           }
           break;
         }
@@ -832,6 +843,8 @@ export const usePointerMachine = ({
       commitCreated,
       addNode,
       minor,
+      cell,
+      snapMinor,
     ],
   );
 

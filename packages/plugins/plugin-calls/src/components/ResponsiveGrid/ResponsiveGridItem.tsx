@@ -8,6 +8,7 @@ import { Waveform } from '@dxos/react-ui-components';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
@@ -53,7 +54,7 @@ export const ResponsiveGridItem = <T extends object = any>({
     wave: {
       icon: 'ph--hand-waving--duotone',
       label: t('icon-wave.label'),
-      classNames: 'animate-pulse bg-orange-500',
+      classNames: 'animate-pulse bg-orange-bg',
     },
     mute: {
       icon: 'ph--microphone-slash--regular',
@@ -81,7 +82,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       className={mx(
         'dx-expand relative group',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
-        speakingIndicator ? 'outline-green-500' : !video && 'outline-separator',
+        speakingIndicator ? 'outline-green-border' : !video && 'outline-separator',
         classNames,
       )}
       style={style}
@@ -90,7 +91,7 @@ export const ResponsiveGridItem = <T extends object = any>({
 
       {/* Action. */}
       {onClick && (
-        <div className='z-10 absolute top-1 right-1 flex'>
+        <Layout.Flex classNames='z-10 absolute top-1 right-1'>
           <Button.Root
             classNames={mx('p-1 min-h-1 rounded-sm', groupHoverControlItemWithTransition)}
             iconOnly
@@ -99,12 +100,12 @@ export const ResponsiveGridItem = <T extends object = any>({
             label={pinned ? t('icon-unpin.label') : t('icon-pin.label')}
             onClick={() => onClick?.(item)}
           />
-        </div>
+        </Layout.Flex>
       )}
 
       {/* Name. */}
       {name && (
-        <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
+        <Layout.Flex justify='end' gap='xs' align='center' classNames='z-10 absolute bottom-1 left-8 right-1'>
           {/* TODO(burdon): Replace with avatar for everyone. */}
           {/* {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 4} />} */}
           {screenshare && <Icon.Icon icon='ph--broadcast--regular' size={pinned ? 'lg' : 'md'} />}
@@ -116,11 +117,11 @@ export const ResponsiveGridItem = <T extends object = any>({
           >
             {name}
           </div>
-        </div>
+        </Layout.Flex>
       )}
 
       {/* Activity. */}
-      <div className='z-10 absolute bottom-1 left-1 flex'>
+      <Layout.Flex classNames='z-10 absolute bottom-1 left-1'>
         {(speaking && <Waveform active size={pinned ? 5 : 4} />) ||
           (props && (
             <Button.Root
@@ -131,7 +132,7 @@ export const ResponsiveGridItem = <T extends object = any>({
               iconOnly
             />
           ))}
-      </div>
+      </Layout.Flex>
     </div>
   );
 };

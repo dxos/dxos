@@ -14,6 +14,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 
+import { useBrainClock } from '../useBrainClock.ts';
 import { usePrivateChat } from '../usePrivateChat.ts';
 
 export type AgentPrivateChatProps = {
@@ -30,6 +31,7 @@ export type AgentPrivateChatProps = {
 export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChatProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { chat, failed, retry } = usePrivateChat(agent);
+  useBrainClock(agent);
 
   const data = useMemo(() => (chat ? { subject: chat, attendableId } : undefined), [chat, attendableId]);
   if (data) {
@@ -39,7 +41,7 @@ export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChat
   return (
     <Panel.Root role={role}>
       {failed && (
-        <Layout.Flex column center classNames='gap-2 p-4 text-fg-muted' role='alert'>
+        <Layout.Flex column center gap='sm' classNames='p-4 text-fg-muted' role='alert'>
           {t('private-chat-failed.message')}
           <Button.Root icon='ph--arrow-clockwise--regular' label={t('private-chat-retry.label')} onClick={retry} />
         </Layout.Flex>

@@ -15,7 +15,7 @@ import { type Box, SceneBuilder } from '../../utils/builder.ts';
 import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { TONES } from '../../utils/style.ts';
-import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
+import { createModelSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**
@@ -26,8 +26,8 @@ import { SceneView } from './SceneView.tsx';
  * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows a diamond per control point and a dot per span midpoint:
  *    drag a diamond to move a point, drag a dot to add one there, alt-click a diamond to remove one.
- * 4. R / E / C / T / S then drag draws a rectangle, ellipse, UML class, text or nested scene; Delete removes the
- *    selection (nodes or links).
+ * 4. R / E / T / S then drag draws a rectangle, ellipse, text or nested scene (the UML class is plugin-uml's);
+ *    Delete removes the selection (nodes or links).
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
  *    selected element.
@@ -36,7 +36,7 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'classes' | 'square' | 'lattice';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes';
 };
 
 type EditorProps = {
@@ -92,11 +92,11 @@ const createLatticeTree = () => {
     ...[box('a', at(-1, -1), 'A'), box('b', at(-1, 0), 'B'), box('c', at(-1, 1), 'C')].map((element) =>
       element.properties({ style: { hue: 'neutral' } }),
     ),
-    box('d', at(0, 0), 'D').properties({ style: { hue: 'green', tone: 1 } }),
-    box('e', at(0, 1), 'E').properties({ style: { hue: 'green', tone: 3 } }),
+    box('d', at(0, 0), 'D').properties({ style: { hue: 'green', tone: 3 } }),
+    box('e', at(0, 1), 'E').properties({ style: { hue: 'green', tone: 1 } }),
     // Unlabelled, so the scene shows its contents.
     SceneBuilder.scene('f', [
-      // One hue at each of its tones, lightest to strongest.
+      // One hue at each of its tones: outline, then strongest to lightest.
       ...TONES.map((tone, index) =>
         box(`f${index + 1}`, at(0, index - 1), `F${index + 1}`).properties({ style: { hue: 'blue', tone } }),
       ),
@@ -123,17 +123,82 @@ const createLatticeTree = () => {
     .build();
 };
 
+/**
+ * Three levels, every shape 256×128: A, scene B, C; inside B, D, scene E, F, with two rectangles either side
+ * of E; inside E, X, Y, Z with a box above X, below Z and beside each; each level's shapes linked. Open the
+ * scenes to check that a shape is the same size at the same zoom on every level.
+ */
+const createScenesTree = () => {
+  const root = 'scene:root';
+  const size = { width: 256, height: 128 };
+  const at = (y: number, x = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
+  const rect = (id: string, y: number, x = 0) =>
+    SceneBuilder.rect(id, at(y, x)).properties({ label: id.toUpperCase() });
+  // An unlabelled box beside the column.
+  const box = (id: string, y: number, x: number) => SceneBuilder.rect(id, at(y, x));
+  const link = (from: string, to: string) => SceneBuilder.link('smart', from, to);
+  return SceneBuilder.scene(root, [
+    rect('a', -256),
+    SceneBuilder.scene('b', [
+      rect('d', -256),
+      // X, Y, Z down the middle, with a box above X, below Z and either side of each.
+      SceneBuilder.scene('e', [
+        box('n', -512, 0),
+        box('xw', -256, -384),
+        rect('x', -256),
+        box('xe', -256, 384),
+        rect('y', 0),
+        box('zw', 256, -384),
+        rect('z', 256),
+        box('ze', 256, 384),
+        box('s', 512, 0),
+        link('n', 'x'),
+        link('xw', 'x'),
+        link('x', 'xe'),
+        link('x', 'y'),
+        link('y', 'z'),
+        link('zw', 'z'),
+        link('z', 'ze'),
+        link('z', 's'),
+      ])
+        .at(at(0))
+        .name('E'),
+      rect('f', 256),
+      // Two rectangles either side of E.
+      rect('g', 0, -768),
+      rect('h', 0, -384),
+      rect('i', 0, 384),
+      rect('j', 0, 768),
+      link('d', 'e'),
+      link('e', 'f'),
+      link('g', 'h'),
+      link('h', 'e'),
+      link('e', 'i'),
+      link('i', 'j'),
+    ])
+      .at(at(0))
+      .name('B'),
+    rect('c', 256),
+    link('a', 'b'),
+    link('b', 'c'),
+  ])
+    .name('root')
+    .build();
+};
+
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    // The class fixture is a fixed three levels, so `depth` does not apply to it.
+    // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
-      fixture === 'classes'
-        ? createClassSceneTree()
+      fixture === 'model'
+        ? createModelSceneTree()
         : fixture === 'square'
           ? createSquareTree()
           : fixture === 'lattice'
             ? createLatticeTree()
-            : createSceneTree(depth);
+            : fixture === 'scenes'
+              ? createScenesTree()
+              : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -192,15 +257,20 @@ export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
 };
 
-/** A three-level class model: drill into a subsystem's portal to open its own classes. */
-export const Classes: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'classes' },
+/** A three-level model, a box per class: drill into a subsystem's portal to open its own. */
+export const Model: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'model' },
 };
 
 /**
  * Lattice mode (DESIGN §8b): shapes snap to whole cells of a 256x128 lattice with 128x64 gutters, span any number
  * of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
  */
+/** A, an empty scene B and C in a column: open B, draw in it, and compare sizes at 100% on both levels. */
+export const Scenes: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'scenes' },
+};
+
 export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
 };

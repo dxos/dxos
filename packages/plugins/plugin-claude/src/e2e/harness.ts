@@ -2,18 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as acp from '@agentclientprotocol/sdk';
 import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
-import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { type IncomingMessage, type ServerResponse, createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Readable, Writable } from 'node:stream';
 
 import type * as Chat from '@dxos/assistant/Chat';
+import type * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Filter, Obj, type Registry } from '@dxos/echo';
@@ -22,11 +21,17 @@ import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import * as ComposerMcp from '@dxos/plugin-code/ComposerMcp';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import type * as ClaudeCodeProcess from '../process/ClaudeCodeProcess.ts';
+
 /**
- * The credential the suite spends. Deliberately not `ANTHROPIC_API_KEY`: that, or an interactive
+ * The credential the suite spends, from variables of its own: `ANTHROPIC_API_KEY`, or an interactive
  * login, is whatever the developer happens to have, and the run would charge an account nobody chose.
+ * A `claude setup-token` token is connected in the chat's space, as a person connects one, so the
+ * process lends it to the agent; an API key is handed to the agent directly.
  */
+export const OAUTH_TOKEN = process.env.DX_CLAUDE_CODE_OAUTH_TOKEN ?? '';
 export const API_KEY = process.env.DX_ANTHROPIC_API_KEY ?? '';
+export const HAS_CREDENTIAL = OAUTH_TOKEN.length > 0 || API_KEY.length > 0;
 
 /** The ACP adapter release under test; pinned so a failure is a change here, not upstream. */
 export const ADAPTER_VERSION = process.env.DX_E2E_CLAUDE_ACP_VERSION ?? '0.86.0';
@@ -48,95 +53,39 @@ export const installAdapter = (): { dir: string; entry: string } => {
   return { dir, entry: join(root, typeof bin === 'string' ? bin : bin['claude-agent-acp']) };
 };
 
-export type Adapter = {
-  /** Starts the adapter in `cwd` and returns its ACP stream, as the desktop app's agent helper does. */
-  readonly connect: AcpAgent.AgentOptions['connect'];
-  /** Kills every adapter this one started that is still running. */
-  readonly stop: () => void;
+/**
+ * Removes every `ANTHROPIC_*` and `CLAUDE_*` variable from this test process, whose environment the
+ * agent inherits: run from inside a Claude Code session they name that session, which the agent would
+ * resume, and they carry the developer's own credentials.
+ */
+export const isolateEnvironment = () => {
+  for (const name of Object.keys(process.env)) {
+    if (name.startsWith('ANTHROPIC_') || name.startsWith('CLAUDE_')) {
+      delete process.env[name];
+    }
+  }
 };
 
 /**
- * Starts the adapter at `entry` the way the desktop app's agent helper does, with Composer's tools
- * token in its environment. Nothing named `ANTHROPIC_*` or `CLAUDE_*` is inherited: the first could
- * point the agent at another endpoint or credential than the suite's key, and the second, set when the
- * suite runs inside a Claude Code session, would have the agent resume that session. `HOME` is a fresh
- * directory shared by every agent this one starts, so the developer's settings and login play no part
- * and an agent started after another died can still reload its session. Each agent leads a process
- * group of its own, so `stop` ends what it started as well.
+ * How the process starts the adapter at `entry`. `HOME` is a fresh directory shared by every agent of
+ * the run, so the developer's settings and login play no part, and an agent started after another died
+ * can still reload its session.
  */
-export const makeAdapter = (entry: string): Adapter => {
-  const home = mkdtempSync(join(tmpdir(), 'claude-code-e2e-home-'));
-  const children: ChildProcess[] = [];
-  const inherited = Object.fromEntries(
-    Object.entries(process.env).flatMap(([name, value]) =>
-      value === undefined || name.startsWith('ANTHROPIC_') || name.startsWith('CLAUDE_') ? [] : [[name, value]],
-    ),
-  );
-  return {
-    connect: (cwd, toolsToken) =>
-      Effect.sync(() => {
-        const child = spawn(process.execPath, [entry], {
-          cwd,
-          env: {
-            ...inherited,
-            ANTHROPIC_API_KEY: API_KEY,
-            HOME: home,
-            ...(process.env.DX_E2E_MODEL && { ANTHROPIC_MODEL: process.env.DX_E2E_MODEL }),
-            ...(toolsToken !== undefined && { [AcpAgent.TOOLS_TOKEN_ENV]: toolsToken }),
-          },
-          stdio: ['pipe', 'pipe', 'ignore'],
-          detached: true,
-        });
-        children.push(child);
-        // A write to an agent that died is refused by the stream; unlistened, the pipe's error would crash the run.
-        child.stdin.on('error', (error) => log('adapter stdin closed', { error: error.message }));
-        return acp.ndJsonStream(Writable.toWeb(child.stdin), bytes(child.stdout));
-      }),
-    stop: () => {
-      for (const child of children) {
-        if (child.pid === undefined) {
-          continue;
-        }
-        try {
-          process.kill(-child.pid, 'SIGKILL');
-        } catch (error) {
-          // A group whose every member has exited is gone, which is what stopping wanted.
-          log('adapter group already gone', { pid: child.pid, error: String(error) });
-        }
-      }
-    },
-  };
-};
-
-/** A Node stream as the byte stream ACP reads; a reader that cancelled closed it, so later events leave it alone. */
-const bytes = (stream: Readable): ReadableStream<Uint8Array> => {
-  let open = true;
-  return new ReadableStream<Uint8Array>({
-    start: (controller) => {
-      stream.on('data', (chunk: Buffer) => open && controller.enqueue(new Uint8Array(chunk)));
-      stream.once('end', () => {
-        if (open) {
-          open = false;
-          controller.close();
-        }
-      });
-      stream.once('error', (error) => {
-        if (open) {
-          open = false;
-          controller.error(error);
-        }
-      });
-    },
-    cancel: () => {
-      open = false;
-      stream.destroy();
-    },
-  });
-};
+export const adapterCommand = (entry: string): ClaudeCodeProcess.Command => ({
+  command: process.execPath,
+  args: [entry],
+  env: {
+    HOME: mkdtempSync(join(tmpdir(), 'claude-code-e2e-home-')),
+    // A setup token, when there is one, comes from the space; Claude Code would prefer a key to it.
+    ...(OAUTH_TOKEN.length === 0 && { ANTHROPIC_API_KEY: API_KEY }),
+    ...(process.env.DX_E2E_MODEL && { ANTHROPIC_MODEL: process.env.DX_E2E_MODEL }),
+  },
+});
 
 /** Ids of the running processes whose command line names `dir`: the adapter and the Claude Code it starts. */
 export const processesUnder = (dir: string): number[] =>
-  execFileSync('ps', ['-eo', 'pid=,args='], { encoding: 'utf8' })
+  // `ww`: without it `ps` clips each line to the terminal's width, and a long command line loses the directory.
+  execFileSync('ps', ['-eww', '-o', 'pid=,args='], { encoding: 'utf8' })
     .split('\n')
     .flatMap((line) => {
       const match = /^\s*(\d+)\s+(.*)$/.exec(line);
@@ -345,3 +294,52 @@ export const answerPermissions = ({
 const pick = (block: ContentBlock.Request, decision: Decision) =>
   block.options.find((option) => option.kind === `${decision}_once`) ??
   block.options.find((option) => option.kind?.startsWith(decision));
+
+/** Per turn: a real agent with tools is slow, and the reply is all a turn waits on. */
+export const TURN_TIMEOUT = 240_000;
+
+/** Sends `prompt` and waits for the turn it starts to end, returning everything the agent said in it. */
+export const turn = Effect.fnUntraced(function* (session: AgentService.Session, prompt: string) {
+  const before = yield* messages(session.feed);
+  const seen = new Set(before.map((message) => message.id));
+  const ended = before.filter(endsTurn).length;
+  yield* session.submitPrompt(prompt);
+  let latest = before;
+  const after = yield* eventually(
+    messages(session.feed).pipe(
+      Effect.tap((all) => Effect.sync(() => (latest = all))),
+      Effect.map((all) => (all.filter(endsTurn).length > ended ? all : undefined)),
+    ),
+    () => `the turn did not end: ${prompt}\nthe chat ends with:\n${summarize(latest.slice(-5))}`,
+    TURN_TIMEOUT,
+  );
+  return after
+    .filter((message) => message.sender.role === 'assistant' && !seen.has(message.id))
+    .map((message) => Message.extractText(message))
+    .filter((text) => text.length > 0)
+    .join('\n');
+});
+
+export const messages = Effect.fnUntraced(function* (feed: Feed.Feed) {
+  return (yield* Feed.query(feed, Filter.type(Message.Message)).run).filter(Obj.instanceOf(Message.Message));
+});
+
+/** One line per message, naming its blocks, so a turn that stalls says where. */
+const summarize = (tail: readonly Message.Message[]): string =>
+  tail
+    .map(
+      (message) =>
+        `${message.sender.role}: ${message.blocks.map((block) => block._tag).join(', ')} ${Message.extractText(message).slice(0, 200)}`,
+    )
+    .join('\n');
+
+/** An ACP turn closes with its usage, so a stats block marks a turn that ended rather than one still talking. */
+const endsTurn = (message: Message.Message): boolean => message.blocks.some((block) => block._tag === 'stats');
+
+/** The assistant's text, in the order the turns produced it. */
+export const transcript = Effect.fnUntraced(function* (feed: Feed.Feed) {
+  return (yield* messages(feed))
+    .filter((message) => message.sender.role === 'assistant')
+    .map((message) => Message.extractText(message))
+    .filter((text) => text.length > 0);
+});
