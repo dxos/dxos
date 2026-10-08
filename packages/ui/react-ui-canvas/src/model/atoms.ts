@@ -17,6 +17,7 @@ import {
   type Camera,
   type ElementId,
   type Endpoint,
+  type LayerId,
   type LinkId,
   type LinkType,
   type NodeId,
@@ -83,6 +84,8 @@ export type SceneViewAtoms = {
   hover: Atom.Writable<NodeId | undefined>;
   /** The link under the pointer, which shows its end handles as a selected one does. */
   linkHover: Atom.Writable<LinkId | undefined>;
+  /** The layer new shapes and links go on; unset (or a layer the scene does not have), the top one. */
+  layer: Atom.Writable<LayerId | undefined>;
   /** The selected control point of a selected spline, if any. */
   point: Atom.Writable<ControlPointRef | undefined>;
   tool: Atom.Writable<Tool>;
@@ -115,6 +118,7 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),
   hover: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   linkHover: Atom.keepAlive(Atom.make<LinkId | undefined>(undefined)),
+  layer: Atom.keepAlive(Atom.make<LayerId | undefined>(undefined)),
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),

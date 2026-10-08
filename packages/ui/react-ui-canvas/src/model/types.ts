@@ -156,6 +156,8 @@ export const nodeBase = {
   /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
   portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
   /** A style class of the drawing (`StyleClass`) the node takes its look from; its own `style` wins over it. */
+  /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
+  layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(NodeStyle),
 };
@@ -291,6 +293,8 @@ const linkBase = {
   /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
   /** A style class of the drawing the link takes its style from; its own `style` wins over it. */
+  /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
+  layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(LineStyle),
 };
@@ -334,6 +338,22 @@ export const isLink = (element: Element): element is Link => 'source' in element
 // Scene
 //
 
+/** A layer id, unique within its scene. */
+export type LayerId = string;
+
+/**
+ * A scene's layer: elements paint by their layer's order (`z`, bottom first), then by their own `z`. A hidden layer
+ * is neither drawn nor hit. A scene with no layers has one, implicitly (`DEFAULT_LAYER`).
+ */
+export const Layer = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  /** Fractional order key (see `order.ts`): the bottom layer has the least. */
+  z: Schema.String,
+  hidden: Schema.optional(Schema.Boolean),
+});
+export type Layer = Schema.Schema.Type<typeof Layer>;
+
 /**
  * The scene schema over a set of node schemas: a host composes it from its registry's types, so the
  * schema stays exact for every type while the engine only ever sees `NodeBase`.
@@ -344,6 +364,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
     name: Schema.optional(Schema.String),
     nodes: Schema.Record(Schema.String, Schema.Union(nodes)),
     links: Schema.Record(Schema.String, Link),
+    layers: Schema.optional(Schema.Record(Schema.String, Layer)),
   });
 
 /** The scene schema over the built-in node types. */
@@ -356,6 +377,7 @@ export type Scene = {
   readonly name?: string;
   readonly nodes: Readonly<Record<NodeId, Node>>;
   readonly links: Readonly<Record<LinkId, Link>>;
+  readonly layers?: Readonly<Record<LayerId, Layer>>;
 };
 
 /** A node or link of the scene by id. */
@@ -385,6 +407,10 @@ export type Intent =
    * rather than a view action, so a projection that owns its own positions may rewrite or refuse it.
    */
   | { kind: 'layout'; ids?: ElementId[] }
+  /** Adds a layer, or replaces the one of its id (a rename, a visibility toggle, a move in the order). */
+  | { kind: 'layer'; layer: Layer }
+  /** Removes a layer and every element on it; the last layer of a scene stays. */
+  | { kind: 'removeLayer'; id: LayerId }
   /** Several intents applied as one model change (one undo step), e.g. a paste. */
   | { kind: 'batch'; intents: Intent[] };
 

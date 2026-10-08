@@ -34,8 +34,10 @@ import { Canvas } from '#types';
 import {
   clone,
   hasLegacyRoot,
+  hasUnplacedLayers,
   isNodeRecord,
   migrateContent,
+  migrateLayers,
   nodeKey,
   readScenes,
   readStyles,
@@ -55,7 +57,7 @@ export type BoundCanvasStore = {
 /** A drawing a scene shape references, bound for as long as this drawing is. */
 type LinkedCanvas = { canvas: Drawing.Canvas; root: SceneId; name?: string; dispose: () => void };
 
-/** Renames, seeds and returns the canvas's root scene, writing only when the content needs it. */
+/** Renames, seeds and returns the canvas's root scene and names its layers, writing only when the content needs it. */
 const prepare = (canvas: Drawing.Canvas): SceneId => {
   if (hasLegacyRoot(canvas.content)) {
     Obj.update(canvas, (canvas) => {
@@ -66,6 +68,11 @@ const prepare = (canvas: Drawing.Canvas): SceneId => {
   if (root === undefined) {
     Obj.update(canvas, (canvas) => {
       root = seedContent(canvas.content);
+    });
+  }
+  if (hasUnplacedLayers(canvas.content)) {
+    Obj.update(canvas, (canvas) => {
+      migrateLayers(canvas.content);
     });
   }
   return root ?? seedContent({});

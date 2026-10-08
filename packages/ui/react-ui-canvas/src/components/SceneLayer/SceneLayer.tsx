@@ -8,7 +8,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo } from 'react';
+import React, { type CSSProperties, Fragment, createContext, memo, useContext, useId, useMemo } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -34,6 +34,7 @@ import {
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
 import { contentBounds } from '../../utils/hit.ts';
 import { type LatticeSpec } from '../../utils/lattice.ts';
+import { elementLayer, sceneLayers, visibleScene } from '../../utils/layers.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
@@ -110,7 +111,7 @@ export type SceneLayerProps = {
 export const SceneLayer = memo(
   ({
     store,
-    scene,
+    scene: sceneProp,
     registry,
     zoom,
     depth,
@@ -130,18 +131,29 @@ export const SceneLayer = memo(
   }: SceneLayerProps) => {
     const inherited = useContext(CellContext);
     const cell = cellProp ?? inherited;
-    // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
-    // hide under a neighbour, while the model's z stays what the user arranged.
-    const nodes = useMemo(() => {
-      const sorted = sortByZ(Object.values(scene.nodes));
-      return selected?.size
-        ? [...sorted.filter((node) => !selected.has(node.id)), ...sorted.filter((node) => selected.has(node.id))]
-        : sorted;
-    }, [scene.nodes, selected]);
+    // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
+    const scene = useMemo(() => visibleScene(sceneProp), [sceneProp]);
     const links = useMemo(
       () => sceneLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],
     );
+    // Paint order is the layers', bottom first: each layer's links, then its nodes, then its links' ends, so an upper
+    // layer covers a lower one whole. Within a layer it is z, with the selection on top: a selected node is being
+    // worked on and must not hide under a neighbour, while the model's order stays what the user arranged.
+    const groups = useMemo(() => {
+      const layers = sceneLayers(scene);
+      const nodes = sortByZ(Object.values(scene.nodes));
+      return layers.map((layer) => {
+        const onLayer = nodes.filter((node) => elementLayer(node, layers) === layer.id);
+        return {
+          layer,
+          nodes: selected?.size
+            ? [...onLayer.filter((node) => !selected.has(node.id)), ...onLayer.filter((node) => selected.has(node.id))]
+            : onLayer,
+          links: links.filter(({ link }) => elementLayer(link, layers) === layer.id),
+        };
+      });
+    }, [scene, links, selected]);
     // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
     const styles = useAtomValue(store.styles ?? NO_STYLES);
     const lines = useMemo(
@@ -172,76 +184,82 @@ export const SceneLayer = memo(
               />
             ))}
           </defs>
-          {links.map(({ link, path }) => (
-            <g key={link.id}>
-              {/* A wide transparent twin makes the thin stroke easy to press. */}
-              {handlers && (
-                <path
-                  d={path}
-                  className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
-                  style={{ pointerEvents: 'stroke' }}
-                  strokeWidth={12 * unit}
-                  onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                  onPointerEnter={() => handlers.onLinkHover?.(link.id)}
-                  onPointerLeave={() => handlers.onLinkHover?.(undefined)}
-                  onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
-                  onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
-                />
-              )}
-              <path
-                d={path}
-                className={mx(
-                  'fill-none',
-                  plain
-                    ? lineClasses(lines.get(link.id)?.hue).stroke
-                    : selected?.has(link.id)
-                      ? 'stroke-focus'
-                      : hoveredLink === link.id
-                        ? 'stroke-focus/50'
-                        : lineClasses(lines.get(link.id)?.hue).stroke,
-                )}
-                strokeWidth={linkWidth}
-                strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
-                strokeLinecap={lines.get(link.id)?.lineStyle === 'dotted' ? 'round' : undefined}
-                data-link-id={link.id}
+        </svg>
+        {groups.map((group) => (
+          <Fragment key={group.layer.id}>
+            <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+              {group.links.map(({ link, path }) => (
+                <g key={link.id}>
+                  {/* A wide transparent twin makes the thin stroke easy to press. */}
+                  {handlers && (
+                    <path
+                      d={path}
+                      className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
+                      style={{ pointerEvents: 'stroke' }}
+                      strokeWidth={12 * unit}
+                      onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                      onPointerEnter={() => handlers.onLinkHover?.(link.id)}
+                      onPointerLeave={() => handlers.onLinkHover?.(undefined)}
+                      onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                      onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                    />
+                  )}
+                  <path
+                    d={path}
+                    className={mx(
+                      'fill-none',
+                      plain
+                        ? lineClasses(lines.get(link.id)?.hue).stroke
+                        : selected?.has(link.id)
+                          ? 'stroke-focus'
+                          : hoveredLink === link.id
+                            ? 'stroke-focus/50'
+                            : lineClasses(lines.get(link.id)?.hue).stroke,
+                    )}
+                    strokeWidth={linkWidth}
+                    strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
+                    strokeLinecap={lines.get(link.id)?.lineStyle === 'dotted' ? 'round' : undefined}
+                    data-link-id={link.id}
+                  />
+                </g>
+              ))}
+            </svg>
+            {group.nodes.map((node) => (
+              <NodeFrame
+                key={node.id}
+                store={store}
+                scene={scene}
+                registry={registry}
+                node={node}
+                styles={styles}
+                zoom={zoom}
+                depth={depth}
+                liveDepth={liveDepth}
+                selected={!plain && (selected?.has(node.id) ?? false)}
+                hovered={hover === node.id}
+                opening={opening === node.id}
+                fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+                chromeFade={focus?.id === node.id ? fadeStyle : undefined}
+                editingPart={editing?.id === node.id ? editing.part : undefined}
+                ghost={ghost === node.id}
+                debug={debug}
+                handlers={handlers}
               />
-            </g>
-          ))}
-        </svg>
-        {nodes.map((node) => (
-          <NodeFrame
-            key={node.id}
-            store={store}
-            scene={scene}
-            registry={registry}
-            node={node}
-            styles={styles}
-            zoom={zoom}
-            depth={depth}
-            liveDepth={liveDepth}
-            selected={!plain && (selected?.has(node.id) ?? false)}
-            hovered={hover === node.id}
-            opening={opening === node.id}
-            fade={focus && focus.id !== node.id ? fadeStyle : undefined}
-            chromeFade={focus?.id === node.id ? fadeStyle : undefined}
-            editingPart={editing?.id === node.id ? editing.part : undefined}
-            ghost={ghost === node.id}
-            debug={debug}
-            handlers={handlers}
-          />
+            ))}
+            {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
+            <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+              {group.links.map(({ link, path }) => (
+                <path
+                  key={link.id}
+                  d={path}
+                  className='fill-none stroke-none'
+                  markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+                  markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                />
+              ))}
+            </svg>
+          </Fragment>
         ))}
-        {/* The ends paint over the nodes, so an end centred on a node's edge shows whole. */}
-        <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-          {links.map(({ link, path }) => (
-            <path
-              key={link.id}
-              d={path}
-              className='fill-none stroke-none'
-              markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
-              markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
-            />
-          ))}
-        </svg>
       </CellContext.Provider>
     );
   },
