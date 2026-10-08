@@ -31,6 +31,7 @@ import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
+import { makeProcessSnapshot } from './process-snapshot.ts';
 import type { PersistedEvent, PersistedEventInput } from './process-store.ts';
 import { EphemeralTraceBuffer } from './trace-buffer.ts';
 
@@ -149,9 +150,9 @@ const fromPersistedChildEvent = (event: {
  * on shutdown. Process.Status transitions are computed here from handler accounting
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
-export class Impl<I, O, R> implements Process.Handle<I, O, any> {
+export class Impl<I, O, R> implements Process.Process<I, O, any> {
   readonly statusAtom: Atom.Atom<Process.Status> = Atom.readable(() => this.#currentStatus);
-  readonly parentId: Process.ID | null;
+  readonly parentPid: Process.ID | null;
   readonly environment: Process.Environment;
 
   /** In-memory client for the process's declared RPC control surface. */
@@ -183,6 +184,9 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
   readonly #scope: Scope.Closeable;
   readonly #registry: Registry.AtomRegistry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
+  // Kept so a subscriber that arrives after the exit (an attach to a finished child) still reads the
+  // result, which the queue's first consumer has already taken.
+  readonly #outputs: O[] = [];
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
@@ -194,7 +198,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
   readonly #cancellation?: AbortController;
   constructor(
     readonly pid: Process.ID,
-    parentId: Process.ID | null,
+    parentPid: Process.ID | null,
     handler: Operation.DurableHandler<I, O, R, any>,
     scope: Scope.Closeable,
     services: Context.Context<R | Operation.BaseServices>,
@@ -217,7 +221,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
     initialState?: Process.State,
     cancellation?: AbortController,
   ) {
-    this.parentId = parentId;
+    this.parentPid = parentPid;
     this.key = key;
     this.params = params;
     this.environment = environment;
@@ -245,37 +249,50 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
       startedAt: new Date(),
       completedAt: Option.none(),
     };
-    log('lifecycle: created', { parentId, key, params });
+    log('lifecycle: created', { parentPid, key, params });
   }
   snapshotStatus(): Process.Status {
     return this.#currentStatus;
   }
-  snapshotProcessInfo(): Process.Process {
-    const status = this.#currentStatus;
-    const error = Option.getOrNull(
-      Option.flatMap(status.exit, (ex) =>
-        Exit.match(ex, {
+  /** The process as of now: its current data, live members delegating to this handle. */
+  snapshotProcessInfo(): Process.Process<I, O, any> {
+    return makeProcessSnapshot<I, O, any>(
+      {
+        pid: this.pid,
+        parentPid: this.parentPid,
+        key: this.key,
+        params: this.params,
+        environment: this.environment,
+        state: this.state,
+        error: this.error,
+        startedAt: this.startedAt,
+        completedAt: this.completedAt,
+        metrics: this.metrics,
+      },
+      () => this,
+    );
+  }
+  get state(): Process.State {
+    return this.#currentStatus.state;
+  }
+  get error(): Process.Data['error'] {
+    return Option.getOrNull(
+      Option.flatMap(this.#currentStatus.exit, (exit) =>
+        Exit.match(exit, {
           onFailure: (cause) => Option.some(serializeFailure(cause)),
           onSuccess: () => Option.none(),
         }),
       ),
     );
-    return {
-      pid: this.pid,
-      parentPid: this.parentId,
-      key: this.key,
-      params: this.params,
-      environment: this.environment,
-      state: status.state,
-      error,
-      startedAt: status.startedAt.getTime(),
-      completedAt: Option.map(status.completedAt, (date) => date.getTime()),
-      metrics: {
-        wallTime: this.#wallTimeMs,
-        inputCount: this.#inputCount,
-        outputCount: this.#outputCount,
-      },
-    };
+  }
+  get startedAt(): number {
+    return this.#currentStatus.startedAt.getTime();
+  }
+  get completedAt(): Option.Option<number> {
+    return Option.map(this.#currentStatus.completedAt, (date) => date.getTime());
+  }
+  get metrics(): Process.Data['metrics'] {
+    return { wallTime: this.#wallTimeMs, inputCount: this.#inputCount, outputCount: this.#outputCount };
   }
   /** Run process onSpawn. Called by ProcessManager.Impl after spawn. */
   runOnSpawn(seq?: number): Effect.Effect<void> {
@@ -302,7 +319,11 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
     });
   }
   subscribeOutputs(): Stream.Stream<O> {
-    return Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow));
+    return Stream.suspend(() =>
+      Process.isExited(this.snapshotStatus().state)
+        ? Stream.fromIterable([...this.#outputs])
+        : Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow)),
+    );
   }
   pushEphemeral(event: Trace.Message): void {
     this.#ephemeralBuffer.push(event);
@@ -346,7 +367,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
       yield* this.#cleanup();
     }).pipe(Effect.withSpan('Process.terminate', { attributes: this.#spanAttributes() }));
   }
-  hydrate(definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Handle<I, O, any>> {
+  hydrate(definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Process<I, O, any>> {
     if (definition.key !== this.key) {
       return Effect.die(
         new Error(`Process definition key mismatch for ${this.pid}: expected "${this.key}", got "${definition.key}"`),
@@ -414,7 +435,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
         return Effect.gen({ self: this }, function* () {
           // The runtime assumes handlers are idempotent: an input whose handler was interrupted
           // is always re-delivered. Operations that are not idempotent guard against unsafe
-          // retries themselves (see `DurableOperation.fromOperation`).
+          // retries themselves (see `OperationProcess.make`).
           // event.value is persisted JSON; cast required at deserialization boundary since
           // Operation.Durable<I,O,R> does not expose the input Schema (runtime object does).
           const defWithSchema = definition as unknown as { input: Schema.Codec<I, unknown, never> };
@@ -660,6 +681,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
   requestSubmitOutput(output: O): void {
     log('lifecycle: submit output', { pid: this.pid });
     this.#outputCount++;
+    this.#outputs.push(output);
     this.#onStatusChanged?.();
     Queue.offerUnsafe(this.#outputQueue, Option.some(output));
   }
@@ -760,7 +782,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
     return {
       [SpanAttributes.PROCESS.id]: this.pid,
       [SpanAttributes.PROCESS.key]: this.key,
-      ...(this.parentId ? { [SpanAttributes.PROCESS.parentId]: this.parentId } : {}),
+      ...(this.parentPid ? { [SpanAttributes.PROCESS.parentId]: this.parentPid } : {}),
     };
   }
 

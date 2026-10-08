@@ -56,7 +56,6 @@ EphemeralDebugModule (storybook debug panel)
 │ each subscribe forks, closing the scope and interrupting scoped forks before
 │ live events arrive. forkDaemon survives until explicit Fiber.interrupt on dispose.
 │
-│ Same pattern as ProcessOperationInvoker.fiberFromProcess (output collector).
 ▼
 resolveEphemeralStatusUpdate → TaskList activity line
 
