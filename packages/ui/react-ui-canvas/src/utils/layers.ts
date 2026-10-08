@@ -17,7 +17,7 @@ import {
   type Scene,
   endpointNode,
 } from '../model/types.ts';
-import { between, sortByZ, topZ } from './order.ts';
+import { between, sortByZ } from './order.ts';
 
 /** The layer of a scene that names none: every element is on it. */
 export const DEFAULT_LAYER: Layer = { id: 'layer', name: 'Layer 1', z: between() };
@@ -100,10 +100,10 @@ export const reduceLayerIntent = (scene: Scene, intent: Extract<Intent, { kind: 
   return { ...scene, nodes, links, layers: rest };
 };
 
-/** A new layer above the others. */
+/** A new layer below the others, so it ends the top-first list. */
 export const createLayer = (scene: Scene, id: LayerId): Layer => {
   const layers = sceneLayers(scene);
-  return { id, name: `Layer ${layers.length + 1}`, z: topZ(layers) };
+  return { id, name: `Layer ${layers.length + 1}`, z: between(undefined, layers[0]?.z) };
 };
 
 /** The layer moved to `index` in the bottom-first order. */

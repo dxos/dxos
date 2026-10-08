@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { reduceIntent } from '../model/projection.ts';
-import { type Scene } from '../model/types.ts';
+import { type Layer, type Scene } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 import {
   DEFAULT_LAYER,
@@ -31,7 +31,7 @@ describe('layers', () => {
 
   /** The base scene with a second layer above, holding `b`. */
   const layered = (): Scene => {
-    const top = createLayer(base, 'top');
+    const top: Layer = { id: 'top', name: 'Top', z: between(DEFAULT_LAYER.z) };
     const scene = reduceIntent(base, { kind: 'layer', layer: top });
     return reduceIntent(scene, { kind: 'update', id: 'b', values: { layer: 'top' } });
   };
@@ -41,7 +41,15 @@ describe('layers', () => {
     expect(elementLayer(base.nodes.a, sceneLayers(base))).toBe(DEFAULT_LAYER.id);
   });
 
-  test('a new layer goes on top, and the implicit layer becomes real so it keeps its elements', ({ expect }) => {
+  test('a new layer goes below the others', ({ expect }) => {
+    const scene = layered();
+    const layer = createLayer(scene, 'new');
+    const added = reduceIntent(scene, { kind: 'layer', layer });
+    expect(layer.name).toBe('Layer 3');
+    expect(sceneLayers(added).map((layer) => layer.id)).toEqual(['new', DEFAULT_LAYER.id, 'top']);
+  });
+
+  test('a second layer makes the implicit layer real, so it keeps its elements', ({ expect }) => {
     const scene = layered();
     expect(sceneLayers(scene).map((layer) => layer.id)).toEqual([DEFAULT_LAYER.id, 'top']);
     expect(elementLayer(scene.nodes.a, sceneLayers(scene))).toBe(DEFAULT_LAYER.id);

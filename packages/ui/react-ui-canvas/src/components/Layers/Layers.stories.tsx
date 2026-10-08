@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type Layer, type LayerId } from '../../model/types.ts';
-import { between, topZ } from '../../utils/order.ts';
+import { between } from '../../utils/order.ts';
 import { LayersPanel } from './Layers.tsx';
 
 /** Three layers, bottom first, the middle one hidden. */
@@ -46,7 +46,10 @@ const DefaultStory = () => {
       }
       onCreate={() => {
         const id = `layer-${layers.length + 1}`;
-        setLayers((layers) => [...layers, { id, name: `Layer ${layers.length + 1}`, z: topZ(layers) }]);
+        setLayers((layers) => [
+          { id, name: `Layer ${layers.length + 1}`, z: between(undefined, layers[0]?.z) },
+          ...layers,
+        ]);
         setSelected([id]);
         return id;
       }}
@@ -84,9 +87,9 @@ export const Test: Story = {
     const names = () => canvas.getAllByTestId(/^layer-name-/).map((element) => element.textContent);
     await expect(names()).toEqual(['Diagram', 'Notes', 'Background']);
 
-    // 2. A new layer goes on top.
+    // 2. A new layer goes at the end of the list (the bottom of the stack).
     await userEvent.click(canvas.getByTestId('layers-create'));
-    await waitFor(() => expect(names()[0]).toBe('Layer 4'));
+    await waitFor(() => expect(names().at(-1)).toBe('Layer 4'));
 
     // 3. The new layer's name opens for editing; the green check saves it.
     const input = await canvas.findByTestId('layer-input-layer-4');
@@ -94,7 +97,7 @@ export const Test: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'Sketch');
     await userEvent.click(within(canvas.getByTestId('layer-layer-4')).getByTestId('editable.save'));
-    await waitFor(() => expect(names()[0]).toBe('Sketch'));
+    await waitFor(() => expect(names().at(-1)).toBe('Sketch'));
 
     // 4. The eye shows a hidden layer.
     await userEvent.click(canvas.getByTestId('layer-toggle-notes'));
@@ -110,7 +113,7 @@ export const Test: Story = {
     await user.keyboard('{/Meta}');
     await waitFor(() => expect(canvas.getByTestId('layers-merge')).toBeEnabled());
     await userEvent.click(canvas.getByTestId('layers-merge'));
-    await waitFor(() => expect(names()).toEqual(['Sketch', 'Diagram', 'Background']));
+    await waitFor(() => expect(names()).toEqual(['Diagram', 'Background', 'Sketch']));
 
     // 6. The arrows move along the list, and Enter opens the current row's name.
     await userEvent.click(canvas.getByTestId('layer-name-diagram'));
