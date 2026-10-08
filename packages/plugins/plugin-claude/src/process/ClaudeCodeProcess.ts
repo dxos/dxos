@@ -54,18 +54,17 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
  * running between turns, so a follow-up does not pay for starting it again.
  */
 export const make = (options: Options): AgentProcessDefinition =>
-  Operation.makeDurable(
-    {
-      key: KEY,
-      input: AgentInput,
-      output: Schema.Void,
-      // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
-      // and the agent's subscription token is found with one.
-      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
-      services: [Database.Service, ShellService.ShellService],
-      rpcs: HarnessControl,
-    },
-    (ctx) =>
+  Operation.makeDurable({
+    key: KEY,
+    input: AgentInput,
+    output: Schema.Void,
+    // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
+    // and the agent's subscription token is found with one.
+    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
+    services: [Database.Service, ShellService.ShellService],
+    rpcs: HarnessControl,
+  }).pipe(
+    Operation.withDurableHandler((ctx) =>
       Effect.gen(function* () {
         const chatDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
           Option.getOrUndefined,
@@ -210,6 +209,7 @@ export const make = (options: Options): AgentProcessDefinition =>
           ),
         };
       }),
+    ),
   );
 
 /** Wake-ups the agent scheduled for itself since a person last prompted it; bounded by {@link Alarm.MAX_SELF_WAKES}. */

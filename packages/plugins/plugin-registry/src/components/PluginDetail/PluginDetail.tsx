@@ -180,10 +180,10 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
             />
 
             <Layout.Grid cols={['fill', 'min']} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'>
-              <div className='flex items-center gap-2'>
+              <Layout.Flex align='center' gap='sm'>
                 <h2 className='text-xl'>{name}</h2>
                 {failure && <PluginFailureBadge failure={failure} size='lg' />}
-              </div>
+              </Layout.Flex>
               {onInstall ? (
                 <Button.Root size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
@@ -197,14 +197,14 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                   />
                 </Field.Root>
               )}
-              <div className='flex items-center gap-1 pt-0.5 text-sm text-fg-muted'>
+              <Layout.Flex align='center' gap='xs' classNames='pt-0.5 text-sm text-fg-muted'>
                 {slug}
                 {author && (
                   <span className='dx-tag dx-tag-inline' data-hue='info'>
                     {author}
                   </span>
                 )}
-              </div>
+              </Layout.Flex>
             </Layout.Grid>
 
             {scope && (
@@ -242,7 +242,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
             <Section.Root>
               <Section.Heading title={t('resources.label')} />
               <Section.Body>
-                <div className='flex gap-3 items-center'>
+                <Layout.Flex gap='md' align='center'>
                   {homePage && (
                     <Typography.Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
@@ -266,7 +266,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
-                </div>
+                </Layout.Flex>
               </Section.Body>
             </Section.Root>
 
@@ -274,7 +274,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('dependencies.label')} />
                 <Section.Body>
-                  <div className='flex flex-wrap gap-1'>
+                  <Layout.Flex wrap gap='xs'>
                     {dependencies.map((depId) => (
                       <Chip
                         key={depId}
@@ -283,7 +283,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                         onClick={onNavigateToPlugin}
                       />
                     ))}
-                  </div>
+                  </Layout.Flex>
                 </Section.Body>
               </Section.Root>
             )}
@@ -292,7 +292,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('dependents.label')} />
                 <Section.Body>
-                  <div className='flex flex-wrap gap-1'>
+                  <Layout.Flex wrap gap='xs'>
                     {dependents.map((dependentId) => (
                       <Chip
                         key={dependentId}
@@ -301,7 +301,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                         onClick={onNavigateToPlugin}
                       />
                     ))}
-                  </div>
+                  </Layout.Flex>
                 </Section.Body>
               </Section.Root>
             )}
@@ -310,7 +310,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
-                  <div className='flex gap-2 items-center'>
+                  <Layout.Flex gap='sm' align='center'>
                     <Select.Root
                       items={versionItems}
                       value={selectedVersionTag ? [selectedVersionTag] : []}
@@ -333,13 +333,13 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                         {installing ? t('installing.label') : t('install-version.label')}
                       </Button.Root>
                     )}
-                  </div>
+                  </Layout.Flex>
                 </Section.Body>
               </Section.Root>
             )}
 
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
-              <div className='col-start-2 col-span-2 flex gap-2'>
+              <Layout.Flex gap='sm' classNames='col-start-2 col-span-2'>
                 {updating ? (
                   <Button.Root variant='primary' disabled>
                     {t('updating.label')}
@@ -350,7 +350,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                   </Button.Root>
                 ) : null}
                 {onUninstall && <Button.Root onClick={onUninstall}>{t('uninstall.label')}</Button.Root>}
-              </div>
+              </Layout.Flex>
             )}
           </Layout.Grid>
         </ScrollArea.Viewport>
@@ -368,7 +368,9 @@ const SectionHeading = ({ title }: { title: string }) => (
 );
 
 const SectionBody = ({ classNames, children }: Util.ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('col-start-2 flex flex-col gap-2', classNames)}>{children}</div>
+  <Layout.Flex column gap='sm' classNames={['col-start-2', classNames]}>
+    {children}
+  </Layout.Flex>
 );
 
 const Section = {

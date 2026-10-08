@@ -125,6 +125,8 @@ const GitHubPullSchema = Schema.Struct({
   draft: Schema.Boolean.pipe(Schema.optional),
   merged: Schema.Boolean.pipe(Schema.optional),
   merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  created_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  updated_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
   html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
   user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
   labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),

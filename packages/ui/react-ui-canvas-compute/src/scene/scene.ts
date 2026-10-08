@@ -33,7 +33,7 @@ export const sceneFromCircuit = (model: CanvasGraphModel<ComputeShape>, id = 'ci
       z: keys[shapes.length + index],
       source: { node: edge.source, port: createAnchorId('output', edge.output ?? DEFAULT_OUTPUT) },
       target: { node: edge.target, port: createAnchorId('input', edge.input ?? DEFAULT_INPUT) },
-      directed: true,
+      ends: { end: 'arrow' },
     };
   });
   return { id, ...(name ? { name } : {}), nodes, links };

@@ -15,27 +15,10 @@ import * as RDF from '@dxos/pipeline-rdf/types';
  */
 export const ANNOTATIONS_KEY = 'org.dxos.agent.annotations';
 
-/**
- * pipeline-rdf's `Term` as one struct: ECHO only stores discriminated unions, and an entity term and a
- * literal term share no tag field.
- */
-export const Term = Schema.Struct({
-  entity: Schema.optional(Schema.String),
-  label: Schema.optional(Schema.String),
-  literal: Schema.optional(Schema.String),
-});
+/** `Obj.Meta` key source of a {@link FactEntry}; the key's id is the fact's `id`, so a fact is found without a scan. */
+export const FACT_KEY = 'org.dxos.agent.fact';
 
-export interface Term extends Schema.Schema.Type<typeof Term> {}
-
-/** pipeline-rdf's `Fact`, with its subject and object stored as {@link Term}; an `RDF.Fact` is assignable to it. */
-export const Fact = Schema.Struct({
-  ...RDF.Fact.fields,
-  assertion: Schema.Struct({ ...RDF.Assertion.fields, subject: Term, object: Term }),
-});
-
-export interface Fact extends Schema.Schema.Type<typeof Fact> {}
-
-/** Who extracted an entry's facts. */
+/** Who extracted a pass's facts. */
 export const Extractor = Schema.Struct({
   id: Schema.String,
   model: Schema.String,
@@ -45,11 +28,23 @@ export const Extractor = Schema.Struct({
 export interface Extractor extends Schema.Schema.Type<typeof Extractor> {}
 
 /**
- * One extraction pass over a source (document, web page or chat transcript), appended to that
- * source's annotation feed. Facts are feed items rather than objects: an agent records hundreds a day
- * (docs/ONTOLOGY.md §2).
+ * One fact read from a source, appended to that source's annotation feed. A fact is a feed item rather
+ * than an object (an agent records hundreds a day, docs/ONTOLOGY.md §2), and one item per fact so it can
+ * be forgotten on its own; it is wrapped because an ECHO id cannot be the fact's `source#hash#index` id.
  */
-export class FactEntry extends Type.makeObject<FactEntry>(DXN.make('org.dxos.type.agent.factEntry', '0.1.0'))(
+export class FactEntry extends Type.makeObject<FactEntry>(DXN.make('org.dxos.type.agent.factEntry', '0.2.0'))(
+  Schema.Struct({
+    fact: RDF.Fact,
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--graph--regular', hue: 'violet' })),
+) {}
+
+/**
+ * Closes one extraction pass over a source: appended after the pass's facts, whose `pass` is this
+ * object's id, so a fact whose marker is absent belongs to a pass that has not completed.
+ */
+export class ExtractionPass extends Type.makeObject<ExtractionPass>(
+  DXN.make('org.dxos.type.agent.extractionPass', '0.1.0'),
+)(
   Schema.Struct({
     source: Schema.optional(
       Ref.Ref(Obj.Unknown).annotate({ title: 'Source', description: 'The object read; absent for a web page.' }),
@@ -64,16 +59,32 @@ export class FactEntry extends Type.makeObject<FactEntry>(DXN.make('org.dxos.typ
       }),
     ),
     extractor: Extractor,
-    facts: Schema.Array(Fact),
+    facts: Schema.Number.annotate({ title: 'Facts', description: 'How many facts the pass appended.' }),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--graph--regular', hue: 'violet' }),
   ),
 ) {}
 
+/** The foreign key a fact's entry carries. */
+export const factKey = (factId: string) => ({ source: FACT_KEY, id: factId });
+
+/** A fact of a completed pass, with the entry that holds it and the pass that recorded it. */
+export type Recorded = { entry: FactEntry; fact: RDF.Fact; pass: ExtractionPass };
+
+/** The facts whose pass completed; facts of a pass still being appended (no marker yet) are left out. */
+export const completed = (entries: readonly FactEntry[], passes: readonly ExtractionPass[]): Recorded[] => {
+  const byId = new Map(passes.map((pass) => [pass.id, pass]));
+  return entries.flatMap((entry) => {
+    const pass = entry.fact.pass === undefined ? undefined : byId.get(entry.fact.pass);
+    return pass ? [{ entry, fact: entry.fact, pass }] : [];
+  });
+};
+
 /** The text of a fact's subject or object. */
-export const termText = (term: Term): string => term.label ?? term.entity ?? term.literal ?? '';
+export const termText = (term: RDF.Term): string =>
+  term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 /** A fact as one line: subject, predicate, object. */
-export const factText = (fact: Fact): string =>
+export const factText = (fact: RDF.Fact): string =>
   `${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;

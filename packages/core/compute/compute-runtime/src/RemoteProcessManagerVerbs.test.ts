@@ -17,7 +17,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { SpaceId } from '@dxos/keys';
+import { SpaceId, URI } from '@dxos/keys';
 
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
 
@@ -34,6 +34,25 @@ describe('RemoteProcessManager control verbs', () => {
       host,
     );
     expect(result).toEqual({ pid: 'pid-1', state: Process.State.IDLE, listed: 1 });
+  });
+
+  test('list keeps only processes spawned against the requested target, whatever the host filters', async ({
+    expect,
+  }) => {
+    const host = makeFakeHost();
+    const [mine, other] = ['echo:///01JTESTTARGETMINE000000000', 'echo:///01JTESTTARGETOTHER00000000'].map(URI.make);
+    const listed = await run(
+      Effect.gen(function* () {
+        const manager = yield* remoteManager;
+        yield* manager.spawn(EchoProcess, { target: mine });
+        return {
+          mine: (yield* manager.list({ key: TEST_KEY, target: mine })).length,
+          other: (yield* manager.list({ key: TEST_KEY, target: other })).length,
+        };
+      }),
+      host,
+    );
+    expect(listed).toEqual({ mine: 1, other: 0 });
   });
 
   test('encodes inputs with the definition schema and streams outputs back', async ({ expect }) => {
@@ -255,15 +274,12 @@ const TEST_SPACE = SpaceId.random();
 const TEST_PID = Schema.decodeUnknownSync(Process.ID)('pid-1');
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
-const EchoProcess = Operation.makeDurable(
-  {
-    key: TEST_KEY,
-    input: Schema.String,
-    output: Schema.String,
-    services: [],
-  },
-  () => Effect.succeed({}),
-);
+const EchoProcess = Operation.makeDurable({
+  key: TEST_KEY,
+  input: Schema.String,
+  output: Schema.String,
+  services: [],
+}).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
 
 /**
  * In-memory stand-in for a remote host: echoes each input back as an output and tracks state, so the
@@ -286,12 +302,13 @@ const makeFakeHost = (
   let seq = 0;
   let spawnedHere = false;
   let terminated = false;
+  let spawnedAnnotations: Annotation.Dictionary = {};
 
   const info = (): RemoteProcessManager.Snapshot => ({
     pid: TEST_PID,
     parentPid: null,
     key: TEST_KEY,
-    params: { name: 'test', annotations: {} },
+    params: { name: 'test', annotations: spawnedAnnotations },
     environment: {},
     state,
     alarmDueAt: null,
@@ -304,9 +321,10 @@ const makeFakeHost = (
   return {
     inputs,
     statusCalls: () => statusCalls,
-    spawn: () =>
+    spawn: (request) =>
       Effect.sync(() => {
         spawnedHere = true;
+        spawnedAnnotations = request.annotations ?? {};
         return info();
       }),
     list: () => Effect.sync(() => (terminated || !(spawnedHere || options.existing) ? [] : [info()])),

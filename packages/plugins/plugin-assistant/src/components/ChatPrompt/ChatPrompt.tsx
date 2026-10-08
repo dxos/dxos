@@ -22,9 +22,9 @@ import {
 } from '@dxos/react-ui-chat';
 import type { ActionGraphProps } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { pendingText } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
@@ -201,19 +201,20 @@ export const ChatPrompt = ({
   );
 
   return (
-    <div
+    <Layout.Flex
+      column
       data-testid='assistant.prompt'
       role='group'
-      className={mx(
-        'flex flex-col w-full dx-density-md',
+      classNames={[
+        'w-full dx-density-md',
         outline &&
           'dx-group-surface rounded-sm border border-separator-subtle transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
-      )}
+      ]}
     >
       {processor && <ChatMcpErrors processor={processor} />}
 
-      <div className='flex p-2 gap-2'>
+      <Layout.Flex gap='sm' classNames='p-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
@@ -225,7 +226,7 @@ export const ChatPrompt = ({
           extensions={extensions}
           onSubmit={handleSubmit}
         />
-      </div>
+      </Layout.Flex>
 
       {db &&
         settings && (
@@ -253,14 +254,14 @@ export const ChatPrompt = ({
                   presets={presets}
                   onPresetChange={onPresetChange}
                 />
-                <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
+                <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
                   {processor && <ChatReferences db={db} context={processor.context} />}
-                </div>
+                </Layout.Flex>
               </>
             }
           />
         )}
-    </div>
+    </Layout.Flex>
   );
 };
 

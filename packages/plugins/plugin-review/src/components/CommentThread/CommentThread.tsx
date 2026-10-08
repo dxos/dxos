@@ -15,6 +15,7 @@ import {
 } from '@dxos/react-ui-thread';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
@@ -143,7 +144,7 @@ export const CommentThread = ({
   }
 
   const headerControls = (
-    <div className='flex flex-row items-center gap-0.5 pe-2'>
+    <Layout.Flex align='center' classNames='gap-0.5 pe-2'>
       {status === 'staged' && <Tag.Tag hue='neutral'>{t('draft.button')}</Tag.Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
         <Button.Root
@@ -178,7 +179,7 @@ export const CommentThread = ({
           onClick={handleThreadDelete}
         />
       )}
-    </div>
+    </Layout.Flex>
   );
 
   const header = detached ? (

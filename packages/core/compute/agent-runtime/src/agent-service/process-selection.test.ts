@@ -24,16 +24,15 @@ import { AGENT_PROCESS_KEY, AgentInput, type AgentProcessDefinition, makeInputMe
 const ECHO_PROCESS_KEY = 'com.example.process.echo';
 
 /** Answers each prompt with its own text, so a test can tell which process ran the chat. */
-const EchoProcess: AgentProcessDefinition = Operation.makeDurable(
-  {
-    key: ECHO_PROCESS_KEY,
-    input: AgentInput,
-    output: Schema.Void,
-    types: [Chat.Chat, Feed.Feed, Message.Message],
-    services: [Database.Service],
-    rpcs: HarnessControl,
-  },
-  (ctx) =>
+const EchoProcess: AgentProcessDefinition = Operation.makeDurable({
+  key: ECHO_PROCESS_KEY,
+  input: AgentInput,
+  output: Schema.Void,
+  types: [Chat.Chat, Feed.Feed, Message.Message],
+  services: [Database.Service],
+  rpcs: HarnessControl,
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       const chatDxn = Option.getOrThrow(Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation));
       const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
@@ -50,6 +49,7 @@ const EchoProcess: AgentProcessDefinition = Operation.makeDurable(
         onInput: (input) => reply(Message.extractText(makeInputMessage(input))),
       };
     }),
+  ),
 );
 
 const TestLayer = AssistantTestLayer({

@@ -244,7 +244,7 @@ const StarRating = ({ value }: { value: number }) => (
           key={index}
           icon={filled ? 'ph--star--fill' : half ? 'ph--star-half--fill' : 'ph--star--regular'}
           size='lg'
-          classNames={filled || half ? 'text-primary-500' : 'text-fg-subtle'}
+          classNames={filled || half ? 'text-accent-text' : 'text-fg-subtle'}
         />
       );
     })}

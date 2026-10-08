@@ -199,7 +199,7 @@ export const NotificationsPanel = ({
       </Panel.Header>
       <Panel.Body asChild>
         {items.length === 0 ? (
-          <Layout.Flex center classNames='h-full text-fg-subtle' role='status'>
+          <Layout.Flex center classNames='text-fg-subtle' role='status'>
             {t(
               inboxStatus === 'account-required'
                 ? 'account-required.message'

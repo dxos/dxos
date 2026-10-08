@@ -11,7 +11,7 @@ import { SceneManager } from './SceneManager.ts';
 const PORT = 9006;
 const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--freehand', PORT);
 
-// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, class C; links A→B (curve), A→C
+// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
 test.describe('SceneView', () => {
   let page: Page;
@@ -37,8 +37,8 @@ test.describe('SceneView', () => {
   test('draws the fixture with an arrowhead on the directed link', async () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
     expect(await scene.linkCount()).toBe(3);
-    // One marker set per layer (arrow and circle, start and end); the directed line uses the end arrow.
-    await expect(page.locator('[data-testid="scene-view"] marker')).toHaveCount(4);
+    // One marker set per layer (arrow, triangle and circle, start and end); the directed line uses the end arrow.
+    await expect(page.locator('[data-testid="scene-view"] marker')).toHaveCount(6);
     await expect(page.locator('[data-testid="scene-view"] path[marker-end]')).toHaveCount(1);
   });
 
@@ -139,6 +139,8 @@ test.describe('SceneView', () => {
   });
 
   test('a marquee replaces the selection, shift adds and alt subtracts', async () => {
+    // Fit frames the shapes tightly, so step out to leave empty canvas around A for the marquee to start on.
+    await scene.zoomOut();
     const a = await scene.box(scene.node('scene:root/a'));
     // The empty canvas above and left of A, dragging back over A's corner. Not the other corner: the
     // B→C spline passes below and right of A, and a press on a link starts an endpoint drag.
@@ -175,6 +177,25 @@ test.describe('SceneView', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
+  test('the line tool shows no link until the pointer has moved a grid cell', async () => {
+    await scene.zoomOut();
+    const view = await scene.box(scene.root);
+    await scene.focus();
+    await page.keyboard.press('l');
+    const right = await scene.nodesRight();
+    const from = { x: right + (view.x + view.width - right) / 2, y: view.y + view.height / 2 };
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    // A few pixels is well under a grid cell at any zoom the story fits to.
+    await page.mouse.move(from.x + 3, from.y + 2, { steps: 3 });
+    await expect(page.locator('[data-link-id]')).toHaveCount(3);
+    await page.mouse.up();
+    expect(await scene.linkCount()).toBe(3);
+    // A click on the background ends the link tool: the select tool is back.
+    await expect(page.getByTestId('palette-L')).not.toHaveClass(/bg-primary-500\/20/);
+    await expect(page.getByTestId('palette-V')).toHaveClass(/bg-primary-500\/20/);
+  });
+
   test('picking a creation tool clears the selection', async () => {
     await scene.clickNode('scene:root/a');
     expect(await scene.selectedNodes()).toEqual(['scene:root/a']);
@@ -200,6 +221,10 @@ test.describe('SceneView', () => {
     // The new link is the selection, and nothing else is.
     await expect(page.locator('[data-link-id].stroke-primary-500')).toHaveCount(1);
     expect(await scene.selectedNodes()).toEqual([]);
+    // The hover follows the pointer, not the gesture: the source is no longer highlighted, the target under
+    // the released pointer is.
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/border-primary-500\/50/);
+    await expect(scene.node('scene:root/c')).toHaveClass(/border-primary-500\/50/);
   });
 
   test('the line tool draws nothing when a press on a node never moves', async () => {
@@ -222,7 +247,7 @@ test.describe('SceneView', () => {
     // One step is ×1.25; both readouts round, so they can disagree by a point.
     await expect.poll(async () => Math.abs((await scene.zoom()) - fitted * 1.25)).toBeLessThanOrEqual(1);
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-class').click();
+    await page.getByTestId('create-note').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     await page.getByTestId('toolbar-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
@@ -245,12 +270,36 @@ test.describe('SceneView', () => {
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
-  test('the properties panel edits the selected class', async () => {
+  test('a scene shape opens from its zoom-in control', async () => {
+    await page.getByTestId('toolbar-create').click();
+    await page.getByTestId('create-scene').click();
+    await page.getByTestId('portal-open').first().click();
+    await expect(page.getByTestId('toolbar-up')).toBeEnabled();
+  });
+
+  test('the properties panel edits the selected node', async () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
-    expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
+    expect(labels).toEqual(expect.arrayContaining(['Label', 'Style']));
     // Geometry is two labelled number fields per row.
     expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
+  });
+
+  test('the style grid sets hue and tone together', async () => {
+    await scene.clickNode('scene:root/a');
+    const grid = page.getByTestId('style-grid');
+    const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
+    // An unstyled node matches no swatch.
+    await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
+    // Tone 1 is the strongest fill.
+    await option('blue:1').click();
+    await expect(option('blue:1')).toHaveAttribute('aria-checked', 'true');
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-500/);
+    await option('neutral:0').click();
+    await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');
+    // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-500/);
   });
 
   test('the geometry fields step by the grid and move the node', async () => {

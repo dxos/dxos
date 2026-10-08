@@ -18,6 +18,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import {
   FeedTraceSink,
   ProcessManager,
+  ProcessOperationInvoker,
   RemoteProcessManager,
   RemoteTraceMonitor,
   TriggerDispatcher,
@@ -84,9 +85,10 @@ interface TestLayerOptions {
 
   /**
    * Extra services to make available in the service resolver.
-   * Operations can depend on those services.
+   * Operations can depend on those services. They may themselves require the {@link AgentService.AgentService}
+   * (e.g. a service that wakes other conversations), which is served to them once it is built.
    */
-  extraServices?: Layer.Layer<never, never, never>;
+  extraServices?: Layer.Layer<never, never, AgentService.AgentService>;
 }
 
 export type AssistantTestServices =
@@ -100,7 +102,7 @@ export type AssistantTestServices =
   | Operation.Service
   | ProcessManager.Service
   | RemoteProcessManager.Service
-  | ProcessManager.ProcessOperationInvoker.Service
+  | ProcessOperationInvoker.Service
   | Process.ManagerService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
@@ -138,7 +140,7 @@ export const AssistantTestLayer = (
   return Layer.empty.pipe(
     // Captures must sit above the layers they read (a provideMerge chain feeds upward).
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
-    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+    Layer.provideMerge(ProcessOperationInvoker.layer),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(UnifiedProcessManager.layer),
     // A local test stack has no EDGE, so both the manager's remote half and `location: 'edge'` see
@@ -178,6 +180,20 @@ interface AgentServiceHolder {
   current?: Context.Service.Shape<typeof AgentService.AgentService>;
 }
 
+/** An {@link AgentService.AgentService} that forwards to the holder's, so it can be handed out before that exists. */
+const lateAgentService = (holder: AgentServiceHolder): Context.Service.Shape<typeof AgentService.AgentService> => ({
+  getSession: (chat, options) =>
+    Effect.suspend(() =>
+      holder.current
+        ? holder.current.getSession(chat, options)
+        : Effect.die(new Error('AgentService is not built yet.')),
+    ),
+  hydrate: () =>
+    Effect.suspend(() =>
+      holder.current ? holder.current.hydrate() : Effect.die(new Error('AgentService is not built yet.')),
+    ),
+});
+
 /** Fills the {@link AgentServiceHolder}, letting the resolver serve operations that relay into agent sessions. */
 const captureAgentService = (holder: AgentServiceHolder): Layer.Layer<never, never, AgentService.AgentService> =>
   Layer.effectDiscard(
@@ -212,8 +228,13 @@ export const AssistantTestServiceResolverLayer = (
 
       const { db } = yield* Database.Service;
 
-      // v4 dropped `Layer.toRuntime`; a built layer is its service context.
-      const extraServicesContext = yield* Layer.build(extraServices);
+      // v4 dropped `Layer.toRuntime`; a built layer is its service context. The agent service is built
+      // after the resolver (it needs it), so extra services reach it through the same late-bound holder.
+      const extraServicesContext = yield* Layer.build(
+        extraServices.pipe(
+          Layer.provide(Layer.succeed(AgentService.AgentService, lateAgentService(agentServiceHolder))),
+        ),
+      );
 
       return ServiceResolver.compose(
         ServiceResolver.succeed(Harness.HarnessService, (context) =>

@@ -12,19 +12,40 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { AgentActivity, ProfileProperties } from '#containers';
+import { AgentActivity, AgentKnowledge, AgentPrivateChat, ProfileProperties } from '#containers';
+import { AgentCompanion } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      // The Agent's main article; first so it outranks plugin-assistant's instructions-only AgentArticle,
-      // whose fields are edited in the Properties panel.
+      // The Agent's main article: the viewer's own private chat with it. First so it outranks plugin-assistant's
+      // instructions-only AgentArticle, whose fields are edited in the Properties panel.
       Surface.create({
-        id: 'agentActivity',
+        id: 'agentPrivateChat',
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         position: Position.first,
+        component: AgentPrivateChat,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, agent: subject, attendableId }),
+      }),
+      // What the agent knows: facts read from its conversations, the goals it watches and its graph.
+      Surface.create({
+        id: 'agentBrain',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, AgentCompanion.BRAIN),
+          AppSurface.companion(AppSurface.Article, Agent.Agent),
+        ),
+        component: AgentKnowledge,
+        props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // The channels it converses in, its skills and its channel conversations.
+      Surface.create({
+        id: 'agentActivity',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, AgentCompanion.ACTIVITY),
+          AppSurface.companion(AppSurface.Article, Agent.Agent),
+        ),
         component: AgentActivity,
-        props: ({ role, data: { subject } }) => ({ role, agent: subject }),
+        props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({

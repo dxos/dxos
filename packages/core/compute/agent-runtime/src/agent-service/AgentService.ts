@@ -26,7 +26,7 @@ import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
-type AgentHandle = Process.Handle<AgentInput, void, HarnessControlRpcs>;
+type AgentHandle = Process.Process<AgentInput, void, HarnessControlRpcs>;
 
 // TODO(burdon): Agent identity?
 export interface CreateSessionOptions {

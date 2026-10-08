@@ -82,7 +82,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [getPluginPath(targetId)],
         pivotId: getPluginPath(pluginId),
-        disposition: 'add',
+        disposition: 'detail',
       });
     },
     [invokePromise, pluginId],
