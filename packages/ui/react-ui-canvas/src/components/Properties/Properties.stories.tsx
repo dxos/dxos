@@ -64,9 +64,11 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const styles = useAtomValue(store.styles);
   const selected = select.flatMap((id) => getElement(scene, id) ?? []);
   return (
-    <Panel.Root classNames='grid grid-cols-2 gap-4'>
-      <Properties projection={projection} atoms={atoms} styles={store.styles} />
-      <JsonHighlighter data={{ selected, styles }} />
+    <Panel.Root>
+      <Panel.Body classNames='grid grid-cols-[20rem_1fr] gap-3'>
+        <Properties projection={projection} atoms={atoms} styles={store.styles} />
+        <JsonHighlighter data={{ selected, styles }} classNames='text-sm' />
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -74,7 +76,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
 const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/Properties',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column', classNames: 'w-[56rem]' })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column', classNames: 'w-[50rem]' })],
   args: { select: ['a'] },
   parameters: { translations: [...uiTranslations, ...formTranslations] },
 };

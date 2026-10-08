@@ -25,9 +25,9 @@ import {
 } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 
 import { useRegistry } from '../../hooks/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
@@ -307,24 +307,19 @@ export const Properties = ({
 
   if (elements.length === 0) {
     return (
-      <div
-        className={mx('flex flex-col overflow-hidden', classNames)}
-        data-testid='properties'
-        {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
-      >
-        <div className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</div>
-      </div>
+      <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+        <Panel.Body>
+          <p className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</p>
+        </Panel.Body>
+      </Panel.Root>
     );
   }
 
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
-    <div
-      className={mx('flex flex-col overflow-hidden', classNames)}
-      data-testid='properties'
-      {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
-    >
-      <Toolbar.Root data-testid='properties-toolbar'>
+    <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+      <Panel.Header asChild>
+        <Toolbar.Root data-testid='properties-toolbar'>
         {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
           <Button.Root
             variant='ghost'
@@ -358,7 +353,9 @@ export const Properties = ({
             onClick={onFlip}
           />
         )}
-      </Toolbar.Root>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
       {schema ? (
         <LayersContext.Provider value={layers}>
           <StyleClassesContext.Provider value={styleMap}>
@@ -395,6 +392,7 @@ export const Properties = ({
           {summary}
         </p>
       )}
-    </div>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

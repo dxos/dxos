@@ -110,7 +110,7 @@ const LINK_HOVER_GRACE_MS = 150;
 const SETTLE_MS = 200;
 
 /** Where the properties and layers panels float: the top right, one at a time (properties with a selection). */
-const PANEL_CLASSES = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]';
+const PANEL_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)]';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
