@@ -9,6 +9,7 @@ export {
   AGENT_PROCESS_KEY,
   AgentInput,
   AgentProcess,
+  type AgentProcessDefinition,
   type AgentProcessOptions,
   makeInputMessage,
 } from './agent-process.ts';

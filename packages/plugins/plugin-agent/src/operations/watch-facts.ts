@@ -42,6 +42,23 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
+      const members = yield* loadMembers;
+      const resolved = resolvePattern(members, when);
+      if (typeof resolved === 'string') {
+        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
+      }
+
+      // Telling someone what they say themselves is never the ask: the requester was mixed up with the watched person.
+      const told = recipient ? yield* Database.load(recipient) : requester;
+      const toldDid = personDid(told);
+      if (toldDid !== undefined && resolved.speaker === toldDid) {
+        return yield* Effect.fail(
+          new AgentOperationError({
+            message: `${Profile.displayName(told)} would be told what they say themselves; the requester is the person asking you, not the person to watch.`,
+          }),
+        );
+      }
+
       const goal = goalRef
         ? yield* Database.load(goalRef)
         : outcome
@@ -59,12 +76,6 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         return yield* Effect.fail(
           new AgentOperationError({ message: 'Pass the outcome the requester wants, or the goal it serves.' }),
         );
-      }
-
-      const members = yield* loadMembers;
-      const resolved = resolvePattern(members, when);
-      if (typeof resolved === 'string') {
-        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
       }
 
       const createdAt = DateTime.formatIso(yield* DateTime.now);

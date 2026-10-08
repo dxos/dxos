@@ -9,7 +9,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import type { MakeTurnProducer } from '@dxos/agent-runtime';
+import type { AgentProcessDefinition, MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import type { AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
@@ -106,6 +106,13 @@ export type Agent = {
 };
 
 export const Agent = Capability.make<Agent>()(`${meta.profile.key}.capability.agent`);
+
+/**
+ * A durable process a chat can run on in place of the assistant's own agent process, named by its
+ * key in `chat.session.process`. The agent service spawns it for such a chat; a chat that names
+ * none runs on the assistant's.
+ */
+export const AgentProcess = Capability.make<AgentProcessDefinition>()(`${meta.profile.key}.capability.agentProcess`);
 
 /** Context a chat receives when it runs against a subject object. */
 export type SubjectBindings = AiContext.BindingProps & {
