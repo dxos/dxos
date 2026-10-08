@@ -15,6 +15,7 @@ export * from './parts.ts';
 export * from './ports.ts';
 export * from './resize.ts';
 export * from './route.ts';
+export * from './scenes.ts';
 export * from './shapes.ts';
 export * from './style.ts';
 export * from './undo.ts';

@@ -64,6 +64,7 @@ import { nodeDragType } from '../../utils/dnd.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
+import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
@@ -1072,7 +1073,10 @@ SceneViewPalette.displayName = 'SceneView.Palette';
 //
 
 export type SceneViewPropertiesProps = Util.ThemedClassName<
-  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'>
+  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+    /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
+    sceneFilter?: (id: SceneId) => boolean;
+  }
 >;
 
 /** The selected element's properties as a floating panel; absent while nothing is selected. */
@@ -1082,8 +1086,12 @@ const SceneViewProperties = ({
   db,
   getOptions,
   overrides,
+  sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection } = useSceneViewContext('SceneView.Properties');
+  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+    useSceneViewContext('SceneView.Properties');
+  const scenes = useAtomValue(store.scenes);
+  const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
   if (selection.size === 0) {
     return null;
   }
@@ -1098,6 +1106,7 @@ const SceneViewProperties = ({
       db={db}
       getOptions={getOptions}
       overrides={overrides}
+      sceneOptions={options}
       readonly={!capabilities.update}
     />
   );

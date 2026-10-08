@@ -49,12 +49,14 @@ import {
 } from '../../model/types.ts';
 import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
+import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { resolveStyle } from '../../utils/style.ts';
+import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { LineHueField, StyleGridField } from './StyleGrid.tsx';
 
-/** Identity, ordering, geometry lists and a scene shape's child-scene id are the surface's, not the user's. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'scene'];
+/** Identity, ordering and geometry lists are the surface's, not the user's. */
+const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
@@ -87,6 +89,7 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
   'line.hue': LineHueField,
+  'scene': SceneField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -124,6 +127,7 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.tone': { hidden: true },
   'style.fontSize': { min: 8, max: 80, step: 1 },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
+  'scene': { label: 'Scene' },
 };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -148,6 +152,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   getOptions?: RefFieldDataProps['getOptions'];
   /** A host's per-selection field overrides (e.g. a field it allows only in some states), over the panel's own. */
   overrides?: (elements: readonly Element[]) => Record<string, FormFieldOverride>;
+  /** The scenes a scene shape may open (`sceneOptions`); without them its scene is not editable here. */
+  sceneOptions?: readonly SceneOption[];
 }>;
 
 export const Properties = ({
@@ -160,6 +166,7 @@ export const Properties = ({
   db,
   getOptions,
   overrides,
+  sceneOptions,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -175,12 +182,16 @@ export const Properties = ({
     const shown = elements.map((element) => formValues(nodes, element));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
-    const fieldOverrides: Record<string, FormFieldOverride> = { ...FIELD_OVERRIDES, ...overrides?.(elements) };
+    const fieldOverrides: Record<string, FormFieldOverride> = {
+      ...FIELD_OVERRIDES,
+      ...(sceneOptions ? {} : { scene: { hidden: true } }),
+      ...overrides?.(elements),
+    };
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides]);
+  }, [elements, nodes, overrides, sceneOptions]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -255,30 +266,32 @@ export const Properties = ({
         )}
       </Toolbar.Root>
       {schema ? (
-        <Form.Root
-          key={[...selection].join()}
-          schema={schema}
-          values={values}
-          fieldOverrides={fieldOverrides}
-          fieldMap={fieldMap}
-          db={db}
-          getOptions={getOptions}
-          readonly={readonly}
-          autoSave
-          onSave={onSave}
-        >
-          {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
-          <Form.Viewport scroll>
-            <Form.Content>
-              <Form.Fields exclude={HIDDEN} />
-              {summary && (
-                <p className='text-sm text-fg-muted' data-testid='properties-summary'>
-                  {summary}
-                </p>
-              )}
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
+        <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+          <Form.Root
+            key={[...selection].join()}
+            schema={schema}
+            values={values}
+            fieldOverrides={fieldOverrides}
+            fieldMap={fieldMap}
+            db={db}
+            getOptions={getOptions}
+            readonly={readonly}
+            autoSave
+            onSave={onSave}
+          >
+            {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
+            <Form.Viewport scroll>
+              <Form.Content>
+                <Form.Fields exclude={HIDDEN} />
+                {summary && (
+                  <p className='text-sm text-fg-muted' data-testid='properties-summary'>
+                    {summary}
+                  </p>
+                )}
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </SceneOptionsContext.Provider>
       ) : (
         <p className='p-2 text-sm text-fg-muted' data-testid='properties-summary'>
           {summary}
