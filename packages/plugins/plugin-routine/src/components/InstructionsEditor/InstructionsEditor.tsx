@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useActivationSignal } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -42,7 +42,7 @@ export const InstructionsEditor = ({
 }: InstructionsEditorProps) => {
   // Signalled here rather than by each embedding surface: a `skills` row renders blank until the
   // modules gated on this event contribute their definitions.
-  useActivationSignal(AppActivationEvents.AssistantStart);
+  Hooks.useActivationSignal(AppActivationEvents.AssistantStart);
 
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
   const db = dbProp ?? Obj.getDatabase(instructions);

@@ -4,7 +4,8 @@
 
 import React, { forwardRef, useId, useMemo } from 'react';
 
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type Point } from '../../model/types.ts';
@@ -26,7 +27,7 @@ const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${g
  */
 const levelOpacity = (size: number, min: number) => Math.min(0.12, 0.04 + (0.02 * Math.log(size / min)) / Math.log(4));
 
-export type GridProps = ThemedClassName<{
+export type GridProps = Util.ThemedClassName<{
   size?: number;
   scale?: number;
   offset?: Point;
@@ -51,7 +52,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
     },
     forwardedRef,
   ) => {
-    const svgRef = useForwardedRef(forwardedRef);
+    const svgRef = Hooks.useForwardedRef(forwardedRef);
     const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
 
     const instanceId = useId();
@@ -68,10 +69,10 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       <svg
         data-testid='dx-canvas-grid'
         ref={svgRef}
-        // `dx-fullscreen` (absolute inset-0) does not stretch a replaced <svg> element — without an explicit
+        // `dx-cover` (absolute inset-0) does not stretch a replaced <svg> element — without an explicit
         // size it falls back to the intrinsic 300x150, clipping the 100%-sized grid rects. Force full size.
         className={mx(
-          'dx-fullscreen w-full h-full pointer-events-none touch-none select-none',
+          'dx-cover w-full h-full pointer-events-none touch-none select-none',
           'stroke-neutral-500',
           classNames,
         )}

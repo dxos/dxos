@@ -11,32 +11,41 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectPopupSize, expectScoped, sizeRow } from '../../testing.ts';
+import {
+  GEOMETRY,
+  byTestId,
+  controlSize,
+  expectEndCell,
+  expectPopupSize,
+  expectScoped,
+  sizeRow,
+} from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { type FieldRootProps } from '../Field/index.ts';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { DateInput, type DateInputProps } from './DateInput.tsx';
 
-type ValueFieldProps = Next.DateInputProps & { label: string; testId: string; fieldProps?: FieldRootProps };
+type ValueFieldProps = DateInputProps & { label: string; testId: string; fieldProps?: Field.RootProps };
 
 /** A labelled DateInput whose value string is shown beside it, so a test can read what the field reports. */
 const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: ValueFieldProps) => {
   const [value, setValue] = useState(defaultValue);
   return (
-    <Next.Field.Root {...fieldProps}>
-      <Next.Field.Label>{label}</Next.Field.Label>
-      <Next.DateInput {...props} value={value} onValueChange={setValue} data-testid={testId} />
-      <Next.Field.HelperText>
+    <Field.Root {...fieldProps}>
+      <Field.Label>{label}</Field.Label>
+      <DateInput {...props} value={value} onValueChange={setValue} data-testid={testId} />
+      <Field.HelperText>
         Value: <output data-testid={`${testId}-value`}>{value}</output>
-      </Next.Field.HelperText>
-    </Next.Field.Root>
+      </Field.HelperText>
+    </Field.Root>
   );
 };
 
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <ValueField label='Due' testId={`date-${size}`} defaultValue='2026-09-29' />
-    <Next.Input aria-label='Note' data-testid={`input-${size}`} />
+    <Input aria-label='Note' data-testid={`input-${size}`} />
     <ValueField label='Starts at' testId={`time-${size}`} type='time' defaultValue='09:30' />
     <ValueField label='Reminder' testId={`datetime-${size}`} type='datetime-local' defaultValue='2026-09-29T09:30' />
     <ValueField label='Empty' testId={`empty-${size}`} />
@@ -62,7 +71,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/DateInput',
+  title: 'ui/react-ui-core/components/DateInput',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -131,10 +140,7 @@ export const Test: Story = {
       await expect(rect.width, `${size} width`).toBeCloseTo(input.width, 0);
       await expect(parseFloat(getComputedStyle(row).marginTop), `${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
       const trigger = within(row).getByRole('button', { name: 'Pick a date' });
-      await expect(trigger.getBoundingClientRect().right, `${size} trigger end`).toBeCloseTo(
-        rect.right - GEOMETRY[size].inset,
-        0,
-      );
+      await expectEndCell(trigger.querySelector('svg'), rect.right, size, `${size} trigger`);
     }
     await expectScoped(canvasElement);
 

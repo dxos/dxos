@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
@@ -11,10 +13,11 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
@@ -145,6 +148,68 @@ describe('RemoteProcessHandle ephemeral trace', () => {
   });
 });
 
+describe('RemoteProcessHandle event polling', () => {
+  test('a failed read is retried rather than ending the subscription', async ({ expect }) => {
+    let failures = 2;
+    const healthy = makeControl([traceMessage('after-outage')]);
+    const control: RemoteProcessManager.Control = {
+      ...healthy,
+      readEvents: (request) =>
+        failures-- > 0 ? Effect.die(new Error('connection reset')) : healthy.readEvents(request),
+    };
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control);
+        return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect(textsOf([...collected])).toEqual(['after-outage']);
+  });
+
+  test('a failed initial cursor read is retried before outputs are polled', async ({ expect }) => {
+    let failures = 1;
+    const control: RemoteProcessManager.Control = {
+      ...makeControl([]),
+      // The end cursor is read at `MAX_SAFE_INTEGER`; the output then lands at the cursor it returned.
+      readEvents: ({ cursor }) =>
+        cursor === Number.MAX_SAFE_INTEGER
+          ? failures-- > 0
+            ? Effect.die(new Error('connection reset'))
+            : Effect.succeed({ events: [], cursor: 0, truncated: false, snapshot: snapshot(Process.State.RUNNING) })
+          : Effect.succeed({
+              events: cursor === 0 ? [{ _tag: 'output' as const, seq: 0, data: 'hello' }] : [],
+              cursor: 1,
+              truncated: false,
+              snapshot: snapshot(Process.State.RUNNING),
+            }),
+    };
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control, undefined, Duration.millis(1), EchoOutput);
+        return yield* Stream.runCollect(handle.subscribeOutputs().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['hello']);
+  });
+
+  test('a host that stays unreachable still ends the subscription', async ({ expect }) => {
+    const control: RemoteProcessManager.Control = {
+      ...makeControl([]),
+      readEvents: () => Effect.die(new Error('gone')),
+    };
+    const exit = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control, undefined, Duration.millis(1));
+        return yield* Stream.runCollect(handle.subscribeEphemeral()).pipe(Effect.exit);
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+  });
+});
+
 const TEST_PID = Schema.decodeUnknownSync(Process.ID)('test-pid');
 const SPACE_ID = SpaceId.random();
 
@@ -221,7 +286,18 @@ const makeLiveSource = () => {
 
 const registryLayer = () => Layer.succeed(Registry.AtomRegistry, Registry.make());
 
-const makeHandle = (control: RemoteProcessManager.Control, remoteTrace?: RemoteTraceMonitor.Monitor) =>
+/** Supplies the output codec `subscribeOutputs` needs; the process itself never runs here. */
+const EchoOutput = Operation.makeDurable(
+  { key: 'org.dxos.test.process', input: Schema.Void, output: Schema.String, services: [] },
+  () => Effect.succeed({}),
+);
+
+const makeHandle = (
+  control: RemoteProcessManager.Control,
+  remoteTrace?: RemoteTraceMonitor.Monitor,
+  pollInterval?: Duration.Duration,
+  definition?: Operation.Durable<void, string, never, never>,
+) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
     return yield* RemoteProcessHandle.RemoteProcessHandle.make({
@@ -230,6 +306,8 @@ const makeHandle = (control: RemoteProcessManager.Control, remoteTrace?: RemoteT
       spaceId: SPACE_ID,
       registry,
       ...(remoteTrace !== undefined ? { remoteTrace } : {}),
+      ...(pollInterval !== undefined ? { pollInterval } : {}),
+      ...(definition !== undefined ? { definition } : {}),
     });
   });
 

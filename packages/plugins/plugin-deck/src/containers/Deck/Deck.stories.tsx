@@ -13,27 +13,30 @@ import { expect, waitFor, within } from 'storybook/test';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/hooks';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
-import { useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -41,7 +44,7 @@ import {
   decorateMarkdown,
   documentSlots,
 } from '@dxos/ui-editor';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
@@ -98,7 +101,7 @@ const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
  * the container because `Editor.View` renders its own div and drops unknown props.
  */
 const TestArticle = ({ title, content }: { title: string; content: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = UiHooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -132,7 +135,7 @@ const LAUNCHER_MESSAGES = Array.from({ length: 4 }, (_, index) => ({
 }));
 
 const TestLauncher = ({ launcherId }: { launcherId: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Selection state, so a click re-renders the launcher's own subtree the way the mailbox list does.
   const [selected, setSelected] = useState<string | undefined>(undefined);
 
@@ -150,7 +153,11 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 
   return (
-    <Listbox.Root value={selected} onValueChange={handleOpen}>
+    <Listbox.Root
+      value={selected}
+      onValueChange={handleOpen}
+      items={LAUNCHER_MESSAGES.map((message) => ({ value: message.id, label: message.id }))}
+    >
       <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
         {LAUNCHER_MESSAGES.map((message) => (
           <Listbox.Item
@@ -171,7 +178,7 @@ const REVEAL_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-5`;
 
 /** Reveals a plank from outside the deck, and marks the button once the deck's effects have run. */
 const TestRevealControls = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const reveal = useCallback(
     async (button: HTMLButtonElement, focus?: boolean) => {
       delete button.dataset.revealed;
@@ -197,7 +204,7 @@ const TestRevealControls = () => {
 
 /** Opens one more plank beside the seeded ones. */
 const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleClick = useCallback(() => {
     if (targetId) {
       void invokePromise(LayoutOperation.Open, { subject: [targetId], disposition: 'add' });
@@ -339,7 +346,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   data-testid='story.companion'
                   data-companion-to={companionTo?.title}
                 >
-                  <p className='text-sm text-description'>Story companion surface</p>
+                  <p className='text-sm text-fg-muted'>Story companion surface</p>
                   <p>
                     Companion <span className='font-mono text-xs'>{String(data.variant)}</span> of{' '}
                     <span className='font-medium'>{companionTo?.title ?? data.attendableId}</span>.
@@ -488,14 +495,14 @@ const DefaultStory = ({
   openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: StoryArgs) => {
-  const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
+  const [settings, updateSettings] = Hooks.useAtomCapabilityState(DeckCapabilities.Settings);
 
   // The deck reads its experiments from settings, not from props, so the story writes them there.
   useEffect(() => {
     updateSettings((current) => ({ ...current, ...settingsOverrides }));
   }, [settingsOverrides, updateSettings]);
-  const pluginManager = usePluginManager();
-  const { graph } = useAppGraph();
+  const pluginManager = PluginManagerProvider.usePluginManager();
+  const { graph } = ToolkitHooks.useAppGraph();
   const { state, deck, updateState, updateEphemeral } = useDeckState();
 
   // Only root expands automatically at graph-capability startup, so this story owns expanding the
@@ -503,7 +510,7 @@ const DefaultStory = ({
   // resolves. The graph qualifies connector node ids with their parent path (e.g.
   // `root/default/story-item-1`), so the seeded `active` list holds the materialized ids.
   useState(() => AppGraph.expandSync(graph, STORY_WORKSPACE_ID, 'child'));
-  const workspaceChildren = useConnections(graph, STORY_WORKSPACE_ID, 'child');
+  const workspaceChildren = GraphHooks.useConnections(graph, STORY_WORKSPACE_ID, 'child');
   const items = useMemo(() => workspaceChildren.filter((node) => node.type === 'story-item'), [workspaceChildren]);
   const launcherNode = useMemo(
     () => workspaceChildren.find((node) => node.type === 'story-launcher'),
@@ -574,7 +581,7 @@ const meta = {
   decorators: [
     withMosaic(),
     withPluginManager({
-      plugins: [...corePlugins(), TestPlugin()],
+      plugins: [...CorePlugins.make(), TestPlugin()],
     }),
   ],
   parameters: {
@@ -880,5 +887,60 @@ export const OpenAttendsTheNewPlank: Story = {
     await expect(unattended).toEqual([]);
     await expect(misfocused).toEqual([]);
     await expect(plankTitle(canvasElement, ATTENDED_PLANK_ID)).toHaveAttribute('data-attention', 'false');
+  },
+};
+
+const companionClose = (canvasElement: HTMLElement) =>
+  within(canvasElement).queryByRole('button', { name: 'close-companion.label' });
+
+/**
+ * A lone plank's companion fits the deck it is given, so its close control is never under the end sidebar; once the
+ * deck is too narrow for a plank and a companion side by side the companion is not shown, and it returns when the deck
+ * widens again.
+ *
+ * Test:
+ * 1. Narrow the deck (by widening the navigation sidebar) to less than the plank and the companion's stored widths;
+ *    the companion's close control stays inside the deck.
+ * 2. Narrow it below a plank and a companion at their minimums; the companion is not shown.
+ * 3. Restore the sidebar; the companion is shown again.
+ */
+export const TestCompanionFitsTheDeck: Story = {
+  tags: ['test'],
+  args: { count: 1, companionPlanks: [1], sidebarState: 'expanded' },
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const root = canvasElement.ownerDocument.documentElement;
+    const viewport = await within(canvasElement).findByTestId('deck.viewport', {}, { timeout: 30_000 });
+    await waitFor(() => expect(companionClose(canvasElement)).not.toBeNull(), { timeout: 10_000 });
+    // Re-applied until it holds, since the end sidebar may still be settling into its rail when the story starts.
+    const narrowTo = (px: number) =>
+      waitFor(() => {
+        const sidebar = within(canvasElement).getByTestId('deck.sidebar');
+        const delta = viewport.getBoundingClientRect().width - px;
+        if (Math.abs(delta) > 1) {
+          root.style.setProperty('--dx-nav-sidebar-size', `${sidebar.getBoundingClientRect().width + delta}px`);
+        }
+        return expect(Math.abs(delta)).toBeLessThanOrEqual(1);
+      });
+
+    try {
+      // 1. Wide enough for both at their minimums (35rem), narrower than the stored pair (20rem + 30rem).
+      await narrowTo(640);
+      await waitFor(() => {
+        const close = companionClose(canvasElement);
+        return expect(close?.getBoundingClientRect().right ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
+          viewport.getBoundingClientRect().right + 1,
+        );
+      });
+
+      // 2. Too narrow for the pair.
+      await narrowTo(480);
+      await waitFor(() => expect(companionClose(canvasElement)).toBeNull());
+    } finally {
+      root.style.removeProperty('--dx-nav-sidebar-size');
+    }
+
+    // 3. Wide again.
+    await waitFor(() => expect(companionClose(canvasElement)).not.toBeNull());
   },
 };

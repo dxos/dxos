@@ -26,5 +26,5 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: { environment: 'happy-dom' }, storybook: true, workerd: true },
 });

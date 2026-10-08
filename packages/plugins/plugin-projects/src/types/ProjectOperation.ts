@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Chat from '@dxos/assistant/Chat';
-import { AgentService } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
@@ -54,11 +54,17 @@ export const DelegateTaskToChat = Operation.make({
   },
   // `AgentService` because the operation runs the chat's first turn: a message written to the
   // feed is a message nobody read.
-  services: [Capability.Service, Database.Service, AgentService],
+  services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
     // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
     // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
     tasks: Schema.Array(Ref.Ref(Task.Task)),
+    harness: Schema.optional(
+      Schema.String.annotate({
+        description:
+          "Id of the agent that works the tasks, e.g. composer or claude-code. Defaults to the reader's default agent.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
@@ -175,8 +181,8 @@ export const ArtifactAdd = Operation.make({
       project's context, so the project owns it and it appears in the project's artifacts list.
       When the object was produced for a task on your checklist, pass that task too, so the finished
       task shows what it made. Adding the same object twice is a no-op.
-      A pull request is recorded on the ROOT of the task's tree, since all sub-tasks land in one PR;
-      it is refused when the root already has a different open PR.
+      A pull request is recorded on the task given — a sub-task fixed on its own carries its own PR;
+      it is refused only when that task already has a different open PR.
     `,
   },
   input: Schema.Struct({

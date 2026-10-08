@@ -16,8 +16,11 @@ import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '#testing';
@@ -129,9 +132,9 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
     <>
       <audio ref={audioRef} autoPlay />
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <IconButton
+            <Button.Root
               iconOnly
               disabled={!stream}
               icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
@@ -139,22 +142,22 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
               onClick={() => setRunning((value) => !value)}
             />
             <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
-            <IconButton
+            <Button.Root
               iconOnly
               icon='ph--upload--regular'
               label='Upload audio'
               onClick={() => fileInputRef.current?.click()}
             />
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
         <ScrollContainer.Root pin>
-          <Panel.Content asChild>
+          <Panel.Body asChild>
             <ScrollContainer.Content>
               <ScrollContainer.Viewport>
                 <Transcription model={model} />
               </ScrollContainer.Viewport>
             </ScrollContainer.Content>
-          </Panel.Content>
+          </Panel.Body>
         </ScrollContainer.Root>
       </Panel.Root>
     </>

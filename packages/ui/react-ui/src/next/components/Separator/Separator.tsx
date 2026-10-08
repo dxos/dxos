@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 
 export type SeparatorOrientation = 'horizontal' | 'vertical';
@@ -36,4 +36,4 @@ export const Separator = composable<HTMLDivElement, SeparatorProps>(
   },
 );
 
-Separator.displayName = 'Next.Separator';
+Separator.displayName = 'Separator';

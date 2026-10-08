@@ -50,6 +50,7 @@
   "rules": {
     "@dxos/eslint-plugin-rules/consistent-update-param": "error",
     "@dxos/eslint-plugin-rules/dxos-package-imports": "warn",
+    "@dxos/eslint-plugin-rules/dxos-subpath-entrypoints": "error",
     "@dxos/eslint-plugin-rules/dxos-subpath-exports": "warn",
     "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
@@ -236,5 +237,19 @@
     "vitest": {
       "typecheck": false
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["packages/ui/react-ui/src/next/recipes.ts"],
+      "rules": {
+        "perfectionist/sort-objects": [
+          "error",
+          {
+            "order": "asc",
+            "type": "natural"
+          }
+        ]
+      }
+    }
+  ]
 }

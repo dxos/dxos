@@ -14,12 +14,12 @@ import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFr
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type { ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { makeEvalToolkit } from './eval-tool.ts';
+import { type CallLabel, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -105,8 +105,10 @@ const runCodeModeTurn = ({
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
     const history = yield* Effect.promise(() => session.getHistory());
+    // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
+    let labelCall = labelEvalCall([]);
     const request = new AiRequest.Request({
-      onOutput: (message) => Effect.promise(() => session.appendTurnMessage(message)),
+      onOutput: (message) => Effect.promise(() => session.appendTurnMessage(labelEvalCalls(message, labelCall))),
     });
 
     yield* request.begin({
@@ -123,6 +125,7 @@ const runCodeModeTurn = ({
       yield* Effect.promise(() => session.context.sync());
       const skills = session.context.getSkills();
       const operations = yield* projectOperations(skills);
+      labelCall = labelEvalCall(operations);
       const toolkit = makeEvalToolkit({
         dialect,
         sandbox,
@@ -140,7 +143,10 @@ const runCodeModeTurn = ({
         instructions,
       }).pipe(Effect.orDie);
 
-      const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
+      const { done, finishReason } = yield* request.runAgentTurn({
+        system,
+        toolkit,
+      });
       if (done) {
         break;
       }
@@ -166,6 +172,28 @@ const runCodeModeTurn = ({
     Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
     Effect.withSpan('CodeMode.runTurn'),
   );
+
+/**
+ * Labels the message's `eval` calls before it reaches the feed, which is what the thread renders: a
+ * code-mode turn's every call is an eval, and the label is the only thing that tells them apart.
+ */
+const labelEvalCalls = (
+  message: Message.Message,
+  labelCall: (block: ContentBlock.ToolCall) => CallLabel | undefined,
+): Message.Message => {
+  const labels = message.blocks.map((block) => (block._tag === 'toolCall' ? labelCall(block) : undefined));
+  if (labels.some((label) => label !== undefined)) {
+    Obj.update(message, (message) => {
+      message.blocks.forEach((block, index) => {
+        const label = labels[index];
+        if (block._tag === 'toolCall' && label !== undefined) {
+          Object.assign(block, label);
+        }
+      });
+    });
+  }
+  return message;
+};
 
 /**
  * The operation a tool invokes, when one backs it.

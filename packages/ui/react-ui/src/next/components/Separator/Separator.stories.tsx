@@ -9,29 +9,32 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Separator } from './Separator.tsx';
 
 /** A horizontal rule between two paragraphs, then a vertical rule and a decorative one between buttons. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Typography data-testid={`above-${size}`}>Above</Next.Typography>
-    <Next.Separator data-testid={`horizontal-${size}`} />
-    <Next.Typography>Below</Next.Typography>
-    <Next.Group data-testid={`group-${size}`}>
-      <Next.Button data-testid={`left-${size}`}>Left</Next.Button>
-      <Next.Separator orientation='vertical' data-testid={`vertical-${size}`} />
-      <Next.Button>Middle</Next.Button>
-      <Next.Separator orientation='vertical' decorative data-testid={`decorative-${size}`} />
-      <Next.Button>Right</Next.Button>
-    </Next.Group>
+    <Typography.Text data-testid={`above-${size}`}>Above</Typography.Text>
+    <Separator data-testid={`horizontal-${size}`} />
+    <Typography.Text>Below</Typography.Text>
+    <Group data-testid={`group-${size}`}>
+      <Button data-testid={`left-${size}`}>Left</Button>
+      <Separator orientation='vertical' data-testid={`vertical-${size}`} />
+      <Button>Middle</Button>
+      <Separator orientation='vertical' decorative data-testid={`decorative-${size}`} />
+      <Button>Right</Button>
+    </Group>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Separator',
+  title: 'ui/react-ui-core/components/Separator',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

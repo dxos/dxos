@@ -7,9 +7,9 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { PreviewEvents } from '@dxos/plugin-preview';
-import { corePlugins } from '@dxos/plugin-testing';
-import { Panel } from '@dxos/react-ui';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -24,15 +24,15 @@ const meta = {
   decorators: [
     (Story) => (
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           <Story />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     ),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],

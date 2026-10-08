@@ -15,21 +15,19 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
+import * as App from '@dxos/app-framework/App';
+import type * as Devtools from '@dxos/app-framework/Devtools';
+import * as Hooks from '@dxos/app-framework/Hooks';
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
-import {
-  FIRST_INTERACTIVE_EVENT,
-  STARTUP_ACTIVATED_EVENT,
-  STARTUP_FAILED_EVENT,
-  bootLoader,
-  useApp,
-} from '@dxos/app-framework/ui';
+import * as Registry from '@dxos/app-framework/Registry';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
@@ -38,8 +36,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
@@ -64,6 +61,7 @@ import {
   registerPreloadErrorHandler,
   reportBootAssetFailure,
   reportWebProcessTerminations,
+  restoreDragRegionFocus,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -105,10 +103,10 @@ declare const __DX_DEV_SERVER_BOOT_ID__: string;
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
 declare const __DX_DEBUG_PORT_SESSION__: string;
 
-// Merged onto `@dxos/app-framework`'s `ComposerDevtools` (the type behind `globalThis.composer`)
+// Merged onto `@dxos/app-framework/Devtools`'s `ComposerDevtools` (the type behind `globalThis.composer`)
 // rather than declared fresh — a second `declare global { var composer }` here would collide with
 // its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
-declare module '@dxos/app-framework' {
+declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
     profiler?: Profiler;
     otel?: {
@@ -145,7 +143,7 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => bootLoader?.status({ humanized: text });
+const bootStatus = (text: string) => App.bootLoader?.status({ humanized: text });
 
 // Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
 // from a true page boot. Dev-only — production has no HMR and the diagnostic
@@ -297,7 +295,8 @@ const main = async () => {
       return level;
     },
   };
-  globalThis.composer = { profiler, otel };
+  const composer: Devtools.ComposerDevtools = { profiler, otel };
+  globalThis.composer = composer;
 
   AppMigrations.define();
 
@@ -334,6 +333,7 @@ const main = async () => {
   if (isTauri) {
     const platform = getHostPlatform();
     document.body.setAttribute('data-platform', platform);
+    restoreDragRegionFocus();
   }
 
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
@@ -409,7 +409,7 @@ const main = async () => {
   };
 
   window.addEventListener(
-    STARTUP_ACTIVATED_EVENT,
+    Hooks.STARTUP_ACTIVATED_EVENT,
     () => {
       startupActivated = true;
       // The scheduler carries on with independent modules after one fails, so activation can still
@@ -423,7 +423,7 @@ const main = async () => {
     { once: true },
   );
   window.addEventListener(
-    FIRST_INTERACTIVE_EVENT,
+    Hooks.FIRST_INTERACTIVE_EVENT,
     (event) => {
       const firstInteractiveMs = event.detail;
       void observability
@@ -432,7 +432,7 @@ const main = async () => {
     },
     { once: true },
   );
-  window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
+  window.addEventListener(Hooks.STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(
@@ -451,7 +451,7 @@ const main = async () => {
   // The popover shares storage and the host's termination queue with the main window, which reports them.
   if (!isPopover) {
     window.addEventListener(
-      STARTUP_ACTIVATED_EVENT,
+      Hooks.STARTUP_ACTIVATED_EVENT,
       () => {
         const failure = readBootAssetFailure();
         void observability
@@ -622,19 +622,19 @@ const main = async () => {
         // Pass `range` so the loader updates the existing line in place
         // ("Loading plugins (3/12)") instead of appending a fresh entry per
         // tick — keeps the visible log compact.
-        bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        App.bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — remote-plugin preload (0 → 50%) and
         // module activation (50 → 100%, driven from `Placeholder` once
         // React mounts). Splitting the range keeps it monotonic across
         // the boundary.
-        bootLoader?.progress((loaded / total) * 0.5);
+        App.bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
   );
 
   bootStatus('Building Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
-  bootLoader?.progress(0.5);
+  App.bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
@@ -642,7 +642,7 @@ const main = async () => {
   const defaults = getDefaults(conf);
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
+  const pluginRegistryProvider = edgeUrl ? new Registry.EdgePluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
   startupMark('plugins:end');
   startupMeasure('plugins-init', 'plugins:start', 'plugins:end');
@@ -693,25 +693,23 @@ const main = async () => {
             (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
             keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
             icon-only button. */}
-        <ThemeProvider
-          tx={defaultTx}
+        <Theme.Provider
+          tx={Theme.defaultTx}
           resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
         >
-          <Tooltip.Provider>
-            {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
+          {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
-            <Suspense fallback={null}>
-              <ResetDialog
-                error={error}
-                logStore={logStore}
-                onSubmitReport={submitReport}
-                needRefresh={needRefresh}
-                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-                onReset={import.meta.env.DEV ? handleReset : undefined}
-              />
-            </Suspense>
-          </Tooltip.Provider>
-        </ThemeProvider>
+          <Suspense fallback={null}>
+            <ResetDialog
+              error={error}
+              logStore={logStore}
+              onSubmitReport={submitReport}
+              needRefresh={needRefresh}
+              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+              onReset={import.meta.env.DEV ? handleReset : undefined}
+            />
+          </Suspense>
+        </Theme.Provider>
       </ErrorBoundary>
     );
   };
@@ -722,7 +720,7 @@ const main = async () => {
       raiseFatalError = (error) => setFatalError(error instanceof Error ? error : new Error(String(error)));
     }, []);
 
-    const App = useApp({
+    const AppRoot = Hooks.useApp({
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
       // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
@@ -746,7 +744,7 @@ const main = async () => {
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a
     // throw here would escape React entirely and blank the page.
-    return fatalError ? <Fallback error={fatalError} /> : <App />;
+    return fatalError ? <Fallback error={fatalError} /> : <AppRoot />;
   };
 
   const root = document.getElementById('root');

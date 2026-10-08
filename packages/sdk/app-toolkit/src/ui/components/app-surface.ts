@@ -6,13 +6,14 @@ import type * as Schema from 'effect/Schema';
 import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import { Entity, Obj, type Ref, Type } from '@dxos/echo';
-import type { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { log } from '@dxos/log';
 import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
-import { type MenuActions } from '@dxos/react-ui-menu';
+import type { MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
+import { type Actor, SpaceInvitationMessage } from '@dxos/types';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
 
@@ -689,6 +690,12 @@ export type ContactPickerData = {
 /** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
 export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
 
+/** Data for the space-invitation slot: the invitation block's data plus who sent the message. */
+export type SpaceInvitationData = SpaceInvitationMessage.Data & { sender?: Actor.Actor };
+
+/** Slot for a space invitation carried by a message (see `SpaceInvitationMessage`); filled by the client plugin. */
+export const SpaceInvitation: Role.Role<SpaceInvitationData> = Role.make(SpaceInvitationMessage.SPACE_INVITATION_ROLE);
+
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');
 
@@ -699,8 +706,9 @@ export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dx
  * must call this factory with the same variant id so they agree on the dispatch NSID.
  *
  * Variant ids must be camelCase alphanumeric (DXN rule: no hyphens in the final segment).
+ * The deck passes the companion's graph node `id`, which is the surface's attendable id.
  */
-export const deckCompanion = (variant: string): Role.Role<{ subject?: any }> => {
+export const deckCompanion = (variant: string): Role.Role<{ id?: string; subject?: any }> => {
   if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(variant)) {
     throw new Error(
       `Invalid deck companion variant id: "${variant}". Must be camelCase alphanumeric (no hyphens or underscores).`,

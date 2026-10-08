@@ -5,16 +5,16 @@
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
@@ -130,7 +130,7 @@ export const MessageArticle = ({
   });
 
   // Settings + view state.
-  const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
+  const settingsAtom = Hooks.useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const viewState = useManager();
   const viewModeAtom = useMemo(
     () => viewState.atom(messageViewModeAspect, attendableId ?? 'default'),
@@ -153,14 +153,14 @@ export const MessageArticle = ({
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
   // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
-  const invoker = useOperationInvoker();
-  const runtime = useProcessManagerRuntime();
-  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const invoker = Hooks.useOperationInvoker();
+  const runtime = Hooks.useProcessManagerRuntime();
+  const graph = Hooks.useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
+  const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
   // No contributed generator means nothing to invoke, so the AI-reply affordance is omitted rather
   // than shown and failing.
-  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
-  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  const replyGenerator = Hooks.useCapabilities(InboxCapabilities.ReplyGenerator)[0];
+  const sendOperations = Hooks.useCapabilities(InboxCapabilities.MailSendOperation);
   const getExtractActions = useCallback(
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
     [extractors, invoker],
@@ -168,7 +168,7 @@ export const MessageArticle = ({
 
   // Sender-scoped actions contributed by other plugins (plugin-crm's research). Resolved here and
   // bound per message so the component never touches a capability or an invoker.
-  const senderActionDefs = useCapabilities(InboxCapabilities.SenderAction);
+  const senderActionDefs = Hooks.useCapabilities(InboxCapabilities.SenderAction);
   const getSenderActions = useCallback(
     (message: Mailbox.MessageLike) => {
       const actor = message.sender;
@@ -348,12 +348,12 @@ export const MessageArticle = ({
       onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <ConversationStack.Toolbar classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <ConversationStack.Content />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </ConversationStack.Root>
   );

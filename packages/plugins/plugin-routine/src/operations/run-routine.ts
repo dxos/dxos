@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import { createInvocationPayload } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
         // The instructions carry their own context objects and skills; RunInstructions binds them when it
         // executes. No Chat session object is created — the run appears in the process monitor only.
         yield* Operation.schedule(
-          RunInstructions,
+          AgentOperation.RunInstructions,
           { instructions: spec.instructions, input: {} },
           { spaceId: db.spaceId },
         );

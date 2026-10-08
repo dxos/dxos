@@ -4,18 +4,18 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 export type TemplatePanelProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
 export const TemplatePanel = ({ role, subject: object, attendableId: _attendableId }: TemplatePanelProps) => {
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Content>
+    <Panel.Root role={role} width='document'>
+      <Panel.Body>
         <span>{Obj.getURI(object)}</span>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

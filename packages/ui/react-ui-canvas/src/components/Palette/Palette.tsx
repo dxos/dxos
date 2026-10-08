@@ -3,9 +3,10 @@
 //
 
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import React, { useEffect, useRef } from 'react';
 
-import { IconButton } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
@@ -110,10 +111,15 @@ const PaletteButton = ({
     if (!ref.current || nodeType === undefined) {
       return;
     }
-    return draggable({ element: ref.current, getInitialData: () => nodeDragData(nodeType) });
+    return draggable({
+      element: ref.current,
+      getInitialData: () => nodeDragData(nodeType),
+      // The canvas draws a ghost of the node that will land, so the browser's image of the icon is noise.
+      onGenerateDragPreview: ({ nativeSetDragImage }) => disableNativeDragPreview({ nativeSetDragImage }),
+    });
   }, [nodeType]);
   return (
-    <IconButton
+    <Button.Root
       ref={ref}
       variant='ghost'
       iconOnly

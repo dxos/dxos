@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
@@ -15,9 +15,12 @@ import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 import { downloadBlob } from '@dxos/util';
@@ -60,7 +63,7 @@ const getFixtureName = (message: Message.Message): string => {
  * disconnected Connection accounts accumulate in the Connect menu across reconnects.
  */
 export const ArchiveModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -191,23 +194,23 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <SystemIconButton.Upload
+          <SystemButton.Upload
             iconOnly
             label='Import messages (appends)'
             accept='application/json,.json'
             disabled={!mailbox || busy}
             onFileChange={handleUpload}
           />
-          <SystemIconButton.Download
+          <SystemButton.Download
             iconOnly
             label={`Download starred (${starredIds.length})`}
             filename={archiveFilename()}
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
-          <IconButton
+          <Button.Root
             iconOnly
             icon='ph--tray-arrow-down--regular'
             label={`Download all (${messages.length})`}
@@ -216,7 +219,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           />
           {/* Not `SystemIconButton.Download`: it fixes its own glyph, which would make this visually
               identical to the feed export beside it. */}
-          <IconButton
+          <Button.Root
             iconOnly
             icon='ph--envelope-simple--regular'
             label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
@@ -224,7 +227,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             onClick={handleDownloadMessage}
           />
           <Toolbar.Separator />
-          <IconButton
+          <Button.Root
             iconOnly
             icon='ph--trash--regular'
             label='Reset'
@@ -232,10 +235,10 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => void handleReset()}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm'>
         <JsonHighlighter data={{ feed: feed?.id, ...status }} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

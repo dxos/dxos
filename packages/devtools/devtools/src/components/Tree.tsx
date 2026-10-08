@@ -4,10 +4,10 @@
 
 import React, { type HTMLAttributes, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export const Tree = ({ classNames, data }: ThemedClassName<{ data?: object }>) => {
+export const Tree = ({ classNames, data }: Util.ThemedClassName<{ data?: object }>) => {
   return (
     <div className={mx('flex w-full py-2 overflow-auto', classNames)}>
       <Node data={data} root />
@@ -15,7 +15,7 @@ export const Tree = ({ classNames, data }: ThemedClassName<{ data?: object }>) =
   );
 };
 
-export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) => {
+export const Node = ({ data }: Util.ThemedClassName<{ data?: any; root?: boolean }>) => {
   if (typeof data !== 'object' || data === undefined || data === null) {
     return <Scalar value={data} />;
   }
@@ -24,7 +24,7 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
     return (
       <div className='flex flex-col space-y-1'>
         {data.map((value, index) => (
-          <KeyValue key={index} label={String(index)} data={value} classNames='text-description font-thin' />
+          <KeyValue key={index} label={String(index)} data={value} classNames='text-fg-muted font-thin' />
         ))}
       </div>
     );
@@ -33,13 +33,13 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
   return (
     <div className='flex flex-col space-y-1'>
       {Object.entries(data).map(([key, value]) => (
-        <KeyValue key={key} label={key} data={value} classNames='dx-group-surface text-description font-thin' />
+        <KeyValue key={key} label={key} data={value} classNames='dx-group-surface text-fg-muted font-thin' />
       ))}
     </div>
   );
 };
 
-export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: string; data?: any }>) => {
+export const KeyValue = ({ classNames, label, data }: Util.ThemedClassName<{ label: string; data?: any }>) => {
   const [open, setOpen] = useState(true);
   if (data === undefined) {
     return null;
@@ -67,9 +67,9 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
   );
 };
 
-const Scalar = ({ classNames, value }: ThemedClassName<{ value: any }>) => {
+const Scalar = ({ classNames, value }: Util.ThemedClassName<{ value: any }>) => {
   return (
-    <Box className={mx('dx-tag dx-tag--green text-xs items-center', classNames)}>
+    <Box className={mx('dx-tag dx-tag-inline items-center', classNames)} data-hue='green'>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||

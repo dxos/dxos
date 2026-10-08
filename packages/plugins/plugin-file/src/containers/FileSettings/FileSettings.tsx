@@ -4,11 +4,13 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { useClient } from '@dxos/react-client';
-import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
 
 import { meta } from '#meta';
 import { FileCapabilities, Settings } from '#types';
@@ -16,10 +18,10 @@ import { FileCapabilities, Settings } from '#types';
 export type FileSettingsProps = AppSurface.SettingsData;
 
 export const FileSettings = ({ subject }: FileSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const client = useClient();
-  const contributed = useCapabilities(FileCapabilities.Backend);
+  const contributed = Hooks.useCapabilities(FileCapabilities.Backend);
   // Sorted by name: contribution order is module activation order, which is neither stable nor
   // meaningful to the reader, so the list would otherwise reshuffle as plugins are toggled.
   const backends = useMemo(() => [...contributed].sort((a, b) => a.name.localeCompare(b.name)), [contributed]);
@@ -46,25 +48,23 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
-              <Select.Root value={activeStorage} onValueChange={handleChange}>
-                <Select.TriggerButton placeholder={t('settings.backend.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {backends.map((backend) => (
-                        <Select.Option key={backend.storage} value={backend.storage}>
-                          {backend.name}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+              <Select.Root
+                value={[activeStorage]}
+                onValueChange={({ value: [value] }) => handleChange(value)}
+                items={backends.map((backend) => ({ value: backend.storage, label: backend.name }))}
+              >
+                <Select.Trigger placeholder={t('settings.backend.placeholder')} />
+                <Select.Content>
+                  {backends.map((backend) => (
+                    <Select.Item key={backend.storage} item={{ value: backend.storage, label: backend.name }} />
+                  ))}
+                </Select.Content>
               </Select.Root>
             </Form.Field>
           </Form.FieldSet>

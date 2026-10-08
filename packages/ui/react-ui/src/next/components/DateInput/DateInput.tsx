@@ -18,8 +18,8 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
-import { LABEL_TARGET_ATTRIBUTE } from '../Field/index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Field from '../Field/Field.tsx';
 import {
   type DateInputGranularity,
   type DateInputType,
@@ -31,8 +31,6 @@ import {
   withDay,
 } from './date-value.ts';
 import { DateCalendar } from './DateCalendar.tsx';
-
-export type { DateInputGranularity, DateInputType };
 
 export type DateInputProps = ThemedClassName<{
   'type'?: DateInputType;
@@ -180,7 +178,7 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
             <DateInputPrimitive.Segment
               key={index}
               segment={segment}
-              {...(index === firstEditable && { [LABEL_TARGET_ATTRIBUTE]: '' })}
+              {...(index === firstEditable && { [Field.LABEL_TARGET_ATTRIBUTE]: '' })}
               className={recipes.dateInputSegment()}
             />
           ))}
@@ -238,4 +236,6 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
   },
 );
 
-DateInput.displayName = 'Next.DateInput';
+DateInput.displayName = 'DateInput';
+
+export type { DateInputGranularity, DateInputType };

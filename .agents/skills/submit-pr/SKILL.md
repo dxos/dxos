@@ -36,9 +36,11 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    exclusion with the user.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-8. **Open the PR** with `gh`. Title uses `scope: description`. In the
-   description, summarize the changes and the reasoning behind major
-   decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
+8. **Open the PR** with `gh`. Title uses `scope: description`. Write the
+   description with the `pr-description` skill: pick every template that
+   applies (summary and safety always), and link any Linear issue as
+   `closes DX-123` or `part of DX-123`. Apply the Safety labels it specifies
+   (`risk: …` always, plus any `breaking:`/`api:`/`tests:`/`revert:`/`perf:`).
    If this work builds on another open PR (or the user asked for a stack), see
    **Stacked PRs** below instead of `gh pr create`.
 9. **Monitor CI every 5 minutes:**
@@ -67,7 +69,7 @@ targeting `main`, one-click whole-stack merge. Linking is what makes it a
 stack; a PR merely based on another PR's branch is not one. A PR that `link`
 creates gets an auto-generated title and body — follow up with
 `gh pr edit <pr> --title --body` so it meets step 8's standards (scope-prefixed
-title, summary, reasoning, Linear link). Docs:
+title, `pr-description` templates, Linear link). Docs:
 <https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests>.
 
 ## Composer PR deploy URL — always surface

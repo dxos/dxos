@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ const PAGE_SIZE = 30;
  * Every read is an operation, so what the viewer shows is exactly what an agent's tools see.
  */
 export const RepositoryArticle = ({ role, subject: repository }: RepositoryArticleProps) => {
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const spaceId = Obj.getDatabase(repository)?.spaceId;
 
   const [branches, setBranches] = useState<readonly BranchInfo[]>([]);

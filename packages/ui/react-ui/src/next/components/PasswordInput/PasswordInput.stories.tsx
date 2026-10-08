@@ -5,38 +5,40 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { PasswordInput } from './PasswordInput.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Field.Root>
-      <Next.Field.Label>Password</Next.Field.Label>
-      <Next.PasswordInput defaultValue='hunter2' autoComplete='current-password' data-testid={`password-${size}`} />
-      <Next.Field.HelperText>At least 8 characters.</Next.Field.HelperText>
-    </Next.Field.Root>
-    <Next.Input aria-label='Note' data-testid={`input-${size}`} />
-    <Next.Field.Root>
-      <Next.Field.Label>API key</Next.Field.Label>
-      <Next.PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root disabled>
-      <Next.Field.Label>Locked</Next.Field.Label>
-      <Next.PasswordInput defaultValue='secret' data-testid={`disabled-${size}`} />
-    </Next.Field.Root>
+    <Field.Root>
+      <Field.Label>Password</Field.Label>
+      <PasswordInput defaultValue='hunter2' autoComplete='current-password' data-testid={`password-${size}`} />
+      <Field.HelperText>At least 8 characters.</Field.HelperText>
+    </Field.Root>
+    <Input aria-label='Note' data-testid={`input-${size}`} />
+    <Field.Root>
+      <Field.Label>API key</Field.Label>
+      <PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
+    </Field.Root>
+    <Field.Root disabled>
+      <Field.Label>Locked</Field.Label>
+      <PasswordInput defaultValue='secret' data-testid={`disabled-${size}`} />
+    </Field.Root>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/PasswordInput',
+  title: 'ui/react-ui-core/components/PasswordInput',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -68,10 +70,7 @@ export const Test: Story = {
       );
       await expect(parseFloat(getComputedStyle(row).marginTop), `${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
       const toggle = within(row).getByRole('button', { name: 'Show password' });
-      await expect(toggle.getBoundingClientRect().right, `${size} toggle end`).toBeCloseTo(
-        rect.right - GEOMETRY[size].inset,
-        0,
-      );
+      await expectEndCell(toggle.querySelector('svg'), rect.right, size, `${size} toggle`);
     }
     await expectScoped(canvasElement);
 
@@ -92,5 +91,26 @@ export const Test: Story = {
     await expect(canvas.getByLabelText('API key')).toHaveAttribute('data-1p-ignore');
     await expect(canvas.getByLabelText('Locked')).toBeDisabled();
     await expect(within(byTestId(md, 'disabled-md')).getByRole('button', { name: 'Show password' })).toBeDisabled();
+  },
+};
+
+/** `onBlur` reports focus leaving the input, as a settings field commits its draft. */
+const BlurStory = () => {
+  const [blurred, setBlurred] = useState(0);
+  return (
+    <div className='flex flex-col gap-2'>
+      <PasswordInput aria-label='Token' onBlur={() => setBlurred((count) => count + 1)} />
+      <span data-testid='blurred'>{blurred}</span>
+    </div>
+  );
+};
+
+export const BlurTest: Story = {
+  render: () => <BlurStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByLabelText('Token'));
+    await userEvent.tab();
+    await waitFor(() => expect(canvas.getByTestId('blurred')).toHaveTextContent('1'));
   },
 };

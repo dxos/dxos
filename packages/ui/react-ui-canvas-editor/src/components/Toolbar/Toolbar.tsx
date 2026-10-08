@@ -4,12 +4,15 @@
 
 import React, { useState } from 'react';
 
-import { Icon, Toolbar as NaturalToolbar, Select, type ThemedClassName } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Select from '@dxos/react-ui/Select';
+import * as UiToolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { type ActionHandler } from '../../actions/index.ts';
 import { type LayoutKind, LAYOUTS } from '../../layout/index.ts';
 
-export type ToolbarProps = ThemedClassName<{
+export type ToolbarProps = Util.ThemedClassName<{
   onAction?: ActionHandler;
 }>;
 
@@ -21,59 +24,85 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
 
   // TODO(burdon): Translations.
   return (
-    <NaturalToolbar.Root classNames={['p-1', classNames]}>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
-        <Icon icon='ph--bug--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
-        <Icon icon='ph--dots-nine--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid-snap' })} title='Toggle snap.'>
-        <Icon icon='ph--arrows-in-line-horizontal--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
-        <Icon icon='ph--crosshair-simple--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
-        <Icon icon='ph--magnifying-glass-plus--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
-        <Icon icon='ph--magnifying-glass-minus--regular' />
-      </NaturalToolbar.Button>
-      <Select.Root value={layout} onValueChange={(value) => setLayout(value as LayoutKind)}>
-        <NaturalToolbar.Button asChild>
-          <Select.TriggerButton variant='ghost' classNames='w-[100px]' />
-        </NaturalToolbar.Button>
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {LAYOUTS.map((layout) => (
-                <Select.Option key={layout} value={layout}>
-                  {layout}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
-        <Icon icon='ph--graph--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
-        <Icon icon='ph--arrows-out--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button
-        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
-        title='Delete objects.'
+    <UiToolbar.Root classNames={['p-1', classNames]}>
+      <Button.Root
+        onClick={() => handleAction({ type: 'debug' })}
+        label='Toggle debug.'
+        icon='ph--bug--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'grid' })}
+        label='Toggle snap.'
+        icon='ph--dots-nine--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'grid-snap' })}
+        label='Toggle snap.'
+        icon='ph--arrows-in-line-horizontal--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'center' })}
+        label='Center canvas.'
+        icon='ph--crosshair-simple--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'zoom-in' })}
+        label='Center canvas.'
+        icon='ph--magnifying-glass-plus--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'zoom-out' })}
+        label='Center canvas.'
+        icon='ph--magnifying-glass-minus--regular'
+        iconOnly
+      />
+      <Select.Root
+        value={[layout]}
+        onValueChange={({ value: [value] }) => setLayout(value as LayoutKind)}
+        items={LAYOUTS.map((layout) => ({ value: layout, label: layout }))}
       >
-        <Icon icon='ph--trash--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
-        <Icon icon='ph--plus--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'trigger' })} title='Trigger event.'>
-        <Icon icon='ph--play--regular' />
-      </NaturalToolbar.Button>
-    </NaturalToolbar.Root>
+        <Select.Trigger classNames='w-[100px]' />
+        <Select.Content>
+          {LAYOUTS.map((layout) => (
+            <Select.Item key={layout} item={{ value: layout, label: layout }} />
+          ))}
+        </Select.Content>
+      </Select.Root>
+      <Button.Root
+        onClick={() => handleAction({ type: 'layout', layout })}
+        label='Do layout.'
+        icon='ph--graph--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'zoom-to-fit' })}
+        label='Expand selected.'
+        icon='ph--arrows-out--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
+        label='Delete objects.'
+        icon='ph--trash--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'create' })}
+        label='Create objects.'
+        icon='ph--plus--regular'
+        iconOnly
+      />
+      <Button.Root
+        onClick={() => handleAction({ type: 'trigger' })}
+        label='Trigger event.'
+        icon='ph--play--regular'
+        iconOnly
+      />
+    </UiToolbar.Root>
   );
 };

@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
@@ -78,7 +78,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
         extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
       });
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ message: Progress.STATUS_COMPLETE });
       return result;
     }),
   ),

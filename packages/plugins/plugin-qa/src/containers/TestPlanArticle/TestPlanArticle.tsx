@@ -6,11 +6,16 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Field, Icon, Panel } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
@@ -19,7 +24,7 @@ export type TestPlanArticleProps = AppSurface.ObjectArticleProps<TestPlan.TestPl
 
 /** The plan surface: the declared cases above the feed of runs, newest first. */
 export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [plan] = useObject(subject);
   const [starting, setStarting] = useState(false);
   const [caseKey, setCaseKey] = useState('');
@@ -84,14 +89,14 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='flex flex-col gap-4 p-4' data-testid='qa.plan'>
+      <Panel.Body classNames='flex flex-col gap-4 p-4' data-testid='qa.plan'>
         <header className='flex items-center gap-2'>
-          <Icon icon='ph--check-square-offset--regular' size={5} />
+          <Icon.Icon icon='ph--check-square-offset--regular' size='lg' />
           <h1 className='grow text-lg'>{plan.name}</h1>
-          <button className='dx-button' disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
-            <Icon icon='ph--play--regular' size={4} />
+          <Button.Root disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
+            <Icon.Icon icon='ph--play--regular' size='md' />
             <span>Run</span>
-          </button>
+          </Button.Root>
         </header>
 
         {error && (
@@ -102,33 +107,28 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
 
         <section>
           <Field.Label>Cases</Field.Label>
-          <div className='flex gap-2 py-2'>
-            <Field.Input
+          <Layout.Flex gap='sm' classNames='py-2'>
+            <Input.Root
               classNames='w-24'
               placeholder='Key'
               value={caseKey}
               onChange={(event) => setCaseKey(event.target.value)}
               data-testid='qa.plan.case-key'
             />
-            <Field.Input
+            <Input.Root
               classNames='grow'
               placeholder='Title'
               value={caseTitle}
               onChange={(event) => setCaseTitle(event.target.value)}
               data-testid='qa.plan.case-title'
             />
-            <button
-              className='dx-button'
-              disabled={caseKey.trim().length === 0}
-              onClick={handleAddCase}
-              data-testid='qa.plan.add-case'
-            >
-              <Icon icon='ph--plus--regular' size={4} />
+            <Button.Root disabled={caseKey.trim().length === 0} onClick={handleAddCase} data-testid='qa.plan.add-case'>
+              <Icon.Icon icon='ph--plus--regular' size='md' />
               <span>Add case</span>
-            </button>
-          </div>
+            </Button.Root>
+          </Layout.Flex>
           {cases.length === 0 ? (
-            <p className='text-subdued' data-testid='qa.plan.no-cases'>
+            <p className='text-fg-subtle' data-testid='qa.plan.no-cases'>
               No cases yet.
             </p>
           ) : (
@@ -137,7 +137,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
                 <li key={testCase.id} className='flex gap-2 py-1'>
                   <span className='font-mono text-sm w-20 shrink-0'>{testCase.key}</span>
                   <span className='grow'>{testCase.title}</span>
-                  <span className='text-subdued text-sm'>{testCase.steps.length} steps</span>
+                  <span className='text-fg-subtle text-sm'>{testCase.steps.length} steps</span>
                 </li>
               ))}
             </ul>
@@ -147,7 +147,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         <section>
           <Field.Label>Runs</Field.Label>
           {newestFirst.length === 0 ? (
-            <p className='text-subdued' data-testid='qa.plan.no-runs'>
+            <p className='text-fg-subtle' data-testid='qa.plan.no-runs'>
               No runs yet.
             </p>
           ) : (
@@ -164,7 +164,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
             </ul>
           )}
         </section>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

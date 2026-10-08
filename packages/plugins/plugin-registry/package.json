@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-registry",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Braneframe plugin gallery",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -82,20 +82,35 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./Operations": {
+      "source": "./src/Operations.ts",
+      "types": "./dist/types/src/Operations.d.ts",
+      "import": "./dist/lib/ns/Operations.mjs"
+    },
+    "./PluginLoader": {
+      "source": "./src/PluginLoader.ts",
+      "types": "./dist/types/src/PluginLoader.d.ts",
+      "import": "./dist/lib/ns/PluginLoader.mjs"
+    },
+    "./PluginStorage": {
+      "source": "./src/PluginStorage.ts",
+      "types": "./dist/types/src/PluginStorage.d.ts",
+      "import": "./dist/lib/ns/PluginStorage.mjs"
+    },
+    "./RegistryOperation": {
+      "source": "./src/types/RegistryOperation.ts",
+      "types": "./dist/types/src/types/RegistryOperation.d.ts",
+      "import": "./dist/lib/RegistryOperation.mjs"
     },
     "./RegistryPlugin": {
       "source": "./src/RegistryPlugin.ts",
       "types": "./dist/types/src/RegistryPlugin.d.ts",
       "import": "./dist/lib/RegistryPlugin.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -126,7 +141,6 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",

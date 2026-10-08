@@ -14,7 +14,7 @@ import { type IncomingMessage, type ServerResponse } from 'node:http';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 import * as LocalUpload from '@dxos/mcp-server/LocalUpload';

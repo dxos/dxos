@@ -4,10 +4,13 @@
 
 import { type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { type Attached, type Cdp, detachAll, refreshTargets } from './cdp.ts';
+import { type CallCounter, startCallCounting } from './collectors/calls.ts';
 import {
+  EMPTY_THREAD,
   type ProcessCpu,
   diffProcessCpu,
   diffRealmThreadMetrics,
@@ -16,15 +19,20 @@ import {
   readRealmThreadMetrics,
   readThreadMetrics,
 } from './collectors/cpu.ts';
+import { type DataReading, diffData, readData } from './collectors/data.ts';
 import { diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
+import { requestLatency } from './collectors/latency.ts';
+import { readMarks } from './collectors/marks.ts';
 import { readDomCounters, readHeap, readProcessFootprint, sumAppFootprint, sumHeapUsed } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
+import { type ReactReading, diffReact, readReact } from './collectors/react.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
-import { type RpcReading, diffRpc, readRpc } from './collectors/rpc.ts';
+import { type RpcReading, diffRpc, diffRpcByMethod, readRpc } from './collectors/rpc.ts';
 import { recordDetailedDump, takeMemorySnapshot } from './collectors/snapshot.ts';
-import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
+import { type CounterTrace, STAGE_MARK_PREFIX, startCounterTrace } from './collectors/tracing.ts';
+import { type CounterSet, DEFAULT_COUNTERS } from './counters.ts';
 import {
   type Comparability,
   type DiskMetrics,
@@ -34,18 +42,6 @@ import {
   type StageRow,
   type ThreadMetrics,
 } from './types.ts';
-
-const EMPTY_THREAD: ThreadMetrics = {
-  taskMs: 0,
-  scriptMs: 0,
-  layoutMs: 0,
-  recalcStyleMs: 0,
-  v8CompileMs: 0,
-  threadTimeMs: 0,
-  processTimeMs: 0,
-  layoutCount: 0,
-  recalcStyleCount: 0,
-};
 
 /** The stateful, cross-boundary collectors, which can only start once the page target exists. */
 export type Instruments = {
@@ -80,6 +76,13 @@ export type RunnerOptions = {
    */
   snapshotStages?: ReadonlySet<string>;
   snapshotDir?: string;
+  /**
+   * The costed work counters to run (`parseCounters(process.env.DX_PERF_COUNTERS)`); defaults to
+   * {@link DEFAULT_COUNTERS}. The React counter also needs `installReactProbe` before navigation.
+   */
+  counters?: CounterSet;
+  /** Where the per-stage call and React breakdowns are written; defaults to a directory under the OS temp dir. */
+  counterDir?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -91,6 +94,8 @@ type Boundary = {
   network: NetworkMetrics;
   disk: DiskMetrics;
   rpc: RpcReading[];
+  data: DataReading[];
+  react?: ReactReading;
 };
 
 /**
@@ -106,9 +111,15 @@ export class StageRunner {
   #fixtureSize: number | undefined;
   #targets: Attached[] = [];
   #index = 0;
+  readonly #counters: CounterSet;
+  readonly #counterDir: string;
+  readonly #calls: CallCounter | undefined;
 
   constructor(options: RunnerOptions) {
     this.#options = options;
+    this.#counters = options.counters ?? DEFAULT_COUNTERS;
+    this.#counterDir = options.counterDir ?? path.join(tmpdir(), 'dxos-perf-counters');
+    this.#calls = this.#counters.calls ? startCallCounting(this.#counterDir) : undefined;
   }
 
   get rows(): StageRow[] {
@@ -185,6 +196,11 @@ export class StageRunner {
     this.#instruments.screencast?.beginStage(id);
     await this.#instruments.profiler?.beginStage(id, this.#targets);
 
+    // Started before the opening reads, so enabling coverage and tracing is not charged to the
+    // stage; both only count inside it (coverage is zeroed here, the trace is cut at the marks).
+    await this.#calls?.beginStage(this.#targets);
+    const counterTrace = await this.#startCounterTrace(id);
+
     // Drained and discarded: samples produced between stages belong to neither, and leaving them
     // would charge the previous stage's tail to this one.
     await readResponsiveness(page, this.#targets).catch(() => undefined);
@@ -197,6 +213,8 @@ export class StageRunner {
       network: network(),
       disk: await readDisk(this.#targets),
       rpc: await readRpc(this.#targets),
+      data: await readData(this.#targets),
+      react: this.#counters.react ? await readReact(pageTarget) : undefined,
     };
 
     let ok = true;
@@ -237,10 +255,25 @@ export class StageRunner {
     const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
     // After the refresh for the same reason as disk: `boot` is the stage that creates the worker
     // serving every later RPC, so a set captured at the opening boundary would miss it entirely.
-    const rpc = diffRpc(before.rpc, await readRpc(this.#targets));
+    const rpcAfter = await readRpc(this.#targets);
+    const rpc = diffRpc(before.rpc, rpcAfter);
+    const rpcCallsByMethod = diffRpcByMethod(before.rpc, rpcAfter);
+    // After the refresh, like RPC: the worker `boot` creates holds the database and automerge.
+    const data = diffData(before.data, await readData(this.#targets));
+    // After the refresh, like data: a mark is an instant, so the stage owns every one taken since it opened.
+    const latency = requestLatency(await readMarks(this.#targets, before.at));
+    const closingPage = this.#targets.find((target) => target.kind === 'page');
+    const reactAfter = this.#counters.react ? await readReact(closingPage) : undefined;
+    const react = reactAfter
+      ? diffReact(before.react, reactAfter, { stage: id, outputDir: this.#counterDir })
+      : undefined;
 
     const responsiveness = await readResponsiveness(page, this.#targets);
-    const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
+    const domCounters = await readDomCounters(closingPage);
+
+    // Before the footprint read, which records a trace of its own and cannot while this one runs.
+    // After every CPU reading, so flushing the trace buffers is charged to no stage.
+    const traceCounters = await counterTrace?.stop().catch(() => undefined);
 
     // LAST of the closing reads, and at the boundary rather than sampled. It starts and ends a
     // trace around one dump, which costs ~100 ms — an order of magnitude more than every other
@@ -263,6 +296,10 @@ export class StageRunner {
     // stage, and read before the DOM counters it would drop nodes the stage had just created.
     const heap = await readHeap(this.#targets);
 
+    // After the heap read: reading coverage serializes every function's counts inside the realm,
+    // an allocation that would otherwise land in this stage's heap.
+    const calls = await this.#calls?.endStage(id);
+
     // After the heap read, which is the last thing charged to the stage: a screenshot forces a
     // paint and a PNG encode, and neither belongs in this stage's numbers or the next one's.
     const shot = await this.#screenshot(id);
@@ -278,7 +315,14 @@ export class StageRunner {
         })
       : undefined;
 
-    const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : []), ...(snapshot?.files ?? [])];
+    const artifacts = [
+      ...profiles,
+      ...(stills?.files ?? []),
+      ...(shot ? [shot] : []),
+      ...(snapshot?.files ?? []),
+      ...(calls?.file ? [calls.file] : []),
+      ...(react ? [react.file] : []),
+    ];
     const row: StageRow = {
       flow: this.#options.flow,
       stage: id,
@@ -305,6 +349,12 @@ export class StageRunner {
       network: networkDelta,
       disk: diskDelta,
       rpc,
+      ...(Object.keys(rpcCallsByMethod).length > 0 ? { rpcCallsByMethod } : {}),
+      ...(traceCounters ? { traceCounters } : {}),
+      ...(calls ? { jsCalls: calls.calls } : {}),
+      ...(react ? { react: react.counters } : {}),
+      data,
+      ...(latency ? { latency } : {}),
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),
@@ -318,9 +368,31 @@ export class StageRunner {
     return row;
   }
 
-  /** Closes every CDP session the run opened. */
-  dispose(): void {
+  /**
+   * A counter trace for the stage, or undefined when one cannot start — another trace is recording
+   * (the boot trace, which then carries the counts itself) or the browser refused.
+   */
+  async #startCounterTrace(id: string): Promise<CounterTrace | undefined> {
+    if (!this.#counters.trace) {
+      return undefined;
+    }
+    return startCounterTrace(this.#options.browserCdp, { stage: id, outputDir: this.#counterDir }).catch(
+      () => undefined,
+    );
+  }
+
+  /**
+   * Closes every target session; the next stage boundary re-attaches what is live.
+   *
+   * Required before navigating away: a debugger session held on a shared worker keeps it alive
+   * across the unload, and the page that loads next connects to it and renders nothing.
+   */
+  detach(): void {
     detachAll(this.#targets);
     this.#targets = [];
+  }
+
+  dispose(): void {
+    this.detach();
   }
 }

@@ -5,14 +5,16 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
 import { type AiChatProcessor } from '../../processor/index.ts';
 
-export type ChatMcpErrorsProps = ThemedClassName<{
+export type ChatMcpErrorsProps = Util.ThemedClassName<{
   processor: AiChatProcessor;
 }>;
 
@@ -21,7 +23,7 @@ export type ChatMcpErrorsProps = ThemedClassName<{
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
 export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const errors = useAtomValue(processor.mcpErrors);
 
   const handleDismiss = useCallback(() => {
@@ -34,26 +36,29 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
 
   return (
     <Banner.Root valence='warning'>
-      <Banner.Content classNames={['m-1', classNames]}>
-        <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
-        <Banner.Body>
-          <Listbox.Root>
-            <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
-              {errors.map((error) => (
-                <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
-                  {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
+      <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
+      <Banner.Body>
+        <Listbox.Root
+          items={errors.map((error) => ({
+            value: `${error.url}::${error.protocol}`,
+            label: `${error.url}::${error.protocol}`,
+          }))}
+        >
+          <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
+            {errors.map((error) => (
+              <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
+                {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
                       the content's intrinsic width. */}
-                  <span className='truncate min-w-0'>
-                    <span className='font-mono'>{error.url}</span>
-                    {' — '}
-                    <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
-                  </span>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Root>
-        </Banner.Body>
-      </Banner.Content>
+                <span className='truncate min-w-0'>
+                  <span className='font-mono'>{error.url}</span>
+                  {' — '}
+                  <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
+                </span>
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Root>
+      </Banner.Body>
     </Banner.Root>
   );
 };

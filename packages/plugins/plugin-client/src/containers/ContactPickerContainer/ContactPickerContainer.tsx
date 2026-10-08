@@ -4,12 +4,17 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Field, Flex, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -27,7 +32,7 @@ const roleLabel: Record<AdmitRole, string> = {
 export type ContactPickerContainerProps = AppSurface.ContactPickerData;
 
 export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const contacts = useContacts();
   const members = useMembers(space.key);
   const identity = useIdentity();
@@ -68,12 +73,12 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   };
 
   if (contacts.length === 0) {
-    return <p className='text-description'>{t('contact-picker-empty.message')}</p>;
+    return <p className='text-fg-muted'>{t('contact-picker-empty.message')}</p>;
   }
 
   return (
-    <Flex column gap='sm' role='group'>
-      <Flex align='center' gap='sm'>
+    <Layout.Container gap='md' role='group' gutter='none'>
+      <Layout.Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
           excludeKeys={memberKeys}
@@ -85,41 +90,36 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           disabled={!canAdmit}
         />
         <Select.Root
-          value={String(role)}
-          onValueChange={(value) =>
+          value={[String(role)]}
+          onValueChange={({ value: [value] }) =>
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
+          items={ROLES.map((value) => ({ value: String(value), label: t(roleLabel[value]) }))}
         >
-          <Select.TriggerButton classNames='min-w-[6rem]' disabled={!canAdmit} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {ROLES.map((value) => (
-                  <Select.Option key={value} value={String(value)}>
-                    {t(roleLabel[value])}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
+          <Select.Content>
+            {ROLES.map((value) => (
+              <Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
+            ))}
+          </Select.Content>
         </Select.Root>
-        <SystemIconButton.Add
+        <SystemButton.Add
           iconOnly
           label={t('contact-picker-add.label')}
           disabled={!canAdmit || pending || !selected}
           onClick={handleAdd}
           data-testid='contactPicker.add'
         />
-      </Flex>
+      </Layout.Flex>
       {joinUrl && (
-        <Flex gap='sm'>
+        <Layout.Flex gap='sm'>
           <Field.Root readOnly>
-            <Field.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+            <Input.Root readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
-          <SystemIconButton.Clipboard value={joinUrl} />
-        </Flex>
+          <SystemButton.Clipboard value={joinUrl} />
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Container>
   );
 };
 

@@ -9,10 +9,12 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { Textarea } from './Textarea.tsx';
 
 type StoryArgs = SizeArgs & {
   /** Grow the Notes textarea with its content. */
@@ -21,31 +23,31 @@ type StoryArgs = SizeArgs & {
 
 const DefaultStory = ({ size, autoResize }: StoryArgs) => (
   <>
-    <Next.Field.Root>
-      <Next.Field.Label>Title</Next.Field.Label>
-      <Next.Input data-testid={`input-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Notes</Next.Field.Label>
-      <Next.Textarea autoResize={autoResize} placeholder='Write something' data-testid={`textarea-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Summary</Next.Field.Label>
-      <Next.Textarea rows={6} data-testid={`rows-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Log</Next.Field.Label>
-      <Next.Textarea autoResize placeholder='Grows as you type' data-testid={`auto-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Draft</Next.Field.Label>
-      <Next.Textarea variant='subdued' placeholder='No well' data-testid={`subdued-${size}`} />
-    </Next.Field.Root>
+    <Field.Root>
+      <Field.Label>Title</Field.Label>
+      <Input data-testid={`input-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Notes</Field.Label>
+      <Textarea autoResize={autoResize} placeholder='Write something' data-testid={`textarea-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Summary</Field.Label>
+      <Textarea rows={6} data-testid={`rows-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Log</Field.Label>
+      <Textarea autoResize placeholder='Grows as you type' data-testid={`auto-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Draft</Field.Label>
+      <Textarea variant='subdued' placeholder='No well' data-testid={`subdued-${size}`} />
+    </Field.Root>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Textarea',
+  title: 'ui/react-ui-core/components/Textarea',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

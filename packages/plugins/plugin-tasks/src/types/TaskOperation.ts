@@ -82,7 +82,7 @@ export const UpdateTask = Operation.make({
       'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
       'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
       'creating the session record in the space if it is not there yet. ' +
-      'A task with sub-tasks is one unit of work landing in one PR: assigning or starting any task in a tree ' +
+      'A task with sub-tasks is one unit of work: assigning or starting any task in a tree ' +
       'assigns (and starts, if not yet started) its root and every sub-task too.',
     icon: 'ph--pencil-simple--regular',
   },
@@ -229,9 +229,9 @@ export const AddArtifact = Operation.make({
     name: 'Add Task Artifact',
     description:
       'Attach an existing object (e.g. a File created by file.createFromUpload) to a task as an artifact ' +
-      'the task produced. Adding the same object twice is a no-op. A pull request is recorded on the ROOT ' +
-      "of the task's tree (the returned task), since all sub-tasks land in one PR; it is refused when the " +
-      'root already has a different open PR.',
+      'the task produced. Adding the same object twice is a no-op. A pull request is recorded on the task ' +
+      'given — attach a PR that fixes one sub-task to that sub-task, and one covering the whole tree to its ' +
+      'root; it is refused only when that task already has a different open PR.',
     icon: 'ph--paperclip--regular',
   },
   services: [Database.Service],

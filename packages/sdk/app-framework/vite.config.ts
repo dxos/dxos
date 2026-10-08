@@ -6,6 +6,18 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/Surface': 'src/Surface.ts',
+    'ns/SharedPackages': 'src/SharedPackages.ts',
+    'ns/PluginManagerProvider': 'src/PluginManagerProvider.ts',
+    'ns/Hooks': 'src/Hooks.ts',
+    'ns/Cli': 'src/Cli.ts',
+    'ns/App': 'src/App.ts',
+    'ns/Devtools': 'src/Devtools.ts',
+    'ns/Translations': 'src/Translations.ts',
+    'App': 'src/ui/components/App/index.ts',
+    'Hooks': 'src/ui/hooks/index.ts',
+    'PluginManagerProvider': 'src/ui/components/PluginManager/index.ts',
+    'Surface': 'src/ui/components/Surface/index.ts',
     'vite-plugin': 'src/vite-plugin/index.ts',
     // Split out of `vite-plugin` so a runtime host can read the shared-package list without
     // pulling in Vite itself — the CLI registers the same set in bun's module registry.
@@ -26,8 +38,8 @@ export default defineConfig({
     'cli': 'src/cli/index.ts',
     'testing': 'src/testing/index.ts',
     'testing/react': 'src/testing/react.tsx',
-    'ui': 'src/ui/index.ts',
     'core/capability-manager': 'src/core/capability-manager.ts',
+    'plugin-process-manager/ProcessManagerPlugin': 'src/plugin-process-manager/ProcessManagerPlugin.ts',
     'plugin-process-manager/history/history-tracker': 'src/plugin-process-manager/history/history-tracker.ts',
     'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
     'core/plugin-manifest': 'src/core/plugin-manifest.ts',

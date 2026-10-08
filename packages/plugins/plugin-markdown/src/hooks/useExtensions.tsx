@@ -13,8 +13,8 @@ import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -95,7 +95,7 @@ export const useExtensions = ({
   setWidgets,
   onSelectLink,
 }: ExtensionsOptions): Extension[] => {
-  const { platform } = useThemeContext();
+  const platform = Hooks.usePlatform();
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
@@ -302,7 +302,7 @@ const createRenderLink =
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
     const icon = Domino.of('span')
-      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
+      .classNames('dx-link-accent ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
@@ -333,7 +333,7 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // Not `dx-link-accent`: the tooltip sits on the inverse surface, where the accent link color has no
       // contrast — inherit the tooltip's own `text-inverse-fg` instead.
       .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)

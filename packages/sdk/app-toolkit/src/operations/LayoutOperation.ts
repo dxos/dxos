@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
@@ -241,7 +243,7 @@ export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: N
   notifyOverride: override,
 });
 
-/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Info.error`, a `SerializedError` whose `context` carries it), if present. */
+/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Process.error`, a `SerializedError` whose `context` carries it), if present. */
 export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
   if (!Predicate.isObject(failure) || !Predicate.isObject(failure.context)) {
     return null;
@@ -466,6 +468,21 @@ export const UpdateCompanion = Operation.make({
   }),
   output: Schema.Void,
 });
+
+/**
+ * Closes the companion, for a view that has nothing for one to accompany (settings). A layout without companions has
+ * no `UpdateCompanion` handler, which is not a failure; it is matched on the whole cause, since some invokers report it
+ * as a defect rather than an error.
+ */
+export const closeCompanion = (): Effect.Effect<void, Operation.NoHandlerError, Operation.Service> =>
+  Operation.invoke(UpdateCompanion, { subject: null }).pipe(
+    Effect.catchCause((cause) => {
+      const error = Cause.squash(cause);
+      return error instanceof Operation.NoHandlerError && error.context?.operationKey === UpdateCompanion.meta.key
+        ? Effect.void
+        : Effect.failCause(cause);
+    }),
+  );
 
 //
 // Selection Operations

@@ -7,20 +7,11 @@ import './emoji.css';
 import React, { Suspense, lazy, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import {
-  Button,
-  ButtonGroup,
-  type ButtonProps,
-  Icon,
-  IconButton,
-  IconButtonProps,
-  Popover,
-  type ThemedClassName,
-  Toolbar,
-  useMediaQuery,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
+import type * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
 
 /**
@@ -29,14 +20,14 @@ import { osTranslations } from '@dxos/ui-theme';
  */
 const EmojiMartPanel = lazy(() => import('./EmojiMartPanel.tsx'));
 
-export type EmojiPickerProps = ThemedClassName<{
+export type EmojiPickerProps = Util.ThemedClassName<{
   disabled?: boolean;
-  size?: IconButtonProps['size'];
+  size?: Button.RootProps['size'];
   defaultEmoji?: string;
   emoji?: string;
   onChangeEmoji?: (nextEmoji: string) => void;
-  onClickClear?: ButtonProps['onClick'];
-  triggerVariant?: ButtonProps['variant'];
+  onClickClear?: Button.RootProps['onClick'];
+  triggerVariant?: Button.RootProps['variant'];
 }>;
 
 /**
@@ -49,8 +40,8 @@ export const EmojiPickerToolbarButton = ({
   defaultEmoji,
   onChangeEmoji,
 }: Omit<EmojiPickerProps, 'onClickClear'>) => {
-  const { t } = useTranslation(osTranslations);
-  const { themeMode } = useThemeContext();
+  const { t } = Hooks.useTranslation(osTranslations);
+  const themeMode = Hooks.useThemeMode();
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,
@@ -63,12 +54,13 @@ export const EmojiPickerToolbarButton = ({
   return (
     <Popover.Root
       open={emojiPickerOpen}
-      onOpenChange={(nextOpen) => {
+      onOpenChange={({ open: nextOpen }) => {
         setEmojiPickerOpen(nextOpen);
       }}
+      positioning={{ placement: 'bottom' }}
     >
       <Popover.Trigger asChild>
-        <Toolbar.IconButton
+        <Button.Root
           size={size}
           label={t('select-emoji.label')}
           icon='ph--smiley--regular'
@@ -77,30 +69,26 @@ export const EmojiPickerToolbarButton = ({
           disabled={disabled}
         />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          side='bottom'
-          onKeyDownCapture={(event) => {
-            if (event.key === 'Escape') {
-              event.stopPropagation();
-              setEmojiPickerOpen(false);
-            }
-          }}
-        >
-          <Suspense fallback={null}>
-            <EmojiMartPanel
-              onEmojiSelect={({ native }: { native?: string }) => {
-                if (native) {
-                  setEmojiValue(native);
-                  setEmojiPickerOpen(false);
-                }
-              }}
-              themeMode={themeMode}
-            />
-          </Suspense>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content
+        onKeyDownCapture={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            setEmojiPickerOpen(false);
+          }
+        }}
+      >
+        <Suspense fallback={null}>
+          <EmojiMartPanel
+            onEmojiSelect={({ native }: { native?: string }) => {
+              if (native) {
+                setEmojiValue(native);
+                setEmojiPickerOpen(false);
+              }
+            }}
+            themeMode={themeMode}
+          />
+        </Suspense>
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -117,8 +105,8 @@ export const EmojiPickerBlock = ({
   triggerVariant = 'ghost',
   classNames,
 }: EmojiPickerProps) => {
-  const { t } = useTranslation(osTranslations);
-  const [isMd] = useMediaQuery('md');
+  const { t } = Hooks.useTranslation(osTranslations);
+  const [isMd] = Hooks.useMediaQuery('md');
 
   const [emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,
@@ -129,45 +117,44 @@ export const EmojiPickerBlock = ({
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
   return (
-    <ButtonGroup classNames={classNames}>
-      <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+    <Button.Group classNames={classNames}>
+      <Popover.Root
+        open={emojiPickerOpen}
+        onOpenChange={({ open }) => setEmojiPickerOpen(open)}
+        positioning={{ placement: 'right', gutter: isMd ? 0 : -310, overflowPadding: 8 }}
+      >
         <Popover.Trigger asChild>
-          <Button variant={triggerVariant} classNames='grow gap-2 text-2xl' disabled={disabled}>
+          <Button.Root variant={triggerVariant} classNames='text-xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>
             <span>{emojiValue}</span>
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
-          </Button>
+            <Icon.Icon icon='ph--caret-down--bold' size='xs' />
+          </Button.Root>
         </Popover.Trigger>
         {/* Portalled, like `EmojiPickerToolbarButton` above and `PickerButton` (which is why the hue
             picker never had this problem): rendered in place, a 300px panel is clipped by the first
             scrolling ancestor — in the profile page, the settings panel's own overflow. */}
-        <Popover.Portal>
-          <Popover.Content
-            side='right'
-            sideOffset={isMd ? 0 : -310}
-            collisionPadding={8}
-            onKeyDownCapture={(event) => {
-              if (event.key === 'Escape') {
-                event.stopPropagation();
-                setEmojiPickerOpen(false);
-              }
-            }}
-          >
-            <Suspense fallback={null}>
-              <EmojiMartPanel
-                onEmojiSelect={({ native }: { native?: string }) => {
-                  if (native) {
-                    setEmojiValue(native);
-                    setEmojiPickerOpen(false);
-                  }
-                }}
-              />
-            </Suspense>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content
+          classNames='p-0'
+          onKeyDownCapture={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
+              setEmojiPickerOpen(false);
+            }
+          }}
+        >
+          <Suspense fallback={null}>
+            <EmojiMartPanel
+              onEmojiSelect={({ native }: { native?: string }) => {
+                if (native) {
+                  setEmojiValue(native);
+                  setEmojiPickerOpen(false);
+                }
+              }}
+            />
+          </Suspense>
+        </Popover.Content>
       </Popover.Root>
-      <IconButton
+      <Button.Root
         icon='ph--arrow-counter-clockwise--regular'
         iconOnly
         label={t('clear.label')}
@@ -176,6 +163,6 @@ export const EmojiPickerBlock = ({
         onClick={onClickClear}
         disabled={disabled}
       />
-    </ButtonGroup>
+    </Button.Group>
   );
 };

@@ -4,7 +4,7 @@
 
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -69,7 +69,8 @@ export const translations = [
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
         'object-card.archived.label': 'Archived',
+        'object-card.menu.label': 'Object actions',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

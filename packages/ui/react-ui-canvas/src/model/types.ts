@@ -11,13 +11,38 @@
 
 import * as Schema from 'effect/Schema';
 
-import { HueAnnotationId } from '@dxos/ui-types';
+import { Annotation } from '@dxos/echo';
+import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Point = Schema.Schema.Type<typeof Point>;
 
 export const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number });
 export type Size = Schema.Schema.Type<typeof Size>;
+
+/** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
+export const DEFAULT_GRID = 16;
+
+/** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
+export const MAJOR_GRID_RATIO = 4;
+
+/** Snap unit: nodes, layout defaults and scene bounds align to it. */
+export const MAJOR_GRID = DEFAULT_GRID * MAJOR_GRID_RATIO;
+
+/** Two fields side by side in a form, rather than one row each. */
+const pairLayout = (first: string, second: string) =>
+  `<grid cols="2" fixed="true"><field name="${first}"/><field name="${second}"/></grid>`;
+
+/** A node coordinate as a form edits it: the stepper moves by one minor grid cell, as an arrow nudge does. */
+const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnotationId]: DEFAULT_GRID });
+
+/** `Point` and `Size` for a node's own frame, laid out as one row each in the properties form. */
+const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') }).pipe(
+  Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }),
+);
+const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') }).pipe(
+  Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }),
+);
 
 export const Bounds = Schema.Struct({
   x: Schema.Number,
@@ -58,20 +83,27 @@ export type Port = Schema.Schema.Type<typeof Port>;
 // Nodes
 //
 
+/** The hues the style pickers offer, neutral first, then in hue order; any theme hue still renders on a node. */
+export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet'] as const;
+export const StyleHue = Schema.Literals(STYLE_HUES);
+export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
+
+/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are stronger to lighter fills. */
+export const NodeTone = Schema.Literals([0, 1, 2, 3]);
+export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
+
 /** Presentation choices a node carries; every field is optional and the frame supplies the default look. */
 export const NodeStyle = Schema.Struct({
   /** One of the theme's hues, colouring fill, text and border together. */
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  /** The hue's fill; unset is 2, the look a hue had before tones. */
+  tone: Schema.optional(NodeTone),
   rounded: Schema.optional(Schema.Boolean),
   fill: Schema.optional(Schema.Boolean),
   border: Schema.optional(Schema.Boolean),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
-  /**
-   * Text size in the node's own scene units. A nested scene's units are finer than its parent's by the
-   * portal's factor, so a node created deeper carries a proportionally larger value and reads the same
-   * on screen at every level.
-   */
+  /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Extra classes on the frame, for a host's own look. */
   className: Schema.optional(Schema.String),
@@ -84,11 +116,13 @@ export const nodeBase = {
   /** Fractional z-order key (see `order.ts`). */
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
-  center: Point,
+  center: NodeCenter,
   /** The frame is `size` centred on `center`, whatever the type draws inside it. */
-  size: Size,
+  size: NodeSize,
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
+  /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
+  portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
   style: Schema.optional(NodeStyle),
 };
 
@@ -96,10 +130,15 @@ export const nodeBase = {
 export const NodeBase = Schema.Struct({ type: Schema.String, ...nodeBase });
 export type NodeBase = Schema.Schema.Type<typeof NodeBase>;
 
+/** The fields of the `box` prototype (a framed shape with a centred label), shared by the types built on it. */
+export const boxFields = {
+  label: Schema.optional(Schema.String),
+};
+
 export const RectNode = Schema.Struct({
   type: Schema.Literal('rect'),
   ...nodeBase,
-  label: Schema.optional(Schema.String),
+  ...boxFields,
 });
 export type RectNode = Schema.Schema.Type<typeof RectNode>;
 
@@ -110,16 +149,6 @@ export const EllipseNode = Schema.Struct({
   label: Schema.optional(Schema.String),
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
-
-/** UML class box: a name compartment over attribute and method compartments. */
-export const ClassNode = Schema.Struct({
-  type: Schema.Literal('class'),
-  ...nodeBase,
-  name: Schema.String,
-  attributes: Schema.Array(Schema.String),
-  methods: Schema.Array(Schema.String),
-});
-export type ClassNode = Schema.Schema.Type<typeof ClassNode>;
 
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
@@ -133,15 +162,18 @@ export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
 export const PortalNode = Schema.Struct({
   type: Schema.Literal('scene'),
   ...nodeBase,
+  ...boxFields,
   scene: Schema.String,
+  /** Draw the child scene inside the frame rather than the label; unset, it does so while there is no label. */
+  contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
 });
 export type PortalNode = Schema.Schema.Type<typeof PortalNode>;
 
 /** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
-export const BuiltinNode = Schema.Union([RectNode, EllipseNode, ClassNode, NoteNode, PortalNode]);
+export const BuiltinNode = Schema.Union([RectNode, EllipseNode, NoteNode, PortalNode]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
-export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'class', 'note', 'scene'];
+export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'note', 'scene'];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
 export type Node = NodeBase;
@@ -151,9 +183,12 @@ export type NodeType = string;
 /** Narrows a node to one built-in type; sound because the registry maps each type name to one schema. */
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
-export const isClassNode = (node: NodeBase): node is ClassNode => node.type === 'class';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isPortalNode = (node: NodeBase): node is PortalNode => node.type === 'scene';
+/** A node built on the `box` prototype, carrying a centred, editable label. */
+export const isBoxNode = (node: NodeBase): node is RectNode | PortalNode => isRectNode(node) || isPortalNode(node);
+/** Whether a portal draws its child scene: as set, else while it has no label to show instead. */
+export const showsContents = (node: PortalNode): boolean => node.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
 //
@@ -179,15 +214,24 @@ export const isPointEndpoint = (end: Endpoint): end is PointEndpoint => 'point' 
 export const endpointNode = (end: Endpoint): NodeId | undefined => ('node' in end ? end.node : undefined);
 
 /** What is drawn at a link end. */
-export const Marker = Schema.Literals(['arrow', 'circle']);
+/** An end marker: a filled `arrow`, a `circle`, or a hollow `triangle` (inheritance). */
+export const Marker = Schema.Literals(['arrow', 'circle', 'triangle']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
 /** Markers at the source (`start`) and target (`end`) of a link. */
+/** A link's end markers; the properties form shows them side by side, as the two ends of the line. */
 export const LinkEnds = Schema.Struct({
   start: Schema.optional(Marker),
   end: Schema.optional(Marker),
-});
+}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
 export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
+
+/** How a link's line is drawn; unset draws it neutral and solid. */
+export const LinkLine = Schema.Struct({
+  hue: Schema.optional(StyleHue.annotate({ title: 'Color' })),
+  dash: Schema.optional(Schema.Literals(['solid', 'dashed', 'dotted']).annotate({ title: 'Pattern' })),
+});
+export type LinkLine = Schema.Schema.Type<typeof LinkLine>;
 
 const linkBase = {
   id: Schema.String,
@@ -195,10 +239,9 @@ const linkBase = {
   locked: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
-  /** Shorthand for `ends: { end: 'arrow' }`; ports with `accepts` constrain which end lands where. */
-  directed: Schema.optional(Schema.Boolean),
-  /** Explicit end markers; when present they replace what `directed` implies. */
+  /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
+  line: Schema.optional(LinkLine.annotate({ title: 'Line' })),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -230,8 +273,8 @@ export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline', 'smar
 
 export type Element = Node | Link;
 
-/** The markers a link draws: its explicit `ends`, else an arrowhead at the target when it is `directed`. */
-export const linkMarkers = (link: Link): LinkEnds => link.ends ?? (link.directed ? { end: 'arrow' } : {});
+/** The markers a link draws. */
+export const linkMarkers = (link: Link): LinkEnds => link.ends ?? {};
 
 export const isNode = (element: Element): element is Node => 'center' in element;
 export const isLink = (element: Element): element is Link => 'source' in element;
@@ -253,7 +296,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
   });
 
 /** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([RectNode, EllipseNode, ClassNode, NoteNode, PortalNode]);
+export const Scene = createSceneSchema([RectNode, EllipseNode, NoteNode, PortalNode]);
 
 /** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
 export const OpenScene = createSceneSchema([NodeBase]);
@@ -269,7 +312,9 @@ export const getElement = (scene: Scene, id: ElementId): Element | undefined => 
 
 /** Property edits: the shared fields typed, a type's own fields by name. */
 export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };
-export type LinkValues = Partial<Omit<Link, 'id' | 'type'>>;
+/** Per link type, so a spline's `points` are among the values an `update` may set. */
+type ValuesOf<T> = T extends unknown ? Partial<Omit<T, 'id' | 'type'>> : never;
+export type LinkValues = ValuesOf<Link>;
 
 /**
  * What the surface asks of a projection (§3). The surface never writes coordinates itself: a
@@ -308,12 +353,3 @@ export type Tool =
   | { kind: 'hand' }
   | { kind: 'node'; type: NodeType }
   | { kind: 'link'; type: LinkType };
-
-/** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
-export const DEFAULT_GRID = 16;
-
-/** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
-export const MAJOR_GRID_RATIO = 4;
-
-/** Snap unit: nodes, layout defaults and scene bounds align to it. */
-export const MAJOR_GRID = DEFAULT_GRID * MAJOR_GRID_RATIO;

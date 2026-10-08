@@ -36,6 +36,10 @@ Not to be confused with `packages/apps/composer-app/demos/`, which arranges seve
 a grid on a real desktop for a human to drive via `robotjs` (its own TODO calls that abandoned). It
 records nothing and exposes no control channel, so it cannot serve an agent or produce an artifact.
 
+**Two people at once** (Alice and Bob, each with their own identity, in one shared space) is a different
+script: `scripts/pair.mjs` records one browser context per person and `scripts/compose.mjs` tiles the
+panes into one side-by-side video on a shared clock. See [SIDE-BY-SIDE.md](SIDE-BY-SIDE.md).
+
 ## Decide what to produce first
 
 **A screenshot is often enough, and always cheaper.** Reach for one when the thing being shown is a
@@ -297,16 +301,64 @@ Four things about storybook that cost a cycle each:
 
 The same driver drives the desktop app with `--target tauri`: every op, the overlay, captions, cuts, flow
 scripts and the trimmer work unchanged. Playwright cannot attach to a WebKitGTK or WKWebView webview, so the
-driver speaks W3C WebDriver instead — `tauri-driver` hands the session to `WebKitWebDriver`, whose pointer
-and key actions arrive in the page as **trusted** platform events (menus open, CodeMirror takes typed text).
-`scripts/tauri/page.mjs` is a Playwright-shaped `page` over that session and `scripts/tauri/selectors.mjs`
-evaluates Playwright's selector syntax in the page (`>>`, `nth=`, `text=`, `role=…[name=…]`, `:visible`,
-`:has-text()`, `:text-is()`, `:has()`), so a flow written for Chromium runs as is. What it does not have:
-open shadow roots are not pierced, the log tap misses entries logged before the first drain, and there is
-no `page.on('console' | 'response')`.
+driver speaks W3C WebDriver instead. `scripts/tauri/page.mjs` is a Playwright-shaped `page` over that session
+and `scripts/tauri/selectors.mjs` evaluates Playwright's selector syntax in the page (`>>`, `nth=`, `text=`,
+`role=…[name=…]`, `:visible`, `:has-text()`, `:text-is()`, `:has()`), so a flow written for Chromium runs as
+is. What it does not have: open shadow roots are not pierced, the log tap misses entries logged before the
+first drain, and there is no `page.on('console' | 'response')`.
+Restart the driver after editing `scripts/tauri/*`: the adapter loads once. Flow scripts reload per `run`.
 
-**Linux (and the cloud sandbox) only.** macOS has no WebDriver for WKWebView, so there is no route there;
-Windows would work through `msedgedriver` but is untested.
+#### macOS
+
+macOS has no WebDriver for WKWebView, so the app serves one itself. A build with the `webdriver` cargo feature
+embeds `tauri-plugin-wdio-webdriver`, which listens on loopback at `TAURI_WEBDRIVER_PORT` (the driver passes
+`--driver-port`, 4444). Shipped release builds never enable the feature.
+
+```bash
+export DX_TAURI=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true   # plus DX_EDGE_BASE_URL for EDGE preview
+moon run composer-app:tauri-build-test     # bundle, sidecars, then `tauri build --no-bundle`
+node .agents/skills/autocue/scripts/driver.mjs --target tauri --fresh on --out /tmp/demo
+```
+
+- **The test build has its own identity.** `tauri-build-test` applies `src-tauri/tauri.test.conf.json`:
+  identifier `org.dxos.composer.test`, its own asset-server port (26781, the `Test` channel in
+  `src-tauri/src/channel.rs`) and its own WebKit data store. Nothing it does touches an installed Composer's
+  profile, and it runs beside one. Never run a `webdriver` build under a shipped identifier: the app asserts
+  the test identifier at startup, and the launcher refuses a binary without it.
+- **`--fresh on` is a first-run take.** It deletes the test profile before launch:
+  `~/Library/WebKit/app/WebsiteDataStore/6175746f-…-000000000001` (web storage),
+  `~/Library/Application Support/org.dxos.composer.test` (window state, last URL) and
+  `~/Library/Caches/org.dxos.composer.test`. Without it, identity, spaces and plugin toggles carry over.
+- **The window is real and on screen.** It opens wherever macOS puts it and is resized to `--width`x`--height`.
+  It needs neither focus nor to be uncovered: the `webdriver` build turns WKWebView's occlusion detection
+  off, so a window behind others, or on another Space, still renders and reports itself `visible`. Without
+  that, rendering stopped and every wait on `requestAnimationFrame` hung. Keep working; just don't click into it
+  mid-take or minimize it.
+- **The recorder takes webview snapshots** (`takeSnapshot` through WebDriver, about 50 ms each at the
+  display's 2x), held and repeated to a steady `--fps`, then transcoded like the Linux capture. A screen grab
+  would need the Screen Recording permission, which an agent cannot grant itself. No window chrome is in
+  the frame, and the frame rate of motion is roughly 10 per second, which is enough for UI.
+- **Input is dispatched in the page** (`scripts/tauri/input.mjs`). The plugin's own `/actions` send only bare
+  `mousedown`/`mouseup`/`click` and keys with no default action, so a zag menu ignores a click outside it and
+  CodeMirror takes no text. The adapter instead sends the full pointer sequence (`pointerover`…`click`, with
+  focus moved on press) and keys with their defaults (`execCommand('insertText')`, delete, caret moves, Tab
+  focus, Enter submits). The events are untrusted: native HTML5 drag and drop does not start, and anything
+  gated on `isTrusted` (fullscreen, clipboard reads) is out of reach.
+- **Native dialogs cannot be driven.** Set what a folder or file picker would return through app state with
+  an `eval`, the same way the browser flows stand in for Tauri IPC.
+- **The updater stays off.** The test port is not in `TAURI_LOCALHOST_PORTS`, so the app treats itself as a dev
+  server and never updates into a shipped build.
+- **Xcode 27 needs a debug Swift build for the passkey plugin.** Its release configuration makes the
+  `swift-rs` symbols the bridge exports local, and the link fails; `tauri-build-test` passes
+  `--config profile.release.package.tauri-plugin-macos-passkey.debug=1`, which flips `swift-rs` to
+  `swift build -c debug`. Pass the same to a hand-run `cargo build --release`.
+- The app's own log goes to `<out>/native.log`; the page's log to `<out>/app.log`, as in the browser.
+
+#### Linux (and the cloud sandbox)
+
+`tauri-driver` hands the session to `WebKitWebDriver`, whose pointer and key actions arrive in the page as
+**trusted** platform events (menus open, CodeMirror takes typed text). Windows is not wired up: the launcher
+rejects it, though `tauri-driver` with `msedgedriver` would be the route.
 
 One-time setup:
 
@@ -345,7 +397,6 @@ node .agents/skills/autocue/scripts/driver.mjs --target tauri --out /tmp/demo
   segfault in `AcceleratedBackingStore::update` on the first composited frame; the launcher sets
   `LIBGL_ALWAYS_SOFTWARE=1` instead. For a crash, run the app under `gdb` via a wrapper passed as `--app`,
   with `libwebkit2gtk-4.1-0-dbgsym` from `ddebs.ubuntu.com` for symbols.
-- **Restart the driver after editing `scripts/tauri/*`**: the adapter loads once. Flow scripts reload per `run`.
 
 ## 2. Start the driver
 
@@ -555,13 +606,15 @@ through steps in a browser. It is **not** a route into a PR.
 
 ## 5b. Attaching a demo to a PR
 
-**Publish the artifact; do not commit it.** [[hosting-artifacts]] puts a `.webm`, a still, or a
-contact sheet in the shared `agent-artifacts` R2 bucket, verifies it over the public URL, and prints the
-link to paste here — one command, no commit, and it works in the cloud sandbox. Prefer it over both of
-the git-based tricks below, which remain documented because the pinned-URL one is still the only way to
-get an image that lives in the repo's own history.
+**Attach the artifact; do not commit it.** With `gh` ≥ 2.99, `gh pr create`/`gh pr edit --attach` uploads
+the `.webm` and stills to GitHub itself, so the stills render inline and the video renders as an inline
+player when it stands alone in its paragraph — see [[hosting-artifacts]] for the flags and limits. Where
+`--attach` is unavailable (older `gh`, no usable token, MCP-only session, a file over the limits),
+[[hosting-artifacts]] puts it in the shared `agent-artifacts` R2 bucket instead and prints a verified
+link. Prefer either over the git-based tricks below, which remain documented because the pinned-URL one
+is still the only way to get an image that lives in the repo's own history.
 
-**A still can be embedded; a video cannot.** Use the SHA-pinned hosting technique from
+**Without `--attach`, a still can be embedded but a video cannot.** Use the SHA-pinned hosting technique from
 [[composer-ui]] ("Hosting"): commit the PNG, take
 `https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, embed it, then delete
 the file in the next commit. `refs/pull/<n>/head` keeps serving the blob, so the URL survives both the
@@ -589,17 +642,16 @@ What survives this session's API proxy, measured rather than assumed:
 | `![x](https://raw.githubusercontent.com/…)`                            | **yes** — GitHub-hosted absolute URLs keep the `!`                                     |
 | `![x](relative/path.png)`                                              | no — the `!` is stripped, leaving a link                                               |
 | `<video src>`, `<source>`, `<track>`, `<img src>`                      | no — escaped by the proxy, and stripped by GitHub even when written with `--body-file` |
-| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | a player — but only a human can create that URL; see [[hosting-artifacts]]             |
+| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | a player — mint the URL with `gh --attach`; see [[hosting-artifacts]]                  |
 | bare URL, `[text](url)`                                                | yes, verbatim                                                                          |
 
-`<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides — and the
-attachment upload that does yield a player is a web-UI endpoint: `POST /upload/policies/assets` needs a
-browser CSRF token and answers `422`/`403` to a PAT. So a player is reachable, but only through a human.
+`<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides. The player
+comes from a GitHub attachment, which `gh --attach` mints; do not hand-roll the web-UI upload endpoint
+(`POST /upload/policies/assets` wants a browser CSRF token and answers `422`/`403` to a PAT).
 
-Upload the video per [[hosting-artifacts]] and link it with its **duration and size** in the link text.
-That is the convention — a labelled R2 link for the video, an R2 image embed for the stills. A player
-needs a human drag-and-drop to mint a GitHub attachment; it is deliberately not part of the flow, and the
-measured reasons not to chase it are in [[hosting-artifacts]].
+So the convention is: attach the video and stills with `gh --attach`, the video's reference alone in its
+paragraph. Only where that is unavailable, fall back to a labelled R2 link for the video (with its
+**duration and size** in the link text) and an R2 image embed for the stills, per [[hosting-artifacts]].
 
 ### Before/after, when the demo is a fix
 

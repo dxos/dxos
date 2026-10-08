@@ -12,7 +12,9 @@ import React, {
   useState,
 } from 'react';
 
-import { Popover, type ThemedClassName } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
@@ -39,7 +41,7 @@ export type OutlineMarker = {
   range: { from: number; to: number };
 };
 
-export type OutlineProps = ThemedClassName<{
+export type OutlineProps = Util.ThemedClassName<{
   markers: OutlineMarker[];
   /** Currently-visible document range; markers intersecting it render brighter ("active"). */
   visibleRange?: { from: number; to: number };
@@ -265,7 +267,12 @@ export const Outline = ({
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
-    <Popover.Root open={hoveredMarker != null}>
+    <Popover.Root
+      open={hoveredMarker != null}
+      // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
+      positioning={{ placement: 'right', flip: false, slide: false }}
+      autoFocus={false}
+    >
       <div
         role='navigation'
         className={mx('relative flex flex-col justify-center overflow-hidden', classNames)}
@@ -361,21 +368,16 @@ export const Outline = ({
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
           // tick is what makes it re-measure.
           key={hoveredMarker.id}
-          side='right'
-          align='center'
-          // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
-          avoidCollisions={false}
-          onOpenAutoFocus={(event) => event.preventDefault()}
+          // Wide enough for a prompt's first lines, but never past the space beside the rail.
+          classNames='w-[32rem] max-w-(--available-width)'
         >
-          <Popover.Viewport>
-            <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
-              <p className='truncate font-medium'>{hoveredMarker.title}</p>
-              {hoveredMarker.description && (
-                <p className='mt-1 text-sm text-description line-clamp-3'>{hoveredMarker.description}</p>
-              )}
-            </div>
-          </Popover.Viewport>
-          <Popover.Arrow />
+          {/* A plain column rather than `Popover.Body`: a hover card neither scrolls nor needs the body's gutter grid. */}
+          <Layout.Flex column classNames='gap-1 px-2 py-1'>
+            <p className='font-medium line-clamp-2'>{hoveredMarker.title}</p>
+            {hoveredMarker.description && (
+              <p className='text-sm text-fg-muted line-clamp-4'>{hoveredMarker.description}</p>
+            )}
+          </Layout.Flex>
         </Popover.Content>
       )}
     </Popover.Root>

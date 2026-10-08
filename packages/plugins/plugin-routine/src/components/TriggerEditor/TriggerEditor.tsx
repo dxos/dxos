@@ -9,11 +9,13 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
-import { Field, IconButton, useTranslation } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { ParentLabelAnnotation } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -305,30 +307,29 @@ export type TriggerSectionProps = {
  * includes {@link triggerFieldMap}.
  */
 export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const values = useFormValues<TriggerFormInput>('TriggerEditor.TriggerSection', TRIGGER_PATH);
   const kind = values?.kind;
 
   // The card pads itself: `Form.Fields` renders its rows bare, so any inset the kind's fields get is this one.
   return (
-    <div className={mx('flex flex-col', kind && 'px-2 pb-2 dx-card-surface border border-separator rounded-xs')}>
+    <Layout.Flex column classNames={[kind && 'px-2 pb-2 dx-card-surface border border-separator rounded-xs']}>
       {kind ? (
         <>
-          <div className='flex items-center'>
+          <Layout.Flex align='center'>
             <Field.Root>
               <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
             </Field.Root>
             {!readonly && (
-              <IconButton
+              <Button.Root
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
-                square
                 label={t('trigger-kind.clear.label')}
                 onClick={onClear}
               />
             )}
-          </div>
+          </Layout.Flex>
           <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
         </>
       ) : (
@@ -336,8 +337,8 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
       )}
 
       {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-      {kind === 'email' && <p className='text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
-    </div>
+      {kind === 'email' && <p className='text-sm text-fg-muted'>{t('trigger-kind.email-note.message')}</p>}
+    </Layout.Flex>
   );
 };
 

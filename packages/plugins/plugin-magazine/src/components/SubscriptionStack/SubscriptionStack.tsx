@@ -4,9 +4,16 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
 
@@ -28,7 +35,7 @@ export type SubscriptionStackProps = {
   onAction?: SubscriptionStackActionHandler;
 };
 
-export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackProps>(
+export const SubscriptionStack = Util.composable<HTMLDivElement, SubscriptionStackProps>(
   ({ feeds = [], currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -52,7 +59,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -60,7 +67,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}
@@ -88,15 +95,15 @@ SubscriptionStack.displayName = 'SubscriptionStack';
 const icons: Record<Subscription.FeedType, { icon: string; className?: string }> = {
   'standard-site': {
     icon: 'ph--article--regular',
-    className: 'text-sky-500',
+    className: 'text-sky-text',
   },
   'rss': {
     icon: 'ph--rss--regular',
-    className: 'text-green-500',
+    className: 'text-green-text',
   },
   'bluesky': {
     icon: 'ph--butterfly--regular',
-    className: 'text-blue-500',
+    className: 'text-blue-text',
   },
 };
 
@@ -110,6 +117,7 @@ type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'data' 
 const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { feed, onAction } = data;
+    const { t } = Hooks.useTranslation(osTranslations);
     const { setCurrentId } = useMosaicContainer('SubscriptionTile');
     const { icon, className: iconClassName } = icons[feed.type ?? 'rss'] || icons.rss;
 
@@ -130,23 +138,27 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
             <Card.Header>
-              <Card.Block>
-                <Icon icon={icon} classNames={iconClassName} />
-              </Card.Block>
+              <Layout.Block>
+                <Icon.Icon icon={icon} classNames={iconClassName} />
+              </Layout.Block>
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
-              <Card.Menu items={menuItems} />
+              <Card.Menu label={t('toolbar-menu.label')}>
+                {menuItems.map((item) => (
+                  <Menu.Item key={item.label} item={{ value: item.label, label: item.label }} onClick={item.onClick} />
+                ))}
+              </Card.Menu>
             </Card.Header>
             <Card.Body>
               {/* {feed.url && (
                 <Card.Row>
-                  <Card.Text classNames='truncate' variant='description'>
+                  <Card.Text classNames='truncate' variant='muted'>
                     {feed.url}
                   </Card.Text>
                 </Card.Row>
               )} */}
               {feed.description && (
                 <Card.Row>
-                  <Card.Text variant='description'>{feed.description}</Card.Text>
+                  <Card.Text variant='muted'>{feed.description}</Card.Text>
                 </Card.Row>
               )}
             </Card.Body>

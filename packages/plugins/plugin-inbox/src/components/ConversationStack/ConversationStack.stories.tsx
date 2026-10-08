@@ -9,9 +9,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, DraftMessage, Message, Person } from '@dxos/types';
 
@@ -115,17 +117,17 @@ const DefaultStory = ({ reply }: StoryArgs) => {
         <Dnd.Root>
           <Panel.Root role='article'>
             {reply && (
-              <Panel.Toolbar asChild>
+              <Panel.Header>
                 <Toolbar.Root>
-                  <Toolbar.Button onClick={handleReply} data-testid='story-reply'>
+                  <Button.Root onClick={handleReply} data-testid='story-reply'>
                     Reply
-                  </Toolbar.Button>
+                  </Button.Root>
                 </Toolbar.Root>
-              </Panel.Toolbar>
+              </Panel.Header>
             )}
-            <Panel.Content asChild>
+            <Panel.Body asChild>
               <ConversationStack.Content />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </Dnd.Root>
       </ConversationStack.Root>

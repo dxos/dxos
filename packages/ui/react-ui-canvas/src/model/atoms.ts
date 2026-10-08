@@ -40,9 +40,10 @@ export type Drag =
   | { kind: 'marquee'; from: Point; to: Point; mode: 'replace' | 'add' | 'subtract' }
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
-   * and `delta` the resulting scene-space offset applied transiently to every selected node.
+   * and `delta` the resulting scene-space offset applied transiently to every selected node. With
+   * `copy` (⌘ held) the originals stay and copies land at `delta` instead.
    */
-  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
+  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; copy?: boolean }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**
@@ -79,6 +80,10 @@ export type SceneViewAtoms = {
   linkType: Atom.Writable<LinkType>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
+  /** Guides shown: on a lattice, its cells. */
+  guides: Atom.Writable<boolean>;
+  /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
+  lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** Projection snapshots for undo and redo (`undo.ts`). */
@@ -103,6 +108,8 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
+  guides: Atom.keepAlive(Atom.make<boolean>(true)),
+  lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),

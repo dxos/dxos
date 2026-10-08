@@ -1,0 +1,52 @@
+layer: tool
+language: typescript
+tags:
+  - ts-compile
+  - ts-test
+
+tasks:
+  test:
+    # The store is the Rust addon, so the suite needs it built first.
+    deps:
+      - code-index-native:cargo-build
+    options:
+      mergeOutputs: replace
+    outputs: []
+  # The web UI and chat over this repository. Builds what it loads first: the Rust addon, which a
+  # pull can leave stale, and the workspace packages the server imports from their dist. Pass CLI
+  # flags after `--`, e.g. `moon run code-index:serve -- --provider anthropic`.
+  serve:
+    command: bun bin/code-index.ts serve
+    deps:
+      - '^:build'
+      - code-index-native:cargo-build
+    options:
+      cache: false
+      runInCI: false
+      # The terminal goes straight to the server, so Ctrl+C reaches it and its log streams live.
+      interactive: true
+  # Any subcommand with the same dependencies built, e.g. `moon run code-index:cli -- index --force`.
+  cli:
+    command: bun bin/code-index.ts
+    deps:
+      - '^:build'
+      - code-index-native:cargo-build
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
+  # Cold index, warm one-file reindex and store size on this repository.
+  bench:
+    command: bun scripts/bench.ts
+    deps:
+      - code-index-native:cargo-build
+    options:
+      cache: false
+      runInCI: false
+  # The design pipeline against plugin-illustrator's hand-drawn diagrams. Live and billed: System One
+  # (TYPESAFE_API_KEY) and, with `-- --llm`, Anthropic for the LLM explorer — never in CI.
+  design-eval:
+    command: node --experimental-transform-types --no-warnings scripts/design-eval.ts
+    options:
+      cache: false
+      runInCI: false

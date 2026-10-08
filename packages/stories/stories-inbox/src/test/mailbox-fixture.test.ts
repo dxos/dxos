@@ -8,7 +8,7 @@ import { beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { fixtureExists, fixturePath, fixtureVersions, readFixture } from '@dxos/fixtures';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';

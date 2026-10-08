@@ -5,17 +5,17 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
-import { Panel } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { CallsCapabilities } from '#types';
 
 import { Call } from '../../components/Call/index.ts';
 
 export const CallSidebar = () => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const _roomId = useAtomValue(call.roomIdAtom);
   const leaveSound = useSoundEffect('LeaveCall');
 
@@ -30,12 +30,12 @@ export const CallSidebar = () => {
   return (
     <Call.Root>
       <Panel.Root>
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <Call.Viewport>
             <Call.Grid />
             <Call.Toolbar onLeave={handleLeave} />
           </Call.Viewport>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Call.Root>
   );

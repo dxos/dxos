@@ -9,23 +9,23 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Switch } from './Switch.tsx';
 
 /** Icon size (and so track height) per size, in px. */
 const ICON: Record<Size, number> = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Switch label='Notifications' defaultChecked={size === 'md'} />
-    <Next.Switch label='Disabled' disabled />
+    <Switch label='Notifications' defaultChecked={size === 'md'} />
+    <Switch label='Disabled' disabled />
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Switch',
+  title: 'ui/react-ui-core/components/Switch',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -49,7 +49,7 @@ export const Test: Story = {
       const control = scope.querySelector<HTMLElement>('[data-scope="switch"][data-part="control"]');
       await expect(control?.getBoundingClientRect().height, size).toBeCloseTo(ICON[size], 0);
       await expect(control?.getBoundingClientRect().width, size).toBeCloseTo(ICON[size] * 1.75, 0);
-      const block = parseFloat(getComputedStyle(scope).getPropertyValue('--nx-block-size')) * 16;
+      const block = parseFloat(getComputedStyle(scope).getPropertyValue('--dx-block-size')) * 16;
       const root = scope.querySelector<HTMLElement>('[data-scope="switch"][data-part="root"]');
       await expect(root?.getBoundingClientRect().height, size).toBeCloseTo(block, 0);
     }

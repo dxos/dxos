@@ -5,8 +5,8 @@
 import React, { Fragment, useState } from 'react';
 
 import * as Trace from '@dxos/compute/Trace';
-import { IconButton } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type ReceivedMessage } from '../../../hooks/index.ts';
@@ -31,7 +31,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
         info={`${messages.length} · ${spaceCount} spaces`}
         action={
           onClear && (
-            <IconButton
+            <Button.Root
               iconOnly
               variant='ghost'
               icon='ph--trash--regular'

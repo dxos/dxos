@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -143,4 +143,6 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
     .join('\n')}
 `;
 
-const camelCase = (name: string): string => name.replace(/[-_]([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+/** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
+export const camelCase = (name: string): string =>
+  name.replace(/[-_]([a-z0-9])/g, (_, char: string) => char.toUpperCase());

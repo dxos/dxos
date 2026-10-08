@@ -9,7 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import activityInit from './activity/0001_init.sql?raw';

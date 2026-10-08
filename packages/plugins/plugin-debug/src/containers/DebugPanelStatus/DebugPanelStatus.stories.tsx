@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import {
   type DebugPortController,
   type DebugPortStartOptions,
@@ -57,7 +57,7 @@ const meta = {
   // and placement persist through the attention core plugin's view state; the drawer stub answers
   // the docked toggle in the deck's stead.
   decorators: [
-    withPluginManager({ plugins: [...corePlugins(), DebugPlugin.make(), StubToolsPlugin(), StubDrawerPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), DebugPlugin.make(), StubToolsPlugin(), StubDrawerPlugin()] }),
     withTheme(),
   ],
   parameters: { translations },

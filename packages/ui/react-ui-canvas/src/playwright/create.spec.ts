@@ -6,6 +6,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
+import { NOMINAL_SIZES, nominalSize } from '../utils/shapes.ts';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
@@ -92,7 +93,7 @@ test.describe('create sizing', () => {
     expect(moved === 0 || moved > cell / 2).toBe(true);
   });
 
-  test('a toolbar create covers the same screen area whatever the zoom', async () => {
+  test('a toolbar create is the default size in scene units whatever the zoom', async () => {
     const createFromToolbar = async () => {
       await page.getByTestId('toolbar-create').click();
       await page.getByRole('menuitem').first().click();
@@ -103,16 +104,16 @@ test.describe('create sizing', () => {
       return (await scene.box(scene.node(id!))).width;
     };
 
-    const initial = await widthAt();
+    // A new rectangle is its nominal width (two major cells, 128 scene units) at any zoom, so on screen it
+    // scales with the zoom.
+    const expectDefault = async () => {
+      const width = await widthAt();
+      expect(Math.abs(width - (nominalSize(NOMINAL_SIZES.rect).width * (await scene.zoom())) / 100)).toBeLessThan(4);
+    };
+    await expectDefault();
     await scene.zoomIn(2);
-    const zoomedIn = await widthAt();
+    await expectDefault();
     await scene.zoomOut(4);
-    const zoomedOut = await widthAt();
-
-    // The default size is expressed in scene units, so without scaling by the zoom these would differ by
-    // the zoom ratio (over 2x across this range). Snapping to the grid leaves a cell of slack.
-    for (const width of [zoomedIn, zoomedOut]) {
-      expect(Math.abs(width - initial)).toBeLessThan(60);
-    }
+    await expectDefault();
   });
 });

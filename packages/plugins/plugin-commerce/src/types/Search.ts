@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, type Database, DXN, Feed, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { TagIndex } from '@dxos/schema';
 
 import { Provider } from './Provider.ts';
@@ -19,18 +18,18 @@ export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.comm
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
     providers: Schema.Array(Ref.Ref(Provider)),
     /** Values for the union of provider fields, keyed by field name. */
-    params: Schema.Record(Schema.String, Schema.Unknown).pipe(FormInputAnnotation.set(false)),
+    params: Schema.Record(Schema.String, Schema.Unknown).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
      * Timestamp of the last run; persisted metadata, hidden from forms.
      * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
      */
-    lastRunAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    lastRunAt: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
     Annotation.UserType.set(),
   ),

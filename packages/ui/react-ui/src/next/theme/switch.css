@@ -3,64 +3,68 @@
  */
 
 @layer dx-components {
-  .nx-switch {
+  .dx-switch {
     display: inline-flex;
     align-items: center;
     /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
     align-self: start;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     cursor: pointer;
   }
-  .nx-switch[data-disabled] {
+  .dx-switch[data-disabled] {
     opacity: 0.5;
     cursor: default;
   }
+  /* Neither on nor off: the track is dimmed and the host's label says why. */
+  .dx-switch[data-indeterminate] .dx-switch-control {
+    opacity: 0.5;
+  }
 
-  .nx-switch-control {
-    --nx-switch-inset: 2px;
+  .dx-switch-control {
+    --dx-switch-inset: 2px;
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
-    width: calc(var(--nx-icon-size) * 1.75);
-    height: var(--nx-icon-size);
+    width: calc(var(--dx-icon-size) * 1.75);
+    height: var(--dx-icon-size);
     /* Centred in a block-sized cell, so a switch takes the same space as an icon-only Button and labels align. */
-    margin-inline: calc((var(--nx-block-size) - var(--nx-icon-size) * 1.75) / 2);
-    padding: var(--nx-switch-inset);
+    margin-inline: calc((var(--dx-block-size) - var(--dx-icon-size) * 1.75) / 2);
+    padding: var(--dx-switch-inset);
     border-radius: 9999px;
     background: var(--color-input-surface);
     transition: background-color 120ms ease-out;
   }
-  .nx-switch:hover:not([data-disabled]) .nx-switch-control:not([data-state='checked']) {
+  .dx-switch:hover:not([data-disabled]) .dx-switch-control:not([data-state='checked']) {
     background: var(--color-hover-surface);
   }
-  .nx-switch-control[data-state='checked'] {
+  .dx-switch-control[data-state='checked'] {
     background: var(--color-accent-bg);
   }
-  .nx-switch-control[data-focus-visible] {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  .dx-switch-control[data-focus-visible] {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
   }
 
-  .nx-switch-thumb {
-    width: calc(var(--nx-icon-size) - 2 * var(--nx-switch-inset));
-    height: calc(var(--nx-icon-size) - 2 * var(--nx-switch-inset));
+  .dx-switch-thumb {
+    width: calc(var(--dx-icon-size) - 2 * var(--dx-switch-inset));
+    height: calc(var(--dx-icon-size) - 2 * var(--dx-switch-inset));
     border-radius: 9999px;
-    background: var(--color-description);
+    background: var(--color-fg-muted);
     transition: transform 120ms ease-out;
   }
   /* Travel is the track's inner width less the thumb: 1.75 icons minus one icon. */
-  .nx-switch-thumb[data-state='checked'] {
-    transform: translateX(calc(var(--nx-icon-size) * 0.75));
+  .dx-switch-thumb[data-state='checked'] {
+    transform: translateX(calc(var(--dx-icon-size) * 0.75));
     background: var(--color-accent-fg);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-switch-control,
-    .nx-switch-thumb {
+    .dx-switch-control,
+    .dx-switch-thumb {
       transition: none;
     }
   }

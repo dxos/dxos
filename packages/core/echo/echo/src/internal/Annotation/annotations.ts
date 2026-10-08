@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 import * as Struct from 'effect/Struct';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
@@ -424,6 +425,27 @@ export const FormCreateAnnotation = createAnnotationHelper<string>(FormCreateAnn
  */
 export const FormOrderedAnnotationId = '@dxos/schema/annotation/FormOrdered';
 export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
+
+/**
+ * How a form presents an array of references; the two options are independent.
+ */
+export type ArrayPresentation = {
+  /** Rows (or chips) reorder by drag and keyboard, and the order is persisted; `false` by default. */
+  ordered?: boolean;
+  /**
+   * `tag`: removable chips in the targets' hues (the default for arrays of `Tag` refs). `title`: a row per target with
+   * its type's icon, its label and an optional description (the default otherwise).
+   */
+  display?: 'tag' | 'title';
+  /** A property of the target whose value is the `title` row's description line. */
+  description?: string;
+};
+
+/**
+ * When set on an array-of-`Ref` property, sets how the form presents it ({@link ArrayPresentation}).
+ */
+export const ArrayPresentationAnnotationId = '@dxos/schema/annotation/ArrayPresentation';
+export const ArrayPresentationAnnotation = createAnnotationHelper<ArrayPresentation>(ArrayPresentationAnnotationId);
 
 /**
  * Annotation carrying one or more named layout DSL templates that control how a

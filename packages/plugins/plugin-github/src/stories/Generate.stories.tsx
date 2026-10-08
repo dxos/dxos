@@ -10,8 +10,11 @@ import React, { useCallback, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
-import { Button, Field, Icon } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { WalkthroughView } from '../components/WalkthroughView/index.ts';
@@ -96,22 +99,22 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
     <div className='dx-fill grid grid-rows-[auto_1fr]'>
       <div className='flex items-center gap-2 p-2 border-be border-separator'>
         <Field.Root classNames='flex-1'>
-          <Field.Input
+          <Input.Root
             placeholder='https://github.com/owner/repo/pull/123'
             value={url}
             disabled={busy}
             onChange={(event) => setUrl(event.target.value)}
           />
         </Field.Root>
-        <Button disabled={busy} onClick={handleGenerate}>
-          <Icon
+        <Button.Root disabled={busy} onClick={handleGenerate}>
+          <Icon.Icon
             icon={busy ? 'ph--circle-notch--regular' : 'ph--path--regular'}
             classNames={busy ? 'animate-spin' : ''}
           />
           <span className='ms-2'>{busy ? PHASE_LABEL[phase] : 'Generate'}</span>
-        </Button>
+        </Button.Root>
         {result && (
-          <span className='text-sm text-description whitespace-nowrap'>
+          <span className='text-sm text-fg-muted whitespace-nowrap'>
             {result.covered} of {result.total} hunks narrated
           </span>
         )}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-computer",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Dev-only coding harness: a bash tool and a multi-string-replace tool backed by a vite dev-server route.",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -65,16 +65,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./shell": {
-      "source": "./src/shell/index.ts",
-      "types": "./dist/types/src/shell/index.d.ts",
-      "import": "./dist/lib/shell.mjs"
-    },
-    "./vite-plugin": {
-      "types": "./dist/types/src/vite-plugin/index.d.ts",
-      "import": "./dist/lib/vite-plugin.mjs"
-    },
     "./ComputerOperation": {
       "source": "./src/types/ComputerOperation.ts",
       "types": "./dist/types/src/types/ComputerOperation.d.ts",
@@ -84,6 +74,11 @@
       "source": "./src/ComputerPlugin.ts",
       "types": "./dist/types/src/ComputerPlugin.d.ts",
       "import": "./dist/lib/ComputerPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./vite-plugin": {
+      "types": "./dist/types/src/vite-plugin/index.d.ts",
+      "import": "./dist/lib/vite-plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -91,9 +86,6 @@
     "*": {
       "ComputerOperation": [
         "dist/types/src/types/ComputerOperation.d.ts"
-      ],
-      "shell": [
-        "dist/types/src/shell/index.d.ts"
       ],
       "vite-plugin": [
         "dist/types/src/vite-plugin/index.d.ts"

@@ -3,7 +3,7 @@
 //
 
 import { PasswordInput as PasswordInputPrimitive, usePasswordInputContext } from '@ark-ui/react/password-input';
-import React, { forwardRef } from 'react';
+import React, { type FocusEventHandler, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
+import { Button } from '../Button/Button.tsx';
 
 export type PasswordInputProps = ThemedClassName<
   Pick<
@@ -32,6 +32,8 @@ export type PasswordInputProps = ThemedClassName<
   'defaultValue'?: string;
   'onValueChange'?: (value: string) => void;
   'onVisibleChange'?: (visible: boolean) => void;
+  /** Focus leaving the input, e.g. to commit a draft. */
+  'onBlur'?: FocusEventHandler<HTMLInputElement>;
   'placeholder'?: string;
   'autoFocus'?: boolean;
   /** Overrides the translated `password-input.show.label`. */
@@ -75,6 +77,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       defaultValue,
       onValueChange,
       onVisibleChange,
+      onBlur,
       placeholder,
       autoFocus,
       showLabel,
@@ -95,6 +98,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           value={value}
           defaultValue={defaultValue}
           onChange={onValueChange && ((event) => onValueChange(event.target.value))}
+          onBlur={onBlur}
           placeholder={placeholder}
           autoFocus={autoFocus}
           aria-label={ariaLabel}
@@ -109,4 +113,4 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   ),
 );
 
-PasswordInput.displayName = 'Next.PasswordInput';
+PasswordInput.displayName = 'PasswordInput';

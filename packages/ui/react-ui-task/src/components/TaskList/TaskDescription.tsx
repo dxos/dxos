@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /** A description is a line in a row, not a document: no paragraph block, no heading scale. */
@@ -13,7 +13,7 @@ export const DESCRIPTION_COMPONENTS = {
   p: ({ children }: PropsWithChildren) => <span>{children}</span>,
 };
 
-export type TaskDescriptionProps = ThemedClassName<{
+export type TaskDescriptionProps = Util.ThemedClassName<{
   content: string;
   /** Renderers beyond the row's own — a host's link anchor, say. */
   components?: MarkdownViewProps['components'];
@@ -29,7 +29,7 @@ export const TaskDescription = ({ content, components, classNames }: TaskDescrip
   <MarkdownView
     data-testid='taskList.item.description'
     content={content}
-    classNames={mx('text-sm text-description line-clamp-3', classNames)}
+    classNames={mx('text-sm text-fg-muted line-clamp-3', classNames)}
     // Every block at the row's line height, so the clamp ends on a whole line.
     uniformLineHeight
     // The row supplies the type scale and the clamp, so the description renders as one inline run

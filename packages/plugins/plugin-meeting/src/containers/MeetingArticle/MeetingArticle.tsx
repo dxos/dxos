@@ -4,13 +4,15 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Meeting, MeetingOperation } from '#types';
@@ -33,11 +35,11 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
  * area that renders the selected component as an article surface.
  */
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
   // The Call tab is offered only when the calls plugin contributes a transport provider.
-  const callAvailable = useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
+  const callAvailable = Hooks.useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
   const tabs = useMemo(() => (callAvailable ? TAB_ORDER : TAB_ORDER.filter((key) => key !== 'call')), [callAvailable]);
 
   // Subscribed to their own refs (not a plain `useObject(meeting)` snapshot) because these values are
@@ -118,19 +120,19 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
       {tab === 'call' && callData && (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       )}
       {tab !== 'call' && articleData && (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       )}
     </Panel.Root>
   );

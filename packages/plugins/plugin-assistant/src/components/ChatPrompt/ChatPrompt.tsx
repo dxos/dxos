@@ -13,7 +13,6 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -21,9 +20,11 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
-import { type ActionGraphProps } from '@dxos/react-ui-menu';
+import type { ActionGraphProps } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { pendingText } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
@@ -39,8 +40,11 @@ import { ChatOptions } from './ChatOptions.tsx';
 import { ChatReferences } from './ChatReferences.tsx';
 import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
+/** Prompts that may wait behind a running turn, by default. */
+export const DEFAULT_MAX_QUEUE = 3;
+
 export type ChatPromptProps = Merge<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     outline?: boolean;
     settings?: boolean;
     expandable?: boolean;
@@ -63,6 +67,10 @@ export type ChatPromptProps = Merge<
     nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
     autoFocus?: boolean;
+    /** How many prompts are waiting behind the running turn. */
+    queueSize?: number;
+    /** The most prompts that may wait behind a running turn; past it the prompt takes no more until one is taken up. */
+    maxQueue?: number;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -82,13 +90,15 @@ export const ChatPrompt = ({
   nodeId,
   placeholder,
   autoFocus = true,
-  onPresetChange,
+  queueSize = 0,
+  maxQueue = DEFAULT_MAX_QUEUE,
   settings = true,
   presets,
   preset,
   companionTo,
+  onPresetChange,
 }: ChatPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const processorState = getProcessorState(processor);
   const error = useAtomValue(processorState.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processorState.streaming);
@@ -117,7 +127,7 @@ export const ChatPrompt = ({
   // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
-  const commandsRef = useDynamicRef(instructions?.commands ?? []);
+  const commandsRef = Hooks.useDynamicRef(instructions?.commands ?? []);
   const commandsExtension = useMemo(
     () =>
       commands({
@@ -145,7 +155,9 @@ export const ChatPrompt = ({
     [],
   );
 
-  const canSend = hasText && processor != null;
+  // A full queue stops taking prompts: what is typed stays in the editor until the agent takes one up.
+  const queueFull = active && queueSize >= maxQueue;
+  const canSend = hasText && processor != null && !queueFull;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -153,16 +165,17 @@ export const ChatPrompt = ({
   );
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
-  // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
+  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the processor's
+  // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processor) {
+      if (!processor || queueFull) {
         return false;
       }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event, processor],
+    [event, processor, queueFull],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -185,19 +198,20 @@ export const ChatPrompt = ({
   );
 
   return (
-    <div
+    <Layout.Flex
+      column
       data-testid='assistant.prompt'
       role='group'
-      className={mx(
-        'flex flex-col w-full dx-density-md',
+      classNames={[
+        'w-full dx-density-md',
         outline &&
-          'dx-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'dx-group-surface rounded-sm border border-separator-subtle transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
-      )}
+      ]}
     >
       {processor && <ChatMcpErrors processor={processor} />}
 
-      <div className='flex p-2 gap-2'>
+      <Layout.Flex gap='sm' classNames='p-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
@@ -209,26 +223,13 @@ export const ChatPrompt = ({
           extensions={extensions}
           onSubmit={handleSubmit}
         />
-      </div>
+      </Layout.Flex>
 
-      {db && settings && (
-        <div className='flex items-center overflow-hidden p-1.5'>
-          <ChatOptions
-            db={db}
-            chat={chat}
-            registry={processor?.registry}
-            context={processor?.context}
-            preset={preset}
-            presets={presets}
-            onPresetChange={onPresetChange}
-          />
-
-          <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
-            {processor && <ChatReferences db={db} context={processor.context} />}
-          </div>
-
+      {db &&
+        settings && (
+          // One toolbar for the row: the options and context chips lead, the chips' track takes the slack, the actions end it.
           <ChatActions
-            classNames='col-span-2'
+            classNames='p-1.5'
             attendableId={attendableId}
             customActions={customActions}
             // `active`, not `streaming`: a turn parked in a tool call streams nothing,
@@ -238,10 +239,25 @@ export const ChatPrompt = ({
             tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}
+            leading={
+              <>
+                <ChatOptions
+                  db={db}
+                  chat={chat}
+                  registry={processor?.registry}
+                  context={processor?.context}
+                  preset={preset}
+                  presets={presets}
+                  onPresetChange={onPresetChange}
+                />
+                <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
+                  {processor && <ChatReferences db={db} context={processor.context} />}
+                </Layout.Flex>
+              </>
+            }
           />
-        </div>
-      )}
-    </div>
+        )}
+    </Layout.Flex>
   );
 };
 

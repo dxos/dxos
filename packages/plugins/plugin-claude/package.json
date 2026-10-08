@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-claude",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Claude managed agents as ECHO objects, with an assistant skill to configure, deploy and run them",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#api": {
@@ -138,13 +138,24 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-code": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

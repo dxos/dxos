@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -18,6 +18,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/test-stream.ts",
       "types": "./dist/types/src/test-stream.d.ts",

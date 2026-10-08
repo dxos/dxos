@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
 

@@ -9,8 +9,9 @@ import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
 import { EID, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, Placeholder, Searchbar } from '../../../../components/index.ts';
@@ -179,13 +180,13 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
           <div className='flex flex-col w-full overflow-hidden'>
             <DynamicTable
@@ -198,7 +199,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
               className={mx(
                 'h-(--dx-statusbar-size)',
                 'flex shrink-0 justify-end items-center gap-2',
-                'dx-base-surface text-description',
+                'dx-base-surface text-fg-muted',
               )}
             >
               <div className='text-sm pe-2'>Objects: {items.length}</div>
@@ -226,7 +227,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             </div>
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

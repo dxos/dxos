@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -14,8 +15,8 @@ const outcomeIcon: Record<GitHubOperation.CheckOutcome, { icon: string; classNam
   failure: { icon: 'ph--x-circle--fill', classNames: 'text-error-text' },
   pending: { icon: 'ph--circle-notch--regular', classNames: 'text-warning-text animate-spin' },
   success: { icon: 'ph--check-circle--fill', classNames: 'text-success-text' },
-  neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-description' },
-  skipped: { icon: 'ph--prohibit--regular', classNames: 'text-description' },
+  neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-fg-muted' },
+  skipped: { icon: 'ph--prohibit--regular', classNames: 'text-fg-muted' },
 };
 
 // What needs attention first: a failure is the reason to open the list, a running check the next.
@@ -49,16 +50,16 @@ export type CheckRunListProps = {
 
 /** Every check on the head commit: its outcome, how long it took, and its logs a click away. */
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
   const summary = useCheckSummary(runs);
 
   if (!sorted || sorted.length === 0) {
-    return <Banner.Empty label={t(sorted ? 'no-checks.message' : 'checks-loading.message')} />;
+    return <Status.Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Status.Empty>;
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}>
       <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];
@@ -81,11 +82,9 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
               data-testid='pull-request.check'
               onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
             >
-              <Listbox.ItemContent
-                icon={<Icon icon={icon} size={5} classNames={classNames} />}
-                title={run.name}
-                description={[detail, outcome].filter(Boolean).join(' · ')}
-              />
+              <Listbox.ItemIcon icon={icon} classNames={classNames} />
+              <Listbox.ItemText>{run.name}</Listbox.ItemText>
+              <Listbox.ItemDescription>{[detail, outcome].filter(Boolean).join(' · ')}</Listbox.ItemDescription>
             </Listbox.Item>
           );
         })}
@@ -96,7 +95,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
 
 /** The label the checks section carries: the counts once there are runs to count. */
 export const useCheckSummary = (runs?: readonly GitHubOperation.CheckRun[]): string => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return useMemo(() => {
     if (!runs || runs.length === 0) {
       return t('checks.label');

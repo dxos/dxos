@@ -54,6 +54,9 @@ const CONTENT_TYPES: Record<string, string> = {
  */
 const UNBRANDED_ENVIRONMENTS = new Set(['production', 'ci']);
 
+/** Environments that ship as a channel under another name: TestFlight builds come from dev deploys. */
+const ENVIRONMENT_CHANNELS: Record<string, ChannelVariant> = { testflight: 'dev' };
+
 /** The channel a dev server brands itself as: it is never the released app, so it wears the dev mark. */
 const DEV_SERVER_VARIANT: ChannelVariant = 'dev';
 
@@ -72,6 +75,9 @@ export const channelVariant = (
   }
   if (!environment || UNBRANDED_ENVIRONMENTS.has(environment)) {
     return undefined;
+  }
+  if (Object.hasOwn(ENVIRONMENT_CHANNELS, environment)) {
+    return ENVIRONMENT_CHANNELS[environment];
   }
   if (!isChannel(environment)) {
     throw new Error(`channel-branding: unknown environment: ${environment} (expected ${CHANNELS.join(' | ')})`);

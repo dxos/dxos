@@ -6,12 +6,14 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { List, ListItem } from '@dxos/react-list';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Combobox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { AssistantCapabilities, Ollama } from '#types';
@@ -28,7 +30,7 @@ const LOADED_POLL_INTERVAL = 3_000;
  * browser/mobile. Split from the section body so hooks are never called conditionally.
  */
 export const OllamaModels = () => {
-  const manager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const manager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
   if (!manager) {
     return null;
   }
@@ -37,7 +39,7 @@ export const OllamaModels = () => {
 };
 
 export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // Explicit subscription: the list and badges must re-render as pulls/installs/loads land.
   const state = useAtomValue(manager.state);
   const [query, setQuery] = useState('');
@@ -98,7 +100,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           // Connection-level failure has no associated model, so it shows inline as the row content.
           <p className='text-sm text-error-text'>{t('settings.ollama.failed.message', { error: state.error })}</p>
         ) : empty ? (
-          <p className='text-sm text-description'>{t('settings.ollama.empty.message')}</p>
+          <p className='text-sm text-fg-muted'>{t('settings.ollama.empty.message')}</p>
         ) : (
           // Plain `List`/`ListItem` (non-select), with the trigger editor's "fatter" two-line row
           // treatment: a name line plus a secondary meta line, on a surface-styled row. Rows are
@@ -118,9 +120,9 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   key={model.name}
                   className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
-                  <Flex gap='sm' align='center'>
+                  <Layout.Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
-                    <IconButton
+                    <Button.Root
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
                       iconOnly
                       label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
@@ -131,7 +133,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         )()
                       }
                     />
-                    <IconButton
+                    <Button.Root
                       icon='ph--trash--regular'
                       iconOnly
                       label={t('settings.ollama.remove.label')}
@@ -140,13 +142,13 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         void withPending(model.name, () => EffectEx.runPromise(manager.remove(model.name)))()
                       }
                     />
-                  </Flex>
+                  </Layout.Flex>
                   {(size || loadedLabel || error) && (
-                    <Flex gap='sm' align='center' classNames='text-sm'>
-                      {size && <span className='text-description'>{size}</span>}
+                    <Layout.Flex gap='sm' align='center' classNames='text-sm'>
+                      {size && <span className='text-fg-muted'>{size}</span>}
                       {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
                       {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
-                    </Flex>
+                    </Layout.Flex>
                   )}
                 </ListItem>
               );
@@ -161,16 +163,16 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   key={name}
                   className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
-                  <Flex gap='sm' align='center'>
-                    <span className='grow truncate font-medium text-description'>{name}</span>
-                    <IconButton
+                  <Layout.Flex gap='sm' align='center'>
+                    <span className='grow truncate font-medium text-fg-muted'>{name}</span>
+                    <Button.Root
                       icon='ph--x--regular'
                       iconOnly
                       label={t('settings.ollama.cancel.label')}
                       onClick={() => void EffectEx.runPromise(manager.cancel(name))}
                     />
-                  </Flex>
-                  <span className='text-sm text-description'>{status}</span>
+                  </Layout.Flex>
+                  <span className='text-sm text-fg-muted'>{status}</span>
                 </ListItem>
               );
             })}
@@ -188,42 +190,30 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
             </p>
           ))}
         {/* Root value is held empty so the trigger always shows the placeholder; the live text is
-            the separate `query` driving the input and suggestion filter. */}
+            the separate `query` driving the search field and suggestion filter. A query that names no
+            pick is offered as the create row, which pulls it. */}
         <Combobox.Root
+          items={suggestions.map((pick) => ({ value: pick, label: pick }))}
+          filter={null}
           open={open}
-          onOpenChange={setOpen}
-          value=''
-          onValueChange={() => {}}
-          placeholder={t('settings.ollama.pull.placeholder')}
+          onOpenChange={({ open }) => setOpen(open)}
+          value={[]}
+          onValueChange={({ value: [pick] }) => pick && handlePull(pick)}
+          inputValue={query}
+          onInputValueChange={({ inputValue }) => setQuery(inputValue)}
+          onCreate={offerCustom ? handlePull : undefined}
+          createLabel={(name) => t('settings.ollama.pull-custom.label', { name })}
+          createIcon='ph--download-simple--regular'
         >
-          <Combobox.Trigger classNames='w-full' />
-          <Combobox.Portal>
-            <Combobox.Content>
-              <Combobox.Input
-                value={query}
-                onValueChange={setQuery}
-                placeholder={t('settings.ollama.pull.placeholder')}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && filter.length > 0) {
-                    handlePull(filter);
-                  }
-                }}
-              />
-              <Combobox.List>
-                {offerCustom && (
-                  <Combobox.Item
-                    value={filter}
-                    label={t('settings.ollama.pull-custom.label', { name: filter })}
-                    icon='ph--download-simple--regular'
-                    onSelect={() => handlePull(filter)}
-                  />
-                )}
-                {suggestions.map((pick) => (
-                  <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
-                ))}
-              </Combobox.List>
-            </Combobox.Content>
-          </Combobox.Portal>
+          <Combobox.Trigger classNames='w-full' placeholder={t('settings.ollama.pull.placeholder')} />
+          <Combobox.Content>
+            <Combobox.Input placeholder={t('settings.ollama.pull.placeholder')} />
+            <Combobox.List>
+              {suggestions.map((pick) => (
+                <Combobox.Item key={pick} item={{ value: pick, label: pick }} />
+              ))}
+            </Combobox.List>
+          </Combobox.Content>
         </Combobox.Root>
       </Form.Field>
     </Form.FieldSet>

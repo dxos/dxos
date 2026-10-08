@@ -13,11 +13,11 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -147,7 +147,7 @@ const DefaultStory = ({ title }: StoryArgs) => {
 const withPlugins = ({ files }: { files: boolean }) =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       TasksPlugin.make(),
       // Contributes the object menus the artifact cards show.
       SpacePlugin.make({}),
@@ -276,7 +276,7 @@ export const UntitledTaskFocus: Story = {
   play: async ({ canvasElement }) => {
     const title = await waitFor(
       () => {
-        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskEditor.title"]');
+        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="tasksPlugin.fields"] input');
         if (!found) {
           throw new Error('Title field not rendered.');
         }
@@ -312,7 +312,7 @@ export const Plain: Story = {
     await expect(canvas.queryByTestId('tasksPlugin.artifacts')).toBeNull();
     // The creation time the database records for the task.
     const created = await canvas.findByTestId('taskList.property.created', undefined, { timeout: 10_000 });
-    await expect(created.querySelector('time[data-testid="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
+    await expect(created.querySelector('time[data-scope="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
   },
 };
 

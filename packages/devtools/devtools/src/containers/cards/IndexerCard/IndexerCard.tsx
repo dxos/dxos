@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Grid, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type IndexerRow } from '../../../hooks/index.ts';
@@ -15,7 +17,7 @@ export type IndexerCardProps = {
   onCopy?: () => void;
 };
 
-const ROW_TRACKS = ['1fr', 'auto'];
+const ROW_TRACKS = ['fill', 'auto'] as const;
 
 const rowIcon = (row: IndexerRow): { icon: string; className: string } => {
   if (row.error) {
@@ -52,20 +54,21 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
         const { icon, className } = rowIcon(row);
         return (
           <StatCard.Row key={row.spaceId} icon={icon} iconClassNames={className}>
-            <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+            <Layout.Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.error ?? row.name}>
-                <SystemIconButton.Clipboard
-                  density='sm'
+                {/* Labelled: presets are icon-only by default, which left the row a bare icon with no space id. */}
+                <SystemButton.Clipboard
+                  iconOnly={false}
+                  size='sm'
                   variant='ghost'
                   compact
-                  iconEnd
                   classNames='justify-self-start font-mono'
                   label={row.spaceId.slice(0, 8)}
                   onCopy={() => row.spaceId}
                 />
               </Tooltip.Trigger>
               <span className={className}>{rowStatus(row)}</span>
-            </Grid>
+            </Layout.Grid>
           </StatCard.Row>
         );
       })}

@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useMainContext } from '@dxos/react-ui';
+import * as Main from '@dxos/react-ui/Main';
 
-export const useMainSize = () => {
-  const { navigationSidebarState, complementarySidebarState } = useMainContext('DeckPluginPlank');
+export const useMainSize = (): Record<'data-sidebar-left-state' | 'data-sidebar-right-state', Main.SidebarState> => {
+  const { navigationSidebarState, complementarySidebarState } = Main.useMainSidebars('DeckPluginPlank');
   return {
     'data-sidebar-left-state': navigationSidebarState,
     'data-sidebar-right-state': complementarySidebarState,

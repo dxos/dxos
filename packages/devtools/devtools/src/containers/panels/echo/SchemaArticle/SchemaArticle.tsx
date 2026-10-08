@@ -5,11 +5,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DXN, Entity, Format, Type } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, Placeholder, Searchbar } from '../../../../components/index.ts';
@@ -128,13 +129,13 @@ export const SchemaArticle = ({ role, ...props }: ArticleProps & { space?: Space
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
           <div className='flex flex-col w-full overflow-hidden'>
             <DynamicTable
@@ -147,7 +148,7 @@ export const SchemaArticle = ({ role, ...props }: ArticleProps & { space?: Space
               className={mx(
                 'h-(--dx-statusbar-size)',
                 'flex shrink-0 justify-end items-center gap-2',
-                'dx-base-surface text-description',
+                'dx-base-surface text-fg-muted',
               )}
             >
               <div className='text-sm pe-2'>Objects: {dataRows.length}</div>
@@ -168,7 +169,7 @@ export const SchemaArticle = ({ role, ...props }: ArticleProps & { space?: Space
             </div>
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

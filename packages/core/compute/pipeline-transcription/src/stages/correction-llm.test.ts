@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { correctWithLanguageModel } from './correction-llm.ts';
 

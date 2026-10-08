@@ -1,5 +1,72 @@
 # @dxos/compute
 
+## 0.13.0
+
+### Minor Changes
+
+- bbe9f18: Agents gain a brain: each member talks to an agent in their own private chat, the agent records facts from every turn in an RDF fact store and watches them against the goals people set, and a matching fact wakes the requester's chat with an update, relayed as a synthetic system note. The brain runs in memory locally and as a SQLite Durable Object on EDGE. Fact extraction now works with Anthropic structured output, and `@dxos/compute` adds `Process.EnvironmentService`, and `Process.currentEnvironment`.
+- 68dc875: Process definitions are now durable operations: `Process.make` → `Operation.makeDurable`, `Process.Process` → `Operation.Durable`, `Process.Callbacks` → `Operation.DurableHandler`, `Process.ProcessContext` → `Operation.DurableContext`, and `BaseServices`/`ChildEvent` move to `Operation`. `Process.fromOperation` moves to `@dxos/compute-runtime` as `DurableOperation.fromOperation`. The `Process` name now means a running process: `Process.Info` → `Process.Process`.
+- 246ee3c: Add `@dxos/plugin-agent`, an agent that talks to people through any channel, remembers them as ECHO objects, reads every conversation turn into facts, relays messages, and keeps one-time and ongoing ("keep me posted") watches whose updates it writes from the conversation's context. Every subpath of the package is a namespace: `AgentState` and `AgentKnowledge` (each with a `Root` container), one per skill (`ConversationSkill`, `GoalsSkill`, `InterviewSkill`, `ModesSkill`, `NoteTakerSkill`, `RelaySkill`), and one per type and operation set.
+
+  `@dxos/plugin-thread` channel backends can now open direct conversations (`openDirect`), post into threads (`threads.send`), run a connection (`connection.start`/`stop`/`status`), and return a send receipt. New operations `sendToChannel`, `openDirect`, `connectChannel`, `disconnectChannel` and `getChannelStatus` dispatch to them, and the handlers are published as the `ThreadOperationHandlerSet` subpath. The Discord and Slack plugins implement these backends.
+
+  An agent prompt can name its sender: `AgentProcess` accepts `{ prompt, sender?, properties? }` as well as a bare prompt (`AgentInput`, `makeInputMessage`), `AgentService.Session.submitPrompt` and the assistant's request and session take a `sender`, and the model sees a named sender as `[From: <name>]`. `useChatProcessor` and `AiChatProcessor` take a `sender`, and `ChatThread` takes a `userHue`.
+
+  `Agent.loadChat` no longer picks a chat bridged from an external conversation as the agent's primary chat, and finds chats with a child-of filter so it also works on EDGE. `Agent.makeInitialized` accepts a skill ref, and `Skill.makeRef` binds a database skill as-is and any other by registry URI.
+
+  The `ProfileOf` relation moves from `@dxos/plugin-crm` to `@dxos/types` with its typename unchanged, so existing profiles still resolve. `EdgeHttpClient.request` makes an authenticated call to any EDGE route. `pipeline-rdf` exports `DEFAULT_MODEL`. `FormInlineAnnotation` now survives the JSON-schema round trip. A plugin that declares two modules with the same id now fails when it is constructed instead of silently dropping one.
+
+- 596728d: `Process.Manager` (`Process.ManagerService`) replaces `Process.Monitor`: it keeps the process-tree reads and trace stream that span local and remote runtimes, and adds `spawn` and `handles` verbs that take a `Process.Location`, so a caller no longer holds the local and remote managers separately. `Process.isTerminal` and `Process.isExited` replace hand-written checks of terminal process states.
+
+  Breaking: `Process.Monitor`, `Process.MonitorFilter` and `Process.ProcessMonitorService` are removed (use `Process.Manager`, `Process.Filter`, `Process.ManagerService`); `ProcessManager.Handle`, `Status`, `SpawnOptions` and `ListOptions` move to `Process`; `ProcessMonitor.layer` is now `UnifiedProcessManager.layer`; the local manager exposes `processTreeAtom` and `subscribeToTraceMessages` directly instead of `monitor`; the `Capabilities.ProcessMonitor` capability is now `Capabilities.ProcessManager`; and `AgentService.layer` requires `Process.ManagerService` instead of both process managers.
+
+- dde8f43: Add `SqlService`: operations and processes declare it and call `SqlService.database({ name })` for an Effect `SqlClient`, including `withTransaction`. Locally it runs on the client services host, which rejects statements that touch SQLite internals, host tables or another database's tables, and connection-level commands such as `PRAGMA` and `ATTACH`.
+
+### Patch Changes
+
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [c6922ce]
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [161f994]
+- Updated dependencies [3e73e53]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/vendor-kbn-handlebars@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

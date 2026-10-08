@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bench, describe } from 'vitest';
 
-import { layerFile } from '@dxos/sql-sqlite/platform';
+import { layerFile } from '@dxos/sql-sqlite/Platform';
 
 import { parseBenchCount } from './testing/bench-util.ts';
 

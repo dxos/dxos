@@ -5,8 +5,8 @@
 import { Toggle as TogglePrimitive, useToggleContext } from '@ark-ui/react/toggle';
 import React from 'react';
 
-import { composable } from '../../../util/index.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
+import { composable } from '../../../util/slots.ts';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
 
 type ToggleIconProps = {
   /** Icon shown while pressed, in place of `icon` (e.g. a filled star for a pinned item). */
@@ -35,7 +35,7 @@ export const Toggle = composable<HTMLButtonElement, ToggleProps>(
   ),
 );
 
-Toggle.displayName = 'Next.Toggle';
+Toggle.displayName = 'Toggle';
 
 /** Reads the machine's pressed state, which an uncontrolled toggle's caller does not have, to swap the icon. */
 const ToggleButton = composable<HTMLButtonElement, ButtonProps & ToggleIconProps>(

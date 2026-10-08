@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
 import * as McpServer from '@dxos/compute/McpServer';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { McpOAuth, McpToolkit } from '@dxos/mcp-client';
 

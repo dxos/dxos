@@ -25,15 +25,10 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  type Density,
-  type Elevation,
-  Field,
-  type ThemedClassName,
-  composableProps,
-  slottable,
-  useThemeContext,
-} from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme.ts';
@@ -181,7 +176,7 @@ type InputVariant = 'default' | 'subdued';
  */
 type EscapeBehavior = 'clear' | 'dismiss';
 
-type PickerInputProps = ThemedClassName<
+type PickerInputProps = Util.ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
     /** Controlled input value. Caller owns this — e.g. binds to query state. */
     value?: string;
@@ -189,15 +184,16 @@ type PickerInputProps = ThemedClassName<
     onValueChange?: (value: string) => void;
     /** Defaults to `clear`. */
     escapeBehavior?: EscapeBehavior;
-    density?: Density;
-    elevation?: Elevation;
     variant?: InputVariant;
+    /** Adornments inside the input's frame (`Input`'s slots), e.g. a trailing search icon. */
+    start?: ReactNode;
+    end?: ReactNode;
   }
 >;
 
 const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
   ({ value, onValueChange, onChange, onKeyDown, autoFocus, escapeBehavior = 'clear', ...props }, forwardedRef) => {
-    const { hasIosKeyboard } = useThemeContext();
+    const hasIosKeyboard = Hooks.useIosKeyboard();
     const { selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       usePickerInputContext('Picker.Input');
     const inputRef = useRef<HTMLInputElement>(null);
@@ -320,7 +316,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
       <Field.Root>
-        <Field.Input
+        <Input.Root
           {...props}
           autoFocus={shouldAutoFocus}
           {...(value !== undefined && { value })}
@@ -346,7 +342,7 @@ PickerInput.displayName = 'Picker.Input';
 // Item
 //
 
-type PickerItemProps = ThemedClassName<{
+type PickerItemProps = Util.ThemedClassName<{
   /** Unique identifier; used by the registry and DOM-order traversal. */
   value: string;
   /** Callback when the item is committed (click, or Enter while highlighted). */
@@ -357,7 +353,7 @@ type PickerItemProps = ThemedClassName<{
   children?: ReactNode;
 }>;
 
-const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
+const PickerItem = Util.slottable<HTMLDivElement, PickerItemProps>(
   ({ value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
     const { selectedValue, onSelectedValueChange, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
@@ -372,9 +368,10 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
       return () => unregisterItem(value);
     }, [value, onSelect, disabled, registerItem, unregisterItem]);
 
+    // Instant, as a native listbox: a smooth scroll restarts on every key repeat and lags behind the highlight.
     useEffect(() => {
       if (isSelected && internalRef.current) {
-        internalRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        internalRef.current.scrollIntoView({ block: 'nearest' });
       }
     }, [isSelected]);
 
@@ -395,7 +392,7 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
     return (
       <ark.div
         asChild={asChild}
-        {...composableProps<HTMLDivElement>(props, {
+        {...Util.composableProps<HTMLDivElement>(props, {
           classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
           role: 'option',
         })}

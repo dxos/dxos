@@ -7,10 +7,11 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { Shimmer } from '@dxos/react-ui-components';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -43,7 +44,7 @@ const hasShimmerEffect = (commit: Commit): boolean => commit.tags?.includes(SHIM
 
 const empty = Object.freeze([]);
 
-export type TimelineProps = ThemedClassName<{
+export type TimelineProps = Util.ThemedClassName<{
   /** Optional whitelist. */
   branches?: string[];
   /**
@@ -77,7 +78,7 @@ export type TimelineProps = ThemedClassName<{
  * layout is still computed over the whole history, so a windowed row draws every lane crossing it.
  */
 export const Timeline = memo(
-  composable<HTMLDivElement, TimelineProps>(
+  Util.composable<HTMLDivElement, TimelineProps>(
     (
       {
         branches: branchesProp,
@@ -95,8 +96,8 @@ export const Timeline = memo(
       },
       forwardedRef,
     ) => {
-      const { t } = useTranslation(translationKey);
-      const containerRef = useForwardedRef(forwardedRef);
+      const { t } = Hooks.useTranslation(translationKey);
+      const containerRef = Hooks.useForwardedRef(forwardedRef);
 
       // Auto-discover branches if not provided.
       const branches = useMemo(() => {
@@ -117,8 +118,8 @@ export const Timeline = memo(
 
       // Navigation.
       const [current, setCurrent] = useState<number | undefined>(undefined);
-      const currentRef = useDynamicRef<number | undefined>(current);
-      const selectedRef = useDynamicRef<number | undefined>(undefined);
+      const currentRef = Hooks.useDynamicRef<number | undefined>(current);
+      const selectedRef = Hooks.useDynamicRef<number | undefined>(undefined);
       const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
 
       // Controlled `branch` takes precedence over the branch derived from the selected commit.
@@ -236,13 +237,13 @@ export const Timeline = memo(
 
       return (
         <div
-          {...composableProps(props, { classNames: 'relative outline-none' })}
+          {...Util.composableProps(props, { classNames: 'relative outline-none' })}
           role='list'
           tabIndex={0}
           ref={containerRef}
         >
           {layout.rows.length < 1 ? (
-            <p className='text-description p-trim-md'>{t('no-commits.message')}</p>
+            <p className='text-fg-muted p-trim-md'>{t('no-commits.message')}</p>
           ) : (
             scroller && (
               <TimelineWindow
@@ -422,14 +423,14 @@ const TimelineRowView = memo(
         {showIcon && <CommitIcon commit={commit} />}
         <div
           className={mx(
-            'text-sm truncate cursor-pointer text-description font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
+            'text-sm truncate cursor-pointer text-fg-muted font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
             hasLink && 'underline decoration-dotted underline-offset-2',
           )}
         >
           {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
         </div>
         {showTimestamp && (
-          <div className='text-xs tabular-nums items-center text-description font-thin'>
+          <div className='text-xs tabular-nums items-center text-fg-muted font-thin'>
             {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
           </div>
         )}
@@ -446,14 +447,11 @@ const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   }
 
   return (
-    <Icon
+    <Icon.Icon
       icon={commit.icon}
-      size={4}
-      synchronized
-      classNames={mx(
-        commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',
-        commit.level !== undefined && levelColors[commit.level],
-      )}
+      size='md'
+      spin={commit.icon === 'ph--spinner-gap--regular'}
+      classNames={commit.level !== undefined ? levelColors[commit.level] : undefined}
     />
   );
 });

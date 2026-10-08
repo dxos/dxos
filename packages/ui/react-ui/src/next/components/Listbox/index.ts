@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Listbox.tsx';
+export * as Listbox from './Listbox.tsx';

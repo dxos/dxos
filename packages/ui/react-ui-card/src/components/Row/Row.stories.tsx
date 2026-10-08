@@ -16,9 +16,14 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type Actor, Person } from '@dxos/types';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -71,28 +76,29 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
   }, [handleActivate]);
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={VirtualAnchor.virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
+      autoFocus={false}
+    >
       {children}
       {link && (
-        <Popover.Portal>
-          <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-            <Popover.Viewport classNames='dx-card-popover-width'>
-              <Card.Root border={false} data-testid='contact-preview'>
-                <Card.Header>
-                  <Card.Block>
-                    <Icon icon='ph--user--regular' />
-                  </Card.Block>
-                  <Card.Title>{link.title ?? link.label}</Card.Title>
-                </Card.Header>
-                <Card.Row>
-                  <Card.Text variant='description'>{link.eid}</Card.Text>
-                </Card.Row>
-              </Card.Root>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content>
+          <Popover.Body classNames='dx-card-popover-width'>
+            <Card.Root border={false} data-testid='contact-preview'>
+              <Card.Header>
+                <Layout.Block>
+                  <Icon.Icon icon='ph--user--regular' />
+                </Layout.Block>
+                <Card.Title>{link.title ?? link.label}</Card.Title>
+              </Card.Header>
+              <Card.Row>
+                <Card.Text variant='muted'>{link.eid}</Card.Text>
+              </Card.Row>
+            </Card.Root>
+          </Popover.Body>
+        </Popover.Content>
       )}
     </Popover.Root>
   );
@@ -127,12 +133,12 @@ const DefaultStory = () => {
 
   return (
     <CardPreviewHost>
-      <Card.Root border={false} fullWidth classNames='p-1'>
+      <Card.Root border={false} classNames='p-1'>
         <Card.Body>
           <Card.Row>
-            <Card.Block>
+            <Layout.Block>
               <Row.Star starred={starred} onToggle={handleToggleStar} />
-            </Card.Block>
+            </Layout.Block>
             <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
           </Card.Row>
           {/* Neither `db` nor `getContact`: no contact resolution, so the avatar is inert. */}
@@ -196,7 +202,7 @@ export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const avatarFor = (name: string) => {
-      const rows = [...canvasElement.querySelectorAll('.dx-card__row')].filter((row) =>
+      const rows = [...canvasElement.querySelectorAll('[data-scope="card"][data-part="row"]')].filter((row) =>
         row.textContent?.includes(name),
       );
       // The first row for the known actor is the inert variant; the interactive one carries the testid.

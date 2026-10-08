@@ -1,0 +1,69 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+import { trim } from '@dxos/util';
+
+import { type ResearchSource, defaultResearchSources } from '#sources';
+import { CrmOperation } from '#types';
+
+import { CRM_SKILL_KEY as SKILL_KEY } from '../keys.ts';
+
+/**
+ * Skill instructions are deliberately thin: entity shapes, dedup, and profile structure are owned
+ * by the CRM operations (ProcessMailbox / ResearchPerson / ResearchOrganization), so the prose only
+ * covers what the tools cannot — subject resolution and content enrichment conventions.
+ */
+const INSTRUCTIONS = trim`
+  {{! CRM }}
+
+  You help a user maintain a CRM in their DXOS space: Person and Organization records with linked
+  markdown Profile documents.
+
+  - Resolve your subject first: a DXN loads with the database tools; a bare email address resolves
+    to the Person whose emails contain it (query before creating).
+  - Prefer the CRM operations over ad-hoc object edits: "Process mailbox" extracts contacts from a
+    mailbox's new messages; "Research person" / "Research organization" create or refresh the
+    subject's Profile document and ProfileOf relation.
+  - Deduplicate before creating: match Persons by email and Organizations by website domain; never
+    overwrite existing field values with blanks.
+  - Enrich Profile documents in place: extend the skeleton's sections (Overview, Details, Key
+    Links, Notes, Sources) with researched content, record every contributing URL under Sources,
+    and mirror it into the ProfileOf relation's sources.
+  - Attach an avatar or logo with the ${Operation.toolName(CrmOperation.AttachImage)} tool when web research surfaces a good https
+    candidate; failures are non-fatal.
+  - Reply with a short summary and DXN references to the objects you created or updated.
+`;
+
+/**
+ * Factory for the CRM skill. Optionally accepts a list of registered
+ * research sources whose tools are composed into the skill's tool list.
+ */
+export const makeCrmSkill = (researchSources: ReadonlyArray<ResearchSource> = defaultResearchSources) =>
+  Skill.make({
+    key: SKILL_KEY,
+    name: 'CRM',
+    description: 'Research people and organizations and produce structured Profile documents in your space.',
+    agentCanEnable: true,
+    tools: Skill.toolDefinitions({
+      operations: [
+        CrmOperation.AttachImage,
+        CrmOperation.ProcessMailbox,
+        CrmOperation.ResearchPerson,
+        CrmOperation.ResearchOrganization,
+        ...researchSources.flatMap((source) => source.operations ?? []),
+      ],
+      tools: researchSources.flatMap((source) => source.tools ?? []),
+    }),
+    instructions: Template.make({
+      source: INSTRUCTIONS,
+    }),
+  });
+
+export const key = SKILL_KEY;
+export const make = makeCrmSkill;

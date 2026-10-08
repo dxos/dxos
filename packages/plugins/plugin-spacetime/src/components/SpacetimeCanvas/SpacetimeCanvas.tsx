@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useContext, useEffect, useRef, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 
 import { Model, Scene, type SceneView } from '#types';
 
@@ -59,7 +59,7 @@ export type SpacetimeCanvasProps = {
 /**
  * A 3D canvas for creating and editing 3D models using Babylon.js and Manifold.
  */
-export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
+export const SpacetimeCanvas = Util.composable<HTMLDivElement, SpacetimeCanvasProps>(
   (
     {
       showFps = true,
@@ -535,7 +535,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'relative bg-(--surface-bg)' })}
+        {...Util.composableProps(props, { classNames: 'relative bg-(--surface-bg)' })}
         ref={(node) => {
           (containerRef as RefObject<HTMLDivElement | null>).current = node;
           if (typeof forwardedRef === 'function') {
@@ -546,7 +546,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         }}
       >
         <canvas
-          className='dx-fullscreen dx-fill block outline-none'
+          className='dx-cover dx-fill block outline-none'
           onContextMenu={(event) => event.preventDefault()}
           ref={canvasRef}
         />

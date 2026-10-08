@@ -6,16 +6,22 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Banner, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -90,12 +96,12 @@ const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.N
  * spaces, collection sections, type sections, and schema nodes.
  */
 export const NavBranch = ({ id }: NavBranchProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
 
   useExpandPath(id);
 
-  const children = useConnections(graph, id, 'child');
+  const children = GraphHooks.useConnections(graph, id, 'child');
   const emptyGroupIds = useEmptyGroupIds(graph, children);
 
   const visibleChildren = useMemo(
@@ -105,18 +111,20 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: visibleChildren,
-    extract: (child) => toLocalizedString(child.properties.label, t),
+    extract: (child) => Theme.toLocalizedString(child.properties.label, t),
   });
 
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
+        <ScrollArea.Root>
           <ScrollArea.Viewport>
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
               // search that matched nothing); rendering nothing at all reads as a broken screen.
-              <Banner.Empty label={t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')} />
+              <Status.Empty>
+                {t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}
+              </Status.Empty>
             ) : (
               <Mosaic.Stack
                 classNames='py-2 gap-1'
@@ -135,13 +143,14 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
 const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;
 
-  const name = toLocalizedString(data.properties.label, t);
+  const name = Theme.toLocalizedString(data.properties.label, t);
+  const titleId = UiHooks.useId('mobile-tile');
 
   const handleSelect = useCallback(
     () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
@@ -168,7 +177,6 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
     <Card.Root
       ref={ref}
       role='button'
-      fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
       // The search list auto-selects the first row for keyboard nav; a coarse (touch) pointer has no
@@ -177,26 +185,22 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       onClick={handleSelect}
     >
       <Card.Header>
-        <Avatar.Root>
-          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
-              `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Card.Block>
-            <Avatar.Content
-              hue={data.properties.hue}
-              icon={data.properties.icon}
-              hueVariant='transparent'
-              variant='square'
-              size={8}
-              fallback={name}
-            />
-          </Card.Block>
-          <Avatar.Label asChild>
-            <Card.Title>{name}</Card.Title>
-          </Avatar.Label>
-          <Card.Block end>
-            <Icon icon='ph--caret-right--regular' />
-          </Card.Block>
-        </Avatar.Root>
+        {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+            `Card.Title` are what keep the icon, label, and caret on one row. */}
+        <Layout.Block>
+          <Avatar.Root
+            icon={data.properties.icon}
+            hue={Avatar.toAvatarHue(data.properties.hue)}
+            hueVariant='transparent'
+            variant='square'
+            fallback={name}
+            aria-labelledby={titleId}
+          />
+        </Layout.Block>
+        <Card.Title id={titleId}>{name}</Card.Title>
+        <Layout.Block rail='end'>
+          <Icon.Icon icon='ph--caret-right--regular' />
+        </Layout.Block>
       </Card.Header>
     </Card.Root>
   );

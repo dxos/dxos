@@ -13,15 +13,18 @@ import { hues } from '@dxos/ui-types';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Tag from './Tag.tsx';
 
 /** Label text (one step below the body) per size, in px. */
 const LABEL_FONT: Record<Size, number> = { xs: 12, sm: 12, md: 14, lg: 16, xl: 18 };
 
-const VALENCES: Next.TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
+const VALENCES: Tag.TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
 /** Clickable, deletable, and clickable and deletable tags, counting their clicks and restoring deleted ones. */
 const InteractiveTags = ({ size }: { size?: Size }) => {
@@ -30,59 +33,59 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
   const remove = (name: string) => () => setDeleted((current) => [...current, name]);
   const shown = (name: string) => !deleted.includes(name);
   return (
-    <Next.Container layout='row' data-testid={`interactive-${size}`}>
-      <Next.Group>
-        <Next.Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
+    <Container layout='row' data-testid={`interactive-${size}`}>
+      <Group>
+        <Tag.Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
           Filter
-        </Next.Tag>
+        </Tag.Tag>
         {shown('design') && (
-          <Next.Tag hue='violet' onDelete={remove('design')} data-testid={`deletable-${size}`}>
+          <Tag.Tag hue='violet' onDelete={remove('design')} data-testid={`deletable-${size}`}>
             Design
-          </Next.Tag>
+          </Tag.Tag>
         )}
         {shown('bug') && (
-          <Next.Tag
+          <Tag.Tag
             hue='rose'
             onClick={() => setClicks((count) => count + 1)}
             onDelete={remove('bug')}
             data-testid={`both-${size}`}
           >
             Bug
-          </Next.Tag>
+          </Tag.Tag>
         )}
-        <Next.Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
+        <Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
           Reset
-        </Next.Button>
+        </Button>
         <output data-testid={`clicks-${size}`}>{clicks}</output>
-      </Next.Group>
-    </Next.Container>
+      </Group>
+    </Container>
   );
 };
 
 /** A row of tags centred in a block row, clickable and deletable tags, then every valence and hue. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Container layout='row' data-testid={`row-${size}`}>
-      <Next.Group>
-        <Next.Tag hue='blue' data-testid={`tag-${size}`}>
+    <Container layout='row' data-testid={`row-${size}`}>
+      <Group>
+        <Tag.Tag hue='blue' data-testid={`tag-${size}`}>
           Release
-        </Next.Tag>
-        <Next.Tag hue='amber'>Draft</Next.Tag>
-      </Next.Group>
-    </Next.Container>
+        </Tag.Tag>
+        <Tag.Tag hue='amber'>Draft</Tag.Tag>
+      </Group>
+    </Container>
     <InteractiveTags size={size} />
-    <Next.Group>
+    <Group>
       {[...VALENCES, ...hues].map((hue) => (
-        <Next.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+        <Tag.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
-        </Next.Tag>
+        </Tag.Tag>
       ))}
-    </Next.Group>
+    </Group>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Tag',
+  title: 'ui/react-ui-core/components/Tag',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[48rem]' }), withTheme()],
   args: { size: 'md' },
@@ -109,7 +112,7 @@ export const Test: Story = {
     for (const size of SIZES) {
       const tag = byTestId(canvasElement, `tag-${size}`);
       const row = byTestId(canvasElement, `row-${size}`);
-      const inset = parseFloat(getComputedStyle(row).getPropertyValue('--nx-control-inset'));
+      const inset = parseFloat(getComputedStyle(row).getPropertyValue('--dx-control-inset'));
       const rect = tag.getBoundingClientRect();
       await expect(rect.height, size).toBeCloseTo(controlSize(size) - 2 * inset, 0);
       await expect(centreY(rect), size).toBeCloseTo(centreY(row.getBoundingClientRect()), 0);

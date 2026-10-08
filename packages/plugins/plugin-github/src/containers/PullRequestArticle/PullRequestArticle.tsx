@@ -5,18 +5,22 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Flex, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { PullRequest } from '@dxos/types';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
@@ -71,8 +75,8 @@ export type PullRequestArticleProps = AppSurface.ObjectArticleProps<PullRequest.
  * pull request, not a different object to open.
  */
 export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }: PullRequestArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [subject] = useObject(pullRequest);
   const db = Obj.getDatabase(pullRequest);
   const spaceId = db?.spaceId;
@@ -80,9 +84,11 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const walkthroughs = useQuery(db, Filter.type(Walkthrough.Walkthrough, { pullRequest: Ref.make(pullRequest) }));
   const walkthrough = useMemo(() => newestWalkthrough(walkthroughs), [walkthroughs]);
   // Watched by key rather than tied to `generating`, so a run started elsewhere shows here too.
-  const walkthroughProgress = useProgressMonitor(GitHubOperation.createWalkthroughProgressKey(pullRequest));
+  const walkthroughProgress = ToolkitHooks.useProgressMonitor(
+    GitHubOperation.createWalkthroughProgressKey(pullRequest),
+  );
   // Present only when plugin-progress is loaded; it is what lets the meter cancel or dismiss a run.
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const [status, setStatus] = useState<Status>();
   // The live state where it has arrived, the stored one until then — an absent status is unknown,
@@ -325,13 +331,13 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
   const tabs = useMemo(
     () => (
-      <Tabs.Tablist>
+      <Tabs.List>
         {TABS.map((value) => (
-          <Tabs.Button key={value} value={value} data-testid={`pull-request.tab.${value}`}>
+          <Tabs.Trigger key={value} value={value} data-testid={`pull-request.tab.${value}`}>
             {t(`${value}-tab.label`)}
-          </Tabs.Button>
+          </Tabs.Trigger>
         ))}
-      </Tabs.Tablist>
+      </Tabs.List>
     ),
     [t],
   );
@@ -501,11 +507,13 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       onValueChange={(value) => setTab(TABS.find((candidate) => candidate === value) ?? 'overview')}
     >
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Flex column>
+        <Panel.Header>
+          {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and a disabled
+              Next toolbar disables every item in it. */}
+          <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Layout.Flex column>
             <PullRequestStatus
               reference={reference}
               title={subject.title}
@@ -543,9 +551,9 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 onLineComment={diff.commit ? handleFilesLineComment : undefined}
               />
             )}
-          </Flex>
-        </Panel.Content>
-        <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+          </Layout.Flex>
+        </Panel.Body>
+        <Panel.Footer classNames='border-t border-separator-subtle'>
           <ProgressMeter
             state={
               walkthroughProgress?.status === 'running' || walkthroughProgress?.status === 'error'
@@ -558,7 +566,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 : undefined
             }
           />
-        </Panel.Statusbar>
+        </Panel.Footer>
       </Panel.Root>
     </Tabs.Root>
   );

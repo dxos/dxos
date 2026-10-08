@@ -9,13 +9,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DiagnosticOverlay } from './components/index.ts';
 import { ComputeShapeLayout } from './compute-layout.ts';
@@ -143,19 +144,17 @@ const DefaultStory = ({
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Toolbar.Root>
-            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {sidebarTypes.map((type) => (
-                      <Select.Item key={type} value={type}>
-                        {type}
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+            <Select.Root
+              value={[sidebar]}
+              onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar'])}
+              items={sidebarTypes.map((type) => ({ value: type, label: type }))}
+            >
+              <Select.Trigger classNames='w-full' />
+              <Select.Content>
+                {sidebarTypes.map((type) => (
+                  <Select.Item key={type} item={{ value: type, label: type }} />
+                ))}
+              </Select.Content>
             </Select.Root>
           </Toolbar.Root>
 

@@ -9,8 +9,9 @@ import React, { type CSSProperties, forwardRef, useEffect, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { getInputPoint, pointSubtract } from '../layout/index.ts';
@@ -75,7 +76,7 @@ export const DragTest = () => {
   );
 };
 
-type DragElementProps = ThemedClassName<{ style?: CSSProperties }>;
+type DragElementProps = Util.ThemedClassName<{ style?: CSSProperties }>;
 
 const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, style }, forwardedRef) => {
   return (
@@ -87,7 +88,7 @@ const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, 
         classNames,
       )}
     >
-      <Icon icon={'ph--crosshair-simple--regular'} size={16} />
+      <Icon.Icon icon={'ph--crosshair-simple--regular'} size='xl' />
     </div>
   );
 });

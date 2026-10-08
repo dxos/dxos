@@ -12,7 +12,7 @@ import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { getDeep, isNonNullable } from '@dxos/util';
+import { countWork, getDeep, isNonNullable } from '@dxos/util';
 
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
@@ -68,6 +68,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
+        countWork('echo.querySubscriberCallbacks', this._event.listenerCount());
         this._event.emit(this);
       }
     });
@@ -221,6 +222,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       timeout: opts?.timeout ?? 30_000,
     });
     const presented = this._presentResults(filteredResults);
+    countWork('echo.queryRuns');
+    countWork('echo.queryResultObjects', presented.objects.length);
     queryMetrics.executed(this._metricsKey, performance.now() - begin, presented.objects.length, 'run');
     return presented;
   }
@@ -240,6 +243,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const results = this._queryContext.getResults();
     const presented = this._presentResults(results);
     const end = performance.now();
+    countWork('echo.queryRecomputes');
+    countWork('echo.queryResultObjects', presented.objects.length);
     queryMetrics.updated(this._metricsKey, end - begin, presented.objects.length);
     // Time to answer: the first recompute after start at which no source is still outstanding.
     if (this._startedAt !== undefined && !this._queryContext.hasPendingSources()) {

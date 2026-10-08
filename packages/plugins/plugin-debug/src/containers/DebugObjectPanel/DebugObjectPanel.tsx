@@ -4,14 +4,16 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
@@ -38,11 +40,11 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <Layout.Grid rows={db ? [1, 2] : undefined} classNames='divide-y divide-separator-subtle'>
           {db && (
             <ScrollArea.Root>
               <ScrollArea.Viewport>
@@ -61,21 +63,21 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
             getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
           >
             <Panel.Root>
-              <Panel.Toolbar asChild>
-                <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+              <Panel.Header>
+                <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
                   <Syntax.Filter />
                   <Syntax.Depth />
                 </Toolbar.Root>
-              </Panel.Toolbar>
-              <Panel.Content asChild>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <Syntax.Viewport>
                   <Syntax.Code />
                 </Syntax.Viewport>
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </Syntax.Root>
-        </div>
-      </Panel.Content>
+        </Layout.Grid>
+      </Panel.Body>
     </Panel.Root>
   );
 };

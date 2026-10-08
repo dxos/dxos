@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
-import type { ServiceNotAvailableError } from '@dxos/compute/errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type { SpaceId } from '@dxos/keys';
 
 import { Capabilities } from '../../common/index.ts';
@@ -65,7 +64,7 @@ export const useSpaceCallback = <
         Operation.withInvocationOptions({ spaceId }),
       );
       return runtime.runPromise(
-        fn(...args).pipe(Effect.provide(layer)) as Effect.Effect<T, E | ServiceNotAvailableError, any>,
+        fn(...args).pipe(Effect.provide(layer)) as Effect.Effect<T, E | ServiceResolver.ServiceNotAvailableError, any>,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
