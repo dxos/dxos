@@ -1,5 +1,23 @@
 # @dxos/util
 
+## 0.13.0
+
+### Minor Changes
+
+- cb1e218: Cut the wait between submitting a chat prompt and the model request by 22–39% and between agent turns by 40–48%, and add `markWork`, `dxos:`-prefixed User Timing marks that a perf harness joins across realms over CDP and DevTools shows on its Timings track, with `ai.request` / `ai.response` marked around every `@dxos/ai` model call.
+- 1894fc1: Add `countWork`, always-on work counters published on `__dxosWorkCounters`, and count automerge storage, ECHO query and SQLite statement work with it, plus per-method served calls in `RpcTiming`'s readout, so a perf harness can budget on counts rather than timings.
+
+### Patch Changes
+
+- e99ee70: `NativePasskey.getPasskeySupport()` now reports `'native'` in the Composer iOS app, which creates and redeems passkeys through its own AuthenticationServices bridge, and `'none'` when that bridge is missing, never WebAuthn. `createNativePasskey` and `loginNativePasskey` invoke whichever bridge the shell names. New: `NativePasskey.isNativePasskeyError()` recognises the iOS bridge's structured rejection, so `PasskeyError` treats only a dismissed sheet as a dismissal and reports every other `ASAuthorizationError` as a failure.
+
+  `@dxos/util`'s storage cleanup helpers (`clearServiceWorkers`, `clearCaches`, `clearOPFS`, `clearIndexedDB`) resolve where their API is absent, as in a WKWebView on a custom scheme, instead of throwing.
+
+- @dxos/debug@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

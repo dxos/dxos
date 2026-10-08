@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PROV, SX, entityIri } from '../vocab.ts';
+import * as Vocab from '../../types/Vocab.ts';
 
 export type SemanticQuery = {
   /** Entity id constrained to the subject position. */
@@ -21,29 +21,29 @@ export type SemanticQuery = {
 export const buildSparql = (query: SemanticQuery): string => {
   const patterns: string[] = [];
   if (query.subjectEntity) {
-    patterns.push(`?fact <${SX}subject> <${entityIri(query.subjectEntity).value}> .`);
+    patterns.push(`?fact <${Vocab.SX}subject> <${Vocab.entityIri(query.subjectEntity).value}> .`);
   }
   if (query.predicate) {
-    patterns.push(`?fact <${SX}predicate> ${JSON.stringify(query.predicate)} .`);
+    patterns.push(`?fact <${Vocab.SX}predicate> ${JSON.stringify(query.predicate)} .`);
   }
   if (query.source) {
-    patterns.push(`?fact <${PROV}wasDerivedFrom> ${JSON.stringify(query.source)} .`);
+    patterns.push(`?fact <${Vocab.PROV}wasDerivedFrom> ${JSON.stringify(query.source)} .`);
   }
   if (query.entity) {
-    const iri = entityIri(query.entity).value;
-    patterns.push(`{ ?fact <${SX}subject> <${iri}> } UNION { ?fact <${SX}object> <${iri}> }`);
+    const iri = Vocab.entityIri(query.entity).value;
+    patterns.push(`{ ?fact <${Vocab.SX}subject> <${iri}> } UNION { ?fact <${Vocab.SX}object> <${iri}> }`);
   }
   let confFilter = '';
   if (query.minConfidence !== undefined) {
     if (!Number.isFinite(query.minConfidence)) {
       throw new TypeError('minConfidence must be a finite number.');
     }
-    patterns.push(`?fact <${SX}confidence> ?conf .`);
+    patterns.push(`?fact <${Vocab.SX}confidence> ?conf .`);
     confFilter = `FILTER(xsd:decimal(?conf) >= ${query.minConfidence})`;
   }
   // No-filter fallback: bind every fact node via its required subject triple.
   if (patterns.length === 0) {
-    patterns.push(`?fact <${SX}subject> ?anySubject .`);
+    patterns.push(`?fact <${Vocab.SX}subject> ?anySubject .`);
   }
   const inner = [...patterns, confFilter].filter(Boolean).join(' ');
   return [

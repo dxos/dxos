@@ -77,7 +77,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
 }
 
 /**
- * {@link Process.Handle} for a process hosted by a remote runtime.
+ * {@link Process.Process} for a process hosted by a remote runtime.
  *
  * The remote host owns the process; this is a view plus the control verbs. Outputs and ephemeral
  * trace are read by cursor (see `RemoteProcessManager.Control.readEvents`), so every subscription
@@ -87,7 +87,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
  * `runToCompletion` / `runUntilSettled` are derived here from polled state rather than served by the
  * host, so the settle predicates cannot drift from `ProcessHandle`'s definitions.
  */
-export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> implements Process.Handle<
+export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> implements Process.Process<
   _Input,
   _Output,
   _Rpcs
@@ -101,13 +101,20 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   readonly #statusAtom: Atom.Writable<Process.Status>;
   #info: RemoteProcessManager.Snapshot;
   #rpc: RpcClient.RpcClient<_Rpcs> | undefined;
+  /** Log cursor taken just before this handle's latest input, so its outputs are read even if they land first. */
+  #inputCursor: number | undefined;
 
   /**
    * Effectful for symmetry with the local handle's construction, though nothing here can fail any
    * more: `Control` answers in domain types, so the transport has already decoded what arrived.
    */
   static make<I, O, R extends Rpc.Any>(options: Options<I, O, R>): Effect.Effect<RemoteProcessHandle<I, O, R>> {
-    return Effect.sync(() => new RemoteProcessHandle(options));
+    return Effect.sync(() => RemoteProcessHandle.makeSync(options));
+  }
+
+  /** Synchronous {@link make}, for a process that resolves its runtime lazily on first use. */
+  static makeSync<I, O, R extends Rpc.Any>(options: Options<I, O, R>): RemoteProcessHandle<I, O, R> {
+    return new RemoteProcessHandle(options);
   }
 
   readonly #options: Options<_Input, _Output, _Rpcs>;
@@ -139,8 +146,28 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return this.#info.pid;
   }
 
-  get parentId(): Process.ID | null {
+  get parentPid(): Process.ID | null {
     return this.#info.parentPid;
+  }
+
+  get state(): Process.State {
+    return this.#info.state;
+  }
+
+  get error(): Process.Data['error'] {
+    return this.#info.error;
+  }
+
+  get startedAt(): number {
+    return this.#info.startedAt;
+  }
+
+  get completedAt(): Option.Option<number> {
+    return this.#info.completedAt;
+  }
+
+  get metrics(): Process.Data['metrics'] {
+    return this.#info.metrics;
   }
 
   get key(): string {
@@ -186,6 +213,13 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   submitInput(input: _Input): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
+      this.#inputCursor = yield* this.#endCursor;
+      yield* this.#submit(input);
+    });
+  }
+
+  #submit(input: _Input): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
       const encoded = yield* Schema.encodeEffect(this.#requireDefinition().input)(input).pipe(Effect.orDie);
       yield* this.#control.submitInput({ ...this.#target, input: encoded });
     });
@@ -195,9 +229,18 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // Decoding an output needs the definition's output codec, so a handle from `list` (which has no
     // definition) cannot serve this — the same limitation as {@link rpc}.
     const decode = Schema.decodeUnknownSync(this.#requireDefinition().output);
-    // From the live end, not the start of the log: the local handle streams outputs as they are
-    // produced, so replaying earlier turns' outputs into a new subscriber would not match it.
-    return this.#readEventsFromEnd().pipe(
+    // Not from the start of the log while the process lives: the local handle streams outputs as they
+    // are produced, so replaying earlier turns' outputs into a new subscriber would not match it.
+    return Stream.unwrap(
+      Effect.gen({ self: this }, function* () {
+        if (this.#inputCursor !== undefined) {
+          return this.#readEvents(this.#inputCursor);
+        }
+        const page = yield* this.#readPage(Number.MAX_SAFE_INTEGER);
+        // An exited process replays what it produced, as the local handle does for a late attach.
+        return this.#readEvents(Process.isExited(page.snapshot.state) ? 0 : page.cursor);
+      }),
+    ).pipe(
       Stream.filter((event) => event._tag === 'output'),
       Stream.map((event) => decode(event.data)),
     );
@@ -304,7 +347,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
         // The cursor is taken before the inputs are submitted, so the stream carries this call's
         // outputs and not the history of earlier turns.
         const start = yield* this.#endCursor;
-        yield* Effect.forEach(options.inputs, (input) => this.submitInput(input), { discard: true });
+        yield* Effect.forEach(options.inputs, (input) => this.#submit(input), { discard: true });
         // Ends on IDLE or SUCCEEDED as the local `runAndExit` does — a remote process that goes idle
         // has finished this call's work, and waiting for a terminal state would never return.
         return this.#readEvents(start, (state) => state === Process.State.IDLE || Process.isExited(state), true).pipe(
@@ -317,7 +360,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   hydrate(
     definition: Operation.Durable<_Input, _Output, any, _Rpcs>,
-  ): Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>> {
+  ): Effect.Effect<Process.Process<_Input, _Output, _Rpcs>> {
     // The host revives its own processes from its own storage, so there is no dormant state to
     // restore here. What a caller does need is the definition: a handle from `attach` or `list` has
     // no codecs, and this is the only place it can acquire them.
@@ -342,10 +385,6 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // A read at or beyond the end returns an empty page carrying the current end cursor; retried like
     // every other page, since a failure here would end the subscription before it starts polling.
     return this.#readPage(Number.MAX_SAFE_INTEGER).pipe(Effect.map((page) => page.cursor));
-  }
-
-  #readEventsFromEnd(): Stream.Stream<RemoteProcessManager.Event> {
-    return Stream.unwrap(this.#endCursor.pipe(Effect.map((cursor) => this.#readEvents(cursor))));
   }
 
   /**

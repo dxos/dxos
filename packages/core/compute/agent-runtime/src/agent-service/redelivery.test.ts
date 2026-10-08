@@ -7,7 +7,13 @@ import { describe, it } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { type ContentBlock } from '@dxos/types';
 
-import { type ToolResultEvent, dropReportedToolResults, toolResultPrompt, wakeUpPrompt } from './agent-process.ts';
+import {
+  type ToolResultEvent,
+  dropReportedToolResults,
+  isToolResultHandled,
+  toolResultPrompt,
+  wakeUpPrompt,
+} from './agent-process.ts';
 
 // Recovering a tool result across a reload was, until now, exercised only when a race inside
 // `AgentService.test.ts`'s `recovers queued tool results after reload` happened to land on it, and no
@@ -52,6 +58,22 @@ describe('dropReportedToolResults', () => {
     const dropped = dropReportedToolResults(queue, (pid) => pid !== Process.ID.make('2'));
     expect(dropped).toEqual([Process.ID.make('1')]);
     expect(queue.map((item) => item.pid)).toEqual([Process.ID.make('2'), Process.ID.make('3')]);
+  });
+});
+
+// A tool child that can no longer be reattached is answered with an error unless its result is already
+// accounted for; otherwise the call would stay pending and the agent could never complete.
+describe('isToolResultHandled', () => {
+  it('is handled when the result is queued for the next turn', ({ expect }) => {
+    expect(isToolResultHandled([toolResult('1')], Process.ID.make('1'), () => false)).toBe(true);
+  });
+
+  it('is handled when the result already reached the agent', ({ expect }) => {
+    expect(isToolResultHandled([], Process.ID.make('1'), (pid) => pid === Process.ID.make('1'))).toBe(true);
+  });
+
+  it('is not handled when the result was neither queued nor reported', ({ expect }) => {
+    expect(isToolResultHandled([toolResult('2')], Process.ID.make('1'), () => false)).toBe(false);
   });
 });
 

@@ -78,7 +78,7 @@ export const usePluginActions = ({
     void invokePromise(LayoutOperation.Open, {
       subject: [specPath],
       pivotId: getPluginPath(pluginId),
-      disposition: 'add',
+      disposition: 'detail',
     });
   }, [invokePromise, specPath, pluginId]);
 

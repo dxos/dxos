@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-agent",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Autonomous agents that converse in channels (Discord, freeq, local feeds) and Composer chats.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -97,6 +97,21 @@
       "source": "./src/AgentState.ts",
       "types": "./dist/types/src/AgentState.d.ts",
       "import": "./dist/lib/AgentState.mjs"
+    },
+    "./AgentCompanion": {
+      "source": "./src/types/AgentCompanion.ts",
+      "types": "./dist/types/src/types/AgentCompanion.d.ts",
+      "import": "./dist/lib/AgentCompanion.mjs"
+    },
+    "./BrainService": {
+      "source": "./src/types/BrainService.ts",
+      "types": "./dist/types/src/types/BrainService.d.ts",
+      "import": "./dist/lib/BrainService.mjs"
+    },
+    "./BrainSkill": {
+      "source": "./src/skills/BrainSkill.ts",
+      "types": "./dist/types/src/skills/BrainSkill.d.ts",
+      "import": "./dist/lib/BrainSkill.mjs"
     },
     "./ChatParticipant": {
       "source": "./src/types/ChatParticipant.ts",
@@ -268,13 +283,17 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/brain": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
@@ -290,6 +309,12 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",

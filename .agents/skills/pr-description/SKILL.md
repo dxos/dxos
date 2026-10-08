@@ -83,6 +83,14 @@ grep -n '^#' "$BODY_FILE" | grep -vE '^[0-9]+:(## (Summary|Bug|Architecture|UI|S
 grep -n '```mermaid' "$BODY_FILE"                                             # must print nothing
 ````
 
+## Labels
+
+The Safety answers are also applied as PR labels (`risk: …`, `breaking: storage`, `breaking: wire`,
+`api: changes`, `tests: changed`, `tests: none added`, `revert: unsafe`, `perf: risk`), so the PR
+list can be triaged by merge risk without opening each body. The body table stays the source of
+the reasons; the labels mirror its answers and are kept in sync on every rewrite. The mapping,
+colours and commands are in [safety](templates/safety.md#labels).
+
 ## How to pick
 
 Decide from the diff against the PR's own base, not from the commit messages or the task prompt.
@@ -119,5 +127,5 @@ git diff --stat "$BASE"...HEAD
 
 A PR body describes the PR as it will merge, not its history. When later pushes change the
 picture (a new test, a reverted approach, a second bug), rewrite the affected slots rather than
-appending an "Update:" paragraph. Re-check which templates apply on each rewrite, and re-run the
-checks above.
+appending an "Update:" paragraph. Re-check which templates apply on each rewrite, re-sync the
+labels with the Safety answers, and re-run the checks above.

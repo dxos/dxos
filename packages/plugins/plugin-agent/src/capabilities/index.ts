@@ -7,6 +7,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { translations } from '#translations';
 
+export const Brain = AppCapability.layerSpec(() => import('./brain.ts'), {
+  name: 'Brain',
+  environments: ['browser', 'node', 'tauri'],
+});
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

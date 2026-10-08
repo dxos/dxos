@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 
-import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
+import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, Mode } from '#types';
 
 import { baseInstructions } from '../instructions.ts';
@@ -24,7 +24,9 @@ const handler: Operation.WithHandler<typeof AgentOperation.CreateAgent> = AgentO
         {
           name,
           instructions: instructions ?? baseInstructions(name),
-          skills: [ModesSkill.key, RelaySkill.key, GoalsSkill.key].map((key) => Ref.fromURI(Skill.registryURI(key))),
+          skills: [ModesSkill.key, RelaySkill.key, GoalsSkill.key, BrainSkill.key].map((key) =>
+            Ref.fromURI(Skill.registryURI(key)),
+          ),
         },
         Ref.fromURI(Skill.registryURI(ConversationSkill.key)),
       );

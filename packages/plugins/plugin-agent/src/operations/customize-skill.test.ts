@@ -19,7 +19,15 @@ import { Text } from '@dxos/schema';
 import { Channel } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import {
+  BrainSkill,
+  ConversationSkill,
+  GoalsSkill,
+  InterviewSkill,
+  ModesSkill,
+  NoteTakerSkill,
+  RelaySkill,
+} from '#skills';
 import { AgentOperation, Mode } from '#types';
 
 import { findBound, openBinder } from './agent-skills.ts';
@@ -136,6 +144,7 @@ describe('CustomizeSkill', () => {
           Skill.registryURI(ModesSkill.key),
           Skill.registryURI(RelaySkill.key),
           Skill.registryURI(GoalsSkill.key),
+          Skill.registryURI(BrainSkill.key),
         ]);
         expect(yield* Database.load(Ref.make(copy)).pipe(Effect.option)).toMatchObject({ _tag: 'None' });
       },

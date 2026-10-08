@@ -8,7 +8,8 @@
 // the diagram re-attaches its links.
 //
 
-import { type NodeRegistry, nodeDef } from '../model/registry.ts';
+import { nodeDef } from '../model/node-def.ts';
+import { type NodeRegistry } from '../model/registry.ts';
 import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '../model/types.ts';
 import { nodeBounds } from './shapes.ts';
 

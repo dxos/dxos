@@ -6,10 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
+import { Space } from '@dxos/halo';
 
+import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
 import * as Trigger from './Trigger.ts';
 
@@ -25,7 +28,7 @@ export const WatchFacts = Operation.make({
       'Waits for something to happen ("let me know when X") and tells the requester when a fact says it did. Records the outcome as a goal the requester owns.',
     icon: 'ph--binoculars--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, AiService.AiService, BrainService.BrainService, Space.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that watches.' }),
     requester: Ref.Ref(Obj.Unknown).annotate({
@@ -84,7 +87,7 @@ export const ListTriggers = Operation.make({
     description: 'Lists what the agent is waiting for and who it will tell.',
     icon: 'ph--list-checks--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService, Space.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
   }),
@@ -101,12 +104,35 @@ export const CancelTrigger = Operation.make({
     description: 'Stops waiting for something, e.g. when the requester no longer needs to know.',
     icon: 'ph--x-circle--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     trigger: Schema.String.annotate({ description: 'The id of the watch.' }),
     dropGoal: Schema.optional(Schema.Boolean.annotate({ description: 'Also mark the goal it served as dropped.' })),
   }),
   output: Schema.Struct({
     cancelled: Schema.Boolean,
+  }),
+});
+
+/**
+ * Runs the agent's time-driven rules (`elapsed`, `every`, `due`) now and delivers what they woke; the
+ * host calls it when the brain says the clock next matters (`nextDueAt`), as EDGE's Durable Object
+ * alarm does for EDGE's brain.
+ */
+export const RunDue = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.runDue'),
+    name: 'Run due watches',
+    description: "Wakes the agent's watches whose time has come and passes their updates on.",
+    icon: 'ph--alarm--regular',
+  },
+  services: [Database.Service, AiService.AiService, BrainService.BrainService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
+  }),
+  output: Schema.Struct({
+    fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the watches that fired.' }),
+    undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired update was not delivered.' }),
+    nextDueAt: Schema.optional(Format.DateTime.annotate({ description: 'When the clock next matters to a watch.' })),
   }),
 });

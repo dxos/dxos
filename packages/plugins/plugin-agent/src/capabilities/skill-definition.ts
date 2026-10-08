@@ -7,7 +7,15 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import {
+  BrainSkill,
+  ConversationSkill,
+  GoalsSkill,
+  InterviewSkill,
+  ModesSkill,
+  NoteTakerSkill,
+  RelaySkill,
+} from '#skills';
 
 export default () =>
   Effect.succeed([
@@ -15,6 +23,7 @@ export default () =>
     Capability.contribute(AppCapabilities.SkillDefinition, InterviewSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, RelaySkill),
     Capability.contribute(AppCapabilities.SkillDefinition, GoalsSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, BrainSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, ModesSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, NoteTakerSkill),
   ]);

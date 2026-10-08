@@ -35,6 +35,7 @@ import {
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
 import { Message, Task } from '@dxos/types';
@@ -939,7 +940,7 @@ const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
   }
 
   return (
-    <div className='flex flex-col gap-2 p-2' data-testid='chat.taskQuestions'>
+    <Layout.Flex column gap='sm' classNames='p-2' data-testid='chat.taskQuestions'>
       {threads.map(({ task, thread }) => (
         <TaskQuestion
           key={thread.question.id}
@@ -947,7 +948,7 @@ const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
           onAnswer={(answer) => handleAnswer(task, thread.question.id, answer)}
         />
       ))}
-    </div>
+    </Layout.Flex>
   );
 };
 

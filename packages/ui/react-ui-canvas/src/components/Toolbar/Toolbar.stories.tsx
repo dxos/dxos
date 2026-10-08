@@ -16,6 +16,7 @@ import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } 
 const DefaultStory = () => {
   const [log, setLog] = useState<string[]>([]);
   const [snap, setSnap] = useState(true);
+  const [guides, setGuides] = useState(true);
   const [debug, setDebug] = useState(false);
   const [zoom, setZoom] = useState(1);
   const note = (entry: string) => setLog((entries) => [entry, ...entries].slice(0, 12));
@@ -24,10 +25,13 @@ const DefaultStory = () => {
     nameOf: (id) => id.split(':')[1] ?? id,
     onPath: (index) => note(`path → ${index}`),
     fit: () => note('fit'),
+    zoomReset: () => setZoom(1),
     zoomIn: () => setZoom((value) => value * 1.25),
     zoomOut: () => setZoom((value) => value / 1.25),
     snap,
     toggleSnap: () => setSnap((value) => !value),
+    guides,
+    toggleGuides: () => setGuides((value) => !value),
     debug,
     toggleDebug: () => setDebug((value) => !value),
     canUndo: true,
@@ -45,10 +49,11 @@ const DefaultStory = () => {
   return (
     // `items-start`: each bar fills its box, as SceneView floats it, so the column must not stretch them.
     <div className='flex flex-col items-start gap-2 p-2'>
-      <NavigationToolbar actions={actions}>depth {actions.path.length - 1}</NavigationToolbar>
+      <NavigationToolbar actions={actions} />
       <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
       <CameraToolbar actions={actions}>
-        {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
+        {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · guides {guides ? 'on' : 'off'} · debug{' '}
+        {debug ? 'on' : 'off'}
       </CameraToolbar>
       <pre className='text-xs text-fg-muted'>{log.join('\n')}</pre>
     </div>

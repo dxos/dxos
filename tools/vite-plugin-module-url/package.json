@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vite-plugin-module-url",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Vite plugin that resolves `?module-url` imports to the URL of the module compiled as a standalone ES chunk.",
   "homepage": "https://dxos.org",

@@ -13,9 +13,9 @@ import { buildEntityIndex, reconcileFactEntities } from './fact-index.ts';
 const fact = (subjectLabel: string, objectLabel: string): RDF.Fact => ({
   id: 'f1',
   assertion: {
-    subject: { entity: normalizeEntityId(subjectLabel), label: subjectLabel },
+    subject: { kind: 'entity', entity: normalizeEntityId(subjectLabel), label: subjectLabel },
     predicate: 'works at',
-    object: { entity: normalizeEntityId(objectLabel), label: objectLabel },
+    object: { kind: 'entity', entity: normalizeEntityId(objectLabel), label: objectLabel },
   },
   factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'dxn:queue:m1', generatedAtTime: '2001-05-14T10:00:00.000Z' },

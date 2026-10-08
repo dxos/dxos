@@ -98,6 +98,23 @@ export const config = {
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
+  /** A local EDGE stack (`moon run edge:dev` in dxos/edge): every worker behind :8787, ai-service under `/ai`. */
+  edgeLocal: new Config({
+    runtime: {
+      // As `configPreset({ edge: 'local' })`: without these the client never replicates the space to EDGE.
+      client: {
+        edgeFeatures: {
+          signaling: true,
+          subductionReplicator: true,
+          feedReplicator: true,
+        },
+      },
+      services: {
+        edge: { url: 'http://localhost:8787' },
+        ai: { server: 'http://localhost:8787/ai' },
+      },
+    },
+  }),
   /**
    * Persistent OPFS storage with no EDGE: the client gates every EDGE layer on an edge URL, so
    * leaving it out keeps replication, signaling and agents off and a perf run measures only the
@@ -369,12 +386,16 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const project = space.db.add(Project.make({ name: agentOptions.project }));
           Obj.setParent(agent, project);
         }
+        const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+        invariant(chat, 'Agent chat not found.');
+        // An agent's chat runs on EDGE unless told otherwise; the harness runs its agents in the story.
+        Obj.update(chat, (chat) => {
+          chat.remote = false;
+        });
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
-          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
-          invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });

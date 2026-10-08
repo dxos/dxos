@@ -13,7 +13,8 @@ import React, { memo } from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
-import { type NodeRegistry, nodeDef } from '../../model/registry.ts';
+import { nodeDef } from '../../model/node-def.ts';
+import { type NodeRegistry } from '../../model/registry.ts';
 import {
   type Bounds,
   type Capabilities,
@@ -29,8 +30,9 @@ import {
   isPointEndpoint,
 } from '../../model/types.ts';
 import { boundsFromPoints } from '../../utils/hit.ts';
+import { type LatticeSpec } from '../../utils/lattice.ts';
 import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
-import { curvePath, linkGeometry } from '../../utils/route.ts';
+import { curvePath, linkGeometry, sceneLinkGeometry } from '../../utils/route.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -66,6 +68,10 @@ export type ControlFrameProps = {
   drag?: Drag;
   /** The bounds a create gesture in flight would land, drawn as a provisional frame. */
   createFrame?: Bounds;
+  /** The gesture in flight would be refused (an overlap on the lattice): its outlines turn red. */
+  blocked?: boolean;
+  /** The scene's lattice, so a selected smart link's handles sit on its gutter route. */
+  lattice?: LatticeSpec;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -95,6 +101,8 @@ export const ControlFrame = memo(
     zoom,
     drag,
     createFrame,
+    blocked,
+    lattice,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -108,6 +116,15 @@ export const ControlFrame = memo(
     const midpointRadius = 4 * unit;
     const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
+    const lanes =
+      lattice && selectedLinks.length > 0
+        ? new Map(
+            sceneLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+              geometry.link.id,
+              geometry,
+            ]),
+          )
+        : undefined;
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
     // Only the node under the pointer: every node's ports at once is a field of dots that hides the
     // diagram the user is drawing, and a link can start from a body now, so they are a refinement
@@ -143,8 +160,9 @@ export const ControlFrame = memo(
               y={bounds.y}
               width={bounds.width}
               height={bounds.height}
-              className='fill-none stroke-primary-500'
+              className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-primary-500')}
               strokeWidth={unit}
+              data-blocked={blocked || undefined}
             />
           );
         })}
@@ -197,7 +215,10 @@ export const ControlFrame = memo(
         )}
         {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
         {selectedLinks.map((link) => {
-          const geometry = capabilities.update ? linkGeometry(scene, registry, link) : undefined;
+          // On a lattice the handles sit on the link's lane, which depends on the links around it.
+          const geometry = capabilities.update
+            ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice))
+            : undefined;
           if (!geometry) {
             return null;
           }
@@ -285,7 +306,8 @@ export const ControlFrame = memo(
             y={createFrame.y}
             width={createFrame.width}
             height={createFrame.height}
-            className='fill-primary-500/10 stroke-primary-500'
+            className={blocked ? 'fill-error-surface stroke-error-border' : 'fill-primary-500/10 stroke-primary-500'}
+            data-blocked={blocked || undefined}
             strokeWidth={unit}
           />
         )}

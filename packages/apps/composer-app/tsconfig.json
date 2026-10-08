@@ -439,6 +439,9 @@
       "path": "../../plugins/plugin-typesafe"
     },
     {
+      "path": "../../plugins/plugin-uml"
+    },
+    {
       "path": "../../plugins/plugin-video"
     },
     {

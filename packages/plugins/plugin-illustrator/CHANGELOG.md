@@ -1,5 +1,93 @@
 # @dxos/plugin-illustrator
 
+## 0.13.0
+
+### Minor Changes
+
+- 014996b: Edge labels sit beside their own route and off group frame borders. The semantic DSL gains soft sides (`A:~left`), group shape (`compact`, `max-width=N`, `diagram aspect=W:H`) and fan-in buses (`edge A, B -> C bus`), and warns about a bus it cannot honour or a group frame an outside relation stretches. Diagnostics measure bound arrows as drawn, count a bus as one connector, and no longer count T-junctions or self-loops as crossings. Node labels wrap, shrink or ellipsize to stay inside their box, and re-rendering a source gives a byte-identical `.dx.svg`.
+- 2d5050d: `SceneSvg`, the SVG renderer for laid-out scenes, is exported as `@dxos/plugin-illustrator/SceneSvg`, so a host can draw an `@dxos/diagram` layout without loading the plugin.
+- 2550779: The diagram DSL gains a semantic layer: `diagram`, `group`, `node` and `edge` statements describe what is related and roughly where, and `Dsl.compile` places and routes the rest. Constraints range from loose to exact — `right-of`, `above`, `same-row` (soft with `~`), grid cells, absolute positions, port sides, `via` waypoints and shared `bus` channels — so a model can write a good-looking diagram directly, without a helper script.
+
+  Edges name UML and ER relationships — `extends`, `implements`, `composes`, `owns`, `depends-on`, `one-to-many`, `many-to-many` — and the renderer draws their line endings (hollow triangle, filled and hollow diamond, crow's foot, dashed lines). Children that extend or implement the same parent sit on one row and meet it through a single trunk and triangle. Mermaid class and ER diagrams carry the same relations through. The illustrator's Constraints story shows each diagram beside its DSL and scores.
+
+  The illustrator's `render-diagrams` task renders `.dx` sources as well as mermaid, writes a PNG beside each file it is given, and runs from source again.
+
+### Patch Changes
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [234ef9c]
+- Updated dependencies [014996b]
+- Updated dependencies [22adb53]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [2550779]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/diagram@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-ui-search@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

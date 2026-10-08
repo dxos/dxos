@@ -14,6 +14,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { File } from '@dxos/types';
 
@@ -77,16 +78,16 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
       {reference && (
         <Field.Root>
           <Field.Label>{t('properties.reference.label')}</Field.Label>
-          <div className='flex w-full gap-1'>
+          <Layout.Flex gap='xs' classNames='w-full'>
             <Input.Root readOnly value={reference} classNames='grow' />
             <SystemButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
-          </div>
+          </Layout.Flex>
         </Field.Root>
       )}
       {url && (
         <Field.Root>
           <Field.Label>{t('properties.url.label')}</Field.Label>
-          <div className='flex w-full gap-1'>
+          <Layout.Flex gap='xs' classNames='w-full'>
             <Input.Root readOnly value={url} classNames='grow' />
             <SystemButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
             <Button.Root
@@ -96,7 +97,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
               disabled={pending}
               onClick={() => void resolve()}
             />
-          </div>
+          </Layout.Flex>
           <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
         </Field.Root>
       )}

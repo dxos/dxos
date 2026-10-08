@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -23,6 +24,8 @@ import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } f
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
 import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
+
+import { testSpaceLayer } from '../brain/testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -61,6 +64,7 @@ const SKILLS = [
 ];
 
 const TestLayer = AssistantTestLayer({
+  extraServices: testSpaceLayer,
   operationHandlers: AgentOperationHandlerSet,
   types: TYPES,
   skills: SKILLS,
@@ -127,7 +131,7 @@ describe('Modes', () => {
         }).pipe(Effect.exit);
         expect(Exit.isFailure(unknown) && String(unknown.cause)).toContain('No mode named "Juggler"');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
   );
@@ -151,7 +155,7 @@ describe('Modes', () => {
           expect((yield* Database.load(memory.body)).content).toBe(body);
         }
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
   );
@@ -185,7 +189,7 @@ describe('Modes', () => {
           expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]),
         );
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
   );

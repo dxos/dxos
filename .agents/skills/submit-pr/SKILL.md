@@ -39,7 +39,8 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 8. **Open the PR** with `gh`. Title uses `scope: description`. Write the
    description with the `pr-description` skill: pick every template that
    applies (summary and safety always), and link any Linear issue as
-   `closes DX-123` or `part of DX-123`.
+   `closes DX-123` or `part of DX-123`. Apply the Safety labels it specifies
+   (`risk: …` always, plus any `breaking:`/`api:`/`tests:`/`revert:`/`perf:`).
    If this work builds on another open PR (or the user asked for a stack), see
    **Stacked PRs** below instead of `gh pr create`.
 9. **Monitor CI every 5 minutes:**
