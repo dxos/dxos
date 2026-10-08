@@ -79,7 +79,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     if (!readonly) {
       return true;
     }
-    return properties.some((prop) => (snapshot as any)?.[prop.name] != null);
+    return properties.some((prop) => Reflect.get(snapshot, prop.name) != null);
   }, [schema, snapshot, readonly]);
 
   const handleSave = useCallback(

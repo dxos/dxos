@@ -38,11 +38,11 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
   const schema = useMemo(() => {
     const ignored = new Set(ignorePaths ?? []);
     const fields: Record<string, Schema.Codec<any, any>> = {};
-    for (const key of Object.keys(snapshot)) {
+    for (const [key, value] of Object.entries(snapshot)) {
       if (isInternalKey(key) || ignored.has(key)) {
         continue;
       }
-      const fieldSchema = schemaForValue((snapshot as any)[key]);
+      const fieldSchema = schemaForValue(value);
       if (fieldSchema) {
         fields[key] = fieldSchema;
       }

@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -134,18 +134,17 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
       Atom.make((get) => {
         const out: Obj.Unknown[] = [];
         const { items } = get(Obj.atomProperty(object, 'spec'));
-        for (const ref of items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
-          const target = get(Obj.atom(ref));
-          if (target == null) {
-            continue;
-          }
+        for (const ref of items) {
+          // The snapshot subscribes to the card (so a soft delete drops it); the board model takes the live object.
+          const snapshot = get(Obj.atom(ref));
+          const target = get(Obj.atomReactive(ref));
           // Drop soft-deleted cards (e.g. Trello-closed cards). The ref
           // stays in `spec.items` so arrangement is preserved, but the card
           // shouldn't render.
-          if (Obj.isDeleted(target)) {
+          if (snapshot == null || target == null || Obj.isDeleted(snapshot)) {
             continue;
           }
-          out.push(target as unknown as Obj.Unknown);
+          out.push(target);
         }
         return out;
       }),
