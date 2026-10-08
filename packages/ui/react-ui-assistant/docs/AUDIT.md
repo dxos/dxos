@@ -194,11 +194,11 @@ Order of work:
    while there.
 3. **Move `Chat.Root`/`Toolbar`/`Content`/`Outline`/`Thread`** out of the plugin, splitting
    `Chat.tsx` at the seam where it touches `@dxos/app-framework` (`useOperationInvoker`, `:10`),
-   `@dxos/assistant-toolkit` (`:11`), `AiChatProcessor`, `TaskSlashCommands`, `SurfaceWidget`. Those
+   `@dxos/assistant-toolkit` (`:11`), `ChatModel`, `TaskSlashCommands`, `SurfaceWidget`. Those
    five stay in the plugin and are injected as props/context. `buildMarkers:359`, `promptTitle:333`,
    `replySnippet:340` are pure and move as-is.
 4. **Move `Chat.Prompt`** — split `ChatPrompt.tsx` into presentational (moves) and wiring
-   (`AiChatProcessor`, `AssistantPreset`, `#hooks`, `useChatVoiceInput` — stays). Without this,
+   (`ChatModel`, `AssistantPreset`, `#hooks`, `useChatVoiceInput` — stays). Without this,
    step 3 drags `@dxos/compute` into `packages/ui`.
 5. **Re-export, don't relocate**, the chat primitives — `Chat.Prompt`/`Chat.Status`/`Chat.Dialog`
    compose from `@dxos/react-ui-chat`, preserving its light dependency set for `composer-crx`.

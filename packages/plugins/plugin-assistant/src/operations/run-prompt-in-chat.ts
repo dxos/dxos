@@ -18,8 +18,8 @@ import { ContentBlock } from '@dxos/types';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
+import { defaultPreset, providerForModel } from '../chat-model/index.ts';
 import { ChatNotSpecifiedError } from '../errors.ts';
-import { defaultPreset, providerForModel } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(

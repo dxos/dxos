@@ -246,21 +246,25 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     );
   }
 
-  subscribeEphemeral(): Stream.Stream<Trace.Message> {
+  subscribeEphemeral({ replay = true }: Process.SubscribeEphemeralOptions = {}): Stream.Stream<Trace.Message> {
     // From the start of the log, matching the local handle: it replays buffered ephemeral events
     // before streaming new ones, which is what lets a UI attach mid-turn and still render it.
     const remoteTrace = this.#remoteTrace;
     if (remoteTrace === undefined) {
-      return this.#readEvents(0).pipe(
+      return (
+        replay ? this.#readEvents(0) : Stream.unwrap(Effect.map(this.#endCursor, (cursor) => this.#readEvents(cursor)))
+      ).pipe(
         Stream.filter((event) => event._tag === 'trace'),
         Stream.map((event) => event.message),
       );
     }
 
-    const replay = this.#readRing(0).pipe(
-      Stream.filter((event) => event._tag === 'trace'),
-      Stream.map((event) => event.message),
-    );
+    const buffered = replay
+      ? this.#readRing(0).pipe(
+          Stream.filter((event) => event._tag === 'trace'),
+          Stream.map((event) => event.message),
+        )
+      : Stream.empty;
 
     // Replay what the host already has, then take the rest as it is PUSHED. Paging the ring for the
     // rest would defeat the point: it is flushed at the end of an invocation, so the turn this
@@ -271,6 +275,9 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // the whole text so far and is applied by message id, so re-applying one is idempotent.
     return Stream.unwrap(
       Effect.gen({ self: this }, function* () {
+        // The live source is filtered by the pid the HOST publishes under; a queued spawn is known
+        // locally by a placeholder until it is delivered, and a subscription under that hears nothing.
+        yield* this.#awaitState((state) => state !== Process.State.STARTING);
         const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message, Cause.Done>(), (queue) =>
           Queue.shutdown(queue),
         );
@@ -289,7 +296,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
         // Lets the forked fiber reach its subscribe before the replay read is issued; a fork alone
         // is only scheduled, so the window this buffering exists to close would still be open.
         yield* Effect.yieldNow;
-        return Stream.concat(replay, Stream.fromQueue(queue));
+        return Stream.concat(buffered, Stream.fromQueue(queue));
       }),
     );
   }
