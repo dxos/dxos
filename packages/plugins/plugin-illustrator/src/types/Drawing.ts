@@ -22,6 +22,8 @@ export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canv
     schema: Schema.String.pipe(Schema.optional),
     /** Diagram parts by id. */
     content: Schema.Record(Schema.String, Schema.Any),
+    /** Named looks the parts share, by id; opaque here like `content`, managed by the renderer's store adapter. */
+    styles: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   }),
 ) {}
 
