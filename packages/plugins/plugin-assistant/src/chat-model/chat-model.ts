@@ -686,10 +686,13 @@ export class ChatModel {
             // A remote agent's trace is relayed over the swarm, which does not preserve order, so a
             // phase or partial older than one already applied is stale rather than news.
             if (Trace.isOfType(Trace.PartialBlock, event)) {
+              // Read before `#isStale` records it: a block can be news for its message yet older than a
+              // phase already shown, which it must not turn back into `generating`.
+              const current = event.timestamp >= this.#appliedAt;
               if (this.#isStale(event.timestamp, event.data.messageId)) {
                 continue;
               }
-              this.#handleEphemeralMessage(event.data);
+              this.#handleEphemeralMessage(event.data, current);
             } else if (Trace.isOfType(Trace.RequestPhase, event)) {
               if (this.#isStale(event.timestamp)) {
                 continue;
@@ -784,11 +787,13 @@ export class ChatModel {
    * against messages already written to the feed queue to handle the race between
    * ephemeral delivery and feed replication.
    */
-  #handleEphemeralMessage(event: Trace.PayloadType<typeof Trace.PartialBlock>) {
+  #handleEphemeralMessage(event: Trace.PayloadType<typeof Trace.PartialBlock>, current = true) {
     // Content arriving is what "generating" means, and deriving it here keeps it out of the agent's
     // streaming pipeline, where the extra yield a trace write costs is observable to the turn's
     // tools. A tool call the agent reports supersedes it for as long as the tool runs.
-    this.#registry.set(this.activity, { phase: 'generating' });
+    if (current) {
+      this.#registry.set(this.activity, { phase: 'generating' });
+    }
 
     const isPending = event.block.pending;
     const message = Obj.make(Message.Message, {

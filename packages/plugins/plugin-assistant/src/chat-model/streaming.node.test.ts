@@ -320,6 +320,9 @@ describe('ChatModel streaming', () => {
           traceMessage([partialBlockEvent(messageId, 'Hello', true, 40)]),
           traceMessage([partialBlockEvent(messageId, 'Hel', true, 35)]),
           traceMessage([partialBlockEvent(messageId, 'Hello world.', false, 50)]),
+          // A tool phase, then a block of a message not seen yet but produced before it.
+          traceMessage([requestPhaseEvent('calling-tool', undefined, 70)]),
+          traceMessage([partialBlockEvent(Obj.ID.random(), 'Earlier', true, 60)]),
         ];
         const stubSession = yield* makeStubSession(chat, feed, batches);
         const observableRegistry = AtomRegistry.make();
@@ -346,8 +349,10 @@ describe('ChatModel streaming', () => {
         yield* Effect.promise(() => chatModel.request({ message: 'Hello?' }));
 
         expect(phases).not.toContain('encoding-prompt');
+        // The older block still streams, but the line keeps naming the tool rather than `generating`.
+        expect(phases.slice(phases.indexOf('calling-tool'))).not.toContain('generating');
         expect(streamed).not.toContainEqual(['Hel']);
-        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Hello world.']);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Hello world.', 'Earlier']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

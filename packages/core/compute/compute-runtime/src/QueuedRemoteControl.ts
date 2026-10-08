@@ -390,8 +390,14 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         }),
 
       submitInput: ({ spaceId, pid, input }) =>
+        // Counted before the enqueue, since the flusher may deliver (and uncount) the command before
+        // this fiber resumes; uncounted again if the durable write dies.
         Effect.sync(() => countInput(localPidOf(pid), 1)).pipe(
-          Effect.andThen(enqueue(localPidOf(pid), newId(), { _tag: 'submitInput', spaceId, pid, value: input })),
+          Effect.andThen(
+            enqueue(localPidOf(pid), newId(), { _tag: 'submitInput', spaceId, pid, value: input }).pipe(
+              Effect.tapCause(() => Effect.sync(() => countInput(localPidOf(pid), -1))),
+            ),
+          ),
         ),
 
       terminate: ({ spaceId, pid }) =>
