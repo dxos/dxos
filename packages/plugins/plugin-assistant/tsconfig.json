@@ -67,6 +67,9 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {
@@ -88,6 +91,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../devtools/devtools"
     },
     {
@@ -104,6 +110,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"
@@ -206,6 +215,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-preview"

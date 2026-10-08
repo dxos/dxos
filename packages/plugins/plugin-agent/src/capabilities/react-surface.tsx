@@ -12,7 +12,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { AgentActivity, AgentKnowledge, AgentPrivateChat, ProfileProperties } from '#containers';
+import { AgentActivity, AgentKnowledge, AgentPrivateChat, BrainStore, ProfileProperties } from '#containers';
 import { AgentCompanion } from '#types';
 
 export default Capability.makeModule(() =>
@@ -45,6 +45,16 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article, Agent.Agent),
         ),
         component: AgentActivity,
+        props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // A debug view of the brain store as held: raw facts, rules, their matching format and outboxes.
+      Surface.create({
+        id: 'agentBrainStore',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, AgentCompanion.BRAIN_STORE),
+          AppSurface.companion(AppSurface.Article, Agent.Agent),
+        ),
+        component: BrainStore,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
