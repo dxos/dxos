@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import * as Instructions from '@dxos/compute/Instructions';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Feed, Filter, Obj } from '@dxos/echo';
@@ -16,6 +17,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
+import { makeRoutine } from '../../util/index.ts';
 import { RoutineForm } from './RoutineForm.tsx';
 
 // Exposes the live automation to the play function (module scope is shared with the story render)
@@ -39,7 +41,7 @@ const withSeededSpace = (seed: (space: Space) => void) =>
   withClientProvider({
     createIdentity: true,
     createSpace: true,
-    types: [Routine.Routine, Trigger.Trigger, Feed.Feed],
+    types: [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed],
     onCreateSpace: async ({ space }) => seed(space),
   });
 
@@ -120,3 +122,18 @@ export const CreateWebhookTrigger: Story = { ...createKindStory('webhook', /^Web
 
 /** Create an Email trigger via the picker. */
 export const CreateEmailTrigger: Story = { ...createKindStory('email', /^Email/), tags: ['!test'] };
+
+/** Switching an enabled routine with no operation to restore leaves it with nothing to run, which the editor flags. */
+export const ActionUnsetWarning: Story = {
+  decorators: [
+    withSeededSpace((space) => {
+      const trigger = Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *') });
+      space.db.add(makeRoutine({ name: 'Digest', instructions: Instructions.make({}), trigger }));
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByText('Operation', {}, { timeout: 10_000 }));
+    await expect(await canvas.findByTestId('routine-form.action-unset')).toBeInTheDocument();
+  },
+};
