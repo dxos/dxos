@@ -6,6 +6,7 @@ import React from 'react';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -34,12 +35,12 @@ export const RepositoryFileView = ({ file }: RepositoryFileViewProps) => {
 
   const imageType = imageTypeForPath(file.path);
   return imageType ? (
-    <div className='dx-expand grid place-items-center overflow-auto p-4'>
+    <Layout.Grid grow center classNames='overflow-auto p-4'>
       <img src={`data:${imageType};base64,${file.content}`} alt={file.path} className='max-w-full' />
-    </div>
+    </Layout.Grid>
   ) : (
-    <div className='dx-expand grid place-items-center p-4 text-fg-muted'>
+    <Layout.Grid grow center classNames='p-4 text-fg-muted'>
       {t('binary-file.message', { size: file.size })}
-    </div>
+    </Layout.Grid>
   );
 };

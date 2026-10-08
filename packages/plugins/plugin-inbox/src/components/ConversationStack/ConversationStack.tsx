@@ -20,6 +20,7 @@ import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import * as Card from '@dxos/react-ui/Card';
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
@@ -415,12 +416,12 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
       data-testid='conversation.summary'
     >
       <Card.Row icon='ph--text-align-left--regular'>
-        <div className='flex items-baseline gap-2 text-sm text-fg-muted'>
+        <Layout.Flex align='baseline' gap='sm' classNames='text-sm text-fg-muted'>
           <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
           <span className='text-fg-subtle truncate' title={summary.model} data-testid='conversation.summary.provenance'>
             {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
           </span>
-        </div>
+        </Layout.Flex>
       </Card.Row>
       <Card.Section classNames='pb-2'>
         <MarkdownViewer content={summary.summary} />
@@ -593,9 +594,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
             {/* The summary is not repeated here: an expanded message shows its body, and the
               conversation's summary is the last tile in the stack. */}
-            <div className='flex flex-col gap-1 min-w-0 pb-1'>
+            <Layout.Flex column gap='xs' classNames='min-w-0 pb-1'>
               <MessageBody message={message} mailbox={mailbox} options={options} />
-            </div>
+            </Layout.Flex>
           </Card.Section>
         </Collapsible.Content>
       </Card.Section>

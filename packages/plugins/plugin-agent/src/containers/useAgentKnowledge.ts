@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import type * as Agent from '@dxos/assistant/Agent';
 import { Filter, Obj, type Ref, Relation } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { useMembers } from '@dxos/halo-react';
 import { EID } from '@dxos/keys';
 import { HasSubject, Organization, Person } from '@dxos/types';
 
@@ -20,6 +21,7 @@ import {
 } from '#components';
 import { FactEntry, Goal, Memory, Profile } from '#types';
 
+import { labelOf } from '../operations/members.ts';
 import { useFactEntries } from './useFactEntries.ts';
 import { useTriggers } from './useTriggers.ts';
 
@@ -119,21 +121,21 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   const { memories: active, nodes, edges, goals: goalItems } = useAtomValue(graphAtom);
 
   // Feed items are immutable, so the entries query alone tracks every change.
-  const { entries } = useFactEntries(agent);
+  const { facts: recorded } = useFactEntries(agent);
+  const members = useMembers(db?.spaceId);
+  const label = useMemo(() => labelOf(members), [members]);
   const facts = useMemo(
     () =>
-      entries
-        .flatMap((entry) =>
-          entry.facts.map((fact): AgentKnowledgeFact => ({
-            id: `${entry.id}:${fact.id}`,
-            text: FactEntry.factText(fact),
-            source: entry.name,
-            speaker: fact.attribution.agent,
-            saidAt: fact.attribution.generatedAtTime,
-          })),
-        )
+      recorded
+        .map(({ entry, fact, pass }): AgentKnowledgeFact => ({
+          id: entry.id,
+          text: FactEntry.factText(fact),
+          source: pass.name,
+          speaker: fact.attribution.agentLabel ?? (fact.attribution.agent && label(fact.attribution.agent)),
+          saidAt: fact.attribution.generatedAtTime,
+        }))
         .sort((left, right) => right.saidAt.localeCompare(left.saidAt)),
-    [entries],
+    [recorded, label],
   );
 
   return { memories: active, facts, goals: goalItems, nodes, edges };

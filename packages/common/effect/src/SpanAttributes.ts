@@ -55,6 +55,12 @@ export const TRIGGER = {
   kind: 'dxos.trigger.kind',
 } as const;
 
+/** Attributes that steer tail sampling. */
+export const SAMPLING = {
+  /** Set on a rare span whose every occurrence is counted, so tail sampling never drops it. */
+  keep: 'dxos.sampling.keep',
+} as const;
+
 /** Attribute naming the operation an invocation runs. */
 export const OPERATION = {
   key: 'dxos.operation.key',

@@ -6,6 +6,7 @@ import React from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '../../meta.ts';
 
@@ -17,7 +18,7 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
   const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
-    <div className='flex flex-col items-center justify-center h-full gap-8'>
+    <Layout.Flex column center gap='2xl' classNames='h-full'>
       <h1 className="font-['Poiret One'] text-5xl" style={{ fontFamily: 'Poiret One' }}>
         composer
       </h1>
@@ -25,6 +26,6 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
       <Button.Root variant='ghost' onClick={onOpenHere}>
         {t('open-in-browser-button.label')}
       </Button.Root>
-    </div>
+    </Layout.Flex>
   );
 };

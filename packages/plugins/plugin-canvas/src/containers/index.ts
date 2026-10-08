@@ -3,3 +3,4 @@
 //
 
 export * from './CanvasArticle/index.ts';
+export * from './CanvasProperties/index.ts';

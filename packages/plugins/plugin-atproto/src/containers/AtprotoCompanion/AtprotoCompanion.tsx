@@ -20,7 +20,6 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 import { type PublishFieldNote } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
@@ -270,11 +269,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 )}
                 {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
                     is a table rather than the `treegrid` this used to claim. Depth is visual indent only. */}
-                <div
-                  role='table'
-                  className='grid gap-x-3'
-                  style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) min-content' }}
-                >
+                <Layout.Grid role='table' cols={['fill', 'fill', 'min']} classNames='gap-x-3'>
                   {fields.map((field) => {
                     const published = field.visibility === 'publish';
                     const mirrored = field.visibility === 'mirror';
@@ -293,27 +288,26 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           typeof publishedValues?.[field.path] === 'string' &&
                           publishedValues[field.path] !== value));
                     return (
-                      <div
+                      <Layout.Grid
                         key={field.path}
                         role='row'
-                        className={mx(
-                          'grid grid-cols-subgrid col-span-full items-center py-0.5',
-                          field.group ? 'font-medium' : 'font-normal',
-                        )}
+                        cols='subgrid'
+                        align='center'
+                        classNames={['py-0.5', field.group ? 'font-medium' : 'font-normal']}
                       >
-                        <div
+                        <Layout.Flex
                           role='rowheader'
-                          className='flex items-center'
+                          align='center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
                           <span className={`truncate text-sm ${field.group || visible ? '' : 'text-fg-muted'}`}>
                             {field.name}
                           </span>
-                        </div>
+                        </Layout.Flex>
                         <div role='cell' className='truncate text-sm text-fg-muted'>
                           {value}
                         </div>
-                        <div role='cell' className='flex shrink-0 items-center justify-end gap-1'>
+                        <Layout.Flex role='cell' align='center' justify='end' gap='xs' classNames='shrink-0'>
                           {!field.group && (
                             <>
                               {diverged && <Tag.Tag hue='warning'>{t('diverged-field.label')}</Tag.Tag>}
@@ -326,11 +320,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                               </Tag.Tag>
                             </>
                           )}
-                        </div>
-                      </div>
+                        </Layout.Flex>
+                      </Layout.Grid>
                     );
                   })}
-                </div>
+                </Layout.Grid>
               </Layout.Container>
             </Layout.Flex>
           </ScrollArea.Viewport>

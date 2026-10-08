@@ -52,11 +52,11 @@ const toDisplayPlugin = (plugin: Plugin.Meta): Plugin.Plugin =>
   }) as Plugin.Plugin;
 
 export type PublicRegistryArticleProps = {
-  id: string;
+  contextId: string;
 };
 
 export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegistryArticleProps>(
-  ({ id, ...props }, forwardedRef) => {
+  ({ contextId, ...props }, forwardedRef) => {
     const { t } = UiHooks.useTranslation(meta.profile.key);
     const manager = PluginManagerProvider.usePluginManager();
     const { invoke } = Hooks.useOperationInvoker();
@@ -187,7 +187,7 @@ export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegis
     return (
       <BaseRegistryArticle
         {...props}
-        id={id}
+        contextId={contextId}
         source='registry'
         plugins={items}
         installed={installedIds}

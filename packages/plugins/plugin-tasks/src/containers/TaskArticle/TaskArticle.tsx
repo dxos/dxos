@@ -146,9 +146,9 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
                   see without dragging the row sideways. */}
-                <div className='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
+                <Layout.Flex wrap align='center' gap='xs' data-testid='tasksPlugin.tags'>
                   <TaskTags task={task} />
-                </div>
+                </Layout.Flex>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the

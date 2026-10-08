@@ -64,9 +64,9 @@ const DefaultStory = () => <FactsStoryRoot layout={CRAWL_LAYOUT} />;
 const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
+    subject: { kind: 'entity', entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
     predicate,
-    object: { entity: object, label: object === 'dxos' ? 'DXOS' : object },
+    object: { kind: 'entity', entity: object, label: object === 'dxos' ? 'DXOS' : object },
   },
   factuality: { value: 'CT+', polarity: '+', confidence },
   attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },

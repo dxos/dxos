@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.11.8",
+  "version": "0.11.10",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -169,6 +169,7 @@
     "@dxos/plugin-trip": "workspace:*",
     "@dxos/plugin-typefully": "workspace:*",
     "@dxos/plugin-typesafe": "workspace:*",
+    "@dxos/plugin-uml": "workspace:*",
     "@dxos/plugin-video": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",

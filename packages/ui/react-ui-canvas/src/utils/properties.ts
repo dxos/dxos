@@ -14,8 +14,14 @@ import { getChecks, getPropertySignatures, pick } from '@dxos/effect/SchemaAST';
 
 type Values = Readonly<Record<string, unknown>>;
 
-const isPlainObject = (value: unknown): value is Values =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+/** A record of fields to merge into; an instance (an ECHO `Ref`, a date) is a value, compared and kept whole. */
+const isPlainObject = (value: unknown): value is Values => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
 
 const isOptional = (ast: SchemaAST.AST) => ast.context?.isOptional ?? false;
 

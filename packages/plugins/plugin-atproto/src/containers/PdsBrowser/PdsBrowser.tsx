@@ -60,13 +60,13 @@ type PaneListProps = {
 
 /**
  * One level of the browser: a selectable list in its own pane beside a detail pane, composed from `OrderedList` and two
- * Panels (master-detail is composed, not a component). The list sizes to its content up to `max-w-xs`; the detail takes
- * the rest and holds the next level.
+ * Panels (master-detail is composed, not a component). The list has a fixed width; the detail takes the rest and holds
+ * the next level.
  */
 const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListProps) => (
   // `overflow-hidden` lets the panes shrink below their content so their own scroll areas engage.
   <Layout.Flex gap='sm' classNames='dx-grow overflow-hidden'>
-    <Panel.Root classNames='shrink-0 w-max max-w-xs'>
+    <Panel.Root classNames='shrink-0 w-xs'>
       <Panel.Body>
         {rows.length === 0 ? (
           <Status.Empty>{emptyLabel}</Status.Empty>
@@ -105,8 +105,8 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
         )}
       </Panel.Body>
     </Panel.Root>
-    <Panel.Root classNames='flex-1 min-w-0'>
-      <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
+    <Panel.Root classNames='flex-1'>
+      <Panel.Body classNames='flex flex-col'>{detail}</Panel.Body>
     </Panel.Root>
   </Layout.Flex>
 );
@@ -315,7 +315,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body classNames='flex flex-col dx-grow py-2'>
+      <Panel.Body classNames='flex flex-col py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <PaneList
           rows={collectionRows}

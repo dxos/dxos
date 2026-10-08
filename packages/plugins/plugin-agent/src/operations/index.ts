@@ -34,5 +34,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.WatchFacts.pipe(Operation.lazyHandler(() => import('./watch-facts.ts'))),
   TriggerOperation.ListTriggers.pipe(Operation.lazyHandler(() => import('./list-triggers.ts'))),
   TriggerOperation.CancelTrigger.pipe(Operation.lazyHandler(() => import('./cancel-trigger.ts'))),
+  TriggerOperation.RunDue.pipe(Operation.lazyHandler(() => import('./run-due.ts'))),
   BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
 ]);

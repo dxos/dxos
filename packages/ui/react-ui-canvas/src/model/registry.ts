@@ -16,18 +16,13 @@
 import type * as Schema from 'effect/Schema';
 import { type ComponentType } from 'react';
 
-import {
-  BoxNodeView,
-  ClassNodeView,
-  EllipseNodeView,
-  NoteNodeView,
-  PortalNodeView,
-} from '../components/SceneLayer/SceneLayer.tsx';
-import { type PartEditing } from '../utils/parts.ts';
-import { DEFAULT_SIZES, createNode } from '../utils/shapes.ts';
+import { type FormFieldMap } from '@dxos/react-ui-form';
+
+import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
+import { type PartEditing, type PartField } from '../utils/parts.ts';
+import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
-  ClassNode,
   EllipseNode,
   type LinkType,
   type Node,
@@ -77,6 +72,7 @@ export type NodeDef = {
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
   create: (props: CreateProps) => Node;
+  /** Size when created, in nominal units: one unit is the drawing's major grid cell. */
   defaultSize: Size;
   /** Explicit port layout; absent, the type gets `portsPerSide` ports spread along each side. */
   ports?: (node: Node) => readonly Port[];
@@ -87,6 +83,10 @@ export type NodeDef = {
   maxSize?: Size;
   /** Double-click opens the node (a portal drills in; a text node edits, later). */
   openable?: boolean;
+  /** The text properties edited in place, in order; the first is the node's main text. */
+  parts?: readonly PartField[];
+  /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
+  fields?: FormFieldMap;
 };
 
 /**
@@ -152,7 +152,8 @@ const MIN_SIZE: Size = { width: 64, height: 32 };
  */
 export const boxPrototype: NodeDefSpec = {
   component: BoxNodeView,
-  defaultSize: DEFAULT_SIZES.rect,
+  parts: [{ field: 'label' }],
+  defaultSize: NOMINAL_SIZES.rect,
   resizable: true,
   minSize: MIN_SIZE,
 };
@@ -175,31 +176,23 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     schema: EllipseNode,
     component: EllipseNodeView,
     create: (props) => createNode({ type: 'ellipse', ...props }),
-    defaultSize: DEFAULT_SIZES.ellipse,
+    defaultSize: NOMINAL_SIZES.ellipse,
     // Only the side centres of the frame lie on the curve.
     portsPerSide: 1,
+    parts: [{ field: 'label' }],
     resizable: true,
     minSize: MIN_SIZE,
   },
-  class: {
-    name: 'Class',
-    icon: 'ph--rows--regular',
-    key: 'C',
-    schema: ClassNode,
-    component: ClassNodeView,
-    create: (props) => createNode({ type: 'class', ...props }),
-    defaultSize: DEFAULT_SIZES.class,
-    resizable: true,
-    minSize: { width: 128, height: 96 },
-  },
+
   note: {
     name: 'Note',
     icon: 'ph--text-t--regular',
     key: 'T',
     schema: NoteNode,
     component: NoteNodeView,
+    parts: [{ field: 'text', multiline: true }],
     create: (props) => createNode({ type: 'note', ...props }),
-    defaultSize: DEFAULT_SIZES.note,
+    defaultSize: NOMINAL_SIZES.note,
     resizable: true,
     minSize: MIN_SIZE,
   },
@@ -211,7 +204,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     schema: PortalNode,
     component: PortalNodeView,
     create: (props) => createNode({ type: 'scene', ...props }),
-    defaultSize: DEFAULT_SIZES.scene,
+    defaultSize: NOMINAL_SIZES.scene,
     minSize: { width: 96, height: 60 },
     openable: true,
   },

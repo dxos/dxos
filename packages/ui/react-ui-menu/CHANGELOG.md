@@ -1,5 +1,34 @@
 # @dxos/react-ui-menu
 
+## 0.13.0
+
+### Minor Changes
+
+- 64f1a7a: The pull request type opens as a triage list of every pull request in the space, showing each one's repository, title, CI checks, tracking tasks and state, ordered by relevance or time; its filter, sort and grouping persist per device. `@dxos/react-ui-menu` gains generic `SortMenu`/`GroupMenu`, `@dxos/react-ui-query` gains `usePersistentQuery`, and `PullRequest` now records GitHub's `createdAt`/`updatedAt`.
+
+### Patch Changes
+
+- ecd099a: A deferred `ActionMenu` (`deferUntilOpen`) no longer builds its action graph until it is first opened, so a list that renders one per row mounts each row without creating a graph per menu.
+- Updated dependencies [d2a6aad]
+- Updated dependencies [cb1e218]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
