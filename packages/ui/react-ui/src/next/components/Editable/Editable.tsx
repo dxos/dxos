@@ -23,6 +23,9 @@ const EDITABLE_INPUT_NAME = 'Editable.Input';
 // parts read does not expose.
 const [EditableActivationProvider, useEditableActivation] = createContext<EditableActivationBinding>(EDITABLE_NAME);
 
+// A controlled field's submit never reaches the machine's commit callback, so Save commits through the hook.
+const [EditableCommitProvider, useEditableCommit] = createContext<{ commit: () => void }>(EDITABLE_NAME);
+
 //
 // Root
 //
@@ -50,7 +53,7 @@ const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
     },
     forwardedRef,
   ) => {
-    const { api, activationProps } = useEditable({
+    const { api, activationProps, commit } = useEditable({
       value,
       defaultValue,
       onValueChange,
@@ -69,7 +72,9 @@ const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
         className={mx(recipes.editable(), classNames)}
         ref={forwardedRef}
       >
-        <EditableActivationProvider {...activationProps}>{children}</EditableActivationProvider>
+        <EditableActivationProvider {...activationProps}>
+          <EditableCommitProvider commit={commit}>{children}</EditableCommitProvider>
+        </EditableActivationProvider>
       </EditablePrimitive.RootProvider>
     );
   },
@@ -128,6 +133,7 @@ type EditableInputProps = ThemedClassName<Omit<ComponentPropsWithRef<'input'>, '
 /** The field shown while editing, focused with the caret at the end, with a save button at its end. */
 const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classNames, ...props }, forwardedRef) => {
   const { editing } = useEditableContext();
+  const { commit } = useEditableCommit(EDITABLE_INPUT_NAME);
   const localRef = useRef<HTMLInputElement | null>(null);
 
   // The machine focuses the input but leaves the caret where the browser puts it, which from the keyboard is the start.
@@ -165,6 +171,7 @@ const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classN
         className={recipes.editableSubmit()}
         aria-label='Save'
         data-testid='editable.save'
+        onClick={() => commit()}
       >
         <Icon.Icon icon='ph--check--bold' />
       </EditablePrimitive.SubmitTrigger>

@@ -49,6 +49,12 @@ describe('layers', () => {
     expect(sceneLayers(added).map((layer) => layer.id)).toEqual(['new', DEFAULT_LAYER.id, 'top']);
   });
 
+  test('a new layer takes a name no other layer has', ({ expect }) => {
+    // Two layers, one already named after the count a new one would otherwise take.
+    const scene = reduceIntent(layered(), { kind: 'layer', layer: { ...DEFAULT_LAYER, name: 'Layer 3' } });
+    expect(createLayer(scene, 'new').name).toBe('Layer 4');
+  });
+
   test('a second layer makes the implicit layer real, so it keeps its elements', ({ expect }) => {
     const scene = layered();
     expect(sceneLayers(scene).map((layer) => layer.id)).toEqual([DEFAULT_LAYER.id, 'top']);

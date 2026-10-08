@@ -202,12 +202,15 @@ for M1–M3.
   keeps only the compute-specific code. What still depends on them, and the steps, are §5.
 
 Rough size: M1 small (types + tests), M2 medium (UI, the largest surface), M3 medium (mostly moves), M4 medium
-(store + plugin), M5 small. Every step is verifiable with the existing stories plus one new story per step.
+(store + plugin), M5 large: six steps, one of them the rewrite of thirty shapes (§5.3). Every step is verifiable with the existing stories plus one new story per step.
 
 ## 5. M5: removing `react-ui-canvas-editor` and `src/archive`
 
 Dependency map as of 2026-10-08 (imports counted per name, `src` only). Nothing outside the packages below imports
-either; the archive is re-exported from the package root (`src/index.ts`) and the `./types` entry point.
+either; the archive is re-exported from the package root (`src/index.ts`) and the `./types` entry point. The editor is
+also a declared workspace dependency (`package.json` and a `tsconfig.json` reference) of `react-ui-canvas-compute`,
+`plugin-conductor` and `plugin-debug`, is listed in `tsconfig.all.json`, and is named in app-framework's
+`vite-plugin/packages.ts`; step 6 removes each.
 
 ### 5.1 Who still uses `src/archive`
 
@@ -245,7 +248,8 @@ either; the archive is re-exported from the package root (`src/index.ts`) and th
    plugin-debug's editor helpers.
 6. **Delete.** Remove `packages/ui/react-ui-canvas-editor`, `src/archive`, the root `src/index.ts` re-export and the
    `./types` entry point of `@dxos/react-ui-canvas` (the root export then is the scene engine); drop the editor from
-   Composer's `optimizeDeps` and the app-framework allowlist. A changeset marks the removal as breaking.
+   Composer's `optimizeDeps`, the app-framework allowlist (`vite-plugin/packages.ts`), `tsconfig.all.json`, and the
+   `package.json` dependency and `tsconfig.json` reference of each consumer above (then `pnpm install`). A changeset marks the removal as breaking.
 
 Order: 1 and 2 are independent of the rest and unblock the archive's removal except for the editor. 3–5 retire the
 editor; 6 needs all of them. Sizes: 1 small, 2 small (a move), 3 large (thirty shapes), 4 medium, 5 small, 6 small.

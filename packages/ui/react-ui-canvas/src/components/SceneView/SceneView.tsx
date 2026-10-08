@@ -1213,7 +1213,7 @@ const SceneViewProperties = ({
     recordScenes(registry, atoms.undo, path[path.length - 1], before);
     registry.set(atoms.selection, new Set([id]));
     registry.set(atoms.point, undefined);
-  }, [registry, projection, selection, store.scenes, atoms.selection, atoms.point, atoms.undo, path]);
+  }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
   if (selection.size === 0) {
     return null;

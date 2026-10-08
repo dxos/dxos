@@ -100,10 +100,15 @@ export const reduceLayerIntent = (scene: Scene, intent: Extract<Intent, { kind: 
   return { ...scene, nodes, links, layers: rest };
 };
 
-/** A new layer below the others, so it ends the top-first list. */
+/** A new layer below the others, so it ends the top-first list, named after the first `Layer <n>` not taken. */
 export const createLayer = (scene: Scene, id: LayerId): Layer => {
   const layers = sceneLayers(scene);
-  return { id, name: `Layer ${layers.length + 1}`, z: between(undefined, layers[0]?.z) };
+  const names = new Set(layers.map((layer) => layer.name));
+  let index = layers.length + 1;
+  while (names.has(`Layer ${index}`)) {
+    index++;
+  }
+  return { id, name: `Layer ${index}`, z: between(undefined, layers[0]?.z) };
 };
 
 /** The layer moved to `index` in the bottom-first order. */
