@@ -148,6 +148,18 @@ describe('Reducer', () => {
       expect(texts(state.entries)).to.deep.eq(['one and two', 'three']);
     });
 
+    test('a compact starting at a queued message leaves the prompt unchanged', ({ expect }) => {
+      const queued = message('queued', user);
+      const reply = message('reply');
+      const { state } = Reducer.run(Reducer.prompt, [
+        message('earlier'),
+        queued,
+        reply,
+        event({ _tag: 'compact', from: queued.id, to: reply.id, summary: text('summary') }),
+      ]);
+      expect(texts(state.entries)).to.deep.eq(['earlier', 'reply']);
+    });
+
     test('a reversed compact range leaves the prompt unchanged', ({ expect }) => {
       const first = message('one');
       const second = message('two');

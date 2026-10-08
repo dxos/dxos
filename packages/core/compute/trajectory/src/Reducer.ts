@@ -222,14 +222,16 @@ const append = (state: PromptState, threadId: Trajectory.EventId | undefined, en
     ? { ...state, entries: [...state.entries, entry] }
     : { ...state, threads: { ...state.threads, [threadId]: [...(state.threads[threadId] ?? []), entry] } };
 
-const compact = (entries: readonly PromptEntry[], payload: Trajectory.Compact, id: Trajectory.EventId) => {
+const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory.EventId) => {
+  const entries = state.entries;
   const first = entries.findIndex((entry) => entry.source.includes(payload.from));
   const last = entries.findLastIndex((entry) => entry.source.includes(payload.to));
-  if (last === -1) {
+  // A `from` still waiting for its consume is not in the prompt yet, so the range cannot be placed.
+  if (last === -1 || (first === -1 && state.held[payload.from])) {
     return entries;
   }
 
-  // A range that starts before the loaded checkpoint is folded from the start of what is held.
+  // A range that starts before the loaded checkpoint is folded from the first entry the state still has.
   const start = first === -1 ? 0 : first;
   if (start > last) {
     return entries;
@@ -288,7 +290,7 @@ export const prompt: Reducer<PromptState> = {
       case 'threadClose':
         return { ...state, threads: omit(state.threads, payload.thread) };
       case 'compact':
-        return event.thread === undefined ? { ...state, entries: compact(state.entries, payload, event.id) } : state;
+        return event.thread === undefined ? { ...state, entries: compact(state, payload, event.id) } : state;
       default:
         return state;
     }
