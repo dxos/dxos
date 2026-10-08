@@ -180,7 +180,7 @@ ListboxLabel.displayName = 'Listbox.Label';
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'gap'> & {
+  Pick<ContainerProps, 'gutter' | 'gap' | 'padBlock'> & {
     /**
      * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
      * composed in `Panel.Body`): the rows then inherit the host's rails (`gutter='inherit'` by default).
@@ -195,7 +195,7 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
 const ListboxViewport = composable<
   HTMLDivElement,
   ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
->(({ gutter, gap, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
+>(({ gutter, gap, padBlock, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
   const api = useListboxContext();
   const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
   const [element, setElement] = useState<HTMLDivElement | null>(null);
@@ -205,7 +205,7 @@ const ListboxViewport = composable<
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
   useRowTabStops(element);
 
-  const { style, ...attributes } = containerAttributes({ gutter, gap, columns });
+  const { style, ...attributes } = containerAttributes({ gutter, gap, columns, padBlock });
   const {
     className,
     style: ownStyle,

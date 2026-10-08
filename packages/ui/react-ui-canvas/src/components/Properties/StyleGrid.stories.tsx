@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type NodeTone } from '../../model/types.ts';
+import { type NodeTone, type StyleHue } from '../../model/types.ts';
 import { TONE_NAMES } from '../../utils/style.ts';
 import { StyleGrid, type StyleGridProps } from './StyleGrid.tsx';
 
@@ -16,7 +16,7 @@ type StoryArgs = Pick<StyleGridProps, 'indeterminate' | 'readonly'>;
 
 /** The grid alone, holding its own pick: each swatch is a hue at a tone, as a node would draw it. */
 const DefaultStory = ({ indeterminate, readonly }: StoryArgs) => {
-  const [hue, setHue] = useState<string>('blue');
+  const [hue, setHue] = useState<StyleHue>('blue');
   const [tone, setTone] = useState<NodeTone>(2);
   return (
     <div className='grid grid-cols-2 gap-4 w-[48rem]'>

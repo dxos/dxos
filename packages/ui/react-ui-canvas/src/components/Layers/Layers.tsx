@@ -147,8 +147,8 @@ export const LayersPanel = ({
         {({ items }) => (
           <OrderedList.Content
             aria-label='Layers'
-            // The gutter is inline only; the same space above and below frames the rows evenly.
-            classNames='py-[var(--dx-gutter)]'
+            // The gutter frames the rows above and below as well as at the sides.
+            padBlock
             onKeyDown={(event) => {
               // Enter on the list (as well as selecting the highlighted row) opens that row's name.
               if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
