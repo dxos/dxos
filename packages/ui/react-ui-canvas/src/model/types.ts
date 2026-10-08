@@ -92,6 +92,12 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
+/** Where text sits across a shape, and down it. */
+export const HORIZONTAL_ALIGNS = ['left', 'center', 'right'] as const;
+export const VERTICAL_ALIGNS = ['top', 'middle', 'bottom'] as const;
+export type HorizontalAlign = (typeof HORIZONTAL_ALIGNS)[number];
+export type VerticalAlign = (typeof VERTICAL_ALIGNS)[number];
+
 /** How a line is drawn: a link's stroke, or a node's border. */
 export const LINE_STYLES = ['solid', 'dashed', 'dotted'] as const;
 
@@ -126,14 +132,14 @@ export const styleFields = {
   guide: Schema.optional(Schema.Boolean),
   /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
+  /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
+  alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
+  /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
+  alignVertical: Schema.optional(Schema.Literals(VERTICAL_ALIGNS).annotate({ title: 'Vertical' })),
 };
 
-/** Presentation choices a node carries: the shape style plus the host's own frame classes. */
-export const NodeStyle = Schema.Struct({
-  ...styleFields,
-  /** Extra classes on the frame, for a host's own look. */
-  className: Schema.optional(Schema.String),
-});
+/** Presentation choices a node carries: the shape style. */
+export const NodeStyle = Schema.Struct(styleFields);
 export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
 
 /** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */

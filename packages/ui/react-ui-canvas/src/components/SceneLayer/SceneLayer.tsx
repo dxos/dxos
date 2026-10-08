@@ -38,7 +38,7 @@ import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
 import { sceneLinkGeometry } from '../../utils/route.ts';
 import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
-import { classedLink, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
+import { alignClasses, classedLink, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
@@ -466,7 +466,8 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
     text={label}
     editing={editing}
     classNames={mx(
-      'dx-cover flex items-center justify-center text-center whitespace-pre-wrap',
+      'dx-cover p-2 whitespace-pre-wrap',
+      alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
       sizeClass(node, 'text-lg'),
     )}
   >
@@ -497,7 +498,15 @@ export const UnknownNodeView = ({ node }: NodeViewProps) => (
 export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
   const text = isNoteNode(node) ? node.text : '';
   return (
-    <TextPart part='text' text={text} editing={editing} classNames='dx-cover p-3 whitespace-pre-wrap'>
+    <TextPart
+      part='text'
+      text={text}
+      editing={editing}
+      classNames={mx(
+        'dx-cover p-3 whitespace-pre-wrap',
+        alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+      )}
+    >
       {text}
     </TextPart>
   );

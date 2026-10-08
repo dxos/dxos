@@ -42,12 +42,15 @@ import {
   type Element,
   LineLink,
   type LinkType,
+  type Node,
+  type NodeStyle,
   SmartLink,
   SplineLink,
   type StyleClass,
   type StyleMap,
   getElement,
   isLink,
+  isNoteNode,
   isPortalNode,
   showsContents,
 } from '../../model/types.ts';
@@ -56,6 +59,7 @@ import { commonSchema, mergeValues, patchValues } from '../../utils/properties.t
 import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
+import { AlignField } from './AlignField.tsx';
 import { ClassField, StyleClassesContext } from './ClassField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
@@ -93,6 +97,7 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 /** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
+  'style.alignHorizontal': AlignField,
   'scene': SceneField,
   'class': ClassField,
 };
@@ -108,6 +113,12 @@ const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
   isLink(element) ? (LINK_SCHEMAS[element.type] ?? LineLink) : (nodeDef(nodes, element)?.schema ?? BaseNode);
 
+/** Where a type places its text unless styled otherwise: a note from the top left, a label in the middle. */
+const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertical'> =>
+  isNoteNode(node)
+    ? { alignHorizontal: 'left', alignVertical: 'top' }
+    : { alignHorizontal: 'center', alignVertical: 'middle' };
+
 /**
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
  * contents read as they look and an unset port count as the type's.
@@ -117,7 +128,7 @@ const formValues = (nodes: NodeRegistry, element: Element, styles: StyleMap): Re
     ? { ...element, style: classedLink(element, styles).style }
     : {
         ...element,
-        style: resolveStyle(classedNode(element, styles).style),
+        style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
       };
@@ -130,6 +141,7 @@ const formValues = (nodes: NodeRegistry, element: Element, styles: StyleMap): Re
 const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.hue': { label: 'Style' },
   'style.tone': { hidden: true },
+  'style.alignVertical': { hidden: true },
   'style.fontSize': { min: 8, max: 80, step: 1 },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
   'scene': { label: 'Scene' },

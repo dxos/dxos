@@ -8,6 +8,7 @@
 //
 
 import {
+  type HorizontalAlign,
   type Link,
   type Node,
   type NodeStyle,
@@ -15,6 +16,7 @@ import {
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
+  type VerticalAlign,
   isEllipseNode,
   isPortalNode,
   showsContents,
@@ -158,7 +160,7 @@ export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
 
 /**
  * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
- * dashed and unfilled, and the host's `className` comes last so it wins.
+ * dashed and unfilled.
  */
 export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
   const style = resolveStyle(node.style);
@@ -181,7 +183,6 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
           : hue.border,
     style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',
     isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
-    style.className ?? '',
   ];
 };
 
@@ -231,3 +232,27 @@ export const splitClassEdit = <T extends object>(
   }
   return { classLook: nextClass, own: nextOwn };
 };
+
+const HORIZONTAL_CLASSES: Record<HorizontalAlign, string> = {
+  left: 'items-start text-left',
+  center: 'items-center text-center',
+  right: 'items-end text-right',
+};
+
+const VERTICAL_CLASSES: Record<VerticalAlign, string> = {
+  top: 'justify-start',
+  middle: 'justify-center',
+  bottom: 'justify-end',
+};
+
+/**
+ * Classes placing a text part in its shape by the style's alignment, else by the type's own (`defaults`): the part
+ * is a column, so `justify` places it down the shape and `items` across it.
+ */
+export const alignClasses = (
+  style: NodeStyle | undefined,
+  defaults: { horizontal: HorizontalAlign; vertical: VerticalAlign },
+): string =>
+  `flex flex-col ${HORIZONTAL_CLASSES[style?.alignHorizontal ?? defaults.horizontal]} ${
+    VERTICAL_CLASSES[style?.alignVertical ?? defaults.vertical]
+  }`;
