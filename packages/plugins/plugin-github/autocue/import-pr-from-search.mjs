@@ -14,7 +14,8 @@
  *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * Record on a fresh profile; the pull request is public, so no GitHub connection is needed.
+ * Record on a fresh profile. GitHub is a Labs plugin, off by default, so setup enables it; the pull
+ * request is public, so no GitHub connection is needed.
  */
 
 /** A public pull request, read anonymously. */
@@ -30,11 +31,52 @@ const INPUT = '[role="dialog"] input >> nth=0';
 /** The imported pull request's title, as the navtree and its plank show it. */
 const TITLE = 'chore: release 1.0.0';
 
+/** Whether the GitHub plugin is on in this profile. */
+const githubEnabled = (page) =>
+  page.evaluate(() =>
+    globalThis.composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.github' && plugin.enabled),
+  );
+
 export const steps = [
+  {
+    name: 'Prep (off camera): enable the GitHub plugin',
+    setup: true,
+    done: ({ page }) => githubEnabled(page),
+    run: async ({ demo, page }) => {
+      // The switch toggles, so a profile that already has the plugin on is left alone.
+      if (await githubEnabled(page)) {
+        return;
+      }
+      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
+      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'github', hud: false });
+      // The switch's input is visually hidden; its parent is the control a person clicks.
+      await demo.click({ selector: 'role=switch[name="GitHub"] >> xpath=..', hud: false });
+      await page.waitForFunction(
+        () => globalThis.composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.github' && plugin.active),
+        undefined,
+        { timeout: 15_000 },
+      );
+    },
+  },
+  {
+    name: 'Prep (off camera): authenticate GitHub reads when a token is available',
+    setup: true,
+    run: async ({ page }) => {
+      // A shared egress IP exhausts GitHub's anonymous limit (60 an hour), which fails the import with 403.
+      const token = process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+      if (!token) {
+        return;
+      }
+      await page.unroute('https://api.github.com/**').catch(() => {});
+      await page.route('https://api.github.com/**', (route) =>
+        route.continue({ headers: { ...route.request().headers(), authorization: `Bearer ${token}` } }),
+      );
+    },
+  },
   {
     name: 'Prep (off camera): dismiss notices and settle on the space',
     setup: true,
-    run: async ({ page }) => {
+    run: async ({ demo, page }) => {
       const notice = page.locator(
         '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
       );
@@ -49,6 +91,9 @@ export const steps = [
       ) {
         await notice.first().click();
       }
+      await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', hud: false });
+      await demo.click({ selector: '[data-testid="spacePlugin.spaceHome"]', hud: false });
+      await page.locator('[data-testid="deck.plank"][data-attendable-id$="/home"]').first().waitFor();
       const close = page.locator('role=button[name="Close companion"]').first();
       if (await close.isVisible().catch(() => false)) {
         await close.click();

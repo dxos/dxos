@@ -734,6 +734,7 @@ test QA-4: Import a pull request from the search dialog
   given:
     - an identity exists
     - space: a space is open
+    - the GitHub plugin is enabled (Plugins › Labs; it is off by default)
     - no PullRequest with owner "dxos", repo "dxos", number 1 exists — ABORT rather than
       deleting one this test did not create
   steps:
