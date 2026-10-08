@@ -61,7 +61,13 @@ import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions, type SpaceDocumentHeads } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  EntityManager,
+  type LoadObjectOptions,
+  type SpaceDocumentHeads,
+  type WorkingSetLink,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -1111,6 +1117,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   allObjectCores() {
     return this._entityManager.allObjectCores();
+  }
+
+  /** Loaded cores whose parent, or relation source or target, is one of `ids` — see {@link EntityManager.coresLinkedTo}. */
+  coresLinkedTo(link: WorkingSetLink, ids: Iterable<string>) {
+    return this._entityManager.coresLinkedTo(link, ids);
   }
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {
