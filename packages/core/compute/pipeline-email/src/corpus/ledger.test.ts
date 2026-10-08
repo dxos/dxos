@@ -62,9 +62,9 @@ const fact = (
 ): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: normalizeEntityId(subject), label: subject },
+    subject: { kind: 'entity', entity: normalizeEntityId(subject), label: subject },
     predicate,
-    object: { entity: normalizeEntityId(object), label: object },
+    object: { kind: 'entity', entity: normalizeEntityId(object), label: object },
     ...(extra?.validTo ? { validTo: extra.validTo } : {}),
   },
   factuality: {

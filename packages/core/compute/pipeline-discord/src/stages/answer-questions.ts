@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { type Stage } from '@dxos/pipeline';
-import { FactStore, type RDF, generateQuery } from '@dxos/pipeline-rdf';
+import { FactStore, RDF, generateQuery } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 import { type StoreError } from '../errors.ts';
@@ -21,12 +21,10 @@ const AnswerShape = Schema.Struct({
   answer: Schema.optional(Schema.String),
 });
 
-const termValue = (term: RDF.Term): string => ('entity' in term ? term.entity : term.literal);
-
 const answerPrompt = (question: string, facts: readonly RDF.Fact[]): string => {
   const lines = facts.map(
     (fact) =>
-      `- ${termValue(fact.assertion.subject)} ${fact.assertion.predicate} ${termValue(fact.assertion.object)}` +
+      `- ${RDF.termValue(fact.assertion.subject)} ${fact.assertion.predicate} ${RDF.termValue(fact.assertion.object)}` +
       ` (source: ${fact.attribution.source})`,
   );
   return trim`

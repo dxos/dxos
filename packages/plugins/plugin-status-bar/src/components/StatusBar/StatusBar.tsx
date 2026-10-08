@@ -5,6 +5,7 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -17,9 +18,9 @@ type StatusBarItemProps = Util.ThemedClassName<PropsWithChildren>;
 const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div {...props} role='status' className={mx('grid place-items-center', classNames)} ref={forwardedRef}>
+      <Layout.Grid {...props} role='status' center classNames={classNames} ref={forwardedRef}>
         {children}
-      </div>
+      </Layout.Grid>
     );
   },
 );
@@ -75,9 +76,9 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 type StartContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+  <Layout.Flex align='center' classNames={['flex-grow space-x-2', classNames]} ref={forwardedRef}>
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 //
@@ -87,9 +88,9 @@ const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames
 type EndContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+  <Layout.Flex align='center' justify='end' classNames={['flex-grow', classNames]} ref={forwardedRef}>
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 //

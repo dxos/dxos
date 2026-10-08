@@ -8,8 +8,8 @@ import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
-import { NodeStyle, type NodeTone } from '../../model/types.ts';
-import { DEFAULT_TONE, STYLE_HUES, type StyleHue, TONE_NAMES, TONES, hueClasses } from '../../utils/style.ts';
+import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '../../model/types.ts';
+import { DEFAULT_TONE, TONE_NAMES, TONES, hueClasses } from '../../utils/style.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
 
@@ -36,6 +36,8 @@ export type StyleGridProps = {
   /** Several nodes disagree: no swatch is selected until one is picked. */
   indeterminate?: boolean;
   readonly?: boolean;
+  /** The rows offered; all tones by default, or one row (e.g. a line's outline colour only). */
+  tones?: readonly NodeTone[];
   onValueChange: (choice: StyleChoice) => void;
 };
 
@@ -43,7 +45,14 @@ export type StyleGridProps = {
  * Each offered hue in a column and its tones down the rows, every swatch drawn with the classes the node
  * itself would take, so a pick is a preview. A hue the grid does not offer, or none, selects nothing.
  */
-export const StyleGrid = ({ hue, tone = DEFAULT_TONE, indeterminate, readonly, onValueChange }: StyleGridProps) => {
+export const StyleGrid = ({
+  hue,
+  tone = DEFAULT_TONE,
+  indeterminate,
+  readonly,
+  tones = TONES,
+  onValueChange,
+}: StyleGridProps) => {
   const selected = indeterminate || !hue ? '' : `${hue}${SEPARATOR}${tone}`;
   return (
     <ToggleGroup.Root
@@ -60,7 +69,7 @@ export const StyleGrid = ({ hue, tone = DEFAULT_TONE, indeterminate, readonly, o
         }
       }}
     >
-      {TONES.flatMap((rowTone) =>
+      {tones.flatMap((rowTone) =>
         STYLE_HUES.map((columnHue) => {
           const key = choiceKey({ hue: columnHue, tone: rowTone });
           const classes = hueClasses(columnHue, rowTone);
@@ -116,3 +125,32 @@ export const StyleGridField: FormFieldRenderer = ({ label, jsonPath, readonly, i
     </Form.Field>
   );
 };
+
+/** The outline row alone: a line takes a hue but no fill, so its colour is the hue's border. */
+const LINE_TONES: readonly NodeTone[] = [0];
+
+/** A line's colour, rendered at `line.hue`: the style grid's outline row, which writes just the hue. */
+export const LineHueField: FormFieldRenderer = ({
+  type,
+  label,
+  jsonPath,
+  readonly,
+  indeterminate,
+  getValue,
+  onValueChange,
+  onBlur,
+}) => (
+  <Form.Field path={jsonPath} label={label} readonly={readonly}>
+    <StyleGrid
+      hue={getValue()}
+      tone={0}
+      tones={LINE_TONES}
+      indeterminate={indeterminate}
+      readonly={!!readonly}
+      onValueChange={({ hue }) => {
+        onValueChange(type, hue);
+        onBlur();
+      }}
+    />
+  </Form.Field>
+);

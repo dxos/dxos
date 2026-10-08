@@ -1,0 +1,31 @@
+diagram flow=down aspect=4:3
+group ingest "Facts (ingest)" {
+  node Source "Source" ref="packages/plugins/plugin-agent/src/operations/read-source.ts"
+  node Extract "Extract facts" ref="packages/core/compute/pipeline-rdf/src/stages/extract-facts.ts"
+  node FactFeed "Fact feed" ref="packages/plugins/plugin-agent/src/types/FactEntry.ts"
+  node Index "Index" ref="packages/core/compute/brain/src/Encoding.ts"
+}
+group compile "Goals (compile)" {
+  node GoalText "Goal text" ref="packages/plugins/plugin-agent/src/types/Goal.ts"
+  node Compile "Compile" ref="packages/core/compute/brain/src/CompilePrompt.ts"
+  node Replay "Check + replay" ref="packages/core/compute/brain/src/Compiler.ts"
+}
+group evaluate "Evaluate" compact {
+  node Rules "GoalRules" ref="packages/core/compute/brain/src/GoalRules.ts"
+  node Thread "Private thread" ref="packages/plugins/plugin-agent/docs/THREADS.md"
+  node Check "checkAction" ref="packages/core/compute/brain/src/GoalRules.ts"
+  node Act "Channels" ref="packages/plugins/plugin-agent/src/operations/send-message.ts"
+  node GoalFeed "Goal feed" ref="packages/plugins/plugin-agent/src/types/FactEntry.ts"
+}
+edge Source -> Extract
+edge Extract -> FactFeed "RDF.Fact"
+edge FactFeed -> Index "cursor"
+edge GoalText -> Compile
+edge Compile -> Replay "Datalog"
+edge Index -> Rules "relations"
+edge Replay -> Rules "activate"
+edge Rules -> Thread "wake"
+edge Thread -> Check "action"
+edge Check -> Act
+edge Thread -> GoalFeed "judgment"
+edge GoalFeed -> Index "facts"

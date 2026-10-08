@@ -25,4 +25,7 @@ export const CanvasSettings = AppCapability.settings(() => import('./settings.ts
   activatesOn: ActivationEvents.Idle,
   provides: [CanvasCapabilities.Settings],
 });
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
+  roles: ['org.dxos.role.objectProperties'],
+});
 export const Translations = AppCapability.translations(translations);

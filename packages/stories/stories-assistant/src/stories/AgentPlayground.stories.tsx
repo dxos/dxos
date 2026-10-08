@@ -63,6 +63,7 @@ const TYPES = [
   HasSubject.HasSubject,
   Memory.Memory,
   FactEntry.FactEntry,
+  FactEntry.ExtractionPass,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,
@@ -250,13 +251,13 @@ export const PlaygroundScripted: Story = {
           return [];
         }
         const entries = await db.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run();
-        return entries.flatMap(({ facts }) => facts);
+        return entries.map(({ fact }) => fact);
       },
       // The rule is Dima's, so the fact is attributed to her line of the transcript.
       (facts) =>
         facts.some(
           ({ assertion, attribution, illocution }) =>
-            assertion.quote?.includes('6pm') && attribution.agent === 'dima' && illocution?.force === 'directive',
+            assertion.quote?.includes('6pm') && attribution.agentLabel === 'Dima' && illocution?.force === 'directive',
         ),
     );
 
@@ -363,7 +364,7 @@ const readQuotes = async (db: Database.Database) => {
     return [];
   }
   const entries = await db.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run();
-  return entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.quote));
+  return entries.map(({ fact }) => fact.assertion.quote);
 };
 
 /** The text of every message the agent posted in Rich's chat; tool calls, which quote the watch's message, are left out. */

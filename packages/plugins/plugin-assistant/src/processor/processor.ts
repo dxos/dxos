@@ -23,6 +23,7 @@ import {
   createSystemPrompt,
   formatSystemPrompt,
 } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
@@ -627,7 +628,7 @@ export class AiChatProcessor {
       const model = chat.session?.model ?? selected;
       return yield* AgentService.getSession(chat, {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
-        location: chat.remote ? 'edge' : 'local',
+        location: Agent.chatLocation(chat),
       });
     });
   }

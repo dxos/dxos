@@ -1,5 +1,11 @@
 # @dxos/effect-atom-solid
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/effect@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

@@ -7,6 +7,7 @@ import React from 'react';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 import { Track } from '#types';
@@ -44,7 +45,7 @@ export const TrackList = ({
 }: TrackListProps) => {
   return (
     <Listbox.Root items={tracks.map((track) => ({ value: track.id, label: track.name }))}>
-      <div className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}>
+      <Layout.Flex column gap='xs' classNames={['p-2 overflow-y-auto', classNames]}>
         <Listbox.Content aria-label='Tracks' classNames='gap-1'>
           {tracks.map((track) => {
             const selected = track.id === selectedTrackId;
@@ -72,7 +73,7 @@ export const TrackList = ({
                   type='button'
                   className={mx(
                     'p-1 rounded text-xs dx-focus-ring',
-                    track.muted ? 'text-amber-500' : 'text-neutral-500 hover:text-neutral-300',
+                    track.muted ? 'text-amber-text' : 'text-fg-subtle hover:text-fg',
                   )}
                   onClick={() => onMute?.(track.id, !track.muted)}
                   aria-label={track.muted ? 'Unmute' : 'Mute'}
@@ -82,7 +83,7 @@ export const TrackList = ({
                 {onRemove && (
                   <button
                     type='button'
-                    className='p-1 rounded text-xs text-neutral-500 dx-focus-ring'
+                    className='p-1 rounded text-xs text-fg-subtle dx-focus-ring'
                     onClick={() => onRemove(track.id)}
                     aria-label='Remove track'
                   >
@@ -99,7 +100,7 @@ export const TrackList = ({
             Add track
           </Button.Root>
         )}
-      </div>
+      </Layout.Flex>
     </Listbox.Root>
   );
 };

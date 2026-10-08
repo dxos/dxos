@@ -81,7 +81,7 @@ describe('compute scene', () => {
     const plain = Object.values(scene.links).find(
       (link) => 'port' in link.target && link.target.port === `input.${DEFAULT_INPUT}`,
     );
-    expect(plain?.directed).toBe(true);
+    expect(plain?.ends).toEqual({ end: 'arrow' });
   });
 
   test('ports follow the anchors: stacked inputs on the west side, outputs east, exact offsets', ({ expect }) => {

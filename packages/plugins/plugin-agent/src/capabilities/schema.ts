@@ -13,6 +13,7 @@ import { AgentChannels, FactEntry, Goal, Memory, Mode, Relay } from '#types';
 export default [
   AgentChannels.AgentChannels,
   FactEntry.FactEntry,
+  FactEntry.ExtractionPass,
   Memory.Memory,
   Goal.Goal,
   Relay.Relay,

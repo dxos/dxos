@@ -48,6 +48,12 @@ export default Capability.makeModule(
               icon: 'ph--pulse--regular',
               data: AgentCompanion.ACTIVITY,
             }),
+            AppNode.makeCompanion({
+              variant: AgentCompanion.BRAIN_STORE,
+              label: ['brain-debug-companion.label', { ns: meta.profile.key }],
+              icon: 'ph--bug--regular',
+              data: AgentCompanion.BRAIN_STORE,
+            }),
           ]),
       }),
     ]);

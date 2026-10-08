@@ -9,11 +9,11 @@
 export const BRAIN_SCENARIO = {
   agent: 'Kai',
   alice: {
-    did: 'did:halo:BALICEALICEALICEALICEALICEALICEALI',
+    did: 'did:halo:BALICEALICEALICEALICEALICEALICEAL',
     ask: 'Keep me posted about what Bob is working on.',
   },
   bob: {
-    did: 'did:halo:BBOBBOBBOBBOBBOBBOBBOBBOBBOBBOBBOB',
+    did: 'did:halo:BBOBBOBBOBBOBBOBBOBBOBBOBBOBBOBBO',
     working: "I'm working on the indexer migration.",
     ask: 'Keep me updated about what Alice is working on.',
   },
