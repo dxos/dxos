@@ -51,6 +51,7 @@ const DefaultStory = () => {
         const id = `layer-${layers.length + 1}`;
         setLayers((layers) => [...layers, { id, name: `Layer ${layers.length + 1}`, z: topZ(layers) }]);
         setActive(id);
+        return id;
       }}
       // In a scene, deleting takes the layer's shapes and merging moves them down; here there are none.
       onDelete={remove}
@@ -84,11 +85,12 @@ export const Test: Story = {
     await userEvent.click(canvas.getByTestId('layers-create'));
     await waitFor(() => expect(names()[0]).toBe('Layer 4'));
 
-    // 3. A double-click renames in place; Enter commits.
-    await userEvent.dblClick(canvas.getByTestId('layer-name-layer-4'));
+    // 3. The new layer's name opens for editing; the green check saves it.
     const input = await canvas.findByTestId('layer-input-layer-4');
+    await waitFor(() => expect(input).toHaveFocus());
     await userEvent.clear(input);
-    await userEvent.type(input, 'Sketch{Enter}');
+    await userEvent.type(input, 'Sketch');
+    await userEvent.click(within(canvas.getByTestId('layer-layer-4')).getByTestId('editable.save'));
     await waitFor(() => expect(names()[0]).toBe('Sketch'));
 
     // 4. The eye shows a hidden layer.

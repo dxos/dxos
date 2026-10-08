@@ -50,6 +50,7 @@
   .dx-editable-preview-icon {
     color: var(--color-fg-subtle);
     visibility: hidden;
+    cursor: pointer;
   }
   .dx-editable-preview:is(:hover, :focus-visible):not([data-disabled]) .dx-editable-preview-icon {
     visibility: visible;
@@ -57,6 +58,19 @@
 
   .dx-editable-input {
     color: var(--color-fg);
+    /* Room for the save button laid over the input's end. */
+    padding-inline-end: var(--dx-block-size);
+  }
+
+  .dx-editable-submit {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
+    color: var(--color-success-text);
+    cursor: pointer;
   }
   .dx-editable-input::placeholder {
     color: var(--color-fg-subtle);

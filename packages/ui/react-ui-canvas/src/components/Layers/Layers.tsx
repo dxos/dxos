@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
@@ -25,25 +25,34 @@ export type LayersPanelProps = Util.ThemedClassName<{
   onRename?: (id: LayerId, name: string) => void;
   /** Moves a layer to `index` in the bottom-first order. */
   onMove?: (id: LayerId, index: number) => void;
-  onCreate?: () => void;
+  /** Adds a layer; the panel opens the name of the one whose id it returns. */
+  onCreate?: () => LayerId | void;
   /** Removes a layer and its shapes; offered while there is more than one. */
   onDelete?: (id: LayerId) => void;
   /** Merges a layer into the one below it; offered for every layer but the bottom one. */
   onMerge?: (id: LayerId) => void;
 }>;
 
-type LayerNameProps = { layer: Layer; readonly?: boolean; onRename?: (name: string) => void };
+type LayerNameProps = {
+  layer: Layer;
+  readonly?: boolean;
+  editing: boolean;
+  onEditingChange: (editing: boolean) => void;
+  onRename?: (name: string) => void;
+};
 
 /**
  * A layer's name, edited in place on a double-click (`Editable`: the input takes the preview's cell, so the row does
  * not move). Enter or leaving it commits, Escape keeps the old name. It is the row's text part, so it carries that
  * part's class for the row's layout.
  */
-const LayerName = ({ layer, readonly, onRename }: LayerNameProps) => (
+const LayerName = ({ layer, readonly, editing, onEditingChange, onRename }: LayerNameProps) => (
   <Editable.Root
     classNames='dx-listbox-item-text'
     value={layer.name}
     activation='dblclick'
+    editing={editing}
+    onEditingChange={onEditingChange}
     disabled={readonly || !onRename}
     onValueChange={(next) => {
       const name = next.trim();
@@ -77,6 +86,8 @@ export const LayersPanel = ({
   onMerge,
 }: LayersPanelProps) => {
   const items = useMemo(() => [...layers].reverse(), [layers]);
+  // The row whose name is open; a new layer opens its own, so it is named as it is made.
+  const [editingId, setEditingId] = useState<LayerId>();
   const active = layers.find((layer) => layer.id === activeProp) ?? layers[layers.length - 1];
   const bottom = layers[0];
   return (
@@ -89,7 +100,12 @@ export const LayersPanel = ({
           label='Add layer'
           disabled={readonly || !onCreate}
           data-testid='layers-create'
-          onClick={onCreate}
+          onClick={() => {
+            const id = onCreate?.();
+            if (id) {
+              setEditingId(id);
+            }
+          }}
         />
         <Button.Root
           variant='ghost'
@@ -124,7 +140,15 @@ export const LayersPanel = ({
             {items.map((layer) => (
               <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
                 <OrderedList.DragHandle />
-                <LayerName layer={layer} readonly={readonly} onRename={(name) => onRename?.(layer.id, name)} />
+                <LayerName
+                  layer={layer}
+                  readonly={readonly}
+                  editing={editingId === layer.id}
+                  onEditingChange={(editing) =>
+                    setEditingId((current) => (editing ? layer.id : current === layer.id ? undefined : current))
+                  }
+                  onRename={(name) => onRename?.(layer.id, name)}
+                />
                 <Button.Root
                   variant='ghost'
                   iconOnly

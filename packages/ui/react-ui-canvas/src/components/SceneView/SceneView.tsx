@@ -1274,6 +1274,7 @@ const SceneViewLayers = ({ classNames = 'absolute bottom-14 right-2 w-64' }: Sce
         const layer = createLayer(scene, createId('layer'));
         setLayer(layer);
         registry.set(atoms.layer, layer.id);
+        return layer.id;
       }}
       onDelete={capabilities.delete ? (id) => projection.apply({ kind: 'removeLayer', id }) : undefined}
       onMerge={(id) => {
