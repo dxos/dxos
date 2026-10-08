@@ -8064,6 +8064,9 @@ importers:
       '@dxos/mcp-client':
         specifier: workspace:*
         version: link:../../core/compute/mcp-client
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -8082,6 +8085,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/plugin-registry':
         specifier: workspace:*
         version: link:../plugin-registry

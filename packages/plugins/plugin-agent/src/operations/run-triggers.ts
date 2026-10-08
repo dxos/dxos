@@ -16,7 +16,7 @@ import { BrainSkill } from '#skills';
 import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
-import { agentId } from './members.ts';
+import { agentId, personDid } from './members.ts';
 import { readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
@@ -75,8 +75,8 @@ export const deliver: (
   const undelivered: string[] = [];
 
   for (const subscription of yield* brain.subscriptions(agent.id)) {
-    const events = yield* brain.take(subscription.id);
-    if (events.length === 0) {
+    const allEvents = yield* brain.take(subscription.id);
+    if (allEvents.length === 0) {
       continue;
     }
     const goal = subscription.goal
@@ -84,6 +84,22 @@ export const deliver: (
       : undefined;
     if (goal && CLOSED.includes(goal.status)) {
       yield* brain.unsubscribe(subscription.id);
+      continue;
+    }
+
+    // Through the database: a subscription read back from the brain carries refs with no resolver of their own.
+    // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
+    const resolved = Option.getOrUndefined(yield* Database.resolve(subscription.then.recipient).pipe(Effect.option));
+    const recipient = Obj.isObject(resolved) ? resolved : undefined;
+    // A watch never tells its recipient what they said themselves: they know, and a watch on a topic they
+    // speak about (or one set up for the wrong person) would otherwise echo their own words back to them.
+    const saidByRecipient = isSaidBy(recipient ? personDid(recipient) : undefined);
+    const events = allEvents.filter((event) => !saidByRecipient(event));
+    if (events.length === 0) {
+      yield* brain.ack(
+        subscription.id,
+        allEvents.map(({ id }) => id),
+      );
       continue;
     }
     // A one-time subscription closes when its outcome happened: compiled rules say so with `achieved`,
@@ -97,10 +113,6 @@ export const deliver: (
 
     const matched = uniqueFacts(events);
     const [first] = matched;
-    // Through the database: a subscription read back from the brain carries refs with no resolver of their own.
-    // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
-    const resolved = Option.getOrUndefined(yield* Database.resolve(subscription.then.recipient).pipe(Effect.option));
-    const recipient = Obj.isObject(resolved) ? resolved : undefined;
     const text = yield* composeUpdate({
       agentName: agent.name ?? 'Agent',
       recipientName: recipient ? Profile.displayName(recipient) : 'the requester',
@@ -114,6 +126,10 @@ export const deliver: (
           : (subscription.request ?? subscription.then.message),
       ),
     });
+    // Composing is a model call, long enough for the watch to be cancelled meanwhile (e.g. set up for the wrong person).
+    if (!closes && !(yield* brain.subscriptions(agent.id)).some(({ id }) => id === subscription.id)) {
+      continue;
+    }
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
       recipient: recipient ? Ref.make(recipient) : subscription.then.recipient,
@@ -126,7 +142,7 @@ export const deliver: (
       // Acknowledged even when undelivered: the failure is reported to this turn, and a retry would resend on every turn.
       yield* brain.ack(
         subscription.id,
-        events.map(({ id }) => id),
+        allEvents.map(({ id }) => id),
       );
     } else if (goal) {
       Obj.update(goal, (goal) => {
@@ -138,6 +154,12 @@ export const deliver: (
   yield* Database.flush();
   return { fired, undelivered };
 });
+
+/** Whether an event rests only on facts the identity stated; a wake the clock caused (no facts) never does. */
+const isSaidBy =
+  (did: string | undefined) =>
+  ({ facts }: BrainService.Event): boolean =>
+    did !== undefined && facts.length > 0 && facts.every(({ attribution }) => attribution.agent === did);
 
 /** The facts behind the events, each once, in the order they were queued. */
 const uniqueFacts = (events: readonly BrainService.Event[]): RDF.Fact[] => {
