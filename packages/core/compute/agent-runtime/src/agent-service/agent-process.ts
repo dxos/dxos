@@ -64,6 +64,14 @@ export interface AgentProcessOptions {
   defaultModel?: DXN.DXN;
 
   /**
+   * Stay resident (IDLE) once the work is done rather than succeeding, so the next prompt lands on this
+   * process instead of a new one. For a host where a spawn is expensive — on EDGE it is a fresh Durable
+   * Object that opens the space and loads the toolkit before the turn can start.
+   * @default false
+   */
+  resident?: boolean;
+
+  /**
    * The catalog's shared model ids are served by several providers, so resolution needs the provider
    * alongside the id; without it a local model id cannot be claimed by any resolver.
    */
@@ -291,6 +299,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // conversational agent.
         const strategy = Option.fromNullishOr(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
+        // Background end-request hooks still running as children; persisted so a rehydrated process
+        // still waits for them, and so it knows the request they belong to has already ended.
+        let asyncHooks: Process.ID[] = [...(yield* AsyncHooksCell.get)];
+        // Exits of children this process did not recognise yet: child events run concurrently with
+        // the handler, so a background hook can exit before its pid is registered below.
+        const untrackedExits = new Set<Process.ID>();
 
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
@@ -311,12 +325,22 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           yield* SkillHooks.runHooks({
             skills: session.getSkills(),
             phase: 'end-request',
-            invoke: (operation, input) =>
+            invoke: (operation, input, hook) =>
               Effect.gen(function* () {
                 const handle = yield* Process.spawn(OperationProcess.make(operation), input, {
                   environment: { conversation: Obj.getURI(feed) },
                   traceMeta: { conversation: Ref.make(feed) },
                 });
+                if (hook.async) {
+                  if (untrackedExits.delete(handle.pid)) {
+                    return;
+                  }
+                  // Not awaited, so the request settles now; the child is linked, so its exit wakes
+                  // `onChildEvent`, which completes the process once every background hook is done.
+                  asyncHooks.push(handle.pid);
+                  yield* AsyncHooksCell.set(asyncHooks);
+                  return;
+                }
                 // A child failure surfaces in the Effect channel, so the outer `Effect.orDie` (and the
                 // hook runner's `catchAllCause`) handle it instead of it being silently discarded.
                 yield* Process.awaitOutput(handle);
@@ -331,6 +355,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // prompt that spawned it arrives, and `submitInput` then drops that prompt on a finished
         // handle, leaving the reader with no reply and no error.
         let turnRan = false;
+
+        // Whether this request's end-request hooks have fired; reset by every turn, so a request
+        // continued by a hook gets its own hooks when it ends. A rehydrated process with background
+        // hooks still running has already fired them.
+        let endHooksFired = asyncHooks.length > 0;
 
         // Queue entries this incarnation wrote but has not yet read back. A hosted process's queue
         // read is served by the space INDEX, which is eventually consistent: the agent appends a
@@ -375,7 +404,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               return;
             }
 
-            if (!turnRan) {
+            if (!turnRan && !endHooksFired) {
               // Idle, not done: stay resident so the prompt this process was spawned for can still
               // land. Ahead of the hooks below, which are end-of-REQUEST hooks — there has been no
               // request to end. Nothing is scheduled; the next `onInput` arms the alarm.
@@ -383,14 +412,29 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               return;
             }
 
-            // The hook may enqueue work (e.g. a plan continuation reminder) via HarnessService Tier B,
-            // which appends to the feed queue; re-check before succeeding so the turn is not dropped.
-            yield* runEndRequestHooks;
-            const after = yield* sessionStore.loadPending(feed);
-            if (pendingWork(after)) {
-              log('agent work enqueued by end-request hook, continuing');
-              yield* reconcileAlarmWith(after);
-              yield* reportSleeping(after);
+            if (!endHooksFired) {
+              endHooksFired = true;
+              // The hook may enqueue work (e.g. a plan continuation reminder) via HarnessService Tier B,
+              // which appends to the feed queue; re-check before succeeding so the turn is not dropped.
+              yield* runEndRequestHooks;
+              const after = yield* sessionStore.loadPending(feed);
+              if (pendingWork(after)) {
+                log('agent work enqueued by end-request hook, continuing');
+                yield* reconcileAlarmWith(after);
+                yield* reportSleeping(after);
+                return;
+              }
+            }
+
+            if (asyncHooks.length > 0) {
+              // Resident rather than done: the linked children keep the process HYBERNATING, which
+              // `runUntilSettled` treats as settled, so the reader is not held up by them.
+              log('awaiting background end-request hooks', { count: asyncHooks.length });
+              return;
+            }
+
+            if (options.resident) {
+              log('agent work complete, staying resident');
               return;
             }
 
@@ -450,9 +494,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               markWork('agent.wake');
 
               // Earliest point the agent can report to a reader who is already waiting: draining the
-              // queue below reads the feed, which is itself part of the wait. An empty wake emits it
-              // too, but that path returns in milliseconds and the turn settling clears the line.
-              yield* Trace.emitRequestPhase('preparing');
+              // queue below reads the feed, which is itself part of the wait. Only for a wake with known
+              // work — the re-check after every turn finds none, and on a hosted agent that read takes
+              // long enough for the line to read as another request starting after the reply.
+              const announced = toolResults.length > 0 || unseenWriteIds.size > 0;
+              if (announced) {
+                yield* Trace.emitRequestPhase('preparing');
+              }
 
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
@@ -562,6 +610,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 }
               }
 
+              if (!announced) {
+                yield* Trace.emitRequestPhase('preparing');
+              }
+
               // The MCP servers are read concurrently with the writes below: neither depends on the
               // other, and each is a round trip to the database that the turn would otherwise wait on in series.
               const [mcpServers] = yield* Effect.all(
@@ -611,6 +663,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 );
               log('end request');
               turnRan = true;
+              endHooksFired = false;
               yield* ToolResultsCell.set(toolResults);
 
               // Ack only now: the turn is what the queue entry was for, so a process that dies before
@@ -658,6 +711,18 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           ),
           onChildEvent: Effect.fnUntraced(function* (event) {
             log('childEvent', { event });
+            if (event._tag === 'exited' && asyncHooks.includes(event.pid)) {
+              asyncHooks = asyncHooks.filter((pid) => pid !== event.pid);
+              yield* AsyncHooksCell.set(asyncHooks);
+              const manager = yield* Process.ManagerService;
+              const exit = yield* manager.attach(event.pid).pipe(Effect.flatMap(Process.awaitOutput), Effect.exit);
+              // A failed background hook is reported and dropped, like a failed inline hook.
+              if (Exit.isFailure(exit)) {
+                log.warn('background end-request hook failed', { pid: event.pid });
+              }
+              yield* maybeComplete;
+              return;
+            }
             if (event._tag === 'exited') {
               // A delegated sub-agent finished: read its result and hand it to the strategy (which
               // updates the work item and notifies the user). Unlike tool results, this does not
@@ -741,6 +806,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 log('agent onChildEvent alarm scheduled', { depth: toolResults.length });
               } else {
                 log.verbose('childEvent ignored non-tool call and not a delegation', { pid: event.pid });
+                untrackedExits.add(event.pid);
               }
             }
           }),
@@ -791,6 +857,12 @@ type Delegation = Schema.Schema.Type<typeof Delegation>;
 const DelegationsCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
+).pipe(StorageService.withDefault(() => []));
+
+/** Pids of background ({@link Skill.Hook.async}) end-request hooks the process is waiting on. */
+const AsyncHooksCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Array(Process.ID).pipe(Schema.mutable)),
+  'asyncHooks',
 ).pipe(StorageService.withDefault(() => []));
 
 /**

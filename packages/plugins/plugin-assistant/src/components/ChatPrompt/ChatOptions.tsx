@@ -45,7 +45,7 @@ import {
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
-import { resolveProvider } from '../../processor/index.ts';
+import { resolveProvider } from '../../chat-model/index.ts';
 import { agentOptions } from '../../util/agent-options.ts';
 
 const styles = {
