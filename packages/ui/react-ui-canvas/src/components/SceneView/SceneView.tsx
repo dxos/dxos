@@ -11,7 +11,7 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
 import type * as Util from '@dxos/react-ui/Util';
@@ -91,6 +91,9 @@ const DEFAULT_MARGIN = 2;
 const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
+/** How long a move's pointer rests before the shapes snap to where they will land. */
+const SETTLE_MS = 300;
+
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
@@ -414,6 +417,18 @@ const SceneViewRoot = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
   // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
+  // A move follows the pointer while it moves; once it rests for `SETTLE_MS`, the shapes snap to where they will land.
+  const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    setSettled(false);
+    if (!moveRaw) {
+      return;
+    }
+    const timer = setTimeout(() => setSettled(true), SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [moveRaw?.x, moveRaw?.y]);
+
   const { displayScene, blocked, landing } = useMemo<{
     displayScene: Scene;
     blocked: boolean;
@@ -439,11 +454,13 @@ const SceneViewRoot = ({
       const moved = copy
         ? Object.values(landed.displayScene.nodes).filter((node) => !scene.nodes[node.id])
         : ids.flatMap((id) => landed.displayScene.nodes[id] ?? []);
-      return {
-        displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
-        blocked: landed.blocked,
-        landing: moved.map(nodeBounds),
-      };
+      return settled
+        ? { displayScene: landed.displayScene, blocked: landed.blocked }
+        : {
+            displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
+            blocked: landed.blocked,
+            landing: moved.map(nodeBounds),
+          };
     }
     if (drag?.kind === 'resize') {
       return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
@@ -481,7 +498,7 @@ const SceneViewRoot = ({
       };
     }
     return { displayScene: scene, blocked: false };
-  }, [scene, drag, createPreview, projection, minor]);
+  }, [scene, drag, settled, createPreview, projection, minor]);
 
   /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
   const createFrame = useMemo(() => {
