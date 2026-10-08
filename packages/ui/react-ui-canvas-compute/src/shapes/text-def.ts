@@ -5,10 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { TextComponent } from './Text.tsx';
 
 // Kept out of `Text.tsx`: react-refresh only fast-refreshes a module whose
@@ -27,12 +25,14 @@ export type CreateTextProps = CreateShapeProps<TextShape>;
 export const createText = (props: CreateTextProps) =>
   createShape<TextShape>({ type: 'text', size: { width: 384, height: 384 }, ...props });
 
-export const textShape: ShapeDef<TextShape> = {
+export const textNodeDef = defineComputeNode<TextShape>({
   type: 'text',
   name: 'Text',
   icon: 'ph--article--regular',
+  group: 'Outputs',
+  schema: withZ(TextShape),
   component: TextComponent,
-  createShape: createText,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+  create: createText,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('input')]: { x: -1, y: 0 } }),
   resizable: true,
-};
+});

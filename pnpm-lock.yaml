@@ -22229,6 +22229,15 @@ importers:
 
   packages/ui/react-ui-canvas-compute:
     dependencies:
+      '@codemirror/lang-json':
+        specifier: 'catalog:'
+        version: 6.0.2
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -22286,6 +22295,9 @@ importers:
       '@dxos/react-ui-canvas-editor':
         specifier: workspace:*
         version: link:../react-ui-canvas-editor
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
       '@dxos/react-ui-experimental':
         specifier: workspace:*
         version: link:../react-ui-experimental
@@ -22295,6 +22307,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

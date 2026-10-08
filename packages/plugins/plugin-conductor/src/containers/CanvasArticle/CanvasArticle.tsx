@@ -23,11 +23,10 @@ import {
   ComputeGraphController,
   boardSceneId,
   computeNodeRegistry,
-  computeShapes,
   createComputeProjection,
   createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
-import { type CanvasBoard, KeyboardContainer, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard, KeyboardContainer } from '@dxos/react-ui-canvas-editor';
 import {
   type FreehandProjectionOptions,
   SceneView,
@@ -61,7 +60,6 @@ type CanvasSceneProps = Pick<CanvasArticleProps, 'role' | 'subject'> & { control
 const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   const id = Obj.getURI(subject);
   const registry = useRegistry();
-  const shapeRegistry = useMemo(() => new ShapeRegistry(computeShapes), []);
   const store = useMemo(() => createEchoStore(subject), [subject]);
   const sceneId = useMemo(() => boardSceneId(subject), [subject]);
   const atoms = useMemo(() => createSceneViewAtoms(sceneId), [sceneId]);
@@ -89,7 +87,7 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   const Root = role === AppSurface.Section.role ? Container : Fragment;
 
   return (
-    <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
+    <ComputeContext.Provider value={{ controller, resize }}>
       <Root>
         <KeyboardContainer id={id}>
           <SceneView.Root

@@ -6,12 +6,12 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import * as Icon from '@dxos/react-ui/Icon';
 
+import { type ComputeNodeViewProps } from './common/index.ts';
 import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 
-export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
+export const GptRealtimeComponent = ({ node: shape }: ComputeNodeViewProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const config = useConfig();

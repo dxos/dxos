@@ -5,9 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { SwitchComponent } from './Switch.tsx';
 
 // Kept out of `Switch.tsx`: react-refresh only fast-refreshes a module whose
@@ -26,11 +25,13 @@ export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 export const createSwitch = (props: CreateSwitchProps) =>
   createShape<SwitchShape>({ type: 'switch', size: { width: 64, height: 64 }, ...props });
 
-export const switchShape: ShapeDef<SwitchShape> = {
+export const switchNodeDef = defineComputeNode<SwitchShape>({
   type: 'switch',
   name: 'Switch',
   icon: 'ph--toggle-left--regular',
+  group: 'Inputs',
+  schema: withZ(SwitchShape),
   component: SwitchComponent,
-  createShape: createSwitch,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-};
+  create: createSwitch,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+});

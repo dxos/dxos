@@ -5,26 +5,27 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import {
-  type ShapeComponentProps,
-  TextBox,
-  type TextBoxControl,
-  type TextBoxProps,
-} from '@dxos/react-ui-canvas-editor';
 import * as Field from '@dxos/react-ui/Field';
 import * as Input from '@dxos/react-ui/Input';
 import { safeParseJson } from '@dxos/util';
 
 import { useComputeNodeState } from '../hooks/index.ts';
-import { Box, TypeSelect } from './common/index.ts';
+import {
+  Box,
+  type ComputeNodeViewProps,
+  TextBox,
+  type TextBoxControl,
+  type TextBoxProps,
+  TypeSelect,
+} from './common/index.ts';
 import { type ConstantShape } from './constant-def.tsx';
 
 //
 // Component
 //
 
-export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
-  TextBoxProps & { title?: string; chat?: boolean };
+export type ConstantComponentProps = ComputeNodeViewProps<ConstantShape> &
+  Pick<TextBoxProps, 'placeholder'> & { title?: string };
 
 const inferType = (value: any): ComputeValueType | undefined => {
   if (typeof value === 'string') {
@@ -38,7 +39,7 @@ const inferType = (value: any): ComputeValueType | undefined => {
   }
 };
 
-export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
+export const ConstantComponent = ({ node: shape, title, placeholder }: ConstantComponentProps) => {
   const { node } = useComputeNodeState(shape);
   const [type, setType] = useState(inferType(node.value) ?? ComputeValueType.literals[0]);
   const inputRef = useRef<TextBoxControl>(null);
@@ -68,10 +69,15 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   return (
     <Box shape={shape} title={title} status={<TypeSelect value={type} onValueChange={setType} />}>
       {(type === 'string' || type === 'number') && (
-        <TextBox {...props} ref={inputRef} value={node.value} onEnter={handleEnter} />
+        <TextBox placeholder={placeholder} ref={inputRef} value={node.value} onEnter={handleEnter} />
       )}
       {type === 'object' && (
-        <TextBox {...props} ref={inputRef} value={JSON.stringify(node.value, null, 2)} language={'json'} />
+        <TextBox
+          placeholder={placeholder}
+          ref={inputRef}
+          value={JSON.stringify(node.value, null, 2)}
+          language={'json'}
+        />
       )}
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
