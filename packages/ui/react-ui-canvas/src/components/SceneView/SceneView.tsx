@@ -35,6 +35,7 @@ import {
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
+  type Bounds,
   type Camera,
   DEFAULT_GRID,
   type ElementId,
@@ -43,6 +44,7 @@ import {
   MAJOR_GRID_RATIO,
   type Node,
   type NodeType,
+  type Point,
   type Scene,
   type SceneId,
   isPointEndpoint,
@@ -412,18 +414,36 @@ const SceneViewRoot = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
   // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  const { displayScene, blocked } = useMemo<{ displayScene: Scene; blocked: boolean }>(() => {
+  const { displayScene, blocked, landing } = useMemo<{
+    displayScene: Scene;
+    blocked: boolean;
+    /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
+    landing?: Bounds[];
+  }>(() => {
     const preview = (intent: Intent) => {
       const constrained = projection.constrain ? projection.constrain(intent) : intent;
       return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
     };
     if (drag?.kind === 'move') {
       // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
-      let next = 0;
-      const copy = drag.copy
-        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
-        : undefined;
-      return preview(copy ? copy.intent : { kind: 'move', ids: drag.ids, delta: drag.delta });
+      const { ids, copy } = drag;
+      const moveBy = (delta: Point): Intent => {
+        let next = 0;
+        const duplicate = copy
+          ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
+          : undefined;
+        return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
+      };
+      // The nodes follow the pointer smoothly; the frames they will snap to on the drop are drawn under them.
+      const landed = preview(moveBy(drag.delta));
+      const moved = copy
+        ? Object.values(landed.displayScene.nodes).filter((node) => !scene.nodes[node.id])
+        : ids.flatMap((id) => landed.displayScene.nodes[id] ?? []);
+      return {
+        displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
+        blocked: landed.blocked,
+        landing: moved.map(nodeBounds),
+      };
     }
     if (drag?.kind === 'resize') {
       return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
@@ -748,6 +768,7 @@ const SceneViewRoot = ({
       tool={tool}
       debug={debug}
       createFrame={createFrame}
+      landing={landing}
       handlers={handlers}
       select={select}
       toolbarActions={toolbarActions}
@@ -847,6 +868,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     drag,
     debug,
     createFrame,
+    landing,
     handlers,
     select,
     navigating,
@@ -920,6 +942,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           drag={drag}
           capabilities={capabilities}
           createFrame={createFrame}
+          landing={landing}
           blocked={blocked}
           lattice={latticeOn ? projection.lattice : undefined}
           onHandlePointerDown={onHandlePointerDown}

@@ -80,6 +80,8 @@ export type SceneViewContextValue = {
 
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;
+  /** Where the nodes of a move in flight will land, while they follow the pointer. */
+  landing: readonly Bounds[] | undefined;
   handlers: ElementHandlers;
   select: (ids: Iterable<ElementId>) => void;
   toolbarActions: ToolbarActions;

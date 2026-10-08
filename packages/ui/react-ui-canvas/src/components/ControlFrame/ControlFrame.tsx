@@ -68,6 +68,8 @@ export type ControlFrameProps = {
   drag?: Drag;
   /** The bounds a create gesture in flight would land, drawn as a provisional frame. */
   createFrame?: Bounds;
+  /** Where the nodes of a move in flight will land, drawn under them as they follow the pointer. */
+  landing?: readonly Bounds[];
   /** The gesture in flight would be refused (an overlap on the lattice): its outlines turn red. */
   blocked?: boolean;
   /** The scene's lattice, so a selected smart link's handles sit on its gutter route. */
@@ -101,6 +103,7 @@ export const ControlFrame = memo(
     zoom,
     drag,
     createFrame,
+    landing,
     blocked,
     lattice,
     onHandlePointerDown,
@@ -299,6 +302,20 @@ export const ControlFrame = memo(
             strokeWidth={unit}
           />
         )}
+        {landing?.map((frame, index) => (
+          <rect
+            key={index}
+            data-testid='landing-frame'
+            x={frame.x}
+            y={frame.y}
+            width={frame.width}
+            height={frame.height}
+            className={blocked ? 'fill-error-surface stroke-error-border' : 'fill-primary-500/10 stroke-primary-500'}
+            data-blocked={blocked || undefined}
+            strokeWidth={unit}
+            strokeDasharray={`${4 * unit} ${4 * unit}`}
+          />
+        ))}
         {createFrame && (
           <rect
             data-testid='create-frame'
