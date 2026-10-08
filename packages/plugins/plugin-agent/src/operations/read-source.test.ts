@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -22,8 +23,9 @@ import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import { AgentOperation, FactEntry, Goal, Memory, MemoryOperation, Mode, Relay } from '#types';
+import { AgentOperation, ChatParticipant, FactEntry, Goal, Memory, MemoryOperation, Mode, Relay } from '#types';
 
+import { TEST_MEMBERS, testSpaceLayer } from '../brain/testing.ts';
 import { forgetFact } from './annotations.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -64,6 +66,7 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 };
 
 const TestLayer = AssistantTestLayer({
+  extraServices: testSpaceLayer,
   operationHandlers: AgentOperationHandlerSet,
   types: [
     Agent.Agent,
@@ -93,7 +96,13 @@ describe('ReadSource', () => {
     "appends the transcript's facts, attributed to their speakers, to its annotation feed",
     Effect.fnUntraced(
       function* ({ expect }) {
-        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dima',
+            preferredName: 'Dima',
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: TEST_MEMBERS.dima }],
+          }),
+        );
         const document = yield* Database.add(Markdown.make({ name: 'CI triage', content: TRANSCRIPT }));
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
@@ -121,7 +130,13 @@ describe('ReadSource', () => {
         expect(entries.map(({ fact }) => fact.pass)).toEqual([pass.id, pass.id, pass.id]);
         expect(Math.max(...entries.map(Feed.getPosition))).toBeLessThan(Feed.getPosition(pass));
         const owns = entries.find(({ fact }) => fact.assertion.predicate === 'owns')?.fact;
-        expect(owns?.attribution).toMatchObject({ agent: 'dima', source: Obj.getURI(document) });
+        expect(owns?.attribution).toMatchObject({
+          agent: TEST_MEMBERS.dima,
+          agentLabel: 'Dima',
+          source: Obj.getURI(document),
+        });
+        // A member named in a fact is keyed by their DID; the name stays the label.
+        expect(owns?.assertion.subject).toEqual({ kind: 'entity', entity: TEST_MEMBERS.dima, label: 'Dima' });
         expect(owns?.attribution.generatedAtTime).toBeTypeOf('string');
         expect(entries.find(({ fact }) => fact.assertion.predicate === 'reviews')?.fact.illocution?.force).toBe(
           'commissive',
@@ -142,7 +157,7 @@ describe('ReadSource', () => {
         expect(yield* Feed.query(feed, Filter.type(FactEntry.FactEntry)).run).toHaveLength(6);
         expect(yield* Feed.query(feed, Filter.type(FactEntry.ExtractionPass)).run).toHaveLength(2);
 
-        // Recall finds the facts about a person, or said by them, by their name; Josiah's are left out.
+        // Recall finds the facts about a person, or said by them, by their DID; Josiah's are left out.
         const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dima) });
         expect(recalled.facts.map(({ fact }) => fact).sort()).toEqual([
           'Dima owns indexer',
@@ -150,11 +165,11 @@ describe('ReadSource', () => {
           'race is in v12 index migration',
           'race is in v12 index migration',
         ]);
-        expect(recalled.facts[0]).toMatchObject({ speaker: 'dima', sourceName: 'CI triage' });
+        expect(recalled.facts[0]).toMatchObject({ speaker: 'Dima', sourceName: 'CI triage' });
         const searched = yield* Operation.invoke(MemoryOperation.Recall, { query: 'migration', limit: 1 });
         expect(searched.facts.map(({ fact }) => fact)).toEqual(['race is in v12 index migration']);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -187,7 +202,7 @@ describe('ReadSource', () => {
         const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
         const [entry] = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
         expect(entry.fact.attribution).toMatchObject({
-          agent: 'dima',
+          agent: TEST_MEMBERS.dima,
           source: Obj.getURI(message),
           generatedAtTime: message.created,
         });
@@ -214,7 +229,7 @@ describe('ReadSource', () => {
         const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
         expect(entries.map(({ fact }) => fact.assertion.predicate).sort()).toEqual(['owns', 'reviews']);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -240,9 +255,9 @@ describe('ReadSource', () => {
         yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
         const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
         const [entry] = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entry.fact.attribution.agent).toBe('dima');
+        expect(entry.fact.attribution.agent).toBe('did:halo:dima');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -284,7 +299,7 @@ describe('ReadSource', () => {
           'Dima owns indexer',
         ]);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -315,7 +330,7 @@ describe('ReadSource', () => {
           'race is in v12 index migration',
         ]);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -331,7 +346,7 @@ describe('ReadSource', () => {
         );
         expect(Exit.isFailure(exit)).toBe(true);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
     ),
   );

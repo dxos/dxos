@@ -107,6 +107,7 @@ export class GoalRules {
   readonly #subgoals = new Map<string, string>();
   readonly #maxFacts: number;
   readonly #maxSubgoals: number;
+  readonly #createdAt: number;
   #now: number;
   #previous: number;
   #achieved = false;
@@ -114,6 +115,7 @@ export class GoalRules {
 
   /** @throws Compiler.CompileError if the rules do not compile. */
   constructor(options: Options) {
+    this.#createdAt = options.createdAt;
     this.#now = options.createdAt;
     this.#previous = options.createdAt;
     this.#maxFacts = options.maxFacts ?? MAX_FACTS;
@@ -204,7 +206,16 @@ export class GoalRules {
       this.#subgoals.set(subgoal, status);
     }
 
-    const changes = this.#engine.update({ insert, retract, refresh: this.#now !== this.#previous });
+    const refresh = this.#now !== this.#previous;
+    if (refresh) {
+      // Re-evaluate at the previous time with no period boundary crossed, discarding the changes: otherwise a
+      // binding `every` held at the previous evaluation is still present, and the next boundary adds nothing new.
+      const now = this.#now;
+      this.#now = this.#previous;
+      this.#engine.update({ refresh: true });
+      this.#now = now;
+    }
+    const changes = this.#engine.update({ insert, retract, refresh });
     for (const [relation, label] of this.compilation.wakes) {
       for (const tuple of changes.added.get(relation) ?? []) {
         wakes.push({ label, cause: 'rule', facts: Encoding.factIds(this.#engine.provenance(relation, tuple)) });
@@ -268,6 +279,70 @@ export class GoalRules {
     return retired;
   }
 
+  /**
+   * The earliest time after the last evaluation at which a time built-in can change its answer
+   * (`elapsed`, `every`, `due`), so a host schedules its next {@link update} rather than polling;
+   * `undefined` when the rules read no clock.
+   */
+  nextDueAt(): number | undefined {
+    const candidates: number[] = [];
+    const after = (time: number | undefined) => {
+      if (time !== undefined && time > this.#now) {
+        candidates.push(time);
+      }
+    };
+    const constant = (term: Ast.Term | undefined): Ast.Value | undefined =>
+      term?.type === 'constant' ? term.value : undefined;
+    const visit = (literal: Ast.Literal): void => {
+      if (literal.type === 'aggregate') {
+        literal.body.forEach(visit);
+        return;
+      }
+      if (literal.type !== 'atom') {
+        return;
+      }
+      const [first, second] = literal.atom.terms;
+      switch (literal.atom.predicate) {
+        case 'elapsed': {
+          const length = Builtins.parseDuration(constant(second) ?? '');
+          if (length === undefined) {
+            return;
+          }
+          const ref = constant(first);
+          if (ref === undefined) {
+            // `elapsed(F, …)` over facts: each fact in working memory starts its own clock.
+            for (const { saidAt } of this.#facts.values()) {
+              after(saidAt + length);
+            }
+          } else if (ref === 'goal') {
+            after(this.#createdAt + length);
+          } else {
+            const start = this.#facts.get(String(ref))?.saidAt ?? Builtins.parseTime(ref);
+            after(start === undefined ? undefined : start + length);
+          }
+          return;
+        }
+        case 'every': {
+          const period = Builtins.parseDuration(constant(first) ?? '');
+          if (period !== undefined && period > 0) {
+            after(this.#createdAt + (Math.floor((this.#now - this.#createdAt) / period) + 1) * period);
+          }
+          return;
+        }
+        case 'due': {
+          const deadline = Builtins.parseTime(constant(first) ?? '');
+          const lead = Builtins.parseDuration(constant(second) ?? '');
+          after(deadline === undefined || lead === undefined ? undefined : deadline - lead);
+          return;
+        }
+      }
+    };
+    for (const rule of this.compilation.program.rules) {
+      rule.body.forEach(visit);
+    }
+    return candidates.length === 0 ? undefined : Math.min(...candidates);
+  }
+
   /** Evaluates the `blocks` rules for a proposed action without keeping it. */
   checkAction(action: Action): ActionCheck {
     const entries: Engine.Entry[] = [
@@ -299,8 +374,10 @@ const age = (saidAt: number): number => (Number.isNaN(saidAt) ? Number.NEGATIVE_
 /** Creates a goal evaluator. */
 export const make = (options: Options): GoalRules => new GoalRules(options);
 
+/** A term's id and, for an entity known by an opaque id (a DID), its label, so `about` matches the name. */
+const termText = (term: RDF.Term): string =>
+  term.kind === 'entity' && term.label !== undefined ? `${term.entity} ${term.label}` : RDF.termValue(term);
+
 /** The text `about` matches: what was said plus the triple. */
 const factText = ({ assertion }: RDF.Fact): string =>
-  [assertion.quote ?? '', RDF.termValue(assertion.subject), assertion.predicate, RDF.termValue(assertion.object)].join(
-    ' ',
-  );
+  [assertion.quote ?? '', termText(assertion.subject), assertion.predicate, termText(assertion.object)].join(' ');

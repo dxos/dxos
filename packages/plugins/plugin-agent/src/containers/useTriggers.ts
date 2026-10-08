@@ -5,13 +5,15 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { useMembers } from '@dxos/halo-react';
 
 import { Trigger, TriggerOperation } from '#types';
 
+import { labelOf } from '../operations/members.ts';
 import { triggerRegistry } from '../triggers.ts';
 
 /** A trigger as the UI shows it, from whichever brain holds it. */
@@ -39,7 +41,10 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
   const db = Obj.getDatabase(agent);
   const chatFilter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
   const chats: Chat.Chat[] = useQuery(db, chatFilter);
-  const remote = chats.some((chat) => chat.remote);
+  const remote = chats.some((chat) => Agent.chatLocation(chat) === 'edge');
+
+  const members = useMembers(db?.spaceId);
+  const label = useMemo(() => labelOf(members), [members]);
 
   const local = useSyncExternalStore(subscribe, getSnapshot);
   const localWatches = useMemo(
@@ -49,11 +54,11 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
         .map(({ id, goal, when, then }): Watch => ({
           id,
           ...(goal ? { goal } : {}),
-          when: Trigger.describePattern(when),
+          when: Trigger.describePattern(when, label),
           recipient: then.recipient,
           message: then.message,
         })),
-    [local, agent.id],
+    [local, agent.id, label],
   );
 
   const [remoteWatches, setRemoteWatches] = useState<Watch[]>([]);

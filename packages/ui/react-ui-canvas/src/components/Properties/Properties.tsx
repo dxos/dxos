@@ -35,11 +35,11 @@ import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type NodeRegistry, defaultNodeRegistry } from '../../model/registry.ts';
 import {
+  BaseNode,
   CurveLink,
   type Element,
   LineLink,
   type LinkType,
-  BaseNode,
   SmartLink,
   SplineLink,
   getElement,
