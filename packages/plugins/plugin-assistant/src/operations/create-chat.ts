@@ -8,17 +8,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import * as AlarmSkill from '@dxos/assistant-toolkit/AlarmSkill';
-import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
-import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Ref } from '@dxos/echo';
-import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
-import { AssistantSkill, PluginManagerSkill } from '#skills';
+import { PluginManagerSkill } from '#skills';
 import { AssistantOperation } from '#types';
+
+import { defaultChatSkills } from '../util/default-skills.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
@@ -33,37 +30,15 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
 
-      // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
-      const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
-
-      // Only an extensible host contributes the plugin-manager skill, since its tools resolve to the
-      // registry plugin's handlers; binding it elsewhere would bind a skill that cannot run.
+      // Only an extensible host contributes the plugin-manager skill.
       const contributed = yield* Capability.getAll(AppCapabilities.SkillDefinition);
-      const pluginManagerContributed = contributed.some(({ key }) => key === PluginManagerSkill.key);
+      const pluginManager = contributed.some(({ key }) => key === PluginManagerSkill.key);
 
       const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
-
-      // Bind default skills via registry refs — no DB clone needed since the ECHO ref
-      // resolver already spans the hypergraph registry.
       yield* Effect.promise(() =>
         binder.use((b: AiContext.Binder) =>
-          b.bind({
-            skills: [
-              AssistantSkill,
-              DatabaseSkill,
-              ChatContextSkill,
-              SkillManagerSkill,
-              AlarmSkill,
-              // Bound by default rather than agent-enabled: the conversation's checklist is durable
-              // and invisible to the model, so a chat without this skill cannot read or update the
-              // tasks it is already carrying — and a model that enables it mid-turn has already
-              // answered a task question from nothing.
-              PlanningSkill,
-              ...(pluginManagerContributed ? [PluginManagerSkill] : []),
-            ].map(({ key }) => Ref.fromURI(Skill.registryURI(key))),
-            objects: [Ref.make(chat)],
-          }),
+          b.bind({ skills: defaultChatSkills({ pluginManager }), objects: [Ref.make(chat)] }),
         ),
       );
 
