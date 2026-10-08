@@ -16,6 +16,7 @@ import {
   type Camera,
   type Capabilities,
   type ElementId,
+  type LinkId,
   type Scene,
   type SceneId,
   type Tool,
@@ -83,6 +84,8 @@ export type SceneViewContextValue = {
   /** Where the nodes of a move in flight will land, while they follow the pointer. */
   landing: readonly Bounds[] | undefined;
   handlers: ElementHandlers;
+  /** The link under the pointer. */
+  linkHover: LinkId | undefined;
   select: (ids: Iterable<ElementId>) => void;
   toolbarActions: ToolbarActions;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &

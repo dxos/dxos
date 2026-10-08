@@ -39,6 +39,7 @@ import {
   type Camera,
   DEFAULT_GRID,
   type ElementId,
+  type LinkId,
   type Endpoint,
   type Intent,
   MAJOR_GRID_RATIO,
@@ -91,8 +92,11 @@ const DEFAULT_MARGIN = 2;
 const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
+/** How long a link stays hovered after the pointer leaves it, so the pointer can reach its end handles. */
+const LINK_HOVER_GRACE_MS = 150;
+
 /** How long a move's pointer rests before the shapes snap to where they will land. */
-const SETTLE_MS = 300;
+const SETTLE_MS = 100;
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -519,9 +523,26 @@ const SceneViewRoot = ({
   );
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 
+  // Leaving a link waits a moment before it clears, so the pointer can reach the end handles drawn over it.
+  const linkHover = useAtomValue(atoms.linkHover);
+  const linkHoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const onLinkHover = useCallback(
+    (id: LinkId | undefined) => {
+      clearTimeout(linkHoverTimer.current);
+      if (id) {
+        registry.set(atoms.linkHover, id);
+      } else {
+        linkHoverTimer.current = setTimeout(() => registry.set(atoms.linkHover, undefined), LINK_HOVER_GRACE_MS);
+      }
+    },
+    [registry, atoms.linkHover],
+  );
+  useEffect(() => () => clearTimeout(linkHoverTimer.current), []);
+
   const handlers = useMemo<ElementHandlers>(
     () => ({
       onNodePointerDown,
+      onLinkHover,
       onLinkPointerDown,
       onLinkDoubleClick,
       onLinkContextMenu,
@@ -529,7 +550,16 @@ const SceneViewRoot = ({
       onPartCancel,
       onNodeOpen: drillIn,
     }),
-    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel, drillIn],
+    [
+      onNodePointerDown,
+      onLinkHover,
+      onLinkPointerDown,
+      onLinkDoubleClick,
+      onLinkContextMenu,
+      onPartCommit,
+      onPartCancel,
+      drillIn,
+    ],
   );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
@@ -788,6 +818,7 @@ const SceneViewRoot = ({
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
+      linkHover={linkHover}
       select={select}
       toolbarActions={toolbarActions}
       navigating={navigating}
@@ -888,6 +919,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     createFrame,
     landing,
     handlers,
+    linkHover,
     select,
     navigating,
     opening,
@@ -940,6 +972,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             selected={selection}
             plain={drag?.kind === 'move'}
             hover={hover}
+            hoveredLink={linkHover}
             opening={opening}
             focus={focus}
             editing={editing}
@@ -956,6 +989,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           registry={nodeRegistry}
           selection={selection}
           hover={hover}
+          hoveredLink={drag ? undefined : linkHover}
+          onLinkHover={handlers.onLinkHover}
           selectedPoint={selectedPoint}
           zoom={camera.zoom}
           drag={drag}

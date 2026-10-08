@@ -21,6 +21,7 @@ import {
   type ElementId,
   type Endpoint,
   type Link,
+  type LinkId,
   type Node,
   type Point,
   type Port,
@@ -63,6 +64,10 @@ export type ControlFrameProps = {
   capabilities: Capabilities;
   selection: ReadonlySet<ElementId>;
   hover?: ElementId;
+  /** The link under the pointer: it shows its end handles, as a selected link does. */
+  hoveredLink?: LinkId;
+  /** The pointer entered or left a hovered link's handles, which keeps the link hovered while on them. */
+  onLinkHover?: (id: LinkId | undefined) => void;
   selectedPoint?: ControlPointRef;
   zoom: number;
   drag?: Drag;
@@ -99,6 +104,8 @@ export const ControlFrame = memo(
     capabilities,
     selection,
     hover,
+    hoveredLink,
+    onLinkHover,
     selectedPoint,
     zoom,
     drag,
@@ -121,8 +128,11 @@ export const ControlFrame = memo(
     const chrome = drag?.kind === 'move' ? [] : [...selection];
     const selectedNodes = chrome.map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = chrome.map((id) => scene.links[id]).filter((link) => link !== undefined);
+    const linkUnder = hoveredLink && !selection.has(hoveredLink) ? scene.links[hoveredLink] : undefined;
+    // A hovered link shows the handles of a selected one; only its ends, its control points stay a selection's.
+    const handleLinks = linkUnder ? [...selectedLinks, linkUnder] : selectedLinks;
     const lanes =
-      lattice && selectedLinks.length > 0
+      lattice && handleLinks.length > 0
         ? new Map(
             sceneLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
               geometry.link.id,
@@ -219,7 +229,8 @@ export const ControlFrame = memo(
           </g>
         )}
         {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
-        {selectedLinks.map((link) => {
+        {handleLinks.map((link) => {
+          const hoverOnly = link === linkUnder;
           // On a lattice the handles sit on the link's lane, which depends on the links around it.
           const geometry = capabilities.update
             ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice))
@@ -249,10 +260,13 @@ export const ControlFrame = memo(
                   )}
                   strokeWidth={unit}
                   onPointerDown={(event) => onEndPointerDown?.(link, end, event)}
+                  onPointerEnter={hoverOnly ? () => onLinkHover?.(link.id) : undefined}
+                  onPointerLeave={hoverOnly ? () => onLinkHover?.(undefined) : undefined}
                 />
               ))}
               {/* Midpoints first, so a control point wins wherever the two land on each other. */}
-              {link.type === 'spline' &&
+              {!hoverOnly &&
+                link.type === 'spline' &&
                 midpoints(geometry.source.point, points, geometry.target.point).map(({ index, point }) => (
                   <circle
                     key={`midpoint-${index}`}

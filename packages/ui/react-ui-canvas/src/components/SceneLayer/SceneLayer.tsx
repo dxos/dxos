@@ -8,7 +8,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo, useState } from 'react';
+import React, { type CSSProperties, createContext, memo, useContext, useId, useMemo } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -20,6 +20,7 @@ import {
   type ElementId,
   type LineStyle,
   type Link,
+  type LinkId,
   type Marker,
   type Node,
   type NodeId,
@@ -68,6 +69,8 @@ export type ElementHandlers = {
   /** The in-place editor of `part` finished with `text` (commit) or was dismissed (cancel). */
   onPartCommit?: (node: Node, part: PartKey, text: string) => void;
   onPartCancel?: () => void;
+  /** The pointer entered a link (its id) or left it (`undefined`). */
+  onLinkHover?: (id: LinkId | undefined) => void;
   /** A node's own open control was pressed (a portal's zoom-in icon). */
   onNodeOpen?: (node: Node) => void;
 };
@@ -84,6 +87,8 @@ export type SceneLayerProps = {
   /** The selection is drawn as it looks, without its outline (a move in flight shows the shapes themselves). */
   plain?: boolean;
   hover?: NodeId;
+  /** The link under the pointer, outlined as a hovered shape is. */
+  hoveredLink?: LinkId;
   /** The portal a drill-in is animating into, while it is. */
   opening?: ElementId;
   /** The portal filling most of the view, and the opacity of everything else on the layer as it does. */
@@ -113,6 +118,7 @@ export const SceneLayer = memo(
     selected,
     plain,
     hover,
+    hoveredLink,
     opening,
     focus,
     editing,
@@ -143,8 +149,6 @@ export const SceneLayer = memo(
       [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
-    // A link under the pointer is outlined as a hovered shape is; only an interactive layer tracks it.
-    const [hoveredLink, setHoveredLink] = useState<ElementId>();
     const linkWidth = LINK_WIDTH * lineWeight(depth, zoom);
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
@@ -178,8 +182,8 @@ export const SceneLayer = memo(
                   style={{ pointerEvents: 'stroke' }}
                   strokeWidth={12 * unit}
                   onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                  onPointerEnter={() => setHoveredLink(link.id)}
-                  onPointerLeave={() => setHoveredLink((current) => (current === link.id ? undefined : current))}
+                  onPointerEnter={() => handlers.onLinkHover?.(link.id)}
+                  onPointerLeave={() => handlers.onLinkHover?.(undefined)}
                   onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
                   onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
                 />

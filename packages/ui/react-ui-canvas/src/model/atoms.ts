@@ -74,6 +74,8 @@ export type SceneViewAtoms = {
   path: Atom.Writable<SceneId[]>;
   selection: Atom.Writable<ReadonlySet<ElementId>>;
   hover: Atom.Writable<NodeId | undefined>;
+  /** The link under the pointer, which shows its end handles as a selected one does. */
+  linkHover: Atom.Writable<LinkId | undefined>;
   /** The selected control point of a selected spline, if any. */
   point: Atom.Writable<ControlPointRef | undefined>;
   tool: Atom.Writable<Tool>;
@@ -105,6 +107,7 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   path: Atom.keepAlive(Atom.make<SceneId[]>([root])),
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),
   hover: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
+  linkHover: Atom.keepAlive(Atom.make<LinkId | undefined>(undefined)),
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
