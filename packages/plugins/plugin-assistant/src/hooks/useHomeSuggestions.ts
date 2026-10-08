@@ -9,7 +9,7 @@ import { type Space } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
-import { AssistantOperation } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 const FALLBACK_SUGGESTION_KEYS = [
   'space-home.suggestion-magazine.label',
@@ -17,31 +17,37 @@ const FALLBACK_SUGGESTION_KEYS = [
 ] as const;
 
 /**
- * Returns starter prompts for the space Home page. Returns undefined while the request is in flight
- * so the section stays hidden until settled. On success yields generated prompts; on empty result or
- * error falls back to the hardcoded defaults.
+ * Returns starter prompts for the space Home page: the space's cached prompts at once, then the
+ * operation's answer once it settles (generated prompts, or the hardcoded defaults on an empty result
+ * or error). Undefined while nothing is cached and the request is in flight.
  */
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
+  const cache = Hooks.useOptionalAtomCapability(AssistantCapabilities.HomeSuggestionsCache);
   const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);
-  const [suggestions, setSuggestions] = useState<readonly string[] | undefined>(undefined);
+  // Keyed by space so an answer for the previous space is never shown on the next one.
+  const [settled, setSettled] = useState<{ spaceId: string; prompts: readonly string[] }>();
 
   UiHooks.useAsyncEffect(
     async (controller) => {
-      setSuggestions(undefined);
       if (!space) {
         return;
       }
-      const result = await invokePromise(AssistantOperation.GenerateHomeSuggestions, {}, { spaceId: space.db.spaceId });
+      const spaceId = space.db.spaceId;
+      const result = await invokePromise(AssistantOperation.GenerateHomeSuggestions, {}, { spaceId });
       if (controller.signal.aborted) {
         return;
       }
       const prompts = result.data?.prompts;
-      setSuggestions(prompts && prompts.length > 0 ? prompts : fallbacks);
+      setSettled({ spaceId, prompts: prompts && prompts.length > 0 ? prompts : fallbacks });
     },
     [space, invokePromise],
   );
 
-  return suggestions;
+  const spaceId = space?.db.spaceId;
+  if (!spaceId) {
+    return undefined;
+  }
+  return settled?.spaceId === spaceId ? settled.prompts : cache?.[spaceId]?.prompts;
 };

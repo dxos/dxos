@@ -32,13 +32,18 @@ class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
 class Note extends Type.makeObject<Note>(DXN.make('org.dxos.type.test.note', '0.1.0'))(
   Schema.Struct({
     content: Schema.optional(Schema.String),
-  }).pipe(Annotation.LabelAnnotation.set(['content']), Annotation.IconAnnotation.set({ icon: 'ph--note--regular' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['content']),
+    Annotation.IconAnnotation.set({ icon: 'ph--note--regular' }),
+    Annotation.UserType.set(),
+  ),
 ) {}
 
 const OBJECT_COUNT = 24;

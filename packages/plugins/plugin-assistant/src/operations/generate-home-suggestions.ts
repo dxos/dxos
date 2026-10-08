@@ -3,6 +3,7 @@
 //
 
 import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -44,14 +45,26 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const { db } = yield* Database.Service;
         const spaceId = db.spaceId;
 
+        // Inside the refresh floor the recent set cannot change the answer, so skip its query, which
+        // loads every hit's document.
+        const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.HomeSuggestionsCache);
+        const entry = cache[spaceId];
+        const age = entry ? Date.now() - entry.generatedAt : Infinity;
+        if (entry && age < MIN_REFRESH_MS) {
+          return { prompts: [...entry.prompts] };
+        }
+
         // Build the recent-objects filter (mirrors SpaceHomeRecent).
         const schemas = yield* Capability.getAll(AppCapabilities.Schema);
         const collectionTypename = Type.getTypename(Collection.Collection);
-        const types = schemas
-          .flat()
-          .filter(Type.isType)
-          .filter((type) => TypeOptions.isUserType(type))
-          .filter((type) => Type.getTypename(type) !== collectionTypename);
+        const types = Array.dedupeWith(
+          schemas
+            .flat()
+            .filter(Type.isType)
+            .filter((type) => TypeOptions.isUserType(type))
+            .filter((type) => Type.getTypename(type) !== collectionTypename),
+          (a, b) => Type.getURI(a) === Type.getURI(b),
+        );
         if (types.length === 0) {
           return { prompts: [] };
         }
@@ -85,10 +98,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
           .map(({ label, typename }) => `${typename}:${label}`)
           .sort()
           .join('\n');
-        const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.HomeSuggestionsCache);
-        const entry = cache[spaceId];
-        const age = entry ? Date.now() - entry.generatedAt : Infinity;
-        if (entry && (age < MIN_REFRESH_MS || (entry.fingerprint === fingerprint && age < CACHE_TTL_MS))) {
+        if (entry && entry.fingerprint === fingerprint && age < CACHE_TTL_MS) {
           return { prompts: [...entry.prompts] };
         }
 

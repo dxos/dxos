@@ -122,11 +122,11 @@ describe('GenerateHomeSuggestions', () => {
   );
 
   it.effect(
-    'a changed set reuses cached prompts within the refresh interval',
+    'cached prompts are reused within the refresh interval whatever the recent set is',
     Effect.fnUntraced(
       function* (_) {
         const { db } = yield* Database.Service;
-        yield* addNotes(5);
+        // No recent objects at all: answering from the cache means the recent set was never read.
         const stored = ['Refine the proposal', 'Review the schedule', 'Draft a summary'];
         testRegistry.set(testCacheAtom, {
           [db.spaceId]: { generatedAt: Date.now() - HOUR_MS / 2, prompts: stored, fingerprint: 'another set' },
