@@ -16,6 +16,9 @@ import { createCellGridAtoms } from './state/atoms.ts';
 import type { Cell, CellCoord, Row, Tool } from './state/types.ts';
 
 type SequencerData = { velocity: number };
+type DataVizData = { magnitude: number };
+/** The two variants' cells share one grid, so each renderer reads the variant's own field. */
+type StoryData = SequencerData | DataVizData;
 
 const trackColors = [
   '#ef4444', // red
@@ -28,11 +31,11 @@ const trackColors = [
   '#ec4899', // pink
 ];
 
-const renderSequencerCell: RenderCell<SequencerData> = ({ ctx, x, y, w, h, cell }) => {
+const renderSequencerCell: RenderCell<StoryData> = ({ ctx, x, y, w, h, cell }) => {
   const inset = 1;
   const radius = 4;
   const color = trackColors[cell.row % trackColors.length];
-  const velocity = cell.data?.velocity ?? 0.8;
+  const velocity = cell.data && 'velocity' in cell.data ? cell.data.velocity : 0.8;
   ctx.fillStyle = color;
   ctx.globalAlpha = 0.3 + velocity * 0.7;
   roundedRect(ctx, x + inset, y + inset, w - inset * 2, h - inset * 2, radius);
@@ -40,8 +43,8 @@ const renderSequencerCell: RenderCell<SequencerData> = ({ ctx, x, y, w, h, cell 
   ctx.globalAlpha = 1;
 };
 
-const renderDataVizCell: RenderCell<{ magnitude: number }> = ({ ctx, x, y, w, h, cell }) => {
-  const magnitude = cell.data?.magnitude ?? 0.5;
+const renderDataVizCell: RenderCell<StoryData> = ({ ctx, x, y, w, h, cell }) => {
+  const magnitude = cell.data && 'magnitude' in cell.data ? cell.data.magnitude : 0.5;
   const cx = x + w / 2;
   const cy = y + h / 2;
   const r = Math.max(2, (Math.min(w, h) / 2 - 2) * magnitude);
@@ -93,10 +96,7 @@ type StoryArgs = Pick<CellGridProps, 'headers'> & {
 const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, playback, headers }: StoryArgs) => {
   const registry = useContext(RegistryContext);
 
-  const atoms = useMemo(
-    () => createCellGridAtoms<SequencerData | { magnitude: number }>({ cellWidth, cellHeight }),
-    [cellWidth, cellHeight],
-  );
+  const atoms = useMemo(() => createCellGridAtoms<StoryData>({ cellWidth, cellHeight }), [cellWidth, cellHeight]);
   const rows: Row[] = useMemo(
     () =>
       Array.from({ length: numRows }, (_, index) => ({
@@ -114,7 +114,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
   // Seed with sample data. Use a deterministic LCG instead of Math.random so
   // story renders are stable across runs (helpful for visual review / snapshots).
   useEffect(() => {
-    const next = new Map<string, Cell<SequencerData | { magnitude: number }>>();
+    const next = new Map<string, Cell<StoryData>>();
     const lcg = makeLcg(0xc0ffee);
     if (variant === 'sequencer') {
       for (let row = 0; row < numRows; row++) {
@@ -159,7 +159,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
     };
   }, [registry, atoms.playhead, playback, numCols]);
 
-  const renderCell = variant === 'sequencer' ? (renderSequencerCell as RenderCell) : (renderDataVizCell as RenderCell);
+  const renderCell = variant === 'sequencer' ? renderSequencerCell : renderDataVizCell;
 
   const handleToggle = (coord: CellCoord) => {
     toggleCell(registry, atoms, coord, ({ col, row }) => ({
@@ -172,13 +172,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
 
   return (
     <div className='dx-cover'>
-      <CellGrid
-        atoms={atoms as any}
-        rows={rows}
-        renderCell={renderCell}
-        headers={headers}
-        onCellToggle={handleToggle}
-      />
+      <CellGrid atoms={atoms} rows={rows} renderCell={renderCell} headers={headers} onCellToggle={handleToggle} />
     </div>
   );
 };
