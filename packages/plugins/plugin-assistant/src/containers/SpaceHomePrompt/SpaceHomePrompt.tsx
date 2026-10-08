@@ -13,7 +13,7 @@ import { type Space, useRegistry } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
-import { useChatProcessor, useChatServices, usePresets } from '#hooks';
+import { useChatModel, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
@@ -27,7 +27,7 @@ type SpaceScopedProps = {
  * Home article pinned-bottom contributor: the assistant prompt. Backed by an ephemeral in-memory
  * chat whose sole responsibility is to collect the user's text, context bindings, and preset
  * choice, then on submit: persist the chat to the space, queue the text as a pending prompt, and
- * navigate to it. AI generation runs in the opened chat view — the processor here exists only to
+ * navigate to it. AI generation runs in the opened chat view — the chat model here exists only to
  * back the context-binder UI.
  */
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
@@ -60,7 +60,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     };
   }, [space, nonce, invokePromise]);
 
-  const processor = useChatProcessor({ db: space?.db, chat, preset, runtime, registry });
+  const chatModel = useChatModel({ db: space?.db, chat, preset, runtime, registry });
 
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
@@ -85,7 +85,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     });
   }, [event, space, chat, atomRegistry, stateAtom, invokePromise]);
 
-  if (!processor || !chat || !space) {
+  if (!chatModel || !chat || !space) {
     return null;
   }
 
@@ -95,7 +95,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       outline
       chat={chat}
       db={space.db}
-      processor={processor}
+      chatModel={chatModel}
       event={event}
       preset={preset?.id}
       placeholder={t('space-home.prompt.placeholder')}

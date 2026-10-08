@@ -24,7 +24,7 @@ import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
 
-import { useChatProcessor, useChatServices, usePresets } from '#hooks';
+import { useChatModel, useChatServices, usePresets } from '#hooks';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
@@ -38,7 +38,7 @@ type StoryArgs = {
   /** Prompts already queued on the feed, as a submit-while-busy leaves them. */
   queued?: string[];
   /**
-   * Holds the processor `active` while leaving `streaming` false — a turn parked in a tool call.
+   * Holds the chat model `active` while leaving `streaming` false — a turn parked in a tool call.
    * This is the state the send/stop control has to get right, and no scripted model can hold it
    * still long enough to assert against.
    */
@@ -55,26 +55,26 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
   const { preset, ...chatProps } = usePresets(settings, chat);
   const db = space?.db;
   const runtime = useChatServices({ id: db?.spaceId });
-  const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
+  const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
 
   // Drives the control's mode from the outside, so the assertion does not race a real turn. The
-  // processor reads its atoms from the ambient registry, which is what the story writes to.
-  // The same registry `useChatProcessor` hands the processor, so a write here is a write it sees.
+  // chat model reads its atoms from the ambient registry, which is what the story writes to.
+  // The same registry `useChatModel` hands the chat model, so a write here is a write it sees.
   const atomRegistry = useContext(RegistryContext);
   useEffect(() => {
-    if (running && processor) {
-      atomRegistry.set(processor.active, true);
+    if (running && chatModel) {
+      atomRegistry.set(chatModel.active, true);
     }
-  }, [running, processor, atomRegistry]);
+  }, [running, chatModel, atomRegistry]);
 
-  if (!chat || !db || !processor) {
+  if (!chat || !db || !chatModel) {
     return <Loading />;
   }
 
   return (
     <div className='flex justify-center p-4'>
       <div className='w-full max-w-document-width'>
-        <Chat.Root chat={chat} db={db} processor={processor}>
+        <Chat.Root chat={chat} db={db} chatModel={chatModel}>
           <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
               has no node, so the row shows only its own controls unless a plugin renders one. The

@@ -22,7 +22,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
+import { useChatModel, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
@@ -57,7 +57,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           : undefined,
       [identity?.did, identity?.displayName],
     );
-    const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings, sender });
+    const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender });
     const getContext = useSelectionContext(companionTo);
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -95,7 +95,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     }, [attendableId]);
 
     useEffect(() => {
-      if (!processor || !attendableId || pendingSubmitted.current) {
+      if (!chatModel || !attendableId || pendingSubmitted.current) {
         return;
       }
 
@@ -108,15 +108,15 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           return { ...current, pendingPrompts: rest };
         });
 
-        void processor.request({ message: pendingPrompt });
+        void chatModel.request({ message: pendingPrompt });
       }
-    }, [processor, attendableId, atomRegistry, stateAtom]);
+    }, [chatModel, attendableId, atomRegistry, stateAtom]);
 
     return (
       <ChatComponent.Root
         chat={chat}
         db={db}
-        processor={processor}
+        chatModel={chatModel}
         debug={debug}
         getContext={getContext}
         onEvent={onEvent}
