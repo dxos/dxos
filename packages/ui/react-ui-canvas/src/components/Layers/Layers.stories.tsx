@@ -103,14 +103,15 @@ export const Test: Story = {
     await userEvent.click(canvas.getByTestId('layer-toggle-notes'));
     await expect(canvas.getByTestId('layer-toggle-notes')).toHaveAccessibleName('Hide layer');
 
-    // 5. Merge needs two layers: a Cmd-click adds one to the selection, and merging keeps the top-most.
+    // 5. Merge needs two layers: a Shift-click extends the selection to the next one, and merging keeps the top-most.
+    // Shift rather than Cmd/Ctrl, whose key the listbox picks by platform.
     await expect(canvas.getByTestId('layers-merge')).toBeDisabled();
     await userEvent.click(canvas.getByTestId('layer-name-diagram'));
     // One session, so the held key is still down for the click.
     const user = userEvent.setup();
-    await user.keyboard('{Meta>}');
+    await user.keyboard('{Shift>}');
     await user.click(canvas.getByTestId('layer-name-notes'));
-    await user.keyboard('{/Meta}');
+    await user.keyboard('{/Shift}');
     await waitFor(() => expect(canvas.getByTestId('layers-merge')).toBeEnabled());
     await userEvent.click(canvas.getByTestId('layers-merge'));
     await waitFor(() => expect(names()).toEqual(['Diagram', 'Background', 'Sketch']));
