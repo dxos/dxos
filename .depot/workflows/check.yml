@@ -1,7 +1,11 @@
 name: Check
 
+# Draft PRs run nothing unless labeled `ci`; marking one ready (or adding the label) starts the run.
+# Every PR-triggered job repeats the same gate in its `if:`, and a `labeled` event passes it only
+# for `ci`.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
   merge_group:
 
   push:
@@ -49,19 +53,23 @@ env:
 # nightly shares a group with pushes to main and the next push cancels it mid-e2e.
 #
 # A manual dispatch also keys on its run id, so repeated dispatches of one ref run in parallel:
-# measuring flakiness needs N independent samples of the same commit. Every other event keeps
+# measuring flakiness needs N independent samples of the same commit. So does a label other than
+# `ci`, whose run skips every job and must not cancel the PR's in-flight run. Every other event keeps
 # one-run-per-ref, where superseding an in-flight run is what you want.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
-    }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
+    }}-${{ (github.event_name == 'workflow_dispatch' || (github.event.action == 'labeled' &&
+    github.event.label.name != 'ci')) && github.run_id || '' }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
     # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
-    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) }}
     permissions:
       contents: read
       packages: read
@@ -196,7 +204,9 @@ jobs:
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead.
   boot-budget:
-    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) }}
     permissions:
       contents: read
       packages: read
@@ -297,7 +307,7 @@ jobs:
     if: >-
       ${{ !cancelled() && github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      needs.boot-budget.outputs.status != 'skipped' }}
+      needs.boot-budget.result != 'skipped' && needs.boot-budget.outputs.status != 'skipped' }}
     runs-on: depot-ubuntu-latest
     permissions:
       contents: read
@@ -338,7 +348,9 @@ jobs:
   # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
   # suites can provoke looks identical to an assertion failure from the outside).
   memory:
-    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'e2e' && (
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) }}
     permissions:
       contents: read
       packages: read
@@ -395,7 +407,9 @@ jobs:
   # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
   # default bail drops a failing cell's remaining targets, hiding what they cost.
   test:
-    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'e2e' && (
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) }}
     strategy:
       fail-fast: false
       matrix:
@@ -498,7 +512,9 @@ jobs:
   # because moon's default bail drops a failing cell's remaining targets, hiding what they cost. The
   # shape, and the alternatives measured against it, are in `.agents/projects/ci/DESIGN.md`.
   e2e:
-    if: ${{ inputs.only != 'check' && inputs.only != 'test' }}
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'test' && (
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) }}
     strategy:
       fail-fast: false
       matrix:
@@ -615,10 +631,11 @@ jobs:
   cli:
     # The Changesets PR's `github.ref` is refs/pull/N/merge, so only `github.head_ref` matches it.
     if: >-
-      startsWith(github.ref, 'refs/heads/main') ||
+      (startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.only == 'all'
+      inputs.only == 'all') && (
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci')))
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -732,7 +749,8 @@ jobs:
   changeset-reminder:
     if: >-
       github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository && (
+      (!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))
     runs-on: depot-ubuntu-latest
     permissions:
       contents: read

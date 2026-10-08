@@ -4,8 +4,10 @@ name: Model Fixture
 # shifts a prompt is caught before it silently rots the cache. Deliberately a SEPARATE, non-required
 # workflow (not a job in check.yml): it reports on the PR but is not in the required-checks set, so a
 # fixture drift never blocks merge. Fixtures are committed, so replay needs no API key or build step.
+# Draft PRs skip this unless labeled `ci`, the same gate as `Check`.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
 
   push:
     branches:
@@ -25,11 +27,15 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
+    }}-${{ github.event.action == 'labeled' && github.event.label.name != 'ci' && github.run_id || '' }}
   cancel-in-progress: true
 
 jobs:
   model-fixture:
+    if: >-
+      github.event_name != 'pull_request' || ((!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

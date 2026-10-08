@@ -36,19 +36,24 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    exclusion with the user.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-8. **Open the PR** with `gh`. Title uses `scope: description`. Write the
+8. **Open the PR as a draft** with `gh pr create --draft`. CI skips draft PRs,
+   so iterate on the draft freely. Title uses `scope: description`. Write the
    description with the `pr-description` skill: pick every template that
    applies (summary and safety always), and link any Linear issue as
    `closes DX-123` or `part of DX-123`. Apply the Safety labels it specifies
    (`risk: …` always, plus any `breaking:`/`api:`/`tests:`/`revert:`/`perf:`).
    If this work builds on another open PR (or the user asked for a stack), see
    **Stacked PRs** below instead of `gh pr create`.
-9. **Monitor CI every 5 minutes:**
-   `gh run list --branch <branch> --limit 3 --workflow "Check"` and
-   `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
-   CI errors — even ones unrelated to this branch. Never merge around a red
-   Check; fix the root cause with `gh run view <id> --log-failed`.
-10. **Address and RESPOND to every PR review comment.**
+9. **Mark it ready.** Run `moon run :lint :build :test-types` locally, then
+   `gh pr ready`, which starts CI. Every push after this runs the full
+   suite, so batch fixes into one push rather than pushing each one. To get CI
+   on a draft without marking it ready, add the `ci` label.
+10. **Monitor CI every 5 minutes:**
+    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
+    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
+    CI errors — even ones unrelated to this branch. Never merge around a red
+    Check; fix the root cause with `gh run view <id> --log-failed`.
+11. **Address and RESPOND to every PR review comment.**
 
 ## Stacked PRs
 
@@ -69,7 +74,8 @@ targeting `main`, one-click whole-stack merge. Linking is what makes it a
 stack; a PR merely based on another PR's branch is not one. A PR that `link`
 creates gets an auto-generated title and body — follow up with
 `gh pr edit <pr> --title --body` so it meets step 8's standards (scope-prefixed
-title, `pr-description` templates, Linear link). Docs:
+title, `pr-description` templates, Linear link), and `gh pr ready --undo <pr>`
+to make it a draft until step 9. Docs:
 <https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests>.
 
 ## Composer PR deploy URL — always surface

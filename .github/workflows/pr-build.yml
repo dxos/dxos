@@ -10,12 +10,16 @@ name: PR Build
 # Named for the trigger, not the output: `preview` is a deploy ENVIRONMENT
 # (preview.composer.space), while these are Worker preview versions of `dev`.
 
+# Draft PRs skip this unless labeled `ci`, the same gate as `Check`. A skipped run concludes
+# `skipped`, which pr-deploy.yml ignores.
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
 
 concurrency:
-  group: pr-build-${{ github.event.pull_request.number }}
+  group: >-
+    pr-build-${{ github.event.pull_request.number
+    }}-${{ github.event.action == 'labeled' && github.event.label.name != 'ci' && github.run_id || '' }}
   cancel-in-progress: true
 
 permissions:
@@ -32,7 +36,9 @@ jobs:
   build:
     # Skip forks (per project policy) — not required for safety (no secrets are
     # used here), but fork previews are intentionally unsupported.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository && (
+      (!github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) && (github.event.action != 'labeled' || github.event.label.name == 'ci'))
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
