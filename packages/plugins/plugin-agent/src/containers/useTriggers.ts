@@ -5,16 +5,15 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import type * as Agent from '@dxos/assistant/Agent';
+import { Obj, Ref } from '@dxos/echo';
 import { useMembers } from '@dxos/halo-react';
 
 import { Trigger, TriggerOperation } from '#types';
 
 import { labelOf } from '../operations/members.ts';
 import { triggerRegistry } from '../triggers.ts';
+import { useRemoteBrain } from './useBrainLocation.ts';
 
 /** A trigger as the UI shows it, from whichever brain holds it. */
 export type Watch = {
@@ -39,9 +38,7 @@ const getSnapshot = () => triggerRegistry.snapshot;
 export const useTriggers = (agent: Agent.Agent): Watch[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
-  const chatFilter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
-  const chats: Chat.Chat[] = useQuery(db, chatFilter);
-  const remote = chats.some((chat) => Agent.chatLocation(chat) === 'edge');
+  const remote = useRemoteBrain(agent);
 
   const members = useMembers(db?.spaceId);
   const label = useMemo(() => labelOf(members), [members]);
