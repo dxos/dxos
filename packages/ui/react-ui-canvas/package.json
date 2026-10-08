@@ -55,7 +55,9 @@
     "transformation-matrix": "catalog:"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@playwright/test": "catalog:",

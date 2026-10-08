@@ -2,18 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useLayoutEffect, useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useRegistry, useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
-import { type ElementId, type Layer, type Scene } from '../../model/types.ts';
+import { type ElementId, type Layer, type Scene, getElement } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { between } from '../../utils/order.ts';
 import { Properties } from './Properties.tsx';
@@ -56,13 +58,20 @@ const DefaultStory = ({ select }: StoryArgs) => {
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));
   }, [registry, atoms, select]);
+  // The selection as the model holds it, beside the panel editing it, so every edit shows what it wrote.
+  const scene = useAtomValue(projection.scene);
+  const styles = useAtomValue(store.styles);
+  const selected = select.flatMap((id) => getElement(scene, id) ?? []);
   return (
-    <Properties
-      classNames='w-80 h-[40rem] border border-separator rounded-sm'
-      projection={projection}
-      atoms={atoms}
-      styles={store.styles}
-    />
+    <div className='grid grid-cols-2 gap-4 w-[56rem] h-[40rem]'>
+      <Properties
+        classNames='border border-separator rounded-sm'
+        projection={projection}
+        atoms={atoms}
+        styles={store.styles}
+      />
+      <JsonHighlighter classNames='overflow-auto' data={{ selected, styles }} />
+    </div>
   );
 };
 

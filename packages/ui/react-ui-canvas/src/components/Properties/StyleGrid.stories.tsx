@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type NodeTone } from '../../model/types.ts';
@@ -18,7 +19,7 @@ const DefaultStory = ({ indeterminate, readonly }: StoryArgs) => {
   const [hue, setHue] = useState<string>('blue');
   const [tone, setTone] = useState<NodeTone>(2);
   return (
-    <div className='w-72 p-2'>
+    <div className='grid grid-cols-2 gap-4 w-[48rem]'>
       <StyleGrid
         hue={hue}
         tone={tone}
@@ -29,9 +30,7 @@ const DefaultStory = ({ indeterminate, readonly }: StoryArgs) => {
           setTone(choice.tone);
         }}
       />
-      <p className='pt-2 text-xs font-mono'>
-        {hue} · {TONE_NAMES[tone]}
-      </p>
+      <JsonHighlighter data={{ hue, tone, name: TONE_NAMES[tone] }} />
     </div>
   );
 };
@@ -39,8 +38,11 @@ const DefaultStory = ({ indeterminate, readonly }: StoryArgs) => {
 const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/scene/StyleGrid',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { indeterminate: false, readonly: false },
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  args: {
+    indeterminate: false,
+    readonly: false,
+  },
 };
 
 export default meta;
