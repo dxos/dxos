@@ -401,7 +401,7 @@ Found while building the replacement placement layer (`DESIGN.md` §Principles).
 
 Independent of phase 1's outcome.
 
-- [ ] `ChatProcessor` port in plugin-assistant + `AiChatProcessor implements ChatProcessor` +
+- [ ] `ChatProcessor` port in plugin-assistant + `ChatModel implements ChatProcessor` +
       `MockChatProcessor` in `#testing`. Prove it by rewriting `Chat/Error.stories.tsx`.
 - [ ] Extract the prompt's actions slot — `ChatOptions` / `ChatReferences` / `ChatActions` move to
       a prop. This is what keeps `AiContext` out of the lower package.

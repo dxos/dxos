@@ -3,45 +3,34 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiService, OpaqueToolkit } from '@dxos/ai';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
-import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { AiSession } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { ProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
-import * as Credential from '@dxos/compute/Credential';
-import * as Operation from '@dxos/compute/Operation';
-import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { AiChatProcessor } from './processor.ts';
+import { ChatModel } from './chat-model.ts';
+import { makeStubSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
-describe('AiChatProcessor streaming', () => {
+describe('ChatModel streaming', () => {
   it.effect(
     'upserts partials, finalizes complete blocks, ignores late partials, and flushes on completion',
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        // The processor resolves its agent session from the chat it runs on.
+        // The chat model resolves its agent session from the chat it runs on.
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
@@ -62,11 +51,11 @@ describe('AiChatProcessor streaming', () => {
           getSession: () => Effect.succeed(stubSession),
           hydrate: () => Effect.void,
         };
-        const spaceLayer = yield* makeSpaceLayer(stubAgentService);
+        const spaceLayer = yield* makeStubSpaceLayer(stubAgentService);
 
         const observableRegistry = AtomRegistry.make();
-        const processorRuntime = yield* makeTestRuntime;
-        const processor = new AiChatProcessor(session, processorRuntime, feed, spaceLayer, {
+        const chatModelRuntime = yield* makeTestRuntime;
+        const chatModel = new ChatModel(session, chatModelRuntime, feed, spaceLayer, {
           chat: Ref.make(chat),
           observableRegistry,
         });
@@ -78,27 +67,27 @@ describe('AiChatProcessor streaming', () => {
         const snapshots: string[][] = [];
         const unsubscribers = [
           observableRegistry.subscribe(
-            processor.messages,
+            chatModel.messages,
             (messages) =>
               snapshots.push(
                 messages.map((message) => message.blocks.map((block) => (block as ContentBlock.Text).text).join('')),
               ),
             { immediate: true },
           ),
-          observableRegistry.subscribe(processor.error, () => {}),
-          observableRegistry.subscribe(processor.active, () => {}),
+          observableRegistry.subscribe(chatModel.error, () => {}),
+          observableRegistry.subscribe(chatModel.active, () => {}),
         ];
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
 
-        yield* Effect.promise(() => processor.request({ message: 'Hello?' }));
+        yield* Effect.promise(() => chatModel.request({ message: 'Hello?' }));
 
         // Surface any swallowed request failure before asserting on state.
-        const error = observableRegistry.get(processor.error);
+        const error = observableRegistry.get(chatModel.error);
         expect(error._tag === 'Some' ? `${error.value.message}: ${error.value.cause}` : undefined).toBeUndefined();
 
         // m1 was finalized exactly once (the late partial after finalization is dropped); m2's
         // unfinalized partial was flushed into the pending list when the agent completed.
-        const messages = observableRegistry.get(processor.messages);
+        const messages = observableRegistry.get(chatModel.messages);
         expect(messages.map(({ id }) => id)).toEqual([m1, m2]);
         expect(texts(messages)).toEqual(['Hello world.', 'Working…']);
 
@@ -111,8 +100,8 @@ describe('AiChatProcessor streaming', () => {
         expect(snapshots.flat()).not.toContain('Hello world. (stale)');
 
         // The request settled cleanly: nothing left streaming, no error, inactive.
-        expect(observableRegistry.get(processor.streaming)).toBe(false);
-        expect(observableRegistry.get(processor.active)).toBe(false);
+        expect(observableRegistry.get(chatModel.streaming)).toBe(false);
+        expect(observableRegistry.get(chatModel.active)).toBe(false);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -124,7 +113,7 @@ describe('AiChatProcessor streaming', () => {
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        // The processor resolves its agent session from the chat it runs on.
+        // The chat model resolves its agent session from the chat it runs on.
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
@@ -137,33 +126,33 @@ describe('AiChatProcessor streaming', () => {
 
         const idleSession = yield* makeStubSession(chat, feed, batches, { running: false });
         const idleRegistry = AtomRegistry.make();
-        const idleProcessor = new AiChatProcessor(
+        const idleChatModel = new ChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeSpaceLayer({
+          yield* makeStubSpaceLayer({
             getSession: () => Effect.succeed(idleSession),
             hydrate: () => Effect.void,
           }),
           { chat: Ref.make(chat), observableRegistry: idleRegistry },
         );
         const idleUnsubscribers = [
-          idleRegistry.subscribe(idleProcessor.messages, () => {}, { immediate: true }),
-          idleProcessor.adopt(),
+          idleRegistry.subscribe(idleChatModel.messages, () => {}, { immediate: true }),
+          idleChatModel.adopt(),
         ];
         yield* Effect.addFinalizer(() => Effect.sync(() => idleUnsubscribers.forEach((dispose) => dispose())));
         yield* quiesce;
         // A live-but-idle agent (awaiting input) is not adopted.
-        expect(idleRegistry.get(idleProcessor.active)).toBe(false);
-        expect(idleRegistry.get(idleProcessor.messages)).toEqual([]);
+        expect(idleRegistry.get(idleChatModel.active)).toBe(false);
+        expect(idleRegistry.get(idleChatModel.messages)).toEqual([]);
 
         const runningSession = yield* makeStubSession(chat, feed, batches, { running: true });
         const observableRegistry = AtomRegistry.make();
-        const processor = new AiChatProcessor(
+        const chatModel = new ChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeSpaceLayer({
+          yield* makeStubSpaceLayer({
             getSession: () => Effect.succeed(runningSession),
             hydrate: () => Effect.void,
           }),
@@ -172,19 +161,19 @@ describe('AiChatProcessor streaming', () => {
 
         const activeSnapshots: boolean[] = [];
         const unsubscribers = [
-          observableRegistry.subscribe(processor.messages, () => {}, { immediate: true }),
-          observableRegistry.subscribe(processor.active, (active) => activeSnapshots.push(active), {
+          observableRegistry.subscribe(chatModel.messages, () => {}, { immediate: true }),
+          observableRegistry.subscribe(chatModel.active, (active) => activeSnapshots.push(active), {
             immediate: true,
           }),
         ];
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
 
-        unsubscribers.push(processor.adopt());
-        yield* whenAtom(observableRegistry, processor.active, (active) => !active && activeSnapshots.includes(true));
+        unsubscribers.push(chatModel.adopt());
+        yield* whenAtom(observableRegistry, chatModel.active, (active) => !active && activeSnapshots.includes(true));
 
         expect(activeSnapshots).toContain(true);
-        expect(observableRegistry.get(processor.active)).toBe(false);
-        expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still working…']);
+        expect(observableRegistry.get(chatModel.active)).toBe(false);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Still working…']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -196,7 +185,7 @@ describe('AiChatProcessor streaming', () => {
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        // The processor resolves its agent session from the chat it runs on.
+        // The chat model resolves its agent session from the chat it runs on.
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
@@ -210,30 +199,30 @@ describe('AiChatProcessor streaming', () => {
         );
 
         const observableRegistry = AtomRegistry.make();
-        const processor = new AiChatProcessor(
+        const chatModel = new ChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeSpaceLayer({
+          yield* makeStubSpaceLayer({
             getSession: () => Effect.succeed(gated),
             hydrate: () => Effect.void,
           }),
           { chat: Ref.make(chat), observableRegistry },
         );
 
-        const unsubscribe = observableRegistry.subscribe(processor.messages, () => {}, { immediate: true });
+        const unsubscribe = observableRegistry.subscribe(chatModel.messages, () => {}, { immediate: true });
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
 
-        const dispose = processor.adopt();
-        yield* whenAtom(observableRegistry, processor.messages, (messages) => messages.length > 0);
-        expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
+        const dispose = chatModel.adopt();
+        yield* whenAtom(observableRegistry, chatModel.messages, (messages) => messages.length > 0);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Still']);
 
         dispose();
         yield* release;
         yield* quiesce;
 
-        expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
-        expect(observableRegistry.get(processor.active)).toBe(false);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Still']);
+        expect(observableRegistry.get(chatModel.active)).toBe(false);
         // The session still reports a turn in flight, so the observer stopped because it was
         // disposed rather than because the turn settled.
         expect(observableRegistry.get(gated.running)).toBe(true);
@@ -248,7 +237,7 @@ describe('AiChatProcessor streaming', () => {
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        // The processor resolves its agent session from the chat it runs on.
+        // The chat model resolves its agent session from the chat it runs on.
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
@@ -266,11 +255,11 @@ describe('AiChatProcessor streaming', () => {
           getSession: () => Effect.succeed(stubSession),
           hydrate: () => Effect.void,
         };
-        const spaceLayer = yield* makeSpaceLayer(stubAgentService);
+        const spaceLayer = yield* makeStubSpaceLayer(stubAgentService);
 
         const observableRegistry = AtomRegistry.make();
-        const processorRuntime = yield* makeTestRuntime;
-        const processor = new AiChatProcessor(session, processorRuntime, feed, spaceLayer, {
+        const chatModelRuntime = yield* makeTestRuntime;
+        const chatModel = new ChatModel(session, chatModelRuntime, feed, spaceLayer, {
           chat: Ref.make(chat),
           observableRegistry,
         });
@@ -278,7 +267,7 @@ describe('AiChatProcessor streaming', () => {
         const snapshots: (string | undefined)[] = [];
         const attempts: (number | undefined)[] = [];
         const unsubscribe = observableRegistry.subscribe(
-          processor.activity,
+          chatModel.activity,
           (activity) => {
             snapshots.push(activity?.phase);
             attempts.push(activity?.attempt);
@@ -287,9 +276,9 @@ describe('AiChatProcessor streaming', () => {
         );
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
 
-        yield* Effect.promise(() => processor.request({ message: 'Hello?' }));
+        yield* Effect.promise(() => chatModel.request({ message: 'Hello?' }));
 
-        const error = observableRegistry.get(processor.error);
+        const error = observableRegistry.get(chatModel.error);
         expect(error._tag === 'Some' ? `${error.value.message}: ${error.value.cause}` : undefined).toBeUndefined();
 
         // `starting` is set locally before the process resolves, so it precedes anything the agent
@@ -307,7 +296,63 @@ describe('AiChatProcessor streaming', () => {
         expect(snapshots.indexOf('contacting-provider')).toBeLessThan(snapshots.indexOf('generating'));
         expect(snapshots.filter((phase) => phase === undefined)).toHaveLength(2);
         expect(snapshots.at(-1)).toBeUndefined();
-        expect(observableRegistry.get(processor.activity)).toBeUndefined();
+        expect(observableRegistry.get(chatModel.activity)).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'ignores phases and partials that arrive after newer ones',
+    Effect.fn(
+      function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const runtime = yield* Effect.context<Database.Service>();
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+
+        // The swarm relay reorders: each stale event follows the newer one it predates.
+        const messageId = Obj.ID.random();
+        const batches = [
+          traceMessage([requestPhaseEvent('contacting-provider', undefined, 30)]),
+          traceMessage([requestPhaseEvent('encoding-prompt', undefined, 20)]),
+          traceMessage([partialBlockEvent(messageId, 'Hello', true, 40)]),
+          traceMessage([partialBlockEvent(messageId, 'Hel', true, 35)]),
+          traceMessage([partialBlockEvent(messageId, 'Hello world.', false, 50)]),
+          // A tool phase, then a block of a message not seen yet but produced before it.
+          traceMessage([requestPhaseEvent('calling-tool', undefined, 70)]),
+          traceMessage([partialBlockEvent(Obj.ID.random(), 'Earlier', true, 60)]),
+        ];
+        const stubSession = yield* makeStubSession(chat, feed, batches);
+        const observableRegistry = AtomRegistry.make();
+        const chatModel = new ChatModel(
+          session,
+          yield* makeTestRuntime,
+          feed,
+          yield* makeStubSpaceLayer({ getSession: () => Effect.succeed(stubSession), hydrate: () => Effect.void }),
+          { chat: Ref.make(chat), observableRegistry },
+        );
+
+        const phases: (string | undefined)[] = [];
+        const streamed: string[][] = [];
+        const unsubscribers = [
+          observableRegistry.subscribe(chatModel.activity, (activity) => phases.push(activity?.phase), {
+            immediate: true,
+          }),
+          observableRegistry.subscribe(chatModel.messages, (messages) => streamed.push(texts(messages)), {
+            immediate: true,
+          }),
+        ];
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
+
+        yield* Effect.promise(() => chatModel.request({ message: 'Hello?' }));
+
+        expect(phases).not.toContain('encoding-prompt');
+        // The older block still streams, but the line keeps naming the tool rather than `generating`.
+        expect(phases.slice(phases.indexOf('calling-tool'))).not.toContain('generating');
+        expect(streamed).not.toContainEqual(['Hel']);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Hello world.', 'Earlier']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -320,15 +365,15 @@ describe('AiChatProcessor streaming', () => {
 //
 
 /** Builds a trace event carrying a request setup phase (the payload the activity atom consumes). */
-const requestPhaseEvent = (phase: Trace.RequestPhaseName, attempt?: number): Trace.Event => ({
-  timestamp: 0,
+const requestPhaseEvent = (phase: Trace.RequestPhaseName, attempt?: number, timestamp = 0): Trace.Event => ({
+  timestamp,
   type: Trace.RequestPhase.key,
   data: { phase, ...(attempt !== undefined ? { attempt } : {}) },
 });
 
 /** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
-const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
-  timestamp: 0,
+const partialBlockEvent = (messageId: string, text: string, pending: boolean, timestamp = 0): Trace.Event => ({
+  timestamp,
   type: Trace.PartialBlock.key,
   data: {
     messageId,
@@ -433,56 +478,3 @@ const makeGatedSession = (
     };
     return { session, release: Deferred.succeed(gate, undefined).pipe(Effect.asVoid) };
   });
-
-/** The processor's space layer: the test layer's real services with the stub agent service swapped in. */
-const makeSpaceLayer = (agentService: AgentService.Service) =>
-  Effect.gen(function* () {
-    const services = yield* Effect.context<
-      | Database.Service
-      | Credential.CredentialsService
-      | AiService.AiService
-      | Registry.Service
-      | OpaqueToolkit.OpaqueToolkitProvider
-    >();
-    return Layer.mergeAll(
-      Layer.succeedContext(
-        Context.pick(
-          Database.Service,
-          Credential.CredentialsService,
-          AiService.AiService,
-          Registry.Service,
-          OpaqueToolkit.OpaqueToolkitProvider,
-        )(services),
-      ),
-      Layer.succeed(AgentService.AgentService, agentService),
-    );
-  });
-
-/**
- * A sound {@link Capabilities.ProcessManagerRuntime} for tests: a `ManagedRuntime` over the
- * assistant test layer's process services plus a bare `PluginManager` for the capability/plugin
- * tags. Scoped so the runtime is disposed with the test.
- */
-const makeTestRuntime = Effect.gen(function* () {
-  const services = yield* Effect.context<
-    | ProcessManager.Service
-    | Operation.Service
-    | ProcessManager.ProcessOperationInvoker.Service
-    | ServiceResolver.ServiceResolver
-  >();
-  const manager = PluginManager.make({
-    pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),
-    plugins: [],
-  });
-  const runtime: Capabilities.ProcessManagerRuntime = ManagedRuntime.make(
-    Layer.mergeAll(
-      Layer.succeedContext(services),
-      Layer.succeed(Capability.Service, manager.capabilities),
-      Layer.succeed(Plugin.Service, manager),
-    ),
-  );
-  yield* Effect.addFinalizer(() =>
-    Effect.promise(() => (runtime as ManagedRuntime.ManagedRuntime<never, never>).dispose()),
-  );
-  return runtime;
-});

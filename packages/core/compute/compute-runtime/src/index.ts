@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as DurableOperation from './DurableOperation.ts';
 export * from './errors.ts';
 export * as FeedTraceSink from './FeedTraceSink.ts';
 export * from './functions-trace.ts';
 export * as LayerStack from './LayerStack.ts';
+export * as OperationProcess from './OperationProcess.ts';
 export * from './protocol.ts';
 export * as ProcessHandle from './ProcessHandle.ts';
 export * as ProcessManager from './ProcessManager.ts';
+export * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 export * as QueuedRemoteControl from './QueuedRemoteControl.ts';
 export * from './remote-command-queue.ts';
 export * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
@@ -20,6 +21,6 @@ export * as SwarmTraceSink from './SwarmTraceSink.ts';
 export * from './services/index.ts';
 export { layer as storageServiceLayer } from './storage-service-layer.ts';
 export * from './triggers/index.ts';
-export * as TriggerMonitor from './TriggerMonitor.ts';
+export * as TriggerManager from './TriggerManager.ts';
 export * as UnifiedProcessManager from './UnifiedProcessManager.ts';
 export * from './url.ts';

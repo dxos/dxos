@@ -23,23 +23,23 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Assistant } from '#types';
 
-import { AiChatProcessor, type AiServicePreset } from '../processor/index.ts';
+import { type AiServicePreset, ChatModel } from '../chat-model/index.ts';
 
-export type UseChatProcessorProps = {
+export type UseChatModelProps = {
   db?: Database.Database;
   chat?: Chat.Chat;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
   registry?: Registry.Registry;
   settings?: Assistant.Settings;
-  /** Attributes the prompts submitted through this processor to a person (see `AiChatProcessorOptions.sender`). */
+  /** Attributes the prompts submitted through this chat model to a person (see `ChatModelOptions.sender`). */
   sender?: AgentService.PromptSender;
 };
 
 /**
- * Configure and create AiChatProcessor.
+ * Configure and create ChatModel.
  */
-export const useChatProcessor = ({
+export const useChatModel = ({
   db,
   chat,
   preset,
@@ -47,7 +47,7 @@ export const useChatProcessor = ({
   registry,
   settings,
   sender,
-}: UseChatProcessorProps): AiChatProcessor | undefined => {
+}: UseChatModelProps): ChatModel | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
@@ -79,11 +79,11 @@ export const useChatProcessor = ({
   }, [db, chat, feed]);
 
   const serviceResolver = Hooks.useCapability(Capabilities.ServiceResolver);
-  // Primitives rather than the object, so an inline `sender` literal does not rebuild the processor each render.
+  // Primitives rather than the object, so an inline `sender` literal does not rebuild the chat model each render.
   const senderName = sender?.name;
   const senderDid = sender?.identityDid;
 
-  const processor = useMemo(() => {
+  const chatModel = useMemo(() => {
     if (!runtime || !session || !chat || !feed || !db) {
       return undefined;
     }
@@ -98,8 +98,8 @@ export const useChatProcessor = ({
       OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 
-    log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(session, runtime, feed, spaceLayer, {
+    log('creating chat model', { preset, model: preset?.model, settings });
+    return new ChatModel(session, runtime, feed, spaceLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       registry,
@@ -113,10 +113,10 @@ export const useChatProcessor = ({
     });
   }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid]);
 
-  // A remount (e.g. the user navigated to another page mid-turn) gets a fresh processor whose
+  // A remount (e.g. the user navigated to another page mid-turn) gets a fresh chat model whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;
   // adopting it restores the running indicator and the streamed blocks.
-  useEffect(() => processor?.adopt(), [processor]);
+  useEffect(() => chatModel?.adopt(), [chatModel]);
 
-  return processor;
+  return chatModel;
 };

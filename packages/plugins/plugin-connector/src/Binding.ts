@@ -270,7 +270,7 @@ export const triggerOfRoutine = (routine: Routine.Routine): Trigger.Trigger | un
     .find((trigger): trigger is Trigger.Trigger => Obj.instanceOf(Trigger.Trigger, trigger) && !!trigger.spec);
 
 /**
- * The space's {@link Trigger.TriggerMonitorService}. The monitor has space affinity, so it is
+ * The space's {@link Trigger.ManagerService}. The monitor has space affinity, so it is
  * resolved through the app's {@link Capabilities.ServiceResolver} rather than taken from the ambient
  * runtime; resolution fails where no such capability exists (CLI, workerd), which is why this layer
  * carries an error channel.
@@ -278,14 +278,14 @@ export const triggerOfRoutine = (routine: Routine.Routine): Trigger.Trigger | un
 export const triggerMonitorLayer = (
   spaceId: Key.SpaceId,
 ): Layer.Layer<
-  Trigger.TriggerMonitorService,
+  Trigger.ManagerService,
   Capability.NotFoundError | ServiceResolver.ServiceNotAvailableError,
   Capability.Service
 > =>
   Layer.unwrap(
     Capability.get(Capabilities.ServiceResolver).pipe(
       Effect.map((resolver) =>
-        ServiceResolver.provide({ space: spaceId }, Trigger.TriggerMonitorService).pipe(
+        ServiceResolver.provide({ space: spaceId }, Trigger.ManagerService).pipe(
           Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, resolver)),
         ),
       ),
@@ -306,9 +306,9 @@ export const triggerMonitorLayer = (
 export const fireTrigger = (
   trigger: Trigger.Trigger,
   data?: TriggerEvent.DirectEvent['data'],
-): Effect.Effect<void, never, Trigger.TriggerMonitorService> =>
+): Effect.Effect<void, never, Trigger.ManagerService> =>
   Effect.gen(function* () {
-    const monitor = yield* Trigger.TriggerMonitorService;
+    const monitor = yield* Trigger.ManagerService;
     // `data` (the pressed binding, for pressed-first ordering) rides on a `DirectEvent` so the
     // trigger's `{{event.data.*}}` input templates pick it up; the dispatcher keeps the event across
     // `runAgain` retries, so the hint survives continuation rounds.

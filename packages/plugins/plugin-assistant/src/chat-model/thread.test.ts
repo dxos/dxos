@@ -578,7 +578,7 @@ const sortText = (messages: Message.Message[]) => text(Array.sort(messages, byAp
 
 const statusOf = (message: Message.Message) => getDelivery(message);
 
-/** A prompt as `AiChatProcessor.send` holds it, submitted while the feed held `known`. */
+/** A prompt as `ChatModel.send` holds it, submitted while the feed held `known`. */
 const outboxEntry = (text: string, known: readonly Message.Message[]): OutboxEntry => ({
   id: Obj.ID.random(),
   created: new Date(clock++).toISOString(),

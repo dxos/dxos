@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 
-import { type ProcessorRequestContext } from '../processor/index.ts';
+import { type ChatRequestContext } from '../chat-model/index.ts';
 
 /** Resolve `object`'s selection to text via the AnchorResolver contributed for its typename. */
 export const getSelectionContext = ({
@@ -21,7 +21,7 @@ export const getSelectionContext = ({
   object: Obj.Unknown;
   selection: Selection.Selection | undefined;
   resolvers: readonly AppCapabilities.AnchorResolver[];
-}): ProcessorRequestContext | undefined => {
+}): ChatRequestContext | undefined => {
   const typename = Obj.getTypename(object);
   const resolver = typename ? resolvers.find((candidate) => candidate.key === typename) : undefined;
   if (!resolver) {
@@ -55,9 +55,7 @@ export const getSelectionContext = ({
 };
 
 /** Submit-time provider of the companion object's current selection as request context. */
-export const useSelectionContext = (
-  companionTo: Obj.Unknown | undefined,
-): (() => ProcessorRequestContext | undefined) => {
+export const useSelectionContext = (companionTo: Obj.Unknown | undefined): (() => ChatRequestContext | undefined) => {
   // getAll-style lookup: absent capabilities yield empty arrays so non-companion chats stay inert.
   const [viewState] = Hooks.useCapabilities(AttentionCapabilities.ViewState);
   const resolvers = Hooks.useCapabilities(AppCapabilities.AnchorResolver);
