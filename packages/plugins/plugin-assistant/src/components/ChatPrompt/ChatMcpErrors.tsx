@@ -12,23 +12,23 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatModel } from '../../chat-model/index.ts';
 
 export type ChatMcpErrorsProps = Util.ThemedClassName<{
-  processor: AiChatProcessor;
+  chatModel: ChatModel;
 }>;
 
 /**
  * Inline banner that lists MCP servers that failed to connect during the most recent request.
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
-export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => {
+export const ChatMcpErrors = ({ classNames, chatModel }: ChatMcpErrorsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const errors = useAtomValue(processor.mcpErrors);
+  const errors = useAtomValue(chatModel.mcpErrors);
 
   const handleDismiss = useCallback(() => {
-    processor.dismissMcpErrors();
-  }, [processor]);
+    chatModel.dismissMcpErrors();
+  }, [chatModel]);
 
   if (errors.length === 0) {
     return null;

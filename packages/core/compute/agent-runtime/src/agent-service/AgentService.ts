@@ -105,6 +105,8 @@ export interface Options {
    * is still found.
    */
   processes?: () => readonly AgentProcessDefinition[];
+  /** Keep each session's process resident between turns (see `AgentProcessOptions.resident`). */
+  resident?: boolean;
 }
 
 /**
@@ -182,6 +184,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           provider: provider ?? opts?.provider,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
+          resident: opts?.resident,
         });
 
       /**
@@ -426,5 +429,5 @@ const makeSession = (
   // turn open, so anything it did afterwards would land after the reader's next prompt. The next
   // process to spawn on this feed discards what it inherits instead (see `onSpawn` in agent-process).
   terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
-  subscribeEphemeral: () => process.subscribeEphemeral(),
+  subscribeEphemeral: (options) => process.subscribeEphemeral(options),
 });

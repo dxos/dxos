@@ -83,7 +83,7 @@ const ChatModuleContainer = ({
 
   const registry = useRegistry();
   const runtime = Hooks.useProcessManagerRuntime();
-  const processor = AssistantHooks.useChatProcessor({ runtime, db: space.db, chat, preset, registry, sender });
+  const chatModel = AssistantHooks.useChatModel({ runtime, db: space.db, chat, preset, registry, sender });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
@@ -93,20 +93,20 @@ const ChatModuleContainer = ({
   // Once per chat for the panel's life: each story load seeds a fresh space, so a remount is the only repeat.
   const prompted = useRef(new Set<string>());
   useEffect(() => {
-    if (!initialPrompt || !chat || !processor || prompted.current.has(chat.id)) {
+    if (!initialPrompt || !chat || !chatModel || prompted.current.has(chat.id)) {
       return;
     }
 
     prompted.current.add(chat.id);
-    void processor.request({ message: initialPrompt });
-  }, [initialPrompt, chat, processor]);
+    void chatModel.request({ message: initialPrompt });
+  }, [initialPrompt, chat, chatModel]);
 
-  if (!chat || !processor) {
+  if (!chat || !chatModel) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} processor={processor}>
+    <Chat.Root chat={chat} chatModel={chatModel}>
       <Panel.Root data-testid={participant ? `chat-panel-${participant}` : undefined}>
         <Panel.Header>
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
