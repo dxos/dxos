@@ -22,10 +22,30 @@ import { Organization, Person } from '@dxos/types';
 
 import { SearchContextProvider } from '#hooks';
 import { translations } from '#translations';
+import { SearchCapabilities } from '#types';
 
 import { SearchDialog } from './SearchDialog.tsx';
 
 random.seed(0);
+
+/** Stands in for a plugin's action, answering text shaped like `owner/repo#123` without any I/O. */
+const testQueryAction: SearchCapabilities.QueryAction = {
+  id: 'storybook/query-action/import',
+  match: (text) => {
+    const reference = /^[\w.-]+\/[\w.-]+#\d+$/.exec(text)?.[0];
+    if (!reference) {
+      return undefined;
+    }
+    return {
+      label: [
+        'storybook-import.label',
+        { ns: 'storybook', defaultValue: 'Import {{reference}} from GitHub', reference },
+      ],
+      icon: 'ph--git-pull-request--regular',
+    };
+  },
+  run: () => Effect.succeed(undefined),
+};
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -48,7 +68,10 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
+      capabilities: [
+        Capability.contribute(AppCapabilities.Translations, translations),
+        Capability.contribute(SearchCapabilities.QueryAction, [testQueryAction]),
+      ],
       plugins: [
         ...CorePlugins.make(),
         StorybookPlugin.make({}),
@@ -104,5 +127,16 @@ export const Test: Story = {
       },
       { timeout: 15_000 },
     );
+  },
+};
+
+export const QueryAction: Story = {
+  play: async () => {
+    const body = within(document.body);
+    const searchInput = await body.findByRole('textbox', undefined, { timeout: 10_000 });
+
+    // The row is built from the text alone, so it is offered before any search result could be.
+    await userEvent.type(searchInput, 'dxos/dxos#1234');
+    await expect(await body.findByRole('option', { name: 'Import dxos/dxos#1234 from GitHub' })).toBeInTheDocument();
   },
 };
