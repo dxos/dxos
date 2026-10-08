@@ -26,11 +26,14 @@ const IMAGE_PROPERTY = 'image';
 const asImage = (value: unknown): string | undefined =>
   typeof value === 'string' && value.length > 0 ? value : undefined;
 
+/** A live object, which may carry the picture convention. */
+const isLiveObject = (value: unknown): value is Obj.Unknown & { readonly [IMAGE_PROPERTY]?: unknown } =>
+  Obj.isObject(value);
+
 /** The object's picture URL, or `undefined` when it has none. */
 export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string | undefined =>
-  // Read through `unknown`: the property is a convention across unrelated types rather than part of
-  // any shared interface, so there is no structural overlap for TypeScript to check against.
-  asImage((entity as unknown as Record<string, unknown>)[IMAGE_PROPERTY]);
+  // Read by name: the property is a convention across unrelated types rather than part of any shared interface.
+  asImage(Reflect.get(entity, IMAGE_PROPERTY));
 
 export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & {
   /** Any ECHO object — the avatar is derived entirely from it. */
@@ -48,7 +51,7 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
  * that away; the type glyph stays the default.
  */
 export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
-  const live = Obj.isObject(object) ? (object as Obj.Unknown & { [IMAGE_PROPERTY]?: unknown }) : undefined;
+  const live = isLiveObject(object) ? object : undefined;
   const [liveImage] = useObject(live, IMAGE_PROPERTY);
   const image = live ? asImage(liveImage) : getObjectImage(object);
   const label = useLabel(object);

@@ -13,8 +13,8 @@ import { isNonNullable } from '@dxos/util';
 
 const getReferences = (obj: Entity.Unknown | Entity.Snapshot): Ref.Unknown[] =>
   Object.getOwnPropertyNames(obj)
-    .map((name) => (obj as unknown as Record<string, unknown>)[name])
-    .filter((value) => Ref.isRef(value)) as Ref.Unknown[];
+    .map((name) => Reflect.get(obj, name))
+    .filter(Ref.isRef);
 
 /**
  * Returns objects related to `subject` via direct references and/or relations.
