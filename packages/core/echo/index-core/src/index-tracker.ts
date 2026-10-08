@@ -152,6 +152,27 @@ export class IndexTracker {
       }),
   );
 
+  /** Whether any index holds a cursor over `resourceId` of `sourceName`, in any space. */
+  hasResourceCursors = Effect.fn('IndexTracker.hasResourceCursors')(
+    (query: { sourceName: string; resourceId: string }): Effect.Effect<boolean, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const rows = yield* this.#sql<{ found: number }>`
+          SELECT 1 AS found FROM indexCursor
+          WHERE sourceName = ${query.sourceName} AND resourceId = ${query.resourceId}
+          LIMIT 1
+        `;
+        return rows.length > 0;
+      }),
+  );
+
+  /** Delete every index's cursors over `resourceId` of `sourceName`, in every space. */
+  deleteResourceCursors = Effect.fn('IndexTracker.deleteResourceCursors')(
+    (query: { sourceName: string; resourceId: string }): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        yield* this.#sql`DELETE FROM indexCursor WHERE sourceName = ${query.sourceName} AND resourceId = ${query.resourceId}`;
+      }),
+  );
+
   /** Delete cursors for documents (resource ids) wiped by garbage collection. */
   deleteCursors = Effect.fn('IndexTracker.deleteCursors')(
     (query: { spaceId: SpaceId; resourceIds: readonly string[] }): Effect.Effect<void, SqlError.SqlError> =>

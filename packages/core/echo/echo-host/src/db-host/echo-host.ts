@@ -33,7 +33,7 @@ import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { countWork } from '@dxos/util';
@@ -56,6 +56,7 @@ import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
+import { FeedRetention, type FeedRetentionPolicy } from './feed-retention.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
@@ -122,6 +123,11 @@ export type EchoHostProps = {
    * @default false
    */
   useSubduction?: boolean;
+
+  /**
+   * How long feed namespaces keep their blocks locally; a namespace without a policy keeps every block.
+   */
+  feedRetention?: readonly FeedRetentionPolicy[];
 };
 
 /**
@@ -176,6 +182,7 @@ export class EchoHost extends Resource {
   private readonly _feedDataSource: FeedDataSource;
 
   private readonly _indexScheduler: IndexScheduler;
+  private readonly _feedRetention: FeedRetention;
 
   private _feedService: FeedService.Handlers;
 
@@ -200,6 +207,7 @@ export class EchoHost extends Resource {
     queryDebounce,
     assignQueuePositions = false,
     useSubduction,
+    feedRetention = [],
   }: EchoHostProps) {
     super();
 
@@ -226,8 +234,15 @@ export class EchoHost extends Resource {
     });
     this._indexScheduler = new IndexScheduler({
       feedBlocks: this._feedStore.onNewBlocks,
+      isIndexedNamespace: (feedNamespace) => this._feedDataSource.feedNamespaces.includes(feedNamespace),
       documentsSaved: this._automergeHost.documentsSaved,
       runPass: (ctx, reasons) => this._runIndexPass(ctx, reasons),
+    });
+    this._feedRetention = new FeedRetention({
+      feedStore: this._feedStore,
+      runtime: this._runtime,
+      getSpaceIds: () => this._spaceStateManager.spaceIds,
+      policies: feedRetention,
     });
     this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
       // Read the mutable slot lazily so a handler wired after construction takes effect;
@@ -375,6 +390,8 @@ export class EchoHost extends Resource {
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     log('echo-host: feed store migration done');
 
+    await this.#dropUnindexedFeedNamespaces();
+
     // AutomergeHost._open() runs its own migrations (automerge_chunks, heads) before
     // constructing the Repo, so table creation is handled there.
     log('echo-host: opening automerge host...');
@@ -419,15 +436,35 @@ export class EchoHost extends Resource {
     });
     // Opened on the host's context, so the scheduler stops subscribing the moment the host starts closing.
     await this._indexScheduler.open(this._ctx);
+    await this._feedRetention.open(this._ctx);
     log('echo-host: open complete');
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    await this._feedRetention.close();
     await this._indexScheduler.close();
 
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();
+  }
+
+  /**
+   * Removes what an earlier release indexed from namespaces this host no longer indexes. Runs before
+   * the scheduler opens, so no query reads a namespace half-dropped.
+   */
+  async #dropUnindexedFeedNamespaces(): Promise<void> {
+    for (const feedNamespace of Object.values(FeedProtocol.WellKnownNamespaces)) {
+      if (this._feedDataSource.feedNamespaces.includes(feedNamespace)) {
+        continue;
+      }
+      const deleted = await RuntimeProvider.runPromise(this._runtime)(
+        this.indexEngine.dropFeedNamespace({ sourceName: this._feedDataSource.sourceName, feedNamespace }),
+      );
+      if (deleted > 0) {
+        log.info('dropped feed namespace from the index', { feedNamespace, deleted });
+      }
+    }
   }
 
   /**
@@ -1418,6 +1455,7 @@ export type EchoHostLayerOptions = Pick<
   | 'useSubduction'
   | 'queryExecutor'
   | 'queryDebounce'
+  | 'feedRetention'
 >;
 
 /**

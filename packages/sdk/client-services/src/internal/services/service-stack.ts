@@ -34,6 +34,7 @@ import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManagerRuntimeProps } from '../spaces/index.ts';
+import { traceFeedRetention } from './trace-retention.ts';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -194,6 +195,7 @@ export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?
             getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
             useSubduction: options.useSubduction,
             queryExecutor: options.queryExecutor,
+            feedRetention: [traceFeedRetention],
           });
         }),
       ),

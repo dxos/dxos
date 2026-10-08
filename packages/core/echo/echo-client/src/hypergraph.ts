@@ -31,6 +31,7 @@ import { RequestImpl } from './core-db/ref-resolver-request.ts';
 import { getObjectCore, isEchoObject } from './echo-handler/index.ts';
 import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
+  DirectFeedQuerySource,
   GraphQueryContext,
   type QueryContext,
   QueryResultCache,
@@ -897,6 +898,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       context.addQuerySource(new SpaceQuerySource(database));
     }
     context.addQuerySource(new RegistryQuerySource(this._registry));
+    context.addQuerySource(
+      new DirectFeedQuerySource((feedUri, namespace) => {
+        const spaceId = EID.getSpaceId(feedUri);
+        return spaceId ? this._databases.get(spaceId)?._getFeedHandleIfAvailable(feedUri, namespace) : undefined;
+      }),
+    );
     for (const provider of this._querySourceProviders) {
       context.addQuerySource(provider.create());
     }

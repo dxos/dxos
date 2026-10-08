@@ -104,6 +104,8 @@ export class FeedHandle {
   #objects = new Map<string, Entity.Unknown>();
   /** Object id of every block the subscription has sent, by block id; what its deltas refer to. */
   #subscriptionBlocks = new Map<string, string>();
+  /** Whether the current subscription has applied its first push, so {@link objects} is the feed's content. */
+  #subscriptionReady = false;
   /** Subscription pushes applied in order: a delta only makes sense on top of the push before it. */
   #pushChain: Promise<void> = Promise.resolve();
   private _isLoading = true;
@@ -170,6 +172,19 @@ export class FeedHandle {
       uri: this._echoUri,
       objects: this.#objects.size,
     };
+  }
+
+  /**
+   * The feed's objects in feed order while a {@link beginPolling} subscription is open; empty
+   * otherwise, and until the subscription's first push ({@link subscriptionReady}).
+   */
+  get objects(): readonly Entity.Unknown[] {
+    return [...this.#objects.values()];
+  }
+
+  /** Whether the open subscription has delivered the feed's content; {@link updated} fires when it does. */
+  get subscriptionReady(): boolean {
+    return this.#subscriptionReady;
   }
 
   /** The last load, subscription, or append failure; an append failure is cleared once every write has been sent. */
@@ -645,6 +660,15 @@ export class FeedHandle {
   }
 
   /**
+   * Reads every object of the feed once, straight from the feed store, in feed order.
+   */
+  async queryObjects(): Promise<Entity.Unknown[]> {
+    const objects = await this.fetchObjectsJSON();
+    const entities = await this.#upsertAll(objects);
+    return [...new Set(objects.map((json) => json.id))].flatMap((id) => entities.get(id) ?? []);
+  }
+
+  /**
    * Upserts a batch of objects, in order for blocks of the same object: concurrent upserts of a new
    * id share one hydration, which would apply only the first of its blocks.
    */
@@ -778,10 +802,13 @@ export class FeedHandle {
     }
 
     const changed = next.size !== this.#objects.size || [...next.keys()].some((id) => !this.#objects.has(id));
+    // The first push is news even when the feed is empty: it is what tells a reader the content is known.
+    const first = !this.#subscriptionReady;
     this.#subscriptionBlocks = blocks;
     this.#objects = next;
+    this.#subscriptionReady = true;
     this._isLoading = false;
-    if (changed) {
+    if (changed || first) {
       this.updated.emit();
     }
   }
@@ -802,6 +829,7 @@ export class FeedHandle {
     // anyway, since nothing is left to refresh it.
     this.#objects = new Map();
     this.#subscriptionBlocks = new Map();
+    this.#subscriptionReady = false;
   }
 
   /** Throws after teardown if writes could not be sent, since nothing carries them to a handle that replaces this one. */

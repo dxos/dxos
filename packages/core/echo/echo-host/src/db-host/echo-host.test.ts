@@ -61,7 +61,7 @@ describe('EchoHost.updateIndexes', () => {
 });
 
 describe('EchoHost trace indexing', () => {
-  test('updateIndexes does not wait out the trace throttle', async () => {
+  test('a trace append starts no index pass and leaves nothing for updateIndexes to wait on', async () => {
     const { host, runtime, spaceId } = await setup();
     await host.updateIndexes();
     const update = vi.spyOn(host.indexEngine, 'update');
@@ -76,7 +76,7 @@ describe('EchoHost trace indexing', () => {
       ]),
     );
     await host.updateIndexes();
-    expect(update).toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 });
 
