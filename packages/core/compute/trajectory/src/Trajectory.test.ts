@@ -8,14 +8,13 @@ import { describe, test } from 'vitest';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { type Actor } from '@dxos/types';
 
-import * as Payload from './Payload.ts';
 import * as Trajectory from './Trajectory.ts';
 
 const user: Actor.Actor = { role: 'user', name: 'alice' };
 const assistant: Actor.Actor = { role: 'assistant' };
 const anchor = Obj.ID.random();
 
-const payloads: Payload.Any[] = [
+const payloads: Trajectory.Payload[] = [
   { _tag: 'message', role: 'user', blocks: [{ _tag: 'text', text: 'hello' }] },
   {
     _tag: 'message',
@@ -52,18 +51,18 @@ const payloads: Payload.Any[] = [
 describe('Trajectory', () => {
   test('payload fixtures cover every tag', ({ expect }) => {
     const tags = new Set(payloads.map((payload) => payload._tag));
-    expect(tags.size).to.eq(Payload.Any.members.length);
+    expect(tags.size).to.eq(Trajectory.Payload.members.length);
   });
 
   test('every payload round-trips through the schema', ({ expect }) => {
     for (const payload of payloads) {
-      const encoded = Schema.encodeSync(Payload.Any)(payload);
-      expect(Schema.decodeUnknownSync(Payload.Any)(encoded)).to.deep.eq(payload);
+      const encoded = Schema.encodeSync(Trajectory.Payload)(payload);
+      expect(Schema.decodeUnknownSync(Trajectory.Payload)(encoded)).to.deep.eq(payload);
     }
   });
 
   test('rejects an unknown tag', ({ expect }) => {
-    expect(() => Schema.decodeUnknownSync(Payload.Any)({ _tag: 'nope' })).to.throw();
+    expect(() => Schema.decodeUnknownSync(Trajectory.Payload)({ _tag: 'nope' })).to.throw();
   });
 
   test('make() creates an event object for every payload', ({ expect }) => {
