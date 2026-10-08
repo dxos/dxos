@@ -376,6 +376,10 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
+      # Each `moon run` below no-ops when `echo-client-e2e:test` is not affected.
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+
       # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
       # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
       # (only github/needs/strategy/matrix/vars/inputs), and referencing it there fails the whole
@@ -405,10 +409,13 @@ jobs:
   # parallelism stays disabled — overloaded runners flake — so the win is concurrency across machines,
   # not within one. `--on-failure continue` because moon's default bail drops a failing cell's
   # remaining targets, hiding what they cost.
+  #
+  # Skipped on pushes to main: the merge queue already ran these targets on the same tree.
   test:
     name: test (${{ matrix.suite }}, shard=${{ matrix.shard }})
     if: >-
-      ${{ inputs.only != 'check' && inputs.only != 'e2e' && (
+      ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') && (
       github.event_name != 'pull_request' || !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'ci')) }}
     strategy:
       fail-fast: false
@@ -511,7 +518,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-  # Sharded browser × cell, three cells per browser: a cell costs ~160s of fixed setup against
+  # Sharded browser × cell, two cells per browser: a cell costs ~160s of fixed setup against
   # ~450-590s of test work, so more cells buy less than they cost. Cells are `moon exec --job`, so moon
   # packs whichever targets it assigns and no target list is hand-maintained. `--on-failure continue`
   # because moon's default bail drops a failing cell's remaining targets, hiding what they cost. The
@@ -523,7 +530,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        # Chromium gates PRs and the merge queue. A push to main runs only Firefox and WebKit, since the
+        # queue already ran Chromium on the same tree. The nightly, dispatches and `ci/*` run all three.
+        browser: >-
+          ${{ fromJSON((github.event_name == 'pull_request' || github.event_name == 'merge_group') &&
+          '["chromium"]' || (github.event_name == 'push' && github.ref == 'refs/heads/main') &&
+          '["firefox","webkit"]' || '["chromium","firefox","webkit"]') }}
         # `composer` gets a dedicated cell (it dwarfs every other suite); `rest` runs the pool.
         # Explicit here rather than via `moon --job`, whose partitioner co-located composer's former
         # halves and (at --concurrency=1) ran them serially — measured in .agents/projects/ci/DESIGN.md.
