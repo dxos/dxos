@@ -302,6 +302,57 @@ describe('ChatModel streaming', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'ignores phases and partials that arrive after newer ones',
+    Effect.fn(
+      function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const runtime = yield* Effect.context<Database.Service>();
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+
+        // The swarm relay reorders: each stale event follows the newer one it predates.
+        const messageId = Obj.ID.random();
+        const batches = [
+          traceMessage([requestPhaseEvent('contacting-provider', undefined, 30)]),
+          traceMessage([requestPhaseEvent('encoding-prompt', undefined, 20)]),
+          traceMessage([partialBlockEvent(messageId, 'Hello', true, 40)]),
+          traceMessage([partialBlockEvent(messageId, 'Hel', true, 35)]),
+          traceMessage([partialBlockEvent(messageId, 'Hello world.', false, 50)]),
+        ];
+        const stubSession = yield* makeStubSession(chat, feed, batches);
+        const observableRegistry = AtomRegistry.make();
+        const chatModel = new ChatModel(
+          session,
+          yield* makeTestRuntime,
+          feed,
+          yield* makeStubSpaceLayer({ getSession: () => Effect.succeed(stubSession), hydrate: () => Effect.void }),
+          { chat: Ref.make(chat), observableRegistry },
+        );
+
+        const phases: (string | undefined)[] = [];
+        const streamed: string[][] = [];
+        const unsubscribers = [
+          observableRegistry.subscribe(chatModel.activity, (activity) => phases.push(activity?.phase), {
+            immediate: true,
+          }),
+          observableRegistry.subscribe(chatModel.messages, (messages) => streamed.push(texts(messages)), {
+            immediate: true,
+          }),
+        ];
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
+
+        yield* Effect.promise(() => chatModel.request({ message: 'Hello?' }));
+
+        expect(phases).not.toContain('encoding-prompt');
+        expect(streamed).not.toContainEqual(['Hel']);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Hello world.']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
 
 //
@@ -309,15 +360,15 @@ describe('ChatModel streaming', () => {
 //
 
 /** Builds a trace event carrying a request setup phase (the payload the activity atom consumes). */
-const requestPhaseEvent = (phase: Trace.RequestPhaseName, attempt?: number): Trace.Event => ({
-  timestamp: 0,
+const requestPhaseEvent = (phase: Trace.RequestPhaseName, attempt?: number, timestamp = 0): Trace.Event => ({
+  timestamp,
   type: Trace.RequestPhase.key,
   data: { phase, ...(attempt !== undefined ? { attempt } : {}) },
 });
 
 /** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
-const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
-  timestamp: 0,
+const partialBlockEvent = (messageId: string, text: string, pending: boolean, timestamp = 0): Trace.Event => ({
+  timestamp,
   type: Trace.PartialBlock.key,
   data: {
     messageId,

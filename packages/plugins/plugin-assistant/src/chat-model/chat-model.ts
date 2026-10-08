@@ -257,6 +257,10 @@ export class ChatModel {
   /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
   readonly #finalizedIds = new Set<string>();
 
+  /** Timestamp of the newest trace event applied this turn, overall and per streamed message. */
+  #appliedAt = 0;
+  readonly #appliedAtByMessage = new Map<string, number>();
+
   /** Currently active request fiber. */
   #requestFiber: Fiber.Fiber<void, unknown> | undefined;
 
@@ -679,9 +683,17 @@ export class ChatModel {
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
+            // A remote agent's trace is relayed over the swarm, which does not preserve order, so a
+            // phase or partial older than one already applied is stale rather than news.
             if (Trace.isOfType(Trace.PartialBlock, event)) {
+              if (this.#isStale(event.timestamp, event.data.messageId)) {
+                continue;
+              }
               this.#handleEphemeralMessage(event.data);
             } else if (Trace.isOfType(Trace.RequestPhase, event)) {
+              if (this.#isStale(event.timestamp)) {
+                continue;
+              }
               this.#registry.set(this.activity, event.data);
             } else if (Trace.isOfType(Trace.McpServerError, event)) {
               this.#handleMcpError(event.data);
@@ -751,6 +763,22 @@ export class ChatModel {
   }
 
   /**
+   * Whether a trace event is older than one already applied (per message for a streamed block, whose
+   * text is the whole reply so far), recording it as the newest when it is not.
+   */
+  #isStale(timestamp: number, messageId?: string): boolean {
+    const appliedAt = messageId === undefined ? this.#appliedAt : (this.#appliedAtByMessage.get(messageId) ?? 0);
+    if (timestamp < appliedAt) {
+      return true;
+    }
+    this.#appliedAt = Math.max(this.#appliedAt, timestamp);
+    if (messageId !== undefined) {
+      this.#appliedAtByMessage.set(messageId, timestamp);
+    }
+    return false;
+  }
+
+  /**
    * Handles an ephemeral message from the agent process.
    * Both pending and completed blocks arrive here. Completed blocks are deduped
    * against messages already written to the feed queue to handle the race between
@@ -816,6 +844,7 @@ export class ChatModel {
     this.#registry.set(this.#streaming, []);
     this.#registry.set(this.activity, undefined);
     this.#finalizedIds.clear();
+    this.#resetApplied();
   }
 
   /**
@@ -830,6 +859,12 @@ export class ChatModel {
       this.#registry.set(this.#streaming, []);
     }
     this.#finalizedIds.clear();
+    this.#resetApplied();
+  }
+
+  #resetApplied() {
+    this.#appliedAt = 0;
+    this.#appliedAtByMessage.clear();
   }
 
   /**
