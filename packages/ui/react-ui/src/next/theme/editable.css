@@ -30,6 +30,10 @@
   .dx-editable-preview:hover:not([data-disabled]) {
     background: var(--color-hover-surface);
   }
+  /* In a list row the row is the hover target: the preview takes the row's background rather than painting its own. */
+  .dx-row .dx-editable-preview:hover:not([data-disabled]) {
+    background: transparent;
+  }
   .dx-editable-preview[data-placeholder-shown] {
     color: var(--color-fg-subtle);
   }
