@@ -6,10 +6,13 @@ import './spotlight.css';
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
-import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as NavTreeSurface from '@dxos/plugin-navtree/NavTreeSurface';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import { isTauri } from '@dxos/util';
 
 import { useSpotlightState } from './useSpotlightState.ts';
@@ -33,10 +36,10 @@ const focusSearchInput = () => {
 
 export const SpotlightLayout = () => {
   const { state, updateState } = useSpotlightState();
-  const dialogContent = state.dialogContent ?? { component: COMMANDS_DIALOG };
+  const dialogContent = state.dialogContent ?? { component: NavTreeSurface.COMMANDS_DIALOG };
 
   // Reset state and autofocus when the popover window gains focus.
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!isTauri()) {
       return;
     }
@@ -48,7 +51,7 @@ export const SpotlightLayout = () => {
       if (payload) {
         updateState(() => ({
           dialogOpen: true,
-          dialogContent: { component: COMMANDS_DIALOG },
+          dialogContent: { component: NavTreeSurface.COMMANDS_DIALOG },
         }));
         requestAnimationFrame(() => focusSearchInput());
       }
@@ -58,10 +61,10 @@ export const SpotlightLayout = () => {
   }, [updateState]);
 
   return (
-    <div className='grid inset-0 overflow-hidden' data-spotlight>
+    <Layout.Grid classNames='inset-0 overflow-hidden' data-spotlight>
       <Dialog.Root open={state.dialogOpen} modal={false}>
-        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback} />
+        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={Status.Error} />
       </Dialog.Root>
-    </div>
+    </Layout.Grid>
   );
 };

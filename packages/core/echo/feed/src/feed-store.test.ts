@@ -7,7 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -851,6 +851,19 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('serves a space token from memory after its first read', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      const token = yield* feed.getServerToken(spaceId);
+
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM cursor_tokens WHERE spaceId = ${spaceId}`;
+      expect(yield* feed.getServerToken(spaceId)).toBe(token);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('honours position for a client that sends a matching token or none', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
@@ -1082,6 +1095,111 @@ describe('FeedStore encryption', () => {
         WHERE feeds.feedId = ${plaintextFeed}
       `;
       expect(plain[0].encryptionKeyId).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('FeedStore caught-up cursors', () => {
+  /** Hides the blocks table, so any read of it fails the test rather than going unnoticed. */
+  const withoutBlocks = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.acquireUseRelease(
+      Effect.flatMap(SqlClient.SqlClient, (sql) => sql`ALTER TABLE blocks RENAME TO blocks_hidden`),
+      () => effect,
+      () => Effect.orDie(Effect.flatMap(SqlClient.SqlClient, (sql) => sql`ALTER TABLE blocks_hidden RENAME TO blocks`)),
+    );
+
+  const message = (spaceId: SpaceId, feedId: string, feedNamespace: string) => ({
+    spaceId,
+    feedId,
+    feedNamespace,
+    data: new Uint8Array([1]),
+  });
+
+  it.effect('answers a caught-up cursor without reading blocks, and sees the next append', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+
+      const read = (cursor?: FeedProtocol.FeedCursor) =>
+        feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.data, cursor });
+      const first = yield* read();
+      expect(first.blocks).toHaveLength(1);
+
+      const idle = yield* withoutBlocks(read(first.nextCursor));
+      expect(idle.blocks).toEqual([]);
+      expect(idle.nextCursor).toBe(first.nextCursor);
+      expect(idle.hasMore).toBe(false);
+
+      // Another namespace moving its head leaves this cursor caught up.
+      yield* feed.appendLocal([message(spaceId, EntityId.random(), WellKnownNamespaces.trace)]);
+      expect((yield* withoutBlocks(read(first.nextCursor))).blocks).toEqual([]);
+
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+      const next = yield* read(first.nextCursor);
+      expect(next.blocks).toHaveLength(1);
+      expect(next.nextCursor).not.toBe(first.nextCursor);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // A feed row keeps the namespace it was created with, so a block appended under another one lands there.
+  it.effect('moves the head of the namespace the feed belongs to, not the one the append named', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+      const { nextCursor } = yield* feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.data });
+
+      yield* feed.appendLocal([message(spaceId, feedId, WellKnownNamespaces.trace)]);
+      const result = yield* feed.query({
+        requestId: 'r',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        cursor: nextCursor,
+      });
+      expect(result.blocks).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('answers an empty namespace without reading blocks', () =>
+    Effect.gen(function* () {
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const spaceId = SpaceId.random();
+      // The first read of a namespace learns its head from the table; after that it is held in memory.
+      yield* feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.trace });
+
+      const result = yield* withoutBlocks(
+        feed.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.trace }),
+      );
+      expect(result.blocks).toEqual([]);
+      expect(result.hasMore).toBe(false);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('learns the head of blocks written before it opened', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const writer = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* writer.migrate();
+      yield* writer.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+      const { nextCursor } = yield* writer.query({ requestId: 'r', spaceId, feedNamespace: WellKnownNamespaces.data });
+      yield* writer.appendLocal([message(spaceId, feedId, WellKnownNamespaces.data)]);
+
+      // A store reopened over the same database holds no head yet, so it must not mistake the cursor for caught up.
+      const reopened = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const result = yield* reopened.query({
+        requestId: 'r',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        cursor: nextCursor,
+      });
+      expect(result.blocks).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

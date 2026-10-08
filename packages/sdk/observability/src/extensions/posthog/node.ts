@@ -130,8 +130,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             const id = attribution();
             if (id) {
               client.captureInitialize({
-                clientName,
-                clientVersion,
+                clientName: clientName || ObservabilityExtension.UNKNOWN_MCP_CLIENT,
+                clientVersion: clientVersion || undefined,
                 sessionId,
                 protocolVersion,
                 distinctId: id,
@@ -147,11 +147,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                 sessionId,
                 protocolVersion,
                 distinctId: id,
-                // `captureToolCall` takes a client name only on the handshake, so the calls carry
-                // it as the property that event would have produced.
+                // `captureToolCall` takes no client name, so the calls carry it as a property.
                 properties: {
                   ...mcpProperties(),
-                  ...(clientName ? { $mcp_client_name: clientName } : {}),
+                  $mcp_client_name: clientName || ObservabilityExtension.UNKNOWN_MCP_CLIENT,
                   ...(clientVersion ? { $mcp_client_version: clientVersion } : {}),
                 },
               });

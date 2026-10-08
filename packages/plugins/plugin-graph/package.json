@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-graph",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#hooks": {
@@ -35,20 +35,25 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
+    "./GraphAction": {
+      "source": "./src/GraphAction.ts",
+      "types": "./dist/types/src/GraphAction.d.ts",
+      "import": "./dist/lib/ns/GraphAction.mjs"
     },
     "./GraphPlugin": {
       "source": "./src/GraphPlugin.ts",
       "types": "./dist/types/src/GraphPlugin.d.ts",
       "import": "./dist/lib/GraphPlugin.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

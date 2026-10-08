@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AsyncResult from 'effect/reactivity/AsyncResult';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
@@ -17,7 +17,9 @@ import type * as Relation from '../../Relation.ts';
 import { getLabel } from '../Annotation/index.ts';
 import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
+import { ParentId } from '../common/types/index.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
+import { refArrayFamily } from '../Ref/atoms.ts';
 import { RefTypeId } from '../Ref/ref.ts';
 import { loadRefTarget } from '../Ref/utils.ts';
 import { isDeleted } from './deleted.ts';
@@ -55,30 +57,34 @@ const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.
 
 /**
  * Atom family for ECHO refs (snapshot version).
- * Uses ref as key — same ref returns same atom.
+ * Keyed by a structurally-equal tuple `[ref, includeDeleted]` so nested families are avoided.
  * Subscribes to target object changes after loading.
  */
-const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined> => {
-  return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
-    let unsubscribeTarget: (() => void) | undefined;
+const refFamily = Atom.family(
+  <T extends Obj.Unknown>([ref, includeDeleted]: readonly [Ref.Ref<T>, boolean]): Atom.Atom<
+    Obj.Snapshot<T> | undefined
+  > => {
+    return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
+      let unsubscribeTarget: (() => void) | undefined;
 
-    const setupTargetSubscription = (target: T): Obj.Snapshot<T> | undefined => {
-      unsubscribeTarget?.();
-      unsubscribeTarget = subscribe(target, () => {
-        // Deleted objects resolve to undefined so callers don't need to inspect isDeleted.
-        // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-        get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
-      });
-      // Runs at once when the node was disposed while the target loaded.
-      get.addFinalizer(unsubscribeTarget);
-      // Guard the initial value too: an already-deleted target must resolve to undefined, not leak a
-      // snapshot until the next update.
-      return isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>);
-    };
+      // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
+      const read = (target: T): Obj.Snapshot<T> | undefined =>
+        !includeDeleted && isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>);
 
-    return loadRefTarget(ref, get, setupTargetSubscription);
-  });
-});
+      const setupTargetSubscription = (target: T): Obj.Snapshot<T> | undefined => {
+        unsubscribeTarget?.();
+        unsubscribeTarget = subscribe(target, () => {
+          get.setSelf(read(target));
+        });
+        // Runs at once when the node was disposed while the target loaded.
+        get.addFinalizer(unsubscribeTarget);
+        return read(target);
+      };
+
+      return loadRefTarget(ref, get, setupTargetSubscription, includeDeleted ? { deleted: 'include' } : undefined);
+    });
+  },
+);
 
 /**
  * Atom family for ECHO object properties, keyed by `[object, key]`.
@@ -189,10 +195,10 @@ const relationFamily = Atom.family(<T extends Relation.Unknown>(relation: T): At
  */
 export const makeAtom: {
   <T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>>;
-  <T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined>;
-} = (objOrRef: Obj.Unknown | Ref.Ref<any>): Atom.Atom<any> => {
+  <T extends Obj.Unknown>(ref: Ref.Ref<T>, options?: Ref.LoadOptions): Atom.Atom<Obj.Snapshot<T> | undefined>;
+} = (objOrRef: Obj.Unknown | Ref.Ref<any>, options?: Ref.LoadOptions): Atom.Atom<any> => {
   if (isRef(objOrRef)) {
-    return refFamily(objOrRef as any);
+    return refFamily([objOrRef, options?.deleted === 'include']);
   }
 
   const obj = objOrRef as Obj.Unknown;
@@ -221,11 +227,17 @@ export const makeProperty: {
 /**
  * Like `makeAtom` but returns the live reactive object instead of a snapshot.
  * Prefer `makeAtom` (snapshot) unless you need the live Obj for generic mutations.
+ * Given a ref array, yields the loaded targets in ref order, without deleted ones unless included.
  */
 export const makeWithReactive: {
   <T extends Obj.Unknown>(obj: T): Atom.Atom<T>;
   <T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined>;
-} = (objOrRef: Obj.Unknown | Ref.Ref<any>): Atom.Atom<any> => {
+  <T extends Obj.Unknown>(refs: readonly Ref.Ref<T>[], options?: Ref.LoadOptions): Atom.Atom<T[]>;
+} = (objOrRef: Obj.Unknown | Ref.Ref<any> | readonly Ref.Ref<any>[], options?: Ref.LoadOptions): Atom.Atom<any> => {
+  if (Array.isArray(objOrRef)) {
+    // Copied: a live ECHO array would mutate under the family key.
+    return refArrayFamily([[...objOrRef], options?.deleted === 'include']);
+  }
   if (isRef(objOrRef)) {
     return refWithReactiveFamily(objOrRef as Ref.Ref<any>);
   }
@@ -281,4 +293,36 @@ const labelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.
 export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
   return labelAtomFamily(entity);
+};
+
+const readParent = (obj: Obj.Unknown): Obj.Unknown | undefined => (obj as any)[ParentId];
+
+/**
+ * Atom family for an object's parent.
+ * Fires only when the parent changes, compared by id since the database may hand back a different proxy.
+ */
+const parentAtomFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Unknown | undefined> => {
+  return Atom.make<Obj.Unknown | undefined>((get) => {
+    let previous = readParent(obj);
+
+    const unsubscribe = subscribe(obj, () => {
+      const next = readParent(obj);
+      if (next?.id !== previous?.id) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  });
+});
+
+/**
+ * Create a read-only atom for the parent of a reactive ECHO object.
+ * Re-evaluates on object mutation; only propagates when the parent changes.
+ */
+export const makeParentAtom = <T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Unknown | undefined> => {
+  assertArgument(isEntity(obj), 'obj', 'Must be a reactive ECHO object');
+  return parentAtomFamily(obj);
 };

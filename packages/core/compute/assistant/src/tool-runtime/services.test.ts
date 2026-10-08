@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AnthropicStructuredOutput from 'effect/ai/AnthropicStructuredOutput';
+import * as Tool from 'effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
-import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
 import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import {
@@ -195,6 +195,38 @@ describe('projectFunctionToTool', () => {
       properties: { any: 1 },
     });
     expect(decoded.properties).toEqual({ any: 1 });
+  });
+
+  // v4 nests a rest signature under `allOf`; the recorded corpus states it on the node itself.
+  test('a struct with a rest signature is advertised as an open object', ({ expect }) => {
+    const Draft = Operation.make({
+      meta: { key: DXN.make('com.example.operation.test.draft') },
+      input: Schema.Struct({
+        drafts: Schema.Array(
+          Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+            Schema.Record(Schema.String, Schema.Unknown),
+          ]),
+        ),
+      }),
+      output: Schema.Void,
+    });
+
+    expect(Tool.getJsonSchema(projectFunctionToTool(Draft))).toEqual({
+      type: 'object',
+      properties: {
+        drafts: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { '@type': { type: 'string' } },
+            required: ['@type'],
+            additionalProperties: true,
+          },
+        },
+      },
+      required: ['drafts'],
+      additionalProperties: false,
+    });
   });
 });
 

@@ -4,13 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { type TestContext } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
@@ -75,18 +78,23 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
   ];
   const operationHandlers = [
     SpaceOperationHandlerSet.handlers,
-    ChatContextHandlers,
+    ChatContextSkill.Handlers,
     ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet.handlers] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
     ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),
   ];
-  const extraServices = usesFactStore(config.mode)
+  const modeServices = usesFactStore(config.mode)
     ? factStoreLayer(config.facts)
     : config.mode === 'rag'
       ? vectorStoreLayer(config.messages)
       : config.mode === 'hybrid'
         ? subjectIndexLayer(config.facts, config.messages)
         : Layer.empty;
+  // The space verbs declare the capability manager (e.g. `addObject`), which every real host binds.
+  const extraServices = Layer.merge(
+    modeServices,
+    Layer.succeed(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
+  );
 
   const TestLayer = AssistantTestLayer({
     aiServicePreset: config.variant.preset,

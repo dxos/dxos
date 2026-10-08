@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
-import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
@@ -28,7 +28,7 @@ export type ProfileFormProps = Omit<IdentityPanelStepProps, 'send' | 'devices'> 
 
 export const ProfileForm = (props: ProfileFormProps) => {
   const { onUpdateProfile } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const handleUpdateProfile = async (profile: NonNullable<Identity['profile']>) => {
     await onUpdateProfile?.(profile).catch((error) => {
@@ -47,13 +47,14 @@ export type ProfileFormImplProps = ProfileFormProps & {
 const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMessage }: ProfileFormImplProps) => {
   const profile = identity?.profile;
   const disabled = !active;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
-  const { textValue, setTextValue } = useClipboard();
   const identityKeyHex = identityHex(identity);
-  const copied = textValue === identityKeyHex;
+  // Confirmed only once the write resolves, since `writeText` rejects without focus or permission.
+  const [copiedKey, setCopiedKey] = useState<string>();
+  const copied = copiedKey !== undefined && copiedKey === identityKeyHex;
   return (
     <>
       <div className='grow flex flex-col justify-center'>
@@ -84,7 +85,10 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           disabled={disabled}
           onClick={() => {
             if (identityKeyHex) {
-              void setTextValue(identityKeyHex);
+              void navigator.clipboard.writeText(identityKeyHex).then(
+                () => setCopiedKey(identityKeyHex),
+                () => setCopiedKey(undefined),
+              );
             }
           }}
           data-testid='update-profile-form-copy-key'

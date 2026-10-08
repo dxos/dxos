@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Database, Type } from '@dxos/echo';
-import * as Annotation from '@dxos/echo/Annotation';
-import * as Entity from '@dxos/echo/Entity';
 
 const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
   Array.from(
@@ -15,10 +13,7 @@ const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
       db.graph.registry
         .list()
         .filter(Type.isType)
-        .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
-        .filter(
-          (schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)),
-        ),
+        .filter((schema) => TypeOptions.isUserType(schema)),
     ),
   );
 

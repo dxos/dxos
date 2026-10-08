@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -25,7 +25,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';

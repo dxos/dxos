@@ -8,8 +8,8 @@ import { useContext, useEffect, useState } from 'react';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Position } from '@dxos/util';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as Position from '@dxos/util/Position';
 
 import { DeckSchema } from '#types';
 
@@ -24,7 +24,7 @@ import { DeckSchema } from '#types';
  * it from an effect defers that notification to the commit phase where cross-component updates are allowed.
  */
 export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const [companions, setCompanions] = useState<AppGraphNode.Node[] | undefined>(undefined);
 

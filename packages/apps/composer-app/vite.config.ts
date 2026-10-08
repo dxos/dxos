@@ -3,12 +3,20 @@
 //
 
 import react from '@vitejs/plugin-react';
+import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
+import {
+  type ConfigEnv,
+  type PluginOption,
+  type Rollup,
+  defaultClientConditions,
+  defineConfig,
+  searchForWorkspaceRoot,
+} from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -22,6 +30,7 @@ import { isNonNullable } from '@dxos/util';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
@@ -46,6 +55,8 @@ const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugi
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
+// The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
+const isTauriBuild = isTrue(process.env.DX_TAURI) || Boolean(process.env.TAURI_ENV_PLATFORM);
 
 // Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
 // per-module transform pipeline, reusing `build.rolldownOptions` verbatim and running no dep
@@ -69,14 +80,26 @@ const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
-const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+const boot = bootChunking({
+  entry: path.resolve(dirname, 'src/main.tsx'),
+  exclude: new RegExp(
+    [
+      /@zag-js\/(accordion|carousel|floating-panel|hover-card|qr-code|scroll-snap|slider|toc)\//,
+      /@ark-ui\/react\/dist\/components\/(accordion|carousel|floating-panel|hover-card|qr-code|slider|toc)\//,
+      /react-ui\/src\/next\/components\/(Accordion|Carousel|FloatingPanel|HoverCard|QrCode|Slider)\//,
+      /node_modules\/(\.pnpm\/)?uqr[@/]/,
+    ]
+      .map((pattern) => pattern.source)
+      .join('|'),
+  ),
+});
 
 // These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
 // Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
 // concurrent dynamic imports before Safari 27 (TDZ, "undefined is not an object" at plugin
 // activation: https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by the module-loader rewrite
 // in https://github.com/WebKit/WebKit/pull/57827). Resolving to `slim` and initializing explicitly
-// per realm via `initAutomergeWasm()` before the client boots avoids both.
+// per realm (`util/automerge-wasm.ts`) before the client boots avoids both.
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
@@ -124,6 +147,29 @@ const slimWasm = (): PluginOption => {
     },
   };
 };
+
+/**
+ * Sources compiled by the Solid JSX transform instead of React's.
+ */
+const SOLID_SOURCES = [
+  '**/solid-ui-geo/**',
+  '**/plugin-map-solid/**',
+  '**/effect-atom-solid/**',
+  '**/web-context-solid/**',
+  '**/echo-solid/**',
+  '**/node_modules/solid-js/**',
+  '**/node_modules/solid-element/**',
+  '**/node_modules/@solid-primitives/**',
+];
+
+/**
+ * Sources plugin-react leaves untouched; regexes, because Rolldown hook filters match string globs
+ * against a cwd-relative id that `**` cannot climb out of.
+ */
+const REACT_EXCLUDE = [
+  /\/node_modules\//,
+  /\/(?:solid-ui-geo|plugin-map-solid|effect-atom-solid|web-context-solid|echo-solid)\//,
+];
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -187,9 +233,52 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
+  // `?module-url` imports: compiled module URLs handed to a worker to `import()`.
+  ModuleUrlPlugin(),
   wasm(),
   // sourcemaps(),
 ];
+
+/** Libraries a plugin shares with the host through its import map, so it must build against the same versions. */
+const PLUGIN_SHARED_PACKAGES = [
+  'effect',
+  'react',
+  'react-dom',
+  '@types/react',
+  '@vitejs/plugin-react',
+  'typescript',
+  'vite',
+];
+
+/**
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
+ * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
+ * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
+ */
+const pluginToolchain = (): string => {
+  let commit = process.env.DX_PLUGIN_TOOLCHAIN_COMMIT;
+  try {
+    commit ??= execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dirname, encoding: 'utf8' }).trim();
+  } catch {
+    return '';
+  }
+  // Read from `node_modules` directly, since not every package exports its `package.json`; the app's own
+  // links first, then the workspace root that pnpm hoists the rest of the toolchain to.
+  const version = (name: string): string => {
+    const [manifest] = [dirname, path.resolve(dirname, '../../..')]
+      .map((dir) => path.join(dir, 'node_modules', name, 'package.json'))
+      .filter((file) => existsSync(file));
+    return manifest ? JSON.parse(readFileSync(manifest, 'utf8')).version : '';
+  };
+  const versions = Object.fromEntries(PLUGIN_SHARED_PACKAGES.map((name) => [name, version(name)]));
+  // A template pinned to an unknown version would install whatever is latest, not what the host shares.
+  if (Object.values(versions).some((value) => !value)) {
+    return '';
+  }
+  const cli = process.env.DX_PLUGIN_TOOLCHAIN_CLI;
+  return JSON.stringify({ commit, versions, ...(cli && { cli }) });
+};
 
 /**
  * https://vitejs.dev/config
@@ -201,9 +290,11 @@ export default defineConfig((env) => ({
     // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
-    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
-    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
+    '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
+    // Pins the desktop app's Composer Plugin template (plugin-projects) to what this bundle was built from.
+    'import.meta.env.VITE_DX_PLUGIN_TOOLCHAIN': JSON.stringify(pluginToolchain()),
   },
   server: {
     host: true,
@@ -323,7 +414,14 @@ export default defineConfig((env) => ({
           ? undefined
           : {
               groups: [
-                { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+                // Only what the page renders with: react-dom's other subpaths (server, static,
+                // profiling, test-utils) reach the graph through the import map's wrappers, and
+                // matching them here pinned ~580 KB that never runs into the eager chunk.
+                {
+                  name: 'react',
+                  test: /node_modules[\\/](?:react[\\/]|react-dom[\\/](?!(?:cjs[\\/]react-dom-)?(?:server|static|profiling|test-utils)))/,
+                  priority: 10,
+                },
                 // Naive maxSize splitting cuts through module cycles and breaks evaluation
                 // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
                 // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
@@ -392,6 +490,7 @@ export default defineConfig((env) => ({
     ],
   },
   resolve: {
+    conditions: isTauriBuild ? ['tauri', ...defaultClientConditions] : undefined,
     // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
     // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
@@ -536,20 +635,10 @@ export default defineConfig((env) => ({
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
-    solid({
-      include: [
-        '**/solid-ui-geo/**',
-        '**/plugin-map-solid/**',
-        '**/effect-atom-solid/**',
-        '**/web-context-solid/**',
-        '**/echo-solid/**',
-        '**/node_modules/solid-js/**',
-        '**/node_modules/solid-element/**',
-        '**/node_modules/@solid-primitives/**',
-      ],
-    }),
+    solid({ include: SOLID_SOURCES }),
 
-    react(),
+    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 

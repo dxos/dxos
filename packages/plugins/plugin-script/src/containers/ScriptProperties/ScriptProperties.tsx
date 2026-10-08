@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Script from '@dxos/compute/Script';
 import { Form } from '@dxos/react-ui-form';
 

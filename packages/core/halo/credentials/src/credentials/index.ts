@@ -8,5 +8,7 @@ export * from './credential-keys.ts';
 export * from './credential-generator.ts';
 export * from './credentials-document.ts';
 export * from './feed-payload.ts';
+export * from './inbox-envelope.ts';
 export * from './signing.ts';
+export * from './space-invitation-notice.ts';
 export * from './verifier.ts';

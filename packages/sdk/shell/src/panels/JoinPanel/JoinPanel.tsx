@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useId, useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Viewport } from '../../components/index.ts';
 import { ConfirmReset } from '../../steps/index.ts';
@@ -192,8 +192,8 @@ export const JoinPanel = ({
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
-  const { hasIosKeyboard } = useThemeContext();
-  const titleId = useId('joinPanel__heading', propsTitleId);
+  const hasIosKeyboard = Hooks.useIosKeyboard();
+  const titleId = Hooks.useId('joinPanel__heading', propsTitleId);
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
@@ -215,7 +215,7 @@ export const JoinPanel = ({
   }, [joinService]);
 
   // TODO(wittjosiah): Workaround, not a fix. The defect is in the join machine: `identity` enters it as
-  //   a one-time context snapshot, so a panel mounting while a `client.reset()` settles routes on the
+  //   a one-time context snapshot, so a panel mounting while an identity deletion settles routes on the
   //   outgoing identity into `resettingIdentity`, a state with no automatic exit. The machine should
   //   react to identity clearing rather than needing this effect to re-issue the disposition from
   //   outside it. Doing that means editing the machine's routing, which is riskier than this is worth
@@ -456,7 +456,7 @@ export const JoinPanel = ({
 
   const onConfirmResetStorage = useCallback(
     () =>
-      client.reset().then(() => {
+      client.halo.deleteIdentity().then(() => {
         joinSend({ type: 'resetIdentity' });
       }),
     [client, joinSend],

@@ -7,8 +7,9 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { SpaceSelector } from '../../../../containers/index.ts';
@@ -46,20 +47,20 @@ export const CredentialsArticle = ({ role, ...props }: ArticleProps & { space?: 
   return (
     <Panel.Root role={role}>
       {!props.space && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <SpaceSelector />
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(d) => d._original}
           detailsPosition='bottom'
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

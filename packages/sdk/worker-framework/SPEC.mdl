@@ -1,7 +1,7 @@
 ---
 id: org.dxos.worker-framework
 name: WorkerFramework
-version: 0.10.0
+version: 0.12.0
 ---
 
 Generic worker management framework for DXOS client services. It elects a single
@@ -90,9 +90,10 @@ module Client
     Options.onConnect. Entrypoint: @dxos/worker-framework/client.
   api:
     Connection: class extends Resource  # ctor(Options); open()/close(); clientId; onReconnect(cb); closed + reconnected events.
-    Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, onConnect.
+    Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, maxLeaderFailures?, onPersistentFailure?, onConnect.
     Handle: { close(): Promise }        # per-connection handle returned by Options.onConnect.
-    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?.
+    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?, workerProbeTimeout?.
+    ConnectionDiagnostics: {...}        # phases + failure counters merged into the error open() rejects with.
 ```
 
 ### `@dxos/worker-framework/worker`
@@ -105,7 +106,8 @@ module Worker
     Entrypoint: @dxos/worker-framework/worker.
   api:
     run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`).
-    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, createRuntime.
+    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, displaceGraceTimeout?, signal?, createRuntime.
+    DEFAULT_DISPLACE_GRACE_TIMEOUT: number  # grace before a queued worker escalates to the incumbent's tab.
     RuntimeHandle: {...}                # createSession({ clientId, isOwner, onClose }) + optional idempotent stop().
 ```
 
@@ -134,14 +136,16 @@ module WorkerProtocol
     The wire protocol shared across the Client, Worker, and Coordinator modules,
     plus the error codec it posts; re-exported from every entrypoint that references them.
   api:
-    WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; sendMessage(msg): void }.
-    CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port.
-    DedicatedWorkerMessage: union        # listening | init | ready | init-failed | start-session | session.
+    WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; onError?: Event<Error>; sendMessage(msg): void }.
+    CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port | session-failed.
+    DedicatedWorkerMessage: union        # listening | init | ready | ping | pong | init-failed | start-session | session | session-failed.
     SerializedError: {...}               # name, message, stack?, cause?, errors? — an error that survives postMessage.
     encodeError: (error: unknown) => SerializedError   # keeps name, cause chain, and AggregateError.errors.
     decodeError: (error: SerializedError) => Error     # rebuilds it as a plain Error / AggregateError.
     WorkerEndpoint: interface            # postMessage / add + removeEventListener('message') / close?.
     WorkerOrPort: Worker | MessagePort   # worker handle usable from a leader tab or a test port.
+    TerminableWorker: interface          # { terminate(): void } — a handle that can stand its worker down without cooperation.
+    isTerminable: (worker: WorkerOrPort) => worker is WorkerOrPort & TerminableWorker
 ```
 
 ## Features
@@ -173,6 +177,25 @@ feat F-1: Leader election
     then: open() rejects with the worker's decoded error, whatever its name, and the
           tab neither re-enters election nor keeps requesting a port; a tab that has
           connected before treats it as F-1.4
+
+  req F-1.6:
+    when: a tab's own port request times out while it holds the leader lock, or its
+          coordinator reported the link dead (`onError`)
+    then: it never steals — its own lock, or a healthy leader it merely cannot hear —
+          but counts the attempt towards the escalation budget
+
+  req F-1.7:
+    when: the leader lock is stolen, or the connection closes, while the leader session is
+          still opening
+    then: the session is closed once it finishes opening and its worker terminated, so the
+          storage lock does not stay with a worker nobody leads
+
+  req F-1.8:
+    when: `maxLeaderFailures` consecutive leader-session or connect-handle failures occur
+          before the initial connection, or the coordinator reports its link dead
+    then: open() rejects with that failure at once instead of at the end of its budget, and
+          the connection releases its lock, worker and timers (`close()` is a no-op on a
+          resource that never opened)
 ```
 
 ```mdl
@@ -192,6 +215,16 @@ feat F-2: Session and port exchange
   req F-2.3:
     when: the worker receives repeated `start-session` for the same clientId
     then: it de-duplicates and serves a single session per client
+
+  req F-2.4:
+    when: a `provide-port` arrives carrying an `attempt` other than the tab's current one
+    then: it is ignored — the worker closes that session when it serves the current attempt
+
+  req F-2.5:
+    when: the worker cannot build a session whose ports it already handed out
+    then: it posts `session-failed`; the leader relays it; the tab fails that attempt with
+          the decoded error at once (before or after the ports arrive, even after its handle
+          opened) and retries with backoff instead of waiting out the handle timeout
 ```
 
 ```mdl
@@ -210,12 +243,50 @@ feat F-3: Worker lifecycle and displacement
   req F-3.3:
     when: the leader sends `init` with config and an `ownerClientId`
     then: the worker builds its runtime, marks the owning client, and replies `ready`
-          with its `livenessLockKey`
+          with its `livenessLockKey`, `workerId`, and `displaceChannel`
 
   req F-3.4:
     when: building the runtime fails
     then: the worker replies `init-failed` with the encoded error instead of `ready`,
           then shuts down, releasing its liveness and storage locks
+
+  req F-3.5:
+    when: a starting worker is still queued on the storage lock after its displacement
+          grace period, i.e. the incumbent never serviced the stop signal
+    then: it escalates once on the same channel with a `terminate` action naming itself,
+          the storage lock and the grace period it allowed
+
+  req F-3.6:
+    when: a tab receives an escalation over the displacement channel
+    then: it discards a malformed message, ignores one its own worker raised, and otherwise
+          judges the worker it owns — never the issuer — terminating that worker only when
+          it still holds its liveness lock and does not answer a `ping` within the probe
+          timeout, so however many tabs share the storage lock every healthy bystander
+          stands down and only the wedged incumbent is terminated
+
+  req F-3.7:
+    when: a worker is asked `ping`
+    then: it replies `pong` with the same nonce from its message loop, which is what tells
+          its tab that it is not the wedged worker an escalation is aimed at
+
+  req F-3.8:
+    when: a tab terminates a worker that ignored displacement
+    then: it reports a `WorkerTerminationError` at error level, so the forced kill reaches
+          error telemetry, and closes the session with that same error
+
+  req F-3.9:
+    when: the wedged worker's handle exposes no `terminate()` (a bare `MessagePort`, whose
+          `close()` leaves the worker holding both locks)
+    then: the tab reports a `WorkerNotTerminableError` at error level and leaves the session
+          open, since nothing was killed and the storage lock is still held
+
+  req F-3.10:
+    when: the worker's storage or liveness lock is stolen, or `Options.signal` aborts
+    then: the worker shuts down (a pending storage-lock request is simply dropped)
+
+  req F-3.11:
+    when: a `start-session` arrives while the worker is shutting down
+    then: it is ignored rather than forked from the closing runtime scope
 ```
 
 ```mdl
@@ -229,7 +300,19 @@ feat F-4: Reconnection
 
   req F-4.2:
     when: a reconnection (not the initial connection) succeeds
-    then: all `onReconnect` callbacks run and the `reconnected` event fires
+    then: all `onReconnect` callbacks run and the `reconnected` event fires; a callback
+          that throws is logged and fails neither the reconnection nor the others
+
+  req F-4.3:
+    when: the connection is lost while a handle is installed
+    then: the stale handle is closed (bounded) BEFORE the next connect attempt starts, and
+          a handle that `onConnect` resolves after its attempt was abandoned or timed out
+          is closed rather than installed
+
+  req F-4.4:
+    when: a connect attempt received a port but its handle failed to open
+    then: the retry waits an exponential, capped, jittered backoff; `maxLeaderFailures`
+          consecutive such failures fire `onPersistentFailure` once per streak
 ```
 
 ```mdl
@@ -281,6 +364,19 @@ scenario T-2: Follower reconnects after leader death
     - the follower detects termination (liveness lock released)
     - a surviving tab wins re-election and spawns a new worker
     - the follower re-runs onConnect and fires the reconnected event
+```
+
+```mdl
+scenario T-4: The system converges after a random storm
+  given: a seeded walk over 2–4 in-process tabs, one recording worker, and a hub coordinator
+         (`src/Client.model.test.ts`; replay with `DX_MODEL_SEED`, soak with `DX_MODEL_SEEDS`)
+  when: tabs open, close and reload; the worker is killed or hung; tab links pause or break;
+        port requests are dropped and replies delayed; handles and sessions fail on purpose
+  then:
+    - every open tab is connected through exactly one handle
+    - all tabs agree on one live worker, which holds its liveness lock, and one leader
+    - the worker's live sessions are exactly the open tabs
+    - no tab accumulates coordinator listeners
 ```
 
 ```mdl

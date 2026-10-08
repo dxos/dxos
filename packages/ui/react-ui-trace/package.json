@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-trace",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Runtime observability: process tree, trace timeline, session gantt.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -56,6 +57,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

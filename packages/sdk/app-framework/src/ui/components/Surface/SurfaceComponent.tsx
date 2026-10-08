@@ -20,11 +20,12 @@ import React, {
   useRef,
 } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useStable } from '@dxos/react-hooks';
-import { Position, shallowEqual } from '@dxos/util';
+import { shallowEqual } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ActivationEvents, Capabilities, Role } from '../../../common/index.ts';
 import { type PluginManager } from '../../../core/index.ts';
@@ -186,7 +187,9 @@ const SurfaceContextProvider = memo(
 
     // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
     // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
-    if (isSurfaceWrapperEnabled()) {
+    // A profiler provider (the devtools plugin) needs the wrapper in production too: its Surfaces card
+    // and highlight overlay read the mount registry the wrapper populates.
+    if (isSurfaceWrapperEnabled() || onProfilerRender) {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>

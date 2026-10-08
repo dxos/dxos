@@ -8,18 +8,18 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ContentBlock } from '@dxos/types';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
+import { defaultPreset, providerForModel } from '../chat-model/index.ts';
 import { ChatNotSpecifiedError } from '../errors.ts';
-import { defaultPreset, providerForModel } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
@@ -53,17 +53,17 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         const preset = yield* chatPreset;
         // As the chat's own UI does before its first request: the process reads the model off the
         // chat, so a chat without one is stamped with the model its picker would show.
-        if (!chat.model && preset) {
+        if (!chat.session?.model && preset) {
           Obj.update(chat, (chat) => {
-            chat.model = Ref.fromURI(preset.model);
+            chat.session = { ...chat.session, model: preset.model };
           });
         }
         // The model is the chat's, so the provider has to be the one that serves THAT model rather
         // than whichever the settings now name — a chat outlives a provider change.
-        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
+        const model = chat.session?.model ?? preset?.model;
         const session = yield* AgentService.getSession(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
-          location: chat.remote ? 'edge' : 'local',
+          location: Agent.chatLocation(chat),
         });
         // A plain string is submitted as-is so the default path keeps its existing shape; a stated
         // disposition needs the block form, which is the only place it can be carried.

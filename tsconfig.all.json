@@ -7,13 +7,13 @@
       "path": "packages/core/compute/agent-claude/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/agent-code-mode/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
       "path": "packages/core/compute/ai/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/ai-typesafe/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
@@ -52,6 +52,9 @@
       "path": "packages/core/echo/blob/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/brain/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -73,6 +76,9 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
+      "path": "tools/code-index/tsconfig.json"
+    },
+    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -80,6 +86,9 @@
     },
     {
       "path": "packages/apps/composer-crx/tsconfig.json"
+    },
+    {
+      "path": "packages/e2e/composer-e2e/tsconfig.json"
     },
     {
       "path": "packages/apps/composer-stream-deck/tsconfig.json"
@@ -115,6 +124,9 @@
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
+      "path": "packages/common/datalog/tsconfig.json"
+    },
+    {
       "path": "packages/common/debug/tsconfig.json"
     },
     {
@@ -125,6 +137,9 @@
     },
     {
       "path": "packages/devtools/devtools-extension/tsconfig.json"
+    },
+    {
+      "path": "packages/common/diagram/tsconfig.json"
     },
     {
       "path": "packages/experimental/discord-bot/tsconfig.json"
@@ -173,6 +188,9 @@
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-sqlite/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
@@ -349,6 +367,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-agent/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -374,6 +395,9 @@
     },
     {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-canvas/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
@@ -518,6 +542,9 @@
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-messenger/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-mobile/tsconfig.json"
@@ -667,6 +694,9 @@
       "path": "packages/plugins/plugin-typesafe/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-uml/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
@@ -790,6 +820,9 @@
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-html/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
@@ -812,6 +845,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-query/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-rdf/tsconfig.json"
@@ -872,6 +908,9 @@
     },
     {
       "path": "packages/stories/stories-brain/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-compute/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"
@@ -983,6 +1022,9 @@
     },
     {
       "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-module-url/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-shutdown/tsconfig.json"

@@ -8,8 +8,9 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState } from '../../../../hooks/index.ts';
@@ -78,13 +79,13 @@ export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   return (
     <Panel.Root role={role}>
       {!props.space && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <DataSpaceSelector />
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <SVG.Root ref={context}>
           <SVG.Markers />
           <SVG.Graph
@@ -115,7 +116,7 @@ export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             // }}
           />
         </SVG.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

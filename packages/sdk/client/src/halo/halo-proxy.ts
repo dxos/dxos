@@ -7,7 +7,13 @@ import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
-import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo, type RecoverIdentityArgs } from '@dxos/client-protocol';
+import {
+  AUTH_TIMEOUT,
+  type ClientServicesProvider,
+  type Halo,
+  type HaloInbox,
+  type RecoverIdentityArgs,
+} from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -33,6 +39,7 @@ import {
   type ProfileDocument,
   ProfileDocumentSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type InboxService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common.ts';
@@ -65,11 +72,27 @@ export class HaloProxy implements Halo {
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _credentialsChanged = new Event<Credential[]>();
+  private readonly _inboxChanged = new Event<readonly InboxService.InboxMessage[]>();
+  private readonly _inboxStatusChanged = new Event<InboxService.Status>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
   private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
+  private readonly _inbox: HaloInbox = {
+    messages: MulticastObservable.from(this._inboxChanged, []),
+    status: MulticastObservable.from(this._inboxStatusChanged, 'available'),
+    sendMessage: (request) =>
+      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.sendMessage'](request), {
+        timeout: RPC_TIMEOUT,
+        label: 'InboxService.sendMessage',
+      }),
+    ack: (ids) =>
+      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.ack']({ ids: [...ids] }), {
+        timeout: RPC_TIMEOUT,
+        label: 'InboxService.ack',
+      }),
+  };
   private _invitationProxy?: InvitationsProxy;
 
   private _haloCredentialStreamCleanup?: () => void;
@@ -111,6 +134,10 @@ export class HaloProxy implements Halo {
 
   get credentials() {
     return this._credentials;
+  }
+
+  get inbox(): HaloInbox {
+    return this._inbox;
   }
 
   get invitations() {
@@ -228,6 +255,17 @@ export class HaloProxy implements Halo {
     );
 
     this._streamSubscriptions.add(
+      subscribeStream(this._runtime, this._serviceProvider.rpc['InboxService.subscribe'](undefined), {
+        onData: (data) => {
+          this._inboxChanged.emit(data.messages);
+          this._inboxStatusChanged.emit(data.status ?? 'available');
+        },
+        // The inbox is optional: an unreachable EDGE must not affect the rest of HALO.
+        onError: (error) => log.warn('inbox stream failed', { error }),
+      }),
+    );
+
+    this._streamSubscriptions.add(
       subscribeStream(this._runtime, this._serviceProvider.rpc['DevicesService.queryDevices'](undefined), {
         onData: (data) => {
           if (data.devices) {
@@ -257,6 +295,8 @@ export class HaloProxy implements Halo {
     this._identityChanged.emit(null);
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
+    this._inboxChanged.emit([]);
+    this._inboxStatusChanged.emit('available');
   }
 
   /**
@@ -301,6 +341,19 @@ export class HaloProxy implements Halo {
     );
     this._identityChanged.emit(identity);
     return identity;
+  }
+
+  /**
+   * Closes and deletes every space and the identity, then wipes the storage they left behind
+   * (automerge documents, hypercore files, the feed store, the index tables and the keyring).
+   * The client stays open, so {@link createIdentity} may be called straight afterwards.
+   */
+  async deleteIdentity(): Promise<void> {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc['IdentityService.deleteIdentity'](undefined), {
+      timeout: RPC_TIMEOUT,
+      label: 'IdentityService.deleteIdentity',
+    });
+    this._identityChanged.emit(null);
   }
 
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {

@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -17,7 +18,7 @@ export type RelatedEventsProps = {
 };
 
 export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <>
@@ -26,13 +27,14 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
           {recent
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Card.Action
+              <Card.Row
                 key={event.id}
-                onClick={() => onEventClick?.(event)}
-                label={event.title ?? event.description!}
                 icon='ph--calendar-dot--regular'
-                actionIcon='ph--arrow-right--regular'
-              />
+                trailing={<Icon.Icon icon='ph--arrow-right--regular' />}
+                onClick={() => onEventClick?.(event)}
+              >
+                <Card.Text>{event.title ?? event.description ?? ''}</Card.Text>
+              </Card.Row>
             ))}
         </Card.Section>
       ) : null}
@@ -41,13 +43,14 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
           {upcoming
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Card.Action
+              <Card.Row
                 key={event.id}
-                onClick={() => onEventClick?.(event)}
-                label={event.title ?? event.description!}
                 icon='ph--calendar-dot--regular'
-                actionIcon='ph--arrow-right--regular'
-              />
+                trailing={<Icon.Icon icon='ph--arrow-right--regular' />}
+                onClick={() => onEventClick?.(event)}
+              >
+                <Card.Text>{event.title ?? event.description ?? ''}</Card.Text>
+              </Card.Row>
             ))}
         </Card.Section>
       ) : null}

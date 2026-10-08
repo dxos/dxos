@@ -2,17 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Accordion, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
-import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
+import { BACKGROUND_TOOL } from '../renderer.ts';
 import { translationKey } from '../translations.ts';
+import { PANEL_FRAME, WidgetPanel, WidgetPanelRow } from './WidgetPanel.tsx';
 
 export type ToolWidgetProps = WidgetProps;
 
@@ -67,6 +71,8 @@ type ToolEntry = {
   active: boolean;
   title: string;
   icon: string;
+  /** A background tool's result, recovered without the call it answers; named by {@link entryLabel}. */
+  background?: boolean;
   /** Prose of a status or reasoning row; a call carries its payload in the fields below. */
   text?: string;
   error?: unknown;
@@ -78,14 +84,13 @@ const TOOL_ICON = 'ph--wrench--regular';
 const STATUS_ICON = 'ph--info--regular';
 const REASONING_ICON = 'ph--brain--regular';
 
-/** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
-const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
-
 /**
- * The operation's human-readable name where the call is an operation invocation; the raw tool name
- * is the fallback for inline toolkit and MCP tools, which have no operation behind them.
+ * The call's display label where its producer supplied one (a code-mode `eval`), else the operation's
+ * human-readable name; the raw tool name is the fallback for inline toolkit and MCP tools, which have
+ * no operation behind them.
  */
-const callTitle = (block: ContentBlock.ToolCall): string => block.operationName ?? block.name ?? 'Tool';
+const callTitle = (block: ContentBlock.ToolCall): string =>
+  block.displayName ?? block.operationName ?? block.name ?? 'Tool';
 
 /**
  * Groups a run's blocks by row.
@@ -115,7 +120,7 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
           kind: 'call',
           active: true,
           title: callTitle(block),
-          icon: block.operationIcon ?? TOOL_ICON,
+          icon: block.displayIcon ?? block.operationIcon ?? TOOL_ICON,
           input: safeParseJson(block.input) ?? (block.input || undefined),
         };
         if (existing !== undefined) {
@@ -130,7 +135,23 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
       }
 
       case 'toolResult': {
-        const entry = pending();
+        // A background tool's result answers a call from an earlier turn, so it stands as its own row
+        // rather than answering whichever call in this run is still unanswered. A pid reported again
+        // replaces its earlier row: the latest report is the outcome.
+        let entry: ToolEntry | undefined;
+        if (block.name === BACKGROUND_TOOL) {
+          const id = `background-${block.toolCallId}`;
+          entry = { id, kind: 'call', active: false, background: true, title: '', icon: TOOL_ICON };
+          // Replaced in place, not moved: `indexById` holds positions of the calls after it.
+          const previous = entries.findIndex((existing) => existing.id === id);
+          if (previous === -1) {
+            entries.push(entry);
+          } else {
+            entries[previous] = entry;
+          }
+        } else {
+          entry = pending();
+        }
         if (!entry) {
           break;
         }
@@ -189,16 +210,15 @@ type ToolPanelProps = {
  * The row's own words. Reasoning names the kind instead of its prose: it runs to paragraphs, and a
  * truncated first line reads as a broken title rather than a summary.
  */
-const entryLabel = (entry: ToolEntry, t: ReturnType<typeof useTranslation>['t']): string =>
-  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.title;
+const entryLabel = (entry: ToolEntry, t: ReturnType<typeof Hooks.useTranslation>['t']): string =>
+  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.background ? t('tool-background.label') : entry.title;
 
 /** Whether the row carries anything an expansion could show. */
 const hasDetail = (entry: ToolEntry): boolean =>
   entry.text !== undefined || entry.input !== undefined || entry.error !== undefined || entry.result !== undefined;
 
 const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
-  const { t } = useTranslation(translationKey);
-  const [open, setOpen] = useState(false);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const calls = entries.filter((entry) => entry.kind === 'call');
   const status = entries.filter((entry) => entry.kind === 'status').at(-1);
@@ -226,65 +246,40 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     ? entryLabel(narrating, t)
     : running
       ? `${entryLabel(running, t)} · ${t('tool-run-suffix.label', { count: calls.length })}`
-      : (singleCall?.title ?? count);
+      : singleCall
+        ? entryLabel(singleCall, t)
+        : count;
   const icon = narrating?.icon ?? running?.icon ?? singleCall?.icon ?? TOOL_ICON;
 
   // Nothing an expansion could show — a lone status, which is what a run looks like while the model
   // is still saying what it is about to do. A caret that reveals emptiness reads as a failure, so
   // the row stays plain prose until a call or a second line of narration joins it.
   if (single && !hasDetail(single)) {
-    return (
-      <div
-        className='flex items-center gap-2 p-1 text-description min-h-(--dx-control)'
-        data-testid={`assistant.tool-${single.kind}`}
-      >
-        <Icon icon={icon} size={4} classNames='shrink-0' />
-        <span className='truncate'>{header}</span>
-      </div>
-    );
+    return <WidgetPanelRow icon={icon} label={header} testId={`assistant.tool-${single.kind}`} />;
   }
 
   return (
-    // The summary is a bare text row rather than a bordered panel header: the border belongs to
-    // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
-    //
-    // The body animates: the Collapsible measures its own `--height`, so the reveal ramps instead
-    // of the content appearing and vanishing in one frame. Content stays mounted and the machine
-    // hides it, which is what lets the ramp have a height to animate to.
-    <TogglePanel.Root
-      open={open}
-      onChangeOpen={setOpen}
-      // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
-      // would stretch the whole line — carrying the summary row out of view and scrolling the
-      // editor instead of the payload. Zero width removes this widget from that calculation, and
-      // the min-width then takes the line's own width, which is what bounds the payload's scroller.
-      classNames='w-0 min-w-full'
+    <WidgetPanel
+      icon={icon}
+      label={header}
+      error={single?.error !== undefined}
+      suffix={
+        failed > 0 && <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+      }
+      testId={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
+      onChangeOpen={onChangeOpen}
+      // A thread is a column of these, nearly all left closed; building each payload at mount was
+      // most of the cost of scrolling one into view.
+      lazyMount
     >
-      <TogglePanel.Header
-        caret='end'
-        data-testid={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
-        classNames='gap-1'
-      >
-        <span className='flex min-w-0 items-center gap-2 text-description tabular-nums'>
-          {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
-              whether it is collapsed or not. */}
-          <Icon icon={icon} size={4} classNames='shrink-0' />
-          <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
-          {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
-        </span>
-      </TogglePanel.Header>
-      {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
-          ramp, while the box is still shorter than the content it is growing to hold. */}
-      <TogglePanel.Body>
-        {single ? (
-          // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
-          // padding twice pushed the copy button off the caret's column.
-          <ToolCallDetail entry={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
-        ) : (
-          <ToolCallList entries={entries} onOpen={onChangeOpen} />
-        )}
-      </TogglePanel.Body>
-    </TogglePanel.Root>
+      {single ? (
+        // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
+        // padding twice pushed the copy button off the caret's column.
+        <ToolCallDetail entry={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
+      ) : (
+        <ToolCallList entries={entries} onOpen={onChangeOpen} />
+      )}
+    </WidgetPanel>
   );
 };
 
@@ -301,51 +296,48 @@ type ToolCallListProps = {
  * feed measures that height as the row mounts.
  */
 const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const label = (entry: ToolEntry) => entryLabel(entry, t);
 
   return (
-    <Accordion.Root<ToolEntry> rounded items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
-      {({ items }) =>
-        items.map((entry) => {
-          // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
-          // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
-          const detail = hasDetail(entry);
-          return (
-            <Accordion.Item key={entry.id} item={entry} disabled={!detail}>
-              <Accordion.ItemHeader
-                hover={detail}
-                icon={entry.icon}
-                data-testid={`assistant.tool-${entry.kind}`}
-                classNames={mx('text-sm', entry.error !== undefined && 'text-error')}
-              >
-                {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
-                <span className='flex items-center h-(--dx-control-sm) min-w-0'>
-                  <span className='truncate'>{label(entry)}</span>
-                </span>
-              </Accordion.ItemHeader>
-              {detail && (
-                <Accordion.ItemBody classNames='px-2'>
-                  <ToolCallDetail entry={entry} />
-                </Accordion.ItemBody>
-              )}
-            </Accordion.Item>
-          );
-        })
-      }
+    <Accordion.Root onValueChange={(value) => onOpen?.(value.length > 0)}>
+      {entries.map((entry) => {
+        // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
+        // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
+        const detail = hasDetail(entry);
+        return (
+          <Accordion.Item key={entry.id} value={entry.id} disabled={!detail}>
+            <Accordion.ItemTrigger
+              icon={entry.icon}
+              data-testid={`assistant.tool-${entry.kind}`}
+              classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
+            >
+              {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
+              <span className='flex items-center h-(--dx-control-sm) min-w-0'>
+                <span className='truncate'>{label(entry)}</span>
+              </span>
+            </Accordion.ItemTrigger>
+            {detail && (
+              <Accordion.ItemContent classNames='px-2'>
+                <ToolCallDetail entry={entry} />
+              </Accordion.ItemContent>
+            )}
+          </Accordion.Item>
+        );
+      })}
     </Accordion.Root>
   );
 };
 
 /** What a row carries, in the order it happened. */
 const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: string }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     // `min-w-0` so a wide payload scrolls inside its own section rather than widening this column
     // and taking the summary row with it.
     <div className={mx('flex flex-col gap-1 min-w-0', classNames)}>
       {entry.text !== undefined && (
-        <p className='text-sm text-description whitespace-pre-wrap px-1 py-trim-sm'>{entry.text}</p>
+        <p className='text-sm text-fg-muted whitespace-pre-wrap px-1 py-trim-sm'>{entry.text}</p>
       )}
       {entry.input !== undefined && <ToolSection label={t('tool-input.label')} data={entry.input} />}
       {entry.error !== undefined && <ToolSection label={t('tool-error.label')} data={entry.error} />}
@@ -354,30 +346,68 @@ const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: 
   );
 };
 
+/** Longer than this, JSON rendering truncates a string, so a text field is shown as text instead. */
+const MAX_JSON_STRING_LENGTH = 128;
+
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
     {/* No horizontal padding of its own: the containing body already insets by `trim-sm`, and a
         second inset here pushed the copy button off the column the disclosure carets sit in. */}
     <div className='flex items-center justify-between'>
-      <span className='text-sm text-description'>{label}</span>
+      <span className='text-sm text-fg-muted'>{label}</span>
       {/* `-me-1` cancels the button's own trailing inset so its glyph centres on the same column as
         the disclosure caret rather than sitting a few pixels inside it. */}
-      <SystemIconButton.Clipboard
+      <SystemButton.Clipboard
         variant='ghost'
-        density='sm'
+        size='sm'
         iconOnly
-        size={4}
         classNames='-me-1'
         onCopy={() => JSON.stringify(data)}
       />
     </div>
-    <JsonHighlighter
-      data={data}
-      // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
-      // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
-      scroll='horizontal'
-      classNames='text-xs bg-transparent'
-      replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
-    />
+    {multilineFields(data)?.map(([key, value], _, fields) => (
+      <div key={key} className='flex flex-col'>
+        {fields.length > 1 && <span className='text-xs text-fg-muted'>{key}</span>}
+        <SyntaxHighlighter
+          language={key === 'code' ? 'js' : 'text'}
+          scroll='horizontal'
+          classNames='text-xs bg-transparent'
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    )) ?? (
+      <JsonHighlighter
+        data={data}
+        // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
+        // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
+        scroll='horizontal'
+        classNames='text-xs bg-transparent'
+        replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: MAX_JSON_STRING_LENGTH }}
+      />
+    )}
   </div>
 );
+
+/**
+ * A string, or the entries of a record whose fields are all strings, when one spans lines or runs
+ * long — a code-mode `eval`'s `code` and its printed output. JSON would escape every newline onto
+ * one line and cut the string short, so these render as the text they are.
+ */
+const multilineFields = (data: unknown): [string, string][] | undefined => {
+  if (typeof data === 'string') {
+    return isMultiline(data) ? [['', data]] : undefined;
+  }
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return undefined;
+  }
+  const entries = Object.entries(data);
+  const strings = entries.flatMap(([key, value]): [string, string][] =>
+    typeof value === 'string' ? [[key, value]] : [],
+  );
+  return strings.length > 0 && strings.length === entries.length && strings.some(([, value]) => isMultiline(value))
+    ? strings
+    : undefined;
+};
+
+const isMultiline = (value: string): boolean => value.includes('\n') || value.length > MAX_JSON_STRING_LENGTH;

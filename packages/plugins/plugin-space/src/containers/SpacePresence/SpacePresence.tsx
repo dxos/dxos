@@ -2,29 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
-import {
-  Avatar,
-  type AvatarContentProps,
-  type DxAvatar,
-  Popover,
-  type Size,
-  type ThemedClassName,
-  Tooltip,
-  useDefaultValue,
-  useTranslation,
-} from '@dxos/react-ui';
-import { AttentionGlyph, type AttentionGlyphProps } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -46,7 +39,7 @@ export type SpacePresenceProps = {
 };
 
 export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
-  const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const db = Obj.getDatabase(object);
   const space = useSpace(spaceId ?? db?.spaceId);
@@ -104,16 +97,18 @@ export type Member = Space.Member & {
   currentlyAttended: boolean;
 };
 
-export type MemberPresenceProps = ThemedClassName<{
-  size?: Size;
+type AvatarSize = ComponentProps<typeof Avatar.Root>['size'];
+
+export type MemberPresenceProps = Util.ThemedClassName<{
+  size?: AvatarSize;
   members?: Member[];
   showCount?: boolean;
   onMemberClick?: (member: Member) => void;
 }>;
 
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 9, onMemberClick } = props;
-  const members = useDefaultValue(props.members, () => []);
+  const { size = 'md', onMemberClick } = props;
+  const members = UiHooks.useDefaultValue(props.members, () => []);
 
   if (members.length === 0) {
     return null;
@@ -139,74 +134,82 @@ export const FullPresence = (props: MemberPresenceProps) => {
       ))}
 
       {members.length > 3 && (
-        <Popover.Root>
+        <Popover.Root positioning={{ placement: 'bottom' }}>
           <Popover.Trigger className='grid focus:outline-hidden'>
-            <Avatar.Root>
-              {/* TODO(wittjosiah): Make text fit. */}
-              <Avatar.Content
-                status='inactive'
-                style={{ zIndex: members.length - 4 }}
-                fallback={`+${members.length - 3}`}
-                size={size}
-              />
-            </Avatar.Root>
+            {/* TODO(wittjosiah): Make text fit. */}
+            <Avatar.Root
+              status='inactive'
+              style={{ zIndex: members.length - 4 }}
+              fallback={`+${members.length - 3}`}
+              size={size}
+            />
           </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content side='bottom'>
-              <Popover.Arrow />
-              <Popover.Viewport classNames='max-h-56'>
-                <Listbox.Root>
-                  <Listbox.Content aria-label='members'>
-                    {members.map((member) => (
-                      <Listbox.Item
-                        key={member.identityKey}
-                        id={member.identityKey ?? ''}
-                        classNames='flex gap-2 items-center cursor-pointer mb-2'
-                        onClick={() => onMemberClick?.(member)}
-                        data-testid='identity-list-item'
-                      >
-                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                        <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Popover.Viewport>
-            </Popover.Content>
-          </Popover.Portal>
+          <Popover.Content>
+            <Popover.Body classNames='max-h-56'>
+              <Listbox.Root
+                items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}
+              >
+                <Listbox.Content aria-label='members'>
+                  {members.map((member) => (
+                    <Listbox.Item
+                      key={member.identityKey}
+                      id={member.identityKey ?? ''}
+                      classNames='flex gap-2 items-center cursor-pointer mb-2'
+                      onClick={() => onMemberClick?.(member)}
+                      data-testid='identity-list-item'
+                    >
+                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                      <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Popover.Body>
+          </Popover.Content>
         </Popover.Root>
       )}
     </div>
   );
 };
 
-type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
+type PresenceAvatarProps = {
   member: Space.Member;
+  size?: AvatarSize;
   showName?: boolean;
   match?: boolean;
   index?: number;
   onClick?: () => void;
 };
 
-const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
+const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
   ({ member, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
-    return (
-      <Avatar.Root>
-        <Avatar.Content
-          status={status}
-          hue={member.data?.hue || fallbackValue.hue}
-          data-testid='spacePlugin.presence.member'
-          data-status={status}
-          size={size}
-          {...(index ? { style: { zIndex: index } } : {})}
-          onClick={onClick}
-          fallback={member.data?.emoji || fallbackValue.emoji}
-          ref={forwardedRef}
-        />
-        <Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>{getName(member)}</Avatar.Label>
-      </Avatar.Root>
+    const name = getName(member);
+    const nameId = UiHooks.useId('presence-name');
+    const avatar = (
+      <Avatar.Root
+        status={status}
+        hue={Avatar.toAvatarHue(member.data?.hue || fallbackValue.hue)}
+        data-testid='spacePlugin.presence.member'
+        data-status={status}
+        size={size}
+        {...(index ? { style: { zIndex: index } } : {})}
+        onClick={onClick}
+        fallback={member.data?.emoji || fallbackValue.emoji}
+        {...(showName ? { 'aria-labelledby': nameId } : { label: name })}
+        ref={forwardedRef}
+      />
+    );
+    return showName ? (
+      <>
+        {avatar}
+        <span id={nameId} className='text-sm truncate px-2'>
+          {name}
+        </span>
+      </>
+    ) : (
+      avatar
     );
   },
 );
@@ -250,7 +253,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>

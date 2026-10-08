@@ -52,7 +52,8 @@ for (const file of files) {
       }
       for (const m of l.matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)) {
         const name = m[1];
-        if (['given', 'result', 'error', 'spaceId'].includes(name)) continue;
+        // The runner binds these itself (qa.mdl Field rule 5 and Input literals), so no test declares them.
+        if (['given', 'result', 'error', 'spaceId', 'snapshot', 'stepErrors', 'runId'].includes(name)) continue;
         if (!captures.has(name)) seen.set(`$${name}`, n);
       }
     }

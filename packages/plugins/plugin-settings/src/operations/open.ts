@@ -14,8 +14,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { SettingsPath } from '#types';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOperation.Open.pipe(
-  Operation.withHandler((input) =>
-    Effect.gen(function* () {
+  Operation.withHandler(
+    Effect.fnUntraced(function* (input) {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(SettingsPath.SETTINGS_ID) });
       if (input.plugin) {
@@ -26,6 +26,8 @@ const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOp
           subject: [SettingsPath.getPluginSettingsSectionPath(input.plugin)],
         });
       }
+      // Settings have nothing to accompany, so a companion carried over from the previous workspace would only narrow them.
+      yield* LayoutOperation.closeCompanion();
     }),
   ),
 );

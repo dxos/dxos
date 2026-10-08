@@ -4,12 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph/hooks';
-import { useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
@@ -24,9 +24,9 @@ const KEEP_MOUNTED: ReadonlySet<unknown> = new Set([DebugNodes.Console, DebugNod
  * their buffers while another tool is shown; every other page mounts only while selected.
  */
 export const DebugPanelMain = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { contextId, nodeId, select } = useDebugPanelContext();
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const handleNavigate = useCallback(
     (target: string) => {
       AppGraph.expandPath(graph, target);
@@ -34,7 +34,7 @@ export const DebugPanelMain = () => {
     },
     [graph, select],
   );
-  const node = useNode(graph, nodeId);
+  const node = GraphHooks.useNode(graph, nodeId);
   const keepMounted = node !== undefined && KEEP_MOUNTED.has(node.data);
   const [visited, setVisited] = useState<string[]>([]);
   useEffect(() => {
@@ -45,7 +45,7 @@ export const DebugPanelMain = () => {
   }, [nodeId, keepMounted]);
 
   if (!nodeId) {
-    return <Empty label={t('debug-panel.empty.label')} />;
+    return <Status.Empty>{t('debug-panel.empty.label')}</Status.Empty>;
   }
 
   // Appended in the same render it is selected (the effect only catches up), so the keyed page is
@@ -90,8 +90,8 @@ type DebugPanelPageProps = {
 
 /** One tool's article surface; the `div` is its show/hide element, not layout. */
 const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugPanelPageProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const node = useNode(graph, nodeId);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const node = GraphHooks.useNode(graph, nodeId);
   const data = useMemo<DebugSurface.PageData | undefined>(
     () =>
       node && {
@@ -105,7 +105,7 @@ const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugP
   );
   if (!data) {
     // A persisted id that no longer resolves (a plugin disabled) shows the empty state rather than nothing.
-    return hidden ? null : <Empty label={t('debug-panel.empty.label')} />;
+    return hidden ? null : <Status.Empty>{t('debug-panel.empty.label')}</Status.Empty>;
   }
 
   return (

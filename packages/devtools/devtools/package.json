@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -61,6 +61,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@robloche/chartjs-plugin-streaming": "catalog:",
@@ -86,7 +87,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",

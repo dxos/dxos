@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 
 import * as Trace from '@dxos/compute/Trace';
-import { IconButton } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type ReceivedMessage } from '../../../hooks/index.ts';
@@ -31,7 +31,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
         info={`${messages.length} · ${spaceCount} spaces`}
         action={
           onClear && (
-            <IconButton
+            <Button.Root
               iconOnly
               variant='ghost'
               icon='ph--trash--regular'
@@ -48,7 +48,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
         const summary = formatSummary(received);
         const open = expanded === received.id;
         return (
-          <React.Fragment key={received.id}>
+          <Fragment key={received.id}>
             <StatCard.Row
               label={summary}
               tooltip={summary}
@@ -70,7 +70,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
                 />
               </StatCard.Content>
             )}
-          </React.Fragment>
+          </Fragment>
         );
       })}
     </StatCard.Root>

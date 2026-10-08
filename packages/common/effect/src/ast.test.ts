@@ -27,7 +27,7 @@ import * as SchemaAST from './internal/schema-ast.ts';
 
 const ZipCode = Schema.String.pipe(
   Schema.check(
-    Schema.isPattern(/^\d{5}$/, {
+    Schema.isPattern(/^\d{5}$/u, {
       identifier: 'ZipCode',
       title: 'ZIP code',
       description: 'Simple 5 digit zip code',
@@ -118,8 +118,22 @@ describe('AST', () => {
     expect(description).to.eq('Feedback placeholder');
   });
 
+  test('getProperties carries annotations of an annotated optional field to its type', ({ expect }) => {
+    const Base = Schema.Struct({
+      locality: Schema.optional(Schema.String.annotate({ description: 'The locality.' })),
+    });
+    const Titled = Base.mapFields((fields) => ({ locality: fields.locality.annotate({ title: 'City' }) }));
+    const [locality] = getProperties(Titled.ast);
+    expect(locality.isOptional).to.be.true;
+    expect(findAnnotation(locality.type, SchemaAST.TitleAnnotationId)).to.eq('City');
+    expect(findAnnotation(locality.type, SchemaAST.DescriptionAnnotationId)).to.eq('The locality.');
+    // An unannotated optional field gains nothing.
+    const [plain] = getProperties(Base.ast);
+    expect(findAnnotation(plain.type, SchemaAST.TitleAnnotationId)).to.be.undefined;
+  });
+
   test('findAnnotation', ({ expect }) => {
-    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/))).annotate({
+    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/u))).annotate({
       title: 'original title',
     });
 

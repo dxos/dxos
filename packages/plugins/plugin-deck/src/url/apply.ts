@@ -18,10 +18,10 @@ import { CompanionViewState, DeckSchema } from '#types';
 import {
   closeCompanionPlank,
   openCompanionPlank,
+  prunePlankNames,
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
-  updatePlankNames,
   withViewTransition,
 } from '../util/index.ts';
 import * as Navigation from './navigation.ts';
@@ -57,9 +57,8 @@ export const applyActive = Effect.fnUntraced(function* (
   const stateAtom = yield* Capability.get(DeckCapabilities.State);
   const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
 
-  const ephemeral = registry.get(ephemeralAtom);
   const workspace = registry.get(stateAtom).activeDeck;
-  const open = ephemeral.open[workspace];
+  const open = registry.get(ephemeralAtom).open[workspace];
   const next = planks.map(({ id }) => id);
   const segments = Object.fromEntries(planks.flatMap(({ id, segment }) => (segment ? [[id, segment] as const] : [])));
   const { deckUpdates, toAttend } = computeActiveUpdates({
@@ -69,8 +68,7 @@ export const applyActive = Effect.fnUntraced(function* (
     flatten,
     segments: { previous: open?.segments, next: segments },
   });
-  const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
-  const plankNames = updatePlankNames(deck.plankNames, activeSegments);
+  const plankNames = prunePlankNames(deck.plankNames, deckUpdates.active);
   const { active, inactive, companionPlanks } = deckUpdates;
   // A caller with no intent at all (a close, a set) has no opinion, so the write falls back to the plank
   // attention is displaced onto, which has to be one that is open. A caller that passed an intent has
@@ -84,23 +82,23 @@ export const applyActive = Effect.fnUntraced(function* (
     // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
     // mounts its plank.
     if (changed || scrollIntoView !== undefined) {
-      registry.set(ephemeralAtom, {
-        ...ephemeral,
-        open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
+      registry.update(ephemeralAtom, (current) => ({
+        ...current,
+        open: { ...current.open, [workspace]: { ...current.open[workspace], active, inactive, segments } },
         ...(scrollIntoView !== undefined
           ? { scrollIntoView: { id: scrollIntoView, ...(intent?.focus !== undefined ? { focus: intent.focus } : {}) } }
           : {}),
-      });
+      }));
     }
     const stored = registry.get(stateAtom).decks[workspace];
     if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
-      registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
+      registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, plankNames }));
     }
   });
 
   // Only a write that changes what is open is worth animating, since rendering is frozen for the whole
   // update step.
-  yield* intent?.transition && changed ? withViewTransition(write) : write;
+  yield* intent?.transition && changed ? withViewTransition(write, ['dx-plank']) : write;
 
   return toAttend;
 });

@@ -12,16 +12,10 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -33,13 +27,7 @@
       "path": "../react-primitives/react-focus"
     },
     {
-      "path": "../react-primitives/react-list"
-    },
-    {
       "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-menu"
     },
     {
       "path": "../ui-theme"

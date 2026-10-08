@@ -11,16 +11,20 @@ import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { Alarm, SessionStore, isConsumed, isQueued } from '@dxos/assistant';
+import { ProcessManager } from '@dxos/compute-runtime';
+import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Feed, Filter, Obj } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
+import { AGENT_PROCESS_KEY } from './agent-process.ts';
 import * as AgentService from './AgentService.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
@@ -139,6 +143,41 @@ const readFeed = (feed: Feed.Feed) =>
     return { items, messages, ...pending };
   });
 
+describe('AgentProcess residency (scripted)', () => {
+  it.effect(
+    'a resident process stays idle after its turn and takes the next prompt itself',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const session = yield* AgentService.createSession();
+        const target = Obj.getURI(session.chat);
+
+        yield* session.submitPrompt('first');
+        yield* session.waitForCompletion();
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(handle.status.state).toBe(Process.State.IDLE);
+
+        // The same session, the same process: no respawn (and no history replay) for a follow-up.
+        const followUp = yield* ComputeAgentService.getSession(session.chat);
+        yield* followUp.submitPrompt('second');
+        yield* followUp.waitForCompletion();
+        const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(processes.map((process) => String(process.pid))).toEqual([String(handle.pid)]);
+        expect(new Set(promptTexts((yield* readFeed(session.feed)).messages))).toEqual(new Set(['first', 'second']));
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Alarm.Alarm],
+          agent: { resident: true },
+          aiService: scriptedAiService(Array.from({ length: 4 }, () => ({ parts: [text('Acknowledged.')] }))),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+});
+
 describe('AgentProcess input queue (scripted)', () => {
   it.effect(
     'a submitted prompt is queued on the feed, then acked by the turn that consumes it',
@@ -160,6 +199,27 @@ describe('AgentProcess input queue (scripted)', () => {
 
         // The prompt reached the model, carried by the turn's own user message.
         expect(promptTexts(messages)).toContain('What is a feed?');
+      },
+      Effect.provide(replyLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    "a prompt's sender is carried onto the turn's user message",
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('The fix landed.', { sender: { name: 'Dima' } });
+        yield* session.waitForCompletion();
+
+        const { messages } = yield* readFeed(session.feed);
+        const turn = messages.find(
+          (message) =>
+            message.sender.role === 'user' && !isQueued(message) && Message.extractText(message) === 'The fix landed.',
+        );
+        expect(turn?.sender.name).toBe('Dima');
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,

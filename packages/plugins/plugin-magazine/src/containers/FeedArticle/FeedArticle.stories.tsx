@@ -5,11 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { EffectEx } from '@dxos/effect';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { PostStack, type PostStackAction } from '#components';
 import { generateFeed, generatePosts } from '#testing';
@@ -67,15 +68,15 @@ const DefaultStory = ({ feedUrl }: FeedArticleStoryArgs) => {
   const { feed, posts } = data;
 
   return (
-    <Panel.Root role='article' classNames='dx-document'>
-      <Panel.Toolbar asChild>
+    <Panel.Root role='article' width='document'>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{feed.name}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <PostStack id='story-feed' posts={posts} currentId={currentPostId} onAction={handleAction} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -3,4 +3,3 @@
 //
 
 export * from './withLayout.tsx';
-export * from './withRegistry.tsx';

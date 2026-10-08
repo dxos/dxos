@@ -5,20 +5,19 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   TracePanel as NaturalTracePanel,
@@ -28,6 +27,7 @@ import {
   useExecutionGraph,
   useTraceMessages,
 } from '@dxos/react-ui-trace';
+import * as Util from '@dxos/react-ui/Util';
 
 import { AssistantCapabilities } from '#types';
 
@@ -37,11 +37,11 @@ export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<NaturalTracePane
  * The trace panel bound to the app: the process monitor, the space's trace feed, the assistant's
  * settings (environment filter, debug view), a view-state process selection, and navigation.
  */
-export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
+export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
-    const { invokePromise } = useOperationInvoker();
-    const [settings, updateSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const [settings, updateSettings] = Hooks.useAtomCapabilityState(AssistantCapabilities.Settings);
     const environments = useMemo(
       () => parseProcessEnvironments(settings.traceProcessEnvironments),
       [settings.traceProcessEnvironments],
@@ -57,7 +57,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const selectedPids = useSelection(attendableId, 'multi');
     const { multi: setSelected } = useSelectionActions(attendableId);
 
-    const monitor = useCapability(Capabilities.ProcessMonitor);
+    const monitor = Hooks.useCapability(Capabilities.ProcessManager);
     const processesAtom = useMemo(
       () => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty,
       [monitor],
@@ -82,7 +82,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // Only the agent process itself is renamed: its children inherit the conversation environment and
     // keep their own operation names.
     const resolveLabel = useCallback(
-      (process: Process.Info) => {
+      (process: Process.Process) => {
         if (!Process.isHarnessHost(process)) {
           return undefined;
         }
@@ -111,39 +111,11 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [invokePromise],
     );
 
-    // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
-    // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
-    // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
-    // (and logs it). Gated on `import.meta.env.DEV` so it's stripped from production builds.
-    const traceMessages = useTraceMessages(space);
-    useEffect(() => {
-      if (!import.meta.env.DEV) {
-        return;
-      }
-
-      // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
-      const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
-      debugGlobal.dxosDumpTrace = () => {
-        const data = traceMessages.map((message) => ({
-          meta: message.meta,
-          isEphemeral: message.isEphemeral,
-          events: message.events,
-        }));
-        const json = JSON.stringify(data, null, 2);
-        // eslint-disable-next-line no-console
-        console.log(json);
-        void navigator.clipboard?.writeText(json);
-        return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
-      };
-
-      return () => {
-        delete debugGlobal.dxosDumpTrace;
-      };
-    }, [traceMessages]);
+    useTraceDumpHatch(space);
 
     return (
       <NaturalTracePanel
-        {...composableProps(props, attentionAttrs)}
+        {...Util.composableProps(props, attentionAttrs)}
         ref={forwardedRef}
         processes={processes}
         graph={graph}
@@ -170,3 +142,28 @@ const feedKey = (uri: string): string => {
   const eid = EID.tryParse(uri);
   return (eid && EID.getEntityId(eid)) ?? uri;
 };
+
+const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta.env.DEV
+  ? (space) => {
+      const traceMessages = useTraceMessages(space);
+      useEffect(() => {
+        const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
+        debugGlobal.dxosDumpTrace = () => {
+          const data = traceMessages.map((message) => ({
+            meta: message.meta,
+            isEphemeral: message.isEphemeral,
+            events: message.events,
+          }));
+          const json = JSON.stringify(data, null, 2);
+          // eslint-disable-next-line no-console
+          console.log(json);
+          void navigator.clipboard?.writeText(json);
+          return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
+        };
+
+        return () => {
+          delete debugGlobal.dxosDumpTrace;
+        };
+      }, [traceMessages]);
+    }
+  : () => {};

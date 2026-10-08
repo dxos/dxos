@@ -47,7 +47,7 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
     /** Login of the account that opened it. */
     author: Schema.String.pipe(Schema.annotate({ title: 'Author' }), Schema.optional),
 
-    description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
+    description: Format.Text.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 
     /** Branch the change is proposed against, e.g. `main`. */
     baseBranch: Schema.String.pipe(Schema.annotate({ title: 'Base branch' }), Schema.optional),
@@ -58,10 +58,17 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
     additions: Schema.Number.pipe(Schema.annotate({ title: 'Additions' }), Schema.optional),
 
     deletions: Schema.Number.pipe(Schema.annotate({ title: 'Deletions' }), Schema.optional),
+
+    /** When it was opened on the host; absent on a pull request stored before the host reported it. */
+    createdAt: Schema.optional(Format.DateTime.annotate({ title: 'Created' })),
+
+    /** When the host last saw activity on it — a push, a review, a comment. */
+    updatedAt: Schema.optional(Format.DateTime.annotate({ title: 'Updated' })),
   }).pipe(
     Schema.annotate({ title: 'Pull request', description: 'A proposed change to a repository.' }),
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--git-pull-request--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -5,8 +5,10 @@
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { URI } from '@dxos/keys';
-import { Button, Clipboard, Field } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 export type ObjectViewerProps = {
   object: any;
@@ -60,28 +62,22 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
     });
   };
 
-  const handleCopy = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify(object, null, 2));
-  }, [object]);
+  const handleCopy = useCallback(() => JSON.stringify(object, null, 2), [object]);
 
   return (
     <>
       {id && (
-        <Clipboard.Provider>
-          <div className='flex flex-col'>
-            <Field.Root>
-              <div className='flex flex-col gap-1'>
-                <div className='flex gap-1'>
-                  <Field.Input disabled value={id} />
-                  <Clipboard.IconButton value={id} />
-                  <Button value={id} onClick={handleCopy}>
-                    Copy JSON
-                  </Button>
-                </div>
+        <div className='flex flex-col'>
+          <Field.Root>
+            <div className='flex flex-col gap-1'>
+              <div className='flex gap-1'>
+                <Input.Root disabled value={id} />
+                <SystemButton.Clipboard iconOnly value={id} />
+                <SystemButton.Clipboard label='Copy JSON' onCopy={handleCopy} />
               </div>
-            </Field.Root>
-          </div>
-        </Clipboard.Provider>
+            </div>
+          </Field.Root>
+        </div>
       )}
       <JsonHighlighter data={object} classNames='text-sm' renderer={rowRenderer} />
     </>

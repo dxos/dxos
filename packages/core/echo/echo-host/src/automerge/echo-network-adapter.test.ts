@@ -12,12 +12,10 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SyncMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { PeerInfoSchema, SyncMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
-import {
-  type AutomergeReplicator,
-  type AutomergeReplicatorCallbacks,
-} from '@dxos/teleport-extension-automerge-replicator';
+import { AutomergeReplicator, type AutomergeReplicatorCallbacks } from '@dxos/teleport-extension-automerge-replicator';
 
 import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { PeerNotFoundError } from './errors.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const PEER_ID = 'peerA' as PeerId;
@@ -173,6 +171,34 @@ describe('EchoNetworkAdapter', () => {
     expect(events).toEqual([]);
   });
 
+  test('a connection that closed while disabled is not promoted to the peer (DX-1279)', async () => {
+    const replicator = new MeshEchoReplicator();
+    const adapter = await createConnectedAdapter(replicator);
+
+    // Two teleport sessions with the same peer: the first is enabled, the second queues behind it.
+    const primaryExtension = await connectRealExtension(replicator, ANOTHER_PEER_ID);
+    const secondaryExtension = await connectRealExtension(replicator, ANOTHER_PEER_ID);
+
+    const events: string[] = [];
+    adapter.on('peer-disconnected', () => events.push('peer-disconnected'));
+    adapter.on('peer-candidate', () => events.push('peer-candidate'));
+
+    // The queued session dies first, then the enabled one — the moment a queued session is promoted.
+    await secondaryExtension.onClose();
+    await primaryExtension.onClose();
+
+    // The peer is gone, so the send is a typed outcome its callers already handle rather than a
+    // write into a destroyed replicator extension.
+    let error: unknown;
+    try {
+      adapter.send(newSyncMessage(PEER_ID, ANOTHER_PEER_ID, PAYLOAD));
+    } catch (err) {
+      error = err;
+    }
+    expect(PeerNotFoundError.is(error)).to.be.true;
+    expect(events).to.deep.eq(['peer-disconnected']);
+  });
+
   const createConnectedAdapter = async (
     replicator: MeshEchoReplicator,
     props: Partial<ConstructorParameters<typeof EchoNetworkAdapter>[0]> = {},
@@ -210,6 +236,21 @@ describe('EchoNetworkAdapter', () => {
         return callbacks;
       },
     };
+  };
+
+  /** Connects a peer through a real extension, so its destruction follows the production lifecycle. */
+  const connectRealExtension = async (replicator: MeshEchoReplicator, peerId: string) => {
+    let extension: AutomergeReplicator | undefined;
+    let callbacks: AutomergeReplicatorCallbacks | undefined;
+    replicator.createExtension((params) => {
+      callbacks = params[1];
+      extension = new AutomergeReplicator(...params);
+      return extension;
+    });
+    invariant(extension);
+    invariant(callbacks?.onStartReplication);
+    await callbacks.onStartReplication(create(PeerInfoSchema, { id: peerId }), PublicKey.random());
+    return extension;
   };
 
   const newSyncMessage = (from: PeerId, to: PeerId, payload: Uint8Array) => ({

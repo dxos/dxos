@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -16,7 +16,7 @@ export const translations = [
         'plugin.name': 'Debug',
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
-        'create-sample-space.label': 'Create sample space: {{label}}',
+        'create-space-from-template.label': 'Create space from template: {{label}}',
         'space-objects.label': 'Database',
         'open-debug-panel.label': 'Show debug panel',
         'console.tab.label': 'Console',
@@ -84,9 +84,8 @@ export const translations = [
         'settings.debug-port.session.label': 'Session id',
         'settings.debug-port.session.description':
           'Pass to composer-recovery.js --session. A new id is issued on every restart.',
-        'settings.debug-port.copy-session.label': 'Copy session id.',
         'settings.debug-port.log.label': 'Debug port log',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

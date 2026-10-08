@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { type WindowState } from '@dxos/react-ui-virtual';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /** 2rem, matching the outline rail it usually sits opposite. */
@@ -22,7 +22,7 @@ const DEFAULT_WIDTH = 32;
  *
  * Debug only. It reads the state the window publishes and draws it (§2); it does not participate.
  */
-export type MinimapProps = ThemedClassName<{
+export type MinimapProps = Util.ThemedClassName<{
   state?: WindowState;
   /** Width of the rail, in px. @default 32 (2rem) */
   width?: number;
@@ -58,7 +58,7 @@ export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: 
           {/* Mounted rows: where content actually exists. Should always contain the viewport — if it
               does not, the reader is looking at rows nobody has rendered. */}
           <div
-            className='absolute inset-x-0 bg-accent-fill/30'
+            className='absolute inset-x-0 bg-accent-bg/30'
             style={{ top: scale(state.geometry.window.start), height: scale(state.geometry.window.extent) }}
             data-testid='minimap.mounted'
           />
@@ -72,7 +72,7 @@ export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: 
           ))}
           {/* The viewport, which is the reader. */}
           <div
-            className='absolute inset-x-0 border-y border-accent-bg bg-accent-fill/70'
+            className='absolute inset-x-0 border-y border-accent-bg bg-accent-bg/70'
             style={{ top: scale(state.geometry.scroll), height: scale(state.geometry.viewport) }}
             data-testid='minimap.viewport'
           />

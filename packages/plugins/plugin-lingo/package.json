@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-lingo",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Language learning: vocabulary, flashcards, and an inline reader",
   "homepage": "https://dxos.org",
@@ -11,19 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -107,16 +109,7 @@
       "types": "./dist/types/src/types/LingoSettings.d.ts",
       "import": "./dist/lib/LingoSettings.mjs"
     },
-    "./Vocabulary": {
-      "source": "./src/types/Vocabulary.ts",
-      "types": "./dist/types/src/types/Vocabulary.d.ts",
-      "import": "./dist/lib/Vocabulary.mjs"
-    },
-    "./Word": {
-      "source": "./src/types/Word.ts",
-      "types": "./dist/types/src/types/Word.d.ts",
-      "import": "./dist/lib/Word.mjs"
-    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -127,12 +120,16 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./Vocabulary": {
+      "source": "./src/types/Vocabulary.ts",
+      "types": "./dist/types/src/types/Vocabulary.d.ts",
+      "import": "./dist/lib/Vocabulary.mjs"
     },
-    "./package.json": "./package.json"
+    "./Word": {
+      "source": "./src/types/Word.ts",
+      "types": "./dist/types/src/types/Word.d.ts",
+      "import": "./dist/lib/Word.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

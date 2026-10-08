@@ -3,12 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { BaseError } from '@dxos/errors';
 import { PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
@@ -18,12 +18,12 @@ import { PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
  *
  * Shared single source of truth — `composerPlugin` reads it as the default
  * port, and the host's "Load Dev Plugin" affordance pre-fills the manifest URL
- * with `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`. Lives in
+ * with `http://localhost:${DEV_SERVER_PORT}/manifest.json`. Lives in
  * app-framework rather than `@dxos/protocols` because the constant is a
  * client-side convention (host loader + Vite plugin) rather than a wire-level
  * protocol.
  */
-export const PLUGIN_DEV_SERVER_PORT = 3967;
+export const DEV_SERVER_PORT = 3967;
 
 /**
  * Tagged error for manifest fetch / parse failures. Construction sites set

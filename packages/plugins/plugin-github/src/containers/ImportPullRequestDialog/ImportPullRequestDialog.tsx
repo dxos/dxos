@@ -5,12 +5,14 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -18,6 +20,7 @@ import { GitHubOperation } from '#types';
 import { GitHubRepoInaccessibleError } from '../../errors.ts';
 import { parsePullRequestReference } from '../../extensions/index.ts';
 import { useOpenObject } from '../../hooks/index.ts';
+import { GitHubApi } from '../../services/index.ts';
 
 const ImportPullRequestForm = Schema.Struct({
   reference: Schema.String.pipe(
@@ -36,16 +39,45 @@ const ImportPullRequestForm = Schema.Struct({
 type ImportPullRequestForm = Schema.Schema.Type<typeof ImportPullRequestForm>;
 
 /**
+ * The status `GitHubRepoInaccessibleError` recorded, for the case the HTTP failure has already been
+ * folded into it and `GitHubApi.responseStatus` no longer sees a response.
+ */
+const readStatus = (error: unknown): number | undefined => {
+  if (!GitHubRepoInaccessibleError.is(error)) {
+    return undefined;
+  }
+  const status = error.context.status;
+  return typeof status === 'number' ? status : undefined;
+};
+
+/**
+ * Names the failure the user can act on. A rejected credential and a repository the connection
+ * cannot see both read as "not found" from the API, but only the first is fixed by reconnecting —
+ * and a space with no connection at all is fixed by making one.
+ */
+const importFailureKey = (error: unknown): string => {
+  if (!GitHubRepoInaccessibleError.is(error)) {
+    return 'import-pull-request-failed.title';
+  }
+  if (error.context.tokenStatus === 401) {
+    return 'import-pull-request-token-rejected.title';
+  }
+  return error.context.connected === true
+    ? 'import-pull-request-inaccessible.title'
+    : 'import-pull-request-not-connected.title';
+};
+
+/**
  * Imports a pull request the user names, into the space they are working in, and opens it.
  *
  * The space is the active one rather than a chosen one: the command is reached from wherever the
  * user already is, and a picker would ask a question they have already answered.
  */
 export const ImportPullRequestDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
 
   const handleCancel = useCallback(async () => {
     await invokePromise(LayoutOperation.UpdateDialog, { state: false });
@@ -72,16 +104,18 @@ export const ImportPullRequestDialog = () => {
 
       const pullRequest = data?.pullRequest.target;
       if (error || !pullRequest) {
-        log.warn('pull request import failed', { reference, error });
+        const status = GitHubApi.responseStatus(error) ?? readStatus(error);
+        // A minified build serialises the invoker's error as a bare, headerless stack, so the name and
+        // the HTTP status it carries are logged explicitly — without them a feedback bundle names the
+        // failure without saying what it was.
+        log.warn('pull request import failed', { reference, errorName: error?.name, status, err: error });
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.profile.key}.import-pull-request`,
           icon: 'ph--warning--regular',
-          // A repository no credential reaches is answered by naming the connection: the reference
-          // is fine and retyping it is the one thing that cannot help.
-          title: GitHubRepoInaccessibleError.is(error)
-            ? ['import-pull-request-inaccessible.title', { ns: meta.profile.key }]
-            : ['import-pull-request-failed.title', { ns: meta.profile.key }],
-          description: reference,
+          title: [importFailureKey(error), { ns: meta.profile.key }],
+          // The status is what separates a reference the user should re-check from a connection they
+          // should repair, and it is otherwise visible only in the logs.
+          description: status ? `${reference} — HTTP ${status}` : reference,
         });
         return;
       }
@@ -96,28 +130,29 @@ export const ImportPullRequestDialog = () => {
 
   return (
     <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
-      </Dialog.Header>
-      <Dialog.Body>
-        <Form.Root
-          autoFocus
-          schema={ImportPullRequestForm}
-          defaultValues={{ reference: '' }}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
-            </Form.Content>
-          </Column.Center>
-        </Form.Root>
-      </Dialog.Body>
+      {/* The form spans the dialog, so its actions sit in the footer while reading the form's context. */}
+      <Form.Root
+        autoFocus
+        schema={ImportPullRequestForm}
+        defaultValues={{ reference: '' }}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      >
+        <Dialog.Header>
+          <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close />
+          </Dialog.CloseTrigger>
+        </Dialog.Header>
+        <Dialog.Body>
+          <Form.Content>
+            <Form.Fields />
+          </Form.Content>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
+        </Dialog.Footer>
+      </Form.Root>
     </Dialog.Content>
   );
 };

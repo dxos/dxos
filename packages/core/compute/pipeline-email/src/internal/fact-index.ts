@@ -37,7 +37,7 @@ export const reconcileFactEntities = (
   fact: RDF.Fact,
   index: Map<string, string>,
 ): { subject?: string; object?: string } => {
-  const subject = 'entity' in fact.assertion.subject ? index.get(fact.assertion.subject.entity) : undefined;
-  const object = 'entity' in fact.assertion.object ? index.get(fact.assertion.object.entity) : undefined;
+  const subject = fact.assertion.subject.kind === 'entity' ? index.get(fact.assertion.subject.entity) : undefined;
+  const object = fact.assertion.object.kind === 'entity' ? index.get(fact.assertion.object.entity) : undefined;
   return { ...(subject ? { subject } : {}), ...(object ? { object } : {}) };
 };

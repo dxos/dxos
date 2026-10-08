@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -51,15 +51,18 @@ export const StoryTripAiPlugin = Plugin.define(
         Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
-            Layer.succeed(AiService.AiService, {
-              model: () =>
-                Layer.succeed(LanguageModel.LanguageModel, {
-                  generateText: () => Effect.succeed({ text: 'Mock summary.', content: [] }),
-                  generateObject: (options: any) =>
-                    Effect.succeed({ value: resolvePayload(String(options?.prompt ?? '')), content: [] }),
-                  streamText: () => Stream.empty,
-                } as any),
-            }),
+            Layer.succeed(
+              AiService.AiService,
+              AiService.make({
+                languageModel: () =>
+                  Layer.succeed(LanguageModel.LanguageModel, {
+                    generateText: () => Effect.succeed({ text: 'Mock summary.', content: [] }),
+                    generateObject: (options: any) =>
+                      Effect.succeed({ value: resolvePayload(String(options?.prompt ?? '')), content: [] }),
+                    streamText: () => Stream.empty,
+                  } as any),
+              }),
+            ),
           ),
         ),
       ]),

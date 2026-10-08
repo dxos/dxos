@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
-import { Filter, Obj } from '@dxos/echo';
+import { Database, Filter, Hypergraph, Obj } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
 import { InstallFunction } from './definitions.ts';
@@ -16,8 +16,7 @@ import { FunctionError } from './errors.ts';
 export default InstallFunction.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ key }) {
-      const client = yield* ClientService;
-      const functionsService = FunctionsServiceClient.fromClient(client);
+      const functionsService = new FunctionsServiceClient(yield* EdgeHttpClientService);
       const deployed = yield* Effect.promise(() => functionsService.query(Context.default()));
 
       const fn = deployed.findLast((entry) => Obj.getMeta(entry).key === key);
@@ -25,15 +24,12 @@ export default InstallFunction.pipe(
         return yield* Effect.fail(new FunctionError({ message: `No deployed function found with key: ${key}` }));
       }
 
-      const space = client.spaces.get()[0];
-      if (!space) {
-        return yield* Effect.fail(new FunctionError({ message: 'No space available' }));
-      }
-
-      yield* Effect.promise(() => client.addTypes([Operation.PersistentOperation]));
+      const { db } = yield* Database.Service;
+      const { graph } = yield* Hypergraph.Service;
+      graph.registry.add([Operation.PersistentOperation]);
 
       const existingFunctions = yield* Effect.promise(() =>
-        space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
+        db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
       );
 
       let installed: Operation.PersistentOperation;
@@ -44,7 +40,7 @@ export default InstallFunction.pipe(
         }
       } else {
         installed = Obj.clone(fn);
-        space.db.add(installed);
+        db.add(installed);
       }
 
       return {

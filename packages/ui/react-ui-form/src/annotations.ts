@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
-import { HueAnnotationId } from '@dxos/ui-types';
+import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
@@ -70,3 +70,9 @@ export const autofill =
 
 /** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
 export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
+
+/**
+ * Increment for a number field's stepper buttons and arrow keys. Without it an integer field steps by 1 and
+ * any other by 0.1 or 0.01, by the size of its current value.
+ */
+export const StepAnnotation = createAnnotationHelper<number>(StepAnnotationId);

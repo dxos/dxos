@@ -4,9 +4,12 @@
 
 import React from 'react';
 
-import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Field, Flex, Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import type * as Surface from '@dxos/app-framework/Surface';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -15,7 +18,7 @@ import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 const SLOW_TIME = 16;
 
 /** Profiler render timings joined with the surface's dispatch metrics. */
-export type SurfaceProfilerStats = BaseSurfaceProfilerStats & {
+export type SurfaceProfilerStats = Surface.ProfilerStats & {
   /** Candidates matched on the last dispatch (from Surface dev metrics). */
   candidates?: number;
   /** `true` when more candidates matched than rendered. */
@@ -101,23 +104,23 @@ const surfaceId = (id: string): string => id.slice('surface/'.length, id.lastInd
 
 /** Tooltip body for a role row: the pooled figures, then the mounted surfaces by id. */
 const RoleDetail = ({ group }: { group: RoleGroup }) => (
-  <Flex column gap='xs' classNames='max-w-64 text-xs'>
+  <Layout.Flex column gap='xs' classNames='max-w-64 text-xs'>
     <span>
       {group.ids.length} mounted · {group.totalRenders} renders · {group.errors} errors
     </span>
     {group.trouble && <span className='text-error-text'>unstable data or errors</span>}
-    <Flex column>
+    <Layout.Container gutter='none'>
       {group.ids.map((id) => (
         <span key={id} className='font-mono text-info-text truncate'>
           {surfaceId(id)}
         </span>
       ))}
-    </Flex>
-  </Flex>
+    </Layout.Container>
+  </Layout.Flex>
 );
 
 /** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
-const ROW_TRACKS = ['1fr', '2rem', '2rem', '2rem'];
+const ROW_TRACKS = ['fill', '2rem', '2rem', '2rem'] as const;
 
 export const SurfaceProfilerCard = ({
   stats = [],
@@ -138,25 +141,25 @@ export const SurfaceProfilerCard = ({
         title='Surfaces'
         action={
           onClear && (
-            <IconButton iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+            <Button.Root iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
           )
         }
       />
       {onDebugChange && (
         <StatCard.Row
           label='Highlight surfaces'
-          action={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+          action={<Input.Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
         />
       )}
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
+          <Layout.Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
-            <span>×</span>
+            <span>#</span>
             <span>avg</span>
             <span>max</span>
-          </Grid>
+          </Layout.Grid>
         </StatCard.Row>
       )}
       {groups.map((group) => (
@@ -168,7 +171,8 @@ export const SurfaceProfilerCard = ({
           current={group.roleId === selected}
           onClick={onSelect && (() => onSelect(group.roleId === selected ? undefined : group.roleId))}
         >
-          <Grid
+          <Layout.Grid
+            grow
             cols={ROW_TRACKS}
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
@@ -176,28 +180,26 @@ export const SurfaceProfilerCard = ({
             <Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
               <span className='truncate text-start'>{group.role}</span>
             </Tooltip.Trigger>
-            <span className='text-description'>{group.ids.length}</span>
+            <span className='text-fg-muted'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
-          </Grid>
+          </Layout.Grid>
         </StatCard.Row>
       ))}
       {selectedGroup && detail && (
         <>
           {/* One block per surface: the stringifier folds repeated references into back-references,
               and sibling surfaces routinely share their `data`. */}
+          {/* A content block, not a label row: a row's content is one truncated line, which clips the JSON to nothing. */}
           {detail.map((surface, index) => (
-            <StatCard.Row
-              key={surface.id ?? index}
-              label={selectedGroup.role}
-              control={<SystemIconButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
-            >
+            <StatCard.Content key={surface.id ?? index}>
               <JsonHighlighter
-                classNames='text-sm'
+                classNames='text-xs'
                 data={surface}
                 replacer={{ maxDepth: 5, maxArrayLen: 10, maxStringLen: 120 }}
+                copyButton
               />
-            </StatCard.Row>
+            </StatCard.Content>
           ))}
         </>
       )}

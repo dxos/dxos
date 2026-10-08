@@ -4,12 +4,12 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Tracer from 'effect/Tracer';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -17,12 +17,12 @@ import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
-import { makeTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { ContentBlock, type Message } from '@dxos/types';
 
 import * as AiRequest from './AiRequest.ts';
 
-const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
+const { text, toolCall, layer } = ScriptedLanguageModel;
 
 // Real handler, so a scripted tool call drives a genuine tool-call → result → continue cycle.
 const TestToolkit = Toolkit.make(
@@ -46,7 +46,7 @@ const toolkit = OpaqueToolkit.make(
 // `RunRequirements` types several services `run()` never yields on this path, hence the noops below.
 const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
   Layer.mergeAll(
-    scriptedLanguageModelLayer(turns),
+    layer(turns),
     ToolExecutionService.layerEmpty,
     ToolResolverService.layerEmpty,
     TestDatabaseLayer(),
@@ -121,7 +121,7 @@ describe('AiRequest.Request.run (telemetry)', () => {
       const request = new AiRequest.Request();
       yield* request
         .run({ toolkit, prompt: 'Echo hello.', history: [] })
-        .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
+        .pipe(Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')));
       yield* Effect.promise(() => provider.forceFlush());
 
       const toolSpan = exporter.getFinishedSpans().find(({ name }) => name === 'callTool');
@@ -144,7 +144,7 @@ describe('AiRequest.Request.run (telemetry)', () => {
       const request = new AiRequest.Request();
       yield* request
         .run({ toolkit, prompt: 'Echo hello.', history: [] })
-        .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
+        .pipe(Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')));
       yield* Effect.promise(() => provider.forceFlush());
 
       const modelSpans = exporter.getFinishedSpans().filter(({ name }) => name.startsWith('LanguageModel.'));

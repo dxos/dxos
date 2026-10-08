@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import type * as Operation from '@dxos/compute/Operation';
@@ -133,7 +133,7 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       const tags = mergeTags(result.tags, template.tags);
       return tags ? { ...result, tags } : result;
     }).pipe(
-      Effect.provide(AiService.model(template.model ?? DXN.getName(DEFAULT_MODEL)).pipe(Layer.orDie)),
+      Effect.provide(AiService.languageModel(template.model ?? DXN.getName(DEFAULT_MODEL)).pipe(Layer.orDie)),
       // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
       // fiber interruption untouched so cancellation propagates (neither catchAll nor
       // catchAllDefect catches interruption).

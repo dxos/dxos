@@ -3,10 +3,10 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -66,7 +66,7 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model('com.anthropic.model.claude-opus-5.default').pipe(
+  AiService.languageModel('com.anthropic.model.claude-opus-5.default').pipe(
     Layer.provideMerge(AiServiceTestingPreset('direct')),
   ),
 );

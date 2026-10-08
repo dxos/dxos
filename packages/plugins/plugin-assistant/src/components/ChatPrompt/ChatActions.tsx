@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type PropsWithChildren } from 'react';
+import type * as Atom from 'effect/reactivity/Atom';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -20,8 +23,10 @@ import { type ChatEvent } from '../Chat/events.ts';
  */
 const TOUCH_TARGET = 'max-md:size-11 pointer-coarse:size-11';
 
-export type ChatActionsProps = ThemedClassName<
+export type ChatActionsProps = Util.ThemedClassName<
   PropsWithChildren<{
+    /** Content before the actions in the same toolbar (the prompt's options and context chips). */
+    leading?: ReactNode;
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
     /**
@@ -32,7 +37,7 @@ export type ChatActionsProps = ThemedClassName<
     customActions?: Atom.Atom<ActionGraphProps>;
     processing?: boolean;
     debug?: boolean;
-    /** Whether the prompt holds text and the processor would accept it; drives the send control's enablement. */
+    /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
     canSend?: boolean;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
@@ -45,6 +50,7 @@ export type ChatActionsProps = ThemedClassName<
 export const ChatActions = ({
   classNames,
   children,
+  leading,
   attendableId,
   customActions,
   processing,
@@ -54,16 +60,15 @@ export const ChatActions = ({
   onSend,
   onEvent,
 }: ChatActionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // While a turn runs the primary control interrupts it — unless there is text waiting, in which
   // case sending it (which queues it behind the running turn) is what the reader is asking for.
   const showStop = processing && !canSend;
-  return (
-    <div className={mx('flex items-center gap-1', classNames)}>
+  const controls = (
+    <>
       {children}
-      {customActions && <ContributedActions actions={customActions} attendableId={attendableId} />}
       {debug && (
-        <IconButton
+        <Button.Root
           variant='ghost'
           icon='ph--wrench--regular'
           iconOnly
@@ -73,7 +78,7 @@ export const ChatActions = ({
       )}
 
       {tasksVisible != null && (
-        <IconButton
+        <Button.Root
           variant='ghost'
           classNames={TOUCH_TARGET}
           icon='ph--list-checks--regular'
@@ -90,7 +95,7 @@ export const ChatActions = ({
           submit, and a touch keyboard offers no such affordance. */}
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
-        <IconButton
+        <Button.Root
           disabled={!showStop && !canSend}
           variant='ghost'
           classNames={mx(TOUCH_TARGET, 'transition duration-300 ease-in-out', canSend && 'text-accent-text rotate-90')}
@@ -103,27 +108,46 @@ export const ChatActions = ({
           data-testid='assistant.send'
         />
       )}
-    </div>
+    </>
+  );
+
+  // One toolbar for the whole row, so the contributed actions and the prompt's own controls share its roving focus.
+  return customActions ? (
+    <ContributedActions actions={customActions} attendableId={attendableId} start={leading} classNames={classNames}>
+      {controls}
+    </ContributedActions>
+  ) : (
+    <Toolbar.Root classNames={classNames}>
+      {leading}
+      {controls}
+    </Toolbar.Root>
   );
 };
 
 /**
- * The contributed actions, rendered through the menu's own item dispatch rather than a local copy
- * of it — that is what makes a `variant: 'custom'` contribution (the mic's press-and-hold and its
- * options menu) render here exactly as it does in a document toolbar.
+ * The prompt's toolbar with the contributed actions first, rendered through the menu's own item dispatch rather than a
+ * local copy of it — that is what makes a `variant: 'custom'` contribution (the mic's press-and-hold and its options
+ * menu) render here exactly as it does in a document toolbar.
  *
- * Its own component so the hook is unconditional; the row renders it only when a caller supplies
- * actions.
+ * Its own component so the hook is unconditional; the row renders it only when a caller supplies actions.
  */
 const ContributedActions = ({
   actions,
   attendableId,
-}: {
-  actions: Atom.Atom<ActionGraphProps>;
-  attendableId?: string;
-}) => {
+  start,
+  classNames,
+  children,
+}: Util.ThemedClassName<
+  PropsWithChildren<{
+    actions: Atom.Atom<ActionGraphProps>;
+    attendableId?: string;
+    start?: ReactNode;
+  }>
+>) => {
   const menuActions = useMenuActions(actions);
-  // Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
-  // context `ActionToolbar` provides; `contents` keeps the items in the prompt's own row.
-  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames='contents' />;
+  return (
+    <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive start={start} classNames={classNames}>
+      {children}
+    </ActionToolbar>
+  );
 };

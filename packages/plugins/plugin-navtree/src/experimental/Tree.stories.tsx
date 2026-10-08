@@ -6,7 +6,10 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, IconButton, Panel, ScrollArea } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -147,8 +150,8 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 
   return (
     <Panel.Root>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical' centered padding thin>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Tree
               className='p-0.5 gap-1'
@@ -170,16 +173,16 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
-      <Panel.Statusbar>
+      </Panel.Body>
+      <Panel.Footer>
         <div className='flex items-center my-2 px-2 gap-2'>
-          <IconButton icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
+          <Button.Root icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
           <span className='grow text-sm' onClick={handleCreateSpace}>
             New space
           </span>
-          <Icon icon='ph--list--regular' />
+          <Icon.Icon icon='ph--list--regular' />
         </div>
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

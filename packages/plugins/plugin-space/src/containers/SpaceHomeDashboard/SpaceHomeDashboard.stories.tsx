@@ -13,7 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -62,7 +62,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Task, Note],
@@ -93,7 +93,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Counts every object by type and places them all on today, the day they were written. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -103,7 +102,7 @@ export const Default: Story = {
     await canvas.findByTestId('space-home-dashboard.objects', {}, { timeout: 10_000 });
     await waitFor(() => expect(valueOf('objects')).toBe(String(OBJECT_COUNT + 1)), { timeout: 10_000 });
     await expect(valueOf('types')).toBe('3');
-    await expect(valueOf('active-days')).toBe('1');
+    await waitFor(() => expect(valueOf('active-days')).toBe('1'), { timeout: 10_000 });
     await expect(canvasElement.querySelectorAll('[data-level]:not([data-level="0"])')).toHaveLength(1);
   },
 };

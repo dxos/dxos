@@ -3,11 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -32,7 +33,7 @@ const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
  */
 const CHESSBOARD_NAME = 'Chessboard';
 
-export type ChessboardProps = ThemedClassName<
+export type ChessboardProps = Util.ThemedClassName<
   PropsWithChildren<{
     orientation?: Player;
     showLabels?: boolean;
@@ -44,7 +45,7 @@ export type ChessboardProps = ThemedClassName<
 
 const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {
-    const targetRef = useForwardedRef(forwardedRef);
+    const targetRef = Hooks.useForwardedRef(forwardedRef);
     const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(CHESSBOARD_NAME);
     const pieces = useAtomValue(model?.pieces ?? EMPTY_PIECES_ATOM);

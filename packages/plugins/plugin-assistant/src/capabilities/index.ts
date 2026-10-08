@@ -29,13 +29,18 @@ export const AgentHydrator = Capability.lazyModule(
     requires: [Capabilities.ProcessManagerRuntime],
     provides: [],
     activatesOn: AssistantEvents.Start,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./agent-hydrator.ts'),
 );
 export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service.ts'), {
   name: 'AgentRuntime',
 });
+export const Agents = Capability.lazyModule(
+  'Agents',
+  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  () => import('./agents.ts'),
+);
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',
 });
@@ -49,7 +54,7 @@ export const Connector = Capability.lazyModule(
   () => import('./connector.ts'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
@@ -68,7 +73,7 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
@@ -85,8 +90,15 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   },
   () => import('./companion-chat-provisioner.ts'),
 );
+// Ungated: an agent blocked on a question is waiting whether or not any assistant UI is on screen.
+export const QuestionResumer = Capability.lazyModule(
+  'QuestionResumer',
+  // Headless hosts (EDGE) provide no operation invoker; it resumes questions only in the app.
+  { requires: [Capabilities.OperationInvoker], provides: [], environments: ['browser', 'node', 'tauri'] },
+  () => import('./question-resumer.ts'),
+);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
 // require once during startup, so a resolver contributed in a later round is invisible to it.
@@ -143,7 +155,7 @@ export const Toolkit = Capability.lazyModule(
   {
     provides: [AppCapabilities.Toolkit],
     activatesOn: AssistantEvents.Start,
-    environments: ['node', 'workerd'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
   },
   () => import('./toolkit.ts'),
 );

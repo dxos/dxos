@@ -4,16 +4,17 @@
 
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { findFirstFocusable } from '@dxos/react-focus';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { Plank } from '#components';
-import { useBreadcrumbs, useDeckSettings } from '#hooks';
+import { planksBefore, useAncestorBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
 import { focusPane } from '../../util/index.ts';
@@ -23,7 +24,7 @@ import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
 import { useDeckPlank } from './useDeckPlank.ts';
 
-export type DeckPlankProps = ThemedClassName<{
+export type DeckPlankProps = Util.ThemedClassName<{
   id: string;
   part: DeckSchema.ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */
@@ -41,7 +42,7 @@ export type DeckPlankProps = ThemedClassName<{
  */
 export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
   if (Attention.isLinkedSegment(id)) {
-    return <CompanionPlank id={id} classNames={classNames} />;
+    return <CompanionPlank id={id} fullscreen={fullscreen} classNames={classNames} />;
   }
 
   return (
@@ -52,8 +53,9 @@ export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, cla
 DeckPlank.displayName = 'DeckPlank';
 
 const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
+  const { attention } = useAttentionContext('DeckPlank');
   const {
     node,
     unresolved,
@@ -68,19 +70,16 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     onScrollIntoView,
   } = useDeckPlank({ id, part, active });
 
-  // In flat mode only the current (last) plank renders; its predecessors in the stack become
-  // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
   const { flatten } = useDeckSettings();
-  const breadcrumbIds = useMemo(
-    () => (flatten && part === 'main' && active ? active.slice(0, active.indexOf(id)) : []),
-    [flatten, part, active, id],
-  );
-  const breadcrumbs = useBreadcrumbs(breadcrumbIds);
+  const history = useMemo(() => planksBefore(active, id), [active, id]);
+  const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined, history);
   const onSelectBreadcrumb = useCallback(
     (crumbId: string) => {
       const index = active?.indexOf(crumbId) ?? -1;
       if (active && index >= 0 && index < active.length - 1) {
         void invokePromise(LayoutOperation.Close, { subject: active.slice(index + 1) });
+      } else {
+        void invokePromise(LayoutOperation.Open, { subject: [crumbId] });
       }
     },
     [invokePromise, active],
@@ -101,10 +100,12 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
         contentFocusRef.current = focusContent(rootRef.current);
       } else if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);
+      } else if (attention && rootRef.current) {
+        Attention.attendElement(attention, rootRef.current);
       }
       onScrollIntoView(undefined);
     }
-  }, [scrollIntoView, id, onScrollIntoView]);
+  }, [scrollIntoView, id, onScrollIntoView, attention]);
   useLayoutEffect(() => () => contentFocusRef.current?.(), []);
 
   // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.

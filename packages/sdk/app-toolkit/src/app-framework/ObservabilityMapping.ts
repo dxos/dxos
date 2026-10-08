@@ -56,9 +56,9 @@ export interface ObservabilityMappingProps<Op extends Operation.Definition<any, 
  * @example
  * ```ts
  * const mapping = ObservabilityMapping.make({
- *   operation: SpaceOperation.AddObject,
- *   event: 'space.object.add',
- *   properties: (_input, output) => ({ objectId: output.object.id }),
+ *   operation: SpaceOperation.Migrate,
+ *   event: 'space.migrate',
+ *   properties: (input) => ({ spaceId: input.space.id, targetVersion: input.version }),
  * });
  * ```
  */

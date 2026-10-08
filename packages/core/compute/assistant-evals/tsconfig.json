@@ -12,6 +12,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/diagram"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
@@ -25,6 +28,9 @@
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../plugins/plugin-agent"
     },
     {
       "path": "../../../plugins/plugin-assistant"
@@ -72,6 +78,9 @@
       "path": "../../../plugins/plugin-testing"
     },
     {
+      "path": "../../../plugins/plugin-uml"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -90,6 +99,9 @@
       "path": "../../../ui/react-ui-table"
     },
     {
+      "path": "../../echo/blob"
+    },
+    {
       "path": "../../echo/echo"
     },
     {
@@ -106,6 +118,12 @@
     },
     {
       "path": "../../protocols"
+    },
+    {
+      "path": "../agent-code-mode"
+    },
+    {
+      "path": "../agent-runtime"
     },
     {
       "path": "../ai"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-task",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Task list components over the durable Task/TaskSet model.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#translations": {
@@ -36,19 +37,19 @@
     "src"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:",
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

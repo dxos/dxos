@@ -215,3 +215,84 @@ test QA-2: Generate synthetic objects into a collection
       do: Select the generated documents in the space-objects browser and delete them.
       expect: the collection returns to its prior state
 ```
+
+```mdl
+test QA-3: Walk the review-queue demo space
+  desc: |
+    The demo script for the Review template (`samples/review`): seed a space holding one project whose
+    finished tasks carry merged dxos/dxos pull requests with their screenshots and demo recordings,
+    and whose tasks in review carry the PRs still open — then walk it the way a reviewer would.
+  actors: both
+  status: passing  # 2026-09-24, agent run recorded as a demo video
+  given:
+    - an identity exists
+    - defaultSpace: the default space, which is where the run returns to
+    - plugin-debug, plugin-projects, plugin-tasks, plugin-file and plugin-video are enabled (dev-only defaults)
+    - the browser can reach raw.githubusercontent.com, which serves the screenshots
+  before:
+    - name: Seed the space
+      do: Create a space from the "Composer — Review queue" template.
+      invoke: org.dxos.operation.debug.createSpaceFromTemplate { id: "org.dxos.plugin-debug.template.review" }
+      capture: seeded
+      expect: a space named "Composer — Review queue" appears in the space list
+      assert: return $snapshot.spaces.some((s) => s.id === $result.spaceId)
+      note: |
+        The template fetches four PNGs while it applies, so on a cold server the step takes up to a minute.
+        A screenshot the browser cannot reach is kept as an external blob naming its URL — this step still
+        passes, and the image step below is where that shows.
+    - name: Find the project
+      do: Open the space and expand Projects in the navtree.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.project" }
+      space: $seeded.spaceId
+      capture: projects
+      expect: Projects lists one project, "Composer polish"
+      assert: return $result.results.length === 1 && $result.results[0].label === 'Composer polish'
+  steps:
+    - name: Open the project's tasks
+      do: Click "Composer polish", then its Tasks tab.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$seeded.spaceId/ai/org.dxos.type.project/$projects.results[0].dxn.objectId"] }
+      expect: |
+        seven tasks: three done, each with a violet merged `#` pill and image or video tags; two in review,
+        each with a green open `#` pill and a video tag; one started; one to do
+      assert: |
+        const tasks = await dxos.spaces($seeded.spaceId).db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run();
+        const count = (status) => tasks.filter((task) => task.status === status).length;
+        const opened = $snapshot.planks.some((plank) => plank.subject?.dxn === $projects.results[0].dxn);
+        return opened && tasks.length === 7 && count('done') === 3 && count('review') === 2;
+      note: The Tasks tab is a view switch inside the plank, so the human clicks it; the agent judges from the database.
+    - name: Look at a finished task's screenshot
+      do: On "Run desktop OAuth in the system browser", click the `oauth-pending.png` tag.
+      expect: a preview card shows the screenshot of the sign-in form waiting on the provider
+      assert: |
+        const blobs = await dxos.spaces($seeded.spaceId).db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.blob'))).run();
+        return blobs.length === 4 && blobs.every((blob) => blob.data._tag === 'inline' && blob.size > 0);
+      note: NO `invoke` — the tag is a pointer gesture on the task row, with no operation behind it.
+    - name: Review an open pull request
+      do: On "Switch identities in place instead of a reset and reload" (in review), click the `#13336` pill.
+      expect: the preview names dxos/dxos#13336, state open, by dmaretskyi
+      assert: |
+        const prs = await dxos.spaces($seeded.spaceId).db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.pullRequest'))).run();
+        return prs.filter((pr) => pr.state === 'open').map((pr) => pr.number).sort().join() === '12952,13336';
+      note: NO `invoke` — as above.
+    - name: Watch a finished task's demo
+      do: On "Count down a toast's remaining time", click the "Toast countdown demo" tag, then Open from its ⋮ menu.
+      expect: |
+        the video opens in the project's plank (breadcrumb "Composer polish » Toast countdown demo") and plays
+        the toast counting down; the Transcript tab says transcripts are for YouTube videos only, and no error
+        toast appears
+      assert: |
+        return $snapshot.planks.some((plank) => plank.subject?.typename === 'org.dxos.type.video') &&
+          !$snapshot.toasts.some((toast) => toast.title === 'Transcription failed.') && $stepErrors.length === 0;
+      note: NO `invoke` — as above. The recording streams from its URL into the player; nothing is written.
+  after:
+    - name: Delete the space
+      do: Open the space's settings and delete the space.
+      invoke: org.dxos.operation.space.delete { space: Space($seeded.spaceId) }
+      expect: the space leaves the space list
+      assert: return !$snapshot.spaces.some((s) => s.id === $seeded.spaceId)
+    - name: Return to the default space
+      do: Pick the default space in the space list.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: the workspace is the default space and no error is logged
+      assert: return $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0
+```

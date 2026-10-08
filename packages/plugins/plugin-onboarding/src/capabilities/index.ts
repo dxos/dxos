@@ -33,7 +33,15 @@ export const DefaultContent = Capability.lazyModule(
   },
   () => import('./default-content.ts'),
 );
-export const Settings = AppCapability.settings(() => import('./settings.ts'));
+export const MigrateDemoSpace = Capability.lazyModule(
+  'MigrateDemoSpace',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
+  () => import('./migrate-demo-space.ts'),
+);
 export const OAuthRecoveryRedirect = Capability.lazyModule(
   'OAuthRecoveryRedirect',
   { provides: [] },
@@ -48,7 +56,7 @@ export const Onboarding = Capability.lazyModule(
       AppCapabilities.Layout,
       ClientCapabilities.Client,
     ],
-    provides: [OnboardingCapabilities.Onboarding],
+    provides: [OnboardingCapabilities.Onboarding, ClientCapabilities.OnIdentityDeleted],
     // The manager reads `client.halo` synchronously at construction, so it needs the forked
     // client initialization to have completed.
     activatesOn: ClientEvents.Initialized,
@@ -59,6 +67,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 
 export * from './capabilities.ts';
 export const Translations = AppCapability.translations(translations);

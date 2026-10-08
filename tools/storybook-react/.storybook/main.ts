@@ -6,13 +6,16 @@
 import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type InlineConfig } from 'vite';
+import { type InlineConfig, type Plugin } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
+
+import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -158,6 +161,30 @@ const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '*
  */
 const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: false };
 
+/**
+ * Re-arms the watch on a file after every change it reports.
+ *
+ * Under `useFsEvents: false` each transformed file outside `root` is watched through its own
+ * descriptor, which is bound to the file's inode. Editors and agents that save by writing a
+ * temporary file and renaming it over the original replace that inode; chokidar 3 re-attaches the
+ * watch on an inode change only on Linux, so on macOS the first such save is reported and every
+ * later one is silently lost — the server keeps serving the stale transform until restarted.
+ */
+const rearmWatchPlugin = (): Plugin => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (path) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (path.includes('\0') || !path.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(path);
+      server.watcher.add(path);
+    });
+  },
+});
+
 // Minimal structural view of a Babel AST node for a dependency-free traversal.
 type AstNode = { type: string } & Record<string, unknown>;
 
@@ -293,6 +320,11 @@ export const createConfig = ({
   features: {
     sidebarOnboardingChecklist: false,
     menuOnboardingChecklist: false,
+    // Nothing here highlights, yet once armed (every story load resets it) the addon re-runs
+    // `getComputedStyle` over every element in the preview on each DOM mutation of the story root.
+    highlight: false,
+    // Marks stories whose files git reports changed; its `git` spawn fails here (EBADF) and logs an error on every start.
+    changeDetection: false,
   },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
@@ -397,7 +429,7 @@ export const createConfig = ({
         },
         worker: {
           format: 'es',
-          plugins: () => [wasm()],
+          plugins: () => [isPerfBundle && perfBundlePlugin(), wasm()],
         },
         plugins: [
           //
@@ -431,6 +463,14 @@ export const createConfig = ({
               });
             },
           },
+
+          !isVitestRun && rearmWatchPlugin(),
+
+          // Ahead of `importSource`, which would otherwise resolve the automerge packages first.
+          isPerfBundle && perfBundlePlugin(),
+
+          // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
+          ModuleUrlPlugin(),
 
           importSource({
             // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,

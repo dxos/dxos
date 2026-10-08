@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-script",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Braneframe notebook plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,19 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -82,27 +84,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./package.json": "./package.json",
-    "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Notebook": {
       "source": "./src/types/Notebook.ts",
       "types": "./dist/types/src/types/Notebook.d.ts",
       "import": "./dist/lib/Notebook.mjs"
     },
+    "./package.json": "./package.json",
     "./ScriptCapabilities": {
       "source": "./src/types/ScriptCapabilities.ts",
       "types": "./dist/types/src/types/ScriptCapabilities.d.ts",
@@ -113,30 +100,45 @@
       "types": "./dist/types/src/types/ScriptEvents.d.ts",
       "import": "./dist/lib/ScriptEvents.mjs"
     },
+    "./ScriptFunction": {
+      "source": "./src/ScriptFunction.ts",
+      "types": "./dist/types/src/ScriptFunction.d.ts",
+      "import": "./dist/lib/ns/ScriptFunction.mjs"
+    },
     "./ScriptOperation": {
       "source": "./src/types/ScriptOperation.ts",
       "types": "./dist/types/src/types/ScriptOperation.d.ts",
       "import": "./dist/lib/ScriptOperation.mjs"
-    },
-    "./ScriptPlugin": {
-      "source": "./src/ScriptPlugin.ts",
-      "types": "./dist/types/src/ScriptPlugin.d.ts",
-      "import": "./dist/lib/ScriptPlugin.mjs"
-    },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
     },
     "./ScriptOperationHandlerSet": {
       "source": "./src/operations/ScriptOperationHandlerSet.ts",
       "types": "./dist/types/src/operations/ScriptOperationHandlerSet.d.ts",
       "import": "./dist/lib/ScriptOperationHandlerSet.mjs"
     },
+    "./ScriptPlugin": {
+      "source": "./src/ScriptPlugin.ts",
+      "types": "./dist/types/src/ScriptPlugin.d.ts",
+      "import": "./dist/lib/ScriptPlugin.mjs"
+    },
     "./ScriptSkill": {
       "source": "./src/skills/ScriptSkill.ts",
       "types": "./dist/types/src/skills/ScriptSkill.d.ts",
       "import": "./dist/lib/ScriptSkill.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Templates": {
+      "source": "./src/Templates.ts",
+      "types": "./dist/types/src/Templates.d.ts",
+      "import": "./dist/lib/ns/Templates.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -179,7 +181,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
@@ -190,9 +191,11 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -209,17 +212,18 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-query": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@lezer/common": "catalog:",
@@ -234,6 +238,7 @@
     "prettier": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/functions-simulator-cloudflare": "workspace:*",

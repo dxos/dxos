@@ -2,24 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
-import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * How a handle for a remotely hosted process delivers ephemeral trace.
@@ -102,8 +105,8 @@ describe('RemoteProcessHandle ephemeral trace', () => {
   });
 
   test('ends when the live source completes', async ({ expect }) => {
-    // A monitor may hand back a finite stream — `RemoteTraceMonitor.layerNoop` is exactly that —
-    // and the subscription has to end with it rather than sit on the drained bridge queue.
+    // A monitor may hand back a finite stream, and the subscription has to end with it rather than
+    // sit on the drained bridge queue.
     const collected = await EffectEx.runPromise(
       Effect.gen(function* () {
         const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), {
@@ -114,6 +117,21 @@ describe('RemoteProcessHandle ephemeral trace', () => {
     );
 
     expect(textsOf([...collected])).toEqual(['buffered', 'live']);
+  });
+
+  test('falls back to polling the ring when the monitor is the noop', async ({ expect }) => {
+    // `layerNoop` says the deployment HAS no live source, so it must behave as if the tag were
+    // unset. Taken as live, its empty stream ends the subscription as soon as the ring's replay is
+    // drained — which, for a reader that subscribes before the turn it wants to watch, is before a
+    // single event exists. That silently delivered nothing to every local-only deployment.
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), RemoteTraceMonitor.noopMonitor);
+        return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer()), Effect.timeout('5 seconds')),
+    );
+
+    expect(textsOf([...collected])).toEqual(['buffered']);
   });
 
   test('falls back to polling the ring with no live source', async ({ expect }) => {
@@ -127,6 +145,94 @@ describe('RemoteProcessHandle ephemeral trace', () => {
     );
 
     expect(textsOf([...collected])).toEqual(['buffered']);
+  });
+});
+
+describe('RemoteProcessHandle event polling', () => {
+  test('a failed read is retried rather than ending the subscription', async ({ expect }) => {
+    let failures = 2;
+    const healthy = makeControl([traceMessage('after-outage')]);
+    const control: RemoteProcessManager.Control = {
+      ...healthy,
+      readEvents: (request) =>
+        failures-- > 0 ? Effect.die(new Error('connection reset')) : healthy.readEvents(request),
+    };
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control);
+        return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect(textsOf([...collected])).toEqual(['after-outage']);
+  });
+
+  test('a failed initial cursor read is retried before outputs are polled', async ({ expect }) => {
+    let failures = 1;
+    const control: RemoteProcessManager.Control = {
+      ...makeControl([]),
+      // The end cursor is read at `MAX_SAFE_INTEGER`; the output then lands at the cursor it returned.
+      readEvents: ({ cursor }) =>
+        cursor === Number.MAX_SAFE_INTEGER
+          ? failures-- > 0
+            ? Effect.die(new Error('connection reset'))
+            : Effect.succeed({ events: [], cursor: 0, truncated: false, snapshot: snapshot(Process.State.RUNNING) })
+          : Effect.succeed({
+              events: cursor === 0 ? [{ _tag: 'output' as const, seq: 0, data: 'hello' }] : [],
+              cursor: 1,
+              truncated: false,
+              snapshot: snapshot(Process.State.RUNNING),
+            }),
+    };
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control, undefined, Duration.millis(1), EchoOutput);
+        return yield* Stream.runCollect(handle.subscribeOutputs().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['hello']);
+  });
+
+  test('an output that lands before the subscription starts is still read', async ({ expect }) => {
+    // The host answers the input before the caller subscribes, as `Process.spawn` + `awaitOutput` do.
+    const log = makeOutputLog([], Process.State.RUNNING, 'reply');
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(log.control, undefined, Duration.millis(1), EchoOutput);
+        yield* handle.submitInput(undefined);
+        return yield* Stream.runCollect(handle.subscribeOutputs());
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['reply']);
+  });
+
+  test('an exited process replays its outputs to a late subscriber', async ({ expect }) => {
+    const log = makeOutputLog(['earlier'], Process.State.SUCCEEDED);
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(log.control, undefined, Duration.millis(1), EchoOutput);
+        return yield* Stream.runCollect(handle.subscribeOutputs());
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['earlier']);
+  });
+
+  test('a host that stays unreachable still ends the subscription', async ({ expect }) => {
+    const control: RemoteProcessManager.Control = {
+      ...makeControl([]),
+      readEvents: () => Effect.die(new Error('gone')),
+    };
+    const exit = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control, undefined, Duration.millis(1));
+        return yield* Stream.runCollect(handle.subscribeEphemeral()).pipe(Effect.exit);
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
   });
 });
 
@@ -158,6 +264,31 @@ const traceMessage = (text: string): Trace.Message =>
  * A host whose ring holds `buffered` and which never settles, so a polled subscription stays open
  * — the shape that makes the difference between the two paths observable.
  */
+/** A host whose log holds only outputs; an input appends `reply` (when given) and ends the process. */
+const makeOutputLog = (initial: readonly string[], initialState: Process.State, reply?: string) => {
+  const outputs = [...initial];
+  let state = initialState;
+  const control: RemoteProcessManager.Control = {
+    ...makeControl([]),
+    status: () => Effect.sync(() => snapshot(state)),
+    submitInput: () =>
+      Effect.sync(() => {
+        if (reply !== undefined) {
+          outputs.push(reply);
+        }
+        state = Process.State.SUCCEEDED;
+      }),
+    readEvents: ({ cursor }) =>
+      Effect.sync(() => ({
+        events: outputs.slice(cursor).map((data, index) => ({ _tag: 'output' as const, seq: cursor + index, data })),
+        cursor: Math.max(cursor === Number.MAX_SAFE_INTEGER ? outputs.length : cursor, outputs.length),
+        truncated: false,
+        snapshot: snapshot(state),
+      })),
+  };
+  return { control };
+};
+
 const makeControl = (buffered: readonly Trace.Message[], onRead?: () => void): RemoteProcessManager.Control => ({
   spawn: () => Effect.sync(() => snapshot(Process.State.RUNNING)),
   list: () => Effect.sync(() => [snapshot(Process.State.RUNNING)]),
@@ -206,7 +337,20 @@ const makeLiveSource = () => {
 
 const registryLayer = () => Layer.succeed(Registry.AtomRegistry, Registry.make());
 
-const makeHandle = (control: RemoteProcessManager.Control, remoteTrace?: RemoteTraceMonitor.Monitor) =>
+/** Supplies the output codec `subscribeOutputs` needs; the process itself never runs here. */
+const EchoOutput = Operation.makeDurable({
+  key: 'org.dxos.test.process',
+  input: Schema.Void,
+  output: Schema.String,
+  services: [],
+}).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
+
+const makeHandle = (
+  control: RemoteProcessManager.Control,
+  remoteTrace?: RemoteTraceMonitor.Monitor,
+  pollInterval?: Duration.Duration,
+  definition?: Operation.Durable<void, string, never, never>,
+) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
     return yield* RemoteProcessHandle.RemoteProcessHandle.make({
@@ -215,6 +359,8 @@ const makeHandle = (control: RemoteProcessManager.Control, remoteTrace?: RemoteT
       spaceId: SPACE_ID,
       registry,
       ...(remoteTrace !== undefined ? { remoteTrace } : {}),
+      ...(pollInterval !== undefined ? { pollInterval } : {}),
+      ...(definition !== undefined ? { definition } : {}),
     });
   });
 

@@ -4,12 +4,12 @@
 
 // @import-as-namespace
 
+import type * as Response from 'effect/ai/Response';
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as Response from 'effect/unstable/ai/Response';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { reportTrace, shouldReportTrace } from 'evalite/traces';
 
 import { type AiService, Model } from '@dxos/ai';
@@ -102,10 +102,10 @@ const fromResponse = (
  * with a transformer that records after the one it found.
  */
 export const instrument = (service: AiService.Service, record: (call: Call) => void): AiService.Service => ({
-  metadata: service.metadata,
-  model: (model, options) =>
+  ...service,
+  languageModel: (model, options) =>
     Layer.effectContext(
-      Layer.build(service.model(model, options)).pipe(
+      Layer.build(service.languageModel(model, options)).pipe(
         Effect.map((context) => {
           const inner = Context.getOption(context, Telemetry.CurrentSpanTransformer);
           const transformer: Telemetry.SpanTransformer = (input) => {

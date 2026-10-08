@@ -136,7 +136,9 @@ export class Context {
     this.#disposeCallbacks.push(callback);
     if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks && !this.#leakDetected) {
       this.#leakDetected = true;
-      const callSite = new StackTrace().getStackArray(1)[0].trim();
+      // A stack is never guaranteed — an engine may omit it entirely — and this is a diagnostic, so
+      // it must not be able to throw out of `onDispose` and break the caller's teardown.
+      const callSite = new StackTrace().getStackArray(1)[0]?.trim();
       log.warn('Context has a large number of dispose callbacks (this might be a memory leak).', {
         context: this.#name,
         callSite,

@@ -4,14 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { synchronized } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Transcriber } from '@dxos/pipeline-transcription';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription/capture';
@@ -82,9 +81,9 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     return this._registry.get(this._enabledAtom);
   }
 
-  setFeed(space: Space, feed: Feed.Feed): this {
+  setFeed(db: Database.Database, feed: Feed.Feed): this {
     this._feed = feed;
-    this._feedServiceLayer = Database.layer(space.db);
+    this._feedServiceLayer = Database.layer(db);
     return this;
   }
 

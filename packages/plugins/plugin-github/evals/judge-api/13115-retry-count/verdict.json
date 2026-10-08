@@ -1,0 +1,50 @@
+{
+  "A": {
+    "order": 4,
+    "why": 3,
+    "load": 5,
+    "trust": 3,
+    "reasons": {
+      "order": "The one-paragraph framing ('raises the retry ceiling so a transient EDGE outage does not fail notarization outright') precedes the single hunk, so the core change leads and nothing mechanical trails it.",
+      "why": "'Two retries was tuned for a fast, reliable EDGE agent; a slower or momentarily unavailable one exhausts that budget' does name a failure mode, but the stated original tuning rationale is asserted rather than derived from anything in the patch.",
+      "load": "Two short sentences with no undefined terms; a reviewer new to the file reads it once and knows exactly what changed.",
+      "trust": "The line range 35-41 matches the hunk exactly, but the claim that 2 'was tuned for a fast, reliable EDGE agent' is a confident statement of past intent the one-line diff cannot support."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 2,
+    "reasons": {
+      "order": "Rationale heading precedes the hunk, so the reviewer gets the motivation before the constant.",
+      "why": "It cites the 3s polling interval and 10s timeout as the budget the retry count sits inside, which is real context the diff alone does not give.",
+      "load": "One pass suffices, though 'contended rounds' is used without being introduced.",
+      "trust": "'no writer yet elected, notarization backlog' invents specific failure causes, and 'gives the same polling loop substantially more time to succeed' conflicts with the fixed 10s notarize timeout it just cited."
+    }
+  },
+  "C": {
+    "order": 4,
+    "why": 3,
+    "load": 5,
+    "trust": 4,
+    "reasons": {
+      "order": "'Notarization against EDGE gave up after two retries... so the limit goes up to five' states the change up front, then the 'Retry limit' section defines the symbol before showing it.",
+      "why": "'Transient EDGE unavailability during that window failed the notarize call outright' names the failure avoided, but it stops there and offers no constraint or rejected alternative.",
+      "load": "Short, defines `MAX_EDGE_RETRIES` before relying on it, and uses no term the reviewer must look up.",
+      "trust": "Every claim is confined to what the constant plainly does; the only stretch is attributing the change to transient unavailability, and the cited range 35-38 is slightly narrower than the 35-41 hunk."
+    }
+  },
+  "D": {
+    "order": 3,
+    "why": 2,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "Core change is first, but the closing paragraph about surrounding constants is commentary on the same hunk rather than a consequence that builds on it.",
+      "why": "'The constant governs how many times the plugin retries a notarization request against EDGE before giving up' is pure restatement of what `MAX_EDGE_RETRIES = 5` already shows; no constraint or rejected alternative appears.",
+      "load": "Plain and short, and it flags 'a single constant edit with no accompanying logic change' early, which usefully sets expectations.",
+      "trust": "The 10s timeout and 3s polling numbers are visible in the hunk, but 'Five retries fits more attempts inside that timeout window than the previous two did' is an unsupported and internally shaky inference — a fixed timeout does not grant room for more attempts."
+    }
+  }
+}

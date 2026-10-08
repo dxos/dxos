@@ -5,8 +5,10 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeContext } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
+import * as Editable from '@dxos/react-ui/Editable';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -29,8 +31,8 @@ import { MarkdownView, type MarkdownViewProps } from '../MarkdownView/index.ts';
  *
  * The value is markdown SOURCE either way: what the reader edits is what the preview renders.
  */
-export type MarkdownEditableProps = ThemedClassName<
-  UseEditableOptions & {
+export type MarkdownEditableProps = Util.ThemedClassName<
+  Editable.UseEditableOptions & {
     /** Shown, dimmed, when the value is empty. */
     placeholder?: string;
     /** Renderers for the preview, as `MarkdownView` takes them. */
@@ -85,7 +87,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
     }: MarkdownEditableProps,
     forwardedRef,
   ) => {
-    const { value, draft, editing, setDraft, commit, revert, previewProps } = useEditable({
+    const { value, draft, editing, setDraft, commit, revert, previewProps } = Editable.useEditable({
       ...options,
       disabled: options.disabled || readonly,
     });
@@ -114,7 +116,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
       revertAll,
     ]);
 
-    const { themeMode } = useThemeContext();
+    const themeMode = Hooks.useThemeMode();
     const commitOnBlur = options.blurBehavior !== 'revert';
     const extensions = useMemo(
       () => [
@@ -152,11 +154,9 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
       // config, not to the DOM, and the preview is a box of the same kind — so the two match.
       return (
         // CodeMirror insets its own content, which would sit the text further in than the preview it
-        // replaced; the field owns its inset, so the editor's is removed.
-        <div
-          data-testid='markdownEditable.editor'
-          className={mx('w-full [&_.cm-content]:!p-0 [&_.cm-line]:!px-0', classNames)}
-        >
+        // replaced; the field owns its inset, so the editor's is removed. Lines keep theirs, since
+        // forcing it to zero would override a list item's hanging indent and hide its bullet.
+        <div data-testid='markdownEditable.editor' className={mx('w-full [&_.cm-content]:!p-0', classNames)}>
           {/* `initialValue`, not a controlled value: the editor owns its document once open, and
             feeding `draft` back in on every keystroke would fight the cursor. */}
           <TextEditor

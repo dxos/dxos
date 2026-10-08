@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { buildArchive, histogram } from '../testing/index.ts';
@@ -101,6 +101,25 @@ describe('definition', () => {
     expect(definition.schemas).toContain(Feed.Feed);
     // Declared by two phases, registered once.
     expect(definition.schemas.filter((schema) => schema === Task.Task)).toHaveLength(1);
+  });
+});
+
+describe('makeTemplate', () => {
+  test('takes its name, icon and hue from the definition', ({ expect }) => {
+    const template = SampleSpace.makeTemplate({ id: 'com.example.template', definition });
+    expect(template.label).toBe('Sample');
+    expect(template.icon).toBe('potted-plant');
+    expect(template.hue).toBe('amber');
+  });
+
+  test('drops an icon the picker cannot produce, rather than offering a blank', ({ expect }) => {
+    // The Phosphor spelling is the near-miss: a consumer wraps a bare name as `ph--<name>--regular`.
+    const template = SampleSpace.makeTemplate({
+      id: 'com.example.template',
+      icon: 'ph--potted-plant--regular',
+      definition,
+    });
+    expect(template.icon).toBeUndefined();
   });
 });
 

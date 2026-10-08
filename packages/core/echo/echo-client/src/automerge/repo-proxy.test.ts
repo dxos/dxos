@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, generateAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -15,7 +15,7 @@ import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,7 +23,7 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { EchoClientError } from '../errors.ts';
+import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
 import { RepoProxy } from './repo-proxy.ts';
@@ -133,6 +133,44 @@ describe('RepoProxy', () => {
     }
   });
 
+  test('a change the host delivers is not an unsaved change', async () => {
+    const peer1 = await setup();
+    const [repo1] = createProxyRepos(peer1.dataService);
+    await openAndClose(repo1);
+
+    const peer2 = await setup();
+    const [repo2] = createProxyRepos(peer2.dataService);
+    await openAndClose(repo2);
+    const network = await new TestReplicationNetwork().open();
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+
+    const handle1 = repo1.create<{ text: string }>({ text: 'one' });
+    await handle1.whenReady();
+    await repo1.flush();
+    const handle2 = repo2.find<{ text: string }>(handle1.url!);
+    await handle2.whenReady();
+    await peer1.host.flush(Context.default());
+
+    const saveStates: string[][] = [];
+    repo1.saveStateChanged.on(({ unsavedDocuments }) => {
+      saveStates.push(unsavedDocuments);
+    });
+    const receivedChange = new Trigger();
+    handle1.once('change', () => receivedChange.wake());
+    handle2.change((doc: any) => {
+      doc.text = 'two';
+    });
+    await receivedChange.wait();
+    expect(handle1.doc().text).to.equal('two');
+    expect(saveStates).to.deep.equal([]);
+
+    handle1.change((doc: any) => {
+      doc.text = 'three';
+    });
+    expect(saveStates).to.deep.equal([[handle1.documentId]]);
+  });
+
   test('load document from disk', async () => {
     const dbPath = createTmpPath();
 
@@ -206,10 +244,21 @@ describe('RepoProxy', () => {
     // `whenReady()` must NOT resolve — there is no source for the doc on
     // disk or on the network.
     let readyResolved = false;
-    void handle.whenReady().then(() => {
-      readyResolved = true;
-    });
-    await sleep(300);
+    void handle.whenReady().then(
+      () => {
+        readyResolved = true;
+      },
+      (err) => {
+        // The close at the end of the test settles the still-pending load.
+        if (!(err instanceof RepoClosedError)) {
+          throw err;
+        }
+      },
+    );
+    // Poll rather than block for a fixed delay: an accidental resolution flips `readyResolved`
+    // immediately instead of only being checked once after the wait, and the expected outcome
+    // is this timing out with the flag still `false`.
+    await waitForCondition({ condition: () => readyResolved, timeout: 300 }).catch(() => {});
 
     expect(readyResolved).toBe(false);
     expect(handle.state).toEqual('requesting');
@@ -351,6 +400,28 @@ describe('RepoProxy', () => {
 
       expect(clientHandle.doc()?.text).to.equal('Hello World!');
     }
+  });
+
+  test('a disk flush saves only the documents written since the last one', async () => {
+    let recorder: FlushRecordingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (recorder = new FlushRecordingDataService(props)));
+    invariant(recorder);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    type TestDoc = { text?: string };
+    const first = clientRepo.create<TestDoc>();
+    const second = clientRepo.create<TestDoc>();
+    await clientRepo.flush({ disk: true });
+    expect(new Set(recorder.flushed.at(-1))).toEqual(new Set([first.documentId, second.documentId]));
+
+    first.change((doc: TestDoc) => (doc.text = 'changed'));
+    await clientRepo.flush({ disk: true });
+    expect(recorder.flushed.at(-1)).toEqual([first.documentId]);
+
+    const flushes = recorder.flushed.length;
+    await clientRepo.flush({ disk: true });
+    expect(recorder.flushed.length).toBe(flushes);
   });
 
   test('client and host make changes simultaneously', async () => {
@@ -568,6 +639,17 @@ describe('RepoProxy', () => {
     await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
   });
 
+  test('an unavailable report from the host settles the handle', async () => {
+    const { dataService } = await setup(undefined, (props) => new UnavailableDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const clientHandle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+
+    await expect(asyncTimeout(clientHandle.whenReady(), 1000)).rejects.toThrow(DocumentUnavailableError);
+    expect(clientHandle.state).to.equal('unavailable');
+  });
+
   test('flush during a dropped subscription delivers the write', async () => {
     const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
 
@@ -585,6 +667,112 @@ describe('RepoProxy', () => {
     invariant(hostHandle);
     await hostHandle.waitUntilReady();
     expect(hostHandle.doc()?.text).toEqual(text);
+  });
+
+  // `Resource` holds `_lifecycleState` at OPEN for the whole of `close()`, and the update job stays
+  // set across `_close`'s `join()`, so a find landing inside the close passed both of those checks
+  // while the context was already disposed — the handle it returned could never reach the host.
+  test('find reports the client going away once close has begun', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    const url = handle.url;
+    invariant(url);
+
+    // The document is still in `_handles` here — `_close` clears the cache only after its `join()`
+    // — so this is also the cached-hit path, which reached no guard at all before: `_getOrLoadHandle`
+    // returned the cached handle before ever calling one.
+    //
+    // Not awaited, so the assertions run while the close is still in flight. `close()` awaits the
+    // open promise before it starts, so the yield is what puts us inside the close rather than
+    // before it — and the lifecycle state is still OPEN throughout.
+    const closing = clientRepo.close();
+    await yieldToEventLoop();
+    expect(clientRepo.isOpen).to.be.false;
+
+    expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
+    expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
+    await closing;
+  });
+
+  test('a load still in flight is settled when the proxy closes', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    // The host has no bytes for this document and no peer to fetch them from, so only the close can
+    // settle the load.
+    const handle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    const ready = asyncTimeout(handle.whenReady(), 1_000);
+    await clientRepo.close();
+
+    await expect(ready).rejects.toThrow(RepoClosedError);
+  });
+
+  // `Trigger` marks its own promise handled, so settling a load nobody awaits must not surface as an
+  // unhandled rejection; vitest reports one as an error for the run.
+  test('closing with a load nobody awaits raises no unhandled rejection', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    await clientRepo.close();
+    // Lets an unhandled rejection surface inside this test rather than a later one.
+    await sleep(10);
+
+    // The load is settled rather than left pending, even though nobody was waiting on it.
+    await expect(asyncTimeout(handle.whenReady(), 1_000)).rejects.toThrow(RepoClosedError);
+  });
+
+  test('find on a closed proxy reports the client going away', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    const url = handle.url;
+    invariant(url);
+    await clientRepo.close();
+
+    // A load started while the proxy was open routinely lands after it; the outcome is typed so a
+    // caller that can abandon the work recognises it, rather than an assertion failure.
+    expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
+    expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
+  });
+
+  test('a failed update leaves the proxy usable and is retried', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService, host } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+    const url = handle.url;
+    invariant(url);
+
+    service.fail = true;
+    handle.change((doc: { text: string }) => {
+      doc.text = 'retried';
+    });
+    await expect.poll(() => service.failures, { timeout: 2_000 }).toBeGreaterThan(0);
+    // A turn of the event loop lets a failure that escapes the proxy settle before the proxy is checked.
+    await yieldToEventLoop();
+
+    // The proxy still serves the database: the next object is created rather than refused.
+    expect(clientRepo.isOpen).toBe(true);
+    const next = clientRepo.create<{ text: string }>({ text: 'next' });
+
+    service.fail = false;
+    const hostText = async () => (await host.loadDoc<{ text: string }>(Context.default(), url))?.doc()?.text;
+    await expect.poll(hostText, { timeout: 4_000 }).toEqual('retried');
+    await next.whenReady();
   });
 });
 
@@ -619,6 +807,61 @@ class RefusingDataService extends DataServiceImpl {
     return this.refuse
       ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
       : super['DataService.createDocument'](request);
+  }
+}
+
+/** Fails every update batch while {@link fail} is set, as a host that times out the call does. */
+class FailingUpdateDataService extends DataServiceImpl {
+  'fail' = false;
+  'failures' = 0;
+
+  override ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
+    if (this.fail) {
+      this.failures++;
+      return Effect.fail(new EchoClientError({ message: 'update timed out' }));
+    }
+    return super['DataService.update'](request);
+  }
+}
+
+/** Records the documents each disk flush asks the host to save. */
+class FlushRecordingDataService extends DataServiceImpl {
+  readonly 'flushed': string[][] = [];
+
+  override ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {
+    this.flushed.push([...(request.documentIds ?? [])]);
+    return super['DataService.flush'](request);
+  }
+}
+
+/**
+ * A host that holds none of the documents it is asked for and reports each as unavailable, as the
+ * EDGE data plane does for a space whose documents never replicated to it. Neither call reaches the
+ * real host: a document it is still fetching is a different answer (`requesting`), and the one under
+ * test is the host having nothing and fetching nothing.
+ */
+class UnavailableDataService extends DataServiceImpl {
+  #emit: ((updates: DataService.BatchedDocumentUpdates) => void) | undefined;
+
+  override ['DataService.subscribe'](
+    _request: DataService.SubscribeRequest,
+  ): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
+      this.#emit = (updates) => void emit.single(updates);
+      // Ready beacon: `RepoProxy` gates every `updateSubscription` on the subscription's first batch.
+      this.#emit({ updates: [] });
+      return Effect.sync(() => {
+        this.#emit = undefined;
+      });
+    });
+  }
+
+  override ['DataService.updateSubscription']({
+    addIds,
+  }: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
+    return Effect.sync(() => {
+      this.#emit?.({ updates: (addIds ?? []).map((documentId) => ({ documentId, unavailable: true })) });
+    });
   }
 }
 

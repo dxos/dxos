@@ -5,60 +5,105 @@
 import { describe, test } from 'vitest';
 
 import { Entity, Obj } from '@dxos/echo';
+import { EchoFeedCodec, type FeedBlockRef } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { FeedObjectCore } from './feed-object-core.ts';
 
 describe('FeedObjectCore', () => {
-  // Large enough that retaining the canonical JSON per object would dominate the object itself —
-  // the reason reconciliation compares digests (DX-1148).
-  const LARGE_PAYLOAD = 'x'.repeat(512 * 1024);
-
-  test('an inbound read of identical content leaves the entity untouched', ({ expect }) => {
-    const entity = Obj.make(TestSchema.Person, { name: LARGE_PAYLOAD });
+  test('a re-read of the applied block needs no decode, and adopts a position it gained', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { actorId: 'a', sequence: 1 });
     const core = new FeedObjectCore(entity, () => {});
 
-    const inbound = Obj.make(TestSchema.Person, { name: LARGE_PAYLOAD });
-    core.reconcile(inbound, jsonOf(inbound));
-
-    expect(entity.name).toEqual(LARGE_PAYLOAD);
+    expect(core.accepts({ actorId: 'a', sequence: 1 })).toBe(false);
+    expect(core.accepts({ actorId: 'a', sequence: 1, position: 7 })).toBe(false);
+    expect(positionOf(entity)).toEqual('7');
     core.dispose();
   });
 
-  test('an inbound read with differing content is applied', ({ expect }) => {
-    const entity = Obj.make(TestSchema.Person, { name: LARGE_PAYLOAD });
+  test('a newer block is applied and an older one ignored', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v2' }), { actorId: 'a', sequence: 2 });
     const core = new FeedObjectCore(entity, () => {});
 
-    const inbound = Obj.make(TestSchema.Person, { name: `${LARGE_PAYLOAD}!` });
-    core.reconcile(inbound, jsonOf(inbound));
+    expect(core.accepts({ actorId: 'b', sequence: 1 })).toBe(false);
 
-    expect(entity.name).toEqual(`${LARGE_PAYLOAD}!`);
+    const next: FeedBlockRef = { actorId: 'b', sequence: 3 };
+    expect(core.accepts(next)).toBe(true);
+    core.reconcile(Obj.make(TestSchema.Person, { name: 'v3' }), next);
+    expect(entity.name).toEqual('v3');
+    expect(core.accepts(next)).toBe(false);
     core.dispose();
   });
 
-  test("a pending append's own echo roundtrips, and a stale unordered read does not clobber it", ({ expect }) => {
-    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+  test('positions order blocks where both have one', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { actorId: 'a', sequence: 5, position: 10 });
+    const core = new FeedObjectCore(entity, () => {});
+
+    expect(core.accepts({ actorId: 'b', sequence: 9, position: 4 })).toBe(false);
+    expect(core.accepts({ actorId: 'b', sequence: 1, position: 11 })).toBe(true);
+    core.dispose();
+  });
+
+  test('blocks written concurrently at the same sequence keep the current state', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'mine' }), { actorId: 'a', sequence: 4 });
+    const core = new FeedObjectCore(entity, () => {});
+
+    expect(core.accepts({ actorId: 'b', sequence: 4 })).toBe(false);
+    core.dispose();
+  });
+
+  test('an unsent local change wins over every inbound block', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { actorId: 'a', sequence: 1 });
+    const core = new FeedObjectCore(entity, () => {});
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'local';
+    });
+    expect(core.accepts({ actorId: 'b', sequence: 9, position: 99 })).toBe(false);
+    core.dispose();
+  });
+
+  test('a confirmed append names its block, so its echo is settled and later blocks order after it', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { actorId: 'a', sequence: 1 });
     const core = new FeedObjectCore(entity, () => {});
 
     Obj.update(entity, (entity) => {
       entity.name = 'v2';
     });
-    const { json } = core.captureForAppend();
+    const { token } = core.captureForAppend();
 
-    // An unordered remote read that is not our echo is ignored while the append is unconfirmed.
-    const other = Obj.make(TestSchema.Person, { name: 'other' });
-    core.reconcile(other, jsonOf(other));
-    expect(entity.name).toEqual('v2');
+    // While in flight, an unordered read is stale.
+    expect(core.accepts({ actorId: 'b', sequence: 2 })).toBe(false);
 
-    // Our own append coming back is recognised by digest, clearing the pending slot.
-    const echo = Obj.make(TestSchema.Person, { name: 'v2' });
-    core.reconcile(echo, json);
-    expect(entity.name).toEqual('v2');
+    core.confirmAppend(token, EchoFeedCodec.blockId('a', 2));
+    expect(core.accepts({ actorId: 'a', sequence: 2 })).toBe(false);
+    expect(core.accepts({ actorId: 'a', sequence: 1 })).toBe(false);
 
-    // With nothing pending, the next differing read is adopted.
-    const next = Obj.make(TestSchema.Person, { name: 'v3' });
-    core.reconcile(next, jsonOf(next));
+    const next: FeedBlockRef = { actorId: 'b', sequence: 3 };
+    expect(core.accepts(next)).toBe(true);
+    core.reconcile(Obj.make(TestSchema.Person, { name: 'v3' }), next);
     expect(entity.name).toEqual('v3');
+    core.dispose();
+  });
+
+  test('an append whose store reports no block id waits for a block ordered after the current state', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { position: 3 });
+    const core = new FeedObjectCore(entity, () => {});
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'v2';
+    });
+    const { token } = core.captureForAppend();
+    core.confirmAppend(token, undefined);
+
+    expect(core.accepts({ position: 2 })).toBe(false);
+    expect(core.accepts({ position: 3 })).toBe(false);
+
+    const echo: FeedBlockRef = { position: 4 };
+    expect(core.accepts(echo)).toBe(true);
+    core.reconcile(Obj.make(TestSchema.Person, { name: 'v2' }), echo);
+    expect(core.accepts(echo)).toBe(false);
     core.dispose();
   });
 
@@ -70,14 +115,39 @@ describe('FeedObjectCore', () => {
       entity.name = 'v2';
     });
     const { token } = core.captureForAppend();
-    core.revertCapture(`${token}-stale`);
+    core.revertCapture(token + 1);
 
     // Still dirty (reverted), so an inbound read must not win over the unappended local change.
-    const remote = Obj.make(TestSchema.Person, { name: 'remote' });
-    core.reconcile(remote, jsonOf(remote));
+    expect(core.accepts({ actorId: 'b', sequence: 1, position: 1 })).toBe(false);
     expect(entity.name).toEqual('v2');
+    core.dispose();
+  });
+
+  test('a subscription reposition applies only to the block the core reflects', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { actorId: 'a', sequence: 1 });
+    const core = new FeedObjectCore(entity, () => {});
+
+    core.reposition(EchoFeedCodec.blockId('a', 0), 5);
+    expect(positionOf(entity)).toBeUndefined();
+    core.reposition(EchoFeedCodec.blockId('a', 1), 6);
+    expect(positionOf(entity)).toEqual('6');
     core.dispose();
   });
 });
 
-const jsonOf = (entity: Entity.Unknown): Record<string, unknown> => Entity.toJSON(entity) as Record<string, unknown>;
+/** Stamps an object's `@meta` the way a store stamps an object it decoded from a block. */
+const stamped = <T extends Obj.Any>(obj: T, ref: FeedBlockRef): T => {
+  Obj.update(obj, (obj) => {
+    const keys = Obj.getMeta(obj).keys;
+    if (ref.actorId !== undefined && ref.sequence !== undefined) {
+      keys.push({ source: FeedProtocol.KEY_FEED_BLOCK, id: EchoFeedCodec.blockId(ref.actorId, ref.sequence) });
+    }
+    if (ref.position !== undefined) {
+      keys.push({ source: FeedProtocol.KEY_QUEUE_POSITION, id: String(ref.position) });
+    }
+  });
+  return obj;
+};
+
+const positionOf = (entity: Entity.Unknown): string | undefined =>
+  Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;

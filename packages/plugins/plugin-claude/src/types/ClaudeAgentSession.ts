@@ -38,7 +38,7 @@ const RESERVED_CREDENTIAL_NAMES = [
  * clients) cannot slip past the list. Expressed as a pattern rather than a filter so it survives
  * the operation's JSON schema — a keyword that schema cannot carry costs the whole tool.
  */
-const CREDENTIAL_NAME_PATTERN = new RegExp(`^(?!(?:${RESERVED_CREDENTIAL_NAMES.join('|')})$)[A-Z][A-Z0-9_]*$`);
+const CREDENTIAL_NAME_PATTERN = new RegExp(`^(?!(?:${RESERVED_CREDENTIAL_NAMES.join('|')})$)[A-Z][A-Z0-9_]*$`, 'u');
 
 /**
  * A credential bound to a session, by reference rather than by value: the secret is resolved from
@@ -94,6 +94,7 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--terminal-window--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

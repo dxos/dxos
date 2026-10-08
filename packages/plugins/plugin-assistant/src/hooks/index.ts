@@ -5,20 +5,20 @@
 
 export * from './useSkillRegistry.ts';
 export * from './useChatKeymap.ts';
-export * from './useChatProcessor.ts';
+export * from './useChatModel.ts';
 export * from './useChatServices.ts';
 export * from './useChatToolbarActions.ts';
 export * from './useContextBinder.ts';
 export * from './useContextObjects.ts';
 export { useDebug } from './useDebug.ts';
 export * from './useFilteredTypes.ts';
+export * from './useMcpServer.ts';
 export * from './usePlatform.ts';
 export * from './usePresets.ts';
 export * from './useReferencesProvider.ts';
 export * from './useSelectionContext.ts';
-export * from './useSettled.ts';
 export * from './useHomeSuggestions.ts';
 export * from './useProcessEphemeralStatus.ts';
 export * from './useSessionTimeline.ts';
 
-export { type AiChatProcessor } from '../processor/index.ts';
+export { type ChatModel } from '../chat-model/index.ts';

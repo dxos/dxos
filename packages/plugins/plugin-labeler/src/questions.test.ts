@@ -2,59 +2,78 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { DecisionModel } from '@dxos/ai-typesafe';
+import {
+  type Decisions,
+  NEEDS_REPLY_TRUTH,
+  NO_LABEL,
+  URGENCY_SCALE,
+  URGENT_SCORE,
+  labelQuestions,
+  toVerdict,
+} from './questions.ts';
 
-import { NEEDS_REPLY_TRUTH, URGENCY_SCALE, URGENT_SCORE, labelQuestions, toVerdict } from './questions.ts';
+const rating = (value: number, confidence = 1): Decisions['urgency'] => ({
+  rating: value,
+  label: URGENCY_SCALE[Math.round(value)],
+  probabilities: {},
+  confidence,
+});
+
+const label = (value: string, confidence?: number, probability = 1): NonNullable<Decisions['label']> => ({
+  label: value,
+  probabilities: { [value]: probability },
+  confidence,
+});
 
 describe('labeler questions', () => {
   test('the space tags become the choice criteria, asked alongside the two fixed questions', ({ expect }) => {
-    const schema = labelQuestions({ Receipts: 'Receipts', Travel: 'Travel' });
+    const { decisions } = labelQuestions({ Receipts: 'Receipts' });
 
-    const questions = DecisionModel.compile(schema);
-
-    expect(Object.keys(questions)).toEqual(['needsReply', 'urgency', 'label']);
-    expect(questions.needsReply.question.type).toBe('noul');
-    expect(questions.urgency.question).toMatchObject({ type: 'score', criteria: [...URGENCY_SCALE] });
-    expect(questions.label.question).toMatchObject({
-      type: 'choice',
-      criteria: { Receipts: 'Receipts', Travel: 'Travel' },
+    expect(Object.keys(decisions)).toEqual(['needsReply', 'urgency', 'label']);
+    expect(decisions.needsReply._tag).toBe('Probability');
+    expect(decisions.urgency).toMatchObject({ _tag: 'Rate', criteria: [...URGENCY_SCALE] });
+    // A single tag is still a choice: "none of these" is always an option, so the model can decline.
+    expect(decisions.label).toMatchObject({
+      _tag: 'Classify',
+      criteria: { Receipts: 'Receipts', [NO_LABEL]: 'None of these labels fit' },
     });
   });
 
   test('a label is applied only when the model is confident enough', ({ expect }) => {
-    const answers = {
-      needsReply: 0.1,
-      urgency: { score: 0, confidence: 0.9 },
-      label: { _tag: 'Receipts', confidence: 0.9 },
+    const answers: Decisions = {
+      needsReply: { probability: 0.1 },
+      urgency: rating(0, 0.9),
+      label: label('Receipts', 0.9),
     };
 
     expect(toVerdict(answers).label).toBe('Receipts');
     // Below the threshold the message keeps no label at all, rather than a guessed one.
-    expect(toVerdict({ ...answers, label: { _tag: 'Receipts', confidence: 0.2 } }).label).toBeUndefined();
+    expect(toVerdict({ ...answers, label: label('Receipts', 0.2) }).label).toBeUndefined();
     expect(toVerdict(answers, 0.95).label).toBeUndefined();
   });
 
-  test('needs-reply and urgent are decided by their own thresholds', ({ expect }) => {
-    const base = { needsReply: 0, urgency: { score: 0, confidence: 1 } };
+  test('with no reported confidence, the probability of the chosen option gates it', ({ expect }) => {
+    const base: Decisions = { needsReply: { probability: 0 }, urgency: rating(0) };
 
-    expect(toVerdict({ ...base, needsReply: NEEDS_REPLY_TRUTH }).needsReply).toBe(true);
-    expect(toVerdict({ ...base, needsReply: NEEDS_REPLY_TRUTH - 0.01 }).needsReply).toBe(false);
-    expect(toVerdict({ ...base, urgency: { score: URGENT_SCORE, confidence: 1 } }).urgent).toBe(true);
-    // A top-of-scale score the model is unsure of is not urgent.
-    expect(toVerdict({ ...base, urgency: { score: 2, confidence: 0.1 } }).urgent).toBe(false);
+    expect(toVerdict({ ...base, label: label('Receipts', undefined, 0.8) }).label).toBe('Receipts');
+    expect(toVerdict({ ...base, label: label('Receipts', undefined, 0.3) }).label).toBeUndefined();
   });
 
-  test('the answers decode into the shape the verdict reads', ({ expect }) => {
-    const schema = labelQuestions({ Receipts: 'Receipts' });
-    const decoded = Schema.decodeUnknownSync(schema)({
-      needsReply: 0.9,
-      urgency: { score: 1.8, confidence: 0.7 },
-      label: { _tag: 'Receipts', confidence: 0.8 },
-    });
+  test('choosing "none of these" applies no label however confident', ({ expect }) => {
+    expect(
+      toVerdict({ needsReply: { probability: 0 }, urgency: rating(0), label: label(NO_LABEL, 1) }).label,
+    ).toBeUndefined();
+  });
 
-    expect(toVerdict(decoded)).toEqual({ label: 'Receipts', needsReply: true, urgent: true });
+  test('needs-reply and urgent are decided by their own thresholds', ({ expect }) => {
+    const base: Decisions = { needsReply: { probability: 0 }, urgency: rating(0) };
+
+    expect(toVerdict({ ...base, needsReply: { probability: NEEDS_REPLY_TRUTH } }).needsReply).toBe(true);
+    expect(toVerdict({ ...base, needsReply: { probability: NEEDS_REPLY_TRUTH - 0.01 } }).needsReply).toBe(false);
+    expect(toVerdict({ ...base, urgency: rating(URGENT_SCORE) }).urgent).toBe(true);
+    // A top-of-scale rating the model is unsure of is not urgent.
+    expect(toVerdict({ ...base, urgency: rating(2, 0.1) }).urgent).toBe(false);
   });
 });

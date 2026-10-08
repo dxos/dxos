@@ -1,7 +1,6 @@
 {
   "name": "@dxos/crx-protocol",
-  "version": "0.11.1",
-  "private": true,
+  "version": "0.13.0",
   "description": "Shared CRX <-> Composer wire protocol (effect schema).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -34,6 +34,9 @@
   },
   "devDependencies": {
     "@dxos/typings": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "beast": {}
 }

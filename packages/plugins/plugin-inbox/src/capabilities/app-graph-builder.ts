@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -387,6 +387,7 @@ export default Capability.makeModule(
                 properties: {
                   label: attachment.name ?? 'Attachment',
                   icon: 'ph--paperclip--regular',
+                  [AppNode.TYPE_LABEL_PROPERTY]: ['attachment-type.label', { ns: meta.profile.key }],
                   disposition: 'hidden',
                 },
               }),

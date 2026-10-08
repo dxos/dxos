@@ -4,7 +4,7 @@
 
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -55,6 +55,12 @@ export const translations = [
         'outline.description':
           'Notes are a scratch surface for the project. Use the menu to promote items into assignable tasks.',
         'create-artifact.label': 'Create artifact',
+        'remove-from-project.label': 'Remove from project',
+        'move-task-dialog.title': 'Move task to project',
+        'move-task.placeholder': 'Search projects…',
+        'move-task-empty.message': 'There are no other projects in this space.',
+        'move-task-error.title': 'The task could not be moved',
+        'untitled-project.label': 'Untitled project',
         'create-chat.label': 'Create session',
         'delegate-tasks.label': 'Assign selected tasks to agent',
         'create-panel.name.placeholder': 'Project name (optional)',
@@ -62,7 +68,9 @@ export const translations = [
         'setup-project.label': 'Set up project',
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
+        'object-card.archived.label': 'Archived',
+        'object-card.menu.label': 'Object actions',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

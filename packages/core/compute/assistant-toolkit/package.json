@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-toolkit",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -17,25 +18,85 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
+    "./AgentOperation": {
+      "source": "./src/types/AgentOperation.ts",
+      "types": "./dist/types/src/types/AgentOperation.d.ts",
+      "import": "./dist/lib/AgentOperation.mjs"
     },
-    "./McpServer": {
-      "source": "./src/types/McpServer.ts",
-      "types": "./dist/types/src/types/McpServer.d.ts",
-      "import": "./dist/lib/McpServer.mjs"
+    "./AgentOperationHandlerSet": {
+      "source": "./src/AgentOperationHandlerSet.ts",
+      "types": "./dist/types/src/AgentOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/AgentOperationHandlerSet.mjs"
+    },
+    "./AgentSkill": {
+      "source": "./src/skills/agent/AgentSkill.ts",
+      "types": "./dist/types/src/skills/agent/AgentSkill.d.ts",
+      "import": "./dist/lib/ns/AgentSkill.mjs"
+    },
+    "./AlarmSkill": {
+      "source": "./src/skills/alarm/AlarmSkill.ts",
+      "types": "./dist/types/src/skills/alarm/AlarmSkill.d.ts",
+      "import": "./dist/lib/ns/AlarmSkill.mjs"
+    },
+    "./AutomationSkill": {
+      "source": "./src/skills/automation/AutomationSkill.ts",
+      "types": "./dist/types/src/skills/automation/AutomationSkill.d.ts",
+      "import": "./dist/lib/ns/AutomationSkill.mjs"
+    },
+    "./BrowserSkill": {
+      "source": "./src/skills/browser/BrowserSkill.ts",
+      "types": "./dist/types/src/skills/browser/BrowserSkill.d.ts",
+      "import": "./dist/lib/ns/BrowserSkill.mjs"
+    },
+    "./ChatContextSkill": {
+      "source": "./src/skills/chat-context/ChatContextSkill.ts",
+      "types": "./dist/types/src/skills/chat-context/ChatContextSkill.d.ts",
+      "import": "./dist/lib/ns/ChatContextSkill.mjs"
+    },
+    "./DelegationSkill": {
+      "source": "./src/skills/delegation/DelegationSkill.ts",
+      "types": "./dist/types/src/skills/delegation/DelegationSkill.d.ts",
+      "import": "./dist/lib/ns/DelegationSkill.mjs"
+    },
+    "./DelegationStrategy": {
+      "source": "./src/DelegationStrategy.ts",
+      "types": "./dist/types/src/DelegationStrategy.d.ts",
+      "import": "./dist/lib/ns/DelegationStrategy.mjs"
     },
     "./Memory": {
       "source": "./src/types/Memory.ts",
       "types": "./dist/types/src/types/Memory.d.ts",
       "import": "./dist/lib/Memory.mjs"
     },
-    "./AgentOperation": {
-      "source": "./src/operations/definitions.ts",
-      "types": "./dist/types/src/operations/definitions.d.ts",
-      "import": "./dist/lib/AgentOperation.mjs"
+    "./MemorySkill": {
+      "source": "./src/skills/memory/MemorySkill.ts",
+      "types": "./dist/types/src/skills/memory/MemorySkill.d.ts",
+      "import": "./dist/lib/ns/MemorySkill.mjs"
+    },
+    "./PlanningSkill": {
+      "source": "./src/skills/planning/PlanningSkill.ts",
+      "types": "./dist/types/src/skills/planning/PlanningSkill.d.ts",
+      "import": "./dist/lib/ns/PlanningSkill.mjs"
+    },
+    "./SkillManagerSkill": {
+      "source": "./src/skills/skill-manager/SkillManagerSkill.ts",
+      "types": "./dist/types/src/skills/skill-manager/SkillManagerSkill.d.ts",
+      "import": "./dist/lib/ns/SkillManagerSkill.mjs"
+    },
+    "./SlashCommand": {
+      "source": "./src/SlashCommand.ts",
+      "types": "./dist/types/src/SlashCommand.d.ts",
+      "import": "./dist/lib/ns/SlashCommand.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./WebSearchSkill": {
+      "source": "./src/skills/websearch/WebSearchSkill.ts",
+      "types": "./dist/types/src/skills/websearch/WebSearchSkill.d.ts",
+      "import": "./dist/lib/ns/WebSearchSkill.mjs"
     }
   },
   "files": [

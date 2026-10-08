@@ -5,10 +5,10 @@
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Scope from 'effect/Scope';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { RTCService } from '@dxos/protocols/rpc';
 

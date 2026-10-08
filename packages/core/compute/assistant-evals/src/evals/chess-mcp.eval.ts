@@ -10,27 +10,28 @@ import { evalite } from 'evalite';
 import { Model } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { McpServer, PlanningSkill } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { EDGE_URLS } from '@dxos/config';
 import { Blob, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { StockfishSpace } from '@dxos/plugin-debug/sample';
+import * as StockfishSpace from '@dxos/plugin-debug/StockfishSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { SandboxSkill } from '@dxos/plugin-sandbox';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxOperation from '@dxos/plugin-sandbox/SandboxOperation';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
+import * as SandboxSkill from '@dxos/plugin-sandbox/SandboxSkill';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { type Actor, File, Task } from '@dxos/types';
+import { type Actor, File, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type ToolInvocation, findObject } from '../assertions.ts';
@@ -225,21 +226,20 @@ const checklist = Scorer.shared(
     if (!taskSet) {
       return empty;
     }
-    const tasks = yield* Effect.forEach(taskSet.tasks, (ref) =>
-      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-    );
+    // The whole tree: the delegated stages are sub-tasks, which `taskSet.tasks` does not list.
+    const tasks = yield* TaskSet.loadTasks(taskSet);
     const delegated = DELEGATED_STAGES.map((title) => tasks.find((candidate) => candidate?.title === title));
     return {
       delegated,
       readerSteps: tasks.filter((candidate) => candidate?.assignee?.role === 'user'),
       later: tasks.filter((candidate) => {
-        const parentTask = candidate?.parentTask;
+        const parentTask = candidate ? Task.getParentTask(candidate) : undefined;
         return (
           parentTask !== undefined &&
           candidate?.assignee?.role !== 'assistant' &&
           candidate?.assignee?.role !== 'user' &&
           !DELEGATED_STAGES.includes(candidate?.title ?? '') &&
-          !delegated.some((stage) => stage && Task.refEntityId(parentTask) === stage.id)
+          !delegated.some((stage) => stage && parentTask.id === stage.id)
         );
       }),
     };
@@ -378,7 +378,7 @@ const task = createEvalRunner({
   ],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make(), SandboxPlugin.make()],
   types: [
-    ...StockfishSpace().schemas,
+    ...StockfishSpace.make().schemas,
     Collection.Collection,
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.
@@ -402,14 +402,14 @@ const task = createEvalRunner({
       if (!space) {
         return yield* Effect.fail(new EvalRunError({ message: `Space not found: ${spaceId}` }));
       }
-      yield* SampleSpace.applyTo(StockfishSpace(), space);
+      yield* SampleSpace.applyTo(StockfishSpace.make(), space);
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       if (!project?.taskSet || !project.instructions) {
         return yield* Effect.fail(new EvalRunError({ message: 'The template did not produce the project.' }));
       }
       const taskSet = yield* Database.load(project.taskSet);
-      const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
+      const tasks = yield* TaskSet.loadTasks(taskSet);
       const stages = DELEGATED_STAGES.map((title) => tasks.find((task) => task.title === title)).filter(
         (stage): stage is Task.Task => stage !== undefined,
       );

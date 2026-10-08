@@ -12,7 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
@@ -21,7 +21,7 @@ import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
 type ClientCapabilityOptions = Omit<
   ClientOptions.ClientPluginOptions,
-  'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'
+  'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam'
 >;
 
 /** The client did not finish initializing inside the configured timeout. */
@@ -32,7 +32,7 @@ export default Capability.makeModule(
     client: hostClient,
     onClientInitialized,
     onClientInitializationError,
-    onSpacesReady,
+    onSpacesAvailable,
     initializeTimeout = INITIALIZE_TIMEOUT,
     awaitInitialization = false,
     ...options
@@ -113,16 +113,16 @@ export default Capability.makeModule(
         }
       });
 
-      let spacesReadyFired = false;
+      let spacesAvailableFired = false;
       subscription = client.spaces.subscribe(async () => {
-        if (!spacesReadyFired) {
-          spacesReadyFired = true;
+        if (!spacesAvailableFired) {
+          spacesAvailableFired = true;
           // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
           performance.mark('milestone:spaces-ready');
           const exit = await Effect.gen(function* () {
-            yield* Plugin.activate(ClientEvents.SpacesReady);
-            if (onSpacesReady) {
-              yield* onSpacesReady({ client });
+            yield* Plugin.activate(ClientEvents.SpacesAvailable);
+            if (onSpacesAvailable) {
+              yield* onSpacesAvailable({ client });
             }
           }).pipe(
             Effect.provideService(Capability.Service, capabilityManager),

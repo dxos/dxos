@@ -79,8 +79,29 @@ export type StubWidgetOptions<TProps> = {
    * and clipped by its `overflow: hidden`.
    */
   heightMode?: 'fixed' | 'min';
+  /** Keep the root and its portal across culls and rebuilds even without a reserved height. */
+  keepAlive?: boolean;
   /** When true, trace the widget's DOM lifecycle to diagnose scroll-cull jitter/jump (see PreviewScrollSurface). */
   debug?: boolean;
+};
+
+/** Marks the placeholder a portaled widget renders into. */
+export const WIDGET_ROOT_ATTRIBUTE = 'data-widget-root';
+
+/**
+ * Frees a mounted block's reserved height in place, from any element the widget rendered: the
+ * placeholder stops pinning and the editor re-measures, with no decoration rebuild — so nothing is
+ * redrawn under the user. Pair with a `LinkWidgetState.intrinsic` report so the next rebuild does
+ * not pin it again.
+ */
+export const releaseBlockHeight = (view: EditorView, element: Element): void => {
+  const root = element.closest(`[${WIDGET_ROOT_ATTRIBUTE}]`);
+  if (root instanceof HTMLElement && (root.style.height || root.style.minHeight)) {
+    root.style.height = '';
+    root.style.minHeight = '';
+    root.style.overflow = '';
+    view.requestMeasure();
+  }
 };
 
 export class StubWidget<TProps extends WidgetProps> extends WidgetType {
@@ -98,6 +119,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
   readonly block?: boolean;
   readonly blockHeight?: number;
   readonly heightMode?: 'fixed' | 'min';
+  readonly keepAlive?: boolean;
   readonly debug?: boolean;
 
   constructor(options: StubWidgetOptions<TProps>) {
@@ -111,6 +133,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     this.block = options.block;
     this.blockHeight = options.blockHeight;
     this.heightMode = options.heightMode;
+    this.keepAlive = options.keepAlive;
     this.debug = options.debug;
     invariant(this.id);
   }
@@ -187,8 +210,17 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     // The signature too: an id that does not encode the tag's content (a streaming tag is keyed on
     // its opening position) would otherwise pin the widget to the props of the first chunk, so a run
     // that keeps appending to the same tag never re-renders until the document is rebuilt.
+    // `block` too: CodeMirror reuses an equal widget's element, and a block's div must never stand
+    // in for an inline span (or the reverse) when a link switches form. Not the reserved height: a
+    // host releases a pin on the mounted element (`releaseBlockHeight`), and a rebuild that differed
+    // only there would remount every embed for nothing.
     const context = (props: TProps) => (props as WidgetProps).context;
-    return this.id === other.id && this.signature === other.signature && context(this.props) === context(other.props);
+    return (
+      this.id === other.id &&
+      this.block === other.block &&
+      this.signature === other.signature &&
+      context(this.props) === context(other.props)
+    );
   }
 
   override ignoreEvent() {
@@ -201,11 +233,13 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
    * cached, already-rendered node instead of rebuilding it keeps the block's measured geometry stable
    * across the cull boundary, which sidesteps CM's measure-phase scroll re-anchor (upstream #1727) and
    * the blank/flicker from the portal remounting. Genuine removals (the tag edited out) are pruned by
-   * `notifier.reconcile` on the next document change, not by cull. Scoped to known-height blocks so
-   * ordinary widgets keep CM's normal virtualization (no unbounded retained portals).
+   * `notifier.reconcile` on the next document change, not by cull. Scoped to known-height blocks and
+   * blocks that ask for it, so ordinary widgets keep CM's normal virtualization (no unbounded retained
+   * portals). Rebuilds go through the same path: a kept block whose portal would otherwise remount
+   * into a fresh root keeps its element, and with it any focus the user has in it.
    */
   get #keepAlive(): boolean {
-    return !!this.block && this.blockHeight != null;
+    return !!this.block && (this.keepAlive === true || this.blockHeight != null);
   }
 
   override toDOM(view: EditorView) {
@@ -213,19 +247,8 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     const cached = this.#keepAlive && this.#root != null;
     if (!this.#root) {
       this.#root = this.block ? Domino.of('div').classNames('min-h-[24px]').root : Domino.of('span').root;
-      if (this.block && this.blockHeight != null) {
-        if (this.heightMode === 'min') {
-          // A floor rather than a pin: the box cannot be measured empty while its portaled content
-          // is still to paint, and can still grow when that content changes size.
-          this.#root.style.minHeight = `${this.blockHeight}px`;
-        } else {
-          // Fixed (not min) height: give CM an authoritative, content-independent measurement so an async
-          // widget that mounts / re-lays-out later cannot perturb the heightmap (we know the height up
-          // front). `overflow: hidden` keeps content that briefly overshoots from changing the measured box.
-          this.#root.style.height = `${this.blockHeight}px`;
-          this.#root.style.overflow = 'hidden';
-        }
-      }
+      this.#root.setAttribute(WIDGET_ROOT_ATTRIBUTE, '');
+      this.#applyBlockHeight(this.#root);
     }
 
     const props = Object.assign({}, this.props, { view }) as TProps;
@@ -249,8 +272,16 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
   // Called on the REPLACEMENT widget with the outgoing instance's DOM, so `view` arrives as the
   // argument — `#view` is only ever set by this instance's own `toDOM`, which has not run.
   override updateDOM(dom: HTMLElement, view: EditorView) {
+    // CodeMirror offers the outgoing DOM to any widget of the same class; a block cannot continue
+    // in an inline span (or the reverse), so decline and let `toDOM` build the right element.
+    if (this.block !== (dom.tagName === 'DIV')) {
+      return false;
+    }
     this.#root = dom;
     this.#view = view;
+    // The reserved height is this instance's, not the outgoing widget's: a host that released it
+    // (`intrinsic`) or set another must not inherit the old pin from the reused element.
+    this.#applyBlockHeight(dom);
     const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({
       id: this.id,
@@ -275,6 +306,23 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     this.notifier.unmounted(this.id, this.#root ?? _dom);
     this.#root = null;
     this.#view = undefined;
+  }
+
+  /** Pins, floors, or frees the block per `blockHeight`/`heightMode`; a no-op for inline widgets. */
+  #applyBlockHeight(root: HTMLElement): void {
+    if (!this.block) {
+      return;
+    }
+    const pinned = this.blockHeight != null && this.heightMode !== 'min';
+    const floored = this.blockHeight != null && this.heightMode === 'min';
+    // A floor rather than a pin: the box cannot be measured empty while its portaled content is
+    // still to paint, and can still grow when that content changes size.
+    root.style.minHeight = floored ? `${this.blockHeight}px` : '';
+    // Fixed (not min) height: give CM an authoritative, content-independent measurement so an async
+    // widget that mounts / re-lays-out later cannot perturb the heightmap (we know the height up
+    // front). `overflow: hidden` keeps content that briefly overshoots from changing the measured box.
+    root.style.height = pinned ? `${this.blockHeight}px` : '';
+    root.style.overflow = pinned ? 'hidden' : '';
   }
 
   /**

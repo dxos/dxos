@@ -6,20 +6,28 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
   EdgeCard,
+  IndexerCard,
+  QueriesCard,
   type Stats,
   SurfaceProfilerCard,
   type SurfaceProfilerStats,
   SwarmTraceCard,
   SyncCard,
   useEdgeStatus,
+  useIndexerRows,
+  useQueryMetrics,
   useSwarmTrace,
   useSyncRows,
 } from '@dxos/devtools';
+import * as DebugOperation from '@dxos/plugin-debug/DebugOperation';
 import { SpaceState, useSpaces } from '@dxos/react-client/echo';
+
+import { Devtools } from '#types';
 
 /** Surfaces hosting the debug tooling; they and everything rendered inside them are not listed. */
 const DEBUG_HOSTS = new Set(['devtoolsOverview', 'debugDrawer']);
@@ -113,4 +121,20 @@ export const SwarmTraceCardSurface = () => {
 export const SyncCardSurface = () => {
   const { spaces, copy } = useSyncRows();
   return <SyncCard spaces={spaces} onCopy={copy} />;
+};
+
+export const IndexerCardSurface = () => {
+  const { spaces, refresh, copy } = useIndexerRows();
+  return <IndexerCard spaces={spaces} onRefresh={refresh} onCopy={copy} />;
+};
+
+/** The slowest queries; the header button shows every query on the devtools Queries page. */
+export const QueriesCardSurface = () => {
+  const { queries } = useQueryMetrics();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const handleOpen = useCallback(
+    () => void invokePromise(DebugOperation.OpenPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Queries) }),
+    [invokePromise],
+  );
+  return <QueriesCard queries={queries} onOpen={handleOpen} />;
 };

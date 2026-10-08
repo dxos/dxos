@@ -8,17 +8,17 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
 
 import { MAX_INLINE_SOURCE_BYTES } from './create-from-source.ts';
-import { FileReadError, FileTooLargeError, UnsupportedFileTypeError } from './create.ts';
+import { FileReadError, FileTooLargeError } from './create.ts';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -94,19 +94,22 @@ describe('FileOperation.CreateFromSource', () => {
     }
   });
 
-  // The one type the widened allowlist must keep out; see FileLimits.
-  test('rejects text/html', async ({ expect }) => {
+  // Stored, but labelled so it downloads rather than executes from the blob origin; see FileLimits.
+  test('stores text/html as application/octet-stream', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();
     await using _harness = harness;
 
-    const error = await harness.runPromise(
-      Operation.invoke(
-        FileOperation.CreateFromSource,
-        { source: { type: 'base64', mediaType: 'text/html', data: toBase64(new Uint8Array([60])) } },
-        { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const { object } = yield* Operation.invoke(
+          FileOperation.CreateFromSource,
+          { source: { type: 'base64', mediaType: 'text/html', data: toBase64(new Uint8Array([60])) } },
+          { spaceId: defaultSpace.id },
+        );
+        const blob = yield* Database.load(object.data);
+        expect(blob.type).toBe('application/octet-stream');
+      }),
     );
-    expect(error).toBeInstanceOf(UnsupportedFileTypeError);
   });
 
   test('rejects a base64 payload over the inline cap', async ({ expect }) => {
@@ -185,7 +188,7 @@ describe('FileOperation.CreateFromSource', () => {
     expect(error).toBeInstanceOf(FileReadError);
   });
 
-  test('rejects a response that declares no content-type', async ({ expect }) => {
+  test('stores a response that declares no content-type as application/octet-stream', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();
     await using _harness = harness;
 
@@ -194,19 +197,22 @@ describe('FileOperation.CreateFromSource', () => {
       vi.fn(async () => new Response(PNG, { headers: {} })),
     );
 
-    const error = await harness.runPromise(
-      Operation.invoke(
-        FileOperation.CreateFromSource,
-        { source: { type: 'http', url: 'https://example.com/icon.png' } },
-        { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const { object } = yield* Operation.invoke(
+          FileOperation.CreateFromSource,
+          { source: { type: 'http', url: 'https://example.com/icon.png' } },
+          { spaceId: defaultSpace.id },
+        );
+        const blob = yield* Database.load(object.data);
+        expect(blob.type).toBe('application/octet-stream');
+      }),
     );
-    expect(error).toBeInstanceOf(UnsupportedFileTypeError);
   });
 });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
   harness.capabilities.contribute({
     module: 'test',
     interface: FileCapabilities.Backend,
@@ -216,6 +222,6 @@ const setup = async () => {
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return { harness, defaultSpace };
 };

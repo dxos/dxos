@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
@@ -46,7 +46,7 @@ export const WhoAmI = Tool.make('whoami', {
     'Returns the authenticated DXOS identity and the data spaces this session can operate on, each ' +
     'with its name and member count — refer to a space by name when talking to the user, and pass ' +
     'its id when calling a tool.',
-  parameters: McpServer.NoParameters,
+  parameters: Tool.EmptyParams,
   success: Schema.Struct({
     // The DID, not the identity key: it is the identity's public name — what EDGE authorizes
     // against and what every other surface reports — where the key is an implementation detail.

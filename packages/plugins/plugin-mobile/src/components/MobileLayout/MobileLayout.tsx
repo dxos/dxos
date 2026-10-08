@@ -6,11 +6,12 @@ import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, 
 
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useDebugLog } from '../DebugOverlay/index.ts';
 import { MobileLayoutProvider } from './MobileLayoutContext.ts';
+import { describeScrollTarget } from './scroll-target.ts';
 
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
 const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
@@ -19,7 +20,7 @@ const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
 // Root
 //
 
-type MobileLayoutRootProps = ThemedClassName<
+type MobileLayoutRootProps = Util.ThemedClassName<
   PropsWithChildren<{
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
@@ -66,7 +67,7 @@ MobileLayoutRoot.displayName = MOBILE_LAYOUT_ROOT_NAME;
 // Panel
 //
 
-type MobileLayoutPanelProps = ThemedClassName<
+type MobileLayoutPanelProps = Util.ThemedClassName<
   PropsWithChildren<{
     safe?: {
       top: boolean;
@@ -128,12 +129,10 @@ const useAutoScroll = () => {
     };
 
     const detectContainerScroll = (event: Event) => {
-      const el = event.target as HTMLElement;
-      if (el === document.documentElement || el === document.body) {
-        return;
+      const description = describeScrollTarget(event.target);
+      if (description) {
+        dbg(`scroll: ${description}`);
       }
-
-      dbg(`scroll: ${el.tagName}.${Array.from(el.classList).slice(0, 2).join('.')} top=${el.scrollTop.toFixed(0)}`);
     };
 
     return combine(

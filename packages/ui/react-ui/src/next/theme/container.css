@@ -1,0 +1,222 @@
+/*
+ * Container grid (decision 5): a template root owns the rails, an inheriting container is a real subgrid, and every
+ * layout choice is an attribute resolved here.
+ */
+
+@layer dx-components {
+  .dx-container[data-gutter='rail'] {
+    --dx-gutter: var(--dx-block-size);
+  }
+  .dx-container[data-gutter='inset'] {
+    --dx-gutter: var(--dx-gap-size);
+  }
+  .dx-container[data-gutter='sm'] {
+    --dx-gutter: var(--dx-gutter-sm);
+  }
+  .dx-container[data-gutter='md'] {
+    --dx-gutter: var(--dx-gutter-md);
+  }
+  .dx-container[data-gutter='lg'] {
+    --dx-gutter: var(--dx-gutter-lg);
+  }
+  .dx-container[data-gutter='none'] {
+    --dx-gutter: 0px;
+  }
+
+  .dx-container {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+  }
+
+  /* Template root: the end track gives back whatever a native scrollbar consumes. */
+  .dx-container:not([data-gutter='inherit']) {
+    grid-template-columns:
+      [full-start] var(--dx-gutter) [content-start] var(--dx-columns, minmax(0, 1fr))
+      [content-end] calc(var(--dx-gutter) - var(--dx-scroll-reserve, 0px)) [full-end];
+  }
+
+  /* A subgrid's tracks are its parent's, so only a template root can be narrowed. */
+  .dx-container[data-width='document']:not([data-gutter='inherit']) {
+    width: 100%;
+    max-width: var(--spacing-document-max-width, 50rem);
+    margin-inline: auto;
+    justify-self: center;
+  }
+
+  .dx-container[data-pad-block]:not([data-gutter='inherit']) {
+    padding-block: var(--dx-gutter);
+  }
+
+  .dx-container[data-gutter='inherit'] {
+    grid-column: full;
+    grid-template-columns: subgrid;
+  }
+  /*
+   * An inheriting container whose parent is no grid (a plain wrapper between it and the host) has no tracks to
+   * subgrid, and its children would fall into implicit columns; it lays out one column of its own instead. Transparent
+   * parents keep the subgrid: `display: contents` wrappers (a surface, a control's Ark root) and the pass-through
+   * frames (a Listbox root, a ScrollArea root) that subgrid their own host — unless that host is no grid either.
+   */
+  :not(
+      .dx-container,
+      .dx-listbox,
+      .dx-scroll-root,
+      dx-surface,
+      .contents,
+      .dx-control-root,
+      .dx-combobox,
+      .dx-select,
+      .dx-date-field
+    )
+    > .dx-container[data-gutter='inherit']:not([data-columns]),
+  :not(.dx-container, dx-surface, .contents)
+    > :is(.dx-listbox, .dx-scroll-root)
+    > .dx-container[data-gutter='inherit']:not([data-columns]) {
+    grid-column: auto;
+    grid-template-columns: [full-start content-start] minmax(0, 1fr) [content-end full-end];
+  }
+  /* Own columns start a fresh template inside the parent's content track (decision 5); no gutters of its own. */
+  .dx-container[data-gutter='inherit'][data-columns] {
+    grid-column: content;
+    grid-template-columns: [full-start content-start] var(--dx-columns) [content-end full-end];
+  }
+
+  /*
+   * A plugin surface (`<dx-surface>`, `display: contents`) adds no box, so its children are this grid's items: they
+   * take the content track too, rather than auto-placing into the first (gutter) track.
+   */
+  .dx-container > *,
+  .dx-container > dx-surface > *,
+  .dx-container > dx-surface > dx-surface > * {
+    grid-column: content;
+  }
+  /* The controls' Ark roots are `display: contents` too, so their parts are the grid's items; a picker DateInput nests two. */
+  .dx-container:not([data-layout='row']) > :is(.dx-control-root, .dx-combobox, .dx-select, .dx-date-field) > *,
+  .dx-container:not([data-layout='row']) > .dx-date-field > .dx-date-field > * {
+    grid-column: content;
+  }
+  .dx-container > [data-place='full'] {
+    grid-column: full;
+  }
+  .dx-container > [data-rail='start'] {
+    grid-column: full-start / content-start;
+  }
+  .dx-container > [data-rail='end'] {
+    grid-column: content-end / full-end;
+  }
+
+  /* Row gap only: the columns belong to the template (or the parent's, through subgrid). */
+  .dx-container[data-gap='none'] {
+    row-gap: 0;
+  }
+  .dx-container[data-gap='sm'] {
+    row-gap: 0.25rem;
+  }
+  .dx-container[data-gap='md'] {
+    row-gap: 0.5rem;
+  }
+  .dx-container[data-gap='lg'] {
+    row-gap: 0.75rem;
+  }
+  /* A row with its own columns and no gutter tracks shares no parent's tracks, so its gap spaces the columns too. */
+  .dx-container[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='sm'] {
+    column-gap: 0.25rem;
+  }
+  .dx-container[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='md'] {
+    column-gap: 0.5rem;
+  }
+  .dx-container[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='lg'] {
+    column-gap: 0.75rem;
+  }
+
+  /* A row is at least one block tall so controls centre in it. */
+  .dx-container[data-layout='row'] {
+    grid-auto-rows: minmax(var(--dx-block-size), auto);
+    align-items: center;
+  }
+  .dx-container[data-layout='row'][data-align='start'] {
+    align-items: start;
+  }
+  .dx-container[data-layout='row'][data-align='stretch'] {
+    align-items: stretch;
+  }
+  .dx-container[data-layout='row'] > :not([data-rail]) {
+    grid-column: auto;
+  }
+  .dx-container[data-layout='row'] > :nth-child(1 of :not([data-rail])) {
+    grid-column-start: content-start;
+  }
+
+  /*
+   * Span (`data-span`): a count extends the child from wherever it starts; `full` takes every content track. The row
+   * rules are repeated so they outrank the row's own `grid-column: auto`.
+   */
+  .dx-container > [data-span] {
+    grid-column-end: span var(--dx-span, 1);
+  }
+  .dx-container > [data-span='full'] {
+    grid-column: content;
+  }
+  .dx-container[data-layout='row'] > [data-span]:not([data-rail]) {
+    grid-column-end: span var(--dx-span, 1);
+  }
+  .dx-container[data-layout='row'] > [data-span='full']:not([data-rail]) {
+    grid-column: content;
+  }
+
+  /*
+   * A row cell sits in one track, so a subgrid there would carry none of the edge lines its children place against;
+   * the cell names its own instead, and anything inheriting inside it aligns within that column.
+   */
+  .dx-container[data-layout='row'] > .dx-container[data-gutter='inherit']:not([data-columns]) {
+    grid-template-columns: [full-start content-start] minmax(0, 1fr) [content-end full-end];
+  }
+
+  /* In a stack a control has no row of its own, so the container pads it out to a block. */
+  .dx-container[data-layout='stack'] > .dx-control {
+    margin-block: var(--dx-control-inset);
+  }
+
+  .dx-block {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
+    justify-self: center;
+  }
+
+  /* The current `IconBlock compact`: rail-wide, so columns still align, but only as tall as its content. */
+  .dx-block[data-compact] {
+    height: auto;
+  }
+
+  /* Responsive: collapse against the nearest query container (the pane), never the viewport. */
+  @container (width < 24rem) {
+    /* A card's rails are its icon column, not page margins, so they keep their width in a narrow pane. */
+    .dx-container.dx-container[data-gutter='rail']:not(.dx-card) {
+      --dx-gutter: var(--dx-gap-size);
+    }
+    .dx-container[data-columns] {
+      --dx-columns: minmax(0, 1fr);
+    }
+    .dx-container:not(.dx-card) > [data-rail] {
+      display: none;
+    }
+    .dx-container[data-layout='row'] > :not([data-rail]),
+    .dx-container > [data-span][data-span]:not([data-rail]) {
+      grid-column: content;
+    }
+    /* A `fixed` row keeps its tracks (its own `--dx-columns` is inline, so only the cells need placing back). */
+    .dx-container[data-layout='row'][data-fixed] > :not([data-rail]) {
+      grid-column: auto;
+    }
+  }
+
+  [data-debug] .dx-container > * {
+    outline: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+  }
+}

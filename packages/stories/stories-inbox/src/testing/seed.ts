@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message, Organization } from '@dxos/types';

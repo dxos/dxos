@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-stream-deck",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Project a space onto Stream Deck hardware — favorites on keys, progress and stats on dials.",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#bridge": {
@@ -23,12 +23,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -77,33 +79,28 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./StreamDeckPlugin": {
-      "source": "./src/StreamDeckPlugin.ts",
-      "types": "./dist/types/src/StreamDeckPlugin.d.ts",
-      "import": "./dist/lib/StreamDeckPlugin.mjs"
-    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
     "./Protocol": {
       "source": "./src/protocol/Protocol.ts",
       "types": "./dist/types/src/protocol/Protocol.d.ts",
       "import": "./dist/lib/Protocol.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
     "./StreamDeckCapabilities": {
       "source": "./src/types/StreamDeckCapabilities.ts",
       "types": "./dist/types/src/types/StreamDeckCapabilities.d.ts",
       "import": "./dist/lib/StreamDeckCapabilities.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
+    "./StreamDeckPlugin": {
+      "source": "./src/StreamDeckPlugin.ts",
+      "types": "./dist/types/src/StreamDeckPlugin.d.ts",
+      "import": "./dist/lib/StreamDeckPlugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -116,7 +113,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/graph": "workspace:*",

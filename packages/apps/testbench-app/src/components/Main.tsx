@@ -15,13 +15,14 @@ import {
   ReplicatorCard,
   ReplicatorMessagesCard,
   StatsPanel,
+  useQueryMetrics,
   useStats,
 } from '@dxos/devtools';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Document, Item } from '../data.ts';
 import { defs } from '../defs.ts';
@@ -46,13 +47,14 @@ export const Main = () => {
   const [showDevTools, setShowDevTools] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [stats, refreshStats] = useStats();
+  const { queries } = useQueryMetrics();
 
   const [view, setView] = useState<DataView>();
   const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
   const flushingPromise = useRef<Promise<void>>(null);
-  const download = useFileDownload();
+  const download = Hooks.useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   // TODO(burdon): Remove restricted list of objects.
@@ -75,7 +77,7 @@ export const Main = () => {
   const identity = client.halo.identity.get();
 
   // Handle invitation.
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     const url = new URL(window.location.href);
     const invitationCode = url.searchParams.get('spaceInvitationCode');
     if (invitationCode && identity) {
@@ -240,7 +242,7 @@ export const Main = () => {
                 <DatabaseCard database={stats.database} />
                 <ReplicatorCard database={stats.database} />
                 <ReplicatorMessagesCard database={stats.database} />
-                <QueriesCard queries={stats.queries} />
+                <QueriesCard queries={queries} />
               </StatsPanel>
             </div>
           )}

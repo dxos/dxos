@@ -4,11 +4,17 @@
 
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { ProcessManager } from '@dxos/compute-runtime';
+import {
+  ProcessManager,
+  ProcessOperationInvoker,
+  RemoteProcessManager,
+  RemoteTraceMonitor,
+  UnifiedProcessManager,
+} from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -58,8 +64,10 @@ const messages: MessageWithRangeId[] = [
 
 // Local process runtime that resolves and invokes operations through `Operation.Service`.
 // `sentenceNormalization` declares no services, so `ServiceResolver.layerRequirements()` is empty.
-const operationLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+const operationLayer = ProcessOperationInvoker.layer.pipe(
+  Layer.provide(UnifiedProcessManager.layer),
   Layer.provide(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provide(Layer.mergeAll(RemoteProcessManager.layerNoop, RemoteTraceMonitor.layerNoop)),
   Layer.provide(ServiceResolver.layerRequirements()),
   Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.make(sentenceNormalization))),
   Layer.provide(Registry.layer),

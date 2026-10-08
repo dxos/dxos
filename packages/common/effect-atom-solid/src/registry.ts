@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { type Context, createContext, onCleanup, useContext } from 'solid-js';
 
-import { GlobalValue } from '@dxos/effect';
+import * as GlobalValue from '@dxos/effect/GlobalValue';
 
 /**
  * Default registry instance

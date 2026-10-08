@@ -1,0 +1,38 @@
+{
+  "A": {
+    "order": 3,
+    "why": 3,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "A has only one body section after the intro, so there is nothing to build on beyond restating the headline in different words.",
+      "why": "\"Two retries was tuned for a fast, reliable EDGE agent\" asserts a rationale for the old value that the diff does not support, and the rest just repeats that a slow EDGE exhausts the budget without naming the polling interval or timeout shown in the surrounding context.",
+      "load": "Short and linear, a reviewer takes it in on one pass with no backtracking.",
+      "trust": "Every claim (constant name, old/new values 2 and 5) matches the diff.patch hunk exactly."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 5,
+    "load": 4,
+    "trust": 5,
+    "reasons": {
+      "order": "The heading states the mechanical change first, then the single body section explains why the old ceiling was wrong, a sensible core-then-consequence order for a one-line diff.",
+      "why": "It names the actual mechanism, \"polls EDGE for an active writer every 3 seconds and gives each notarization attempt up to 10 seconds\", to explain why 2 retries exhausted the budget before the condition could clear.",
+      "load": "Denser than A or C, with two named constants and a polling/timeout interaction to hold in mind, but still followable in one pass.",
+      "trust": "The 3-second polling interval and 10-second timeout it cites are the unchanged `DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL` and `DEFAULT_NOTARIZE_TIMEOUT` values visible as context lines in diff.patch, so nothing is invented."
+    }
+  },
+  "C": {
+    "order": 3,
+    "why": 2,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "Like A, a single section after the intro leaves nothing to build toward.",
+      "why": "The \"Retry limit\" section just defines what `MAX_EDGE_RETRIES` does, which the diff already shows, without adding a constraint or alternative that explains why 5 rather than 2.",
+      "load": "Very short and requires no backtracking.",
+      "trust": "Sticks to the constant name and old/new numbers exactly as they appear in the diff."
+    }
+  }
+}

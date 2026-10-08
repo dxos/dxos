@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import { Diagnostics, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { Diagnostics, SVG_SCHEMA, SvgBuilder } from '@dxos/plugin-illustrator/model';
-import { UmlSkill } from '@dxos/plugin-illustrator/skills';
+import * as UmlSkill from '@dxos/plugin-uml/UmlSkill';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';
@@ -49,7 +50,7 @@ const relayDrawing = Scorer.shared(
       return undefined;
     }
     const canvas = yield* Database.load(drawing.canvas);
-    const { scene } = SvgBuilder.read(canvas);
+    const { scene } = IllustratorModel.SvgBuilder.read(canvas);
     const report = Diagnostics.analyze(scene.objects);
     return {
       errors: Diagnostics.errors(report).map(({ message }) => message),
@@ -117,9 +118,6 @@ const task = createEvalRunner({
   scored: true,
 });
 
-// Skipped: the SVG drawing variant is browser-only (`environments: []` in plugin-illustrator's
-// capabilities), so under Node the illustrator tools are exposed with no variant behind them and
-// every call fails. Unskip once the variant ships in the node barrel.
 evalite.skip('Illustrator — diagram a described system as a legible, grounded flowchart', {
   data: [{ input: null }],
   task,

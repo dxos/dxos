@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { type MakeTurnProducer } from '@dxos/agent-runtime';
+import { type AiService } from '@dxos/ai';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
+import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -10,9 +18,11 @@ import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
 import * as BookmarksPlugin from '@dxos/plugin-bookmarks/BookmarksPlugin';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
@@ -49,7 +59,7 @@ import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
-import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
+import * as MapSolidMapPlugin from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
@@ -83,6 +93,7 @@ import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
 import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
 import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
 import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
+import * as UmlPlugin from '@dxos/plugin-uml/UmlPlugin';
 import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
@@ -147,6 +158,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
+      AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
@@ -166,6 +178,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
+      UmlPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
       ZenPlugin.meta.profile.key,
     ],
@@ -174,6 +187,60 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     .flat()
     // Deduped: a mobile labs build lists transcription in both sets.
     .filter((key, index, keys) => keys.indexOf(key) === index);
+
+// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in.
+// The model's code runs in a Web Worker on its own ECHO client, never in the page: a chunk that fails
+// to load or a missing client degrades to the standard producer, not to in-page evaluation.
+const codeModeTurnProducer =
+  (capabilities: CapabilityManager.CapabilityManager): MakeTurnProducer =>
+  (options) => {
+    const standard = (reason: unknown) =>
+      Effect.logWarning('code mode unavailable; using the standard turn producer', reason).pipe(
+        // Already loaded by the agent service that calls this, so the import resolves from cache.
+        Effect.andThen(Effect.promise(() => import('@dxos/agent-runtime'))),
+        Effect.flatMap(({ makeAiSessionTurnProducer }) => makeAiSessionTurnProducer(options)),
+      );
+    return Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
+      Effect.matchEffect({
+        onFailure: standard,
+        onSuccess: ({ EffectDialect, WorkerSandbox, WorkerSandboxBrowser, makeCodeModeTurnProducer }) => {
+          const [client] = capabilities.getAll(ClientCapabilities.Client);
+          if (client === undefined) {
+            return standard('no client to connect the sandbox worker to');
+          }
+          const sandbox = WorkerSandbox.make({
+            // Read per evaluation: the client's rpc surface is replaced on reconnect.
+            echo: () => echoServices(client.services.rpc),
+            spawn: WorkerSandboxBrowser.spawn(
+              () => new Worker(new URL('./workers/code-mode-worker.ts', import.meta.url), { type: 'module' }),
+            ),
+          });
+          return makeCodeModeTurnProducer({ dialect: EffectDialect, sandbox })(options);
+        },
+      }),
+    );
+  };
+
+// Loaded on first model resolution: the script and the operation definitions it names stay out of the
+// boot graph, which `check-boot-budget` gates.
+const scriptedAiServiceMiddleware = (upstream: AiService.Service): AiService.Service => ({
+  ...upstream,
+  languageModel: () =>
+    Layer.unwrap(
+      Effect.promise(() => import('./util/scripted-model.ts')).pipe(
+        Effect.flatMap(({ makeScriptedModel }) => makeScriptedModel()),
+      ),
+    ),
+});
+
+/** The two services the sandbox worker's ECHO client connects to, served from this tab's client. */
+const echoServices = (rpc: ClientServicesRpc) => {
+  const { DataService, QueryService } = makeHandlersFromRpc(rpc);
+  if (DataService === undefined || QueryService === undefined) {
+    throw new Error('The client does not serve the data and query services.');
+  }
+  return { DataService, QueryService };
+};
 
 /**
  * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
@@ -185,10 +252,14 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make(),
+    AssistantPlugin.make(
+      // Code mode offers the model only its `eval` tool, which the script does not call.
+      config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : { codeModeTurnProducer },
+    ),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),
+    CanvasPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudePlugin.make(),
@@ -218,7 +289,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
-    isLocal && MapPluginSolid.make(),
+    isLocal && MapSolidMapPlugin.make(),
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),
@@ -243,6 +314,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ThreadPlugin.make(),
     TldrawPlugin.make(),
     TranscriptionPlugin.make(),
+    UmlPlugin.make(),
     ...experimental,
   ]
     .filter(isTruthy)
@@ -267,6 +339,7 @@ const experimental: Plugin.Plugin[] = [
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),
   IdeogramPlugin.make(),
+  AgentPlugin.make(),
   IrohBeaconPlugin.make(),
   LaMetricPlugin.make(),
   LinearPlugin.make(),

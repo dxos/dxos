@@ -5,12 +5,12 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
-import { Tabs } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type MenuItem } from '@dxos/react-ui-menu';
-import { Position } from '@dxos/util';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Position from '@dxos/util/Position';
 
 import { useLoadDescendents } from '#hooks';
 
@@ -56,10 +56,10 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
  * Partitions root children into workspaces, pinned items, user-account, and top-level actions.
  */
 const useTopLevelNavItems = (root?: AppGraphNode.Node) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const rootId = root?.id ?? GraphNode.RootId;
-  const rootOutboundItems = useConnections(graph, rootId, 'child');
-  const rootActions = useGraphActions(graph, rootId);
+  const rootOutboundItems = GraphHooks.useConnections(graph, rootId, 'child');
+  const rootActions = GraphHooks.useActions(graph, rootId);
 
   const { topLevelActions, l0Items, pinnedItems, userAccountItem } = useMemo(() => {
     const topLevelWorkspaces: AppGraphNode.Node[] = [];

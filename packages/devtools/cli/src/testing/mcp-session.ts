@@ -6,6 +6,17 @@ import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 import { dxBin } from './run-dx.ts';
 
+/** What a 2026-07-28 client sends on every request in place of a handshake. */
+export const MCP_REQUEST_META: {
+  readonly 'io.modelcontextprotocol/protocolVersion': '2026-07-28';
+  readonly 'io.modelcontextprotocol/clientInfo': { readonly name: string; readonly version: string };
+  readonly 'io.modelcontextprotocol/clientCapabilities': Readonly<Record<string, never>>;
+} = {
+  'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+  'io.modelcontextprotocol/clientInfo': { name: 'dx-cli-test', version: '1' },
+  'io.modelcontextprotocol/clientCapabilities': {},
+};
+
 /**
  * A live `dx mcp serve` stdio session the caller keeps open across several calls.
  *
@@ -73,17 +84,13 @@ export class McpSession {
 
     const session = new McpSession(child, timeout);
     try {
-      await session.#request('initialize', {
-        protocolVersion: '2025-06-18',
-        capabilities: {},
-        clientInfo: { name: 'dx-agent-e2e', version: '1' },
-      });
+      // Waits out the server's boot, so a server that cannot start fails here rather than at the first call.
+      await session.#request('server/discover', {});
     } catch (error) {
       // The caller never receives a handle when this throws, so nothing else can stop the server.
       await session.close();
       throw error;
     }
-    session.#notify('notifications/initialized');
     return session;
   }
 
@@ -174,12 +181,9 @@ export class McpSession {
           reject(error);
         },
       });
-      this.#child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`);
+      const request = { jsonrpc: '2.0', id, method, params: { _meta: MCP_REQUEST_META, ...params } };
+      this.#child.stdin.write(`${JSON.stringify(request)}\n`);
     });
-  }
-
-  #notify(method: string): void {
-    this.#child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method })}\n`);
   }
 
   #consume(chunk: string): void {

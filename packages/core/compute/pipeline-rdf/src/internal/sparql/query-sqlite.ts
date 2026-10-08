@@ -3,15 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as Statement from 'effect/unstable/sql/Statement';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as Statement from 'effect/sql/Statement';
 
 import { SemanticIndexError } from '../../errors.ts';
 import { type Fact } from '../../types/index.ts';
+import * as Mapping from '../../types/Mapping.ts';
+import * as Predicate from '../../types/Predicate.ts';
+import * as Vocab from '../../types/Vocab.ts';
 import { type Row, rowToQuad } from '../source/sqlite-source.ts';
-import { FACT, entityIri, prov, sx } from '../vocab.ts';
-import { triplesToFacts } from './mapping.ts';
-import { normalizePredicate } from './normalize-predicate.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 /**
@@ -37,29 +37,34 @@ export const querySqlite = (
     if (query.subjectEntity) {
       restrict(
         yield* subjects(
-          sql`p = ${sx('subject').value} AND o = ${entityIri(query.subjectEntity).value} AND oType = 'iri'`,
+          sql`p = ${Vocab.sx('subject').value} AND o = ${Vocab.entityIri(query.subjectEntity).value} AND oType = 'iri'`,
         ),
       );
     }
     if (query.predicate) {
       // Match on the normalized relation key (same as queryMemory), with a substring fallback — the
       // LLM rarely reproduces the stored verb phrase verbatim.
-      const needle = normalizePredicate(query.predicate);
-      const rows = yield* sql<{ s: string; o: string }>`SELECT s, o FROM triples WHERE p = ${sx('predicate').value}`;
+      const needle = Predicate.normalize(query.predicate);
+      const rows = yield* sql<{
+        s: string;
+        o: string;
+      }>`SELECT s, o FROM triples WHERE p = ${Vocab.sx('predicate').value}`;
       const matches = rows.filter((row) => {
-        const value = normalizePredicate(row.o);
+        const value = Predicate.normalize(row.o);
         return value === needle || value.includes(needle) || needle.includes(value);
       });
       restrict(new Set(matches.map((row) => row.s)));
     }
     if (query.source) {
-      restrict(yield* subjects(sql`p = ${prov('wasDerivedFrom').value} AND o = ${query.source} AND oType = 'literal'`));
+      restrict(
+        yield* subjects(sql`p = ${Vocab.prov('wasDerivedFrom').value} AND o = ${query.source} AND oType = 'literal'`),
+      );
     }
     if (query.entity) {
-      const iri = entityIri(query.entity).value;
+      const iri = Vocab.entityIri(query.entity).value;
       restrict(
         yield* subjects(
-          sql`(p = ${sx('subject').value} OR p = ${sx('object').value}) AND o = ${iri} AND oType = 'iri'`,
+          sql`(p = ${Vocab.sx('subject').value} OR p = ${Vocab.sx('object').value}) AND o = ${iri} AND oType = 'iri'`,
         ),
       );
     }
@@ -67,7 +72,7 @@ export const querySqlite = (
     // No constraints → every fact node (subjects under the fact IRI namespace).
     const factNodes =
       nodes ??
-      (yield* sql<{ s: string }>`SELECT DISTINCT s FROM triples WHERE s LIKE ${FACT + '%'}`.pipe(
+      (yield* sql<{ s: string }>`SELECT DISTINCT s FROM triples WHERE s LIKE ${Vocab.FACT + '%'}`.pipe(
         Effect.map((rows) => new Set(rows.map((row) => row.s))),
       ));
 
@@ -78,7 +83,7 @@ export const querySqlite = (
     const ids = [...factNodes];
     const rows = yield* sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE ${sql.in('s', ids)}`;
     const facts = yield* Effect.try({
-      try: () => triplesToFacts(rows.map(rowToQuad)),
+      try: () => Mapping.triplesToFacts(rows.map(rowToQuad)),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),
     });
 

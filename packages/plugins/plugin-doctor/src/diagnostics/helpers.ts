@@ -2,21 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Client } from '@dxos/client';
-import { type Space, SpaceState } from '@dxos/client/echo';
-import { Filter, Obj, Query } from '@dxos/echo';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Stream from 'effect/Stream';
+
+import { type Database, Filter, type Hypergraph, Obj, Query } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { type Space } from '@dxos/halo';
+import { isNonNullable } from '@dxos/util';
 
 /**
- * Return all spaces that are ready to be queried.
+ * Return the databases of all spaces that are ready to be queried.
  */
-export const getReadySpaces = (client: Client): Space[] =>
-  client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
+export const getReadyDatabases = async ({
+  spaces,
+  graph,
+}: {
+  spaces: Space.ServiceApi;
+  graph: Hypergraph.Hypergraph;
+}): Promise<Database.Database[]> => {
+  const infos = await EffectEx.runPromise(
+    spaces.spaces.pipe(Stream.runHead, Effect.map(Option.getOrElse((): readonly Space.Info[] => []))),
+  );
+  return infos
+    .filter((info) => info.state === 'ready')
+    .map((info) => graph.getDatabase(info.id))
+    .filter(isNonNullable);
+};
 
 /**
- * Run a query for every object in a space.
+ * Run a query for every object in a database.
  */
-export const queryAllObjects = async (space: Space): Promise<Obj.Unknown[]> => {
-  const objects = await space.db.query(Query.select(Filter.everything())).run();
+export const queryAllObjects = async (db: Database.Database): Promise<Obj.Unknown[]> => {
+  const objects = await db.query(Query.select(Filter.everything())).run();
   return objects as Obj.Unknown[];
 };
 

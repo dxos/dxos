@@ -5,8 +5,8 @@
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
 import * as InboxResolver from '@dxos/extractor-lib';

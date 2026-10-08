@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/display-name"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -52,7 +55,13 @@
       "path": "../../core/echo/echo-doc"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -100,6 +109,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-task"
     },
     {
@@ -110,6 +122,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-file"
     },
     {
       "path": "../plugin-github"

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -13,12 +13,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { ComplexMap } from '@dxos/util';
 
 import { SpacePlugin } from '#plugin';
@@ -63,7 +63,10 @@ describe('SpaceOperation.OpenObjectForm', () => {
     const { harness, db } = await setup((handle) => {
       handle.dismiss();
       handle.retain();
-      setTimeout(() => handle.settle(object), 10);
+      // A later task, not a synchronous one: the draft object is only ready after the
+      // dismiss/retain dance settles, same as it would be in the real flow. A microtask defers it
+      // deterministically, without racing `dismiss`'s own internal (already-cleared) timer.
+      queueMicrotask(() => handle.settle(object));
     });
     await using _harness = harness;
 
@@ -115,13 +118,13 @@ const ephemeralState = () =>
   }).pipe(Atom.keepAlive);
 
 const setup = async (onOpen: (handle: ObjectFormHandle) => void) => {
-  const harness = await createComposerTestApp({
+  const harness = await Harness.createComposerTestApp({
     plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin({}), makeStubLayoutPlugin(onOpen)],
   });
 
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   const space = await client.spaces.create();
   await space.waitUntilReady();
 

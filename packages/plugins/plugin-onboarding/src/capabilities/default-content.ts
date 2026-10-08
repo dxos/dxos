@@ -17,10 +17,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
 import README_CONTENT from '../content/README.md?raw';
-import { OnboardingOperation } from '../operations/index.ts';
 import { type OnboardingOptions } from './capabilities.ts';
 
 const DEFAULT_SPACE_ICON = 'house-line';
@@ -29,13 +30,11 @@ const DEFAULT_SPACE_ICON_HUE = 'violet';
 export const README_DOCUMENT_NAME = 'README';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ generateSampleSpace }: OnboardingOptions) {
+  Effect.fnUntraced(function* ({ generateDemoSpace }: OnboardingOptions) {
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
-    const {
-      AppAnnotation: { RootCollectionAnnotation },
-    } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
+    const { RootCollectionAnnotation } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit/AppAnnotation'));
 
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
@@ -48,8 +47,7 @@ export default Capability.makeModule(
     });
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
-    // depend on a fresh space (e.g. skills) wire themselves up. The sample space
-    // gets the same callbacks via the regular SpaceCreated event on import.
+    // depend on a fresh space (e.g. skills) wire themselves up.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const rootCollection = Option.getOrUndefined(
       Annotation.get(defaultSpace.properties, RootCollectionAnnotation),
@@ -63,23 +61,26 @@ export default Capability.makeModule(
       ).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
       const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
-      defaultSpace.db.add(welcomeDoc);
+      defaultSpace.db.add(welcomeDoc, { origin: 'system' });
       Obj.update(rootCollection, (rootCollection) => {
         rootCollection.objects.push(Ref.make(welcomeDoc));
       });
     }
 
-    if (generateSampleSpace) {
-      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportSampleSpace, {}));
+    if (generateDemoSpace) {
+      const existing = AppSpace.findSpaceFromTemplate(client, BRAMBLE_TEMPLATE_ID);
+      const demoSpaceId =
+        existing?.id ??
+        (yield* Operation.invoke(SpaceOperation.Create, { template: BRAMBLE_TEMPLATE_ID, origin: 'system' }).pipe(
+          Effect.provideService(Operation.Service, operationInvoker),
+          Effect.map(({ id }) => id),
+        ));
 
-      // Eagerly expand the graph so the sample space's content is visible in the navtree
+      // Eagerly expand the graph so the demo space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
-      const sampleSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
-      if (sampleSpace) {
-        AppGraph.expandSync(graph, sampleSpace.id, 'child');
-      }
+      AppGraph.expandSync(graph, demoSpaceId, 'child');
     } else {
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');

@@ -12,16 +12,17 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, SessionLink } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -213,9 +214,8 @@ const StubDelegationStrategy: DelegationStrategy = {
         .map((work) => ({
           id: work.id,
           spawn: Effect.gen(function* () {
-            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(DelegatedWork, work.input);
-            return fiber.pid;
+            const handle = yield* Process.spawn(OperationProcess.make(DelegatedWork), work.input);
+            return handle.pid;
           }),
         })),
     ),
@@ -597,14 +597,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const target = Obj.getURI(session.chat);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
-        const handles: readonly ProcessManager.Handle<
-          string | readonly ContentBlock.Any[],
-          void,
-          HarnessControlRpcs
-        >[] = yield* processManager.list({
-          target,
-          key: AGENT_PROCESS_KEY,
-        });
+        const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+          yield* processManager.list({
+            target,
+            key: AGENT_PROCESS_KEY,
+          });
         const [handle] = handles;
 
         // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
@@ -876,7 +873,7 @@ describe('Agent Service (control plane)', () => {
 
         // Selecting a model on the chat tears the process down and respawns it bound to the selection.
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(DXN.make('com.anthropic.model.claude-haiku-4-5.default'));
+          chat.session = { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') };
         });
         yield* Database.flush();
         const sessionB = yield* ComputeAgentService.getSession(chat);

@@ -5,22 +5,24 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Tracer from 'effect/Tracer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import {
   LayerStack,
   ProcessManager,
-  ProcessMonitor,
+  ProcessOperationInvoker,
   RemoteProcessManager,
   RemoteTraceMonitor,
+  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
-import { makeGlobalTracer } from '@dxos/effect';
+import { Database } from '@dxos/echo';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -41,7 +43,7 @@ import { layerIdb } from './idb-key-value-store.ts';
 //    contributions from dependency-mode modules.
 // 2. Collects all contributed {@link LayerSpec.LayerSpec}s and builds a
 //    {@link LayerStack} whose {@link ServiceResolver} drives process-scoped
-//    service resolution.
+//    service resolution; specs contributed later are added to the live stack.
 // 3. Wires a reactive {@link OperationHandlerSet} that tracks
 //    {@link Capabilities.OperationHandler} contributions and invalidates its
 //    cached merge when new handlers register.
@@ -96,34 +98,9 @@ export default Capability.makeModule(
     const traceSinkContributions = yield* Capabilities.TraceSink;
     const operationHandlerContributions = yield* Capabilities.OperationHandler;
     const remoteTraceMonitorContributions = yield* Capabilities.RemoteTraceMonitor;
-    // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
-    // contributed by plugins enabled later do not join the stack (same as the event window).
+    // Startup soft-ordering makes same-pass providers visible here; specs contributed later (a
+    // plugin enabled after boot) join the live stack through the subscription below.
     const layerSpecs = layerSpecContributions.get();
-
-    const warnOnLateContribution = <T>(capability: Capability.InterfaceDef<T>, label: string, fix: string) => {
-      const atom = capabilityManager.atomByModule(capability);
-      const modulesAtSnapshot = new Set(Object.keys(atomRegistry.get(atom)));
-      return atomRegistry.subscribe(atom, (byModule) => {
-        for (const moduleId of Object.keys(byModule)) {
-          if (!modulesAtSnapshot.has(moduleId)) {
-            modulesAtSnapshot.add(moduleId);
-            log.error(`${label} contributed after the runtime was built — it is ignored until the next boot`, {
-              module: moduleId,
-              fix,
-            });
-          }
-        }
-      });
-    };
-
-    const cancelLateContributionWatches = [
-      warnOnLateContribution(
-        Capabilities.LayerSpec,
-        'LayerSpec',
-        'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
-      ),
-    ];
-    yield* Effect.addFinalizer(() => Effect.sync(() => cancelLateContributionWatches.forEach((cancel) => cancel())));
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
@@ -170,6 +147,29 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
+    // The stack extends built slices in place, so admitting a late spec costs no live service.
+    const rejectedLayerSpecs = new WeakSet<LayerSpec.LayerSpec>();
+    const admitLayerSpecs = (specs: readonly LayerSpec.LayerSpec[]) => {
+      const candidates = specs.filter((spec) => !rejectedLayerSpecs.has(spec));
+      try {
+        layerStack.addLayers(candidates);
+      } catch {
+        // Admitted one at a time so a single bad spec does not keep the others out.
+        for (const spec of candidates) {
+          try {
+            layerStack.addLayers([spec]);
+          } catch (err) {
+            rejectedLayerSpecs.add(spec);
+            log.error('LayerSpec rejected', { provides: spec.provides.map((tag) => tag.key), err });
+          }
+        }
+      }
+    };
+    const cancelLayerSpecWatch = atomRegistry.subscribe(layerSpecContributions.atom, admitLayerSpecs);
+    yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
+    // Covers a contribution landing between the snapshot above and the subscription.
+    admitLayerSpecs(layerSpecContributions.get());
+
     // Handler sets register eagerly at startup (keyed sets defer only handler BODIES), so the
     // reactive view over contributions is complete at boot — no demand pull on a miss.
     const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
@@ -190,36 +190,41 @@ export default Capability.makeModule(
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
       // Over the OTel global provider, a proxy that no-ops until one is registered, so this is
       // installed whether or not observability exists.
-      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
+      Layer.succeed(Tracer.Tracer, OtelTracer.makeGlobal('@dxos/app-framework/process-manager')),
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
       Layer.provide(baseLayer),
     );
-    const operationInvokerLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
-      Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer)),
-    );
-
     // App-framework has no EDGE runtime, so the remote process view is empty;
-    // the aggregate monitor therefore equals the local process tree.
+    // the aggregate manager therefore equals the local process tree.
     const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
     // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
     const remoteTraceMonitorLayer =
       remoteTraceMonitors.length > 0
         ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
         : RemoteTraceMonitor.layerNoop;
-    const processMonitorLayer = ProcessMonitor.layer.pipe(
+    const unifiedProcessManagerLayer = UnifiedProcessManager.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
     );
+    const operationInvokerLayer = ProcessOperationInvoker.layer.pipe(
+      // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
+      Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
+    );
 
-    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer, processMonitorLayer);
+    const runtimeLayer = Layer.mergeAll(
+      baseLayer,
+      processManagerLayer,
+      operationInvokerLayer,
+      unifiedProcessManagerLayer,
+    );
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
     // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
     // down the stack's keep-alive slices.
     yield* Effect.addFinalizer(() =>
-      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(Effect.promise(() => layerStack.destroy()))),
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(layerStack.destroy())),
     );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
@@ -230,10 +235,10 @@ export default Capability.makeModule(
       runSync: (effect) => managedRuntime.runSync(effect as Effect.Effect<any, any, any>),
     };
 
-    // Eagerly extract the process monitor. Safe because it does not require a
+    // Eagerly extract the process manager. Safe because it does not require a
     // fresh scope and is a stable reference for the lifetime of the runtime.
-    const processMonitor = managedRuntime.runSync(
-      Effect.flatMap(Process.ProcessMonitorService, Effect.succeed) as Effect.Effect<Process.Monitor, never, never>,
+    const unifiedProcessManager = managedRuntime.runSync(
+      Effect.flatMap(Process.ManagerService, Effect.succeed) as Effect.Effect<Process.Manager, never, never>,
     );
 
     // Publish the manager into the ambient-layer holder so that
@@ -247,13 +252,12 @@ export default Capability.makeModule(
       >,
     );
 
-    // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
-    // Pulled via the ProcessOperationInvoker tag so the contributed value carries
-    // the full OperationInvoker interface (`invocations`, `pendingFollowups`,
+    // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer, via its own tag so the
+    // contributed value carries the full OperationInvoker interface (`invocations`, `pendingFollowups`,
     // `awaitFollowups`, `_invokeCore`) that HistoryTracker requires.
     const operationInvoker: OperationInvoker.OperationInvoker = managedRuntime.runSync(
-      Effect.flatMap(ProcessManager.ProcessOperationInvoker.Service, Effect.succeed) as unknown as Effect.Effect<
-        OperationInvoker.OperationInvoker,
+      Effect.flatMap(ProcessOperationInvoker.Service, Effect.succeed) as Effect.Effect<
+        ProcessOperationInvoker.ProcessOperationInvoker,
         never,
         never
       >,
@@ -262,7 +266,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(Capabilities.ProcessManagerRuntime, processManagerRuntime),
       Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
-      Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contribute(Capabilities.ProcessManager, unifiedProcessManager),
       Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
       Capability.contribute(Capabilities.OperationHandlers, handlerSet),
     ];

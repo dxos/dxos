@@ -5,7 +5,7 @@
 import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -14,7 +14,6 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Event } from '@dxos/types';
@@ -31,7 +30,7 @@ import { getPlanningWindowDays } from '../operations/extractor/config.ts';
 const resolvePlanningWindow = (viewState: ViewState.Manager, nodeId: string): { from: Date; to: Date } => {
   // Read without asserting the mode (the dedicated range context may be empty or, defensively, hold
   // another mode), falling back to the default window otherwise.
-  const selection = viewState.get(Selection.aspect, getCalendarRangeSelectionId(nodeId));
+  const selection = viewState.get(Selection.aspect, Calendar.getRangeSelectionId(nodeId));
   const range =
     selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }

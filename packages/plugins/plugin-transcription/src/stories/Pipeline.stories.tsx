@@ -24,19 +24,21 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
@@ -58,7 +60,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { PipelineStatus } from '@dxos/react-ui-transcription';
@@ -103,7 +105,7 @@ const StoryGraphPlugin = () =>
         'AppGraphBuilder',
         // After the client is ready: a connector that throws before it subscribes to anything
         // reactive never re-runs, so an extension registered at startup would stay empty for good.
-        { activatesOn: ClientEvents.SpacesReady, provides: [AppCapabilities.AppGraphBuilder] },
+        { activatesOn: ClientEvents.SpacesAvailable, provides: [AppCapabilities.AppGraphBuilder] },
         Effect.fnUntraced(function* () {
           const capabilities = yield* Capability.Service;
           const extensions = yield* AppGraphBuilder.createExtension({
@@ -153,14 +155,14 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ stages, seed }: StoryArgs) => {
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
-  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
-  const status = useAtomCapability(TranscriptionCapabilities.PipelineStatus);
+  const [editorViews] = Hooks.useCapabilities(MarkdownCapabilities.EditorViews);
+  const status = Hooks.useAtomCapability(TranscriptionCapabilities.PipelineStatus);
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([]);
   const [summary, setSummary] = useState<string>();
 
@@ -319,7 +321,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
@@ -329,7 +331,8 @@ const meta = {
               yield* enableQueryIndexes(client.services.services);
               yield* Effect.promise(() => seedTestData(defaultSpace));
               defaultSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
         SpacePlugin({}),

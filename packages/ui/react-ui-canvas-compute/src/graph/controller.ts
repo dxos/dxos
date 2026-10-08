@@ -33,7 +33,7 @@ import {
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { Database, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -159,6 +159,18 @@ export class ComputeGraphController extends Resource {
     private readonly _graph: ComputeGraphModel,
   ) {
     super();
+  }
+
+  /**
+   * Runs the graph once so a circuit shows its state as soon as it is opened; without this the
+   * trigger nodes only ever fire from {@link setOutput}, leaving a freshly loaded graph inert.
+   */
+  protected override async _open(): Promise<void> {
+    try {
+      await this.exec();
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   toJSON() {
@@ -385,7 +397,7 @@ export class ComputeGraphController extends Resource {
     this.update.emit();
   }
 
-  private _createTraceWriter(): Trace.TraceWriter {
+  private _createTraceWriter(): Trace.Writer {
     return {
       write: (eventType, payload) => {
         const event = traceEventToComputeEvent(eventType.key, payload);

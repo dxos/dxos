@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -23,7 +23,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';

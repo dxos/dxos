@@ -67,7 +67,13 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/mcp-client"
     },
     {
       "path": "../../core/echo/echo"
@@ -83,6 +89,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../devtools/devtools"
@@ -134,6 +143,9 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-experimental"
     },
     {
       "path": "../../ui/react-ui-feed"

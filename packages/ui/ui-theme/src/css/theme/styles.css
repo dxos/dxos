@@ -38,6 +38,9 @@
   --color-secondary-text: var(--color-green-text);
   --color-secondary-border: var(--color-green-border);
 
+  /* Keyboard focus: its own slot so a theme can retune it without it doubling as a status or brand colour. */
+  --color-focus: var(--color-orange-500);
+
   --color-info-bg: var(--color-sky-bg);
   --color-info-bg-hover: var(--color-sky-bg-hover);
   --color-info-fg: var(--color-sky-fg);
@@ -73,7 +76,8 @@
   --color-neutral-bg: var(--color-neutral-600);
   --color-neutral-bg-hover: var(--color-neutral-700);
   --color-neutral-fg: var(--color-neutral-900);
-  --color-neutral-surface: var(--color-neutral-400);
+  /* Lighter than the hues' 400 in light mode: a grey at that step reads as a disabled control on white. */
+  --color-neutral-surface: light-dark(var(--color-neutral-200), var(--color-neutral-400));
   --color-neutral-text: light-dark(var(--color-neutral-800), var(--color-neutral-500));
   --color-neutral-border: var(--color-neutral-600);
 

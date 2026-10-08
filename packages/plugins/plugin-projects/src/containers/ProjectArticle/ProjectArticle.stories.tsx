@@ -7,26 +7,34 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -47,8 +55,14 @@ const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
+const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
+const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
+const TASK_ANSWER = 'On for internal spaces only';
+const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
+const OTHER_PROJECT_NAME = 'Project 2';
+const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -58,7 +72,14 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
  */
 let generation = 0;
 let seeded:
-  | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
+  | {
+      generation: number;
+      space: Space;
+      project: Project.Project;
+      taskSet: TaskSet.TaskSet;
+      task: Task.Task;
+      destination: Project.Project;
+    }
   | undefined;
 
 /** Seeded at client init so every story starts populated, including the ones with no play function. */
@@ -88,6 +109,28 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
+  // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
+  // pair is what the detail pane renders as two lines — the question an agent asked, and the answer
+  // it was resumed on. `answer` refuses an id that is not in this task's log, so seeding through
+  // them is also the check that the two entries are joined.
+  const question = Task.ask(task, {
+    text: TASK_QUESTION,
+    context: 'The section ships behind a flag either way; the question is what the flag defaults to.',
+    options: [{ title: TASK_ANSWER }, { title: 'Off for everyone' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
+  Task.answer(task, question.id, TASK_ANSWER, { actor: { role: 'user', name: 'Rich' } });
+  // A second question, left open: answered, a question is a record and reads as two lines of the
+  // log; open, it is a prompt the pane puts to the reader, which is the other half of the surface.
+  Task.ask(task, {
+    text: TASK_OPEN_QUESTION,
+    context: 'Nobody has said which spaces count as internal, and the flag needs a list.',
+    options: [{ title: 'Every space the team owns' }, { title: 'Only the demo space' }],
+    actor: { role: 'assistant', name: 'Scout' },
+  });
+  // What the task produced, linked the way the verbs link it: a ref on the task, with the object
+  // filed in the space rather than parented to the task.
+  Task.addArtifact(task, space.db.add(Text.make({ name: TASK_ARTIFACT_TITLE, content: 'Cupping sheet.' })));
   const linkTask = space.db.add(
     Task.make({
       [Obj.Parent]: taskSet,
@@ -100,12 +143,35 @@ const createProject = (space: Space, storyGeneration: number) => {
     taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
 
+  // Sub-tasks, two levels deep, so the list reads as the hierarchy it is: each child is in its parent's `subtasks`
+  // and parented to it, as the move verbs leave it.
+  const addSubtask = (parent: Task.Task, title: string, status: Task.Status) => {
+    const subtask = space.db.add(Task.make({ [Obj.Parent]: parent, title, status }));
+    Obj.update(parent, (parent) => {
+      parent.subtasks ??= [];
+      parent.subtasks.push(Ref.make(subtask));
+    });
+    return subtask;
+  };
+  // A task of its own, so the two the delegate story ticks stay leaves: ticking a parent takes its sub-tasks too.
+  const launch = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Plan the launch', status: 'started' }));
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks.push(Ref.make(launch));
+  });
+  addSubtask(launch, 'Write the announcement', 'done');
+  const flag = addSubtask(launch, 'Wire the feature flag', 'started');
+  addSubtask(flag, 'Default it on for internal spaces', 'todo');
+  addSubtask(flag, 'Add the flag to the settings panel', 'todo');
+
   // The third item is what promotion leaves behind: a link to the task in the project's set.
   Obj.update(outline.content.target, (text) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  seeded = { generation: storyGeneration, space, project, taskSet, task };
+  // A second project, so a task row's `Move to…` has somewhere to go.
+  const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
+
+  seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
 };
 
 /** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
@@ -182,21 +248,45 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   );
 };
 
+/**
+ * No-op for the one layout operation the ledger row invokes that belongs to DeckPlugin, which this
+ * story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin (in
+ * `corePlugins`), and it is what publishes the row the detail panel reads back.
+ */
+const MockDeckOperations = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.Open, () => Effect.succeed([] as string[]))),
+      ),
+    ]),
+);
+
+const MockDeckOperationsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.projects.story.mockDeckOperations'),
+    name: 'Mock Deck Ops',
+  }),
+).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
+
 const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         TasksPlugin.make(),
         // The plugin under test, for its own contributions rather than its surfaces: the `TaskAction`
         // module is what puts an action on a task row, and Assistant supplies the `CreateChat`
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
+        SpacePlugin.make({}),
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
@@ -231,11 +321,15 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        MockDeckOperationsPlugin(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
       // the first render.
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, as the app's theme is: the storybook layout portals its dialog outside the story,
+    // so a theme inside the plugin manager would leave the dialog without translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -315,6 +409,9 @@ export const Sections: Story = {
 /** The contributed action's label, as written in `capabilities/task-action.ts`. */
 const TASK_ACTION_LABEL = 'Assign to agent';
 
+/** The copy action's label, as written in `capabilities/task-action.ts`. */
+const COPY_PROMPT_LABEL = 'Copy prompt';
+
 /**
  * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
  * row shows it, and running it invokes the operation that opens a chat carrying the task.
@@ -365,6 +462,98 @@ export const TaskAction: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The row's `Copy prompt` starts its clipboard write inside the click that chose it.
+ *
+ * WebKit (Safari, the desktop webview) rejects a write that begins after the gesture has been lost
+ * to an await, and the prompt takes several to render; Chromium does not enforce this, so the story
+ * asserts the invariant itself: the write must be issued while the selecting event is still being
+ * dispatched (`window.event` is only set during dispatch).
+ */
+export const CopyPrompt: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { task } = await seedContent();
+
+    const writes: { duringEvent: boolean; text: Promise<string> }[] = [];
+    const clipboard = navigator.clipboard;
+    const { write, writeText } = clipboard;
+    // Recorded rather than performed: a headless page holds no clipboard permission, so a real write
+    // never settles.
+    clipboard.write = async (items) => {
+      const [item] = items;
+      writes.push({
+        duringEvent: Reflect.get(window, 'event') !== undefined,
+        text: item.getType('text/plain').then((blob) => blob.text()),
+      });
+    };
+    clipboard.writeText = async (text) => {
+      writes.push({ duringEvent: Reflect.get(window, 'event') !== undefined, text: Promise.resolve(text) });
+    };
+
+    try {
+      await showTab(canvas, 'tasks');
+      const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+      const row = title.closest('[data-testid="taskList.item"]');
+      await expect(row).toBeTruthy();
+      await userEvent.click(
+        await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+      );
+      await userEvent.click(await screen.findByText(COPY_PROMPT_LABEL, undefined, { timeout: 10_000 }));
+
+      await waitFor(() => expect(writes).toHaveLength(1), { timeout: 10_000 });
+      const [copied] = writes;
+      await expect(copied.duringEvent).toBe(true);
+
+      // The text that lands is the rendered prompt, addressed to the task the row belongs to.
+      const text = await copied.text;
+      await expect(text).toContain(TASK_TITLE);
+      await expect(text).toContain(Obj.getURI(task));
+    } finally {
+      clipboard.write = write;
+      clipboard.writeText = writeText;
+    }
+  },
+};
+
+/**
+ * The row's `Move to…` action: it opens the project picker (a dialog the storybook layout hosts),
+ * and picking another project transfers the task into that project's task set.
+ */
+export const MoveTaskToProject: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { taskSet, task, destination } = await seedContent();
+
+    await showTab(canvas, 'tasks');
+    const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+    const row = title.closest('[data-testid="taskList.item"]');
+    await expect(row).toBeTruthy();
+    await userEvent.click(
+      await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+    );
+    await userEvent.click(await screen.findByText(MOVE_ACTION_LABEL, undefined, { timeout: 10_000 }));
+
+    // The picker lists the other project only: the task's own project is not a destination.
+    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    await expect(within(dialog).findByText('Move task to project')).resolves.toBeTruthy();
+    await expect(within(dialog).queryByText(PROJECT_NAME)).toBeNull();
+    await userEvent.click(await within(dialog).findByText(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 }));
+
+    await waitFor(
+      async () => {
+        await expect(TaskSet.resolveTasks(taskSet).map(({ id }) => id)).not.toContain(task.id);
+        await expect(destination.taskSet?.target?.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+      },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
   },
 };
 

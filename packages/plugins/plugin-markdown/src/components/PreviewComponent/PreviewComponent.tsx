@@ -5,19 +5,26 @@
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { type WidgetProps } from '@dxos/ui-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
+
+import { meta } from '#meta';
 
 import { parseEmbedLabel } from './parse-embed-label.ts';
 
@@ -52,18 +59,22 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
-export type PreviewComponentProps = WidgetProps<{
-  db?: Database.Database;
-  /** The containing editor's attendable id; the embed nests under it as `<attendableId>/<object id>`. */
-  attendableId?: string;
-  eid: string;
-  label: string;
-  block?: boolean;
-  suggest?: boolean;
-  onOpen?: (eid: URI.URI) => void;
-  /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
-  isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
-}>;
+export type PreviewComponentProps = WidgetProps<
+  {
+    /** The widget id, for reporting the target's state back to the editor. */
+    id: string;
+    db?: Database.Database;
+    /** The containing editor's attendable id; the embed nests under it as `<attendableId>/<object id>`. */
+    attendableId?: string;
+    eid: string;
+    label: string;
+    block?: boolean;
+    suggest?: boolean;
+    onOpen?: (eid: URI.URI) => void;
+    /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
+    isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
+  } & LinkWidgetState
+>;
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
@@ -72,25 +83,30 @@ export type PreviewComponentProps = WidgetProps<{
  * focus to the editor.
  */
 export const PreviewComponent = ({
+  id,
   db,
   attendableId: parentAttendableId,
   eid,
   label: labelProp,
   view,
   range,
+  unresolved,
+  intrinsic,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
-  const invoker = useOptionalCapability(Capabilities.OperationInvoker);
+  const invoker = Hooks.useOptionalCapability(Capabilities.OperationInvoker);
   const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
@@ -100,6 +116,27 @@ export const PreviewComponent = ({
   // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
   // instanceOf check fail, so embeds rendered nothing.
   const [subject] = useObject(object);
+
+  // `object` is undefined both while the target loads and when there is nothing to load; only a
+  // settled load tells them apart, and a deleted object still resolves, so both count as missing.
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    setMissing(false);
+    if (!ref) {
+      return;
+    }
+    let cancelled = false;
+    ref.tryLoad().then(
+      (target: Obj.Unknown | undefined) => !cancelled && setMissing(!target || Obj.isDeleted(target)),
+      () => !cancelled && setMissing(true),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [ref]);
+  const available = !!object && !Obj.isDeleted(object);
+  // No ref at all (no database to resolve against) is as final as a settled miss.
+  const unavailable = !ref || (!available && (missing || !!object));
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
@@ -118,9 +155,56 @@ export const PreviewComponent = ({
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject && attendableId ? { subject, attendableId, extrinsic } : undefined),
-    [subject, attendableId, extrinsic],
+    () => (subject && attendableId && available ? { subject, attendableId, extrinsic } : undefined),
+    [subject, attendableId, extrinsic, available],
   );
+  const mode = !data
+    ? undefined
+    : isSurfaceAvailable({ type: AppSurface.Section, data })
+      ? 'section'
+      : isSurfaceAvailable({ type: AppSurface.CardContent, data })
+        ? 'card'
+        : undefined;
+
+  // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved
+  // target puts the source back (editable) with the error inline, and a card drops the reserved
+  // height a section would have used. Deferred: the report can arrive from a render the editor's own
+  // update triggered, and a dispatch inside an update throws.
+  useEffect(() => {
+    if (!view || !id) {
+      return;
+    }
+    const next: LinkWidgetState = {};
+    // Not a resolved object without a preview: the surface registry answers "none" while a lazy
+    // surface loads, and a report on that would flip the embed to an error for the duration.
+    if (mode && unresolved) {
+      next.unresolved = false;
+    } else if (unavailable && !unresolved) {
+      next.unresolved = true;
+    }
+    // A section takes its reservation back should the same link have been a card before (a plugin
+    // that adds the section surface came up later); the card effect below only ever sets the flag.
+    if (mode === 'section' && intrinsic) {
+      next.intrinsic = false;
+    }
+    if (Object.keys(next).length > 0) {
+      queueMicrotask(() => setLinkWidgetState(view, id, next));
+    }
+  }, [view, id, unavailable, unresolved, mode, intrinsic]);
+
+  // A card sizes itself: the pin is released on the mounted placeholder rather than by rebuilding
+  // the widget (a redraw under a click swapped the element being clicked), and recorded so the next
+  // rebuild does not pin it again. Every render, not on deps: a rebuilt widget that adopted this
+  // element re-pins it, and the release is a no-op once done.
+  useEffect(() => {
+    if (!view || !id || mode !== 'card' || !cardRef.current) {
+      return;
+    }
+    releaseBlockHeight(view, cardRef.current);
+    if (!intrinsic) {
+      queueMicrotask(() => setLinkWidgetState(view, id, { intrinsic: true }, { rebuild: false }));
+    }
+  });
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
@@ -236,12 +320,23 @@ export const PreviewComponent = ({
     [uri, object, onOpen, invokePromise],
   );
 
+  // The chip renders only once the editor has rebuilt this link inline; in the block (before the
+  // report lands) it would flash at the top of the reserved box.
+  if (unresolved) {
+    return (
+      <span className='dx-tag dx-tag-inline gap-1 align-baseline' data-hue='red'>
+        <Icon.Icon icon='ph--warning--regular' size='md' />
+        {t('object-not-found.label')}
+      </span>
+    );
+  }
+
   if (uri && object && data) {
     const objectIcon = Obj.getIcon(object);
     const objectLabel = Obj.getLabel(object);
 
     // Section preview.
-    if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
+    if (mode === 'section') {
       return (
         <div
           className='relative grid scroll-mt-16 outline-hidden'
@@ -259,30 +354,30 @@ export const PreviewComponent = ({
           <div
             className={mx(
               'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
-              hasAttention ? 'border-focus-ring-subtle' : 'border-subdued-separator',
+              hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
             )}
             inert={hasAttention ? undefined : true}
           >
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
-          <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
-            <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-              {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute bottom-1 right-1'>
+            <span className='dx-tag dx-tag-inline flex gap-1' data-hue='neutral'>
+              {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
             </span>
-          </div>
+          </Layout.Flex>
 
-          <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-            <IconButton
-              density='sm'
+          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute top-1 right-1'>
+            <Button.Root
+              size='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly
               label='Open'
               variant='ghost'
               onClick={handleOpen}
             />
-          </div>
+          </Layout.Flex>
 
           <ResizeHandle
             side='block-end'
@@ -296,14 +391,14 @@ export const PreviewComponent = ({
     }
 
     // Card preview.
-    if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
+    if (mode === 'card') {
       return (
-        <div className='outline-hidden' {...frameProps}>
+        <div className='outline-hidden' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
-            <Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
+            <Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>
               <Card.Header>
-                <Card.Block />
+                <Layout.Block />
                 <Card.Title>{objectLabel}</Card.Title>
               </Card.Header>
               <Card.Body>
@@ -316,9 +411,7 @@ export const PreviewComponent = ({
     }
   }
 
-  return (
-    <span className='bg-card-surface text-sm border border-separator rounded-sm p-1'>
-      Invalid object: <span className='font-mono'>{eid}</span>
-    </span>
-  );
+  // Loading, or waiting for the report above to rebuild the link: the placeholder holds the
+  // reserved height meanwhile.
+  return null;
 };

@@ -4,8 +4,11 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, Clipboard, Icon } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { RemoteSession } from '@dxos/types';
 
 export type RemoteSessionCardProps = AppSurface.ObjectCardProps<RemoteSession.RemoteSession>;
@@ -52,63 +55,63 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
   const worktreeName = worktree?.split('/').filter(Boolean).at(-1);
 
   return (
-    <Clipboard.Provider>
-      <Card.Body>
-        <Card.Row>
-          <div className='flex justify-between items-center gap-2 text-sm'>
-            <span className='flex items-center gap-1 text-description'>
-              {harnessIcon && <Icon icon={harnessIcon} size={4} />}
-              {harness ?? 'Session'}
+    <Card.Body>
+      <Card.Row>
+        <Layout.Flex justify='between' align='center' gap='sm' classNames='text-sm'>
+          <span className='flex items-center gap-1 text-fg-muted'>
+            {harnessIcon && <Icon.Icon icon={harnessIcon} size='md' />}
+            {harness ?? 'Session'}
+          </span>
+          {option && (
+            <span className='dx-tag dx-tag-inline' data-hue={option.color}>
+              {option.title}
             </span>
-            {option && (
-              <span className='dx-tag' data-hue={option.color}>
-                {option.title}
+          )}
+        </Layout.Flex>
+      </Card.Row>
+      {title && (
+        <Card.Row>
+          <Card.Title lines={2}>{title}</Card.Title>
+        </Card.Row>
+      )}
+      {(repo || branch || worktreeName) && (
+        <Card.Row>
+          <Layout.Flex align='center' gap='sm' classNames='text-sm text-fg-muted min-w-0'>
+            {repo && <span className='truncate'>{repo}</span>}
+            {branch && (
+              <span className='dx-tag dx-tag-inline' data-hue='neutral'>
+                {branch}
               </span>
             )}
-          </div>
+            {!repo && worktreeName && <span className='truncate'>{worktreeName}</span>}
+          </Layout.Flex>
         </Card.Row>
-        {title && (
-          <Card.Row>
-            <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
-          </Card.Row>
-        )}
-        {(repo || branch || worktreeName) && (
-          <Card.Row>
-            <div className='flex items-center gap-2 text-sm text-description min-w-0'>
-              {repo && <span className='truncate'>{repo}</span>}
-              {branch && (
-                <span className='dx-tag' data-hue='neutral'>
-                  {branch}
-                </span>
-              )}
-              {!repo && worktreeName && <span className='truncate'>{worktreeName}</span>}
-            </div>
-          </Card.Row>
-        )}
+      )}
+      <Card.Row>
+        <Layout.Flex align='center' gap='sm' classNames='text-sm text-fg-subtle'>
+          <span>started {since(started)}</span>
+          {/* Only meaningful while the session might still be working; a closed one has an end. */}
+          {lastCheckedIn && !RemoteSession.isTerminal(subject) && <span>· seen {since(lastCheckedIn)}</span>}
+        </Layout.Flex>
+      </Card.Row>
+      {lastMessage && (
         <Card.Row>
-          <div className='flex items-center gap-2 text-sm text-subdued'>
-            <span>started {since(started)}</span>
-            {/* Only meaningful while the session might still be working; a closed one has an end. */}
-            {lastCheckedIn && !RemoteSession.isTerminal(subject) && <span>· seen {since(lastCheckedIn)}</span>}
-          </div>
+          <Card.Text classNames='line-clamp-3' variant='muted'>
+            {lastMessage}
+          </Card.Text>
         </Card.Row>
-        {lastMessage && (
-          <Card.Row>
-            <Card.Text classNames='line-clamp-3 text-description'>{lastMessage}</Card.Text>
-          </Card.Row>
-        )}
-        {sessionId && (
-          <Card.Row>
-            {/* The only reliable way back into a session: `claude-cli://open` takes no session id, and
+      )}
+      {sessionId && (
+        <Card.Row>
+          {/* The only reliable way back into a session: `claude-cli://open` takes no session id, and
               the web URL needs the bridge id, which the harness does not put in the hook payload. */}
-            <div className='flex items-center gap-1 min-w-0'>
-              <code className='text-xs text-subdued select-all truncate'>{resumeCommand(sessionId)}</code>
-              <Clipboard.IconButton variant='ghost' size={4} value={resumeCommand(sessionId)} />
-            </div>
-          </Card.Row>
-        )}
-      </Card.Body>
-    </Clipboard.Provider>
+          <Layout.Flex align='center' gap='xs' classNames='min-w-0'>
+            <code className='text-xs text-fg-subtle select-all truncate'>{resumeCommand(sessionId)}</code>
+            <SystemButton.Clipboard iconOnly variant='ghost' value={resumeCommand(sessionId)} />
+          </Layout.Flex>
+        </Card.Row>
+      )}
+    </Card.Body>
   );
 };
 

@@ -2,21 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 import { createSignal } from 'solid-js';
 
-import { AiService, Model } from '@dxos/ai';
-import { OpaqueToolkit } from '@dxos/ai';
+import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AiSession } from '@dxos/assistant';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
@@ -124,7 +123,7 @@ export const chat = Command.make(
       }
 
       const handleChatLoad = async () => {
-        const chats = await space.db.query(Filter.type(ChatSchema.Chat)).run();
+        const chats = await space.db.query(Filter.type(AssistantChat.Chat)).run();
         log.info('chats', { chats: chats.length });
         // if (chats.length > 0) {
         //   await handleChatSelect(chats[0]);
@@ -134,7 +133,7 @@ export const chat = Command.make(
       };
 
       // TODO(burdon): Update message history, skills, etc.
-      const handleChatSelect = async (chat: ChatSchema.Chat) => {
+      const handleChatSelect = async (chat: AssistantChat.Chat) => {
         const current = conversation();
         await current?.close();
 
