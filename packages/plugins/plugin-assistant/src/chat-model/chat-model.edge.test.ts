@@ -65,7 +65,7 @@ const PROMPTS = [
   'Reply with exactly one word: pong',
   'Count from one to twenty in words, separated by commas.',
   'Now answer with one word: done',
-].slice(0, Number.parseInt(process.env.DX_CHAT_TURNS ?? '3', 10));
+].slice(0, Number.parseInt(process.env.DX_CHAT_TURNS ?? '', 10) || 3);
 
 /** The stages of a turn, each the first moment (ms after send) at which the reader could see it. */
 type TurnTiming = {

@@ -30,7 +30,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const runtime = useChatServices({ id: db?.spaceId });
   const { preset, ...chatProps } = usePresets(settings, chat);
   const registry = useRegistry();
-  const chatModel = useChatModel({ chat, preset, runtime, registry, settings });
+  const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
   // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.
   const [chatViewType] = useObject(chat, 'viewType');
 

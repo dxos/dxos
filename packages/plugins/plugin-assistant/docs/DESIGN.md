@@ -177,12 +177,14 @@ unit and story coverage.
 
 ### 2.3 Chat model (level 3)
 
-- `chat-model.node.test.ts` — constructs a chat model and unit-tests `parseError`; the
-  **streaming state machine (`#handleEphemeralMessage` dedupe/finalize/flush) has no direct
-  test** and is only exercised via live stories.
+- `chat-model.node.test.ts` — constructs a chat model and unit-tests `parseError`.
+- `streaming.node.test.ts` — drives the streaming state machine (`#handleEphemeralMessage`
+  dedupe/finalize/flush, stale-event ordering) headlessly from a scripted trace stream.
+- `chat-model.scripted.node.test.ts` — records every indicator atom over real agent turns
+  (scripted model) and checks the indicator invariants.
 - `Chat.stories.tsx` — det, but covers only the failure toast.
 
-**Verdict: gap.** The ephemeral/durable dedupe race is subtle and untested headlessly.
+**Verdict: strong.** The ephemeral/durable dedupe race and the indicator lifecycle are covered headlessly.
 
 ### 2.4 Session / request / agent process (levels 4–6)
 
