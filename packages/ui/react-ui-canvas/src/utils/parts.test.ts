@@ -61,8 +61,8 @@ describe('parts', () => {
 
   test('frame classes follow the style', ({ expect }) => {
     expect(frameClasses(rect, false)).toEqual(['bg-base-surface', '', 'border-separator', '', 'rounded-sm', '']);
-    expect(frameClasses(rect, true)[2]).toBe('border-focus-ring-subtle');
-    expect(frameClasses(rect, false, true)[2]).toBe('border-focus-ring-subtle/50');
+    expect(frameClasses(rect, true)[2]).toBe('border-focus');
+    expect(frameClasses(rect, false, true)[2]).toBe('border-focus/50');
     const styled = { ...rect, style: { hue: 'teal', rounded: true, fill: false, border: false } };
     expect(frameClasses(styled, false)).toEqual(['', 'text-teal-fg', 'border-transparent', '', 'rounded-2xl', '']);
     // A guide is dashed and unfilled whatever fill and border say; the host's class comes last.

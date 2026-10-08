@@ -184,9 +184,7 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx(
                   'fill-none',
-                  !plain && selected?.has(link.id)
-                    ? 'stroke-focus-ring-subtle'
-                    : lineClasses(lines.get(link.id)?.hue).stroke,
+                  !plain && selected?.has(link.id) ? 'stroke-focus' : lineClasses(lines.get(link.id)?.hue).stroke,
                 )}
                 strokeWidth={linkWidth}
                 strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
