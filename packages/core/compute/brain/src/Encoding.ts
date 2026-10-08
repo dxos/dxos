@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Ast from '@dxos/datalog/Ast';
 import type * as Engine from '@dxos/datalog/Engine';
 import { RDF } from '@dxos/pipeline-rdf';
 
@@ -97,3 +98,11 @@ export const factIds = (entries: ReadonlyArray<Engine.Entry>): string[] => [
     ),
   ),
 ];
+
+/** An entry as a ground Datalog fact in the dialect goal rules are written in, e.g. `speaker("fact-1", dima).`. */
+export const formatEntry = ({ relation, tuple }: Engine.Entry): string =>
+  Ast.formatRule({ head: Ast.atom(relation, tuple.map(Ast.constant)), body: [] });
+
+/** The relations the rules engine sees for a fact ({@link encode}), one ground Datalog fact per line. */
+export const format = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): string[] =>
+  encode(fact, vocabulary).map(formatEntry);
