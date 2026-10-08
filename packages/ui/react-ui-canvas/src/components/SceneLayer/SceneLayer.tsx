@@ -26,8 +26,6 @@ import {
   type Scene,
   type StyleHue,
   type StyleMap,
-  isBoxNode,
-  isEllipseNode,
   isNoteNode,
   isPortalNode,
   linkMarkers,
@@ -439,8 +437,14 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
   </TextPart>
 );
 
+/** A node's core-base `label`, read from any type: a type the registry does not know still carries it. */
+const baseLabel = (node: Node): string => {
+  const label: unknown = Reflect.get(node, 'label');
+  return typeof label === 'string' ? label : '';
+};
+
 const LabelNodeView = ({ node, editing }: NodeViewProps) => (
-  <LabelPart node={node} editing={editing} label={isBoxNode(node) || isEllipseNode(node) ? (node.label ?? '') : ''} />
+  <LabelPart node={node} editing={editing} label={baseLabel(node)} />
 );
 
 /** The `box` prototype's body: its centred label. */
