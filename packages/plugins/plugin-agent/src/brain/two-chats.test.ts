@@ -25,7 +25,7 @@ import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } fro
 import { AgentOperation, BrainService, FactEntry, Goal, Memory, Mode, Relay, Trigger, TriggerOperation } from '#types';
 
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
-import { TEST_MEMBERS, makeTestBrain, testSpaceLayer } from './testing.ts';
+import { TEST_MEMBERS, createLocalAgent, makeTestBrain, testSpaceLayer } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -222,7 +222,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 
 /** Kai, with a private chat for Alice and one for Bob. */
 const setup = Effect.fnUntraced(function* () {
-  const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+  const { agent: agentRef } = yield* createLocalAgent('Kai');
   const agent = yield* Database.load(agentRef);
   const open = (identityDid: string, name: string) =>
     Operation.invoke(AgentOperation.OpenPrivateChat, { agent: agentRef, identityDid, name }).pipe(
