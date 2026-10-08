@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tour from '@dxos/react-ui/Tour';
 
 import { meta } from '#meta';
@@ -145,7 +146,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
           classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
           data-testid='helpPlugin.tooltip'
         >
-          <div className='flex items-start'>
+          <Layout.Flex align='start'>
             <Tour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
             <Tour.CloseTrigger asChild ref={closeRef}>
               <Button.Root
@@ -158,7 +159,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 data-testid='helpPlugin.tooltip.close'
               />
             </Tour.CloseTrigger>
-          </div>
+          </Layout.Flex>
           <Tour.Description classNames='grow px-4 my-2 text-accent-fg' />
           <Tour.Control>
             <Button.Root
@@ -170,7 +171,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
               variant='primary'
               data-testid='helpPlugin.tooltip.back'
             />
-            <div className='flex grow justify-center'>
+            <Layout.Flex justify='center' classNames='grow'>
               {Array.from({ length: tour.totalSteps }).map((_, index) => (
                 <Icon.Icon
                   key={index}
@@ -179,7 +180,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                   classNames='mx-1'
                 />
               ))}
-            </div>
+            </Layout.Flex>
             {last ? (
               <Tour.CloseTrigger asChild>
                 <Button.Root variant='primary' data-testid='helpPlugin.tooltip.finish'>

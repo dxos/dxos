@@ -4,6 +4,7 @@
 
 import React, { type KeyboardEvent } from 'react';
 
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { TerraObject } from '#types';
@@ -46,7 +47,10 @@ const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
  * every sim frame.
  */
 export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelProps) => (
-  <div className='flex flex-col w-fit max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'>
+  <Layout.Flex
+    column
+    classNames='w-fit max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'
+  >
     <div className='px-3 pt-3 pb-2 text-sm font-medium'>Telemetry</div>
     <ScrollArea.Root orientation='vertical' classNames='max-h-64'>
       <ScrollArea.Viewport>
@@ -101,7 +105,7 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
         </table>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
-  </div>
+  </Layout.Flex>
 );
 
 TelemetryPanel.displayName = 'TelemetryPanel';

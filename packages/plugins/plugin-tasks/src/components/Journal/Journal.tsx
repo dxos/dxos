@@ -9,6 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -129,7 +130,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
       // TODO(burdon): Experiment with `peer-focus-within` Tailwind selector.
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
-      <div className='flex items-center gap-2 bg-transparent'>
+      <Layout.Flex align='center' gap='sm' classNames='bg-transparent'>
         <Button.Root
           label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
@@ -137,7 +138,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
         />
         {isRecent && date && <div className='text-sm text-fg-subtle'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today.label')}</div>}
-      </div>
+      </Layout.Flex>
       <Outline.Root
         ref={outlinerRef}
         id={entry.id}

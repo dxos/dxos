@@ -12,6 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, DXN, Ref } from '@dxos/echo';
+import { Space } from '@dxos/halo';
 import { trim } from '@dxos/util';
 
 import { BrainService, MemoryOperation } from '#types';
@@ -28,7 +29,7 @@ export const RunTriggers = Operation.make({
     description: "Records the facts of the conversation's latest turn and fires the agent's triggers they match.",
     icon: 'ph--lightning--regular',
   },
-  services: [Harness.HarnessService, Database.Service, AiService.AiService, BrainService.BrainService],
+  services: [Harness.HarnessService, Database.Service, AiService.AiService, BrainService.BrainService, Space.Service],
   input: Schema.Struct({}),
   output: Schema.Struct({
     facts: Schema.Number.annotate({ description: 'Facts recorded from the turn.' }),

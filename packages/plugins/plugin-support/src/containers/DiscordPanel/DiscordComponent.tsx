@@ -179,9 +179,9 @@ const Channels = () => {
 };
 
 const STATUS_RING: Record<WidgetMember['status'], string> = {
-  online: 'bg-emerald-500',
-  idle: 'bg-amber-400',
-  dnd: 'bg-rose-500',
+  online: 'bg-success-bg',
+  idle: 'bg-warning-bg',
+  dnd: 'bg-error-bg',
 };
 
 const MemberRow = ({ member }: { member: WidgetMember }) => (
@@ -191,7 +191,7 @@ const MemberRow = ({ member }: { member: WidgetMember }) => (
       <span
         className={mx(
           'absolute -bottom-0.5 -end-0.5 size-2 rounded-full ring-2 ring-base-surface',
-          STATUS_RING[member.status] ?? 'bg-neutral-400',
+          STATUS_RING[member.status] ?? 'bg-neutral-surface',
         )}
       />
     </div>

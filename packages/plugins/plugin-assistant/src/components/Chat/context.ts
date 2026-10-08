@@ -11,7 +11,7 @@ import { type ChatThreadController } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatModel } from '../../chat-model/index.ts';
 import { type ChatEvent } from './events.ts';
 
 /**
@@ -36,8 +36,10 @@ export type ChatContextValue = {
   event: Event<ChatEvent>;
   db?: Database.Database;
   chat?: Chat.Chat;
-  /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
-  processor?: AiChatProcessor;
+  /** Undefined while the chat model is still opening; the chat renders from the feed meanwhile. */
+  chatModel?: ChatModel;
+  /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
+  started: boolean;
   /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */
   queueSize: number;
   setController: (controller: ChatThreadController | null) => void;

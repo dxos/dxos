@@ -18,11 +18,22 @@ import { useLayoutEffect } from 'react';
 export const useForceDarkTheme = () => {
   useLayoutEffect(() => {
     const root = document.documentElement;
-    const hadDark = root.classList.contains('dark');
+    let restoreDark = root.classList.contains('dark');
     root.classList.add('dark');
+
+    // The theme plugin and the boot script rewrite the class when the system preference or the
+    // appearance setting changes; re-assert it before paint, and restore the latest light request.
+    const observer = new MutationObserver(() => {
+      if (!root.classList.contains('dark')) {
+        restoreDark = false;
+        root.classList.add('dark');
+      }
+    });
+    observer.observe(root, { attributeFilter: ['class'] });
+
     return () => {
-      // Revert to whatever the document element's state was before this component mounted.
-      root.classList.toggle('dark', hadDark);
+      observer.disconnect();
+      root.classList.toggle('dark', restoreDark);
     };
   }, []);
 };

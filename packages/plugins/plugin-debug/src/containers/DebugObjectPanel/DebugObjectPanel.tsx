@@ -10,10 +10,10 @@ import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
@@ -44,7 +44,7 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
         <Toolbar.Root />
       </Panel.Header>
       <Panel.Body asChild>
-        <div className={mx('grid divide-y divide-separator-subtle', db && 'grid-rows-[1fr_2fr]')}>
+        <Layout.Grid rows={db ? [1, 2] : undefined} classNames='divide-y divide-separator-subtle'>
           {db && (
             <ScrollArea.Root>
               <ScrollArea.Viewport>
@@ -76,7 +76,7 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
               </Panel.Body>
             </Panel.Root>
           </Syntax.Root>
-        </div>
+        </Layout.Grid>
       </Panel.Body>
     </Panel.Root>
   );

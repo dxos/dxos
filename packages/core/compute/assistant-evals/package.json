@@ -71,6 +71,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-uml": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/test-utils": "workspace:*",

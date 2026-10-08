@@ -2,41 +2,61 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { type NodeRegistry, defaultNodeRegistry } from '../model/registry.ts';
+import { nodeBase } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
-import { isMultiline, partKey, partText, partValues } from './parts.ts';
+import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
 import { frameClasses, hueClasses, resolveStyle } from './style.ts';
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
+  // A host type with a list part, the way a contributed type declares its text.
+  const ListNode = Schema.Struct({
+    type: Schema.Literal('list'),
+    ...nodeBase,
+    title: Schema.String,
+    items: Schema.Array(Schema.String),
+  });
+  const registry: NodeRegistry = {
+    ...defaultNodeRegistry,
+    list: {
+      ...defaultNodeRegistry.rect,
+      type: 'list',
+      schema: ListNode,
+      parts: [{ field: 'title' }, { field: 'items', lines: true }],
+    },
+  };
   const {
     scenes: [{ nodes }],
   } = SceneBuilder.scene('s', [
     SceneBuilder.rect('r', box),
-    SceneBuilder.class('c', box).properties({ name: 'Person', attributes: ['name: string'], methods: [] }),
-  ]).build();
+    SceneBuilder.note('n', box),
+    SceneBuilder.node('list', 'l', box).properties({ title: 'Todo', items: ['buy milk'] }),
+  ]).build(registry);
   const rect = nodes.r;
-  const cls = nodes.c;
+  const note = nodes.n;
+  const list = nodes.l;
 
-  test('reads a part as text and writes it back as the node property', ({ expect }) => {
-    expect(partText(rect, 'label')).toBe('');
-    expect(partText(rect, 'name')).toBeUndefined();
-    expect(partText(cls, 'attributes')).toBe('name: string');
-    expect(partValues(rect, 'label', 'A')).toEqual({ label: 'A' });
-    expect(partValues(cls, 'attributes', 'a: string\n\n b: number \n')).toEqual({
-      attributes: ['a: string', 'b: number'],
-    });
-    expect(partValues(cls, 'name', ' Org ')).toEqual({ name: 'Org' });
-    expect(partValues(rect, 'methods', 'x')).toBeUndefined();
+  test("reads a part as text and writes it back as the node property, by the type's declared parts", ({ expect }) => {
+    expect(partText(registry, rect, 'label')).toBe('');
+    expect(partText(registry, rect, 'items')).toBeUndefined();
+    expect(partText(registry, list, 'items')).toBe('buy milk');
+    expect(partValues(registry, rect, 'label', 'A')).toEqual({ label: 'A' });
+    expect(partValues(registry, list, 'items', 'a\n\n b \n')).toEqual({ items: ['a', 'b'] });
+    expect(partValues(registry, rect, 'items', 'x')).toBeUndefined();
+    // The first part is the node's main text.
+    expect(nodeTitle(registry, list)).toBe('Todo');
+    expect(nodeTitle(registry, note)).toBe('Note');
   });
 
-  test('lists and bodies are multi-line; labels and names are not', ({ expect }) => {
-    expect(isMultiline('attributes')).toBe(true);
-    expect(isMultiline('text')).toBe(true);
-    expect(isMultiline('label')).toBe(false);
-    expect(partKey('label')).toBe('label');
-    expect(partKey('other')).toBeUndefined();
+  test('lists and bodies are multi-line; labels are not', ({ expect }) => {
+    const [label] = nodeParts(registry, rect);
+    const [body] = nodeParts(registry, note);
+    const [, items] = nodeParts(registry, list);
+    expect([isMultiline(label), isMultiline(body), isMultiline(items)]).toEqual([false, true, true]);
   });
 
   test('frame classes follow the style', ({ expect }) => {
@@ -56,9 +76,10 @@ describe('parts', () => {
       text: '',
       border: 'border-blue-border',
     });
+    // Tones 1 to 3 run strongest to lightest.
     expect(hueClasses('blue', 1)).toEqual({
-      surface: 'bg-blue-200',
-      text: 'text-blue-900',
+      surface: 'bg-blue-500',
+      text: 'text-neutral-50',
       border: 'border-blue-border',
     });
     expect(hueClasses('blue')).toEqual(hueClasses('blue', 2));
@@ -68,11 +89,11 @@ describe('parts', () => {
       border: 'border-blue-border',
     });
     expect(hueClasses('blue', 3)).toEqual({
-      surface: 'bg-blue-bg',
-      text: 'text-neutral-50',
+      surface: 'bg-blue-300',
+      text: 'text-blue-900',
       border: 'border-blue-border',
     });
-    // A hue the picker does not offer draws its stronger tones as medium; no hue ignores the tone.
+    // A hue the picker does not offer draws its stronger tones as its role pair; no hue ignores the tone.
     expect(hueClasses('lime', 3)).toEqual(hueClasses('lime'));
     expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
   });

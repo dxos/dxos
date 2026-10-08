@@ -16,7 +16,6 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
 import { SequenceGrid, TrackList } from '#components';
@@ -458,9 +457,9 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         </ActionToolbar>
       </Panel.Header>
 
-      <Panel.Body>
-        <Layout.Flex classNames='h-full min-h-0'>
-          <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>
+      <Panel.Body asChild>
+        <Layout.Flex>
+          <Layout.Grid rows={['fill', 'auto']} classNames='h-full w-48 shrink-0 border-r border-separator'>
             <TrackList
               tracks={score.tracks}
               selectedTrackId={selectedTrackId}
@@ -482,7 +481,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 source={audioOutputNode}
               />
             </div>
-          </div>
+          </Layout.Grid>
           <div className='flex-1 min-w-0 relative'>
             {activeTrack && activeSequence ? (
               <SequenceGrid
@@ -510,13 +509,13 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 }
               />
             ) : (
-              <div className={mx('dx-cover flex items-center justify-center text-neutral-500 text-sm')}>
+              <Layout.Flex center classNames='dx-cover text-fg-subtle text-sm'>
                 <Layout.Flex column gap='sm' align='center'>
                   <Icon.Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>
                   <Button.Root onClick={handleAddTrack}>Add track</Button.Root>
                 </Layout.Flex>
-              </div>
+              </Layout.Flex>
             )}
           </div>
         </Layout.Flex>

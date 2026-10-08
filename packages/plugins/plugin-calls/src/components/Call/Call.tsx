@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 
 import { useDebugMode } from '#hooks';
@@ -60,9 +61,9 @@ const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
 const CallViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <div {...Util.composableProps(props, { classNames: 'relative dx-expand flex flex-col' })} ref={forwardedRef}>
+  <Layout.Flex column {...Util.composableProps(props, { classNames: 'relative dx-expand' })} ref={forwardedRef}>
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 CallViewport.displayName = CALL_VIEWPORT_NAME;
@@ -97,9 +98,9 @@ const CallGrid = () => {
   const users = useAtomValue(call.usersAtom);
 
   return (
-    <div className='grid grow p-4 dark:bg-neutral-900'>
+    <Layout.Grid classNames='grow p-4 dark:bg-neutral-900'>
       <ParticipantGrid self={self} users={users} debug={debug} fullscreen={fullscreen} />
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -112,9 +113,9 @@ CallGrid.displayName = 'Call.Grid';
 type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onJoin' | 'onLeave'>;
 
 const CallToolbar = (props: CallToolbarProps) => (
-  <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+  <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
     <Toolbar isInRoom {...props} />
-  </div>
+  </Layout.Flex>
 );
 
 CallToolbar.displayName = 'Call.Toolbar';
