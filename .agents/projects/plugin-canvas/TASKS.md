@@ -214,6 +214,10 @@ before), not reasoned about from the source.
 
 ## Backlog
 
+- [ ] **Default test drawing.** A canvas drawing seeded in the personal space by default, next to the DXOS
+      README, exercising the engine (shapes, links, nested scene, layers, style classes).
+- [ ] **Slide decks laid out on a canvas.** Extend the slide deck so its slides are placed and arranged on a
+      canvas (one scene per deck, a slide per frame).
 - [x] **Type prototypes.** `createNodeRegistry(types, prototypes)` with `extends`; `rect` and `scene` share the
       `box` prototype (DESIGN §4c). Scene shapes: centred label, `contents` option, zoom-in control.
 - [ ] **Instance prototypes** (DESIGN §4c): `prototype?: NodeId`, `resolveNode`, inherited values as
