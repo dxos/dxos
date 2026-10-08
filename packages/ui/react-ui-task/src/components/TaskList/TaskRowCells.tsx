@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -54,12 +56,25 @@ export type TaskStatusControlProps = {
 /** The status glyph, which is also the control that completes the task. */
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const [snapshot] = useObject(task);
-  const status = snapshot.status ?? 'todo';
+  const [storedStatus] = useObject(task, 'status');
+  const status = storedStatus ?? 'todo';
   // Derived from the task rather than wired down from the list: a task an agent has taken and
   // started is being worked right now whoever renders it, and the row is the only place that says
-  // so. A human-started task keeps the static glyph.
-  const working = active ?? Task.isAgentWorking(snapshot);
+  // so. A human-started task keeps the static glyph. A boolean atom, so an edit elsewhere on the
+  // task does not re-render the glyph.
+  const agentWorking = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make((get) =>
+          Task.isAgentWorking({
+            status: get(Obj.atomProperty(task, 'status')),
+            assignee: get(Obj.atomProperty(task, 'assignee')),
+          }),
+        ),
+      [task],
+    ),
+  );
+  const working = active ?? agentWorking;
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: statusIcon(status), classNames: statusTextStyle(status) };
