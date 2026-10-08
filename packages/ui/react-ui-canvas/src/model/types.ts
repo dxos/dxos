@@ -93,7 +93,7 @@ export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
 /** The typefaces a shape's text may use: the theme's body face, or its fixed-width one. */
-export const FONT_FAMILIES = ['normal', 'monospace'] as const;
+export const FONT_FAMILIES = ['default', 'monospace'] as const;
 export type FontFamily = (typeof FONT_FAMILIES)[number];
 
 /** Where text sits across a shape, and down it. */

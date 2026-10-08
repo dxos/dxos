@@ -10,7 +10,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 
 import { FONT_FAMILIES, type FontFamily, NodeStyle } from '../../model/types.ts';
 
-const FAMILY_LABELS: Record<FontFamily, string> = { normal: 'Normal', monospace: 'Monospace' };
+const FAMILY_LABELS: Record<FontFamily, string> = { default: 'Default', monospace: 'Monospace' };
 
 const FAMILIES = FONT_FAMILIES.map((value) => ({ value, label: FAMILY_LABELS[value] }));
 
@@ -43,12 +43,12 @@ export const FontField: FormFieldRenderer = ({ jsonPath, readonly, onBlur }) => 
       <Form.Field path={jsonPath} label='Font' readonly={readonly}>
         <SelectControl
           items={FAMILIES}
-          value={style.fontFamily ?? 'normal'}
+          value={style.fontFamily ?? 'default'}
           readonly={readonly}
           onValueChange={(next) => {
             const fontFamily = FONT_FAMILIES.find((family) => family === next);
             // The body face is the default, so it is stored as unset.
-            update({ fontFamily: fontFamily === 'normal' ? undefined : fontFamily });
+            update({ fontFamily: fontFamily === 'default' ? undefined : fontFamily });
           }}
         />
       </Form.Field>

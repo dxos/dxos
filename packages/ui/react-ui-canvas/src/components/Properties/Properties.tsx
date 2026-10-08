@@ -320,79 +320,75 @@ export const Properties = ({
     <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
       <Panel.Header asChild>
         <Toolbar.Root data-testid='properties-toolbar'>
-        {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--frame-corners--regular'
-            label='New scene from selection'
-            disabled={readonly}
-            data-testid='properties-group'
-            onClick={onGroup}
-          />
-        )}
-        {styles && single && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--swatches--regular'
-            label='New class from selection'
-            disabled={readonly}
-            data-testid='properties-new-class'
-            onClick={onCreateClass}
-          />
-        )}
-        {links.length > 0 && links.length === elements.length && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--arrows-left-right--regular'
-            label='Flip direction'
-            disabled={readonly}
-            data-testid='properties-flip'
-            onClick={onFlip}
-          />
-        )}
+          {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--frame-corners--regular'
+              label='New scene from selection'
+              disabled={readonly}
+              data-testid='properties-group'
+              onClick={onGroup}
+            />
+          )}
+          {styles && single && (
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--swatches--regular'
+              label='New class from selection'
+              disabled={readonly}
+              data-testid='properties-new-class'
+              onClick={onCreateClass}
+            />
+          )}
+          {links.length > 0 && links.length === elements.length && (
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--arrows-left-right--regular'
+              label='Flip direction'
+              disabled={readonly}
+              data-testid='properties-flip'
+              onClick={onFlip}
+            />
+          )}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-      {schema ? (
-        <LayersContext.Provider value={layers}>
-          <StyleClassesContext.Provider value={styleMap}>
-            <SceneOptionsContext.Provider value={sceneOptions ?? []}>
-              <Form.Root
-                key={[...selection].join()}
-                schema={schema}
-                values={values}
-                fieldOverrides={fieldOverrides}
-                fieldMap={fieldMap}
-                db={db}
-                getOptions={getOptions}
-                readonly={readonly}
-                autoSave
-                onSave={onSave}
-              >
-                {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
-                <Form.Viewport scroll>
-                  <Form.Content>
-                    <Form.Fields exclude={HIDDEN} />
-                    {summary && (
-                      <p className='text-sm text-fg-muted' data-testid='properties-summary'>
-                        {summary}
-                      </p>
-                    )}
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
-            </SceneOptionsContext.Provider>
-          </StyleClassesContext.Provider>
-        </LayersContext.Provider>
-      ) : (
-        <p className='p-2 text-sm text-fg-muted' data-testid='properties-summary'>
-          {summary}
-        </p>
-      )}
+        {schema && (
+          <LayersContext.Provider value={layers}>
+            <StyleClassesContext.Provider value={styleMap}>
+              <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+                <Form.Root
+                  key={[...selection].join()}
+                  schema={schema}
+                  values={values}
+                  fieldOverrides={fieldOverrides}
+                  fieldMap={fieldMap}
+                  db={db}
+                  getOptions={getOptions}
+                  readonly={readonly}
+                  autoSave
+                  onSave={onSave}
+                >
+                  {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
+                  <Form.Viewport scroll>
+                    <Form.Content>
+                      <Form.Fields exclude={HIDDEN} />
+                    </Form.Content>
+                  </Form.Viewport>
+                </Form.Root>
+              </SceneOptionsContext.Provider>
+            </StyleClassesContext.Provider>
+          </LayersContext.Provider>
+        )}
       </Panel.Body>
+      <Panel.Footer classNames='text-center'>
+        <span className='text-sm text-fg-muted' data-testid='properties-summary'>
+          {summary}
+        </span>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

@@ -108,6 +108,6 @@ export const Test: Story = {
     const layer = await canvas.findByRole('combobox', { name: 'Layer' });
     await expect(layer).toHaveTextContent('Notes');
     // 3. The font row shows the face, unset reading as the body face.
-    await expect(await canvas.findByRole('combobox', { name: 'Font' })).toHaveTextContent('Normal');
+    await expect(await canvas.findByRole('combobox', { name: 'Font' })).toHaveTextContent('Default');
   },
 };
