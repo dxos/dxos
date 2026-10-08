@@ -920,6 +920,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             depth={0}
             liveDepth={liveDepth}
             selected={selection}
+            plain={drag?.kind === 'move'}
             hover={hover}
             opening={opening}
             focus={focus}

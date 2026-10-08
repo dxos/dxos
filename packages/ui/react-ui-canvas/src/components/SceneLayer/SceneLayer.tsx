@@ -82,6 +82,8 @@ export type SceneLayerProps = {
   depth: number;
   liveDepth: number;
   selected?: ReadonlySet<ElementId>;
+  /** The selection is drawn as it looks, without its outline (a move in flight shows the shapes themselves). */
+  plain?: boolean;
   hover?: NodeId;
   /** The portal a drill-in is animating into, while it is. */
   opening?: ElementId;
@@ -110,6 +112,7 @@ export const SceneLayer = memo(
     depth,
     liveDepth,
     selected,
+    plain,
     hover,
     opening,
     focus,
@@ -175,7 +178,7 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx(
                   'fill-none',
-                  selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(lines.get(link.id)?.hue).stroke,
+                  !plain && selected?.has(link.id) ? 'stroke-primary-500' : lineClasses(lines.get(link.id)?.hue).stroke,
                 )}
                 strokeWidth={LINK_WIDTH}
                 strokeDasharray={dashArray(lines.get(link.id)?.dash)}
@@ -196,7 +199,7 @@ export const SceneLayer = memo(
             zoom={zoom}
             depth={depth}
             liveDepth={liveDepth}
-            selected={selected?.has(node.id) ?? false}
+            selected={!plain && (selected?.has(node.id) ?? false)}
             hovered={hover === node.id}
             opening={opening === node.id}
             fade={focus && focus.id !== node.id ? fadeStyle : undefined}

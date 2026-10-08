@@ -117,8 +117,10 @@ export const ControlFrame = memo(
     const handleSize = 8 * unit;
     const portRadius = 5 * unit;
     const midpointRadius = 4 * unit;
-    const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
-    const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
+    // A move in flight shows the shapes themselves: no outlines or handles, just where they will land.
+    const chrome = drag?.kind === 'move' ? [] : [...selection];
+    const selectedNodes = chrome.map((id) => scene.nodes[id]).filter((node) => node !== undefined);
+    const selectedLinks = chrome.map((id) => scene.links[id]).filter((link) => link !== undefined);
     const lanes =
       lattice && selectedLinks.length > 0
         ? new Map(
@@ -310,7 +312,7 @@ export const ControlFrame = memo(
             y={frame.y}
             width={frame.width}
             height={frame.height}
-            className={blocked ? 'fill-error-surface stroke-error-border' : 'fill-primary-500/10 stroke-primary-500'}
+            className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-primary-500')}
             data-blocked={blocked || undefined}
             strokeWidth={unit}
             strokeDasharray={`${4 * unit} ${4 * unit}`}
