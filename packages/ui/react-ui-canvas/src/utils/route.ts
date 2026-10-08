@@ -42,7 +42,11 @@ const CORNER_RADIUS = DEFAULT_GRID;
 /** How far a smart link's stub leaves its port, in scene px (half a major cell). */
 const SMART_STUB = MAJOR_GRID / 2;
 
-export type RouteEnd = { point: Point; side: Side };
+/**
+ * A resolved link end. `free` marks a point end (one being dragged, or left on empty canvas): it has no port to
+ * leave along, so a route runs straight to it rather than turning to its side's normal.
+ */
+export type RouteEnd = { point: Point; side: Side; free?: boolean };
 
 const pt = ({ x, y }: Point) => `${x} ${y}`;
 
@@ -52,12 +56,12 @@ const curveControls = (from: RouteEnd, to: RouteEnd): [Point, Point] => {
   const dx = to.point.x - from.point.x;
   const dy = to.point.y - from.point.y;
   const tangent = Math.max(MIN_TANGENT, Math.hypot(dx, dy) * TANGENT_RATIO);
-  const fromNormal = sideNormal(from.side);
-  const toNormal = sideNormal(to.side);
-  return [
-    { x: from.point.x + fromNormal.x * tangent, y: from.point.y + fromNormal.y * tangent },
-    { x: to.point.x + toNormal.x * tangent, y: to.point.y + toNormal.y * tangent },
-  ];
+  // A free end takes no tangent: its control point sits on the end, so the curve arrives straight at it.
+  const control = (end: RouteEnd): Point => {
+    const normal = sideNormal(end.side);
+    return end.free ? end.point : { x: end.point.x + normal.x * tangent, y: end.point.y + normal.y * tangent };
+  };
+  return [control(from), control(to)];
 };
 
 /** Cubic Bézier whose control points sit `tangent` px out along each port's normal. */
@@ -122,7 +126,14 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
     case 'spline':
       return splinePath([from.point, ...link.points, to.point]);
     case 'smart':
-      return splinePath((lattice && gutterRoute(lattice.nodes, lattice.spec, from, to)) ?? smartPoints(from, to));
+      // A free end (one being dragged) takes no gutter: the route runs straight to it.
+      return splinePath(
+        (lattice && !from.free && !to.free && gutterRoute(lattice.nodes, lattice.spec, from, to)) ||
+          smartPoints(from, to),
+      );
+    default:
+      // A link type this engine does not know (saved by a newer one) draws as the core base: a straight line.
+      return linePath(from.point, to.point);
   }
 };
 
@@ -135,14 +146,12 @@ export type LatticeRoute = { spec: LatticeSpec; nodes: readonly Node[] };
  * ports imply rather than a straight line cutting across their own nodes.
  */
 export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
-  const fromNormal = sideNormal(from.side);
-  const toNormal = sideNormal(to.side);
-  return [
-    from.point,
-    { x: from.point.x + fromNormal.x * SMART_STUB, y: from.point.y + fromNormal.y * SMART_STUB },
-    { x: to.point.x + toNormal.x * SMART_STUB, y: to.point.y + toNormal.y * SMART_STUB },
-    to.point,
-  ];
+  // A free end has no stub: the route runs straight to it.
+  const stub = (end: RouteEnd): Point[] => {
+    const normal = sideNormal(end.side);
+    return end.free ? [] : [{ x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB }];
+  };
+  return [from.point, ...stub(from), ...stub(to).reverse(), to.point];
 };
 
 export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };
@@ -193,8 +202,8 @@ const resolveEnds = (
   if (isPointEndpoint(source)) {
     if (isPointEndpoint(target)) {
       return [
-        { point: source.point, side: sideToward(source.point, target.point) },
-        { point: target.point, side: sideToward(target.point, source.point) },
+        { point: source.point, side: sideToward(source.point, target.point), free: true },
+        { point: target.point, side: sideToward(target.point, source.point), free: true },
       ];
     }
     const terminal = terminalOf(scene, registry, target);
@@ -203,7 +212,7 @@ const resolveEnds = (
       return undefined;
     }
     const to = routeEnd(terminal, port);
-    return [{ point: source.point, side: sideToward(source.point, to.point) }, to];
+    return [{ point: source.point, side: sideToward(source.point, to.point), free: true }, to];
   }
   if (isPointEndpoint(target)) {
     const terminal = terminalOf(scene, registry, source);
@@ -212,7 +221,7 @@ const resolveEnds = (
       return undefined;
     }
     const from = routeEnd(terminal, port);
-    return [from, { point: target.point, side: sideToward(target.point, from.point) }];
+    return [from, { point: target.point, side: sideToward(target.point, from.point), free: true }];
   }
   const sourceTerminal = terminalOf(scene, registry, source);
   const targetTerminal = terminalOf(scene, registry, target);

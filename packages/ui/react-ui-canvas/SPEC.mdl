@@ -519,6 +519,20 @@ feat F-3: Selection and editing
   req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
   req F-3.10: The properties panel edits the selected element's own schema through `update` intents,
     `style.fontSize` among them: set, it overrides the view's own size class for every text part.
+  req F-3.11: A scene shape's Scene picks any scene of the store for it to open, so several shapes may
+    share one scene; a scene that would open the current path again is not offered (`sceneOptions`).
+  req F-3.12: Style classes are named looks kept beside the scenes (`SceneStore.styles`): an element
+    naming one in `class` derives its style or line from it. Taking a class drops the element's own
+    look; editing a classed element's look edits the class, so every element of it changes together.
+    "New class from selection" makes a class of the selected element's look and moves the element onto it.
+  req F-3.14: Nodes and links share one `style` object: its common base (`lineStyleFields`: colour and line
+    style) is a link's whole style and the start of a node's (`NodeStyle`), which adds fill, tone, frame and text.
+    A selection of several kinds edits only the fields every kind declares (`commonSchema` intersects nested
+    structs), with one style picker that offers the fill rows only when every element is a node; a class's style
+    restyles nodes and links alike, a link taking its common base.
+  req F-3.13: "New scene from selection" moves the selected nodes, and the links between them, into a new
+    scene opened by a scene shape over their bounds; a link crossing out of the group stays, re-attached to
+    the shape. It is one undo step (`groupIntoScene`).
 ```
 
 ```mdl
@@ -543,8 +557,9 @@ feat F-6: Open registry
   req F-6.1: The engine operates on `NodeBase`; a host's type is not a special case.
   req F-6.2: A host composes its registry from the built-ins and its own defs, and its scene schema with
     `createSceneSchema`.
-  req F-6.3: An unknown type still renders (`UnknownNodeView`) rather than throwing: a scene written by
-    a newer host opens.
+  req F-6.3: An unknown type still renders rather than throwing, as the core base (`BaseNode`): a node as
+    a box showing its `label`, with ports and an editable label, and a link as a straight line. A scene
+    written by a newer host, or one whose plugin is off, opens.
   req F-6.4: Ports come from the definition; a node may still carry its own.
 ```
 
