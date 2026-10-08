@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -15,6 +15,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { log } from '@dxos/log';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
@@ -62,28 +63,37 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { preset, ...presetProps } = usePresets(settings, chat);
 
   const event = useMemo(() => new Event<ChatEvent>(), []);
+  // Held from send until the flush settles, so a second send cannot add the same draft again.
+  const submitting = useRef(false);
   useEffect(() => {
     return event.on((ev) => {
       if (ev.type !== 'submit') {
         return;
       }
       const text = ev.text.trim();
-      if (!space || !chat || !context || text.length === 0) {
+      if (!space || !chat || !context || text.length === 0 || submitting.current) {
         return;
       }
+      submitting.current = true;
 
       // Adding the chat stores its feed with it, so the draft's bindings can be written; they land
       // before the chat view opens and reads them.
       space.db.add(chat);
       const chatPath = getChatPath(space.db.spaceId, chat.id);
-      void context.flush().then(() => {
-        atomRegistry.update(stateAtom, (current) => ({
-          ...current,
-          pendingPrompts: { ...current.pendingPrompts, [chatPath]: text },
-        }));
-        void invokePromise(LayoutOperation.Open, { subject: [chatPath] });
-        setNonce((current) => current + 1);
-      });
+      void context
+        .flush()
+        .then(() => {
+          atomRegistry.update(stateAtom, (current) => ({
+            ...current,
+            pendingPrompts: { ...current.pendingPrompts, [chatPath]: text },
+          }));
+          void invokePromise(LayoutOperation.Open, { subject: [chatPath] });
+        })
+        .catch((err) => log.catch(err))
+        .finally(() => {
+          submitting.current = false;
+          setNonce((current) => current + 1);
+        });
     });
   }, [event, space, chat, context, atomRegistry, stateAtom, invokePromise]);
 
