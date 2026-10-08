@@ -39,9 +39,14 @@ const toLines = (text: string): string[] =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
-/** The parts a node's type declares; none for a type the registry does not know. */
-export const nodeParts = (registry: NodeRegistry, node: Node): readonly PartField[] =>
-  nodeDef(registry, node)?.parts ?? [];
+/** The core base's one part: the label a node of an unknown type is edited by (see `BaseNode`). */
+const BASE_PARTS: readonly PartField[] = [{ field: 'label' }];
+
+/** The parts a node's type declares; a type the registry does not know has the core base's label. */
+export const nodeParts = (registry: NodeRegistry, node: Node): readonly PartField[] => {
+  const def = nodeDef(registry, node);
+  return def ? (def.parts ?? []) : BASE_PARTS;
+};
 
 const partOf = (registry: NodeRegistry, node: Node, part: PartKey): PartField | undefined =>
   nodeParts(registry, node).find(({ field }) => field === part);

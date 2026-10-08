@@ -11,7 +11,7 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
 import type * as Util from '@dxos/react-ui/Util';
@@ -19,7 +19,7 @@ import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
-import { type Drag, type SceneViewAtoms, createSceneViewAtoms } from '../../model/atoms.ts';
+import { type Drag, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
@@ -35,14 +35,17 @@ import {
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
+  type Bounds,
   type Camera,
   DEFAULT_GRID,
   type ElementId,
   type Endpoint,
   type Intent,
+  type LinkId,
   MAJOR_GRID_RATIO,
   type Node,
   type NodeType,
+  type Point,
   type Scene,
   type SceneId,
   isPointEndpoint,
@@ -61,11 +64,13 @@ import {
 } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
+import { groupIntoScene } from '../../utils/group.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
+import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
-import { redo, undo } from '../../utils/undo.ts';
+import { recordScenes, redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -87,6 +92,12 @@ const DEFAULT_MARGIN = 2;
 const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
+/** How long a link stays hovered after the pointer leaves it, so the pointer can reach its end handles. */
+const LINK_HOVER_GRACE_MS = 150;
+
+/** How long a move's pointer rests before the shapes snap to where they will land. */
+const SETTLE_MS = 100;
+
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
@@ -264,15 +275,15 @@ const SceneViewRoot = ({
 
   // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
   const onUndo = useCallback(() => {
-    if (!readonly && undo(projection, registry, atoms.undo, sceneId)) {
+    if (!readonly && undo(projection, registry, atoms.undo, sceneId, store)) {
       select([]);
     }
-  }, [readonly, projection, registry, atoms.undo, sceneId, select]);
+  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
   const onRedo = useCallback(() => {
-    if (!readonly && redo(projection, registry, atoms.undo, sceneId)) {
+    if (!readonly && redo(projection, registry, atoms.undo, sceneId, store)) {
       select([]);
     }
-  }, [readonly, projection, registry, atoms.undo, sceneId, select]);
+  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
 
   //
   // Pointer state machine.
@@ -410,18 +421,51 @@ const SceneViewRoot = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
   // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  const { displayScene, blocked } = useMemo<{ displayScene: Scene; blocked: boolean }>(() => {
+  // A move follows the pointer while it moves; once it rests for `SETTLE_MS`, the shapes snap to where they will land.
+  const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    setSettled(false);
+    if (!moveRaw) {
+      return;
+    }
+    const timer = setTimeout(() => setSettled(true), SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [moveRaw?.x, moveRaw?.y]);
+
+  const { displayScene, blocked, landing } = useMemo<{
+    displayScene: Scene;
+    blocked: boolean;
+    /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
+    landing?: Bounds[];
+  }>(() => {
     const preview = (intent: Intent) => {
       const constrained = projection.constrain ? projection.constrain(intent) : intent;
       return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
     };
     if (drag?.kind === 'move') {
       // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
-      let next = 0;
-      const copy = drag.copy
-        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
-        : undefined;
-      return preview(copy ? copy.intent : { kind: 'move', ids: drag.ids, delta: drag.delta });
+      const { ids, copy } = drag;
+      const moveBy = (delta: Point): Intent => {
+        let next = 0;
+        const duplicate = copy
+          ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
+          : undefined;
+        return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
+      };
+      // The nodes follow the pointer smoothly; the frames they will snap to on the drop are drawn under them.
+      const landed = preview(moveBy(drag.delta));
+      const moved = copy
+        ? Object.values(landed.displayScene.nodes).filter((node) => !scene.nodes[node.id])
+        : ids.flatMap((id) => landed.displayScene.nodes[id] ?? []);
+      return settled
+        ? { displayScene: landed.displayScene, blocked: landed.blocked }
+        : {
+            displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
+            blocked: landed.blocked,
+            // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
+            landing: landed.blocked ? moved.map(nodeBounds) : undefined,
+          };
     }
     if (drag?.kind === 'resize') {
       return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
@@ -459,7 +503,7 @@ const SceneViewRoot = ({
       };
     }
     return { displayScene: scene, blocked: false };
-  }, [scene, drag, createPreview, projection, minor]);
+  }, [scene, drag, settled, createPreview, projection, minor]);
 
   /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
   const createFrame = useMemo(() => {
@@ -479,9 +523,26 @@ const SceneViewRoot = ({
   );
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 
+  // Leaving a link waits a moment before it clears, so the pointer can reach the end handles drawn over it.
+  const linkHover = useAtomValue(atoms.linkHover);
+  const linkHoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const onLinkHover = useCallback(
+    (id: LinkId | undefined) => {
+      clearTimeout(linkHoverTimer.current);
+      if (id) {
+        registry.set(atoms.linkHover, id);
+      } else {
+        linkHoverTimer.current = setTimeout(() => registry.set(atoms.linkHover, undefined), LINK_HOVER_GRACE_MS);
+      }
+    },
+    [registry, atoms.linkHover],
+  );
+  useEffect(() => () => clearTimeout(linkHoverTimer.current), []);
+
   const handlers = useMemo<ElementHandlers>(
     () => ({
       onNodePointerDown,
+      onLinkHover,
       onLinkPointerDown,
       onLinkDoubleClick,
       onLinkContextMenu,
@@ -489,7 +550,16 @@ const SceneViewRoot = ({
       onPartCancel,
       onNodeOpen: drillIn,
     }),
-    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel, drillIn],
+    [
+      onNodePointerDown,
+      onLinkHover,
+      onLinkPointerDown,
+      onLinkDoubleClick,
+      onLinkContextMenu,
+      onPartCommit,
+      onPartCancel,
+      drillIn,
+    ],
   );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
@@ -746,7 +816,9 @@ const SceneViewRoot = ({
       tool={tool}
       debug={debug}
       createFrame={createFrame}
+      landing={landing}
       handlers={handlers}
+      linkHover={linkHover}
       select={select}
       toolbarActions={toolbarActions}
       navigating={navigating}
@@ -845,7 +917,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     drag,
     debug,
     createFrame,
+    landing,
     handlers,
+    linkHover,
     select,
     navigating,
     opening,
@@ -896,7 +970,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             depth={0}
             liveDepth={liveDepth}
             selected={selection}
+            plain={isMoving(drag)}
             hover={hover}
+            hoveredLink={linkHover}
             opening={opening}
             focus={focus}
             editing={editing}
@@ -913,11 +989,14 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           registry={nodeRegistry}
           selection={selection}
           hover={hover}
+          hoveredLink={drag ? undefined : linkHover}
+          onLinkHover={handlers.onLinkHover}
           selectedPoint={selectedPoint}
           zoom={camera.zoom}
           drag={drag}
           capabilities={capabilities}
           createFrame={createFrame}
+          landing={landing}
           blocked={blocked}
           lattice={latticeOn ? projection.lattice : undefined}
           onHandlePointerDown={onHandlePointerDown}
@@ -1072,7 +1151,10 @@ SceneViewPalette.displayName = 'SceneView.Palette';
 //
 
 export type SceneViewPropertiesProps = Util.ThemedClassName<
-  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'>
+  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+    /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
+    sceneFilter?: (id: SceneId) => boolean;
+  }
 >;
 
 /** The selected element's properties as a floating panel; absent while nothing is selected. */
@@ -1082,8 +1164,37 @@ const SceneViewProperties = ({
   db,
   getOptions,
   overrides,
+  sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection } = useSceneViewContext('SceneView.Properties');
+  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+    useSceneViewContext('SceneView.Properties');
+  const registry = useRegistry();
+  const scenes = useAtomValue(store.scenes);
+  const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
+
+  // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
+  const onGroup = useCallback(() => {
+    const id = createId('scene');
+    const group = groupIntoScene(registry.get(projection.scene), selection, id);
+    if (!group) {
+      return;
+    }
+    const before = registry.get(store.scenes);
+    registry.set(store.scenes, { ...before, [id]: { ...group.child, name: 'Untitled' } });
+    projection.apply({ kind: 'batch', intents: group.intents });
+    // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
+    // it the new scene would be an orphan, so it goes and the selection stays.
+    if (!registry.get(projection.scene).nodes[id]) {
+      const { [id]: _, ...scenes } = registry.get(store.scenes);
+      registry.set(store.scenes, scenes);
+      return;
+    }
+    // One undo step takes the new scene away with the shape that opens it.
+    recordScenes(registry, atoms.undo, path[path.length - 1], before);
+    registry.set(atoms.selection, new Set([id]));
+    registry.set(atoms.point, undefined);
+  }, [registry, projection, selection, store.scenes, atoms.selection, atoms.point, atoms.undo, path]);
+
   if (selection.size === 0) {
     return null;
   }
@@ -1098,6 +1209,9 @@ const SceneViewProperties = ({
       db={db}
       getOptions={getOptions}
       overrides={overrides}
+      sceneOptions={options}
+      styles={store.styles}
+      onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
       readonly={!capabilities.update}
     />
   );

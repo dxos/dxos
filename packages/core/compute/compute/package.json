@@ -114,6 +114,11 @@
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
     },
+    "./ShellService": {
+      "source": "./src/ShellService.ts",
+      "types": "./dist/types/src/ShellService.d.ts",
+      "import": "./dist/lib/ShellService.mjs"
+    },
     "./SqlService": {
       "source": "./src/SqlService.ts",
       "types": "./dist/types/src/SqlService.d.ts",

@@ -9,13 +9,16 @@ import { type ContentMap } from '@dxos/diagram';
 import {
   ROOT_SCENE_ID,
   canvasRecordOf,
+  deleteStyleClass,
   hasLegacyRoot,
   migrateContent,
   readScenes,
   rootOf,
   seedContent,
+  styleClassUses,
   updateCanvasRecord,
   writeScenes,
+  writeStyles,
 } from './content.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
@@ -68,6 +71,26 @@ describe('content', () => {
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
   });
 
+  test('a link saved with a line reads it as its style', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    content['link:l'] = {
+      kind: 'link',
+      scene: ROOT_SCENE_ID,
+      link: {
+        type: 'line',
+        id: 'l',
+        z: 'a',
+        source: { point: { x: 0, y: 0 } },
+        target: { point: { x: 1, y: 0 } },
+        line: { hue: 'red', dash: 'dotted' },
+      },
+    };
+    const link = readScenes(content)[ROOT_SCENE_ID].links.l;
+    expect(link.style).toEqual({ hue: 'red', lineStyle: 'dotted' });
+    expect('line' in link).toBe(false);
+  });
+
   test('a link saved as directed reads as an arrow at its end', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
@@ -86,5 +109,48 @@ describe('content', () => {
     const link = readScenes(content)[ROOT_SCENE_ID].links.l;
     expect(link.ends).toEqual({ end: 'arrow' });
     expect('directed' in link).toBe(false);
+  });
+
+  test('a deleted style class leaves its look on the elements that took it', ({ expect }) => {
+    const frame = { center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
+    const content: ContentMap = {};
+    seedContent(content);
+    const node = (id: string, values: object) => ({
+      kind: 'node',
+      scene: ROOT_SCENE_ID,
+      node: { id, type: 'rect', z: 'a0', ...frame, ...values },
+    });
+    content['node:a'] = node('a', { class: 'warn', style: { rounded: true } });
+    content['node:b'] = node('b', { class: 'warn' });
+    content['node:c'] = node('c', {});
+    content['link:l'] = {
+      kind: 'link',
+      scene: ROOT_SCENE_ID,
+      link: { id: 'l', type: 'line', z: 'a0', source: { node: 'a' }, target: { node: 'b' }, class: 'warn' },
+    };
+    const styles: Record<string, unknown> = {
+      warn: { id: 'warn', name: 'Warning', style: { hue: 'red', lineStyle: 'dashed', rounded: true } },
+    };
+    expect(styleClassUses(content)).toEqual({ warn: 3 });
+
+    deleteStyleClass(content, styles, 'warn');
+    expect(styles).toEqual({});
+    expect(styleClassUses(content)).toEqual({});
+    const { nodes, links } = readScenes(content)[ROOT_SCENE_ID];
+    expect(nodes.a.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
+    expect(nodes.b.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
+    expect(nodes.c.style).toBeUndefined();
+    // A link keeps only the common base of the class's style.
+    expect(links.l.style).toEqual({ hue: 'red', lineStyle: 'dashed' });
+  });
+
+  test('writing classes keeps a record this host cannot read', ({ expect }) => {
+    // A record that fails this host's schema (a newer host's) never reaches the view, so its absence there is no delete.
+    const target: Record<string, unknown> = {
+      removed: { id: 'removed', name: 'Removed' },
+      unreadable: { id: 'unreadable', title: 'Written by a newer host' },
+    };
+    writeStyles(target, { kept: { id: 'kept', name: 'Kept' } });
+    expect(Object.keys(target).sort()).toEqual(['kept', 'unreadable']);
   });
 });
