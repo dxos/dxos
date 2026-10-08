@@ -62,6 +62,13 @@ export type Drag =
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
   | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
 
+/**
+ * Whether a move has left where it was pressed: until it does, a press on a selected node is a click, and the
+ * selection keeps its outline and handles rather than flickering off and on.
+ */
+export const isMoving = (drag: Drag | undefined): boolean =>
+  drag?.kind === 'move' && drag.raw !== undefined && (drag.raw.x !== 0 || drag.raw.y !== 0);
+
 export type HistoryEntry = { path: SceneId[]; camera: Camera };
 
 export type ControlPointRef = { link: LinkId; index: number };

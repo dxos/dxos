@@ -19,7 +19,7 @@ import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
-import { type Drag, type SceneViewAtoms, createSceneViewAtoms } from '../../model/atoms.ts';
+import { type Drag, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
@@ -970,7 +970,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             depth={0}
             liveDepth={liveDepth}
             selected={selection}
-            plain={drag?.kind === 'move'}
+            plain={isMoving(drag)}
             hover={hover}
             hoveredLink={linkHover}
             opening={opening}

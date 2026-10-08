@@ -12,7 +12,7 @@ import React, { memo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
+import { type ControlPointRef, type Drag, type Handle, isMoving } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type NodeRegistry } from '../../model/registry.ts';
 import {
@@ -125,7 +125,7 @@ export const ControlFrame = memo(
     const portRadius = 5 * unit;
     const midpointRadius = 4 * unit;
     // A move in flight shows the shapes themselves: no outlines or handles, just where they will land.
-    const chrome = drag?.kind === 'move' ? [] : [...selection];
+    const chrome = isMoving(drag) ? [] : [...selection];
     const selectedNodes = chrome.map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = chrome.map((id) => scene.links[id]).filter((link) => link !== undefined);
     const linkUnder = hoveredLink && !selection.has(hoveredLink) ? scene.links[hoveredLink] : undefined;
