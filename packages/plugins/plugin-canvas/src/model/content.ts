@@ -234,6 +234,46 @@ export const writeStyles = (target: Record<string, unknown>, styles: StyleMap): 
   }
 };
 
+/** The style class a node or link record names. */
+const elementClass = (record: unknown): string | undefined => {
+  if (isNodeRecord(record)) {
+    return record.node.class;
+  }
+  return isLinkRecord(record) ? record.link.class : undefined;
+};
+
+/** How many nodes and links name each style class. */
+export const styleClassUses = (content: ContentMap): Record<string, number> => {
+  const uses: Record<string, number> = {};
+  for (const record of Object.values(content)) {
+    const id = elementClass(record);
+    if (id) {
+      uses[id] = (uses[id] ?? 0) + 1;
+    }
+  }
+  return uses;
+};
+
+/**
+ * Removes a style class, in place. The elements that took it keep its look as their own (under anything they set
+ * themselves), so deleting a class changes how nothing looks, only what restyles together.
+ */
+export const deleteStyleClass = (content: ContentMap, styles: Record<string, unknown>, id: string): void => {
+  const [styleClass] = Object.values(readStyles({ [id]: styles[id] }));
+  delete styles[id];
+  for (const [key, record] of Object.entries(content)) {
+    if (isNodeRecord(record) && record.node.class === id) {
+      const { class: _, ...node } = record.node;
+      const style = { ...styleClass?.style, ...node.style };
+      content[key] = { ...record, node: { ...node, ...(Object.keys(style).length > 0 ? { style } : {}) } };
+    } else if (isLinkRecord(record) && record.link.class === id) {
+      const { class: _, ...link } = record.link;
+      const line = { ...styleClass?.line, ...link.line };
+      content[key] = { ...record, link: { ...link, ...(Object.keys(line).length > 0 ? { line } : {}) } };
+    }
+  }
+};
+
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
   const nodes: Record<SceneId, Record<string, Node>> = {};

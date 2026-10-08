@@ -9,11 +9,13 @@ import { type ContentMap } from '@dxos/diagram';
 import {
   ROOT_SCENE_ID,
   canvasRecordOf,
+  deleteStyleClass,
   hasLegacyRoot,
   migrateContent,
   readScenes,
   rootOf,
   seedContent,
+  styleClassUses,
   updateCanvasRecord,
   writeScenes,
 } from './content.ts';
@@ -86,5 +88,37 @@ describe('content', () => {
     const link = readScenes(content)[ROOT_SCENE_ID].links.l;
     expect(link.ends).toEqual({ end: 'arrow' });
     expect('directed' in link).toBe(false);
+  });
+
+  test('a deleted style class leaves its look on the elements that took it', ({ expect }) => {
+    const frame = { center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
+    const content: ContentMap = {};
+    seedContent(content);
+    const node = (id: string, values: object) => ({
+      kind: 'node',
+      scene: ROOT_SCENE_ID,
+      node: { id, type: 'rect', z: 'a0', ...frame, ...values },
+    });
+    content['node:a'] = node('a', { class: 'warn', style: { rounded: true } });
+    content['node:b'] = node('b', { class: 'warn' });
+    content['node:c'] = node('c', {});
+    content['link:l'] = {
+      kind: 'link',
+      scene: ROOT_SCENE_ID,
+      link: { id: 'l', type: 'line', z: 'a0', source: { node: 'a' }, target: { node: 'b' }, class: 'warn' },
+    };
+    const styles: Record<string, unknown> = {
+      warn: { id: 'warn', name: 'Warning', style: { hue: 'red' }, line: { dash: 'dashed' } },
+    };
+    expect(styleClassUses(content)).toEqual({ warn: 3 });
+
+    deleteStyleClass(content, styles, 'warn');
+    expect(styles).toEqual({});
+    expect(styleClassUses(content)).toEqual({});
+    const { nodes, links } = readScenes(content)[ROOT_SCENE_ID];
+    expect(nodes.a.style).toEqual({ hue: 'red', rounded: true });
+    expect(nodes.b.style).toEqual({ hue: 'red' });
+    expect(nodes.c.style).toBeUndefined();
+    expect(links.l.line).toEqual({ dash: 'dashed' });
   });
 });
