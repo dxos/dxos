@@ -133,6 +133,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-search"
+    },
+    {
       "path": "../plugin-space"
     },
     {
