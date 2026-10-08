@@ -20,9 +20,6 @@ const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
 const text = (value: string): ContentBlock.Any[] => [{ _tag: 'text', text: value }];
 
-const make = (payload: Trajectory.Payload, sender: Trajectory.Sender, thread?: Trajectory.EventId) =>
-  Trajectory.make({ payload, sender, thread });
-
 /** Renders prompt entries as `role: text` lines, the form README.md uses. */
 const lines = (entries: readonly Reducer.PromptEntry[]) =>
   entries.map(
@@ -32,15 +29,18 @@ const lines = (entries: readonly Reducer.PromptEntry[]) =>
 
 describe('samples', () => {
   test('1. a chat turn with a tool call and a prompt typed mid-turn', ({ expect }) => {
-    const question = make({ _tag: 'message', blocks: text('What is the weather in Oslo?') }, alice);
-    const turn = make({ _tag: 'turnBegin', model }, agent);
-    const followUp = make({ _tag: 'message', blocks: text('And in Bergen?') }, alice);
+    const question = Trajectory.make({
+      payload: { _tag: 'message', blocks: text('What is the weather in Oslo?') },
+      sender: alice,
+    });
+    const turn = Trajectory.make({ payload: { _tag: 'turnBegin', model }, sender: agent });
+    const followUp = Trajectory.make({ payload: { _tag: 'message', blocks: text('And in Bergen?') }, sender: alice });
     const events = [
       question,
-      make({ _tag: 'promptConsume', message: question.id }, agent),
+      Trajectory.make({ payload: { _tag: 'promptConsume', message: question.id }, sender: agent }),
       turn,
-      make(
-        {
+      Trajectory.make({
+        payload: {
           _tag: 'message',
           blocks: [
             {
@@ -52,11 +52,11 @@ describe('samples', () => {
             },
           ],
         },
-        agent,
-      ),
+        sender: agent,
+      }),
       followUp,
-      make(
-        {
+      Trajectory.make({
+        payload: {
           _tag: 'message',
           blocks: [
             {
@@ -68,13 +68,18 @@ describe('samples', () => {
             },
           ],
         },
-        tool,
-      ),
-      make({ _tag: 'message', blocks: text('Oslo is 12°C with rain.') }, agent),
-      make(
-        { _tag: 'turnEnd', begin: turn.id, finishReason: 'stop', usage: { inputTokens: 900, cacheReadTokens: 0 } },
-        agent,
-      ),
+        sender: tool,
+      }),
+      Trajectory.make({ payload: { _tag: 'message', blocks: text('Oslo is 12°C with rain.') }, sender: agent }),
+      Trajectory.make({
+        payload: {
+          _tag: 'turnEnd',
+          begin: turn.id,
+          finishReason: 'stop',
+          usage: { inputTokens: 900, cacheReadTokens: 0 },
+        },
+        sender: agent,
+      }),
     ];
 
     const afterTurn = Reducer.run(Reducer.prompt, events);
@@ -90,7 +95,7 @@ describe('samples', () => {
     expect(session.turn).to.be.undefined;
 
     // The next turn picks up the queued prompt; the earlier entries are untouched, so the provider cache hits.
-    const next = make({ _tag: 'promptConsume', message: followUp.id }, agent);
+    const next = Trajectory.make({ payload: { _tag: 'promptConsume', message: followUp.id }, sender: agent });
     const nextPrompt = Reducer.run(Reducer.prompt, [next], afterTurn);
     expect(lines(nextPrompt.state.entries)).to.deep.eq([...lines(afterTurn.state.entries), 'user: And in Bergen?']);
 
@@ -105,27 +110,43 @@ describe('samples', () => {
   });
 
   test('2. an alarm, a subagent thread and a compaction', ({ expect }) => {
-    const request = make({ _tag: 'message', blocks: text('Watch CI and tell me what fails.') }, alice);
-    const set = make({ _tag: 'alarmSet', wakeAt: 1_800_000, message: 'check CI' }, agent);
-    const subagent = make({ _tag: 'threadOpen', mode: 'fresh', purpose: 'triage failures' }, agent);
-    const notice = make({ _tag: 'message', blocks: text('CI finished: 2 failures.') }, alarm);
+    const request = Trajectory.make({
+      payload: { _tag: 'message', blocks: text('Watch CI and tell me what fails.') },
+      sender: alice,
+    });
+    const set = Trajectory.make({
+      payload: { _tag: 'alarmSet', wakeAt: 1_800_000, message: 'check CI' },
+      sender: agent,
+    });
+    const subagent = Trajectory.make({
+      payload: { _tag: 'threadOpen', mode: 'fresh', purpose: 'triage failures' },
+      sender: agent,
+    });
+    const notice = Trajectory.make({
+      payload: { _tag: 'message', blocks: text('CI finished: 2 failures.') },
+      sender: alarm,
+    });
     const events = [
       request,
-      make({ _tag: 'promptConsume', message: request.id }, agent),
+      Trajectory.make({ payload: { _tag: 'promptConsume', message: request.id }, sender: agent }),
       set,
       subagent,
-      make({ _tag: 'message', blocks: text('Reading the failing logs.') }, agent, subagent.id),
-      make({ _tag: 'alarmFire', alarm: set.id }, alarm),
+      Trajectory.make({
+        payload: { _tag: 'message', blocks: text('Reading the failing logs.') },
+        sender: agent,
+        thread: subagent.id,
+      }),
+      Trajectory.make({ payload: { _tag: 'alarmFire', alarm: set.id }, sender: alarm }),
       notice,
-      make(
-        {
+      Trajectory.make({
+        payload: {
           _tag: 'threadMerge',
           thread: subagent.id,
           mode: 'summary',
           summary: text('Both failures are a flaky echo test.'),
         },
-        agent,
-      ),
+        sender: agent,
+      }),
     ];
 
     const prompt = Reducer.run(Reducer.prompt, events);
@@ -142,15 +163,15 @@ describe('samples', () => {
     const compacted = Reducer.run(
       Reducer.prompt,
       [
-        make(
-          {
+        Trajectory.make({
+          payload: {
             _tag: 'compact',
             from: request.id,
             to: notice.id,
             summary: text('Alice asked to watch CI; it finished with 2 failures.'),
           },
-          agent,
-        ),
+          sender: agent,
+        }),
       ],
       prompt,
     );

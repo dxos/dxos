@@ -16,7 +16,7 @@ _0 error(s), 1 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 464c13c3-1 - unresolved - no-trivial-wrappers-over-official-apis - packages/core/compute/trajectory/src/samples.test.ts:23
+- 464c13c3-1 - resolved - no-trivial-wrappers-over-official-apis - packages/core/compute/trajectory/src/samples.test.ts:23
 
 ## Issues
 
