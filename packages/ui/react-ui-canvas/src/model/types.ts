@@ -135,6 +135,14 @@ export const boxFields = {
   label: Schema.optional(Schema.String),
 };
 
+/**
+ * The core base every node falls back to: its frame, ports, style and `label`. A node whose type the registry does
+ * not know (its plugin is off) is drawn and edited as this, a box showing its label, so a type that keeps its title
+ * in `label` still reads as itself.
+ */
+export const BaseNode = Schema.Struct({ type: Schema.String, ...nodeBase, ...boxFields });
+export type BaseNode = Schema.Schema.Type<typeof BaseNode>;
+
 export const RectNode = Schema.Struct({
   type: Schema.Literal('rect'),
   ...nodeBase,

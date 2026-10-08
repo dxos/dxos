@@ -27,10 +27,10 @@ describe('ClassNode', () => {
     const {
       scenes: [scene],
     } = SceneBuilder.scene('s', [
-      SceneBuilder.node('class', 'c', { x: 0, y: 0, width: 256, height: 256 }).properties({ name: 'Person' }),
+      SceneBuilder.node('class', 'c', { x: 0, y: 0, width: 256, height: 256 }).properties({ label: 'Person' }),
     ]).build(registry);
     const node = scene.nodes.c;
-    expect(ClassNode.isClassNode(node) && [node.name, node.attributes, node.methods]).toEqual([
+    expect(ClassNode.isClassNode(node) && [node.label, node.attributes, node.methods]).toEqual([
       'Person',
       ['id: string'],
       ['save(): void'],

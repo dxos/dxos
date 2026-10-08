@@ -335,7 +335,8 @@ const NodeFrame = memo(
     const { node, registry, selected } = props;
     const bounds = nodeBounds(node);
     const interactive = handlers !== undefined && !ghost;
-    const Component = nodeDef(registry, node)?.component ?? UnknownNodeView;
+    // A type the registry does not know is drawn as the core base: a box with its label.
+    const Component = nodeDef(registry, node)?.component ?? BoxNodeView;
     const editing = useMemo<PartEditing | undefined>(
       () =>
         editingPart && handlers

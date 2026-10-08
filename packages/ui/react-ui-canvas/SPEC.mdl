@@ -543,8 +543,9 @@ feat F-6: Open registry
   req F-6.1: The engine operates on `NodeBase`; a host's type is not a special case.
   req F-6.2: A host composes its registry from the built-ins and its own defs, and its scene schema with
     `createSceneSchema`.
-  req F-6.3: An unknown type still renders (`UnknownNodeView`) rather than throwing: a scene written by
-    a newer host opens.
+  req F-6.3: An unknown type still renders rather than throwing, as the core base (`BaseNode`): a node as
+    a box showing its `label`, with ports and an editable label, and a link as a straight line. A scene
+    written by a newer host, or one whose plugin is off, opens.
   req F-6.4: Ports come from the definition; a node may still carry its own.
 ```
 

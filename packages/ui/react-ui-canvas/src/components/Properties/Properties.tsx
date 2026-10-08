@@ -39,7 +39,7 @@ import {
   type Element,
   LineLink,
   type LinkType,
-  NodeBase,
+  BaseNode,
   SmartLink,
   SplineLink,
   getElement,
@@ -96,9 +96,9 @@ const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
   smart: SmartLink,
 };
 
-/** An element's own schema; a node type the registry does not know gets the shared fields. */
+/** An element's own schema; a type the registry does not know gets the core base's (`BaseNode`, or a line). */
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
-  isLink(element) ? LINK_SCHEMAS[element.type] : (nodeDef(nodes, element)?.schema ?? NodeBase);
+  isLink(element) ? (LINK_SCHEMAS[element.type] ?? LineLink) : (nodeDef(nodes, element)?.schema ?? BaseNode);
 
 /**
  * What the form shows for an element: what the view draws, so an unset fill, border or Show contents reads as it

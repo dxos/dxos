@@ -41,17 +41,17 @@ const box = (x: number, y: number) => ({ x, y, width: 256, height: 256 });
 const createClassTree = () =>
   SceneBuilder.scene('root', [
     SceneBuilder.node('class', 'person', box(-384, -320)).properties({
-      name: 'Person',
+      label: 'Person',
       attributes: ['name: string'],
       methods: ['greet()'],
     }),
     SceneBuilder.node('class', 'employee', box(-384, 64)).properties({
-      name: 'Employee',
+      label: 'Employee',
       attributes: ['title: string'],
       methods: ['work()'],
     }),
     SceneBuilder.node('class', 'org', box(128, 64)).properties({
-      name: 'Organization',
+      label: 'Organization',
       attributes: ['name: string'],
       methods: ['hire(person)'],
     }),
