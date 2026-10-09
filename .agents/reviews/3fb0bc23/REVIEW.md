@@ -16,8 +16,8 @@ _0 error(s), 2 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 3fb0bc23-1 - ignored - test-real-scenario-not-narrower-proxy - packages/plugins/plugin-code/src/agents/EdgeAgent.test.ts:31 — pre-existing on main; FakeEdge is the unit-test seam, end-to-end coverage is ClaudeCodeEdge.e2e.test.ts
-- 3fb0bc23-2 - ignored - no-sleep-in-test - packages/plugins/plugin-code/src/agents/EdgeAgent.test.ts:263 — pre-existing on main, not in this diff
+- 3fb0bc23-1 - ignored - test-real-scenario-not-narrower-proxy - packages/plugins/plugin-code/src/agents/EdgeAgent.test.ts:31
+- 3fb0bc23-2 - ignored - no-sleep-in-test - packages/plugins/plugin-code/src/agents/EdgeAgent.test.ts:263
 
 ## Issues
 
@@ -30,6 +30,11 @@ System One judges this a likely violation of `test-real-scenario-not-narrower-pr
 System One judges this a likely violation of `no-sleep-in-test` (No sleep or polling in tests), p=0.94. The likeliest place is lines 263-274 (`yield* Effect.sleep('20 millis');`, location confidence 1.00). This is a single-shot classifier: confirm against the rule before acting.
 
 ## Appendix
+
+### Dismissals
+
+- 3fb0bc23-1: pre-existing on main, not in this diff; `FakeEdge` is the unit-test seam, and end-to-end coverage is `ClaudeCodeEdge.e2e.test.ts`.
+- 3fb0bc23-2: pre-existing on main, not in this diff.
 
 ### System One pass
 
