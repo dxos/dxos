@@ -178,7 +178,8 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
       ? 'border-focus'
       : hovered
         ? 'border-focus/50'
-        : style.border === false && !style.guide
+        : // A frame always shows its edge: it bounds a scene or an embedded object, which has none of its own.
+          style.border === false && !style.guide && !isFrameNode(node)
           ? 'border-transparent'
           : hue.border,
     style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',

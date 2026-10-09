@@ -44,7 +44,7 @@ import {
 } from '#model';
 import { CanvasCapabilities } from '#types';
 
-import { CanvasFrameNodeView } from './CanvasFrameNodeView.tsx';
+import { CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -81,6 +81,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             ...defaultNodeTypes.frame,
             schema: CanvasFrameNode,
             component: CanvasFrameNodeView,
+            toolbar: CanvasFrameToolbar,
             hostOpen: openObject,
           },
           ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),

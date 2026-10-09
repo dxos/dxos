@@ -67,7 +67,8 @@ export const ObjectFrame: Story = {
     const document = db.add(
       Markdown.make({
         name: random.lorem.words(3),
-        content: `# ${random.lorem.words(4)}\n\n${random.lorem.paragraphs(3)}`,
+        // A blank line after each paragraph, so markdown reads them as paragraphs rather than one run of lines.
+        content: [`# ${random.lorem.words(4)}`, ...random.lorem.paragraphs(3).split('\n')].join('\n\n'),
       }),
     );
     // The same document twice, side by side: once as a card, once as an embedded section.
@@ -90,7 +91,7 @@ export const ObjectFrame: Story = {
         canvas.content[`scene:${id}`] = { kind: 'scene', id };
       }
       canvas.content[nodeKey('card')] = frame('card', -384, 'card', { width: 4, height: 4 });
-      canvas.content[nodeKey('section')] = frame('section', 256, 'section', { width: 8, height: 12 });
+      canvas.content[nodeKey('section')] = frame('section', 256, 'section', { width: 8, height: 10 });
     });
   }),
   play: async ({ canvasElement }) => {
@@ -104,6 +105,12 @@ export const ObjectFrame: Story = {
       canvasElement.querySelector(`[data-node-id="${id}"] [data-testid="frame-surface"]`);
     await expect(surfaceOf('card')).toHaveAttribute('data-role', 'card');
     await expect(surfaceOf('section')).toHaveAttribute('data-role', 'section');
+    // The open control floats above each frame rather than inside it.
+    for (const id of ['card', 'section']) {
+      const frame = canvasElement.querySelector(`[data-node-id="${id}"]`);
+      await expect(frame?.querySelector('[data-testid="portal-open"]')).toBeNull();
+      await expect(frame?.nextElementSibling?.querySelector('[data-testid="frame-open"]')).not.toBeNull();
+    }
     // The section embeds the document's editor.
     await waitFor(() => expect(surfaceOf('section')?.querySelector('.cm-editor')).not.toBeNull(), { timeout: 10_000 });
   },

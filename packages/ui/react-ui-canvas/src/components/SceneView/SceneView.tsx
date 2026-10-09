@@ -786,7 +786,8 @@ const SceneViewRoot = ({
   const focus = useMemo(() => {
     let best: { id: ElementId; opacity: number } | undefined;
     for (const node of Object.values(displayScene.nodes)) {
-      if (!isFrameNode(node)) {
+      // A frame the host opens itself (one showing an object) is no scene to zoom into, so it keeps its frame.
+      if (!isFrameNode(node) || nodeDef(nodeRegistry, node)?.hostOpen?.(node)) {
         continue;
       }
       const bounds = nodeBounds(node);
@@ -800,7 +801,7 @@ const SceneViewRoot = ({
       }
     }
     return best;
-  }, [displayScene.nodes, camera, viewport]);
+  }, [displayScene.nodes, nodeRegistry, camera, viewport]);
 
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);

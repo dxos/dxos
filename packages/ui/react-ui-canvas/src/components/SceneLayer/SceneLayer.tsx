@@ -396,7 +396,9 @@ const NodeFrame = memo(
     const bounds = nodeBounds(node);
     const interactive = handlers !== undefined && !ghost;
     // A type the registry does not know is drawn as the core base: a box with its label.
-    const Component = nodeDef(registry, node)?.component ?? BoxNodeView;
+    const def = nodeDef(registry, node);
+    const Component = def?.component ?? BoxNodeView;
+    const Toolbar = interactive ? def?.toolbar : undefined;
     const editing = useMemo<PartEditing | undefined>(
       () =>
         editingPart && handlers
@@ -432,39 +434,64 @@ const NodeFrame = memo(
     };
     const frameLook = props.opening ? frameClasses(drawn, false).slice(1) : frameClasses(drawn, selected, hovered);
     return (
-      <div
-        className={mx(
-          'absolute box-border overflow-hidden',
-          // Fading, the border becomes padding of the same width so the contents stay put.
-          ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
-          // Every text part inherits the face, as it does `fontSize`.
-          drawn.style?.fontFamily === 'monospace' && 'font-mono',
-          interactive && !node.locked && 'cursor-grab',
-          ghost && 'opacity-50 border-dashed pointer-events-none',
-        )}
-        style={frameStyle}
-        data-node-id={node.id}
-        data-ghost={ghost || undefined}
-        onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
-      >
-        {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
-        {chromeFade && (
+      <>
+        <div
+          className={mx(
+            'absolute box-border overflow-hidden',
+            // Fading, the border becomes padding of the same width so the contents stay put.
+            ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
+            // Every text part inherits the face, as it does `fontSize`.
+            drawn.style?.fontFamily === 'monospace' && 'font-mono',
+            interactive && !node.locked && 'cursor-grab',
+            ghost && 'opacity-50 border-dashed pointer-events-none',
+          )}
+          style={frameStyle}
+          data-node-id={node.id}
+          data-ghost={ghost || undefined}
+          onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
+        >
+          {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
+          {chromeFade && (
+            <div
+              aria-hidden
+              className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
+              style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
+            />
+          )}
+          <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
+          {debug && (
+            <div
+              className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
+              data-testid='node-debug'
+            >
+              {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+            </div>
+          )}
+        </div>
+        {Toolbar && (
+          // Outside the frame, which clips its contents; scaled back to screen size from its bottom-right corner. Its
+          // own width (`w-max`): near the layer's edge an absolute box would shrink to the space left. Shown with the
+          // frame's hover or selection, and kept while the pointer crosses onto it.
           <div
-            aria-hidden
-            className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
-            style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
-          />
-        )}
-        <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
-        {debug && (
-          <div
-            className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
-            data-testid='node-debug'
+            className={mx(
+              'absolute flex w-max pb-1 transition-opacity',
+              hovered || selected ? 'opacity-100' : 'opacity-0 hover:opacity-100',
+            )}
+            style={{
+              left: bounds.x + bounds.width,
+              top: bounds.y,
+              transform: `translate(-100%, -100%) scale(${1 / Math.max(props.zoom, 0.05)})`,
+              transformOrigin: 'bottom right',
+              ...fade,
+            }}
+            data-testid='node-toolbar'
+            onPointerDown={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
           >
-            {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+            <Toolbar {...props} node={drawn} editing={editing} onOpen={onOpen} />
           </div>
         )}
-      </div>
+      </>
     );
   },
 );
