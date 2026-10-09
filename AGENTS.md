@@ -379,6 +379,14 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill
   (`.agents/skills/simplified-technical-english/SKILL.md`).
+- **Performance** — `perf` skill (`.agents/skills/perf/SKILL.md`). Perf numbers come only from
+  `pnpm perf` output (verdict, interval, rounds), never a one-off timing or a devtools recording.
+  - Did this change make it faster or slower? `pnpm perf compare --base main --metric '<id>'`.
+  - Where does the time go? `pnpm perf summarize`, then `pnpm perf expand <handle>`.
+  - Users say X is slow? `pnpm perf capture`, then `pnpm perf scenario new` and `scenario check`.
+  - Memory grows, or boot loads too much? The skill's `MEMORY.md` and `BOOT.md`; `pnpm perf gate`
+    is the boot budget CI runs.
+  - A node test suite is slow or leaks? `test-perf-leaks` skill.
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).
