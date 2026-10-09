@@ -105,7 +105,10 @@ export const Dock = () => {
         >
           {sections.map((section) => (
             <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
-              <Accordion.ItemTrigger icon={section.icon}>{section.title}</Accordion.ItemTrigger>
+              {/* A distinct surface, so a section's header reads apart from its panel's own toolbar. */}
+              <Accordion.ItemTrigger icon={section.icon} classNames='bg-group-surface border-b border-separator'>
+                {section.title}
+              </Accordion.ItemTrigger>
               <Accordion.ItemContent>
                 <DockSlot id={section.id} setSlot={setSlot} />
               </Accordion.ItemContent>

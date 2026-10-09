@@ -155,6 +155,8 @@ export const LayersPanel = ({
           <OrderedList.Content
             // Docked, the dock scrolls the panels together, so the list keeps no scroll of its own (it would hold the wheel).
             scroll={!docked}
+            // Its own gutter even without its own scroll, so the block padding below applies either way.
+            gutter='inset'
             aria-label='Layers'
             // The gutter frames the rows above and below as well as at the sides.
             padBlock
