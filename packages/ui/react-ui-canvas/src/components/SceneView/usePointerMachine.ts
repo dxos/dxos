@@ -12,7 +12,7 @@ import {
   useState,
 } from 'react';
 
-import { type useRegistry } from '../../hooks/index.ts';
+import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
 import { type ControlPointRef, type Drag, type Handle, type SceneViewAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -269,7 +269,10 @@ export const usePointerMachine = ({
         return;
       }
       const next = clickSelect(node.id, event);
-      if (capabilities.move && !node.locked) {
+      // A press on content embedded in the node (an object's own toolbar or editor) selects the node but starts no
+      // move: the drag's pointer capture would take the click from that content's controls.
+      const embedded = event.target instanceof Element && event.target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`);
+      if (capabilities.move && !node.locked && !embedded) {
         const { x, y } = nodeBounds(node);
         const ids = [...next].filter((id) => scene.nodes[id] !== undefined);
         startDrag(

@@ -18,7 +18,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
-import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
+import { SCENE_OVERLAY_ATTRIBUTE, useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
 import { type Drag, type PanelMode, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
@@ -595,8 +595,13 @@ const SceneViewRoot = ({
         return;
       }
       const target = document.elementFromPoint(event.clientX, event.clientY);
-      // A floating panel over the node took the clicks, so the node beneath is not the one meant.
-      if (!(target instanceof Element) || !target.closest('[data-node-id]')) {
+      // A floating panel over the node took the clicks, so the node beneath is not the one meant; content embedded in
+      // the node (an editor) keeps its own double-click (selecting a word).
+      if (
+        !(target instanceof Element) ||
+        !target.closest('[data-node-id]') ||
+        target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`)
+      ) {
         return;
       }
       const partElement = target.closest('[data-part]');
