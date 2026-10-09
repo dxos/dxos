@@ -18,7 +18,7 @@ import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { assertArgument, invariant } from '@dxos/invariant';
+import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
@@ -106,7 +106,6 @@ export class Binder extends Resource {
    */
   #bound = { skills: new Set<URI.URI>(), objects: new Set<URI.URI>() };
 
-  /** Bindings made while the feed is unstored; defined until {@link flush} writes them. */
   #pending?: Binding[];
 
   constructor(options: BinderOptions) {
@@ -169,26 +168,26 @@ export class Binder extends Resource {
   }
 
   /**
-   * Writes the bindings held while the feed was unstored, then follows the feed like any other binder.
-   * Call once the feed is stored; a no-op for a binder that opened over a stored feed.
+   * Stores the feed if it is not stored yet, writes the bindings held while it was not, then follows the
+   * feed like any other binder. A no-op for a binder that opened over a stored feed.
    */
   async flush(): Promise<void> {
     const pending = this.#pending;
     if (!pending) {
       return;
     }
-    invariant(Obj.getDatabase(this._feed), 'Feed must be stored before its bindings are flushed');
     this.#pending = undefined;
-    // Folded into one net binding: the feed holds none yet, and items appended in one batch share no
-    // order a reader could fold them back in.
+    if (!Obj.getDatabase(this._feed)) {
+      await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Database.add(this._feed));
+    }
     const { skills, objects } = this._reduce(pending);
     if (skills.size > 0 || objects.size > 0) {
-      await this._append([
+      await this._append(
         Obj.make(Binding, {
           skills: { added: [...skills], removed: [] },
           objects: { added: [...objects], removed: [] },
         }),
-      ]);
+      );
     }
     await this._follow();
   }
@@ -381,11 +380,11 @@ export class Binder extends Resource {
       this.#pending.push(binding);
       return;
     }
-    await this._append([binding]);
+    await this._append(binding);
   }
 
-  private async _append(bindings: Binding[]): Promise<void> {
-    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Feed.append(this._feed, bindings));
+  private async _append(binding: Binding): Promise<void> {
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Feed.append(this._feed, [binding]));
     countBindingWrite(this._feed);
   }
 

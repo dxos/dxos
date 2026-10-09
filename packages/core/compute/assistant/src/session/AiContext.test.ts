@@ -81,7 +81,7 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
-  test('a binder over an unstored feed writes its bindings only when flushed', async ({ expect }) => {
+  test('a binder over an unstored feed stores it and writes its bindings only when flushed', async ({ expect }) => {
     await Effect.gen(function* () {
       const feed = Feed.make();
       const runtime = yield* Effect.context<Database.Service>();
@@ -94,8 +94,7 @@ describe('AiContext.Binder', () => {
       yield* Effect.promise(() => binder.unbind({ objects: [Ref.make(b)] }));
       const held = binder.getObjects();
 
-      yield* Database.add(feed);
-      const beforeFlush = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      const storedBeforeFlush = Obj.getDatabase(feed) !== undefined;
       yield* Effect.promise(() => binder.flush());
       yield* Effect.promise(() => binder.close());
 
@@ -105,7 +104,7 @@ describe('AiContext.Binder', () => {
       yield* Effect.promise(() => reader.close());
 
       expect(held.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
-      expect(beforeFlush).toHaveLength(0);
+      expect(storedBeforeFlush).toBe(false);
       expect(reopened.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
     })
       .pipe(Effect.provide(TestLayer))

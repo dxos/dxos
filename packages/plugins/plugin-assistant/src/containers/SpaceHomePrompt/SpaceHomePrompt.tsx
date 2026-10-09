@@ -13,6 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
+import type * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
@@ -22,7 +23,6 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import { type ChatEvent, ChatPrompt } from '#components';
 import { usePresets } from '#hooks';
 import { meta } from '#meta';
-import { PluginManagerSkill } from '#skills';
 import { AssistantCapabilities } from '#types';
 
 import { getChatPath } from '../../paths.ts';
@@ -32,12 +32,6 @@ type SpaceScopedProps = {
   space?: Space;
 };
 
-/**
- * Home article pinned-bottom contributor: the assistant prompt. Backed by an in-memory draft chat
- * that collects the user's text, context bindings, and preset choice; nothing reaches the space until
- * submit, which persists the chat, queues the text as a pending prompt, and navigates to it. AI
- * generation runs in the opened chat view.
- */
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -47,23 +41,20 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
-  const pluginManager = skillDefinitions.some(({ key }) => key === PluginManagerSkill.key);
 
-  // `nonce` starts a fresh draft after submit.
-  const [nonce, setNonce] = useState(0);
+  const [draftGeneration, setDraftGeneration] = useState(0);
   const draft = useMemo(() => {
     if (!space) {
       return undefined;
     }
     const feed = Feed.make();
     return { feed, chat: Chat.make({ feed: Ref.make(feed) }) };
-  }, [space, nonce]);
+  }, [space, draftGeneration]);
   const chat = draft?.chat;
-  const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, pluginManager });
+  const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, skillDefinitions });
   const { preset, ...presetProps } = usePresets(settings, chat);
 
   const event = useMemo(() => new Event<ChatEvent>(), []);
-  // Held from send until the flush settles, so a second send cannot add the same draft again.
   const submitting = useRef(false);
   useEffect(() => {
     return event.on((ev) => {
@@ -76,8 +67,6 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       }
       submitting.current = true;
 
-      // Adding the chat stores its feed with it, so the draft's bindings can be written; they land
-      // before the chat view opens and reads them.
       space.db.add(chat);
       const chatPath = getChatPath(space.db.spaceId, chat.id);
       void context
@@ -92,7 +81,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
         .catch((err) => log.catch(err))
         .finally(() => {
           submitting.current = false;
-          setNonce((current) => current + 1);
+          setDraftGeneration((current) => current + 1);
         });
     });
   }, [event, space, chat, context, atomRegistry, stateAtom, invokePromise]);
@@ -122,11 +111,10 @@ type UseDraftContextProps = {
   db?: Database.Database;
   draft?: { feed: Feed.Feed; chat: Chat.Chat };
   registry: AtomRegistry.AtomRegistry;
-  pluginManager: boolean;
+  skillDefinitions: readonly Skill.Definition[];
 };
 
-/** Opens a binder over a draft's in-memory feed with the new-chat defaults bound, held in memory until flushed. */
-const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContextProps) => {
+const useDraftContext = ({ db, draft, registry, skillDefinitions }: UseDraftContextProps) => {
   const [context, setContext] = useState<AiContext.Binder>();
   UiHooks.useAsyncEffect(
     async (controller) => {
@@ -138,8 +126,7 @@ const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContext
       );
       const binder = new AiContext.Binder({ feed: draft.feed, runtime, registry });
       await binder.open();
-      await bindChatDefaults(binder, { chat: draft.chat, pluginManager });
-      // The effect's cleanup is only registered once this returns, so an unmount mid-open closes here.
+      await bindChatDefaults(binder, { chat: draft.chat, contributed: skillDefinitions });
       if (controller.signal.aborted) {
         void binder.close();
         return;
@@ -150,7 +137,7 @@ const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContext
         void binder.close();
       };
     },
-    [db, draft, registry, pluginManager],
+    [db, draft, registry, skillDefinitions],
   );
   return context;
 };

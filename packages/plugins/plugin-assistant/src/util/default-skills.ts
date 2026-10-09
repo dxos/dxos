@@ -14,28 +14,18 @@ import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill, PluginManagerSkill } from '#skills';
 
-/**
- * The skills a new chat starts with, as registry refs.
- *
- * `pluginManager` only where the host contributes that skill: its tools resolve to the registry
- * plugin's handlers, so binding it elsewhere binds a skill that cannot run.
- */
-export const defaultChatSkills = ({ pluginManager }: { pluginManager: boolean }): Ref.Ref<Skill.Skill>[] =>
+export const defaultChatSkills = (contributed: readonly Pick<Skill.Definition, 'key'>[]): Ref.Ref<Skill.Skill>[] =>
   [
     AssistantSkill,
     DatabaseSkill,
     ChatContextSkill,
     SkillManagerSkill,
     AlarmSkill,
-    // Bound by default rather than agent-enabled: the conversation's checklist is durable and invisible
-    // to the model, so a chat without this skill cannot read or update the tasks it is already carrying
-    // — and a model that enables it mid-turn has already answered a task question from nothing.
     PlanningSkill,
-    ...(pluginManager ? [PluginManagerSkill] : []),
+    ...(contributed.some(({ key }) => key === PluginManagerSkill.key) ? [PluginManagerSkill] : []),
   ].map(({ key }) => Ref.fromURI(Skill.registryURI(key)));
 
-/** Binds what every new chat starts with: the default skills and the chat itself. */
 export const bindChatDefaults = (
   binder: AiContext.Binder,
-  { chat, pluginManager }: { chat: Chat.Chat; pluginManager: boolean },
-): Promise<void> => binder.bind({ skills: defaultChatSkills({ pluginManager }), objects: [Ref.make(chat)] });
+  { chat, contributed }: { chat: Chat.Chat; contributed: readonly Pick<Skill.Definition, 'key'>[] },
+): Promise<void> => binder.bind({ skills: defaultChatSkills(contributed), objects: [Ref.make(chat)] });

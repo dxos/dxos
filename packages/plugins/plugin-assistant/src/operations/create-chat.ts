@@ -12,7 +12,6 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Ref } from '@dxos/echo';
 
-import { PluginManagerSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { bindChatDefaults } from '../util/default-skills.ts';
@@ -30,13 +29,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
 
-      // Only an extensible host contributes the plugin-manager skill.
       const contributed = yield* Capability.getAll(AppCapabilities.SkillDefinition);
-      const pluginManager = contributed.some(({ key }) => key === PluginManagerSkill.key);
 
       const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
-      yield* Effect.promise(() => binder.use((b: AiContext.Binder) => bindChatDefaults(b, { chat, pluginManager })));
+      yield* Effect.promise(() => binder.use((b: AiContext.Binder) => bindChatDefaults(b, { chat, contributed })));
 
       return { object: chat };
     }),
