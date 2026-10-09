@@ -155,7 +155,6 @@ describe('QueryResultImpl', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Person], storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, rootUrl);
       const execQuery = vi.spyOn(peer.host.queryService, 'QueryService.execQuery');
-      // Nothing is loaded yet, so the working set loads the document the space directory links.
       expect((await db.query(Filter.id(id)).run()).map((person) => person.name)).toEqual(['Alice']);
       expect(execQuery.mock.calls.filter(([request]) => request.query.includes(id))).toEqual([]);
     } finally {

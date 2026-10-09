@@ -152,7 +152,6 @@ export class GraphQueryContext implements QueryContext {
       return this.#runSources(ctx, sources, query, timeout);
     }
 
-    // An id lookup asks the asynchronous sources (the worker's index) only for ids the local ones lack.
     const local = sources.filter((source) => source.isSynchronous());
     const results = await this.#runSources(ctx, local, query, timeout);
     const found = new Set(results.map((entry) => entry.id));
@@ -493,7 +492,6 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
   }
 };
 
-/** The ids a query selects, when it is a lookup by id. */
 const getLookupIds = (query: QueryAST.Query): readonly string[] | undefined => {
   const simple = isSimpleSelectionQuery(query);
   return simple?.filter.type === 'object' && simple.filter.id?.length ? simple.filter.id : undefined;

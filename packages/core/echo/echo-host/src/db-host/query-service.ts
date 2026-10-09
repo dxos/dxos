@@ -98,6 +98,8 @@ type ActiveQuery = {
   /** Answered once and never re-run; its stream ends after the first response. */
   oneShot: boolean;
 
+  pointLookup: boolean;
+
   /** Cost (ms) of the last run; 0 until the query has run. */
   cost: number;
 
@@ -251,8 +253,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
-        if (queryEntry.oneShot && queryIsIdLookup(queryEntry.executor.query)) {
-          // A point lookup answered once never joins a batch, so it does not wait behind the queries in one.
+        if (queryEntry.pointLookup) {
           await this.#runQuery(queryEntry);
           return;
         }
@@ -328,6 +329,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       firstResult: true,
       feedScoped: queryHasFeedScope(parsedQuery),
       oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
+      pointLookup: request.reactivity === QueryReactivity.ONE_SHOT && queryIsIdLookup(parsedQuery),
       cost: 0,
       debouncedUntil: 0,
       sendResults: (results) => {
@@ -489,9 +491,6 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 }
 
-/**
- * True when the query selects objects by id, which the index answers with a point lookup.
- */
 const queryIsIdLookup = (query: QueryAST.Query): boolean => {
   switch (query.type) {
     case 'from':
