@@ -54,17 +54,14 @@ export type TaskStatusControlProps = {
 };
 
 /** The status glyph, which is also the control that completes the task. */
+const useAgentWorking = (task: Task.Task): boolean =>
+  useAtomValue(useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]));
+
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const [storedStatus] = useObject(task, 'status');
   const status = storedStatus ?? 'todo';
-  // Derived from the task rather than wired down from the list: a task an agent has taken and
-  // started is being worked right now whoever renders it, and the row is the only place that says
-  // so. A human-started task keeps the static glyph. A boolean atom, so an edit elsewhere on the
-  // task does not re-render the glyph.
-  const agentWorking = useAtomValue(
-    useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]),
-  );
+  const agentWorking = useAgentWorking(task);
   const working = active ?? agentWorking;
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
