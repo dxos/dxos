@@ -5,9 +5,12 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { Point, Size } from '@dxos/react-ui-canvas/scene';
-
 import { Shape } from './schema.ts';
+
+// The engine's `Point` / `Size` structs, declared here because its `/scene` entry also exports React, which this
+// React-free entry must not import (plugins load it in workers).
+const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number });
 
 //
 // Path
