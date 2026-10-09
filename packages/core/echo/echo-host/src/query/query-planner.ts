@@ -83,7 +83,10 @@ export class QueryPlanner {
     if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
       return plan;
     }
-    return compileToSql(sql, plan, this.#planSubquery, { snapshot: QueryAST.isSnapshotQuery(query) }).plan;
+    return compileToSql(sql, plan, this.#planSubquery, {
+      snapshot: QueryAST.isSnapshotQuery(query),
+      lazy: QueryAST.isLazyQuery(query),
+    }).plan;
   }
 
   /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */

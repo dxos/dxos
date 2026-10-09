@@ -101,6 +101,15 @@ export const QueryResult = Schema.Struct({
    * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
    */
   recordJson: Schema.optional(Schema.String),
+  /**
+   * The object as its document holds it (`encodeEntityStructure`), sent to a lazy query for a
+   * document row the index has a state for; the client backs a live object with it.
+   */
+  state: Schema.optional(Schema.String),
+  /** Heads of the document {@link state} was read at; a write made against it replays there. */
+  heads: Schema.optional(mutableArray(Schema.String)),
+  /** Index stamp of the row, increasing with every re-index; orders two states of one object. */
+  version: Schema.optional(Schema.Number),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 

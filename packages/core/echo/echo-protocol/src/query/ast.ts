@@ -667,27 +667,40 @@ export const QueryOptions = Schema.Struct({
    * its document loading.
    */
   snapshot: Schema.optional(Schema.Boolean),
+
+  /**
+   * Return live objects backed by the index's copy of each object, so none waits on its document;
+   * a document loads only when something writes to the object or needs it. The host ships each
+   * document row's state, heads and version (`QueryResult.state`).
+   */
+  lazy: Schema.optional(Schema.Boolean),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 /**
- * Whether the query returns snapshots (see {@link QueryOptions.snapshot}). Only the outer clause
- * chain is read: a subquery's options do not decide what the outer query returns.
+ * Whether an option is set on the outer clause chain. A subquery's options do not decide what the
+ * outer query returns.
  */
-export const isSnapshotQuery = (query: Query): boolean => {
+const hasOuterOption = (query: Query, isSet: (options: QueryOptions) => boolean): boolean => {
   switch (query.type) {
     case 'options':
-      return query.options.snapshot === true || isSnapshotQuery(query.query);
+      return isSet(query.options) || hasOuterOption(query.query, isSet);
     case 'order':
     case 'limit':
     case 'skip':
     case 'from':
-      return isSnapshotQuery(query.query);
+      return hasOuterOption(query.query, isSet);
     default:
       return false;
   }
 };
+
+/** Whether the query returns snapshots (see {@link QueryOptions.snapshot}). */
+export const isSnapshotQuery = (query: Query): boolean => hasOuterOption(query, (options) => options.snapshot === true);
+
+/** Whether the query returns index-backed live objects (see {@link QueryOptions.lazy}). */
+export const isLazyQuery = (query: Query): boolean => hasOuterOption(query, (options) => options.lazy === true);
 
 /**
  * Selects from a space (automerge documents).

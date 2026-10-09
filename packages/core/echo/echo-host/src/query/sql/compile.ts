@@ -76,6 +76,12 @@ export type CompiledRow = {
    * serialized key rather than an object.
    */
   aggregates: string | null;
+  /** The document row's stored state (`encodeEntityStructure`), in a lazy query only. */
+  state: string | null;
+  /** JSON array of the heads {@link state} was read at, in a lazy query only. */
+  heads: string | null;
+  /** The row's `objectMeta.version` stamp, in a lazy query only. */
+  version: number | null;
 };
 
 /**
@@ -144,7 +150,7 @@ export class SqlPlanCompiler {
     if (options.strongDependencyFilter !== false) {
       root = this.#compileStrongDependencyFilter(root);
     }
-    const final = this.#final(root, options.snapshot === true);
+    const final = this.#final(root, { snapshot: options.snapshot === true, lazy: options.lazy === true });
     const withClause = sql.join(', ', false)(this.#ctes);
     const statement = sql<CompiledRow>`WITH RECURSIVE ${withClause} ${final}`;
     const [text, params] = statement.compile();
@@ -1126,8 +1132,11 @@ export class SqlPlanCompiler {
   // Final projection.
   //
 
-  #final(ws: Relation, snapshot: boolean): Fragment {
+  #final(ws: Relation, { snapshot, lazy }: { snapshot: boolean; lazy: boolean }): Fragment {
     const sql = this.#sql;
+    const stateColumns = lazy
+      ? sql`d.state AS state, d.heads AS heads, m.version AS version`
+      : sql`NULL AS state, NULL AS heads, NULL AS version`;
     const documentJson = snapshot
       ? sql`CASE WHEN m.queueId != '' OR length(d.snapshot) <= ${SNAPSHOT_JSON_LIMIT} THEN json(d.snapshot) END`
       : sql`CASE WHEN m.queueId != '' THEN json(d.snapshot) END`;
@@ -1143,6 +1152,7 @@ export class SqlPlanCompiler {
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt,
       ${documentJson} AS documentJson,
+      ${stateColumns},
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ORDER BY w.ord`;
@@ -1158,6 +1168,9 @@ export type CompileOptions = {
 
   /** Ship every row's indexed JSON, for a query that returns snapshots (`QueryOptions.snapshot`). */
   snapshot?: boolean;
+
+  /** Ship every document row's stored state, heads and version, for a lazy query (`QueryOptions.lazy`). */
+  lazy?: boolean;
 };
 
 /**

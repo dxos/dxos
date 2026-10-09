@@ -24,7 +24,7 @@ import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex, ReverseRefInd
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
 import { QueryPlanner } from '../query-planner.ts';
-import { compilePlan, planDeclinedByCompiler } from './compile.ts';
+import { type CompileOptions, compilePlan, planDeclinedByCompiler } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
@@ -74,6 +74,7 @@ const seed = Effect.gen(function* () {
     createdAt: 1000,
     updatedAt: 2000,
     data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra, ...data },
+    state: { heads: [`heads-${id}`], structure: JSON.stringify({ data }) },
   });
   const objects: IndexerObject[] = [
     doc(ids.project, PROJECT, { name: 'live' }),
@@ -117,11 +118,11 @@ const seed = Effect.gen(function* () {
   return { spaceId, ids } satisfies Fixture;
 });
 
-const run = (fixture: Fixture, query: Query.Any) =>
+const run = (fixture: Fixture, query: Query.Any, options?: CompileOptions) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
     const plan = new QueryPlanner().createPlan(query.ast);
-    const compiled = compilePlan(sql, plan, planSubquery);
+    const compiled = compilePlan(sql, plan, planSubquery, options);
     if (process.env.DX_DEBUG_SQL) {
       // eslint-disable-next-line no-console
       console.log(compiled.sql);
@@ -481,6 +482,29 @@ describe('SqlPlanCompiler', () => {
       );
       expect(rows.every((row) => row.documentJson === null)).toBe(true);
       expect(rows.every((row) => row.documentId.startsWith('doc-'))).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('ships each document row its state, heads and index stamp only in a lazy query', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
+
+      const plain = yield* run(fixture, query);
+      expect(plain.rows.every((row) => row.state === null && row.heads === null && row.version === null)).toBe(true);
+
+      const { rows } = yield* run(fixture, query, { lazy: true });
+      expect(
+        names(
+          fixture,
+          rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(['alice', 'bob']);
+      for (const row of rows) {
+        expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
+        expect(JSON.parse(row.state ?? 'null').data.name).toBe(row.objectId === fixture.ids.alice ? 'alice' : 'bob');
+        expect(row.version).toBeGreaterThan(0);
+      }
     }).pipe(Effect.provide(TestLayer)),
   );
 });

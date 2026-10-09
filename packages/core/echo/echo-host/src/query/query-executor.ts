@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -47,6 +48,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
+import { encodeObjectState } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow, SNAPSHOT_JSON_LIMIT } from './sql/index.ts';
@@ -131,6 +133,9 @@ type QueryItem = {
    * carries no document, data or meta, so it is only ever produced by the plan's last step.
    */
   result?: QueryService.QueryResult;
+
+  /** In a lazy query: the object's document state, the heads it was read at, and its index stamp. */
+  state?: { heads: readonly string[]; structure: string; version: number };
 };
 
 const QueryItem = Object.freeze({
@@ -659,6 +664,8 @@ export class QueryExecutor extends Resource {
   readonly #mode: QueryExecutorMode;
   /** The query returns snapshots, so every row ships its JSON and a content change is a result change. */
   readonly #snapshot: boolean;
+  /** The query returns index-backed live objects, so document rows ship their state. */
+  readonly #lazy: boolean;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -690,6 +697,7 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
     this.#snapshot = QueryAST.isSnapshotQuery(this._query);
+    this.#lazy = QueryAST.isLazyQuery(this._query);
 
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
@@ -767,6 +775,10 @@ export class QueryExecutor extends Resource {
 
         groupKey: serializedGroupKey,
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+
+        state: item.state?.structure,
+        heads: item.state ? [...item.state.heads] : undefined,
+        version: item.state?.version,
       };
     });
   }
@@ -2155,6 +2167,7 @@ export class QueryExecutor extends Resource {
     if (!object) {
       return null;
     }
+    const state = this.#lazy ? encodeObjectState(object, A.getHeads(lease.doc())) : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2166,6 +2179,7 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
+      state: state && { ...state, version: meta.version },
     };
   }
 
@@ -2583,6 +2597,9 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           documentJson: row.documentJson ?? undefined,
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
+          state: row.state ?? undefined,
+          heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
+          version: row.version ?? undefined,
         };
   return {
     objectId: row.objectId,
@@ -2617,7 +2634,9 @@ const _sameResult = (a: QueryItem, b: QueryItem, snapshot: boolean): boolean => 
       a.result?.aggregates === b.result?.aggregates &&
       a.result?.rank === b.result?.rank &&
       // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
-      a.result?.documentJson === b.result?.documentJson
+      a.result?.documentJson === b.result?.documentJson &&
+      // A lazy query ships each row's state, stamped anew by every re-index of it.
+      a.result?.version === b.result?.version
     );
   }
   return (
@@ -2632,7 +2651,8 @@ const _sameResult = (a: QueryItem, b: QueryItem, snapshot: boolean): boolean => 
     // A collapsed group ships only its size and aggregates, so those are what can change.
     _serializeCollapsed(a) === _serializeCollapsed(b) &&
     // A snapshot query ships each document's body, so an edit changes the record without moving it.
-    (!snapshot || a.doc === b.doc || JSON.stringify(a.doc) === JSON.stringify(b.doc))
+    (!snapshot || a.doc === b.doc || JSON.stringify(a.doc) === JSON.stringify(b.doc)) &&
+    a.state?.version === b.state?.version
   );
 };
 

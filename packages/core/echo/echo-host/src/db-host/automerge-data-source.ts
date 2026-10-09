@@ -7,7 +7,7 @@ import { type DocumentId, interpretAsDocumentId, isValidAutomergeUrl } from '@au
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { DatabaseDirectory, type EntityStructure, SpaceDocVersion, encodeEntityStructure } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import {
   type DataSourceCursor,
@@ -18,7 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { SNAPSHOT_JSON_LIMIT } from '../query/sql/index.ts';
+import { encodeObjectState } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -47,14 +47,6 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
     return true; // New document.
   }
   return cursor !== headsCodec.encode(currentHeads);
-};
-
-/** An object's document state for the index to ship, or nothing over {@link SNAPSHOT_JSON_LIMIT}. */
-const objectState = (structure: EntityStructure, heads: A.Heads): IndexerObject['state'] => {
-  const encoded = encodeEntityStructure(structure, {
-    readRawString: (value) => (value instanceof A.RawString ? value.toString() : undefined),
-  });
-  return encoded.length <= SNAPSHOT_JSON_LIMIT ? { heads, structure: encoded } : undefined;
 };
 
 export type AutomergeDataSourceOptions = {
@@ -217,7 +209,7 @@ export class AutomergeDataSource implements IndexDataSource {
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
-              state: stateHeads && objectState(structure, stateHeads),
+              state: stateHeads && encodeObjectState(structure, stateHeads),
             });
           }
 
