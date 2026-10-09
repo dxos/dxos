@@ -113,7 +113,10 @@ describe('Spaces', () => {
 
   test('a space whose database failed to open initializes again while it stays ready', async () => {
     const { space } = await openSpaceWhoseDatabaseOpenFails(1);
-    await expect.poll(() => space.state.get(), { timeout: 5_000 }).toBe(SpaceState.SPACE_READY);
+    const ready = new Trigger();
+    const subscription = space.state.subscribe((state) => state === SpaceState.SPACE_READY && ready.wake());
+    onTestFinished(() => subscription.unsubscribe());
+    await ready.wait({ timeout: 5_000 });
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.
@@ -1069,6 +1072,7 @@ describe('Spaces', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
+    // Polled rather than signalled from the mock: the space records the failure only once it propagates.
     await expect.poll(() => preloads).toBeGreaterThanOrEqual(1);
     const space = client.spaces.get().find((space) => space.id === spaceId);
     invariant(space);
