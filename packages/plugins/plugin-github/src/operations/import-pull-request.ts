@@ -18,6 +18,7 @@ import { type PullRequestReference, parsePullRequestReference } from '../github-
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 import { githubToken } from './pull-request.ts';
+import { ensureRefreshTrigger } from './refresh.ts';
 
 /**
  * Statuses that may report the token's reach rather than the repository's absence, and so are worth
@@ -132,6 +133,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
       if (!PullRequest.instanceOf(object)) {
         return yield* Effect.die(new GitHubPullRequestReferenceError({ context: { reference } }));
       }
+
+      // The first pull request a space holds is what makes refreshing them worth a schedule.
+      yield* ensureRefreshTrigger();
 
       return { pullRequest: Ref.make(object), imported: true };
     }, Effect.provide(FetchHttpClient.layer)),
