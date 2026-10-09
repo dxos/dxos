@@ -88,7 +88,7 @@ export const translations = [
         'update-check.label': 'Check for updates',
         'update-checking.label': 'Checking for updates…',
         'update-up-to-date.message': 'Composer is up to date',
-        'update-failed.message': 'Could not check for updates',
+        'update-failed.message': 'Update failed. Try again.',
         'update-available.message': '{{version}} available',
         'update-download.label': 'Download update',
         'update-downloading.label': 'Downloading… {{percent}}%',

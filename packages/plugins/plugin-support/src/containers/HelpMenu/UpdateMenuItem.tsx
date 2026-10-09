@@ -99,7 +99,7 @@ export const UpdateMenuItem = ({ manager }: UpdateMenuItemProps) => {
     <>
       <Menu.Item
         item={{ value, label, icon }}
-        disabled={status.kind !== 'ready' && busy}
+        disabled={busy}
         // Stays open so the result of a check or download is visible where it was asked for.
         closeOnSelect={status.kind === 'ready'}
         onClick={onClick ? () => void onClick() : undefined}
