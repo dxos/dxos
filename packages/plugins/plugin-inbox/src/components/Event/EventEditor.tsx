@@ -7,12 +7,17 @@ import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card, Icon, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -28,7 +33,7 @@ export type EventEditorProps = {
  * controlled inputs; mutations go through its update callback.
  */
 export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [data, update] = useObject(event);
 
   const allDay = !!data.allDay;
@@ -172,12 +177,6 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update, people],
   );
 
-  // Flex, NOT a nested grid: `Card.Row` places its grandchildren with `col-start-2` (so a control
-  // wrapped in an `Input.Root` still lands in the content column), which collapsed a nested grid's
-  // children into its second track and pushed the date fields to the right edge. Grid placement is
-  // inert on flex children, so the row's rule cannot reach into this layout.
-  const fieldClasses = 'flex items-center gap-2';
-
   // The trailing control of each date row (all-day switch, duration select) takes the SAME fixed
   // width, so the two rows' leading date fields end at the same x and the controls line up as a
   // column — which the nested grid used to provide.
@@ -186,8 +185,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
   return (
     <>
       <Card.Row>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Input.Root
             placeholder={t('event-untitled.label')}
             value={data.title ?? ''}
             onChange={(ev) =>
@@ -196,52 +195,60 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               })
             }
           />
-        </Input.Root>
+        </Field.Root>
       </Card.Row>
 
-      <Input.Root>
+      <Field.Root>
         <Card.Row>
-          <Card.Block>
-            <IconBlock>
-              <Input.TriggerIcon icon='ph--calendar--regular' />
-            </IconBlock>
-          </Card.Block>
-          <div className={fieldClasses}>
+          <Layout.Block>
+            <Layout.Block>
+              <Icon.Icon icon='ph--calendar--regular' />
+            </Layout.Block>
+          </Layout.Block>
+          {/* Flex, NOT a nested grid: `Card.Row`'s grid placement would collapse a nested grid's children into one track. */}
+          <Layout.Flex align='center' gap='sm'>
             <div className='grow'>
               {allDay ? (
-                <Input.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+                <Input.Date type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
               ) : (
-                <Input.DateTime value={toDateTimeInput(data.startDate)} onValueChange={handleStartDateTimeChange} />
+                <Input.Date
+                  type='datetime-local'
+                  value={toDateTimeInput(data.startDate)}
+                  onValueChange={handleStartDateTimeChange}
+                />
               )}
             </div>
-            <Input.Root>
-              <div className={mx('flex items-center gap-2', trailingClasses)}>
-                <Input.Switch checked={allDay} onCheckedChange={handleAllDayChange} />
-                <Input.Label>{t('event-all-day.label')}</Input.Label>
-              </div>
-            </Input.Root>
-          </div>
+            <Input.Switch
+              checked={allDay}
+              onCheckedChange={({ checked }) => handleAllDayChange(checked)}
+              label={t('event-all-day.label')}
+            />
+          </Layout.Flex>
         </Card.Row>
-      </Input.Root>
+      </Field.Root>
 
       {!allDay && (
-        <Input.Root>
+        <Field.Root>
           <Card.Row>
-            <Card.Block>
-              <IconBlock>
-                <Input.TriggerIcon icon='ph--calendar--regular' />
-              </IconBlock>
-            </Card.Block>
-            <div className={fieldClasses}>
+            <Layout.Block>
+              <Layout.Block>
+                <Icon.Icon icon='ph--calendar--regular' />
+              </Layout.Block>
+            </Layout.Block>
+            <Layout.Flex align='center' gap='sm'>
               <div className='grow'>
-                <Input.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
+                <Input.Date
+                  type='datetime-local'
+                  value={toDateTimeInput(data.endDate)}
+                  onValueChange={handleEndDateTimeChange}
+                />
               </div>
               <div className={trailingClasses}>
                 <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
               </div>
-            </div>
+            </Layout.Flex>
           </Card.Row>
-        </Input.Root>
+        </Field.Root>
       )}
 
       {data.attendees.map((attendee, index) => (
@@ -257,9 +264,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* Always-blank row for adding the next attendee. */}
       <Card.Row classNames='items-center'>
-        <Card.Block>
-          <Icon icon='ph--user-plus--regular' />
-        </Card.Block>
+        <Layout.Block>
+          <Icon.Icon icon='ph--user-plus--regular' />
+        </Layout.Block>
         <RefEditor
           db={db}
           type={Person.Person}
@@ -284,21 +291,19 @@ type SelectDurationProps = {
 
 /** Duration preset picker. Empty string keeps the control controlled so it clears to the placeholder. */
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Select.Root value={value ?? ''} onValueChange={onValueChange}>
-      <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {DURATION_PRESETS.map((preset) => (
-              <Select.Option key={preset.value} value={preset.value}>
-                {preset.label}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+    <Select.Root
+      value={[value ?? '']}
+      onValueChange={({ value: [value] }) => onValueChange(value)}
+      items={DURATION_PRESETS.map((preset) => ({ value: preset.value, label: preset.label }))}
+    >
+      <Select.Trigger placeholder={t('event-duration.placeholder')} />
+      <Select.Content>
+        {DURATION_PRESETS.map((preset) => (
+          <Select.Item key={preset.value} item={{ value: preset.value, label: preset.label }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };
@@ -344,19 +349,19 @@ const parseDate = (iso?: string): Date | undefined => {
   return Number.isNaN(date.getTime()) ? undefined : date;
 };
 
-/** Formats a stored ISO string as the `YYYY-MM-DD` value expected by `Input.Date`. */
+/** Formats a stored ISO string as the `YYYY-MM-DD` value expected by `Field.Date`. */
 const toDateInput = (iso?: string): string => {
   const date = parseDate(iso);
   return date ? format(date, 'yyyy-MM-dd') : '';
 };
 
-/** Formats a stored ISO string as the `YYYY-MM-DDTHH:mm` value expected by `Input.DateTime`. */
+/** Formats a stored ISO string as the `YYYY-MM-DDTHH:mm` value expected by `Field.DateTime`. */
 const toDateTimeInput = (iso?: string): string => {
   const date = parseDate(iso);
   return date ? format(date, "yyyy-MM-dd'T'HH:mm") : '';
 };
 
-/** Parses a segmented `Input.Date`/`Input.DateTime` value (local time) back to a stored ISO string. */
+/** Parses a segmented `Field.Date`/`Field.DateTime` value (local time) back to a stored ISO string. */
 const fromDateInput = (value: string): string | undefined => {
   if (!value) {
     return undefined;

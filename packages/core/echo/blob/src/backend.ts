@@ -38,6 +38,14 @@ export interface BlobTransport {
   /** `undefined` means the key was not found. */
   get(key: string): Promise<Uint8Array | undefined>;
   has(key: string): Promise<boolean>;
+  /**
+   * Admits bytes already staged by a direct upload, returning the key they landed under.
+   *
+   * Optional because it is meaningful only for a hosted store: the bytes are moved server-side and
+   * never reach this process, which is the entire reason the path exists — the uploader was an
+   * agent's shell, and routing the file back through the client to hash it would undo the saving.
+   */
+  finalizeUpload?(uploadId: string): Promise<{ key: string; size: number; contentType?: string }>;
 }
 
 /**
@@ -58,4 +66,19 @@ export interface BlobBackend {
   get(request: { spaceId: SpaceId; uri: string }): Promise<Uint8Array | undefined>;
   has(request: { spaceId: SpaceId; uri: string }): Promise<boolean>;
   getUrl?(request: { spaceId: SpaceId; uri: string; contentType?: string }): Promise<string | undefined>;
+  /**
+   * Turns a completed direct upload into a stored blob, returning its URI and what the store
+   * actually received.
+   *
+   * The size and content type come back from the store rather than from the caller because the
+   * caller never saw the bytes: a direct upload is written by a third party (an agent's `curl`), so
+   * the only honest source for what landed is whatever received it.
+   *
+   * Implemented only by backends with a direct-upload path; `undefined` on the others, which is how
+   * the manager tells "this backend cannot adopt uploads" from "the upload failed".
+   */
+  adoptUpload?(request: {
+    spaceId: SpaceId;
+    uploadId: string;
+  }): Promise<{ uri: string; size: number; contentType?: string }>;
 }

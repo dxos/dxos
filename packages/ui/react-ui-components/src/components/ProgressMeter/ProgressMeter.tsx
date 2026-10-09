@@ -5,18 +5,24 @@
 import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react';
 
 import { Progress as ProgressModel } from '@dxos/progress';
-import {
-  IconButton,
-  Progress,
-  Stepper,
-  TextCrawl,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  stepCount,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
+import * as Typography from '@dxos/react-ui/Typography';
+import * as Util from '@dxos/react-ui/Util';
 
-export type ProgressMeterProps = ThemedClassName<
+import { translationKey } from '#translations';
+
+/**
+ * Long enough that a run which finishes almost immediately never shows a meter at all, short enough
+ * that a real one still feels responsive.
+ */
+const DEFAULT_DELAY = 500;
+
+/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
+const DEFAULT_MIN_DURATION = 1_000;
+
+export type ProgressMeterProps = Util.ThemedClassName<
   Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
     state?: ProgressModel.TaskProgress;
     /** Index of a stage the caller has singled out. */
@@ -35,15 +41,6 @@ export type ProgressMeterProps = ThemedClassName<
 >;
 
 /**
- * Long enough that a run which finishes almost immediately never shows a meter at all, short enough
- * that a real one still feels responsive.
- */
-const DEFAULT_DELAY = 500;
-
-/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
-const DEFAULT_MIN_DURATION = 1_000;
-
-/**
  * Shows the meter for a run, or nothing when there is none.
  *
  * The two bounds are why this wrapper exists rather than a bare `state && <meter/>`: a run that
@@ -52,7 +49,7 @@ const DEFAULT_MIN_DURATION = 1_000;
  * meter until the run has lasted long enough to be worth reporting; `minDuration` then holds it long
  * enough to be read.
  */
-export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
+export const ProgressMeter = Util.composable<HTMLDivElement, ProgressMeterProps>(
   ({ state, delay = DEFAULT_DELAY, minDuration = DEFAULT_MIN_DURATION, ...props }, forwardedRef) => {
     // The last state seen while visible: the run can end before `minDuration` is up, and the meter
     // has to keep rendering something for the rest of it.
@@ -61,7 +58,11 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
       held.current = state;
     }
 
-    const visible = useDeferredVisible(Boolean(state), delay, minDuration);
+    // Counted from when the run started, not from when this meter mounted: a run that has already
+    // lasted `delay` is worth reporting the moment a surface opens on it, and a popover that opened
+    // on such runs was otherwise empty for the whole delay.
+    const startedAt = state?.startedAt ? Date.parse(state.startedAt) : undefined;
+    const visible = useDeferredVisible(Boolean(state), delay, minDuration, startedAt);
     if (!visible || !held.current) {
       return null;
     }
@@ -72,16 +73,20 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
 
 ProgressMeter.displayName = 'ProgressMeter';
 
+/** How much of `delay` is still to run, given when the thing became present. */
+const remainingDelay = (delay: number, since: number | undefined): number =>
+  since === undefined ? delay : Math.max(0, delay - (Date.now() - since));
+
 /**
  * Whether a thing that is `present` should be shown, given a delay before it appears and a minimum
- * time it stays once it has.
+ * time it stays once it has. `since` is when it became present, if that predates the mount.
  *
  * Both bounds exist because a surface that flashes is worse than one that is slightly late: a
  * readout appearing and vanishing inside a few frames reads as a fault, and one that appears at all
  * should stay long enough to be read.
  */
-const useDeferredVisible = (present: boolean, delay: number, minDuration: number): boolean => {
-  const [visible, setVisible] = useState(present && delay === 0);
+const useDeferredVisible = (present: boolean, delay: number, minDuration: number, since?: number): boolean => {
+  const [visible, setVisible] = useState(present && remainingDelay(delay, since) === 0);
   // When it became visible, so `minDuration` counts from the render rather than from the moment
   // `present` flipped — a meter held back by `delay` has not been on screen at all yet.
   const shownAt = useRef<number | undefined>(visible ? Date.now() : undefined);
@@ -92,10 +97,13 @@ const useDeferredVisible = (present: boolean, delay: number, minDuration: number
         return;
       }
 
-      const timer = setTimeout(() => {
-        shownAt.current = Date.now();
-        setVisible(true);
-      }, delay);
+      const timer = setTimeout(
+        () => {
+          shownAt.current = Date.now();
+          setVisible(true);
+        },
+        remainingDelay(delay, since),
+      );
       return () => clearTimeout(timer);
     }
 
@@ -116,7 +124,7 @@ const useDeferredVisible = (present: boolean, delay: number, minDuration: number
       setVisible(false);
     }, remaining);
     return () => clearTimeout(timer);
-  }, [present, visible, delay, minDuration]);
+  }, [present, visible, delay, minDuration, since]);
 
   return visible;
 };
@@ -128,13 +136,14 @@ type InnerProgressMeterProps = ProgressMeterProps & { state: ProgressModel.TaskP
  * and how to stop it.
  *
  * One component with one geometry, whatever the monitor reports. The parts are chosen from the
- * state — a {@link Stepper} where the run declared a plan, a {@link Progress} fraction where the
+ * state — a {@link Steps} where the run declared a plan, a {@link Progress} fraction where the
  * phase counts and a sweep where it cannot, a crawl of the phases it has named — but the three rows
  * are always drawn, so a phase that stops being countable never changes the readout's height and
  * never moves the layout around it.
  */
-export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterProps>(
+export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressMeterProps>(
   ({ state, selected, onSelect, onCancel, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(translationKey);
     const { current = 0, total, label, name, status, note, error } = state;
     // Derived here rather than supplied: `deriveEta` projects from the task's own elapsed time, so
     // every producer gets the same estimate without computing one.
@@ -152,14 +161,18 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
     // rather than dropping it: a button that vanishes on completion takes its width with it and
     // slides the readout beside it sideways, at the exact moment the reader is looking at it.
     const cancellable = failed || (state.cancellable === true && active);
-    const stages = stepCount(state.phases);
+    const stages = state.phases ?? 0;
     // The crawl is the meter's only text now, so it opens with the run's name: without it a list of
     // meters would say what each is doing and never which task it is.
     const lines = useNotes(label ?? name, note, state.startedAt);
 
+    // A zero-work run is complete, as the bar's fraction already says; dividing by it would read NaN.
+    const progress = (current: number, total: number) =>
+      total === 0 ? '100%' : `${Math.round((current / total) * 100)}%`;
+
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           // Explicit rows, not auto-placement: both rows are drawn whatever the state, so the meter
           // is the same height determinate, indeterminate or phased, and the layout around it never
           // moves when a phase stops being countable.
@@ -173,24 +186,28 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through its phases. */
-            <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-description' lines={lines} greedy />
+            <Typography.Crawl classNames='min-w-0 flex-1 text-xs text-fg-muted' lines={lines} greedy />
           )}
-          <div className='flex items-center gap-1 shrink-0 text-description'>
-            <span className='font-mono'>
-              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
+          <div className='flex items-center gap-1 shrink-0 text-fg-muted'>
+            <span className='tabular-nums'>
+              {indeterminate
+                ? active && elapsedMs >= SECOND_MS
+                  ? formatDuration(elapsedMs)
+                  : ''
+                : progress(current, total)}
             </span>
-            {!indeterminate && etaMs !== undefined && status === 'running' && (
-              <span className='text-description'>{formatDuration(etaMs)} left</span>
+            {!indeterminate && etaMs !== undefined && etaMs >= SECOND_MS && status === 'running' && (
+              <span className='text-fg-muted'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
-              <IconButton
-                density='sm'
+              <Button.Root
+                size='sm'
                 variant='ghost'
-                size={3}
+                iconSize='xs'
                 icon='ph--x--regular'
                 iconOnly
                 disabled={!cancellable}
-                label={failed ? 'Dismiss' : 'Cancel'}
+                label={t(failed ? 'progress-meter.dismiss.label' : 'progress-meter.cancel.label')}
                 onClick={onCancel}
               />
             )}
@@ -200,7 +217,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
         {/* A declared plan is drawn as its stages, which carry the fraction on the line leaving the
             one in flight; with no plan there is only the fraction, so a bare bar says it. */}
         {stages > 0 ? (
-          <Stepper
+          <Status.Steps
             classNames='self-center'
             steps={state.phases ?? 0}
             active={state.phase}
@@ -211,14 +228,14 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             onSelect={onSelect}
           />
         ) : (
-          <Progress
+          <Status.Progress
             classNames='w-full self-center'
-            progress={fraction}
+            value={fraction}
             // Uncounted while it runs, and still uncounted when it fails — that is what fills the
             // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
             indeterminate={indeterminate && (active || failed)}
             error={failed}
-            aria-label={label ?? name}
+            label={label ?? name}
           />
         )}
       </div>
@@ -279,6 +296,9 @@ const useNotes = (label: string | undefined, note: string | undefined, startedAt
 //
 // Util
 //
+
+/** A duration under this rounds to `0s`, which reads as done or stuck; the readout waits for a whole second. */
+const SECOND_MS = 1_000;
 
 /** Compact human duration (e.g. `12s`, `3m 05s`, `1h 02m`). */
 export const formatDuration = (ms: number): string => {

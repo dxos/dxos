@@ -40,5 +40,6 @@ export default Config2.make({
     `,
     icon: { key: 'ph--butterfly--regular', hue: 'sky' },
     tags: ['labs', 'connector'],
+    dependsOn: ['org.dxos.plugin.thread'],
   },
 });

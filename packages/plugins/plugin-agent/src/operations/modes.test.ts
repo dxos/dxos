@@ -1,0 +1,196 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect/testing';
+import { EntityId } from '@dxos/keys';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Text } from '@dxos/schema';
+import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
+
+import { AgentOperationHandlerSet } from '#operations';
+import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
+
+import { testSpaceLayer } from '../brain/testing.ts';
+
+EntityId.dangerouslyDisableRandomness();
+
+const { text, toolCall } = ScriptedLanguageModel;
+
+const tool = Operation.toolName;
+
+const TYPES = [
+  Agent.Agent,
+  Chat.Chat,
+  Skill.Skill,
+  Feed.Feed,
+  Text.Text,
+  Instructions.Instructions,
+  Person.Person,
+  Organization.Organization,
+  HasSubject.HasSubject,
+  Memory.Memory,
+  Goal.Goal,
+  Mode.Mode,
+  Relay.Relay,
+  Task.Task,
+  TaskSet.TaskSet,
+  Message.Message,
+  Markdown.Document,
+  ProfileOf.ProfileOf,
+];
+
+const SKILLS = [
+  ConversationSkill.make(),
+  InterviewSkill.make(),
+  RelaySkill.make(),
+  ModesSkill.make(),
+  NoteTakerSkill.make(),
+  GoalsSkill.make(),
+];
+
+const TestLayer = AssistantTestLayer({
+  extraServices: testSpaceLayer,
+  operationHandlers: AgentOperationHandlerSet,
+  types: TYPES,
+  skills: SKILLS,
+  disableLlmMemoization: true,
+});
+
+/** The registry keys a chat binds, read through `ListSkills`. */
+const boundKeys = (agent: Ref.Ref<Agent.Agent>, chat: Chat.Chat) =>
+  Operation.invoke(AgentOperation.ListSkills, { agent, chat: Ref.make(chat) }).pipe(
+    Effect.map(({ skills }) => skills.map(({ key }) => key)),
+  );
+
+describe('Modes', () => {
+  it.effect(
+    'seeds the built-in modes and switches a chat between them, keeping the base skills bound',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const chat = yield* Agent.loadChat(agent);
+        expect(chat).toBeDefined();
+        if (!chat) {
+          return;
+        }
+        yield* Database.flush();
+
+        const listed = yield* Operation.invoke(ModeOperation.ListModes, { chat: Ref.make(chat) });
+        expect(listed.current).toBe(Mode.DEFAULT);
+        expect(listed.modes.map(({ name }) => name)).toEqual(['Conversation', 'Note-taker', 'Interviewer', 'Relay']);
+        expect(listed.modes.find(({ name }) => name === 'Note-taker')?.skills).toEqual([NoteTakerSkill.key]);
+        expect(yield* boundKeys(agentRef, chat)).toEqual(
+          expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]),
+        );
+        expect(yield* boundKeys(agentRef, chat)).not.toContain(InterviewSkill.key);
+
+        // Idempotent: listing again creates no second set of modes.
+        yield* Operation.invoke(ModeOperation.ListModes, { chat: Ref.make(chat) });
+        expect((yield* Database.query(Filter.type(Mode.Mode)).run).length).toBe(4);
+
+        const switched = yield* Operation.invoke(ModeOperation.SwitchMode, {
+          chat: Ref.make(chat),
+          mode: 'note-taker',
+        });
+        expect(switched).toEqual({ mode: 'Note-taker', skills: [NoteTakerSkill.key] });
+        yield* Database.flush();
+        expect(Mode.getCurrent(chat)).toBe('Note-taker');
+        const noting = yield* boundKeys(agentRef, chat);
+        expect(noting).toEqual(
+          expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key, NoteTakerSkill.key]),
+        );
+
+        // Another mode drops the note-taker's skill but never the base skills.
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(chat), mode: 'Interviewer' });
+        yield* Database.flush();
+        const interviewing = yield* boundKeys(agentRef, chat);
+        expect(interviewing).toContain(InterviewSkill.key);
+        expect(interviewing).not.toContain(NoteTakerSkill.key);
+        expect(interviewing).toEqual(expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]));
+        expect(new Set(interviewing).size).toBe(interviewing.length);
+
+        const unknown = yield* Operation.invoke(ModeOperation.SwitchMode, {
+          chat: Ref.make(chat),
+          mode: 'Juggler',
+        }).pipe(Effect.exit);
+        expect(Exit.isFailure(unknown) && String(unknown.cause)).toContain('No mode named "Juggler"');
+      },
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'records a note with a markdown body attached to its subject',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const rich = yield* Database.add(Person.make({ fullName: 'Rich Burdon' }));
+        const body = '- The migration must take the write lock first.\n- Dima owns the fix.';
+        const { memory: memoryRef } = yield* Operation.invoke(MemoryOperation.Remember, {
+          content: 'Notes on the indexer migration race.',
+          kind: 'note',
+          subjects: [Ref.make<Obj.Unknown>(rich)],
+          body,
+        });
+        const memory = yield* Database.load(memoryRef);
+        expect(memory.kind).toBe('note');
+        expect(memory.body).toBeDefined();
+        if (memory.body) {
+          expect((yield* Database.load(memory.body)).content).toBe(body);
+        }
+      },
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'keeps one keyed chat per person that is never the primary chat',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const primary = yield* Agent.loadChat(agent);
+        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        yield* Database.flush();
+
+        const first = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make<Obj.Unknown>(dima),
+        });
+        yield* Database.flush();
+        const second = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make<Obj.Unknown>(dima),
+        });
+        expect(second.chat.uri).toBe(first.chat.uri);
+
+        const chat = yield* Database.load(first.chat);
+        expect(ChatParticipant.get(chat)).toBe(dima.id);
+        expect(Mode.getCurrent(chat)).toBe(Mode.DEFAULT);
+        expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+        expect(yield* boundKeys(agentRef, chat)).toEqual(
+          expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]),
+        );
+      },
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});

@@ -2,29 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import type * as Observability from '@dxos/observability/Observability';
-import { FeedbackForm } from '@dxos/plugin-support/components';
+import * as FeedbackForm from '@dxos/plugin-support/FeedbackForm';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
-import {
-  AlertDialog,
-  type AlertDialogRootProps,
-  Banner,
-  DropdownMenu,
-  IconButton,
-  Popover,
-  useFileDownload,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util';
+import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
 // TODO(burdon): Factor out.
+type AlertDialogRootProps = ComponentProps<typeof AlertDialog.Root>;
+
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
   const context = 'context' in error && error.context && typeof error.context === 'object' ? error.context : {};
 
@@ -49,7 +46,8 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logStore: IdbLogStore;
-  observability?: Promise<Observability.Observability>;
+  /** Files the report. Absent when nothing can file one, which hides the feedback affordance. */
+  onSubmitReport?: (report: SupportOperation.SupportRequest) => Promise<void>;
   needRefresh?: boolean;
   onRefresh?: () => void;
   onReset?: () => Promise<void>;
@@ -58,7 +56,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 export const ResetDialog = ({
   error: errorProp,
   logStore,
-  observability: observabilityProp,
+  onSubmitReport,
   needRefresh,
   defaultOpen,
   open,
@@ -66,13 +64,13 @@ export const ResetDialog = ({
   onRefresh,
   onReset,
 }: ResetDialogProps) => {
-  const { t } = useTranslation('composer');
-  const [isNotMobile] = useMediaQuery('md');
+  const { t } = Hooks.useTranslation('composer');
+  const [isNotMobile] = Hooks.useMediaQuery('md');
   const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const download = useFileDownload();
+  const download = Hooks.useFileDownload();
 
   useEffect(() => {
     if (!feedbackSent) {
@@ -92,9 +90,7 @@ export const ResetDialog = ({
     log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
   }, [errorProp]);
 
-  const handleCopyError = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify(error));
-  }, [error]);
+  const handleCopyError = useCallback(() => JSON.stringify(error), [error]);
 
   const handleDownloadLogs = useCallback(async () => {
     const file = await exportManualLogDownload(logStore);
@@ -103,29 +99,23 @@ export const ResetDialog = ({
 
   const handleSaveFeedback = useCallback(
     async (values: SupportOperation.SupportRequest) => {
-      if (!observabilityProp) {
-        return;
+      if (!onSubmitReport) {
+        return false;
       }
 
-      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
-      // shape consumed by Observability. Triage metadata (type/severity/area/version)
-      // is embedded as a Markdown trailer so it travels with the message.
-      const trailer = [
-        `**Type:** ${values.type}`,
-        `**Severity:** ${values.severity}`,
-        values.area && `**Area:** ${values.area}`,
-        values.version && `**Version:** ${values.version}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-      const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
-
-      const observability = await observabilityProp;
-      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
-      setFeedbackSent(true);
+      try {
+        await onSubmitReport(values);
+        setFeedbackSent(true);
+        return true;
+      } catch (err) {
+        // The dialog is already showing a fatal error; a second one helps nobody, so the only
+        // signal is that the sent confirmation never appears.
+        log.warn('crash report not filed', { err });
+        return false;
+      }
     },
-    [observabilityProp],
+    [onSubmitReport],
   );
 
   const handleRefresh = useCallback(() => {
@@ -150,131 +140,116 @@ export const ResetDialog = ({
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
     >
-      <AlertDialog.Overlay>
-        <AlertDialog.Content size='md' data-testid='resetDialog'>
-          <AlertDialog.Header>
-            <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
-          </AlertDialog.Header>
-          <AlertDialog.Body>
-            <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
-            {error && (
-              <>
-                <div>
-                  <div className='flex items-center justify-between py-3'>
-                    <IconButton
-                      icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                      variant='ghost'
-                      classNames='flex items-center'
-                      label={t('show-stack.label')}
-                      onClick={() => setShowStack((showStack) => !showStack)}
-                      data-testid='resetDialog.showStackTrace'
+      <AlertDialog.Content size='md' data-testid='resetDialog'>
+        <AlertDialog.Header>
+          <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
+        </AlertDialog.Header>
+        <AlertDialog.Body>
+          <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
+          {error && (
+            <>
+              <div>
+                <div className='flex items-center justify-between py-3'>
+                  <Button.Root
+                    icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                    variant='ghost'
+                    classNames='flex items-center'
+                    label={t('show-stack.label')}
+                    onClick={() => setShowStack((showStack) => !showStack)}
+                    data-testid='resetDialog.showStackTrace'
+                  />
+                  <div className='flex items-center gap-1'>
+                    <SystemButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
+                    <Button.Root
+                      icon='ph--download-simple--regular'
+                      iconOnly
+                      label={t('download-logs.label')}
+                      onClick={handleDownloadLogs}
                     />
-                    <div className='flex items-center gap-1'>
-                      <IconButton
-                        icon='ph--clipboard--duotone'
-                        iconOnly
-                        label={t('copy-error.label')}
-                        onClick={handleCopyError}
-                      />
-                      <IconButton
-                        icon='ph--download-simple--regular'
-                        iconOnly
-                        label={t('download-logs.label')}
-                        onClick={handleDownloadLogs}
-                      />
-                    </div>
                   </div>
                 </div>
-                {showStack && (
-                  <Banner.Root key={error.message}>
-                    <Banner.Content classNames='overflow-auto'>
-                      <Banner.Body asChild>
-                        <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
-                          {error.stack}
-                        </pre>
-                      </Banner.Body>
-                    </Banner.Content>
-                  </Banner.Root>
-                )}
-              </>
-            )}
-          </AlertDialog.Body>
+              </div>
+              {showStack && (
+                <Banner.Root key={error.message}>
+                  <Banner.Body asChild>
+                    <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
+                      {error.stack}
+                    </pre>
+                  </Banner.Body>
+                </Banner.Root>
+              )}
+            </>
+          )}
+        </AlertDialog.Body>
 
-          <AlertDialog.ActionBar>
-            <IconButton
-              variant='primary'
-              icon='ph--barricade--regular'
-              iconOnly={!isNotMobile}
-              label={t('safe-mode.label')}
-              onClick={handleSafeMode}
-            />
-            <IconButton
-              icon='ph--stethoscope--regular'
-              iconOnly={!isNotMobile}
-              label={t('recovery.label')}
-              onClick={handleRecovery}
-              data-testid='resetDialog.recovery'
-            />
-            {onReset && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <IconButton
-                    icon='ph--trash--regular'
-                    iconOnly
-                    label={t('reset-app.label')}
-                    data-testid='resetDialog.reset'
-                    variant='destructive'
-                  />
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content side='top'>
-                    <DropdownMenu.Viewport>
-                      <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
-                        {t('reset-app-confirm.label')}
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            )}
+        <AlertDialog.Footer>
+          <Button.Root
+            variant='primary'
+            icon='ph--barricade--regular'
+            iconOnly={!isNotMobile}
+            label={t('safe-mode.label')}
+            onClick={handleSafeMode}
+          />
+          <Button.Root
+            icon='ph--stethoscope--regular'
+            iconOnly={!isNotMobile}
+            label={t('recovery.label')}
+            onClick={handleRecovery}
+            data-testid='resetDialog.recovery'
+          />
+          {onReset && (
+            <Menu.Root positioning={{ placement: 'top' }}>
+              <Menu.Trigger asChild>
+                <Button.Root
+                  icon='ph--trash--regular'
+                  iconOnly
+                  label={t('reset-app.label')}
+                  data-testid='resetDialog.reset'
+                  variant='destructive'
+                />
+              </Menu.Trigger>
+              <Menu.Content>
+                <Menu.Item
+                  data-testid='resetDialog.confirmReset'
+                  onClick={onReset}
+                  item={{ value: t('reset-app-confirm.label'), label: t('reset-app-confirm.label') }}
+                />
+              </Menu.Content>
+            </Menu.Root>
+          )}
 
-            <div className='flex-grow' />
-            {observabilityProp &&
-              isNotMobile &&
-              (feedbackSent ? (
-                <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
-              ) : (
-                <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                  <Popover.Trigger asChild>
-                    <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
-                  </Popover.Trigger>
-                  <Popover.Portal>
-                    <Popover.Content>
-                      <Popover.Viewport>
-                        <FeedbackForm.Root>
-                          <Form.Viewport>
-                            <Form.Content>
-                              <Form.FieldSet />
-                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
-                            </Form.Content>
-                          </Form.Viewport>
-                        </FeedbackForm.Root>
-                      </Popover.Viewport>
-                      <Popover.Arrow />
-                    </Popover.Content>
-                  </Popover.Portal>
-                </Popover.Root>
-              ))}
-            <IconButton
-              icon='ph--arrow-clockwise--regular'
-              iconOnly={!!isNotMobile}
-              label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
-              onClick={handleRefresh}
-            />
-          </AlertDialog.ActionBar>
-        </AlertDialog.Content>
-      </AlertDialog.Overlay>
+          <div className='flex-grow' />
+          {onSubmitReport &&
+            isNotMobile &&
+            (feedbackSent ? (
+              <Button.Root icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+            ) : (
+              <Popover.Root open={feedbackOpen} onOpenChange={({ open }) => setFeedbackOpen(open)}>
+                <Popover.Trigger asChild>
+                  <Button.Root icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                </Popover.Trigger>
+                <Popover.Content>
+                  <Popover.Body>
+                    <FeedbackForm.Root onSubmit={handleSaveFeedback}>
+                      <Form.Viewport>
+                        <Form.Content>
+                          <Form.Fields />
+                          <FeedbackForm.Submit />
+                        </Form.Content>
+                      </Form.Viewport>
+                    </FeedbackForm.Root>
+                  </Popover.Body>
+                </Popover.Content>
+              </Popover.Root>
+            ))}
+          <Button.Root
+            icon='ph--arrow-clockwise--regular'
+            iconOnly={!!isNotMobile}
+            label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
+            onClick={handleRefresh}
+          />
+        </AlertDialog.Footer>
+      </AlertDialog.Content>
     </AlertDialog.Root>
   );
 };

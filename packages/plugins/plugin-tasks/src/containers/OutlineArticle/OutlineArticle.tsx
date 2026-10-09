@@ -2,24 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
-import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
+
+import { useMarkdownExtensions } from '../../hooks/index.ts';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline> & {
   /**
@@ -41,7 +42,7 @@ export const OutlineArticle = ({
   taskSet,
   toolbar = true,
 }: OutlineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
 
   // Link the user navigated into; the back button clears it to return to the outline.
@@ -72,18 +73,7 @@ export const OutlineArticle = ({
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
-  // Editor extensions other plugins contribute (e.g. plugin-github's `#123` decoration), read here
-  // rather than handed down as a prop: this is the component that builds the editor, which is the
-  // same contract `MarkdownArticle` honours for markdown documents.
-  const extensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
-  const extensions = useMemo<Extension[]>(
-    () =>
-      (extensionProviders ?? [])
-        .flat()
-        .map((provider) => (typeof provider === 'function' ? provider({}) : provider))
-        .filter((extension): extension is Extension => !!extension),
-    [extensionProviders],
-  );
+  const extensions = useMarkdownExtensions(outline);
 
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
@@ -149,18 +139,18 @@ export const OutlineArticle = ({
   if (task) {
     return (
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
-          <TaskForm task={task} classNames='dx-document' />
-        </Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
+          <TaskForm task={task} />
+        </Panel.Body>
       </Panel.Root>
     );
   }
 
   return (
-    <Show when={text}>
+    <Show.Show when={text}>
       {(text) => (
         <Outline.Root
           ref={outlineRef}
@@ -173,29 +163,29 @@ export const OutlineArticle = ({
           extensions={extensions}
         >
           <Panel.Root role={role}>
-            <Show when={toolbar}>
-              <Panel.Toolbar asChild>
+            <Show.Show when={toolbar}>
+              <Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
-              </Panel.Toolbar>
-            </Show>
-            <Panel.Content asChild>
+              </Panel.Header>
+            </Show.Show>
+            <Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </Outline.Root>
       )}
-    </Show>
+    </Show.Show>
   );
 };
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) => {
+const TaskForm = ({ task }: { task: Task.Task }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
-      Obj.update(task, () => {
+      Obj.update(task, (task) => {
         for (const path of Object.keys(changed).filter((path) => changed[path])) {
           if (SchemaEx.isJsonPath(path)) {
             Obj.setValue(task, SchemaEx.splitJsonPath(path), values[path]);
@@ -208,9 +198,9 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
 
   return (
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
-      <Form.Viewport classNames={classNames} scroll>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

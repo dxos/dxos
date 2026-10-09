@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as ConfigProvider from 'effect/ConfigProvider';
 import * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
-import { account } from './accounts';
-import { code } from './codes';
-import { status } from './status';
-import { user } from './user';
+import { account } from './accounts/index.ts';
+import { code } from './codes/index.ts';
+import { status } from './status/index.ts';
+import { user } from './user/index.ts';
 
 export const hub = Command.make('hub', {
-  apiKey: Options.string('api-key').pipe(Options.withDescription('API key.'), Options.optional),
+  apiKey: Options.String('api-key').pipe(Options.withDescription('API key.'), Options.optional),
 }).pipe(
   Command.withDescription('Manage Hub.'),
   Command.provide(({ apiKey }) =>

@@ -10,7 +10,7 @@ import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +23,7 @@ import {
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
-} from './app-graph-builder';
+} from './app-graph-builder.ts';
 
 describe('project app graph builder', () => {
   test('contributes create-chat to a project node, for the navtree row', async ({ expect }) => {

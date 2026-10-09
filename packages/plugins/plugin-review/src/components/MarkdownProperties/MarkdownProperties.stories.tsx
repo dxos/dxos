@@ -18,7 +18,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
@@ -28,7 +28,7 @@ import { Branch, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
 
-import { MarkdownProperties } from './MarkdownProperties';
+import { MarkdownProperties } from './MarkdownProperties.tsx';
 
 const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.makeMeta({
@@ -69,7 +69,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
         ClientPlugin.make({

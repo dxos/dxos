@@ -18,9 +18,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { TerraObject } from '#types';
 
-import { createFullscreenUi } from '../engine';
-import { createGizmo } from './gizmo-layer';
-import { createObjectForm } from './object-forms';
+import { createFullscreenUi } from '../engine/index.ts';
+import { createGizmo } from './gizmo-layer.ts';
+import { createObjectForm } from './object-forms.ts';
 
 /** Every kind the gallery renders, left to right, in the same order `ObjectLayer` iterates. */
 const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank', 'rocket'];
@@ -141,9 +141,9 @@ const ObjectGalleryScene = () => {
   return (
     <div className='relative dx-fill'>
       {/* `dx-fill` is load-bearing: a bare canvas is a replaced element, so
-          `dx-fullscreen` alone sizes it to its HTML width/height attributes (the DPI-scaled
+          `dx-cover` alone sizes it to its HTML width/height attributes (the DPI-scaled
           render buffer `engine.resize()` sets) instead of stretching to fill the parent. */}
-      <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
+      <canvas ref={canvasRef} className='dx-fill dx-cover outline-none' style={{ touchAction: 'none' }} />
     </div>
   );
 };

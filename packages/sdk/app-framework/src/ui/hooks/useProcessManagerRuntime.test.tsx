@@ -9,10 +9,10 @@ import { describe, test } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
 
-import { ProcessManagerPlugin } from '../../plugin-process-manager';
-import { createTestApp } from '../../testing/harness';
-import { render } from '../../testing/react';
-import { useSpaceCallback } from './useProcessManagerRuntime';
+import * as ProcessManagerPlugin from '../../plugin-process-manager/ProcessManagerPlugin.ts';
+import { createTestApp } from '../../testing/harness.ts';
+import { render } from '../../testing/react.tsx';
+import { useSpaceCallback } from './useProcessManagerRuntime.ts';
 
 type AddFn = (a: number, b: number) => Promise<number>;
 
@@ -23,7 +23,7 @@ const Probe = ({ onResolve }: { onResolve: (fn: AddFn) => void }) => {
 
 describe('useProcessManagerRuntime', () => {
   test('useSpaceCallback passes the callback arguments through to fn', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin()] });
+    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin.make()] });
     let add: AddFn | undefined;
     let view!: RenderResult;
     // Async act: RTL's sync-act render leaves an initial-mount suspension unresumable in jsdom.

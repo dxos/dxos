@@ -3,11 +3,11 @@
 //
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
-import { toEffectSchema } from '@dxos/echo/JsonSchema';
+import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { type Anchor, ShapeLayout, type ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 
-import { type ComputeGraphController } from './graph';
-import { type ComputeShape, createFunctionAnchors } from './shapes';
+import { type ComputeGraphController } from './graph/index.ts';
+import { type ComputeShape, createFunctionAnchors } from './shapes/index.ts';
 
 // TODO(burdon): Customize layout. Specialize ComputeShapeDef and registry.
 export class ComputeShapeLayout extends ShapeLayout {
@@ -26,8 +26,8 @@ export class ComputeShapeLayout extends ShapeLayout {
       const node = this._controller.graph.getNode(shape.node);
       if (node.inputSchema || node.outputSchema) {
         // TODO(burdon): Requires that component defined input and output types.
-        const inputSchema = node.inputSchema ? toEffectSchema(node.inputSchema) : DefaultInput;
-        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : DefaultOutput;
+        const inputSchema = node.inputSchema ? JsonSchema.toEffectSchema(node.inputSchema) : DefaultInput;
+        const outputSchema = node.outputSchema ? JsonSchema.toEffectSchema(node.outputSchema) : DefaultOutput;
         anchors = createFunctionAnchors(shape, inputSchema, outputSchema);
       }
     }

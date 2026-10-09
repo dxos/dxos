@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, {
   type PropsWithChildren,
   Suspense,
@@ -18,7 +18,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -27,15 +27,18 @@ import {
   type EditorMenuProviderProps,
   type UseEditorMenuProps,
   useEditorMenu,
-} from '../EditorMenuProvider';
+} from '../EditorMenuProvider/index.ts';
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
-} from '../EditorToolbar';
-import { type EditorController, noopController } from './controller';
-import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext';
-import { EditorView as NaturalEditorContent, type EditorViewProps as NaturalEditorContentProps } from './EditorView';
+} from '../EditorToolbar/index.ts';
+import { type EditorController, noopController } from './controller.ts';
+import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext.ts';
+import {
+  EditorView as NaturalEditorContent,
+  type EditorViewProps as NaturalEditorContentProps,
+} from './EditorView.tsx';
 
 //
 // Root
@@ -103,7 +106,7 @@ EditorRoot.displayName = 'Editor.Root';
 
 const EDITOR_CONTENT_NAME = 'Editor.Content';
 
-type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type EditorContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Content component that wraps the toolbar and editor view area.
@@ -209,7 +212,7 @@ const countExtensions = (extension: Extension | undefined): number =>
       ? extension.reduce((sum, child) => sum + countExtensions(child), 0)
       : 1;
 
-type EditorDiagnosticsProps = ThemedClassName<{}>;
+type EditorDiagnosticsProps = Util.ThemedClassName<{}>;
 
 /**
  * Developer panel showing live editor state read from the CodeMirror `EditorState` (document size,
@@ -253,7 +256,7 @@ const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
   const extensionCount = countExtensions(extensions);
   const item = (label: string, value: string | number) => (
     <span>
-      <span className='text-subdued'>{label} </span>
+      <span className='text-fg-subtle'>{label} </span>
       {value}
     </span>
   );
@@ -261,7 +264,7 @@ const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
   return (
     <div
       className={mx(
-        'flex flex-wrap gap-x-4 gap-y-0.5 border-bs border-separator px-2 py-1 text-xs font-mono text-description',
+        'flex flex-wrap gap-x-4 gap-y-0.5 border-bs border-separator px-2 py-1 text-xs font-mono text-fg-muted',
         classNames,
       )}
       data-testid='editor.diagnostics'

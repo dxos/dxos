@@ -8,10 +8,10 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client, ClientService } from '@dxos/client';
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
@@ -22,7 +22,7 @@ import { type EdgeTriggerStatus } from '@dxos/edge-client';
 import { EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { createEdgeClient } from './edge-client';
+import { createEdgeClient } from './edge-client.ts';
 
 type EdgeClient = ReturnType<typeof createEdgeClient>;
 
@@ -48,7 +48,7 @@ const REPLICATION_BACKOFF = Schedule.exponential(Duration.seconds(1), 2).pipe(Sc
  * runtime status into a {@link Trigger.State} (marked `environment: 'edge'`).
  * The referenced `Trigger` objects are replicated into the local database, so
  * the trigger ref is a space-relative echo ref synthesized from the id. The
- * aggregate {@link TriggerMonitor} dedupes these against the database-derived
+ * aggregate {@link TriggerManager} dedupes these against the database-derived
  * view (edge entries here supersede the bare database ones).
  *
  * `invokeTrigger` force-runs the trigger's cron on the EDGE dispatcher via
@@ -98,10 +98,9 @@ const make = (
       invokeTrigger: (options: Trigger.InvokeOptions) =>
         // Manual invocation of a remote trigger maps onto force-running its cron on the EDGE
         // dispatcher; refresh the view promptly afterwards.
-        Effect.tryPromise({
-          try: () => getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
-          catch: (error) => error,
-        }).pipe(
+        Effect.tryPromise(() =>
+          getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
+        ).pipe(
           Effect.tapError((error) =>
             Effect.sync(() => log.warn('edge force-run failed; retrying', { triggerId: options.trigger.id, error })),
           ),

@@ -12,13 +12,13 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
 import { BrainOperation } from '#types';
 
-import { mailboxFacts } from './mailbox-facts';
+import { mailboxFacts } from './mailbox-facts.ts';
 
 describe('mailbox facts project template', () => {
   let builder: EchoTestBuilder;

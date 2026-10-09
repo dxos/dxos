@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-// Standalone entrypoint, not a barrel namespace: this is loaded by the log-writer worker, and
-// hoisting it onto the root barrel would put it in the graph of everyone importing the package.
+// @import-as-namespace
+
+// The log-writer worker imports this through its own subpath, so nothing else loads the
+// OpenTelemetry SDK.
 
 import { type Resource, defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { type LogRecordExporter } from '@opentelemetry/sdk-logs';
 
 import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from '@dxos/log';
 
-import { OtelLogs, convertLevel } from './logs';
-import { type OtelDestination } from './otel';
-import { contextForTrace } from './trace-context';
+import { OtelLogs, convertLevel } from './logs.ts';
+import { type OtelDestination } from './otel.ts';
+import { contextForTrace } from './trace-context.ts';
 
 export type Init = {
   type: 'otel-init';
@@ -33,6 +35,7 @@ const levelFromShortName = new Map<string, LogLevel>(
 
 export type Options = {
   exporter?: LogRecordExporter;
+  batch?: { maxQueueSize?: number; maxExportBatchSize?: number };
   /**
    * Called with the trace id of every record at warning or above that names one, before the export
    * level is applied: a warning the sink does not export still marks its trace as worth keeping.
@@ -56,6 +59,7 @@ export class Sink {
       getTags: () => this.#tags,
       logLevel: init.logLevel,
       exporter: options.exporter,
+      batch: options.batch,
     });
   }
 

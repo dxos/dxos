@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -21,23 +21,21 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';
-import { Position, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { findDirectoryById } from '../util';
-import type { FileSystemManager } from './state';
+import { findDirectoryById, isFileId } from '../util.ts';
+import type { FileSystemManager } from './state/index.ts';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 const GENERAL_TYPE = `${meta.profile.key}.general`;
 const DIRECTORY_TYPE = `${meta.profile.key}.directory`;
 const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
 
-const workspaceRearrangeCache = new Map<
-  string,
-  (nextOrder: (FileSystemCapabilities.FileSystemWorkspace | unknown)[]) => void
->();
+const workspaceRearrangeCache = new Map<string, (nextOrder: string[]) => void>();
 
 /**
  * Depth-first walk of a workspace tree from its top-level entries to `targetId`, accumulating the
@@ -70,20 +68,26 @@ export const createFileSystemEntryExtensions = (
 ) => {
   // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/…/<id>`), so
   // forward URL resolution walks the current workspace tree to rebuild the node path from the entry id.
-  const resolve: AppGraphBuilder.PathResolver = ({ id, workspace }) =>
-    Effect.sync(() => {
-      const ws = readState().workspaces.find((item) => item.id === workspace);
-      if (!ws) {
-        return null;
-      }
-      const chain = findEntryAncestorChain(ws.children, id, []);
-      return chain ? [GraphNode.RootId, workspace, ...chain, id].join('/') : null;
-    });
+  const url: AppGraphBuilder.UrlBinding = {
+    key: 'file',
+    kind: 'item',
+    path: [],
+    workspace: isFileId,
+    resolve: ({ id, workspace }) =>
+      Effect.sync(() => {
+        const ws = readState().workspaces.find((item) => item.id === workspace);
+        if (!ws) {
+          return null;
+        }
+        const chain = findEntryAncestorChain(ws.children, id, []);
+        return chain ? [GraphNode.RootId, workspace, ...chain, id].join('/') : null;
+      }),
+  };
 
   return Effect.all([
     AppGraphBuilder.createExtension({
       id: 'workspaceEntries',
-      url: { key: 'file', kind: 'item', path: resolve },
+      url,
       match: GraphNodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -107,7 +111,7 @@ export const createFileSystemEntryExtensions = (
 
     AppGraphBuilder.createExtension({
       id: 'directoryEntries',
-      url: { key: 'file', kind: 'item', path: resolve },
+      url,
       match: GraphNodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -158,8 +162,9 @@ export default Capability.makeModule(
               id: FileSystemOperation.OpenDirectory.meta.key,
               data: Effect.fnUntraced(function* () {
                 const result = yield* Operation.invoke(FileSystemOperation.OpenDirectory);
-                if (result?.subject) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
+                const [workspace] = result?.subject ?? [];
+                if (workspace) {
+                  yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
                 }
               }),
               properties: {
@@ -213,25 +218,9 @@ export default Capability.makeModule(
               let onRearrange = workspaceRearrangeCache.get(workspace.id);
               if (!onRearrange && graph && spacesOrder) {
                 onRearrange = (nextOrder) => {
-                  AppGraph.sortEdges(
-                    graph,
-                    GraphNode.RootId,
-                    'outbound',
-                    nextOrder.map((item) => {
-                      if (FileSystemCapabilities.isFileSystemWorkspace(item)) {
-                        return item.id;
-                      }
-                      return (item as { id: string }).id;
-                    }),
-                  );
-
+                  AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
                   Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
-                    spacesOrder.order = nextOrder.map((item) => {
-                      if (FileSystemCapabilities.isFileSystemWorkspace(item)) {
-                        return item.id;
-                      }
-                      return (item as { id: string }).id;
-                    });
+                    spacesOrder.order = nextOrder;
                   });
                 };
                 workspaceRearrangeCache.set(workspace.id, onRearrange);

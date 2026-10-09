@@ -5,16 +5,16 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
+import type * as Util from '@dxos/react-ui/Util';
 import { type BasicExtensionsOptions, type SubmitOptions } from '@dxos/ui-editor';
 
-import { type ReferencesOptions } from './references';
-import { useChatExtensions } from './useChatExtensions';
+import { type ReferencesOptions } from './references.ts';
+import { useChatExtensions } from './useChatExtensions.ts';
 
 export interface ChatEditorController extends EditorController {}
 
-export type ChatEditorProps = ThemedClassName<
+export type ChatEditorProps = Util.ThemedClassName<
   {
     extensions?: Extension;
     references?: ReferencesOptions;

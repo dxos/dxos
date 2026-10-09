@@ -5,18 +5,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import {
-  Button,
-  Input,
-  Panel,
-  ScrollArea,
-  Select,
-  type ThemedClassName,
-  Toolbar,
-  useThemeContext,
-} from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Empty } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -57,7 +56,7 @@ export type InputPayload =
       transcript: string;
     };
 
-export type InputPanelProps = ThemedClassName<{
+export type InputPanelProps = Util.ThemedClassName<{
   /** The active input tab (controlled, so the parent can keep it in sync with the selected pipeline). */
   mode: InputMode;
   /** Switch the active input tab. */
@@ -98,7 +97,7 @@ export const InputPanel = ({
   onLoadDataset,
   onInput,
 }: InputPanelProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const [text, setText] = useState(initialDocument);
   const [underline, setUnderline] = useState(false);
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');
@@ -134,29 +133,29 @@ export const InputPanel = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
+          <Button.Root variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
             Document
-          </Button>
-          <Button variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
+          </Button.Root>
+          <Button.Root variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
             Dataset
-          </Button>
-          <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
+          </Button.Root>
+          <Button.Root variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
             Record
-          </Button>
+          </Button.Root>
           <div className='grow' />
           {mode === 'document' && parse && (
-            <Input.Root>
+            <Field.Root>
               <div className='flex items-center gap-2 px-2'>
-                <Input.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
-                <Input.Label classNames='text-sm text-description'>POS</Input.Label>
+                <Input.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
+                <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
-            </Input.Root>
+            </Field.Root>
           )}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {mode === 'document' && (
           <Editor.Root>
             <Editor.View classNames='p-2' value={text} onChange={setText} extensions={extensions} />
@@ -165,85 +164,83 @@ export const InputPanel = ({
 
         {mode === 'dataset' && (
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root>
-                <Select.Root value={dataset?.id ?? ''} onValueChange={setDatasetId}>
-                  <Select.TriggerButton placeholder='Dataset' />
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {datasets.map((item) => (
-                          <Select.Option key={item.id} value={item.id}>
-                            {item.label}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
+                <Select.Root
+                  value={[dataset?.id ?? '']}
+                  onValueChange={({ value: [value] }) => setDatasetId(value)}
+                  items={datasets.map((item) => ({ value: item.id, label: item.label }))}
+                >
+                  <Select.Trigger placeholder='Dataset' />
+                  <Select.Content>
+                    {datasets.map((item) => (
+                      <Select.Item key={item.id} item={{ value: item.id, label: item.label }} />
+                    ))}
+                  </Select.Content>
                 </Select.Root>
                 {onLoadDataset && (
                   <>
                     <Toolbar.Separator />
-                    <Input.Root>
-                      <Input.TextInput
-                        type='number'
+                    <Field.Root>
+                      <Input.Root
                         min={1}
                         value={String(count)}
                         onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
                         classNames='w-20'
+                        type='number'
                       />
-                    </Input.Root>
-                    <Button disabled={busy} onClick={() => onLoadDataset(count)}>
+                    </Field.Root>
+                    <Button.Root disabled={busy} onClick={() => onLoadDataset(count)}>
                       Load
-                    </Button>
+                    </Button.Root>
                   </>
                 )}
               </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content asChild>
-              <ScrollArea.Root padding>
+            </Panel.Header>
+            <Panel.Body asChild>
+              <ScrollArea.Root>
                 <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
                   {!dataset || dataset.messages.length === 0 ? (
-                    <Empty label='No messages.' />
+                    <Status.Empty>No messages.</Status.Empty>
                   ) : (
                     dataset.messages.map((message) => (
                       <div
                         key={message.id}
-                        className='flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+                        className='flex flex-col min-w-0 dx-card-surface border border-separator-subtle rounded-sm px-3 py-2'
                       >
                         <div className='font-medium truncate'>{message.subject}</div>
-                        <div className='text-sm text-description truncate'>{message.from}</div>
+                        <div className='text-sm text-fg-muted truncate'>{message.from}</div>
                         <div className='text-sm line-clamp-3'>{message.body}</div>
                       </div>
                     ))
                   )}
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         )}
 
         {mode === 'record' && (
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root>
-                <Toolbar.IconButton
+                <Button.Root
                   icon={transcript ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
                   label={transcript ? 'Clear recording' : 'Record'}
                   onClick={() => setTranscript((current) => (current ? '' : sampleTranscript))}
                 />
               </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content>
+            </Panel.Header>
+            <Panel.Body>
               {transcript && (
                 <Editor.Root>
                   <Editor.View classNames='p-2' value={transcript} extensions={extensions} />
                 </Editor.Root>
               )}
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

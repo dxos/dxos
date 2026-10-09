@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { Organization } from '@dxos/types';
@@ -21,8 +21,8 @@ import genericConfirmationRaw from './testing/files/generic-booking-confirmation
 import klmConfirmationRaw from './testing/files/klm-confirmation.md?raw';
 import unitedConfirmationRaw from './testing/files/united-confirmation.md?raw';
 import unrelatedRaw from './testing/files/unrelated.md?raw';
-import { parseFixtureMessage } from './testing/load-fixture';
-import { TEMPLATE_ID, TripMessageExtractor } from './trip-extractor';
+import { parseFixtureMessage } from './testing/load-fixture.ts';
+import { TEMPLATE_ID, TripMessageExtractor } from './trip-extractor.ts';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});

@@ -2,29 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import type * as ChatType from '@dxos/assistant/Chat';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { ClientOperation } from '@dxos/plugin-client';
+import { useIdentity } from '@dxos/halo-react';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
+import { useChatModel, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
-  AppSurface.ObjectSectionProps<ChatType.Chat> & {
+  Omit<AppSurface.ObjectSectionProps<Chat.Chat>, 'subject'> & {
+    subject?: Chat.Chat;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
@@ -37,15 +40,24 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // pill floats over the last turn — on a phone the rail has nowhere to live outside the text and
     // the pill covers the reply it reports on. Neither has a toggle to orphan; both are passive.
     const mobile = usePlatform() === 'mobile';
-    const settings = useAtomCapability(AssistantCapabilities.Settings);
-    const atomRegistry = useCapability(Capabilities.AtomRegistry);
-    const stateAtom = useCapability(AssistantCapabilities.State);
+    const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
+    const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+    const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
-    const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
+    const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
 
-    const { preset, ...chatProps } = usePresets(settings);
-    const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
+    const { preset, ...chatProps } = usePresets(settings, chat);
+    // Every prompt carries the member's DID, so what they say is attributed to them rather than to a name.
+    const identity = useIdentity();
+    const sender = useMemo(
+      () =>
+        identity
+          ? { identityDid: identity.did, ...(identity.displayName ? { name: identity.displayName } : {}) }
+          : undefined,
+      [identity?.did, identity?.displayName],
+    );
+    const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender });
     const getContext = useSelectionContext(companionTo);
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -53,7 +65,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const [chatViewType] = useObject(chat, 'viewType');
     const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
 
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     const handleViewUsage = useCallback(() => {
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
@@ -68,8 +80,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // matching on the chat files them; it falls back to the object for a surface rendered outside a
     // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
     // acts on the chat, and only some of those belong beside the text being composed.
-    const { graph } = useAppGraph();
-    const actionNodeId = nodeId ?? Obj.getURI(chat);
+    const { graph } = ToolkitHooks.useAppGraph();
+    const actionNodeId = nodeId ?? (chat && Obj.getURI(chat));
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),
       [graph, actionNodeId],
@@ -83,7 +95,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     }, [attendableId]);
 
     useEffect(() => {
-      if (!processor || !attendableId || pendingSubmitted.current) {
+      if (!chatModel || !attendableId || pendingSubmitted.current) {
         return;
       }
 
@@ -96,64 +108,69 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           return { ...current, pendingPrompts: rest };
         });
 
-        void processor.request({ message: pendingPrompt });
+        void chatModel.request({ message: pendingPrompt });
       }
-    }, [processor, attendableId, atomRegistry, stateAtom]);
-
-    if (!processor) {
-      return null;
-    }
+    }, [chatModel, attendableId, atomRegistry, stateAtom]);
 
     return (
       <ChatComponent.Root
         chat={chat}
         db={db}
-        processor={processor}
+        chatModel={chatModel}
         debug={debug}
         getContext={getContext}
         onEvent={onEvent}
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar>
+          <Panel.Header>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <ChatComponent.Content>
-              <div className='dx-expand relative'>
-                {/* Thread outline. */}
+              <Layout.Flex classNames='dx-expand relative'>
+                {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
+
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
-                {/* Floating thread status: what the request is doing, above the counters it has run up. */}
-                {!mobile && viewType !== 'summary' && (
-                  <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
-                    <ChatComponent.StatusStack
-                      rowClassNames='dx-document px-4'
-                      pillClassNames='px-3 rounded-sm bg-group-surface'
-                    />
-                  </div>
+
+                {/** Floating info. */}
+                {!mobile && (
+                  <Layout.Grid
+                    cols={['fill', 'auto']}
+                    gap='sm'
+                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
+                    data-testid='assistant.chat-status'
+                  >
+                    {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
+                    <ChatComponent.Activity classNames='col-start-1 self-center' />
+                    <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
+                  </Layout.Grid>
                 )}
-              </div>
-              <div className='dx-document flex flex-col px-4 pb-4'>
-                {/* On mobile (and in the summary view) the floating stack is dropped, so the activity
-                    line keeps its in-flow slot above the composer. */}
-                {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
-                {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
-                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
+              </Layout.Flex>
+
+              <Layout.Flex column classNames='dx-document px-2 pb-2'>
+                {mobile && (
+                  <Layout.Grid cols={2}>
+                    <ChatComponent.Activity />
+                  </Layout.Grid>
+                )}
+
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
+                  autoFocus={!companionTo}
                   attendableId={attendableId}
                   companionTo={companionTo}
                   customActions={customActions}
                   nodeId={actionNodeId}
                   preset={preset?.id}
                 />
-              </div>
+              </Layout.Flex>
             </ChatComponent.Content>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </ChatComponent.Root>
     );

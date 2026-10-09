@@ -7,8 +7,8 @@
 // Storybook on webkit + vite-dev cannot reliably resolve the lazy form's
 // dynamic `import()` — see `./core.ts` for the underlying chunk-init issue
 // — and there is no production code-splitting benefit to recover here.
-export * as StorybookPlugin from './StorybookPlugin';
-export * from './core';
-export * from './corpus';
-export * from '#meta';
+export * as StorybookPlugin from './StorybookPlugin.ts';
 export * from '#types';
+export * as CorePlugins from './CorePlugins.ts';
+export * as Corpus from './Corpus.ts';
+export * as Harness from './Harness.ts';

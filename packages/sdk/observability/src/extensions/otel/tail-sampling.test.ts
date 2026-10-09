@@ -5,7 +5,7 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { describe, test } from 'vitest';
 
-import { type Decidable, DEFAULT_SLOW_MS, TailSampler, TailSamplingSpanProcessor } from './tail-sampling';
+import { type Decidable, DEFAULT_SLOW_MS, TailSampler, TailSamplingSpanProcessor } from './tail-sampling.ts';
 
 const KEPT_TRACE = '0'.repeat(24) + '00000000';
 const DROPPED_TRACE = '0'.repeat(24) + 'ffffffff';
@@ -44,6 +44,12 @@ describe('TailSampler', () => {
   test('keeps a turn or tool-call span the ratio would have dropped', ({ expect }) => {
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'turn' } }))).toEqual(true);
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'tool' } }))).toEqual(true);
+  });
+
+  test('keeps a span marked to keep, under either attribute namespace', ({ expect }) => {
+    expect(new TailSampler().keep(span({ attributes: { 'dxos.sampling.keep': true } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'ctx.dxos.sampling.keep': true } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'ctx.dxos.sampling.keep': false } }))).toEqual(false);
   });
 
   test('keeps a span slower than the threshold', ({ expect }) => {

@@ -14,14 +14,15 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 import { RoutineCapabilities } from '#types';
 
-import { CreateRoutinePanel } from './CreateRoutinePanel';
+import { CreateRoutinePanel } from './CreateRoutinePanel.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions];
 
@@ -55,7 +56,7 @@ const DefaultStory = ({ initialFormValues }: { initialFormValues?: Record<string
 const withRoutinePlugins = () =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
@@ -74,7 +75,7 @@ const meta = {
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    translations,
+    translations: [...translations, ...formTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -97,13 +98,15 @@ export const CreateFromTemplate: Story = {
     submittedPayload = undefined;
     const canvas = within(canvasElement);
 
-    // Step 1: the picker lists the Blank template; selecting it scaffolds a draft.
+    // Step 1: the picker lists the Blank template; picking selects it and Continue scaffolds a draft.
     const item = await canvas.findByText('Blank', undefined, { timeout: 10_000 });
     await userEvent.click(item);
+    await expect(canvas.getByTestId('create-automation-panel.template-input')).toBeInTheDocument();
+    await userEvent.click(canvas.getByTestId('save-button'));
 
     // Step 2: the routine form renders over the draft with a Save/Cancel row.
-    const save = await canvas.findByTestId('save-button', undefined, { timeout: 10_000 });
-    await userEvent.click(save);
+    const form = await canvas.findByTestId('routine-form', undefined, { timeout: 10_000 });
+    await userEvent.click(within(form).getByTestId('save-button'));
 
     // The save handler submits asynchronously; retry until the payload lands.
     await waitFor(() => expect(submitted()?.templateId).toBe(RoutineCapabilities.BlankTemplateId));
@@ -124,13 +127,12 @@ export const Seeded: Story = {
     submittedPayload = undefined;
     const canvas = within(canvasElement);
 
-    // The form (not the picker) is the first thing shown.
-    await canvas.findByTestId('save-button', undefined, { timeout: 10_000 });
+    // The seeded template is scaffolded without a pick: the form replaces the picker on its own.
+    const form = await canvas.findByTestId('routine-form', undefined, { timeout: 10_000 });
     await expect(canvas.queryByTestId('create-automation-panel.template-input')).toBeNull();
 
     // Cancel falls back to the picker.
-    const cancel = await canvas.findByTestId('cancel-button');
-    await userEvent.click(cancel);
+    await userEvent.click(within(form).getByTestId('cancel-button'));
     await canvas.findByTestId('create-automation-panel.template-input', undefined, { timeout: 10_000 });
   },
 };

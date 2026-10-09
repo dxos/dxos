@@ -15,9 +15,9 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
-import * as ActivationEvent from './activation-event';
-import * as Capability from './capability';
-import type * as PluginManager from './plugin-manager';
+import * as ActivationEvent from './activation-event.ts';
+import * as Capability from './capability.ts';
+import type * as PluginManager from './plugin-manager/index.ts';
 
 //
 // Plugin Service Layer
@@ -520,6 +520,12 @@ export function make<T>(builder: PluginBuilder<T>): ((options: T) => Plugin) & {
     // safe for option-reading module callbacks; ignored by `void` and record modules.
     const resolved = (options ?? {}) as T;
     const modules = builder.modules.map((module) => resolveModule(meta, module, resolved));
+    // The manager keys modules by id, so a second module with the same id would be dropped silently.
+    const ids = new Set<string>();
+    for (const module of modules) {
+      invariant(!ids.has(module.id), `Duplicate module id ${module.id} in plugin ${meta.profile.key}.`);
+      ids.add(module.id);
+    }
     return new PluginImpl(meta, modules);
   };
 
@@ -561,7 +567,7 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * @example
  * ```ts
  * // plugin-markdown/src/index.ts
- * import { Plugin } from '@dxos/app-framework';
+ * import * as Plugin from '@dxos/app-framework/Plugin';
  * import { meta } from './meta';
  *
  * export const MarkdownPlugin = Plugin.lazy(meta, () => import('./MarkdownPlugin'));

@@ -4,7 +4,7 @@
 
 import { pipeline } from '@huggingface/transformers';
 
-import { type EmbeddingOutput, RagPipeline } from './pipeline';
+import { type EmbeddingOutput, RagPipeline } from './pipeline.ts';
 
 // TODO(burdon): Workers.
 //  https://huggingface.co/docs/transformers.js/tutorials/react#step-3-design-the-user-interface

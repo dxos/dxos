@@ -4,6 +4,9 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Toolkit from 'effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
@@ -12,9 +15,6 @@ import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import {
   AiParser,
@@ -35,11 +35,12 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
-import { getOperationFromTool } from '../tool-runtime/services';
-import { type AiAssistantError, CompleteBlock, PartialBlock, emitRequestPhase } from '../util';
-import { formatSystemPrompt, formatUserPrompt } from './format';
-import { GenerationObserver } from './observer';
+import { getOperationFromTool } from '../tool-runtime/services.ts';
+import { type AiAssistantError } from '../util/index.ts';
+import { formatSystemPrompt, formatUserPrompt } from './format.ts';
+import { GenerationObserver } from './observer.ts';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -116,6 +117,8 @@ export type Options = {
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
+  /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
+  sender?: Message.Message['sender'];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
@@ -128,7 +131,10 @@ export type RunProps<R = never> = {
 
 export type BeginProps = {
   prompt: string | ContentBlock.Any[];
+  sender?: Message.Message['sender'];
   system?: string;
+  /** The system prompt already formatted from `system` and the bindings, so it is not formatted twice. */
+  systemPrompt?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
@@ -181,6 +187,9 @@ export class Request {
   /** Turns of this request spent reporting a tool call the toolkit could not resolve. */
   #unresolvedTools = 0;
 
+  /** The turn's prompt, sent on the ephemeral channel once the next model call is under way. */
+  #announcement: Message.Message | undefined;
+
   constructor(private readonly _options: Options = {}) {
     this._observer = _options.observer ?? GenerationObserver.noop();
     this._onOutput = _options.onOutput ?? (() => Effect.void);
@@ -211,7 +220,7 @@ export class Request {
           role: message.sender.role!,
           block: JSON.stringify(block),
         });
-        yield* Trace.write(CompleteBlock, {
+        yield* Trace.write(Trace.CompleteBlock, {
           messageId: message.id,
           role: message.sender.role!,
           block,
@@ -251,7 +260,9 @@ export class Request {
    */
   begin = ({
     prompt,
+    sender,
     system,
+    systemPrompt: formatted,
     history = [],
     skills = [],
     objects = [],
@@ -264,7 +275,8 @@ export class Request {
       // Per-run allowance: a reused Request must not inherit a spent budget from the previous run.
       this.#unresolvedTools = 0;
 
-      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie);
+      const systemPrompt =
+        formatted ?? (yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie));
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -275,13 +287,17 @@ export class Request {
         if (tokenCount > this._options.summarizationThreshold) {
           // A summarization pass is itself a model round-trip, so it can dominate the wait before
           // the turn the reader asked for even starts.
-          yield* emitRequestPhase('summarizing');
+          yield* Trace.emitRequestPhase('summarizing');
           const summary = yield* AiSummarizer.summarize([...this._history]);
           yield* this._submitMessage(summary);
         }
       }
 
-      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
+      const userMessage = yield* formatUserPrompt({ prompt, history, sender });
+      // Also sent on the ephemeral channel, as the reply's blocks are: the feed shows the prompt only
+      // once its index catches up, which can be after the reply has started streaming in.
+      this.#announcement = userMessage;
+      yield* this._submitMessage(userMessage);
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**
@@ -328,13 +344,14 @@ export class Request {
         history: this._history.length,
       });
 
-      yield* emitRequestPhase('encoding-prompt');
+      yield* Trace.emitRequestPhase('encoding-prompt');
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
       });
 
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      markWork('request.prompt-encoded');
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null;
@@ -350,10 +367,26 @@ export class Request {
       // Counts attempts at the provider rather than turns: the retry below re-runs the whole
       // collect, so `Stream.unwrap` re-evaluates this on each attempt and the reader sees the
       // request being re-issued instead of an unexplained stall.
+      // Forked to run once the call has gone out rather than written before it: rendering the prompt
+      // is the reader's page work, so it runs while the provider answers instead of delaying the request.
+      // Detached, since the effect that opens the stream returns at once and would take a child with it.
+      const announce = Effect.suspend(() => {
+        const announcement = this.#announcement;
+        this.#announcement = undefined;
+        return announcement === undefined
+          ? Effect.void
+          : Effect.forEach(
+              announcement.blocks,
+              (block) => Trace.write(Trace.PartialBlock, { messageId: announcement.id, role: 'user', block }),
+              { discard: true },
+            );
+      });
+
       let attempt = 0;
       const stream = Stream.unwrap(
         Effect.gen(function* () {
-          yield* emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          yield* Trace.emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          yield* Effect.yieldNow.pipe(Effect.andThen(announce), Effect.forkDetach);
           return openStream();
         }),
       );
@@ -378,13 +411,16 @@ export class Request {
         Stream.mapEffect(
           (block) =>
             Effect.gen({ self: this }, function* () {
+              // A model that answers before the forked announcement runs must not show its reply
+              // ahead of the prompt; a no-op once the prompt has gone out.
+              yield* announce;
               if (block._tag === 'stats' && block.finishReason !== undefined) {
                 finishReason = block.finishReason;
               }
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
                 log('emit ephemeral message', { id: currentMessageId, type: block._tag });
-                yield* Trace.write(PartialBlock, {
+                yield* Trace.write(Trace.PartialBlock, {
                   messageId: currentMessageId,
                   role: 'assistant',
                   block,
@@ -454,6 +490,7 @@ export class Request {
   }): Effect.Effect<void, RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      markWork('request.tools-begin');
       const toolCalls = this.getToolCalls();
       // A turn can end with no calls to run — a turn recovered from an unresolvable tool call leaves
       // none. Submitting anyway would append a tool message with no blocks, which the provider
@@ -461,12 +498,18 @@ export class Request {
       if (toolCalls.length === 0) {
         return;
       }
-      const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
-        if (!toolkit) {
-          throw new Error('No toolkit provided');
-        }
-        return callTool(toolkit, block);
-      });
+      const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) =>
+        Effect.gen(function* () {
+          if (!toolkit) {
+            throw new Error('No toolkit provided');
+          }
+          // Tool execution is where an agentic turn spends most of its time, and it produces no
+          // streamed content, so the tool's name is the only progress the reader has.
+          yield* Trace.emitRequestPhase('calling-tool', { detail: block.name });
+          return yield* callTool(toolkit, block);
+        }),
+      );
+      markWork('request.tools-called');
 
       yield* this._submitMessage(
         Obj.make(Message.Message, {
@@ -484,6 +527,7 @@ export class Request {
    */
   run = <const R = never>({
     prompt,
+    sender,
     system: systemTemplate,
     history = [],
     objects = [],
@@ -492,11 +536,19 @@ export class Request {
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
-
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(
         Effect.orDie,
       );
+      yield* this.begin({
+        prompt,
+        sender,
+        system: systemTemplate,
+        systemPrompt: system,
+        history,
+        objects,
+        skills,
+        instructions,
+      });
 
       do {
         const { done, finishReason } = yield* this.runAgentTurn({ system, toolkit });

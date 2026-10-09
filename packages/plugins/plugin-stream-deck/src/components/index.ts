@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './StreamDeckStatus';
-export * from './VirtualStreamDeck';
+export * from './StreamDeckStatus/index.ts';
+export * from './VirtualStreamDeck/index.ts';

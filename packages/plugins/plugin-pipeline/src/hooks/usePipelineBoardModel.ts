@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useMemo } from 'react';
 
-import { getQueryTarget } from '@dxos/app-toolkit/query';
+import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { Obj, Query } from '@dxos/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';
@@ -41,7 +41,7 @@ export const usePipelineBoardModel = (
           return [];
         }
         const query = Query.fromAst(JSON.parse(JSON.stringify(viewSnapshot.query.ast)));
-        const queryTarget = db ? getQueryTarget(query.ast, db) : undefined;
+        const queryTarget = db ? ToolkitQuery.getQueryTarget(query.ast, db) : undefined;
         if (!queryTarget) {
           return [];
         }

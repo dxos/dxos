@@ -4,31 +4,33 @@
 
 import React from 'react';
 
-import { AppSurface, useLayout } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PresentationShell, RevealPlayer } from '#components';
 
-import { useExitPresenter } from '../../useExitPresenter';
+import { useExitPresenter } from '../../useExitPresenter.ts';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
 export const DocumentArticle = ({ role, subject: document }: DocumentArticleProps) => {
   const handleExit = useExitPresenter(document);
-  const layout = useLayout();
+  const layout = Hooks.useLayout();
   const fullscreen = layout.mode === 'solo--fullscreen';
-  // RevealPlayer seeds its deck once from `content` (via a `defaultValue`); wait for the markdown ref to
-  // resolve so the presentation isn't initialized empty and left blank when the content arrives later.
-  const content = document.content.target?.content;
+  const [content] = useObject(document.content, 'content');
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
-          {content !== undefined && <RevealPlayer fullscreen={fullscreen} content={content} />}
+          {content !== undefined && (
+            <RevealPlayer data-testid='presenter.deck' fullscreen={fullscreen} content={content} />
+          )}
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

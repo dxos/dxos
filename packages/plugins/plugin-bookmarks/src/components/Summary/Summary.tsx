@@ -6,8 +6,10 @@ import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
+import { useObject } from '@dxos/echo-react';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -30,12 +32,15 @@ export type SummaryProps = {
  * Mirrors plugin-video's Summary: the CodeMirror `EditorView` is owned locally and never carried in
  * a React prop, keeping the article's prop graph free of non-serializable editor state.
  */
-export const Summary = composable<HTMLDivElement, SummaryProps>(
+export const Summary = Util.composable<HTMLDivElement, SummaryProps>(
   ({ classNames, id, source, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Hooks.useThemeMode();
+    // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
+    // loads asynchronously and isn't reactive on its own.
+    const [resolved] = useObject(source);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;
-      if (!target) {
+      if (!resolved || !target) {
         return {};
       }
 
@@ -49,12 +54,12 @@ export const Summary = composable<HTMLDivElement, SummaryProps>(
           decorateMarkdown(),
         ],
       };
-    }, [themeMode, id, source?.target]);
+    }, [themeMode, id, resolved]);
 
     return (
       <div
-        {...composableProps(props, { classNames: ['dx-expand', classNames] })}
-        ref={composeRefs(parentRef, forwardedRef)}
+        {...Util.composableProps(props, { classNames: ['dx-expand', classNames] })}
+        ref={Hooks.composeRefs(parentRef, forwardedRef)}
       />
     );
   },

@@ -6,13 +6,13 @@ import { addHours, isSameDay, startOfHour } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
@@ -24,14 +24,16 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
-import { getCalendarRangeSelectionId } from '../../paths';
-import { InitializeCalendar } from './InitializeCalendar';
+import { getCalendarPath, getFeedObjectPath } from '../../paths.ts';
+import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 const byDate =
   (direction = -1) =>
@@ -41,20 +43,20 @@ const byDate =
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [calendar] = useObject(subject);
-  const id = attendableId ?? Obj.getURI(calendar);
-  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(calendar);
+  // The calendar's graph node id: events open as its children and it is their pivot.
+  const id = attendableId ?? (db ? getCalendarPath(db.spaceId, calendar.id) : Obj.getURI(calendar));
+  const currentId = useSelection(id, 'single');
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
   // Pushing draft events to Google Calendar requires a connection bound to this calendar.
   const { connection } = useTargetConnection(subject);
 
-  const feed = calendar.feed?.target;
+  const feed = useResolveRef(calendar.feed);
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
   // to this calendar (not yet pushed to Google). Overlay both on the calendar.
   const syncedEvents = useQuery(
@@ -72,7 +74,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = calendar.tags?.target;
+  const tagIndex = useResolveRef(calendar.tags);
   const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
     return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
@@ -108,27 +110,17 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleRangeSelect = useCallback(
     ({ range }: { range: { from: Date; to: Date } }) => {
       void invokePromise(LayoutOperation.Select, {
-        contextId: getCalendarRangeSelectionId(id),
+        contextId: Calendar.getRangeSelectionId(id),
         subject: { mode: 'range', from: range.from.toISOString(), to: range.to.toISOString() },
       });
     },
     [id, invokePromise],
   );
 
-  const handleNavigate = useCallback(
-    (eventId: string) => {
-      // Setting the current item updates `activeEvent`, which selects + scrolls the grid (effect below).
-      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: eventId } });
-      // Open the event as its own plank beside the calendar (add), never a companion.
-      void invokePromise(LayoutOperation.Open, {
-        subject: [`${id}/${eventId}`],
-        pivotId: id,
-        disposition: 'add',
-        navigation: 'immediate',
-      });
-    },
-    [id, invokePromise],
-  );
+  const handleNavigate = ToolkitHooks.useDetailNavigation({
+    contextId: id,
+    getPath: (eventId) => getFeedObjectPath(id, eventId),
+  });
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes
   // (keyed on id/startDate, not a fresh Date each render, so the grid keeps its own selection between changes).
@@ -170,18 +162,18 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     const start = floor.getTime() === base.getTime() ? floor : addHours(floor, 1);
     const event = db.add(
       DraftEvent.make({
+        [Obj.Parent]: subject,
         owner: {},
         description: '',
         startDate: start.toISOString(),
         endDate: addHours(start, 1).toISOString(),
       }),
     );
-    Obj.setParent(event, subject);
     handleNavigate(event.id);
   }, [db, subject, selectedDate, handleNavigate]);
 
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const menuActions = useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
@@ -205,22 +197,22 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   return (
     <div role={role} className='@container dx-expand'>
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
-        <Panel.Root classNames='hidden @2xl:block'>
+        <Panel.Root classNames='hidden @2xl:grid'>
           <NaturalCalendar.Root ref={calendarRef}>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <NaturalCalendar.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
-            </Panel.Content>
+            </Panel.Body>
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-          </Panel.Toolbar>
+          </Panel.Header>
 
-          <Panel.Content asChild>
+          <Panel.Body asChild>
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
@@ -233,7 +225,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 onAction={handleAction}
               />
             )}
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </div>
     </div>

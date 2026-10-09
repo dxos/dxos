@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Types from 'effect/Types';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {
@@ -15,7 +15,7 @@ import {
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
-import { Table } from '../types';
+import { Table } from '../types/index.ts';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {

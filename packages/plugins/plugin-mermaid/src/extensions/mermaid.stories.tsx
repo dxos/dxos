@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -15,14 +15,14 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { mermaid } from './mermaid-extension';
+import { type MermaidOptions, mermaid } from './mermaid-extension.ts';
 
-type StoryArgs = {
+type StoryArgs = MermaidOptions & {
   text?: string;
 };
 
-const DefaultStory = ({ text }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+const DefaultStory = ({ text, ...options }: StoryArgs) => {
+  const themeMode = Hooks.useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
@@ -30,11 +30,11 @@ const DefaultStory = ({ text }: StoryArgs) => {
         createBasicExtensions(),
         createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        mermaid(),
+        mermaid(options),
         decorateMarkdown(),
       ],
     }),
-    [themeMode],
+    [themeMode, options.theme, options.themeCSS],
   );
 
   return <div {...focusAttributes} ref={parentRef} />;
@@ -44,6 +44,9 @@ const meta = {
   title: 'plugins/plugin-mermaid/extensions/mermaid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  argTypes: {
+    theme: { control: 'select', options: ['default', 'neutral', 'dark', 'forest', 'base'] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -70,6 +73,32 @@ export const Default: Story = {
       'Inside a markdown document.',
       '',
     ].join('\n'),
+  },
+};
+
+/** A sequence diagram, whose selectors differ from the flowchart's, under the same tokens. */
+export const Sequence: Story = {
+  args: {
+    text: [
+      '# Sequence',
+      '',
+      '```mermaid',
+      'sequenceDiagram',
+      '  participant Client',
+      '  participant Edge',
+      '  Client->>Edge: request',
+      '  Edge-->>Client: response',
+      '```',
+      '',
+    ].join('\n'),
+  },
+};
+
+/** The `base` theme with our own `themeCSS` only, no built-in palette underneath. */
+export const Base: Story = {
+  args: {
+    ...Default.args,
+    theme: 'base',
   },
 };
 

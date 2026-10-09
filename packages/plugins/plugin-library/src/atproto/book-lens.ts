@@ -6,15 +6,15 @@ import { Obj, Ref } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
-import { htmlToMarkdown, markdownToHtml } from '../operations/html-markdown';
+import { htmlToMarkdown, markdownToHtml } from '../operations/html-markdown.ts';
 
 // BookHive's catalog service account, which owns the canonical `buzz.bookhive.catalogBook` records. The
 // published book's `hiveBookUri` points here (its rkey is the hive id) — how BookHive associates the record.
 const BOOKHIVE_SERVICE_DID = 'did:plc:enu2j5xjlqsjaylv3du4myh4';
 
-// Register the ECHO-specific codecs the book lens references by name. A module side-effect (plugin-library
-// is `sideEffects: true`, so it is retained): the wire carries the review as HTML while ECHO holds markdown,
-// and review/notes are `Ref<Text>` on the ECHO side but plain strings on the wire.
+// Register the ECHO-specific codecs the book lens references by name. A module side-effect kept alive by
+// `bookLens` living in this module (plugin-library is `sideEffects: false`): the wire carries the review as
+// HTML while ECHO holds markdown, and review/notes are `Ref<Text>` on the ECHO side but plain strings on the wire.
 Panproto.registerTextFormat('markdown-html', {
   encode: (markdown) => markdownToHtml(markdown) ?? '',
   decode: (html) => htmlToMarkdown(html) ?? '',

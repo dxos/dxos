@@ -5,39 +5,42 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { MagazineTile } from './MagazineTile';
-import { useToolbar } from './useToolbar';
+import { MagazineTile } from './MagazineTile.tsx';
+import { useToolbar } from './useToolbar.tsx';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const invoker = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const invoker = Hooks.useOperationInvoker();
   const [magazine] = useObject(subject);
-  const curateProgress = useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
+  const curateProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
 
   // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
   // filter the visible posts.
   const { menu, viewAtom } = useToolbar({ magazine: subject });
   const view = useAtomValue(viewAtom);
 
-  const showItem = useShowItem();
+  const showItem = ToolkitHooks.useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(magazine);
@@ -91,28 +94,28 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <Flex center classNames='h-full text-subdued text-sm'>
+          <Layout.Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-magazine.message')}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-            <Masonry.Content thin centered padding>
+            <Masonry.Content padding>
               {/* TODO(burdon): Move items into Root. */}
               <Masonry.Viewport classNames='py-2' items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
-      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-separator-subtle'>
         <ProgressMeter state={curateProgress} />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

@@ -2,31 +2,40 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, expect, test } from 'vitest';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { TestSchema, prepareAstForCompare } from '../../testing';
-import * as Type from '../../Type';
+import { TestSchema, prepareAstForCompare } from '../../testing/index.ts';
+import * as Type from '../../Type.ts';
 import {
   FieldLookupAnnotationId,
+  FormInlineAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMeta,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation';
-import { EntityKind } from '../common/types';
-import { EchoObjectSchema } from '../Entity';
-import { Email, FormatAnnotation, TypeFormat } from '../Format';
-import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
-import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';
-import { TypeSchema } from '../Type';
-import { toEffectSchema, toJsonSchema } from './json-schema';
+} from '../Annotation/index.ts';
+import { EntityKind } from '../common/types/index.ts';
+import { EchoObjectSchema } from '../Entity/index.ts';
+import { Email, FormatAnnotation, TypeFormat } from '../Format/index.ts';
+import {
+  JsonSchemaType,
+  getNormalizedEchoAnnotations,
+  getSchemaProperty,
+  setSchemaProperty,
+} from '../JsonSchema/index.ts';
+import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref/index.ts';
+import { TypeSchema } from '../Type/index.ts';
+import { foldRestSignatures, toEffectSchema, toJsonSchema } from './json-schema.ts';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -47,6 +56,27 @@ describe('effect-to-json', () => {
     );
     const jsonSchema = toJsonSchema(Test);
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
+  });
+
+  test('form inline annotation survives a round trip', () => {
+    const Nested = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }),
+    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        nested: Ref(Nested).pipe(FormInlineAnnotation.set(true), Schema.annotate({ title: 'Nested' })),
+      }),
+    );
+    const jsonSchema = toJsonSchema(Test);
+    const nested = jsonSchema.properties?.nested;
+    invariant(nested);
+    expect(getNormalizedEchoAnnotations(nested)?.formInline).toBe(true);
+
+    const property = SchemaAST.getPropertySignatures(toEffectSchema(jsonSchema).ast).find(
+      ({ name }) => name === 'nested',
+    );
+    invariant(property);
+    expect(FormInlineAnnotation.getFromAst(property.type).pipe(Option.getOrUndefined)).toBe(true);
   });
 
   test('reference annotation', () => {
@@ -115,6 +145,19 @@ describe('effect-to-json', () => {
     );
     const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation(jsonSchema.properties!.name);
+  });
+
+  test('a check on an optional property survives dropping its undefined member', ({ expect }) => {
+    const jsonSchema = toJsonSchema(
+      Schema.Struct({
+        name: Schema.optional(Schema.String).check(
+          Schema.makeFilter((value: string | undefined) => value === undefined || value.length >= 3, {
+            toJsonSchema: () => ({ minLength: 3 }),
+          }),
+        ),
+      }),
+    );
+    expect(jsonSchema.properties?.name).to.deep.include({ type: 'string', minLength: 3 });
   });
 
   test('regular objects are not annotated', () => {
@@ -286,6 +329,18 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(A);
     expect(jsonSchema.properties?.kind).toEqual({ type: 'string', enum: ['a'] });
     expect(jsonSchema.properties?.b).toBeDefined();
+  });
+
+  test('a named recursive schema reached through two properties is one definition', () => {
+    interface Node {
+      readonly children: readonly Node[];
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      children: Schema.Array(Schema.suspend((): Schema.Codec<Node> => Node)),
+    }).annotate({ identifier: 'node' });
+
+    const jsonSchema = toJsonSchema(Schema.Struct({ first: Node, second: Node }));
+    expect(Object.keys(jsonSchema.$defs ?? {})).toEqual(['node']);
   });
 
   test('tuple schema with description', () => {
@@ -796,6 +851,22 @@ describe('json-to-effect', () => {
       closed: { name: 'ok', extra: 'stripped' },
     });
     expect((stripped as { closed: Record<string, unknown> }).closed).to.deep.eq({ name: 'ok' });
+  });
+
+  // Callers emitting through Effect directly get the same fold, at any depth.
+  test('foldRestSignatures restores a nested rest signature from Effect output', () => {
+    const Draft = Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+      Schema.Record(Schema.String, Schema.Unknown),
+    ]);
+    const { schema } = Schema.toJsonSchemaDocument(Schema.Struct({ drafts: Schema.Array(Draft) }));
+
+    expect(schema.properties).toMatchObject({ drafts: { items: { allOf: [{ type: 'object' }] } } });
+    expect(foldRestSignatures(schema).properties.drafts.items).to.deep.eq({
+      type: 'object',
+      properties: { '@type': { type: 'string' } },
+      required: ['@type'],
+      additionalProperties: true,
+    });
   });
 
   // A `$ref` is only ever emitted for a genuine cycle (an acyclic suspend is inlined), so the

@@ -9,13 +9,13 @@ import { describe, test } from 'vitest';
 
 import { Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
 
-import { type DocumentFacts, extractFactsStage } from '../stages';
-import { type ExtractDocument } from '../types';
+import { type DocumentFacts, extractFactsStage } from '../stages/index.ts';
+import { type ExtractDocument } from '../types/index.ts';
 
 // Minimal control for the extraction pipeline: run ONE model over a handful of trivial one-sentence
 // documents — no email parsing, no chunking, no model swaps — to isolate LLM/adapter behaviour and

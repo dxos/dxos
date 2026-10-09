@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { AlertDialog } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Action } from '../Panel';
-import { Viewport, useViewportContext } from './Viewport';
+import { Action } from '../Panel/index.ts';
+import { Viewport, useViewportContext } from './Viewport.tsx';
 
 type StorybookViewportProps = {};
 
@@ -42,15 +42,13 @@ const Views = () => {
 const StorybookViewport = (_: StorybookViewportProps) => {
   return (
     <AlertDialog.Root defaultOpen>
-      <AlertDialog.Overlay>
-        <AlertDialog.Content classNames='p-0'>
-          <AlertDialog.Title srOnly>Viewport</AlertDialog.Title>
-          <AlertDialog.Description srOnly>Storybook viewport navigation demo.</AlertDialog.Description>
-          <Viewport.Root defaultActiveView='one'>
-            <Views />
-          </Viewport.Root>
-        </AlertDialog.Content>
-      </AlertDialog.Overlay>
+      <AlertDialog.Content classNames='p-0'>
+        <AlertDialog.Title srOnly>Viewport</AlertDialog.Title>
+        <AlertDialog.Description srOnly>Storybook viewport navigation demo.</AlertDialog.Description>
+        <Viewport.Root defaultActiveView='one'>
+          <Views />
+        </Viewport.Root>
+      </AlertDialog.Content>
     </AlertDialog.Root>
   );
 };

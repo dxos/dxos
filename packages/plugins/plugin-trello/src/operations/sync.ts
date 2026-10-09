@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
@@ -22,9 +22,9 @@ import { Expando } from '@dxos/schema';
 import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
-import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
-import { formatTrelloSyncFailure } from '../errors';
-import { TrelloApi } from '../services';
+import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants.ts';
+import { formatTrelloSyncFailure } from '../errors.ts';
+import { TrelloApi } from '../services/index.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
@@ -212,7 +212,7 @@ export const reconcileBoardCards: (
     if (newRefs.length > 0) {
       Obj.update(kanban, (kanban) => {
         if (kanban.spec.kind === 'items') {
-          kanban.spec.items = [...(kanban.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
+          kanban.spec.items.push(...newRefs);
         }
       });
     }
@@ -512,7 +512,7 @@ export const findOrCreateKanbanForBoard: (board: TrelloBoard) => Effect.Effect<K
 const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
   const db = Obj.getDatabase(bound);
   if (!db) {
-    return yield* Effect.fail(new SyncDatabaseMissingError());
+    return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
   }
 
   // Wrap the body in `Effect.result` so we can emit a toast on either path
@@ -577,8 +577,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
           Cursor.recordError(bound, formatTrelloSyncFailure(error));
         }),
       ),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(TrelloApi.fromAccessToken(bound.spec.source)),
+      Effect.provide(Layer.provideMerge(Database.layer(db), TrelloApi.fromAccessToken(bound.spec.source))),
     ),
   );
 

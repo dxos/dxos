@@ -13,13 +13,12 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { composableProps } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { SVGContext, type SVGContextOptions, SVGContextProvider } from '../../hooks';
+import { SVGContext, type SVGContextOptions, SVGContextProvider } from '../../hooks/index.ts';
 
-export type RootProps = ThemedClassName<PropsWithChildren<SVGContextOptions & ComponentPropsWithoutRef<'div'>>>;
+export type RootProps = Util.ThemedClassName<PropsWithChildren<SVGContextOptions & ComponentPropsWithoutRef<'div'>>>;
 
 /**
  * Makes the SVG context available to child nodes.
@@ -74,7 +73,7 @@ export const Root = forwardRef<SVGContext, RootProps>(({ children, scale, center
 
   return (
     <SVGContextProvider value={context}>
-      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={setContainer}>
+      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={setContainer}>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           ref={context.ref}

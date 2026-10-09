@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { arrayMove, arraySwap, isNonNullable } from './types';
+import { arrayMove, arraySwap, isNonNullable } from './types.ts';
 
 describe('types', () => {
   test('filter', async () => {

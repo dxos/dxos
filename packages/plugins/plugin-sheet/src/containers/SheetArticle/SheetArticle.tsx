@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
 import { Sheet, SheetCapabilities } from '#types';
@@ -24,7 +24,7 @@ export type SheetArticleProps = AppSurface.ObjectArticleProps<
  * that registry. A sheet outside a space has no graph to evaluate against.
  */
 export const SheetArticle = ({ subject, ...props }: SheetArticleProps) => {
-  const registry = useCapability(SheetCapabilities.ComputeGraphRegistry);
+  const registry = Hooks.useCapability(SheetCapabilities.ComputeGraphRegistry);
   const space = getSpace(subject);
   if (!space) {
     return null;
@@ -51,16 +51,16 @@ const SheetArticleInner = ({
 
   return (
     <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
-      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square'}>
-        <Panel.Toolbar asChild>
+      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0'}>
+        <Panel.Header>
           <SheetComponent.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SheetComponent.Content />
-        </Panel.Content>
-        <Panel.Statusbar asChild>
+        </Panel.Body>
+        <Panel.Footer>
           <SheetComponent.Statusbar />
-        </Panel.Statusbar>
+        </Panel.Footer>
       </Panel.Root>
     </SheetComponent.Root>
   );

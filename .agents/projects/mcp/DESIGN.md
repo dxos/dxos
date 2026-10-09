@@ -422,6 +422,8 @@ constant, data written to the child's stdin after the edit reaches the new insta
 comes back empty, so module-level and global registries both reset (which is also why the stage-2
 schema-re-registration obstacle below does not apply here).
 
+<!-- TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support. -->
+
 What survives is the connection; what dies is the session. So the supervisor's job is not to make
 the client reconnect but to hold the handshake outside the realm and replay it: it caches the
 client's `initialize` and `notifications/initialized`, re-drives them into the fresh realm under a
@@ -433,6 +435,8 @@ itself is delegated to `bun --watch`, whose file set is exactly the imported mod
 not a dxos checkout. It was source-only for one revision on the theory that a binary has nothing to
 watch — true of the CLI's own code, false of the thing that matters. Two strategies, chosen by
 `globalThis.DX_CLI_BUNDLED`:
+
+<!-- TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support. -->
 
 - **From source**, `bun --watch` runs the child and tracks the imported module graph. It reloads in
   place, so the supervisor only has to replay the handshake.

@@ -4,11 +4,11 @@
 
 import React, { cloneElement } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Action, ActionBar } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
@@ -19,7 +19,7 @@ export interface InvitationAcceptedProps extends JoinStepProps {
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   const { active, Kind, doneActionParent, onDone } = props;
   const disabled = !active;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const doneAction = (
     <Action

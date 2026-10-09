@@ -6,7 +6,7 @@ import { type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type TableController } from './Table';
+import { type TableController } from './Table.tsx';
 
 // Kept out of `Table.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

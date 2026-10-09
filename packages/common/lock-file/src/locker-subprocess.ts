@@ -4,7 +4,7 @@
 
 /* eslint-disable no-console */
 
-import { LockFile } from './lock-file';
+import { LockFile } from './lock-file.ts';
 
 const filename = process.argv[2];
 

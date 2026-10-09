@@ -2,21 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Annotation, type Extension, type Range, RangeSet } from '@codemirror/state';
+import { Annotation, type Extension, type Range, RangeSet, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
   EditorView,
   type PluginValue,
+  type Tooltip,
   ViewPlugin,
   type ViewUpdate,
   WidgetType,
+  showTooltip,
 } from '@codemirror/view';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { Cursor, type CursorConverter, singleValueFacet } from '../../../util';
+import { Cursor, type CursorConverter, singleValueFacet } from '../../../util/index.ts';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
@@ -54,6 +56,7 @@ export const awareness = (provider = dummyProvider): Extension => {
     ViewPlugin.fromClass(RemoteSelectionsDecorator, {
       decorations: (value) => value.decorations,
     }),
+    hoveredCaret,
     styles,
   ];
 };
@@ -83,6 +86,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   private readonly _ctx = new Context();
   private readonly _cursorConverter: CursorConverter;
   private readonly _provider: AwarenessProvider;
+  private readonly _view: EditorView;
 
   private _lastAnchor?: number;
   private _lastHead?: number;
@@ -90,6 +94,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   public decorations: DecorationSet = RangeSet.of([]);
 
   constructor(view: EditorView) {
+    this._view = view;
     this._cursorConverter = view.state.facet(Cursor.converter);
     this._provider = view.state.facet(awarenessProvider);
     this._provider.open();
@@ -99,6 +104,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   destroy(): void {
+    cancelHide(this._view);
     void this._ctx.dispose();
     this._provider.close();
   }
@@ -134,10 +140,12 @@ export class RemoteSelectionsDecorator implements PluginValue {
       // {
       //   from: 0,
       //   to: 0,
-      //   value: Decoration.widget({ side: 0, block: false, widget: new RemoteCaretWidget('Test', 'red') }),
+      //   value: Decoration.widget({ side: 0, block: false, widget: new RemoteCaretWidget('test', 'Test', 'red') }),
       // },
     ];
 
+    const hovered = view.state.field(hoveredCaret, false);
+    let hoveredRendered = false;
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
       const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
@@ -198,56 +206,160 @@ export class RemoteSelectionsDecorator implements PluginValue {
         }
       }
 
+      const name = state.info.displayName ?? 'Anonymous';
+      const isHovered = hovered?.pos === head && hovered.peerId === state.peerId;
+      hoveredRendered ||= isHovered;
       decorations.push({
         from: head,
         to: head,
         value: Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
           block: false,
-          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', darkColor),
+          widget: new RemoteCaretWidget(state.peerId, name, darkColor, isHovered),
         }),
       });
+    }
+
+    // The peer moved or left: its caret element went without a `mouseleave`, so nothing else would hide the name.
+    if (hovered && !hoveredRendered) {
+      scheduleHide(view);
     }
 
     this.decorations = Decoration.set(decorations, true);
   }
 }
 
+/** Keyed by peer, not name: two peers may share a display name and a position. */
+type HoveredCaret = { pos: number; peerId: string; name: string; color: string };
+
+const setHoveredCaret = StateEffect.define<HoveredCaret | null>();
+
+/** How long a caret's name stays up once shown, in ms. */
+const MIN_TOOLTIP_DURATION = 1_000;
+
+// Per view, so a pending hide is cancelled when the pointer returns to any caret in the same editor.
+const hoveredAt = new WeakMap<EditorView, number>();
+const hideTimers = new WeakMap<EditorView, ReturnType<typeof setTimeout>>();
+
+/** Hides the name once it has been up for {@link MIN_TOOLTIP_DURATION}; a hide already pending is kept. */
+const scheduleHide = (view: EditorView) => {
+  if (hideTimers.has(view)) {
+    return;
+  }
+  const remaining = MIN_TOOLTIP_DURATION - (Date.now() - (hoveredAt.get(view) ?? 0));
+  hideTimers.set(
+    view,
+    setTimeout(
+      () => {
+        hideTimers.delete(view);
+        if (view.dom.isConnected) {
+          view.dispatch({ effects: setHoveredCaret.of(null) });
+        }
+      },
+      Math.max(0, remaining),
+    ),
+  );
+};
+
+const cancelHide = (view: EditorView) => {
+  clearTimeout(hideTimers.get(view));
+  hideTimers.delete(view);
+};
+
+/**
+ * The name of the remote caret under the pointer, shown as a tooltip: CodeMirror draws tooltips outside the
+ * scroller, so the name is not clipped above the first line, and flips below only when the window has no room.
+ */
+const hoveredCaret = StateField.define<HoveredCaret | null>({
+  create: () => null,
+  update: (value, tr) => {
+    for (const effect of tr.effects) {
+      if (effect.is(setHoveredCaret)) {
+        return effect.value;
+      }
+    }
+    return value && tr.docChanged ? { ...value, pos: tr.changes.mapPos(value.pos) } : value;
+  },
+  provide: (field) =>
+    showTooltip.from(field, (caret): Tooltip | null =>
+      caret
+        ? {
+            pos: caret.pos,
+            above: true,
+            create: () => {
+              const dom = document.createElement('div');
+              dom.className = 'cm-collab-selectionInfo';
+              dom.style.backgroundColor = caret.color;
+              dom.textContent = caret.name;
+              return { dom };
+            },
+          }
+        : null,
+    ),
+});
+
 class RemoteCaretWidget extends WidgetType {
   constructor(
+    private readonly _peerId: string,
     private readonly _name: string,
     private readonly _color: string,
+    /** Its name tooltip is showing, which outlasts the pointer; the dot hides for as long. */
+    private readonly _hovered = false,
   ) {
     super();
   }
 
-  override toDOM(): HTMLElement {
+  override toDOM(view: EditorView): HTMLElement {
     const span = document.createElement('span');
     span.className = 'cm-collab-selectionCaret';
+    span.dataset.peer = this._peerId;
+    span.dataset.name = this._name;
+    span.dataset.color = this._color;
+    span.toggleAttribute('data-hovered', this._hovered);
     span.style.backgroundColor = this._color;
     span.style.borderColor = this._color;
 
     const dot = document.createElement('div');
     dot.className = 'cm-collab-selectionCaretDot';
 
-    const info = document.createElement('div');
-    info.className = 'cm-collab-selectionInfo';
-    info.innerText = this._name;
+    // The name for assistive tech; sighted readers get it from the hover tooltip.
+    const name = document.createElement('span');
+    name.className = 'cm-collab-selectionName';
+    name.textContent = this._name;
 
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(dot);
     span.appendChild(document.createTextNode('\u2060'));
-    span.appendChild(info);
-    span.appendChild(document.createTextNode('\u2060'));
+    span.appendChild(name);
+    span.addEventListener('mouseenter', () => {
+      cancelHide(view);
+      hoveredAt.set(view, Date.now());
+      const pos = view.posAtDOM(span);
+      view.dispatch({
+        effects: setHoveredCaret.of({ pos, peerId: this._peerId, name: this._name, color: this._color }),
+      });
+    });
+    // A 2px caret is easy to leave by accident; a name that vanished at once could not be read.
+    span.addEventListener('mouseleave', () => scheduleHide(view));
     return span;
   }
 
-  override updateDOM(): boolean {
-    return false;
+  override updateDOM(dom: HTMLElement): boolean {
+    // Only the hover state changes in place: replacing the element under the pointer would drop its hover.
+    if (dom.dataset.peer !== this._peerId || dom.dataset.name !== this._name || dom.dataset.color !== this._color) {
+      return false;
+    }
+    dom.toggleAttribute('data-hovered', this._hovered);
+    return true;
   }
 
   override eq(widget: this): boolean {
-    return widget._color === this._color;
+    return (
+      widget._peerId === this._peerId &&
+      widget._color === this._color &&
+      widget._name === this._name &&
+      widget._hovered === this._hovered
+    );
   }
 
   override get estimatedHeight() {
@@ -286,33 +398,37 @@ const styles = EditorView.theme({
     transition: 'transform .3s ease-in-out',
     boxSizing: 'border-box',
   },
-  '.cm-collab-selectionCaret:hover > .cm-collab-selectionCaretDot': {
+  '.cm-collab-selectionCaret[data-hovered] > .cm-collab-selectionCaretDot': {
     transform: 'scale(0)',
     transformOrigin: 'center',
   },
-  '.cm-collab-selectionInfo': {
+  // Visually hidden, read by assistive tech.
+  '.cm-collab-selectionName': {
     position: 'absolute',
-    transform: 'translate(-50%, 0)',
-    top: '-20px',
-    left: 0,
+    width: '1px',
+    height: '1px',
+    overflow: 'hidden',
+    clipPath: 'inset(50%)',
+    whiteSpace: 'nowrap',
+  },
+  // Inside a tooltip, which takes the editor's font rather than the line's.
+  '.cm-tooltip.cm-collab-selectionInfo': {
     fontSize: '.75em',
     fontFamily: 'sans-serif',
-    fontStyle: 'normal',
-    fontWeight: 'normal',
     lineHeight: 'normal',
     userSelect: 'none',
     color: 'white',
     padding: '2px 6px',
-    zIndex: 101,
-    transition: 'opacity .3s ease-in-out',
-    backgroundColor: 'inherit',
+    border: 'none',
     borderRadius: '2px',
-    opacity: 0,
-    transitionDelay: '0s',
     whiteSpace: 'nowrap',
+    pointerEvents: 'none',
   },
-  '.cm-collab-selectionCaret:hover > .cm-collab-selectionInfo': {
-    opacity: 1,
-    transitionDelay: '0s',
+  // Square where it meets the caret, so the name reads as the caret's flag.
+  '.cm-tooltip-above.cm-collab-selectionInfo': {
+    borderBottomLeftRadius: 0,
+  },
+  '.cm-tooltip-below.cm-collab-selectionInfo': {
+    borderTopLeftRadius: 0,
   },
 });

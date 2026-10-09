@@ -3,13 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
@@ -17,8 +18,8 @@ import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipel
 import { Expando } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { fixtureExists, loadFixtureMessages, seedFeed } from '../testing/harness';
-import { OLLAMA_MODEL } from './defs';
+import { fixtureExists, loadFixtureMessages, seedFeed } from '../testing/harness/index.ts';
+import { OLLAMA_MODEL } from './defs.ts';
 
 // Local model served by Ollama; requires a running Ollama (`OLLAMA_ORIGINS="*" ollama serve`).
 const MODEL = OLLAMA_MODEL;
@@ -62,9 +63,12 @@ describe.skipIf(!fixtureExists())('runFactPipeline over a mailbox feed fixture (
         const facts = yield* store.query({});
         return { run, facts };
       }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(FactStoreLive.layerMemory),
-        Effect.provide(OllamaAiServiceLayer),
+        Effect.provide(
+          Database.layer(db).pipe(
+            Layer.provideMerge(FactStoreLive.layerMemory),
+            Layer.provideMerge(OllamaAiServiceLayer),
+          ),
+        ),
         EffectEx.runAndForwardErrors,
       );
 

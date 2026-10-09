@@ -4,11 +4,13 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';
@@ -38,14 +40,18 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <SearchList.Input placeholder='Search...' autoFocus={autoFocus} />
+            <SearchList.Input
+              placeholder='Search...'
+              autoFocus={autoFocus}
+              end={<Icon.Icon icon='ph--magnifying-glass--regular' />}
+            />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchResultStack results={allResults} query={query ?? ''} />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SearchList.Root>
   );

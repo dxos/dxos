@@ -8,19 +8,18 @@ import React, { type PropsWithChildren, useRef, useState } from 'react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form, TupleField } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 
-import { doLayout } from '../../layout';
-import { Container, DragTest, useSelection } from '../../testing';
-import { type CanvasGraphModel, Polygon, isPolygon } from '../../types';
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
+import { doLayout } from '../../layout/index.ts';
+import { Container, DragTest, useSelection } from '../../testing/index.ts';
+import { type CanvasGraphModel, Polygon, isPolygon } from '../../types/index.ts';
+import { Editor, type EditorController, type EditorRootProps } from './Editor.tsx';
 
 const generator: ValueGenerator = random as any;
 
@@ -39,7 +38,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!space || !init) {
       return;
     }
@@ -76,18 +75,11 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             isPolygon(selected) && (
               // `Polygon`, not `RectangleShape`: the selection is only ever narrowed that far, and the
               // rectangle's `type: 'rectangle'` literal is not assignable from a `Shape`'s `string`.
-              <Form.Root
-                schema={Polygon}
-                values={selected}
-                fieldMap={{
-                  // TODO(burdon): Replace by type.
-                  center: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                  size: (props) => <TupleField {...props} binding={['width', 'height']} />,
-                }}
-              >
+              // `center` and `size` render as nested field sets of their coordinates.
+              <Form.Root schema={Polygon} values={selected}>
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

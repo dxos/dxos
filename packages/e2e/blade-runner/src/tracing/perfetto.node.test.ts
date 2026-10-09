@@ -8,8 +8,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { scheduleMicroTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { PerfettoEvents } from './perfetto-events';
-import { writeEventStreamToAFile } from './perfetto-tracing';
+import { PerfettoEvents } from './perfetto-events.ts';
+import { writeEventStreamToAFile } from './perfetto-tracing.ts';
 
 describe('perfetto traces', () => {
   // Note: Skiped the test because it produces a file in the file system, and it is not automatically tested.

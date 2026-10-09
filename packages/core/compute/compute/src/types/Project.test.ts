@@ -8,13 +8,13 @@ import { describe, test } from 'vitest';
 
 import { Database, DXN, Filter, Obj, Ref, Type, URI } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
-import * as Instructions from './Instructions';
-import * as Project from './Project';
-import * as Routine from './Routine';
+import * as Instructions from './Instructions.ts';
+import * as Project from './Project.ts';
+import * as Routine from './Routine.ts';
 
 // Stand-in `Obj.Unknown` type for context objects, mirroring the ad-hoc test types used in
 // `AiContext.test.ts` — no database needed since `Ref.make` inlines the target.

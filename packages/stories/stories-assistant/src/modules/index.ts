@@ -3,16 +3,20 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
-import { AgentModule } from './AgentModule';
-import { ChatModule } from './ChatModule';
-import { ContextModule } from './ContextModule';
-import { GraphModule } from './GraphModule';
-import { ResearchInputModule } from './ResearchInputModule';
-import { ResearchOutputModule } from './ResearchOutputModule';
-import { TasksModule } from './TasksModule';
+import { AgentKnowledgeModule } from './AgentKnowledgeModule.tsx';
+import { AgentModule } from './AgentModule.tsx';
+import { AgentStateModule } from './AgentStateModule.tsx';
+import { ChatModule } from './ChatModule.tsx';
+import { ContextModule } from './ContextModule.tsx';
+import { GraphModule } from './GraphModule.tsx';
+import { ProfileModule } from './ProfileModule.tsx';
+import { ProjectModule } from './ProjectModule.tsx';
+import { ResearchInputModule } from './ResearchInputModule.tsx';
+import { ResearchOutputModule } from './ResearchOutputModule.tsx';
+import { TasksModule } from './TasksModule.tsx';
 
 /**
  * Custom roles for story panels that are NOT bound to a story-created object — the harness chat and
@@ -25,9 +29,13 @@ export const StoryRole = {
   ...ModuleRole,
 
   Agent: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agent'),
+  AgentKnowledge: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentKnowledge'),
+  AgentState: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentState'),
   Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chat'),
   Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
   Graph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.graph'),
+  Profile: Role.make<Record<string, unknown>>('org.dxos.storybook.role.profile'),
+  Project: Role.make<Record<string, unknown>>('org.dxos.storybook.role.project'),
   ResearchInput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchInput'),
   ResearchOutput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchOutput'),
   Tasks: Role.make<Record<string, unknown>>('org.dxos.storybook.role.tasks'),
@@ -47,6 +55,16 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: AgentModule,
   }),
   Surface.create({
+    id: 'role.agentKnowledge',
+    filter: Surface.makeFilter(StoryRole.AgentKnowledge),
+    component: AgentKnowledgeModule,
+  }),
+  Surface.create({
+    id: 'role.agentState',
+    filter: Surface.makeFilter(StoryRole.AgentState),
+    component: AgentStateModule,
+  }),
+  Surface.create({
     id: 'role.chat',
     filter: Surface.makeFilter(StoryRole.Chat),
     component: ChatModule,
@@ -60,6 +78,16 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.graph',
     filter: Surface.makeFilter(StoryRole.Graph),
     component: GraphModule,
+  }),
+  Surface.create({
+    id: 'role.profile',
+    filter: Surface.makeFilter(StoryRole.Profile),
+    component: ProfileModule,
+  }),
+  Surface.create({
+    id: 'role.project',
+    filter: Surface.makeFilter(StoryRole.Project),
+    component: ProjectModule,
   }),
   Surface.create({
     id: 'role.researchInput',
@@ -78,4 +106,5 @@ export const moduleSurfaces: Surface.Definition[] = [
   }),
 ];
 
-export { AgentModule } from './AgentModule';
+export { AgentModule } from './AgentModule.tsx';
+export { SpaceTemplateToolbar } from './SpaceTemplateToolbar.tsx';

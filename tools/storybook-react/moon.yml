@@ -10,10 +10,11 @@ tasks:
       - --output-dir=out/storybook-react
     deps:
       # Ensure that all packages are built to run storybook.
-      - '#ts-build:build'
+      - '#ts-vite-build:build'
       - '#ts-compile:build'
-      # Vendor bundles (e.g. `@dxos/vendor-hyperformula`) use the `vendor` tag, not `ts-build`/
-      # `ts-compile`, so they are not covered above; without their dist Vite's dep-scan aborts.
+      # Vendor bundles (e.g. `@dxos/vendor-hyperformula`) use the `vendor` tag, not
+      # `ts-vite-build`/`ts-compile`, so they are not covered above; without their dist Vite's
+      # dep-scan aborts.
       - '#vendor:build'
       # Storybook resolves packages straight from source, so anything *generated* — assets, sprites,
       # compiled shaders — is missing until its producer runs. Each such producer tags its task `prebuild`;
@@ -26,6 +27,28 @@ tasks:
       - $NODE_OPTIONS
     outputs:
       - out/storybook-react/
+  # Static build of only the stories the chat perf flow loads (`assistant-e2e:e2e-perf`), which serves
+  # it with `vite preview` so its stages measure the bundled app, not Vite serving unbundled modules.
+  bundle-perf:
+    command: storybook build
+    args:
+      - --output-dir=out/storybook-perf
+    env:
+      DX_STORIES: stories/stories-assistant
+      # See `.storybook/perf-bundle.ts`: without it the built chat story never mounts.
+      DX_PERF_BUNDLE: '1'
+    deps:
+      # See `bundle`.
+      - '#ts-vite-build:build'
+      - '#ts-compile:build'
+      - '#vendor:build'
+      - '#storybook:#prebuild'
+    outputs:
+      - out/storybook-perf/
+    options:
+      # The stories resolve every `@dxos/*` package from source, which no input list here can cover, and
+      # a perf run must measure the checkout as it is.
+      cache: false
   serve:
     # Wrapper, not `storybook dev` directly: it arms the hang watcher beside the server (see
     # `diagnose.sh`) and forwards every argument through.
@@ -38,14 +61,29 @@ tasks:
       # covers storybook-react's own project deps, so on a fresh worktree it omits artifacts that
       # stories import transitively — e.g. `@dxos/vendor-hyperformula`'s bundle (Vite's dep-scan then
       # aborts and no story loads).
-      - '#ts-build:build'
+      - '#ts-vite-build:build'
       - '#ts-compile:build'
-      # Vendor bundles (e.g. `@dxos/vendor-hyperformula`) use the `vendor` tag, not `ts-build`/
-      # `ts-compile`; their dist is what the dep-scan above needs.
+      # Vendor bundles (e.g. `@dxos/vendor-hyperformula`) use the `vendor` tag, not
+      # `ts-vite-build`/`ts-compile`; their dist is what the dep-scan above needs.
       - '#vendor:build'
       # See `bundle` — generated sources and static assets, which hang off each package's `build` and so
       # are absent in a fresh worktree.
       - '#storybook:#prebuild'
+    inputs:
+      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
+      - scripts/serve.sh
+      - scripts/diagnose.sh
+      - static/*
+    preset: server
+  # `serve` without its build deps, for restarting on a worktree whose `dist` is already built: those
+  # deps are the same `:build` tasks another moon run (e.g. `composer-app:bundle`) may be running, and
+  # moon does not coordinate across processes, so two runs rewrite the same `dist/types` at once.
+  serve-nodeps:
+    command: ./scripts/serve.sh
+    args:
+      - --port=9009
+      - --no-open
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -66,7 +104,7 @@ tasks:
       DX_FASTBUNDLE: '1'
     deps:
       # See `serve` — build the full closure so a fresh worktree has every artifact stories import.
-      - '#ts-build:build'
+      - '#ts-vite-build:build'
       - '#ts-compile:build'
       - '#vendor:build'
       # See `bundle` — generated sources and static assets the tag deps above never produce.

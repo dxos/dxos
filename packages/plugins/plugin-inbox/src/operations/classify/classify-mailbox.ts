@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -26,8 +26,8 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation } from '#types';
 
-import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags';
-import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor';
+import * as SystemTags from '../../types/SystemTags.ts';
+import * as FeedCursor from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -184,7 +184,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
       const feed = yield* Database.load(mailbox.feed);
       const tagIndex = yield* Database.load(mailbox.tags);
       const { db } = yield* Database.Service;
-      const cursor = yield* findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID);
+      const cursor = yield* FeedCursor.findOrCreateFeedCursor(mailbox, FeedCursor.CLASSIFY_CURSOR_KEY_ID);
 
       const signal = yield* Cancellation.signal;
       const traceWriter = yield* Trace.TraceService;
@@ -229,20 +229,20 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
       reportStatus({ current: 0, total: batch.length });
 
       // Lazily resolved canonical tag URIs (one findOrCreate per category actually used).
-      const tagUris = new Map<SystemTagId, string>();
-      const tagUriFor = (id: SystemTagId) =>
+      const tagUris = new Map<SystemTags.SystemTagId, string>();
+      const tagUriFor = (id: SystemTags.SystemTagId) =>
         Effect.gen(function* () {
           const existing = tagUris.get(id);
           if (existing) {
             return existing;
           }
-          const tag = yield* Effect.promise(() => findOrCreateSystemTag(db, id));
+          const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, id));
           const uri = Obj.getURI(tag).toString();
           tagUris.set(id, uri);
           return uri;
         });
 
-      const applyTag = (message: Message.Message, id: SystemTagId) =>
+      const applyTag = (message: Message.Message, id: SystemTags.SystemTagId) =>
         Effect.gen(function* () {
           const uri = yield* tagUriFor(id);
           Tagging.set(message, uri, { index: tagIndex });
@@ -269,7 +269,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           if (unknown.length > 0) {
             const prompt = `${CLASSIFY_PROMPT}\n\n${unknown.map(promptEntry).join('\n\n')}`;
             const payload = yield* generateClassification(prompt, strict ?? true).pipe(
-              Effect.provide(AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
+              Effect.provide(AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
             );
             for (const result of payload.results) {
               const message = unknown[result.index];
@@ -319,7 +319,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           signal,
           Effect.sync(() => {
             log.info('classify: pipeline cancelled', { mailbox: Obj.getURI(mailbox), processed });
-            reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+            reportStatus({ message: Progress.STATUS_CANCELLED });
           }),
         ),
       );
@@ -329,7 +329,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           Effect.sync(() => {
             if (!Cause.hasInterruptsOnly(cause)) {
               Cursor.recordError(cursor, Cause.pretty(cause).slice(0, 500));
-              reportStatus({ message: PROGRESS_STATUS_FAILED });
+              reportStatus({ message: Progress.STATUS_FAILED });
             }
           }),
         ),
@@ -343,7 +343,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
         known: knownCount,
         remaining,
       });
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ message: Progress.STATUS_COMPLETE });
       return { processed, spam, known: knownCount, remaining };
     }),
   ),

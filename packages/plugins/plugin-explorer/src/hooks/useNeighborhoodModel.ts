@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
-import { useGraphModel } from './useGraphModel';
+import { useGraphModel } from './useGraphModel.ts';
 
 /** Default traversal depth (hops) for the neighborhood graph. */
 export const DEFAULT_NEIGHBORHOOD_DEPTH = 2;

@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Feed, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Transcript } from '@dxos/types';
@@ -19,7 +19,7 @@ import { TranscriptionPlugin } from '#plugin';
 import { TestItem } from '#testing';
 import { translations } from '#translations';
 
-import { TranscriptionArticle } from './TranscriptionArticle';
+import { TranscriptionArticle } from './TranscriptionArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -40,7 +40,7 @@ const meta = {
       // The app-wide TranscriptionDriver (ReactContext) reads the recording-session/settings
       // capabilities, which activate on SetupSettings — fire it so the driver does not throw.
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Transcript.Transcript, Feed.Feed, Message.Message, TestItem],
           onClientInitialized: ({ client }) =>

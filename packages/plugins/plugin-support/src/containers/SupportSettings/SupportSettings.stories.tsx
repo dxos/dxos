@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -15,7 +15,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { SupportSettings } from './SupportSettings';
+import { SupportSettings } from './SupportSettings.tsx';
 
 type StoryArgs = {
   settings: Settings.Settings;
@@ -43,7 +43,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ createIdentity: true }),
-    withPluginManager({ plugins: corePlugins() }),
+    withPluginManager({ plugins: CorePlugins.make() }),
   ],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;

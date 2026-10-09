@@ -12,10 +12,10 @@ import { type Scene } from '@babylonjs/core/scene';
 
 import { TerraObject } from '#types';
 
-import { scale } from '../engine';
-import { type SimObject } from '../sim';
-import { easeHeading } from './heading';
-import { SCALE_FACTOR, objectFrame } from './orientation';
+import { scale } from '../engine/index.ts';
+import { type SimObject } from '../sim/index.ts';
+import { easeHeading } from './heading.ts';
+import { SCALE_FACTOR, objectFrame } from './orientation.ts';
 
 /** The three local axes drawn per object: right, up (surface normal), and forward (heading). */
 export type Axis = 'right' | 'up' | 'forward';

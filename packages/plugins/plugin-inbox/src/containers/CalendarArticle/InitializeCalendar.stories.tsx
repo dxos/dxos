@@ -13,7 +13,7 @@ import { AccessToken } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -21,7 +21,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { InboxPlugin } from '#plugin';
 import { Calendar } from '#types';
 
-import { InitializeCalendar } from './InitializeCalendar';
+import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 type StoryArgs = {
   withToken?: boolean;
@@ -44,7 +44,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { withToken = false } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [AccessToken.AccessToken, Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>

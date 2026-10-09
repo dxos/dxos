@@ -20,8 +20,8 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline } from '@dxos/types';
 
-import { RunInstructions } from './definitions';
-import defaultAgentPrompt from './run-instructions';
+import * as AgentOperation from '../types/AgentOperation.ts';
+import defaultAgentPrompt from './run-instructions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -53,7 +53,7 @@ describe('RunInstructions (recorded model)', { tags: ['model-fixture'] }, () => 
         );
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: { title: 'The Wind in the Willows' },
         });
@@ -83,7 +83,7 @@ describe('RunInstructions (recorded model)', { tags: ['model-fixture'] }, () => 
         );
         yield* Database.flush();
 
-        const exit = yield* Operation.invoke(RunInstructions, {
+        const exit = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: { company: 'Acme Manufacturing Holdings', date: '2019-04-02' },
         }).pipe(Effect.exit);

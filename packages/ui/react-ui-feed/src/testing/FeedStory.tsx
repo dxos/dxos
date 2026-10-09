@@ -5,19 +5,29 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Outline, type OutlineMarker } from '../components';
-import { type MessageChromeProps, MessageList, useMessageList } from '../components';
-import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks';
-import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model';
-import { FeedStats, useFeedDebug } from './debug';
-import { createMessages } from './generator';
-import { type FeedScenario, createScenario } from './scenarios';
-import { createAnswer, textStream } from './stream';
-import { streamTurn } from './turn';
+import {
+  type MessageChromeProps,
+  MessageList,
+  Outline,
+  type OutlineMarker,
+  useMessageList,
+} from '../components/index.ts';
+import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks/index.ts';
+import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model/index.ts';
+import { FeedStats, useFeedDebug } from './debug/index.ts';
+import { createMessages } from './generator.ts';
+import { type FeedScenario, createScenario } from './scenarios.tsx';
+import { createAnswer, textStream } from './stream.ts';
+import { streamTurn } from './turn.ts';
 
 /** Pause between one answer finishing and the next question arriving. */
 const TURN_DELAY = 800;
@@ -62,13 +72,13 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
       data-testid='feed.message'
     >
       <div className='flex flex-col items-center gap-1'>
-        <Input.Root>
+        <Field.Root>
           <Input.Checkbox
             checked={selected}
             onCheckedChange={() => onSelect(message.id, true)}
             data-testid='feed.message.select'
           />
-        </Input.Root>
+        </Field.Root>
       </div>
 
       {/*
@@ -77,16 +87,22 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
         a pointer moving down the list during a scroll then shifts every row below it.
       */}
       <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
-        <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
-        <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
-        <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
+        <Button.Root icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' iconSize='xs' />
+        <Button.Root
+          icon='ph--arrow-counter-clockwise--regular'
+          iconOnly
+          label='Rewind'
+          variant='ghost'
+          iconSize='xs'
+        />
+        <Button.Root icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' iconSize='xs' />
       </div>
 
       <div className='min-w-0'>
-        <div className='flex items-center gap-2 text-xs text-description'>
+        <div className='flex items-center gap-2 text-xs text-fg-muted'>
           <span className='font-medium'>{message.sender.name ?? role}</span>
           <span>{time}</span>
-          <span className='text-subdued'>#{index}</span>
+          <span className='text-fg-subtle'>#{index}</span>
         </div>
         {children}
       </div>
@@ -266,24 +282,24 @@ export const FeedStory = ({
           tailLines={tailLines}
         >
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root>
-                <IconButton
+                <Button.Root
                   icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
                   iconOnly
                   label={streaming ? 'Stop' : 'Start'}
                   data-testid='feed.stream.toggle'
                   onClick={() => setStreaming((value) => !value)}
                 />
-                <IconButton
+                <Button.Root
                   icon='ph--plus--regular'
                   iconOnly
                   label='Add message'
                   data-testid='feed.stream.append'
                   onClick={handleAppend}
                 />
-                <IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-                <IconButton
+                <Button.Root icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+                <Button.Root
                   icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
                   iconOnly
                   label={debug ? 'Hide block outlines' : 'Show block outlines'}
@@ -291,17 +307,17 @@ export const FeedStory = ({
                   onClick={toggleDebug}
                 />
                 <Toolbar.Separator />
-                <Input.Root>
-                  <Input.TextInput
+                <Field.Root>
+                  <Input.Root
                     placeholder='Search…'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     data-testid='feed.search'
                   />
-                </Input.Root>
+                </Field.Root>
                 <FindButton hits={hits} />
-                <IconButton icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
-                <IconButton
+                <Button.Root icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
+                <Button.Root
                   icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
                   iconOnly
                   label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
@@ -311,14 +327,14 @@ export const FeedStory = ({
                 <div className='grow' />
                 <MessageList.Nav classNames='contents' />
               </Toolbar.Root>
-            </Panel.Toolbar>
+            </Panel.Header>
 
-            <Panel.Content classNames='relative'>
+            <Panel.Body classNames='relative'>
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>
-              <MessageList.Viewport classNames='dx-fullscreen' padding ref={viewportRef} />
-            </Panel.Content>
+              <MessageList.Viewport classNames='dx-cover' ref={viewportRef} />
+            </Panel.Body>
           </Panel.Root>
           <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
         </MessageList.Root>
@@ -335,7 +351,7 @@ export const FeedStory = ({
  * pixel offsets are involved, which is what makes this survive rows whose heights are still
  * estimates.
  */
-const FeedOutline = ({ classNames, messages }: ThemedClassName<{ messages: readonly Message.Message[] }>) => {
+const FeedOutline = ({ classNames, messages }: Util.ThemedClassName<{ messages: readonly Message.Message[] }>) => {
   const { currentIndex, scrollToIndex } = useMessageList('FeedOutline');
 
   const markers = useMemo<OutlineMarker[]>(() => {
@@ -396,5 +412,5 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
     }
   }, [hits, scrollToIndex]);
 
-  return <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
+  return <Button.Root icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
 };

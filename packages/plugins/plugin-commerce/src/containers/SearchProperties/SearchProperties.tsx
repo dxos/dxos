@@ -4,17 +4,19 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
-import { buildUnionFormSchema } from '../../util';
+import { buildUnionFormSchema } from '../../util/index.ts';
 
 export type SearchPropertiesProps = {
   search: Search.Search;
@@ -27,8 +29,8 @@ export type SearchPropertiesProps = {
  * selector is duplicated here. The masonry results live in the article.
  */
 export const SearchProperties = ({ search }: SearchPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const database = Obj.getDatabase(search);
 
   // Reactive query of every Provider in the space — used to resolve the Provider objects (and their
@@ -76,7 +78,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   }, [invokePromise, search, database]);
 
   return (
-    <Flex column>
+    <Layout.Container gutter='none'>
       {/* TODO(burdon): Fix indentation; is this the right way to extend properties? */}
       {selectedProviders.length > 0 && (
         // Re-key the form on the set of selected providers so the merged schema
@@ -89,18 +91,18 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
           onSave={handleSave}
         >
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Root>
       )}
 
-      <IconButton
+      <Button.Root
         icon='ph--shopping-cart--regular'
         label={running ? t('running.label') : t('run.label')}
         disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />
-    </Flex>
+    </Layout.Container>
   );
 };
 

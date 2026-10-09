@@ -4,7 +4,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -13,7 +13,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   type ExtractError,
   ExtractError as ExtractErrorClass,
@@ -24,8 +24,8 @@ import { Message } from '@dxos/types';
 
 import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
-import extractMailboxHandler from './extract-mailbox';
-import extractMessageHandler from './extract-message';
+import extractMailboxHandler from './extract-mailbox.ts';
+import extractMessageHandler from './extract-message.ts';
 
 const EXTRACTOR_ID = 'test-extractor';
 

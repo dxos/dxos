@@ -4,12 +4,13 @@
 
 import React from 'react';
 
-import { Icon, IconBlock } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
-import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import { type WidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { useWidgetState } from '../components';
+import { useWidgetState } from '../components/index.ts';
 
 /**
  * Widgets for the block kinds an assistant turn contains.
@@ -60,12 +61,12 @@ const Panel = ({
           frame later — a row jumping under the reader. `estimatedHeight` in the registry looks like
           the answer and is not: it sets `height` and `overflow: hidden` on the widget root, which
           pins the panel shut. */}
-        <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-subdued-separator', classNames)}>
+        <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-separator-subtle', classNames)}>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-description truncate'>{title}</span>
-            <IconBlock>
-              <Icon icon={icon} size={4} />
-            </IconBlock>
+            <span className='grow text-fg-muted truncate'>{title}</span>
+            <Layout.Block>
+              <Icon.Icon icon={icon} size='md' />
+            </Layout.Block>
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 text-sm'>{children}</TogglePanel.Viewport>
@@ -76,17 +77,17 @@ const Panel = ({
   );
 };
 
-const Frame = ({ icon, title, children, classNames }: XmlWidgetProps<any> & { classNames?: string }) => (
-  <div className={mx('flex gap-2 px-2 py-1 rounded border border-subdued-separator text-sm', classNames)}>
-    {icon && <Icon icon={icon} size={4} classNames='mt-1 shrink-0 text-description' />}
+const Frame = ({ icon, title, children, classNames }: WidgetProps<any> & { classNames?: string }) => (
+  <div className={mx('flex gap-2 px-2 py-1 rounded border border-separator-subtle text-sm', classNames)}>
+    {icon && <Icon.Icon icon={icon} size='md' classNames='mt-1' tone='muted' />}
     <div className='min-w-0'>
-      {title && <p className='text-xs text-description'>{title}</p>}
+      {title && <p className='text-xs text-fg-muted'>{title}</p>}
       {children}
     </div>
   </div>
 );
 
-const Reasoning = ({ children, range }: XmlWidgetProps) => {
+const Reasoning = ({ children, range }: WidgetProps) => {
   const text = getXmlTextChild(children ?? []) ?? '';
   return (
     <Panel
@@ -100,11 +101,11 @@ const Reasoning = ({ children, range }: XmlWidgetProps) => {
   );
 };
 
-const Status = ({ children }: XmlWidgetProps) => (
-  <p className='px-2 py-1 text-sm text-description animate-pulse'>{getXmlTextChild(children ?? [])}</p>
+const Status = ({ children }: WidgetProps) => (
+  <p className='px-2 py-1 text-sm text-fg-muted animate-pulse'>{getXmlTextChild(children ?? [])}</p>
 );
 
-const ToolCall = ({ name, pending, range }: XmlWidgetProps<{ name?: string; pending?: string }>) => (
+const ToolCall = ({ name, pending, range }: WidgetProps<{ name?: string; pending?: string }>) => (
   <Panel
     stateKey={`toolCall:${range?.from}`}
     icon={pending ? 'ph--circle-notch--regular' : 'ph--wrench--regular'}
@@ -114,20 +115,20 @@ const ToolCall = ({ name, pending, range }: XmlWidgetProps<{ name?: string; pend
   </Panel>
 );
 
-const ToolResult = ({ children, for: tool, range }: XmlWidgetProps<{ for?: string }>) => (
+const ToolResult = ({ children, for: tool, range }: WidgetProps<{ for?: string }>) => (
   <Panel stateKey={`toolResult:${range?.from}`} icon='ph--check--regular' title={`${tool} returned`}>
     <p className='font-mono text-xs'>{getXmlTextChild(children ?? [])}</p>
   </Panel>
 );
 
 // Inline, so a run of them wraps as chips rather than stacking one per line.
-const Suggestion = ({ children }: XmlWidgetProps) => (
+const Suggestion = ({ children }: WidgetProps) => (
   <button type='button' className='me-1 px-2 py-0.5 rounded-full border border-separator text-sm'>
     {getXmlTextChild(children ?? [])}
   </button>
 );
 
-const Select = ({ children }: XmlWidgetProps) => {
+const Select = ({ children }: WidgetProps) => {
   const options = (children ?? [])
     .map((option: any) => option?._tag === 'option' && getXmlTextChild(option.children))
     .filter(Boolean) as string[];
@@ -143,7 +144,7 @@ const Select = ({ children }: XmlWidgetProps) => {
   );
 };
 
-const Json = ({ children }: XmlWidgetProps) => (
+const Json = ({ children }: WidgetProps) => (
   <pre className='px-2 py-1 overflow-x-auto rounded bg-input-surface text-xs'>{getXmlTextChild(children ?? [])}</pre>
 );
 

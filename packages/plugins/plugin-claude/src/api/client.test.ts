@@ -4,10 +4,10 @@
 
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { ClaudeAgentApiError } from '../errors';
-import { isRetryable, listEvents } from './client';
+import { ClaudeAgentApiError } from '../errors.ts';
+import { isRetryable, listEvents } from './client.ts';
 
 const proxyFetchLegacy = vi.hoisted(() => vi.fn());
 vi.mock('@dxos/edge-client', () => ({ proxyFetchLegacy }));

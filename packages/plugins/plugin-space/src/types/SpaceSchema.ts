@@ -9,12 +9,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj } from '@dxos/echo';
-import { type ComplexMap } from '@dxos/util';
+import { Annotation, Database, Obj } from '@dxos/echo';
+import { type ComplexMap, trim } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export * as Settings from './Settings';
+export * as Settings from './Settings.ts';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
 
@@ -56,6 +56,11 @@ export type SpacePluginOptions = {
   invitationProp?: string;
 
   /**
+   * Query parameter carrying a space key to join by admission.
+   */
+  joinSpaceKeyProp?: string;
+
+  /**
    * Whether the navigation handler consumes invitation codes from URL query params.
    * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
    * @default true
@@ -85,11 +90,6 @@ export type PluginState = {
    * Which peers are currently viewing which objects.
    */
   viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
-
-  /**
-   * Object that was linked to directly but not found and is being awaited.
-   */
-  awaiting: string | undefined;
 
   /**
    * Cached space names, used when spaces are closed or loading.
@@ -151,8 +151,8 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    /** The collection to file into; absent files at the space root of `db`. */
-    target?: Collection.Collection;
+    /** The created object's parent; absent files at the space root of `db`. */
+    target?: Obj.Unknown;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
@@ -160,6 +160,19 @@ export type CreateObject = (
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = '@dxos/plugin-space/annotation/Icon';
 export const HueAnnotationId = '@dxos/plugin-space/annotation/Hue';
+
+/** The create dialog's layout: the icon and colour pickers are small, so they share a row (settings keep one row each). */
+export const SPACE_FORM_CREATE_LAYOUT = 'create';
+
+const SPACE_FORM_LAYOUT_CREATE = trim`
+  <grid cols="2">
+    <field name="name" span="2"/>
+    <field name="icon"/>
+    <field name="hue"/>
+    <field name="private" span="2"/>
+    <field name="edgeReplication" span="2"/>
+  </grid>
+`;
 
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
@@ -172,4 +185,8 @@ export const SpaceForm = Schema.Struct({
   template: Schema.optional(
     Schema.String.annotate({ title: 'Template' }).pipe(Annotation.FormInputAnnotation.set(false)),
   ),
-});
+  /** Overrides the invoker's `Database.Origin` for the `space.create` event, e.g. `system` for seeded spaces. */
+  origin: Schema.optional(
+    Schema.Literals(['user', 'system', 'unknown']).pipe(Annotation.FormInputAnnotation.set(false)),
+  ),
+}).pipe(Annotation.FormLayoutAnnotation.set({ [SPACE_FORM_CREATE_LAYOUT]: SPACE_FORM_LAYOUT_CREATE }));

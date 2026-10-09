@@ -8,9 +8,9 @@ import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { type File, StorageType } from '../common';
-import { randomText, storageTests } from '../testing';
-import { createStorage } from './storage';
+import { type File, StorageType } from '../common/index.ts';
+import { randomText, storageTests } from '../testing/index.ts';
+import { createStorage } from './storage.ts';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 

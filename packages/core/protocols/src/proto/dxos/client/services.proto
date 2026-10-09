@@ -120,6 +120,7 @@ message Contact {
   dxos.keys.PublicKey identityKey = 2;
   optional halo.credentials.ProfileDocument profile = 1;
   repeated dxos.keys.PublicKey commonSpaces = 3;
+  optional string did = 4;
 }
 
 message ContactBook {

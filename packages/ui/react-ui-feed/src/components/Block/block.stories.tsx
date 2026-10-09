@@ -9,10 +9,10 @@ import { expect } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { chatRegistry } from '../../testing';
-import { HtmlBlock } from './HtmlBlock';
-import { MarkdownBlock } from './MarkdownBlock';
-import { WidgetStateProvider, createWidgetStateStore } from './widget-state';
+import { chatRegistry } from '../../testing/index.ts';
+import { HtmlBlock } from './HtmlBlock.tsx';
+import { MarkdownBlock } from './MarkdownBlock.tsx';
+import { WidgetStateProvider, createWidgetStateStore } from './widget-state.tsx';
 
 const MARKDOWN = trim`
   ### A markdown item

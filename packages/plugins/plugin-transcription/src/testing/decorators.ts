@@ -8,16 +8,16 @@ import * as Effect from 'effect/Effect';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { IndexKind } from '@dxos/react-client/echo';
+import { IndexKind_Kind } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
 import { TranscriptionPlugin } from '#plugin';
 
-import { TestItem } from './testing';
+import { TestItem } from './testing.ts';
 
 // TODO(mykola): Make API easier to use.
 // TODO(mykola): Delete after enabling vector indexing by default.
@@ -27,10 +27,10 @@ export const enableQueryIndexes = (services: { QueryService?: any }) =>
       services.QueryService!.setConfig({
         enabled: true,
         indexes: [
-          { kind: IndexKind.Kind.SCHEMA_MATCH },
-          { kind: IndexKind.Kind.GRAPH },
-          { kind: IndexKind.Kind.VECTOR },
-          { kind: IndexKind.Kind.FULL_TEXT },
+          { kind: IndexKind_Kind.SCHEMA_MATCH },
+          { kind: IndexKind_Kind.GRAPH },
+          { kind: IndexKind_Kind.VECTOR },
+          { kind: IndexKind_Kind.FULL_TEXT },
         ],
       }),
     );
@@ -55,7 +55,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
   withLayout({ layout: 'column' }),
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({}),
       ClientPlugin.make({
         types: [TestItem, Person.Person, Organization.Organization],

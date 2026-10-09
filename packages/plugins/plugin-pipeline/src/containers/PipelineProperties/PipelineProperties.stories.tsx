@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
@@ -24,7 +24,7 @@ import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { PipelineProperties } from './PipelineProperties';
+import { PipelineProperties } from './PipelineProperties.tsx';
 
 random.seed(0);
 
@@ -51,7 +51,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [
             Tag.Tag,

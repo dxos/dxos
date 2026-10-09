@@ -8,8 +8,8 @@ import { describe, it, test } from 'vitest';
 import { Filter, Tag } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { QueryDSL } from './gen';
-import { type BuildResult, QueryBuilder, normalizeInput } from './query-builder';
+import { QueryDSL } from './gen/index.ts';
+import { type BuildResult, QueryBuilder, formatTag, normalizeInput } from './query-builder.ts';
 
 // TODO(burdon): Ref/Relation traversal.
 
@@ -532,5 +532,26 @@ describe('query', () => {
       const result = queryBuilder.build(input);
       expect(result, JSON.stringify({ input, result, expected }, null, 2)).toEqual(expected);
     });
+  });
+
+  // A `#tag` token cannot hold a space, so a label is written in its token form and matched by it.
+  it('multi-word tag labels', ({ expect }) => {
+    const tags = {
+      tag_1: Tag.make({ label: 'Needs reply' }),
+      tag_2: Tag.make({ label: 'Finance & invoices' }),
+      tag_3: Tag.make({ label: 'Security' }),
+    };
+    const queryBuilder = new QueryBuilder(tags);
+
+    expect(formatTag('Needs reply')).toBe('#Needs-reply');
+    expect(formatTag('Finance & invoices')).toBe('#Finance-invoices');
+    expect(formatTag('Security')).toBe('#Security');
+
+    for (const [key, tag] of Object.entries(tags)) {
+      expect(queryBuilder.build(formatTag(tag.label)).filter, tag.label).toEqual(Filter.tag(key));
+    }
+    expect(queryBuilder.build('#needs-reply #security').filter).toEqual(
+      Filter.and(Filter.tag('tag_1'), Filter.tag('tag_3')),
+    );
   });
 });

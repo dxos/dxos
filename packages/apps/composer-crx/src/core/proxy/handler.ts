@@ -6,8 +6,8 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { isComposerUrl } from '../bridge';
-import { renderUrl } from './render';
+import { isComposerUrl } from '../bridge/index.ts';
+import { renderUrl } from './render.ts';
 import {
   PING_MESSAGE_TYPE,
   type PingAck,
@@ -15,7 +15,7 @@ import {
   type RenderAck,
   decodePingRequest,
   decodeRenderRequest,
-} from './types';
+} from './types.ts';
 
 /**
  * Register the background-side render-proxy listeners.

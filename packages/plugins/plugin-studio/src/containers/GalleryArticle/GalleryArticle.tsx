@@ -4,38 +4,44 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
+import { MediaArtifact } from '#types';
 
-import { useArtifactCoverSource } from '../../hooks';
+import { useMediaArtifactCoverSource } from '../../hooks/index.ts';
 
-const isArtifact = Obj.instanceOf(Artifact.Artifact);
+const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
 type TileData = {
-  artifact: Obj.Snapshot<Artifact.Artifact>;
+  artifact: Obj.Snapshot<MediaArtifact.MediaArtifact>;
   index: number;
 };
 
 const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
-  const { src, contentType } = useArtifactCoverSource(data?.artifact);
+  const { src, contentType } = useMediaArtifactCoverSource(data?.artifact);
   if (!data) {
     return null;
   }
   return (
     <div className='relative'>
       <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
-      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
+      {selected && (
+        <Icon.Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-accent-text' />
+      )}
     </div>
   );
 };
@@ -43,14 +49,14 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
 export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 /**
- * Article surface for a masonry gallery: a `Collection` of {@link Artifact}s rendered as thumbnails.
- * The toolbar creates a new Artifact (added to the collection and opened) and deletes the
+ * Article surface for a masonry gallery: a `Collection` of {@link MediaArtifact}s rendered as thumbnails.
+ * The toolbar creates a new MediaArtifact (added to the collection and opened) and deletes the
  * multi-selected ones. Selection state is owned here via `useListSelection` (multi); the masonry
  * renders the outline and emits tile clicks.
  */
-export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+export const GalleryArticle = ({ role, subject: collection, attendableId }: GalleryArticleProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(collection);
 
   const [collectionSnapshot] = useObject(collection);
@@ -59,7 +65,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
   const items = useMemo(
     () =>
       objects
-        .filter((object): object is Obj.Snapshot<Artifact.Artifact> => isArtifact(object))
+        .filter((object): object is Obj.Snapshot<MediaArtifact.MediaArtifact> => isArtifact(object))
         .map((artifact, index) => ({ artifact, index })),
     [objects],
   );
@@ -67,16 +73,16 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
   const { bind } = useListSelection({ mode: 'multi', value: selectedIds, onValueChange: setSelectedIds });
 
-  // Create a new Artifact owned by (parented to) the collection, then open it to author.
+  // Create a new MediaArtifact owned by (parented to) the collection, then open it to author.
   const handleCreate = useCallback(async () => {
     if (!db) {
       return;
     }
-    const artifact = Artifact.make();
-    Obj.setParent(artifact, collection);
+    const artifact = MediaArtifact.make({ [Obj.Parent]: collection });
     db.add(artifact);
     Obj.update(collection, (collection) => {
-      collection.objects = [...(collection.objects ?? []), Ref.make(artifact)];
+      collection.objects ??= [];
+      collection.objects.push(Ref.make(artifact));
     });
     await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(artifact)] });
   }, [db, collection, invokePromise]);
@@ -106,32 +112,46 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
 
   const handleSelect = useCallback((id: string, _event: MouseEvent) => bind(id).toggle(), [bind]);
 
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'create',
+          {
+            label: ['create.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            iconOnly: false,
+            disabled: !db,
+          },
+          () => void handleCreate(),
+        )
+        .action(
+          'delete',
+          {
+            label: ['delete.label', { ns: meta.profile.key }],
+            icon: 'ph--trash--regular',
+            iconOnly: false,
+            disabled: selectedIds.size === 0,
+          },
+          handleDelete,
+        )
+        .build(),
+    [db, selectedIds, handleCreate, handleDelete],
+  );
+
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <IconButton
-            icon='ph--plus--regular'
-            label={t('create.label')}
-            disabled={!db}
-            onClick={() => void handleCreate()}
-          />
-          <IconButton
-            icon='ph--trash--regular'
-            label={t('delete.label')}
-            disabled={selectedIds.size === 0}
-            onClick={handleDelete}
-          />
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Header>
+      <Panel.Body>
         {items.length === 0 ? (
-          <Flex role='status' center classNames='h-full text-subdued'>
+          <Layout.Flex role='status' center classNames='h-full text-fg-subtle'>
             {t('empty.message')}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Masonry.Root Tile={ArtifactTile}>
-            <Masonry.Content centered>
+            <Masonry.Content>
               <Masonry.Viewport
                 items={items}
                 getId={(data?: TileData) => data?.artifact.id ?? String(data?.index ?? '')}
@@ -141,7 +161,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

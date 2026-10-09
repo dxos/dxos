@@ -8,8 +8,7 @@ import * as Option from 'effect/Option';
 import * as Process from '@dxos/compute/Process';
 import { ErrorCodec } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager';
-import type * as RemoteProcessManager from './RemoteProcessManager';
+import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 /**
  * Projections from a {@link RemoteProcessManager.Snapshot} onto the in-process types.
@@ -22,7 +21,7 @@ import type * as RemoteProcessManager from './RemoteProcessManager';
 export const toError = (error: RemoteProcessManager.Snapshot['error']): Error =>
   error ? ErrorCodec.decode(error) : new Error('remote process failed');
 
-export const toStatus = (snapshot: RemoteProcessManager.Snapshot): ProcessManager.Status => ({
+export const toStatus = (snapshot: RemoteProcessManager.Snapshot): Process.Status => ({
   state: snapshot.state,
   exit:
     snapshot.state === Process.State.FAILED

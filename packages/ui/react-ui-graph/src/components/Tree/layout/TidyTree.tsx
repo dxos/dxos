@@ -6,17 +6,17 @@
 import { curveBumpX, link as d3Link, tree as d3Tree, select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type TreeNode } from '../types';
-import { buildHierarchy, isCollapsed, isLeaf } from './hierarchy';
-import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
-import { useContainerSize } from './useContainerSize';
+import { type TreeNode } from '../types.ts';
+import { buildHierarchy, isCollapsed, isLeaf } from './hierarchy.ts';
+import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots.ts';
+import { useContainerSize } from './useContainerSize.ts';
 
 const TRANSITION_MS = 350;
 
-export type TidyTreeProps = ThemedClassName<{
+export type TidyTreeProps = Util.ThemedClassName<{
   data: TreeNode;
   label?: (d: TreeNode) => string;
   slots?: TreeLayoutSlots;

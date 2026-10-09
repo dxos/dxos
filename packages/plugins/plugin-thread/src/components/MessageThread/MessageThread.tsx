@@ -4,19 +4,21 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Identity, type Space } from '@dxos/halo';
-import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { getMessageMetadata } from '../../util';
+import { getMessageMetadata } from '../../util.ts';
 
-export type MessageThreadProps = ThemedClassName<{
+export type MessageThreadProps = Util.ThemedClassName<{
   /** Stable id used for the underlying thread root and message metadata. */
   id: string;
   /** Identity used to attribute outgoing messages in the textbox metadata. */
@@ -51,9 +53,9 @@ export type MessageThreadProps = ThemedClassName<{
  * data or invoke operations — the caller passes messages and an `onSend`
  * callback. Used by `ChannelArticle` and `ThreadArticle`.
  */
-export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
+export const MessageThread = Util.composable<HTMLDivElement, MessageThreadProps>(
   ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
 
@@ -103,7 +105,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
  * referenced subject via an app-framework `Surface` (the card role).
  */
 const ObjectTile: ObjectTileComponent = ({ subject }) => {
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{subject.id}</span>, [subject]);
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-fg-muted'>{subject.id}</span>, [subject]);
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface

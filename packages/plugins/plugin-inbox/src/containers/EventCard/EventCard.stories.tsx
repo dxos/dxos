@@ -7,12 +7,13 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Card } from '@dxos/react-ui';
 import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Event } from '@dxos/types';
 
-import { EventCard } from './EventCard';
+import { EventCard } from './EventCard.tsx';
 
 random.seed(1234);
 
@@ -44,7 +45,7 @@ const EventCardStory = () => {
     <IntrinsicCardContainer>
       <Card.Root>
         <Card.Header>
-          <Card.DragHandle />
+          <DragHandle.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
         </Card.Header>
         <EventCard role='card--content' subject={subject} />

@@ -1,0 +1,11 @@
+diff --git a/dist/esm/bundler.js b/dist/esm/bundler.js
+index 51142c6..6635349 100644
+--- a/dist/esm/bundler.js
++++ b/dist/esm/bundler.js
+@@ -1,5 +1 @@
+-import init from '../wasm_bindgen/web/automerge_subduction_wasm.js';
+-await init({
+-  module_or_path: new URL('../automerge-subduction.wasm', import.meta.url),
+-});
+-export * from '../wasm_bindgen/web/automerge_subduction_wasm.js';
++export * from './web.js';

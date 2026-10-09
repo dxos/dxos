@@ -4,7 +4,6 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
@@ -13,12 +12,16 @@ import {
   type MapViewportProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
+import * as Util from '@dxos/react-ui/Util';
 
-import { type GeoControlProps } from '../types';
+import { type GeoControlProps } from '../types.ts';
+
+/** The map never zooms out past one world width. */
+export const MAP_MIN_ZOOM = 3;
 
 export type MapControlProps = GeoControlProps & MapViewportProps & MapRootProps;
 
-export const MapControl = composable<HTMLDivElement, MapControlProps>(
+export const MapControl = Util.composable<HTMLDivElement, MapControlProps>(
   // Map.Root is headless and exposes the controller via ref, so MapControl has no DOM ref to forward.
   ({ center, zoom, markers, selected, onSelect, onToggle, onChange, tileUrl, lines, ...props }, _forwardedRef) => {
     const [controller, setController] = useState<MapController | null>(null);
@@ -44,7 +47,7 @@ export const MapControl = composable<HTMLDivElement, MapControlProps>(
 
     return (
       <Map.Root onChange={onChange} ref={setController}>
-        <Map.Viewport {...props} center={center} zoom={zoom} minZoom={3}>
+        <Map.Viewport {...props} center={center} zoom={zoom} minZoom={MAP_MIN_ZOOM}>
           <Map.Tiles url={tileUrl} />
           <Map.Lines lines={lines} />
           <Map.Markers markers={markers} lines={lines} selected={selected} onSelect={onSelect} />

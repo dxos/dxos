@@ -12,36 +12,25 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import {
-  MailSyncError,
-  type MailSyncItem,
-  MailSyncProvider,
-  type MailSyncSource,
-  type ReconcileItem,
-  type TagPushOp,
-  type TagPushResult,
-  batchPushOps,
-  parseFromHeader,
-  reconcileToChanges,
-} from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Person } from '@dxos/types';
 
 import { GoogleMail } from '#apis';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
 
-import { GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
-import { decodeBody, mapToMessage } from '../mapper';
-import { findOrCreateGmailTag } from '../tags';
-import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
-import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags';
+import { GMAIL_SOURCE } from '../../../constants.ts';
+import { GoogleApiError } from '../../../errors.ts';
+import { decodeBody, mapToMessage } from '../mapper.ts';
+import { findOrCreateGmailTag } from '../tags.ts';
+import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch.ts';
+import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags.ts';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `history.list` page. */
 type DeltaPlan = {
   readonly token: string | undefined;
   readonly createdIds: readonly string[] | undefined;
-  readonly reconcileItems: readonly ReconcileItem[];
+  readonly reconcileItems: readonly MailSync.ReconcileItem[];
   readonly hasMoreDelta: boolean;
 };
 
@@ -53,9 +42,9 @@ type DeltaPlan = {
 export const googleMailSyncProvider = (options: {
   userId: string;
   label: string;
-}): Layer.Layer<MailSyncProvider, never, GoogleMailApi | Resolver> =>
+}): Layer.Layer<MailSync.MailSyncProvider, never, GoogleMailApi | Resolver> =>
   Layer.effect(
-    MailSyncProvider,
+    MailSync.MailSyncProvider,
     Effect.gen(function* () {
       // The API is provided into the source stream (leaving `Cursor.Service` for the harness); the full
       // context into each `process` (whose only needs are API + resolver).
@@ -96,7 +85,7 @@ export const googleMailSyncProvider = (options: {
                   return undefined;
                 }
                 const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
-                const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+                const from = fromHeader ? MailSync.parseFromHeader(fromHeader.value) : undefined;
                 // Drop filtered messages before the costly attachment fetch.
                 if (Mailbox.isFiltered(mailbox, { sender: from })) {
                   return undefined;
@@ -127,7 +116,7 @@ export const googleMailSyncProvider = (options: {
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (message: GoogleMail.Message): MailSyncItem => ({
+            const toItem = (message: GoogleMail.Message): MailSync.MailSyncItem => ({
               foreignId: message.id,
               key: Number.parseInt(message.internalDate),
               process: toMapped(message).pipe(Effect.provide(context)),
@@ -186,7 +175,7 @@ export const googleMailSyncProvider = (options: {
                   );
             const { token: capturedToken, createdIds, reconcileItems, hasMoreDelta } = yield* resolveDelta;
 
-            const source: MailSyncSource = {
+            const source: MailSync.MailSyncSource = {
               buildSource: ({ windows, filter, onEnumerated, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
@@ -208,10 +197,10 @@ export const googleMailSyncProvider = (options: {
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(GoogleMailApi, api),
-                    Stream.mapError(MailSyncError.wrap()),
+                    Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),
                   // Empty on non-incremental runs; resolved to `Change`s by the shared `reconcileToChanges`.
-                  reconciles: reconcileToChanges(Stream.fromIterable(reconcileItems)),
+                  reconciles: MailSync.reconcileToChanges(Stream.fromIterable(reconcileItems)),
                 };
               },
               nextToken: () => capturedToken,
@@ -228,7 +217,7 @@ export const googleMailSyncProvider = (options: {
               ),
             };
             return source;
-          }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
+          }).pipe(Effect.provide(context), Effect.mapError(MailSync.MailSyncError.wrap())),
       };
     }),
   );
@@ -256,13 +245,13 @@ const isPermanent = (error: unknown): boolean =>
 const pushGmailTags = (
   api: GoogleMailApiService,
   userId: string,
-  ops: readonly TagPushOp[],
-): Effect.Effect<TagPushResult, MailSyncError, never> =>
+  ops: readonly MailSync.TagPushOp[],
+): Effect.Effect<MailSync.TagPushResult, MailSync.MailSyncError, never> =>
   Effect.gen(function* () {
     const byForeignId = new Map(ops.map((op) => [op.foreignId, op]));
-    const settled: TagPushOp[] = [];
-    const pending: TagPushOp[] = [];
-    for (const batch of batchPushOps(ops)) {
+    const settled: MailSync.TagPushOp[] = [];
+    const pending: MailSync.TagPushOp[] = [];
+    for (const batch of MailSync.batchPushOps(ops)) {
       const batchOps = batch.foreignIds.flatMap((id: string) => {
         const op = byForeignId.get(id);
         return op ? [op] : [];
@@ -301,7 +290,7 @@ const pushGmailTags = (
 const collectLabelChanges = (
   history: readonly GoogleMail.HistoryRecord[],
   labelMap: ReadonlyMap<string, string>,
-): readonly ReconcileItem[] => {
+): readonly MailSync.ReconcileItem[] => {
   const byMessage = new Map<string, { add: Set<string>; remove: Set<string> }>();
   const entryFor = (id: string) => {
     let entry = byMessage.get(id);

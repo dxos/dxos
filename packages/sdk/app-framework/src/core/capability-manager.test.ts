@@ -4,11 +4,11 @@
 
 import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
-import * as Capability from './capability';
-import * as CapabilityManager from './capability-manager';
-import { CapabilityNotFoundError } from './errors';
+import * as CapabilityManager from './capability-manager.ts';
+import * as Capability from './capability.ts';
+import { CapabilityNotFoundError } from './errors.ts';
 
 describe('CapabilityManager', () => {
   it('should return empty array if no capabilities are contributed', () => {

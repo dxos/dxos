@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { extractResults } from './extractResults';
+import { extractResults } from './extractResults.ts';
 
 const HTML = `
   <div class="listing">

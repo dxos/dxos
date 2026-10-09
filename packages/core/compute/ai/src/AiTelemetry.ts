@@ -4,14 +4,18 @@
 
 // @import-as-namespace
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
+import type * as Response from 'effect/ai/Response';
+import type * as Telemetry from 'effect/ai/Telemetry';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 import type * as Tracer from 'effect/Tracer';
-import type * as Prompt from 'effect/unstable/ai/Prompt';
-import type * as Response from 'effect/unstable/ai/Response';
-import type * as Telemetry from 'effect/unstable/ai/Telemetry';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { log } from '@dxos/log';
+import { markWork } from '@dxos/util';
 
 /** Span attributes carrying AI capture, outside the `gen_ai.*` semantic conventions. */
 export const ATTRIBUTES = { spaceId: SpanAttributes.SPACE_ID, ...SpanAttributes.AI } as const;
@@ -33,7 +37,11 @@ const serializeContent = (
   maxLength: number,
 ): { readonly serialized: string; readonly truncated: boolean } | undefined => {
   try {
+    // `JSON.stringify` yields `undefined` (not a string) for `undefined` and functions; nothing to stamp.
     const serialized = JSON.stringify(value());
+    if (serialized === undefined) {
+      return undefined;
+    }
     return { serialized: serialized.slice(0, maxLength), truncated: serialized.length > maxLength };
   } catch (err) {
     log.catch(err, { key });
@@ -158,3 +166,62 @@ const serializeResponse = (response: ReadonlyArray<Response.AllParts<any>>): unk
   }
   return [{ role: 'assistant', content }];
 };
+
+/**
+ * Work marks bracketing every model call, read by the perf harness (`@dxos/util` `markWork`).
+ *
+ * `request` is taken when the call starts, before the provider encodes the prompt, so it is the same
+ * instant for an HTTP provider and the in-process scripted model; `response` only when its output
+ * ends normally, since a failed or interrupted call has no response for the next turn to follow.
+ */
+export const REQUEST_MARKS = { request: 'ai.request', response: 'ai.response' } as const;
+
+const STREAMING_METHODS = new Set<PropertyKey>(['streamText']);
+const EFFECT_METHODS = new Set<PropertyKey>(['generateText', 'generateObject']);
+
+/** `tools` when the call offers a toolkit, which tells an agent turn from a side call such as naming; both marks carry it. */
+const requestDetail = (args: readonly unknown[]): string | undefined => {
+  const [options] = args;
+  return typeof options === 'object' && options !== null && Reflect.get(options, 'toolkit') !== undefined
+    ? 'tools'
+    : undefined;
+};
+
+/**
+ * The model, with {@link REQUEST_MARKS} around each call.
+ *
+ * A proxy rather than a spread: the methods are overloaded generics that no wrapper signature can
+ * restate, and a proxy keeps the model's own type.
+ */
+export const markRequests = (model: LanguageModel.LanguageModel): LanguageModel.LanguageModel =>
+  new Proxy(model, {
+    get: (target, property, receiver) => {
+      const method: unknown = Reflect.get(target, property, receiver);
+      if (typeof method !== 'function') {
+        return method;
+      }
+      if (STREAMING_METHODS.has(property)) {
+        return (...args: unknown[]) =>
+          Stream.suspend(() => {
+            markWork(REQUEST_MARKS.request, requestDetail(args));
+            return method.apply(target, args);
+          }).pipe(Stream.onEnd(Effect.sync(() => markWork(REQUEST_MARKS.response, requestDetail(args)))));
+      }
+      if (EFFECT_METHODS.has(property)) {
+        return (...args: unknown[]) =>
+          Effect.suspend(() => {
+            markWork(REQUEST_MARKS.request, requestDetail(args));
+            return method.apply(target, args);
+          }).pipe(Effect.tap(() => Effect.sync(() => markWork(REQUEST_MARKS.response, requestDetail(args)))));
+      }
+      return method;
+    },
+  });
+
+/** {@link markRequests} over a model layer. */
+export const markRequestsLayer = <E, R>(
+  layer: Layer.Layer<LanguageModel.LanguageModel, E, R>,
+): Layer.Layer<LanguageModel.LanguageModel, E, R> =>
+  Layer.effect(LanguageModel.LanguageModel, Effect.map(LanguageModel.LanguageModel, markRequests)).pipe(
+    Layer.provide(layer),
+  );

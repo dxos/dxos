@@ -3,17 +3,17 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import * as AiPreprocessor from './AiPreprocessor';
-import { PromptPreprocessingError } from './errors';
-import { TestData } from './testing';
+import * as AiPreprocessor from './AiPreprocessor.ts';
+import { PromptPreprocessingError } from './errors.ts';
+import { TestData } from './testing/index.ts';
 
 describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
@@ -30,6 +30,24 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         Prompt.fromMessages([
           Prompt.makeMessage('user', {
             content: [Prompt.makePart('text', { text: 'What is 2 + 2?' })],
+          }),
+        ]),
+      );
+    }),
+  );
+
+  it.effect(
+    'attributes a user message to its named sender',
+    Effect.fn(function* ({ expect }) {
+      const message = Message.make({
+        sender: { role: 'user', name: 'Alice' },
+        blocks: [{ _tag: 'text', text: 'Hello' }],
+      });
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
+      expect(input).toEqual(
+        Prompt.fromMessages([
+          Prompt.makeMessage('user', {
+            content: [Prompt.makePart('text', { text: '[From: Alice]' }), Prompt.makePart('text', { text: 'Hello' })],
           }),
         ]),
       );

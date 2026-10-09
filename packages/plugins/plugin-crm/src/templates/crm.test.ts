@@ -11,12 +11,12 @@ import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
 import { CrmOperation } from '#types';
 
-import { crm } from './crm';
+import { crm } from './crm.ts';
 
 const dbLayer = TestDatabaseLayer({
   types: [Routine.Routine, Trigger.Trigger, Mailbox.Mailbox, Feed.Feed],

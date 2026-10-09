@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type LogConfig, LogLevel, type LogOptions } from './config';
-import { type LogContext, LogEntry, type LogProcessor } from './context';
-import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
-import { type CallMetadata } from './meta';
-import { createConfig } from './options';
+import { type LogConfig, LogLevel, type LogOptions } from './config.ts';
+import { type LogContext, LogEntry, type LogProcessor } from './context.ts';
+import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators.ts';
+import { type CallMetadata } from './meta.ts';
+import { createConfig } from './options.ts';
 
 /**
  * Accessible from browser console.
@@ -161,7 +161,7 @@ export const createLog = (): LogImp => {
      * unless an explicit processor option is provided.
      */
     config: ({ processor, ...options } = {}) => {
-      const config = createConfig(options);
+      const config = createConfig({ ...options, processor });
       // TODO(burdon): This could be buggy since the behavior is not reentrant.
       const processors = processor ? config.processors : log._config.processors;
       log._config = { ...config, processors };

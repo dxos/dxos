@@ -1,0 +1,71 @@
+/*
+ * Switch: an icon-tall track in a block-tall row, like Checkbox, so it reads at the scale of the icons beside it.
+ */
+
+@layer dx-components {
+  .dx-switch {
+    display: inline-flex;
+    align-items: center;
+    /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
+    align-self: start;
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    cursor: pointer;
+  }
+  .dx-switch[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  /* Neither on nor off: the track is dimmed and the host's label says why. */
+  .dx-switch[data-indeterminate] .dx-switch-control {
+    opacity: 0.5;
+  }
+
+  .dx-switch-control {
+    --dx-switch-inset: 2px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: calc(var(--dx-icon-size) * 1.75);
+    height: var(--dx-icon-size);
+    /* Centred in a block-sized cell, so a switch takes the same space as an icon-only Button and labels align. */
+    margin-inline: calc((var(--dx-block-size) - var(--dx-icon-size) * 1.75) / 2);
+    padding: var(--dx-switch-inset);
+    border-radius: 9999px;
+    background: var(--color-input-surface);
+    transition: background-color 120ms ease-out;
+  }
+  .dx-switch:hover:not([data-disabled]) .dx-switch-control:not([data-state='checked']) {
+    background: var(--color-hover-surface);
+  }
+  .dx-switch-control[data-state='checked'] {
+    background: var(--color-accent-bg);
+  }
+  .dx-switch-control[data-focus-visible] {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+
+  .dx-switch-thumb {
+    width: calc(var(--dx-icon-size) - 2 * var(--dx-switch-inset));
+    height: calc(var(--dx-icon-size) - 2 * var(--dx-switch-inset));
+    border-radius: 9999px;
+    background: var(--color-fg-muted);
+    transition: transform 120ms ease-out;
+  }
+  /* Travel is the track's inner width less the thumb: 1.75 icons minus one icon. */
+  .dx-switch-thumb[data-state='checked'] {
+    transform: translateX(calc(var(--dx-icon-size) * 0.75));
+    background: var(--color-accent-fg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-switch-control,
+    .dx-switch-thumb {
+      transition: none;
+    }
+  }
+}

@@ -10,8 +10,8 @@ import { Form } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Splitter } from '../Splitter';
-import { MultiSelectList } from './MultiSelectList';
+import { Splitter } from '../Splitter.tsx';
+import { MultiSelectList } from './MultiSelectList.tsx';
 
 //
 // SPIKE stories for the zag probe: the custom multi-select machine driving a list, and the stock
@@ -69,13 +69,13 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Actions />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
   ) : (
-    <span className='p-2 text-sm text-description'>Nothing selected.</span>
+    <span className='p-2 text-sm text-fg-muted'>Nothing selected.</span>
   );
 
   if (splitter) {
@@ -89,7 +89,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
   return (
     <div className='flex flex-col dx-grow dx-base-surface divide-y divide-separator border-e border-separator'>
       <div className='flex flex-col dx-grow'>{list}</div>
-      <div className='p-2 text-xs font-mono text-description'>
+      <div className='p-2 text-xs font-mono text-fg-muted'>
         {selection.size > 0 ? [...selection].join(', ') : 'Nothing selected.'}
       </div>
     </div>

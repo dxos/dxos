@@ -18,7 +18,7 @@ import {
   installSearchProxy,
   refreshRegistry,
   runPageAction,
-} from './core';
+} from './core/index.ts';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 

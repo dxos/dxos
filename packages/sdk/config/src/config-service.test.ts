@@ -9,10 +9,10 @@ import * as Option from 'effect/Option';
 import { afterEach, describe, test } from 'vitest';
 
 import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { ConfigService } from './config-service';
-import { EDGE_URLS } from './edge-services';
+import { ConfigService } from './config-service.ts';
+import { EDGE_URLS } from './edge-services.ts';
 
 const HUB_SERVICE_URL = 'runtime.services.hub.url';
 const HUB_ENV_URL = 'runtime.app.env.DX_HUB_URL';

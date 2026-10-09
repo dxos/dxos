@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { RelatedMessages } from './RelatedMessages';
+import { RelatedMessages } from './RelatedMessages.tsx';
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -42,7 +42,7 @@ const DefaultStory = () => {
   }, []);
 
   return (
-    <Card.Root fullWidth>
+    <Card.Root>
       <Card.Header>
         <Card.Title>Citrin Cooperman Advisors LLC</Card.Title>
       </Card.Header>

@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { SchemaEx } from '@dxos/effect';
-import { Position } from '@dxos/util';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Position from '@dxos/util/Position';
 
 import { KanbanArticle, KanbanProperties } from '#containers';
 import { Kanban } from '#types';
 
-import { PivotColumnAnnotationId } from '../types/KanbanSchema';
-import { PivotColumnField } from './PivotColumnField';
+import { PivotColumnAnnotationId } from '../types/KanbanSchema.ts';
+import { PivotColumnField } from './PivotColumnField.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

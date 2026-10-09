@@ -19,11 +19,11 @@ import { type AiService } from '@dxos/ai';
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { deterministicAiService } from '@dxos/crawler/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { storesLayer } from '@dxos/pipeline-discord/testing';
 
-import { discordSourceLayer } from '../services';
+import { discordSourceLayer } from '../services/index.ts';
 
 const token = process.env.DISCORD_TOKEN;
 // Defaults: DXOS #general, #composer-vip, #dxos-team.

@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -113,19 +113,18 @@ component SlideArticle
 op TogglePresentation
   key: org.dxos.operation.presenter.setPresenting
   desc: |
-    Toggles presentation mode for a Markdown document or Collection.
-    Opens the presenter companion node via the Deck plugin, driving the deck's ephemeral
-    fullscreen state (EphemeralDeckState.fullscreen) rather than a layout mode.
-    If the presenter companion isn't already fullscreen, toggles it fullscreen before opening;
-    exiting reverts fullscreen and re-opens the source object.
+    Enters or exits presentation for a Markdown document or Collection by toggling the deck's
+    fullscreen overlay (EphemeralDeckState.fullscreen) onto the presenter companion node.
+    The overlay is independent of what is open, so neither direction navigates: the URL and the
+    open planks are unchanged.
   input:
     object: Markdown.Document | Collection.Collection
-    state?: boolean             # explicit on/off override; omit to toggle
+    state: boolean              # on or off; callers that flip read the current state first
   output: void
-  effects: [layout:navigate, deck:fullscreen]
-  requires: [DeckCapabilities.State, DeckOperation.Adjust, LayoutOperation.Open]
+  effects: [deck:fullscreen]
+  requires: [DeckCapabilities.EphemeralState, DeckOperation.Adjust]
   note: |
-    Resolves the presenter companion node path as `<objectPath>/presenter`.
+    Resolves the presenter companion node path as `<objectPath>/~presenter`.
     Keyboard shortcut: Shift+Cmd+P (macOS), Shift+Alt+P (Windows/Linux).
 ```
 
@@ -140,7 +139,7 @@ feat F-1: Presentation Mode
     then: every Collection also has a companion Presenter node
   req F-1.3:
     when: user activates TogglePresentation on a document or collection
-    then: Composer opens the presenter node in solo-fullscreen mode
+    then: the presenter companion fills the screen in the deck's fullscreen overlay, without the companion tab strip, and the URL does not change
   req F-1.4:
     when: user presses Shift+Cmd+P (macOS) or Shift+Alt+P (Windows)
     then: TogglePresentation is invoked for the focused object
@@ -185,7 +184,7 @@ feat F-4: Plugin Settings
 ## Acceptance
 
 ```mdl
-test T-1: Document presenter opens in fullscreen
+scenario T-1: Document presenter opens in fullscreen
   given: a Markdown document exists in the workspace
   when: user invokes TogglePresentation (keyboard or action menu)
   then:
@@ -195,7 +194,7 @@ test T-1: Document presenter opens in fullscreen
 ```
 
 ```mdl
-test T-2: Slide navigation via Reveal.js
+scenario T-2: Slide navigation via Reveal.js
   given: a Markdown document with three `---`-separated sections
   when: DocumentArticle renders the document
   then:
@@ -204,14 +203,14 @@ test T-2: Slide navigation via Reveal.js
 ```
 
 ```mdl
-test T-3: Exit returns to document view
+scenario T-3: Exit returns to document view
   given: DocumentArticle is open in fullscreen
   when: user presses Escape
-  then: Composer navigates back to the document article view
+  then: the fullscreen overlay closes, leaving the document and its companion as they were
 ```
 
 ```mdl
-test T-4: Collection slideshow renders per-item surfaces
+scenario T-4: Collection slideshow renders per-item surfaces
   given: a Collection with two Markdown documents and settings.presentCollections = true
   when: CollectionArticle mounts
   then:
@@ -220,7 +219,7 @@ test T-4: Collection slideshow renders per-item surfaces
 ```
 
 ```mdl
-test T-5: Collection slide advance
+scenario T-5: Collection slide advance
   given: CollectionArticle at slide 0 with a three-item collection
   when: user clicks the next-slide control in Pager
   then:
@@ -230,14 +229,14 @@ test T-5: Collection slide advance
 ```
 
 ```mdl
-test T-6: Collections hidden when setting disabled
+scenario T-6: Collections hidden when setting disabled
   given: settings.presentCollections is false (default)
   when: app graph is built for a Collection node
   then: no Presenter companion node is created for the collection
 ```
 
 ```mdl
-test T-7: Keyboard shortcut registered
+scenario T-7: Keyboard shortcut registered
   given: a Markdown document node is focused in the app graph
   then:
     - action with key TogglePresentation is present on the node
@@ -248,15 +247,17 @@ test T-7: Keyboard shortcut registered
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Present a document and exit
-  desc: The core presenter round-trip — create a document with slide separators, toggle presentation mode on, then off.
+test QA-1: Preview a document in the companion, then present it
+  desc: The core presenter round-trip — create a document with slide separators, preview it in the presenter companion, present it fullscreen, then exit.
   actors: both
-  covers: [F-1.1, F-1.3, F-2.1, F-2.2, T-1, T-3]
+  covers: [F-1.1, F-1.3, F-2.1, F-2.2, F-2.3, T-1, T-3]
   status: unverified
+  automated:
+    - composer-e2e:presenter.spec.ts#Presenter › preview a document in the companion, then present it
   given:
     - an identity exists
     - space: a space is open
@@ -264,8 +265,8 @@ flow QA-1: Present a document and exit
     - plugin-presenter is enabled — it is OFF by default (absent from `getDefaults` in
       `plugin-defs.tsx`), though the plugin itself is registered unconditionally so it always
       appears in the plugin registry to enable manually
-    - no document named "QA Slides" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no document named "QA Slides" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create a document with slides
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Slides".
       invoke: org.dxos.operation.markdown.createDraft { name: "QA Slides", content: "# Slide one\n\n---\n\n# Slide two\n" }
@@ -276,19 +277,19 @@ flow QA-1: Present a document and exit
       do: (the navtree create action places it for you)
       invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
       expect: "QA Slides" appears as a row under the collection
+    - name: Preview in the companion
+      do: Open "QA Slides", open its companion and pick the Presenter tab.
+      expect: the companion shows "Slide one" as a slide scaled to the companion's width
     - name: Enter presentation mode
-      do: Open "QA Slides", then press Shift+Cmd+P (macOS) / Shift+Alt+P (Windows/Linux).
+      do: Choose Present from the document's actions menu, or press Shift+Cmd+P (macOS) / Shift+Alt+P (Windows/Linux).
       invoke: org.dxos.operation.presenter.setPresenting { object: $created.object, state: true }
-      expect: Composer switches to solo-fullscreen layout; DocumentArticle's RevealPlayer shows "Slide one" with a visible next-slide control
+      expect: the slides fill the screen showing "Slide one", with no companion tab strip; the URL is unchanged
       assert: return document.body.innerText.includes('Slide one');
-      note: |
-        The runtime op requires `state` (not optional as the `op` block above still documents —
-        there is no "flip" behavior at the operation layer; only the keyboard shortcut toggles).
     - name: Exit presentation mode
       do: Press Escape.
       invoke: org.dxos.operation.presenter.setPresenting { object: $created.object, state: false }
-      expect: Composer navigates back to the ordinary DocumentArticle view for "QA Slides"; RevealPlayer is no longer shown
-      assert: return !document.querySelector('.reveal');
+      expect: the document plank and its presenter companion are back as they were, and the URL is unchanged
+      assert: return !!document.querySelector('[data-testid="deck.viewport"]');
   after:
     - name: Delete the document
       do: Right-click "QA Slides" in the navtree and choose Delete.
@@ -325,8 +326,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

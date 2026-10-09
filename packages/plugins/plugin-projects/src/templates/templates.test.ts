@@ -9,13 +9,13 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplate, defaultTemplates, scaffoldProject } from './index';
+import { defaultTemplate, defaultTemplates, scaffoldProject } from './index.ts';
 
 describe('project templates', () => {
   let builder: EchoTestBuilder;

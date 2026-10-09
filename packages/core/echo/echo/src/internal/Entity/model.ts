@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import type * as Database from '../../Database';
+import type * as Database from '../../Database.ts';
 import {
   ATTR_DELETED,
   type ATTR_PARENT,
@@ -33,9 +33,9 @@ import {
   SelfURIId,
   TypeId,
   type Version,
-} from '../common/types';
-import { type ATTR_META, type EntityMeta } from '../common/types/meta';
-import { type MetaId } from '../common/types/model-symbols';
+} from '../common/types/index.ts';
+import { type ATTR_META, type EntityMeta } from '../common/types/meta.ts';
+import { type MetaId } from '../common/types/model-symbols.ts';
 
 export {
   ATTR_DELETED,

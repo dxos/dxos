@@ -12,12 +12,15 @@ import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex, Panel, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useStoreAdapter } from '#hooks';
 
@@ -54,7 +57,7 @@ export const ExcalidrawArticle = ({
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   // Last selection reported to the host, so its echo back through `selection` is a no-op.
@@ -209,12 +212,18 @@ export const ExcalidrawArticle = ({
   );
 };
 
-const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
-    <Panel.Content>{props.children}</Panel.Content>
+const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
+  <Panel.Root
+    {...Util.composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
+    ref={forwardedRef}
+  >
+    <Panel.Body>{props.children}</Panel.Body>
   </Panel.Root>
 ));
 
-const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef} />
+const Container = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
+  <Layout.Flex
+    {...Util.composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
+    ref={forwardedRef}
+  />
 ));

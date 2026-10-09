@@ -9,7 +9,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { Blob, Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File } from '@dxos/types';
@@ -18,7 +18,7 @@ import { translations } from '#translations';
 
 import landscapePdf from '../../../fixtures/landscape.pdf?inline';
 import testPdf from '../../../fixtures/test.pdf?inline';
-import { FileArticle } from './FileArticle';
+import { FileArticle } from './FileArticle.tsx';
 
 /** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
 const PNG_BASE64 =

@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import { ACCEPTED_MIME } from './FileLimits';
-import * as Settings from './Settings';
+import * as Settings from './Settings.ts';
 
 /**
  * Descriptor for a registered `BlobBackend` storage option, surfaced in the file plugin's
@@ -38,11 +37,12 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 );
 
 export namespace FileAction {
+  /** Marks a field as a file upload, so the form renders the drop zone for it. Any type is accepted. */
   export const UploadAnnotationId = `${meta.profile.key}.annotation.upload`;
 
   export const CreateFileSchema = Schema.Struct({
     file: Schema.instanceOf(File).annotate({
-      [UploadAnnotationId]: ACCEPTED_MIME,
+      [UploadAnnotationId]: true,
     }),
   });
 

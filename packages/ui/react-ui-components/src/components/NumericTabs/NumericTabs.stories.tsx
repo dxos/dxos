@@ -6,11 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { ScrollArea } from '@dxos/react-ui';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { TogglePanel } from '../TogglePanel';
-import { NumericTabs } from './NumericTabs';
+import { TogglePanel } from '../TogglePanel/index.ts';
+import { NumericTabs } from './NumericTabs.tsx';
 
 const content = Array.from({ length: 15 }, () => ({
   title: random.lorem.paragraph(),
@@ -44,7 +44,7 @@ export const Default: Story = {
               <div className='px-1'>
                 <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
               </div>
-              <ScrollArea.Root orientation='vertical' thin padding>
+              <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport>{content[selected].content}</ScrollArea.Viewport>
               </ScrollArea.Root>
             </TogglePanel.Body>

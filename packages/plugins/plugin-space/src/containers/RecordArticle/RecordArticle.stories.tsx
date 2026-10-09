@@ -16,7 +16,7 @@ import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -26,7 +26,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { RecordArticle } from './RecordArticle';
+import { RecordArticle } from './RecordArticle.tsx';
 
 random.seed(0);
 
@@ -91,7 +91,7 @@ const meta = {
         Capability.contribute(AppCapabilities.AppGraphBuilder, storyGraphBuilders()),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({

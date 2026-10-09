@@ -3,19 +3,26 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { UmlSkill } from '@dxos/plugin-illustrator';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as UmlSkill from '@dxos/plugin-uml/UmlSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import {
+  ModuleContainer,
+  addToRootCollection,
+  createDecorators,
+  storyParameters,
+  submitPrompt,
+} from '../testing/index.ts';
 
 type StoryArgs = {
   /** Name of the seeded document. */
@@ -91,15 +98,22 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
   skills: [AssistantSkill.key, MarkdownSkill.key, UmlSkill.key],
   lazyPlugins: async () => {
     // SpacePlugin contributes the `versioning-state` capability the markdown article reads.
-    const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin] = await Promise.all([
+    const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin, UmlPlugin] = await Promise.all([
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-illustrator/IllustratorPlugin'),
       import('@dxos/plugin-markdown/MarkdownPlugin'),
       import('@dxos/plugin-space/SpacePlugin'),
       import('@dxos/plugin-tldraw/TldrawPlugin'),
+      import('@dxos/plugin-uml/UmlPlugin'),
     ]);
     return {
-      plugins: [IllustratorPlugin.make(), MarkdownPlugin.make(), SpacePlugin.make({}), TldrawPlugin.make()],
+      plugins: [
+        IllustratorPlugin.make(),
+        MarkdownPlugin.make(),
+        SpacePlugin.make({}),
+        TldrawPlugin.make(),
+        UmlPlugin.make(),
+      ],
       types: [Drawing.Drawing, Drawing.Canvas],
     };
   },
@@ -124,6 +138,14 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
   },
 }));
 
+/** A tldraw shape record, as far as the count reads it. */
+const isShapeRecord = Schema.is(
+  Schema.Struct({
+    typeName: Schema.Literal('shape'),
+    meta: Schema.optional(Schema.Struct({ object: Schema.optional(Schema.String) })),
+  }),
+);
+
 /** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
 const countObjectRecords = async (objectId?: string): Promise<number> => {
   if (!storySpace) {
@@ -132,12 +154,9 @@ const countObjectRecords = async (objectId?: string): Promise<number> => {
   const { Drawing } = await import('@dxos/plugin-illustrator');
   const canvases = await storySpace.db.query(Filter.type(Drawing.Canvas)).run();
   return canvases.reduce((count, canvas) => {
-    const records = Object.values(canvas.content ?? {}) as any[];
+    const shapes = Object.values(canvas.content ?? {}).filter(isShapeRecord);
     return (
-      count +
-      records.filter(
-        (record) => record?.typeName === 'shape' && (objectId ? record.meta?.object === objectId : record.meta?.object),
-      ).length
+      count + shapes.filter((record) => (objectId ? record.meta?.object === objectId : record.meta?.object)).length
     );
   }, 0);
 };

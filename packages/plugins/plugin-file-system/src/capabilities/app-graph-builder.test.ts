@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -15,8 +15,8 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { meta } from '#meta';
 import { FileSystemCapabilities } from '#types';
 
-import { MockFileSystemManager } from '../testing/mock-file-system-manager';
-import { createFileSystemEntryExtensions } from './app-graph-builder';
+import { MockFileSystemManager } from '../testing/mock-file-system-manager.ts';
+import { createFileSystemEntryExtensions } from './app-graph-builder.ts';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 

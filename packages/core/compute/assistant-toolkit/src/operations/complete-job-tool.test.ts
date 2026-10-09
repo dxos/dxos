@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
 
-import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool.ts';
 
 /**
  * Anthropic rejects tool schemas containing an empty (`{}`) or typeless subschema, and a

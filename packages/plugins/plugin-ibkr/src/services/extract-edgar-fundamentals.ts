@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import { Ibkr } from '#types';
 
@@ -13,7 +13,7 @@ import {
   EdgarAsOfConceptsAnnotation,
   EdgarFieldAnnotation,
   type EdgarFieldSource,
-} from '../annotations';
+} from '../annotations/index.ts';
 
 type EdgarFact = {
   end: string;

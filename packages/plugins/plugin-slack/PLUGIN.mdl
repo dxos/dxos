@@ -7,7 +7,8 @@ version: 0.1.0
 SlackPlugin connects a Slack workspace to DXOS Composer via OAuth, discovers
 conversations (public channels, private channels), and incrementally syncs
 messages into ECHO as `Channel` and `Message` objects so they appear alongside
-everything else in a space.
+everything else in a space. Each synced Channel is on the Slack channel backend
+(plugin-thread's `ChannelBackend`), so agents post to it as the connection's bot.
 
 ## Extensions
 
@@ -18,10 +19,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -59,6 +60,19 @@ type SlackCredentials
     never stored in plain ECHO fields.
   fields:
     token: string                   # xoxp-… or xoxb-… OAuth token
+```
+
+```mdl
+type SlackChannel
+  desc: |
+    Config of a Slack-backed Channel (Channel.backend.config, kind
+    org.dxos.channel.backend.slack). Owns the feed the sync mirrors the
+    conversation into.
+  fields:
+    accessToken: Ref<AccessToken>   # the connection's bot token (xoxb-…), or a pasted one
+    conversationId: string          # C…/G…/D…
+    teamId?: string
+    feed: Ref<Feed>                 # mirror of the conversation; owned (SetParent)
 ```
 
 ## Operations
@@ -117,7 +131,12 @@ feat F-1: OAuth Connection
 
   req F-1.1: Plugin MUST contribute an IntegrationProvider for source 'slack.com'
     that initiates Slack OAuth with scopes:
-    channels:read, channels:history, groups:read, groups:history, users:read.
+    channels:read, channels:history, groups:read, groups:history, users:read,
+    chat:write, im:write. EDGE requests them as the bot `scope`, so the stored
+    token is the bot token and posts come from the bot.
+
+  req F-1.4: A connection made before chat:write was requested keeps syncing;
+    its posts fail with missing_scope until it is reconnected to grant the new scopes.
 
   req F-1.2:
     when: OAuth flow completes and an AccessToken is created
@@ -214,10 +233,42 @@ feat F-5: Error Handling and Retries
     then: a success toast MUST be shown via LayoutOperation.AddToast.
 ```
 
+```mdl
+feat F-6: Slack Channel Backend
+
+  req F-6.1: Plugin MUST contribute a ThreadCapabilities.ChannelBackend of kind
+    org.dxos.channel.backend.slack whose subscribe reads the config's mirror feed.
+
+  req F-6.2: send MUST post with chat.postMessage into config.conversationId and
+    append the post to the mirror feed keyed by its ts; the receipt carries
+    messageIds [ts] and properties.slack { channel, ts, threadTs }.
+
+  req F-6.3: threads.send MUST reply with thread_ts when the thread id is a Slack
+    ts, and post top-level into the thread id as a conversation id (a DM) otherwise;
+    only posts into config.conversationId are mirrored.
+
+  req F-6.4: openDirect MUST read the person's identity labelled 'slack' and
+    return the conversations.open DM id; undefined without one.
+
+  req F-6.5: Slack refusals (missing_scope, not_in_channel, …) MUST fail with a
+    reason a person can act on, which sendToChannel reports as delivered: false.
+
+  req F-6.6: readOnly is always true: the channel article never posts as the bot;
+    only agents post, through sendToChannel.
+
+  req F-6.7: Sync MUST skip messages whose ts the mirror feed already holds.
+
+  req F-6.8: Materialize and sync MUST move a feed-backed Slack channel onto the
+    Slack backend, adopting its feed as the mirror; idempotently.
+
+  req F-6.9: Real-time receiving (Events API / Socket Mode on EDGE) is deferred;
+    the backend has no connection.
+```
+
 ## Acceptance
 
 ```mdl
-test T-1: OAuth populates account field
+scenario T-1: OAuth populates account field
   given: a fresh Integration with no accessToken.account
   when: OAuth flow completes and onTokenCreated fires
   then:
@@ -226,7 +277,7 @@ test T-1: OAuth populates account field
 ```
 
 ```mdl
-test T-2: Discovery returns targets without ECHO writes
+scenario T-2: Discovery returns targets without ECHO writes
   given: a valid Integration with OAuth token
   when: op:GetSlackChannels is invoked
   then:
@@ -235,18 +286,19 @@ test T-2: Discovery returns targets without ECHO writes
 ```
 
 ```mdl
-test T-3: First sync materializes Channel
+scenario T-3: First sync materializes Channel
   given: an Integration with one selected target (no prior sync)
   when: op:SyncSlackChannel is invoked
   then:
     - a Channel is created in ECHO with key { source: 'slack.com', id: conversationId }
+      on the Slack backend, its SlackChannel config holding the connection's token
     - Channel.name matches the conversation label
     - messages are appended to the channel's feed
     - target.cursor is set to the newest ts
 ```
 
 ```mdl
-test T-4: Second sync is incremental
+scenario T-4: Second sync is incremental
   given: a target with cursor = '1700000100.000000'
   when: op:SyncSlackChannel is invoked
   then:
@@ -256,7 +308,7 @@ test T-4: Second sync is incremental
 ```
 
 ```mdl
-test T-5: Per-target failure does not abort other targets
+scenario T-5: Per-target failure does not abort other targets
   given: an Integration with two targets; the second target's history call fails
   when: op:SyncSlackChannel is invoked
   then:
@@ -266,7 +318,7 @@ test T-5: Per-target failure does not abort other targets
 ```
 
 ```mdl
-test T-6: System messages filtered
+scenario T-6: System messages filtered
   given: a conversation history containing channel_join and channel_leave subtypes
   when: op:SyncSlackChannel processes the history
   then:
@@ -275,7 +327,7 @@ test T-6: System messages filtered
 ```
 
 ```mdl
-test T-7: Thread replies grouped
+scenario T-7: Thread replies grouped
   given: a Slack message with thread_ts set to its parent's ts
   when: the message is mapped to a @dxos/types Message
   then:
@@ -284,7 +336,7 @@ test T-7: Thread replies grouped
 ```
 
 ```mdl
-test T-8: Idempotent re-sync
+scenario T-8: Idempotent re-sync
   given: a channel already containing a Message with key { source: 'slack.com', id: ts }
   when: op:SyncSlackChannel fetches a history that includes the same ts
   then:
@@ -292,15 +344,23 @@ test T-8: Idempotent re-sync
     - pulled.added reflects only net-new messages
 ```
 
+```mdl
+scenario T-9: A posted message is not synced twice
+  given: a Slack channel whose backend posted a message with ts T
+  when: op:SyncSlackChannel fetches a history that includes ts T
+  then:
+    - the mirror feed holds exactly one message keyed T
+```
+
 ---
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect a Slack workspace and sync a channel
+test QA-1: Connect a Slack workspace and sync a channel
   desc: The core round-trip — OAuth-connect a workspace, discover conversations, sync one.
   actors: human
   covers: [F-1.1, F-1.2, F-2.1, F-3.1]
@@ -313,18 +373,18 @@ flow QA-1: Connect a Slack workspace and sync a channel
       registry before an IntegrationProvider for 'slack.com' exists
     - a Slack workspace and user account able to complete OAuth exist, held outside this repo
     - no Integration for 'slack.com' exists in the space — ABORT rather than reusing or deleting
-      one this flow did not create
-  test:
+      one this test did not create
+  steps:
     - name: Connect the workspace
       do: Open Settings -> Connections, choose Slack, and complete the OAuth consent screen for
         a real Slack workspace.
       expect: an Integration for source 'slack.com' appears with accessToken.account set to
         "<user>@<team>"
       blocked: |
-        Requires a live Slack OAuth consent flow and a real bearer token (F-1.2, F-1.3) — no
+        Requires a live Slack OAuth consent test and a real bearer token (F-1.2, F-1.3) — no
         deterministic operation performs this, and the debug port cannot drive a third-party
         OAuth redirect. This step is human-only and cannot be scripted; per Execution Rule 9 the
-        flow's status is `blocked`, not `failing`.
+        test's status is `blocked`, not `failing`.
       capture: connection
     - name: Discover channels
       do: In the Slack integration's target picker, open the conversation list.
@@ -356,7 +416,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -367,7 +427,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -376,8 +436,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -6,16 +6,20 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Card, Icon, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Organization, Person } from '@dxos/types';
 
 import { CrmPlugin } from '#plugin';
@@ -34,7 +38,7 @@ const DefaultStory = () => {
   const space = spaces[spaces.length - 1];
   const people = useQuery(space?.db, Filter.type(Person.Person));
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const [status, setStatus] = useState<string>('Not run.');
 
   const handleEnrich = useCallback(() => {
@@ -59,25 +63,27 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-2 p-2'>
       <Toolbar.Root>
-        <Button onClick={handleEnrich} data-testid='crm.story.enrich'>
+        <Button.Root onClick={handleEnrich} data-testid='crm.story.enrich'>
           Enrich images
-        </Button>
-        <span className='text-sm text-description' data-testid='crm.story.status'>
+        </Button.Root>
+        <span className='text-sm text-fg-muted' data-testid='crm.story.status'>
           {status}
         </span>
       </Toolbar.Root>
 
       {[...people, ...organizations].map((subject) => (
-        <Card.Root key={subject.id} fullWidth>
+        <Card.Root key={subject.id}>
           <Card.Header>
-            <Card.Block>
-              <Icon icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'} />
-            </Card.Block>
+            <Layout.Block>
+              <Icon.Icon
+                icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'}
+              />
+            </Layout.Block>
             <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           </Card.Header>
           <Card.Body>
             <Card.Row>
-              <Card.Text classNames='text-sm text-description' data-testid={`crm.story.image.${subject.id}`}>
+              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='muted'>
                 {(subject as { image?: string }).image ?? 'image: none'}
               </Card.Text>
             </Card.Row>
@@ -96,7 +102,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         // Without the plugin the operation has no registered handler, so the button would fail on
         // click — the story exists to drive the real operation, not a stub.

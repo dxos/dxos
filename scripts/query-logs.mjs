@@ -7,7 +7,7 @@
  * Query NDJSON log files (e.g. composer vite-plugin-log / LogBuffer exports).
  *
  * Usage:
- *   node scripts/query-logs.mjs <file.ndjson> [-q filter]... [-g pattern]...
+ *   node scripts/query-logs.mjs <file.ndjson[.gz]> [-q filter]... [-g pattern]...
  *
  * -q: comma-separated filters in LOG_FILTER form (see @dxos/log parseFilter).
  *     Repeat -q for OR across groups; within one -q, filters combine like shouldLog (include/exclude).
@@ -25,6 +25,7 @@ import { dirname, join, resolve } from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { createGunzip } from 'node:zlib';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -145,7 +146,10 @@ const matchesQuery = (entry, rawLine) => {
   return true;
 };
 
-const input = createReadStream(logFile, { encoding: 'utf8' });
+// Downloaded and uploaded Composer logs are gzipped (`.ndjson.gz`).
+const input = logFile.endsWith('.gz')
+  ? createReadStream(logFile).pipe(createGunzip()).setEncoding('utf8')
+  : createReadStream(logFile, { encoding: 'utf8' });
 const rl = readline.createInterface({ input, crlfDelay: Number.POSITIVE_INFINITY });
 
 for await (const rawLine of rl) {

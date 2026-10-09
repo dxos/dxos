@@ -6,14 +6,21 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/TracePanel': 'src/TracePanel.ts',
+    'ns/Hooks': 'src/Hooks.ts',
+    'ns/Extensions': 'src/Extensions.ts',
+    'ns/Chat': 'src/Chat.ts',
+    'Chat': 'src/components/Chat/index.ts',
+    'TracePanel': 'src/containers/TracePanel/TracePanel.tsx',
     'AssistantSkill': 'src/skills/assistant/AssistantSkill.ts',
+    'PluginManagerSkill': 'src/skills/plugin-manager/PluginManagerSkill.ts',
+    'TurnReviewSkill': 'src/skills/turn-review/TurnReviewSkill.ts',
     'index': 'src/index.ts',
     'AssistantPlugin': 'src/AssistantPlugin.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
-    'execution-graph': 'src/execution-graph/index.ts',
     'extensions': 'src/extensions/index.ts',
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
@@ -34,5 +41,5 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { node: true, storybook: true, workerd: true },
 });

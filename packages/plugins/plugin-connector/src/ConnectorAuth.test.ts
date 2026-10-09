@@ -11,14 +11,14 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { ConnectorSpec } from '#types';
 
-import * as ConnectorAuth from './ConnectorAuth';
+import * as ConnectorAuth from './ConnectorAuth.ts';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.
 const authFlow: Partial<ConnectorSpec.ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };

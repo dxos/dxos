@@ -35,9 +35,18 @@ export const withLayoutVariants = ({
   classNames,
   densities = ['md'],
   elevations = [
-    { elevation: 'dialog', surface: 'dx-modal-surface' },
-    { elevation: 'positioned', surface: 'dx-card-surface' },
-    { elevation: 'base', surface: 'dx-base-surface' },
+    {
+      elevation: 'dialog',
+      surface: 'dx-modal-surface',
+    },
+    {
+      elevation: 'positioned',
+      surface: 'dx-card-surface',
+    },
+    {
+      elevation: 'base',
+      surface: 'dx-base-surface',
+    },
   ],
 }: Config = {}): Decorator => {
   return (Story) => <Panel Story={Story} classNames={classNames} elevations={elevations} densities={densities} />;

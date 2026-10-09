@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { IBKR_SOURCE } from '../constants';
-import { IbkrConnectionError, IbkrSyncError } from '../errors';
-import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services';
-import { getOrCreatePortfolioFeed } from './feed';
+import { IBKR_SOURCE } from '../constants.ts';
+import { IbkrConnectionError, IbkrSyncError } from '../errors.ts';
+import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services/index.ts';
+import { getOrCreatePortfolioFeed } from './feed.ts';
 
 const getCredential = Effect.gen(function* () {
   const credential = yield* Credential.CredentialsService.getCredential({ service: IBKR_SOURCE });
@@ -35,7 +35,9 @@ const handler: Operation.WithHandler<typeof IbkrOperation.SyncPortfolioReport> =
       });
       const fetchedAt = new Date().toISOString();
       const feed = yield* getOrCreatePortfolioFeed;
-      yield* Feed.append(feed, [Obj.make(Ibkr.Report, { xml, fetchedAt })]);
+      yield* Feed.append(feed, [Obj.make(Ibkr.Report, { xml, fetchedAt })]).pipe(
+        Effect.provideService(Database.Origin, 'system'),
+      );
       return {
         fetchedAt,
         positions: parsePositions(xml).length,

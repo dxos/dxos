@@ -9,9 +9,9 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
-import * as Outline from './Outline';
-import * as Task from './Task';
-import * as TaskSet from './TaskSet';
+import * as Outline from './Outline.ts';
+import * as Task from './Task.ts';
+import * as TaskSet from './TaskSet.ts';
 
 describe('Outline', () => {
   let builder: EchoTestBuilder;

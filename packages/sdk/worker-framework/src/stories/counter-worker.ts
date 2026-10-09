@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { RpcTiming } from '@dxos/worker-framework';
 import * as Worker from '@dxos/worker-framework/Worker';
 
-import * as Rpc from '../internal/rpc';
-import { COUNTER_LIVENESS_LOCK_KEY, COUNTER_STORAGE_LOCK_KEY } from './counter-constants';
-import { CounterRpcs, TimingStatsSample, TimingStatsSnapshot } from './counter-service';
+import * as Rpc from '../internal/rpc.ts';
+import { COUNTER_LIVENESS_LOCK_KEY, COUNTER_STORAGE_LOCK_KEY } from './counter-constants.ts';
+import { CounterRpcs, TimingStatsSample, TimingStatsSnapshot } from './counter-service.ts';
 
 let count = 0;
 const listeners = new Set<(value: number) => void>();

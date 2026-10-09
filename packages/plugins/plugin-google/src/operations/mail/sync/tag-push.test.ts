@@ -4,14 +4,16 @@
 
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
@@ -21,10 +23,10 @@ import { Message } from '@dxos/types';
 
 import { type GmailDataset, GoogleMailApi } from '#services';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { runGoogleSync } from '../../../testing/sync-fixture';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { GoogleApiError } from '../../../errors.ts';
+import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
+import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /**
  * Bidirectional tag sync against the mock provider — the local → provider half that
@@ -106,6 +108,48 @@ describe('gmail tag push', () => {
     expect(pushes).toEqual([]);
     // The base is recorded, so the NEXT run can tell a local change from a synced one.
     expect(tagHeadsOf(binding)?.length).toBeGreaterThan(0);
+  });
+
+  test('a capped backfill records a base each run, so it re-pushes nothing it pulled', async ({ expect }) => {
+    // Regression: heads were saved only by uncapped runs, so every backfill run reconciled with no base
+    // and re-pushed — after loading in full — every message synced so far, until EDGE ran out of memory.
+    const dataset = {
+      ...generateGmailDataset({ count: 30, seed: 44, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    const { layer, pushes } = recordingApi(dataset);
+    const services = Layer.mergeAll(layer, ambientSyncServices(db));
+    const runCapped = () =>
+      EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 10, now })).pipe(Effect.provide(services)),
+      );
+
+    // Run 1 is capped, yet still records the base.
+    expect(Exit.isFailure(await runCapped())).toBe(true);
+    expect(tagHeadsOf(binding)?.length).toBeGreaterThan(0);
+
+    // The user stars an already-synced message mid-backfill; the next capped run pushes only that. The
+    // newest message is in run 1's batch because the initial backfill walks newest-first.
+    const target = dataset.messages.at(-1);
+    invariant(target, 'dataset is empty');
+    const message = await feedMessageFor(db, mailbox, target.id);
+    expect(message).toBeDefined();
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
+    Tagging.set(message, Obj.getURI(starred).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    let exit: Exit.Exit<unknown, unknown>;
+    let runs = 1;
+    do {
+      exit = await runCapped();
+      runs += 1;
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(pushes.flatMap((push) => push.ids)).toEqual([target.id]);
+    expect(pushes[0].add).toEqual(['STARRED']);
   });
 
   test('a locally applied star reaches Gmail on the next sync', async ({ expect }) => {
@@ -365,7 +409,7 @@ describe('gmail tag push', () => {
 
     // The run completes rather than dying, and the meter is released.
     expect(result.newMessages).toBe(0);
-    expect(statusUpdates.map((update) => update.message)).toContain(PROGRESS_STATUS_COMPLETE);
+    expect(statusUpdates.map((update) => update.message)).toContain(Progress.STATUS_COMPLETE);
   });
 });
 

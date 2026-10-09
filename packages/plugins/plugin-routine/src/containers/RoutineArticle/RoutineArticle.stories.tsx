@@ -15,16 +15,18 @@ import { Feed, Filter, Json, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
-import { RoutineArticle } from './RoutineArticle';
+import { RoutineArticle } from './RoutineArticle.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, Skill.Skill];
 
@@ -66,7 +68,7 @@ const seedWithTimerTrigger = (space: Space) => {
   const automation = space.db.add(Routine.make({ name: 'Daily Digest', triggers: [] }));
   // Wire the trigger into the automation after both are in the db.
   Obj.update(automation, (automation) => {
-    automation.triggers = [...automation.triggers, Ref.make(trigger)];
+    automation.triggers.push(Ref.make(trigger));
   });
 };
 
@@ -77,7 +79,7 @@ const seedWithTimerTrigger = (space: Space) => {
 const withAutomation = (seed: (space: Space) => void) =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
@@ -108,14 +110,14 @@ const DefaultStory = () => {
  * the live object so its own edits persist. */
 const EditableObject = ({ title, object }: { title: string; object: Obj.Unknown }) => (
   <Panel.Root>
-    <Panel.Content asChild>
+    <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
-          <h2 className='mb-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
+          <h2 className='mb-1 px-2 pt-2 text-sm font-medium text-fg-muted'>{title}</h2>
           <ObjectProperties object={object} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );
 
@@ -132,17 +134,17 @@ const JsonView = ({ data, db }: { data: unknown; db?: ReturnType<typeof Obj.getD
     getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
   >
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+      <Panel.Header>
+        <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
           <Syntax.Filter />
           <Syntax.Depth />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Syntax.Viewport>
           <Syntax.Code />
         </Syntax.Viewport>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   </Syntax.Root>
 );

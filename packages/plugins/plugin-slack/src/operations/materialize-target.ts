@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { SlackOperation } from '#types';
 
-import { findOrCreateChannelForTarget } from './sync';
+import { findOrCreateChannelForTarget } from './sync.ts';
 
 /**
  * Find-or-create the empty local Channel root for a Slack conversation so a
@@ -31,13 +31,16 @@ const handler: Operation.WithHandler<typeof SlackOperation.MaterializeSlackTarge
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
         if (!db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {
+          // The connection's token becomes the channel's, so the Slack backend posts as the connected bot.
+          const { accessToken } = yield* Database.load(connection);
           const channel = yield* findOrCreateChannelForTarget({
             externalId: remoteTarget.id,
             name: remoteTarget.name,
+            accessToken,
           });
           return { target: Ref.make(channel) };
         }).pipe(Effect.provide(Database.layer(db)));

@@ -10,9 +10,9 @@ import { describe, test } from 'vitest';
 import { Database, DXN, Obj, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import * as Skill from './Skill';
+import * as Skill from './Skill.ts';
 
 const SKILL_KEY = 'org.dxos.skill.example';
 

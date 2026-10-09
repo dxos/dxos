@@ -5,43 +5,50 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { SpaceMember } from '@dxos/react-client/echo';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Avatar, type ThemedClassName, useId } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { keyToFallback } from '@dxos/util';
 
+import { profileString } from '../../util/index.ts';
+
 type IdentityListItemProps = {
-  identity: Identity;
+  identity: Pick<Identity, 'identityKey' | 'profile'>;
   presence?: SpaceMember['presence'];
   onClick?: () => void;
 };
 
 export const IdentityListItem = forwardRef<
-  HTMLLIElement,
-  ThemedClassName<ComponentPropsWithoutRef<'li'>> & IdentityListItemProps
+  HTMLDivElement,
+  Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> & IdentityListItemProps
 >(({ identity, presence, onClick, classNames, ...props }, forwardedRef) => {
-  const fallbackValue = keyToFallback(identity.identityKey);
-  const labelId = useId('identityListItem__label');
-  const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+  const identityKey = requirePublicKey(identity.identityKey);
+  const fallbackValue = keyToFallback(identityKey);
+  const labelId = Hooks.useId('identityListItem__label');
+  const displayName = identity.profile?.displayName ?? generateName(identityKey.toHex());
   return (
     <Listbox.Item
       {...props}
-      id={identity.identityKey.toHex()}
+      id={identityKey.toHex()}
       classNames={['flex gap-2 ps-3 pe-1 items-center', onClick && 'cursor-pointer', classNames]}
       onClick={onClick && (() => onClick())}
       data-testid='identity-list-item'
       ref={forwardedRef}
     >
-      <Avatar.Root labelId={labelId}>
-        <Avatar.Content
-          status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}
-          hue={identity.profile?.data?.hue || fallbackValue.hue}
-          fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
-          classNames='place-self-center'
-        />
-        <Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Avatar.Label>
-      </Avatar.Root>
+      <Avatar.Root
+        aria-labelledby={labelId}
+        status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
+        hue={Avatar.toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
+        fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
+        classNames='place-self-center'
+      />
+      <span id={labelId} className='text-sm truncate px-2'>
+        {displayName}
+      </span>
     </Listbox.Item>
   );
 });

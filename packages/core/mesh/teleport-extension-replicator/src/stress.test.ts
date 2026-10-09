@@ -6,7 +6,7 @@ import * as fc from 'fast-check';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Event, asyncTimeout } from '@dxos/async';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,14 +14,14 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { ReplicatorExtension } from './replicator-extension';
-import { createStreamPair } from './testing';
+import { ReplicatorExtension } from './replicator-extension.ts';
+import { createStreamPair } from './testing.ts';
 
 const MAX_NUM_FEEDS = 3;
 
 class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
-  readonly feedStore: FeedStore<any>;
+  readonly hypercoreStore: HypercoreStore<any>;
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
@@ -30,15 +30,15 @@ class TestAgent {
     readonly keyring: Keyring,
     readonly peer: Teleport,
   ) {
-    this.feedStore = new FeedStore({
-      factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
+    this.hypercoreStore = new HypercoreStore({
+      factory: new HypercoreFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
     });
     peer.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 
   async destroy(): Promise<void> {
     await this.peer.close();
-    await this.feedStore.close();
+    await this.hypercoreStore.close();
   }
 }
 
@@ -67,7 +67,7 @@ const assertState = async (model: Model, real: Real) => {
   for (const agent of ['agent1', 'agent2'] as AgentName[]) {
     for (const feedKey of model[agent].keys()) {
       const expectedLength = model.feeds.get(feedKey)!;
-      const feed = await real[agent].feedStore.openFeed(feedKey, { writable: true });
+      const feed = await real[agent].hypercoreStore.openHypercore(feedKey, { writable: true });
 
       log('check', { agent, feedKey: feedKey.truncate(), expectedLength, actualLength: feed.length });
       if (feed.length !== expectedLength) {
@@ -106,8 +106,8 @@ class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
 
     model[this.agent].add(this.feedKey);
 
-    const feed = await real[this.agent].feedStore.openFeed(this.feedKey, { writable: true });
-    real[this.agent].replicator.addFeed(feed);
+    const feed = await real[this.agent].hypercoreStore.openHypercore(this.feedKey, { writable: true });
+    real[this.agent].replicator.addHypercore(feed);
 
     await assertState(model, real);
   };
@@ -129,7 +129,7 @@ class WriteToFeedCommand implements fc.AsyncCommand<Model, Real> {
   run = async (model: Model, real: Real) => {
     model.feeds.set(this.feedKey, model.feeds.get(this.feedKey)! + this.count);
 
-    const feed = await real[this.agent].feedStore.openFeed(this.feedKey, { writable: true });
+    const feed = await real[this.agent].hypercoreStore.openHypercore(this.feedKey, { writable: true });
     for (const _ of range(this.count)) {
       await feed.append('testing');
     }

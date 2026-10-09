@@ -1,0 +1,464 @@
+diff --git a/.changeset/remove-objects-database-service.md b/.changeset/remove-objects-database-service.md
+new file mode 100644
+index 00000000..15b14f13
+--- /dev/null
++++ b/.changeset/remove-objects-database-service.md
+@@ -0,0 +1,7 @@
++---
++'@dxos/plugin-space': minor
++---
++
++`SpaceOperation.RemoveObjects` now declares `Database.Service`, so a caller must pass `spaceId` in the invoke options: `invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId })`. A call without one fails to resolve the service. Every in-repo call site passes it.
++
++This fixes removal on hosts that have no client `Space`, such as edge operation-service behind composer.dxos.network/mcp, where every `removeObjects` call failed its invariant and nothing was removed.
+diff --git a/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts b/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts
+index 5aa54f12..15c977e3 100644
+--- a/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts
++++ b/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts
+@@ -158,7 +158,8 @@ export default Capability.makeModule(
+             }),
+             AppGraphNode.makeAction({
+               id: SpaceOperation.RemoveObjects.meta.key,
+-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }),
++              data: () =>
++                Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }, { spaceId: db?.spaceId }),
+               properties: {
+                 label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Blog.Publication)),
+                 icon: 'ph--trash--regular',
+diff --git a/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx b/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx
+index f828c645..b571e10e 100644
+--- a/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx
++++ b/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx
+@@ -71,7 +71,11 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
+   }, [invokePromise, subject]);
+ 
+   const handleDelete = useCallback(() => {
+-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
++    void invokePromise(
++      SpaceOperation.RemoveObjects,
++      { objects: [subject] },
++      { spaceId: Obj.getDatabase(subject)?.spaceId },
++    );
+   }, [invokePromise, subject]);
+ 
+   // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider
+diff --git a/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts b/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts
+index d0e3aab9..df6ea647 100644
+--- a/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts
++++ b/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts
+@@ -84,7 +84,12 @@ export default Capability.makeModule(
+             },
+             {
+               id: 'delete',
+-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [search] }),
++              data: () =>
++                Operation.invoke(
++                  SpaceOperation.RemoveObjects,
++                  { objects: [search] },
++                  { spaceId: Obj.getDatabase(search)?.spaceId },
++                ),
+               properties: {
+                 label: ['delete-object.label', { ns: Type.getTypename(Search.Search) }],
+                 icon: 'ph--trash--regular',
+@@ -113,7 +118,12 @@ export default Capability.makeModule(
+             }),
+             {
+               id: 'delete',
+-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [provider] }),
++              data: () =>
++                Operation.invoke(
++                  SpaceOperation.RemoveObjects,
++                  { objects: [provider] },
++                  { spaceId: Obj.getDatabase(provider)?.spaceId },
++                ),
+               properties: {
+                 label: ['delete-object.label', { ns: Type.getTypename(Provider.Provider) }],
+                 icon: 'ph--trash--regular',
+diff --git a/packages/plugins/plugin-connector/src/capabilities/app-graph-builder.ts b/packages/plugins/plugin-connector/src/capabilities/app-graph-builder.ts
+index fad970b6..b547354c 100644
+--- a/packages/plugins/plugin-connector/src/capabilities/app-graph-builder.ts
++++ b/packages/plugins/plugin-connector/src/capabilities/app-graph-builder.ts
+@@ -133,9 +133,11 @@ export default Capability.makeModule(
+                     const routine = db
+                       ? yield* Binding.findRoutine(connection).pipe(Effect.provide(Database.layer(db)))
+                       : undefined;
+-                    yield* Operation.invoke(SpaceOperation.RemoveObjects, {
+-                      objects: routine ? [connection, routine] : [connection],
+-                    });
++                    yield* Operation.invoke(
++                      SpaceOperation.RemoveObjects,
++                      { objects: routine ? [connection, routine] : [connection] },
++                      { spaceId: db?.spaceId },
++                    );
+                   }),
+                 properties: {
+                   label: ['delete-connection.label', { ns: meta.profile.key }],
+diff --git a/packages/plugins/plugin-connector/src/containers/ConnectionArticle/ConnectionArticle.tsx b/packages/plugins/plugin-connector/src/containers/ConnectionArticle/ConnectionArticle.tsx
+index 6afbea36..9842e8e7 100644
+--- a/packages/plugins/plugin-connector/src/containers/ConnectionArticle/ConnectionArticle.tsx
++++ b/packages/plugins/plugin-connector/src/containers/ConnectionArticle/ConnectionArticle.tsx
+@@ -49,7 +49,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) =>
+     // Only the connection: its cursors are left dormant, holding the sync progress a later re-connect of
+     // the same account resumes from.
+     const spaceId = db?.spaceId;
+-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }).then(
++    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }, { spaceId }).then(
+       () =>
+         // Fall back to the Connections section: this article's own subject stops resolving the
+         // moment the connection is gone, which would otherwise leave the deck on a dead node.
+@@ -63,9 +63,9 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) =>
+ 
+   const handleRemoveBinding = useCallback(
+     (binding: Cursor.ExternalCursor) => {
+-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [binding] });
++      void invokePromise(SpaceOperation.RemoveObjects, { objects: [binding] }, { spaceId: db?.spaceId });
+     },
+-    [invokePromise],
++    [invokePromise, db],
+   );
+ 
+   // Reads the live entity, as `describeConnection` is typed for, but is keyed on the snapshot so an
+diff --git a/packages/plugins/plugin-connector/src/containers/ConnectorCompanion/ConnectorCompanion.tsx b/packages/plugins/plugin-connector/src/containers/ConnectorCompanion/ConnectorCompanion.tsx
+index 36cf1ed9..fc7bf056 100644
+--- a/packages/plugins/plugin-connector/src/containers/ConnectorCompanion/ConnectorCompanion.tsx
++++ b/packages/plugins/plugin-connector/src/containers/ConnectorCompanion/ConnectorCompanion.tsx
+@@ -71,8 +71,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
+   }, [invokePromise, connection, db]);
+ 
+   const handleRemoveBinding = useCallback(() => {
+-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
+-  }, [invokePromise, subject]);
++    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }, { spaceId: db?.spaceId });
++  }, [invokePromise, subject, db]);
+ 
+   // Seed the options form from the cursor's current options.
+   const optionsDefaultValues = useMemo(() => ({ ...(externalSpec?.options ?? {}) }), [externalSpec]);
+diff --git a/packages/plugins/plugin-game/src/capabilities/create-object.ts b/packages/plugins/plugin-game/src/capabilities/create-object.ts
+index cfead911..763d7d56 100644
+--- a/packages/plugins/plugin-game/src/capabilities/create-object.ts
++++ b/packages/plugins/plugin-game/src/capabilities/create-object.ts
+@@ -63,7 +63,11 @@ export default Capability.makeModule(
+             { spaceId: options.db.spaceId },
+           ).pipe(
+             Effect.tapError(() =>
+-              Operation.invoke(SpaceOperation.RemoveObjects, { objects: [stateObject] }).pipe(Effect.ignore),
++              Operation.invoke(
++                SpaceOperation.RemoveObjects,
++                { objects: [stateObject] },
++                { spaceId: options.db.spaceId },
++              ).pipe(Effect.ignore),
+             ),
+           );
+         }),
+diff --git a/packages/plugins/plugin-illustrator/src/capabilities/create-object.ts b/packages/plugins/plugin-illustrator/src/capabilities/create-object.ts
+index 41e2c148..690357e8 100644
+--- a/packages/plugins/plugin-illustrator/src/capabilities/create-object.ts
++++ b/packages/plugins/plugin-illustrator/src/capabilities/create-object.ts
+@@ -65,7 +65,11 @@ export default Capability.makeModule(
+             { spaceId: options.db.spaceId },
+           ).pipe(
+             Effect.tapError(() =>
+-              Operation.invoke(SpaceOperation.RemoveObjects, { objects: [canvas] }).pipe(Effect.ignore),
++              Operation.invoke(
++                SpaceOperation.RemoveObjects,
++                { objects: [canvas] },
++                { spaceId: options.db.spaceId },
++              ).pipe(Effect.ignore),
+             ),
+           );
+         }),
+diff --git a/packages/plugins/plugin-inbox/src/containers/EventArticle/EventArticle.tsx b/packages/plugins/plugin-inbox/src/containers/EventArticle/EventArticle.tsx
+index ada2a4db..06c21d29 100644
+--- a/packages/plugins/plugin-inbox/src/containers/EventArticle/EventArticle.tsx
++++ b/packages/plugins/plugin-inbox/src/containers/EventArticle/EventArticle.tsx
+@@ -106,7 +106,11 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
+ 
+   // Delete the event locally.
+   const handleDelete = useCallback(() => {
+-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [event] });
++    void invokePromise(
++      SpaceOperation.RemoveObjects,
++      { objects: [event] },
++      { spaceId: Obj.getDatabase(event)?.spaceId },
++    );
+   }, [invokePromise, event]);
+ 
+   return (
+diff --git a/packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.tsx b/packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.tsx
+index 5ab417a7..211a2300 100644
+--- a/packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.tsx
++++ b/packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.tsx
+@@ -245,7 +245,11 @@ export const MessageArticle = ({
+   // Per-message delete action, backed by the space operation for removing objects.
+   const handleDelete = useCallback(
+     (message: MessageType.Message) => {
+-      void invoker.invokePromise(SpaceOperation.RemoveObjects, { objects: [message] });
++      void invoker.invokePromise(
++        SpaceOperation.RemoveObjects,
++        { objects: [message] },
++        { spaceId: Obj.getDatabase(message)?.spaceId },
++      );
+     },
+     [invoker],
+   );
+diff --git a/packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx b/packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx
+index 395bebeb..06ca6a94 100644
+--- a/packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx
++++ b/packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx
+@@ -188,9 +188,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
+       updateProject((project) => {
+         project.artifacts = project.artifacts.filter((artifactRef) => artifactRef.target?.id !== object.id);
+       });
+-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
++      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] }, { spaceId: db?.spaceId });
+     },
+-    [invokePromise, updateProject],
++    [invokePromise, updateProject, db],
+   );
+ 
+   // The create dialog places the object in the space; the ref array is what makes it this project's,
+diff --git a/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts b/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts
+index 0b82a09b..82a86f49 100644
+--- a/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts
++++ b/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts
+@@ -394,10 +394,11 @@ const constructObjectActions = ({
+     AppGraphNode.makeAction({
+       id: SpaceOperation.RemoveObjects.meta.key,
+       data: () =>
+-        Operation.invoke(SpaceOperation.RemoveObjects, {
+-          objects: [object],
+-          target: parentCollection,
+-        }),
++        Operation.invoke(
++          SpaceOperation.RemoveObjects,
++          { objects: [object], target: parentCollection },
++          { spaceId: Obj.getDatabase(object)?.spaceId },
++        ),
+       properties: {
+         label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
+         icon: 'ph--trash--regular',
+diff --git a/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/database.ts b/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/database.ts
+index 781a1031..5a362524 100644
+--- a/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/database.ts
++++ b/packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/database.ts
+@@ -450,9 +450,11 @@ const createSchemaActions = ({
+       id: SpaceOperation.RemoveObjects.meta.key,
+       data: () =>
+         Type.getDatabase(type) != null
+-          ? Operation.invoke(SpaceOperation.RemoveObjects, {
+-              objects: [type],
+-            })
++          ? Operation.invoke(
++              SpaceOperation.RemoveObjects,
++              { objects: [type] },
++              { spaceId: Type.getDatabase(type)?.spaceId },
++            )
+           : Effect.succeed(undefined),
+       properties: {
+         label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
+diff --git a/packages/plugins/plugin-space/src/operations/remove-objects.test.ts b/packages/plugins/plugin-space/src/operations/remove-objects.test.ts
+new file mode 100644
+index 00000000..64197471
+--- /dev/null
++++ b/packages/plugins/plugin-space/src/operations/remove-objects.test.ts
+@@ -0,0 +1,72 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import { describe, it } from '@effect/vitest';
++import * as Effect from 'effect/Effect';
++import * as Layer from 'effect/Layer';
++import * as Option from 'effect/Option';
++import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
++
++import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
++import * as Capability from '@dxos/app-framework/Capability';
++import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
++import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
++import { WithProperties } from '@dxos/app-toolkit/testing';
++import { SpaceProperties } from '@dxos/client-protocol/types';
++import * as Operation from '@dxos/compute/Operation';
++import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
++import { Annotation, Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
++import { TestHelpers } from '@dxos/effect/testing';
++
++import { SpaceOperation } from '#types';
++
++import RemoveObjectsHandler from './remove-objects.ts';
++import { TestObject } from './testing.ts';
++
++// A capability manager with no layout contributed, as on a headless host.
++const TestLayer = AssistantTestLayer({
++  operationHandlers: OperationHandlerSet.make(RemoveObjectsHandler),
++  types: [Collection.Collection, SpaceProperties, TestObject],
++  extraServices: Layer.sync(Capability.Service, () => CapabilityManager.make({ registry: AtomRegistry.make() })),
++  disableLlmMemoization: true,
++});
++
++const loadRootCollection = Effect.fnUntraced(function* () {
++  const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
++  const ref = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrThrow);
++  return yield* Database.load(ref);
++});
++
++describe('SpaceOperation.RemoveObjects', () => {
++  // A remote host holds a bare database: no client `Space`, and refs decoded from URIs, not live handles.
++  it.effect(
++    'removes objects named by refs on a host without a client space, unlinking them from the root collection',
++    Effect.fnUntraced(
++      function* ({ expect }) {
++        const { db } = yield* Database.Service;
++        const rootCollection = yield* loadRootCollection();
++        const kept = yield* Database.add(Obj.make(TestObject, { name: 'kept' }));
++        const removed = yield* Database.add(Obj.make(TestObject, { name: 'removed' }));
++        Obj.update(rootCollection, (rootCollection) => {
++          rootCollection.objects.push(Ref.make(kept), Ref.make(removed));
++        });
++        yield* Database.flush();
++
++        const { indices } = yield* Operation.invoke(
++          SpaceOperation.RemoveObjects,
++          { refs: [db.makeRef<TestObject>(Obj.getURI(removed))] },
++          { spaceId: db.spaceId },
++        );
++
++        expect(indices).toEqual([1]);
++        expect(rootCollection.objects.map((ref) => ref.uri)).toEqual([Ref.make(kept).uri]);
++        const remaining = yield* Database.query(Query.select(Filter.type(TestObject))).run;
++        expect(remaining.map((object) => object.id)).toEqual([kept.id]);
++      },
++      WithProperties,
++      Effect.provide(TestLayer),
++      TestHelpers.provideTestContext,
++    ),
++  );
++});
+diff --git a/packages/plugins/plugin-space/src/operations/remove-objects.ts b/packages/plugins/plugin-space/src/operations/remove-objects.ts
+index 6898a371..14379420 100644
+--- a/packages/plugins/plugin-space/src/operations/remove-objects.ts
++++ b/packages/plugins/plugin-space/src/operations/remove-objects.ts
+@@ -7,9 +7,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
+ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+-import { getSpace } from '@dxos/client/echo';
++import { SpaceProperties } from '@dxos/client-protocol';
+ import * as Operation from '@dxos/compute/Operation';
+-import { Annotation, Collection, Entity, Filter, Obj, Query } from '@dxos/echo';
++import { Annotation, Collection, Database, Entity, Filter, Obj, Query } from '@dxos/echo';
+ import { invariant } from '@dxos/invariant';
+ import { isNonNullable } from '@dxos/util';
+ 
+@@ -25,26 +25,21 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
+         (input.objects == null) !== (input.refs == null),
+         'Pass exactly one of `objects` (held) or `refs` (referenced).',
+       );
+-      // Loaded through the refs themselves rather than `Database.Service`: the app's call sites
+-      // invoke without a spaceId, so a declared service would fail to resolve for them.
+-      const entities =
+-        input.objects ?? (yield* Effect.forEach(input.refs ?? [], (ref) => Effect.promise(() => ref.load())));
+-
+-      const space = getSpace(entities[0] as Obj.Unknown);
++      const { db } = yield* Database.Service;
++      const entities = input.objects ?? (yield* Effect.forEach(input.refs ?? [], (ref) => Database.load(ref)));
+       invariant(
+-        space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
++        entities.every((entity) => Entity.isEntity(entity) && Entity.getDatabase(entity)?.spaceId === db.spaceId),
++        `Every object must belong to space ${db.spaceId}.`,
+       );
+ 
+-      const parentCollection =
+-        input.target ??
+-        Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
++      const parentCollection = input.target ?? (yield* loadRootCollection());
+       invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
+ 
+       // Type entities (persisted schemas) live outside collections — `findIndex` will
+       // return -1 for them and the splice/active-tracking branches are skipped.
+       const indices = entities.map((entity) =>
+         Obj.instanceOf(Collection.Collection, parentCollection)
+-          ? parentCollection.objects.findIndex((ref) => ref.target === entity)
++          ? parentCollection.objects.findIndex((ref) => ref.peek() === entity)
+           : -1,
+       );
+ 
+@@ -62,7 +57,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
+ 
+       for (const entity of entities) {
+         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
+-          const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
++          const index = parentCollection.objects.findIndex((ref) => ref.peek() === entity);
+           if (index !== -1) {
+             Obj.update(parentCollection, (parentCollection) => {
+               parentCollection.objects.splice(index, 1);
+@@ -70,8 +65,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
+           }
+         }
+ 
+-        const db = Entity.getDatabase(entity);
+-        db?.remove(entity);
++        db.remove(entity);
+       }
+ 
+       if (wasActive.length > 0) {
+@@ -89,6 +83,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
+ );
+ export default handler;
+ 
++const loadRootCollection = Effect.fnUntraced(function* () {
++  const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
++  const ref = properties
++    ? Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
++    : undefined;
++  return ref ? yield* Database.load(ref) : undefined;
++});
++
+ /**
+  * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` — i.e. what
+  * `db.remove` will cascade to. Must run before the removal, while the parent edges still resolve.
+diff --git a/packages/plugins/plugin-space/src/types/SpaceOperation.ts b/packages/plugins/plugin-space/src/types/SpaceOperation.ts
+index 8bc76a41..25e4aca2 100644
+--- a/packages/plugins/plugin-space/src/types/SpaceOperation.ts
++++ b/packages/plugins/plugin-space/src/types/SpaceOperation.ts
+@@ -212,8 +212,7 @@ export const RemoveObjects = Operation.make({
+       'when the entities themselves are not held.',
+     icon: 'ph--trash--regular',
+   },
+-  // The space comes from the input itself — live entities, or refs that are always space-qualified.
+-  services: [Capability.Service],
++  services: [Capability.Service, Database.Service],
+   input: Schema.Struct({
+     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
+     // References are what a caller outside this process can supply; resolved to the same entities
+diff --git a/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx b/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx
+index 790ac502..07b89ca4 100644
+--- a/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx
++++ b/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx
+@@ -204,8 +204,8 @@ export const MediaArtifactForm = ({
+ 
+   // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
+   const handleDelete = useCallback(() => {
+-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
+-  }, [invokePromise, artifact]);
++    void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] }, { spaceId: db?.spaceId });
++  }, [invokePromise, artifact, db]);
+ 
+   const busy = generating || running || pendingIndex >= 0;
+   // Generation is enabled only when the draft satisfies the provider's request schema (required
+diff --git a/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx b/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx
+index 092f7d35..a7891430 100644
+--- a/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx
++++ b/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx
+@@ -67,9 +67,9 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
+ 
+     const handleDeleteRows = useCallback(
+       (_row: number, objects: any[]) => {
+-        void invokePromise(SpaceOperation.RemoveObjects, { objects });
++        void invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId: db?.spaceId });
+       },
+-      [invokePromise],
++      [invokePromise, db],
+     );
+ 
+     const handleDeleteColumn = useCallback(

@@ -5,15 +5,19 @@ version: 0.1.0
 ---
 
 Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash tool and a
-multi-string-replace edit tool, carried by a single vite dev-server route that runs a shell script
-under a configured root. Nothing is mounted outside a vite dev server.
+multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
+that runs a shell script under a configured root. Nothing is mounted outside a vite server.
+
+In a browser it also contributes the browser version of plugin-projects' **Composer Plugin** project template:
+a project whose agent uses these tools to build a TypeScript Composer plugin on this machine and offer it back
+to load (QA-2). The desktop app has no vite server, so it offers plugin-projects' own version instead.
 
 ## Extensions
 
 | Term | URI                        |
 |------|----------------------------|
 | `op` | `org.dxos.mdl.op@1.1`      |
-| `flow` | `org.dxos.mdl.flow@1.0`  |
+| `test` | `org.dxos.mdl.test@1.0`  |
 
 ## Operations
 
@@ -54,11 +58,11 @@ op edits
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Run a shell command and apply an edit
+test QA-1: Run a shell command and apply an edit
   desc: |
     The plugin has no ECHO types and no navtree/article surface — it is two raw tools
     (`bash`, `edits`) exposed to the assistant. There is no human gesture other than prompting
@@ -73,7 +77,7 @@ flow QA-1: Run a shell command and apply an edit
     - the vite dev server's harness route is reachable (this plugin only functions there — "Nothing
       is mounted outside a vite dev server")
     - a scratch file the harness root can write to, not otherwise used by this space's QA fixtures
-  test:
+  steps:
     - name: Run a shell command
       do: Ask the assistant to run `echo qa-computer-check` via the Coding (Dev) tool.
       invoke: org.dxos.operation.computer.runBash { script: "echo qa-computer-check" }
@@ -96,4 +100,110 @@ flow QA-1: Run a shell command and apply an edit
       do: Ask the assistant to delete the scratch file.
       invoke: org.dxos.operation.computer.runBash { script: "rm -f qa-computer-scratch.txt" }
       expect: the file no longer exists under the harness root
+```
+
+```mdl
+test QA-2: Build a plugin with an agent from the Composer Plugin project template
+  desc: |
+    The demo script for the Composer Plugin project template (`src/templates/composer-plugin.ts`): an agent
+    works one parent task and its four subtasks on this machine — read the guide, write a TypeScript plugin,
+    typecheck it against the plugin's dev server, offer it — and the reader loads it from that dev server
+    through Plugins → Dev Server. The plugin adds a "World Clock" group to each
+    space's navtree with a "Clocks" page under it: a world map from plugin-map above a row of live clocks,
+    kept in a `Clock` ECHO object. Walked by the autocue flow
+    `packages/plugins/plugin-computer/autocue/composer-plugin.mjs`.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open (the default "My Space" is fine)
+    - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — a plugin's bare
+      `@dxos/*` imports resolve through the bundle's import map, and EDGE production rejects the AI requests
+    - the plugin's Vite dev server serves `temp/plugins/world-clock` on :3967 (`node_modules/.bin/vite
+      temp/plugins/world-clock` from the Composer app directory), started from its `dx.config.ts`,
+      `vite.config.ts` and `tsconfig.json`; the Computer shell kills scripts that outlive its timeout, so the
+      agent cannot run it
+    - Plugins → Dev Server is off
+    - plugin-projects and Coding (Dev) are enabled; the template is contributed by Coding (Dev), so the
+      create dialog offers it only when that plugin is on
+    - the Assistant's default remote model is DeepSeek V4 Pro
+    - no plugin named "World Clock" is loaded, no "Composer Plugin" project is left from an earlier run, and
+      `temp/plugins/world-clock/src` does not exist, so the agent writes the plugin from nothing (the autocue
+      flow's setup steps restore all of this, and seed the three config files so the dev server can start)
+  steps:
+    - name: Create a project from the Composer Plugin template
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "World Clock" and click Create, then open the project's folder in the navtree.
+      capture: project
+      expect: a "World Clock" project opens, and its navtree folder shows what it holds
+    - name: Open the project's tasks
+      do: Click the project's Tasks tab.
+      expect: |
+        one parent task, "Build the World Clock plugin", with four subtasks under it, all to do — read the
+        guide, write the plugin, typecheck and check the dev server, offer it
+    - name: Select the parent task and assign it to the agent
+      do: Tick the parent task's checkbox, then click "Assign selected tasks to agent".
+      expect: |
+        the project's pipeline chart appears and a chat named "Build the World Clock plugin" holds the parent
+        and its four subtasks
+      note: Delegating a parent hands over its whole subtree (DelegateTaskToChat collects it), parent first.
+    - name: Open the agent session
+      do: Open the plank's companion and pick its Assistant tab.
+      expect: the companion shows the delegated chat, already working from its opening turn
+    - name: Show the chat's tasks, then hide them
+      do: Click the prompt's tasks toggle, leave the checklist open for a few seconds, then close it.
+      expect: the checklist lists the parent task and its four subtasks
+      note: The checklist starts collapsed (it is the assistant's working state), so it is opened on purpose.
+    - name: Open the Trace panel
+      do: Click Trace in the right rail.
+      expect: the Trace panel opens pinned to its latest entries, which follow the agent's work
+    - name: Select each task in turn
+      do: Click each of the first four task rows in the project, a second apart.
+      expect: the companion follows the selection, showing each task's detail
+    - name: Return to the chat
+      do: Pick the companion's Assistant tab.
+      expect: the delegated chat is back, still working
+    - name: Wait for the agent to offer the plugin
+      do: Watch the subtasks tick off.
+      expect: all five tasks are done and the chat says World Clock is ready to load from Plugins → Dev Server
+      note: |
+        Takes up to twenty minutes. The model matters: with Composer's stock default (Claude Sonnet 5) the
+        delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
+    - name: Load the plugin from the dev server
+      do: Close the companion and the context sidebar, open Plugins settings, and under Dev Server click Enable.
+      expect: |
+        the button turns to Disable with no warning banner, and World Clock loads and activates as a dev
+        plugin (and plugin-map with it, which it depends on)
+      note: |
+        A dev plugin is not persisted: Dev Server stays on and loads it again on every reload while the dev
+        server runs, and Disable removes it.
+    - name: Open the Clocks page
+      do: Return to the space and click Clocks under the WORLD CLOCK group.
+      expect: |
+        the navtree keeps its own groups (CONTENT, SYSTEM) and gains a WORLD CLOCK group holding Clocks; the
+        page opens as an article with an equirectangular world map above one clock card for the local
+        timezone (date, ticking time, timezone) and an empty card of the same size with a large plus button
+      note: |
+        An earlier version of the guide taught a rail workspace, and the built plugin replaced the whole
+        navtree with its own; the guide now teaches a navtree group.
+    - name: Add two timezones
+      do: Click the plus, pick a timezone from the select and save; do it again with a second timezone.
+      expect: the row shows three clock cards sorted west to east, each ticking in its own timezone, with a pin on the map, and the plus card after them
+      note: The timezones live on the space's `Clock` object, so they survive a reload.
+    - name: Select the clocks on the map, then on the globe
+      do: Click each clock in turn, then switch the map to the globe and click each clock again.
+      expect: |
+        the selected clock's card is outlined and its pin is highlighted; on the globe the earth turns about
+        its axis to the selected clock's meridian
+  after:
+    - name: Delete the project
+      do: Right-click the "World Clock" project in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
+      expect: the project and its tasks leave the navtree
+    - name: Turn off the dev plugin
+      do: Open Plugins settings and under Dev Server click Disable.
+      expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+    - name: Stop the dev server and remove the plugin folder
+      do: Stop the dev server on :3967 and delete `temp/plugins/world-clock` under the Composer app.
+      expect: nothing answers on :3967 and the folder is gone, restoring the `given` for the next run
+      note: The autocue flow's setup steps do this and the Disable before each take.
 ```

@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './graph';
-export * from './space-graph';
+export * from './graph.ts';
+export * from './space-graph.ts';

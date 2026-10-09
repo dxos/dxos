@@ -11,12 +11,12 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
-import * as Pipeline from './Pipeline';
-import * as Stage from './Stage';
-import { captureSink } from './testing';
+import * as Pipeline from './Pipeline.ts';
+import * as Stage from './Stage.ts';
+import { captureSink } from './testing/index.ts';
 
 describe('Pipeline.run', () => {
   test('chains stages left-to-right and drains to the sink', async ({ expect }) => {

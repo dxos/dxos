@@ -5,14 +5,14 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Fact } from './Fact';
+import { Fact } from './Fact.ts';
 
 const ALICE_FACT: Fact = {
   id: 'fact-1',
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: 'paris' },
+    object: { kind: 'entity', entity: 'paris' },
     validFrom: '2026-06-12',
     quote: "I think I'm probably going to Paris next week",
   },
@@ -50,12 +50,25 @@ describe('Fact schema', () => {
     const question: Fact = {
       ...ALICE_FACT,
       id: 'fact-q',
-      assertion: { subject: { entity: 'meeting' }, predicate: 'startsAt', object: { literal: '?' } },
+      assertion: {
+        subject: { kind: 'entity', entity: 'meeting' },
+        predicate: 'startsAt',
+        object: { kind: 'literal', literal: '?' },
+      },
       factuality: { value: 'Uu', polarity: '?' },
       illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' },
     };
     const decoded = Schema.decodeUnknownSync(Fact)(JSON.parse(JSON.stringify(Schema.encodeSync(Fact)(question))));
     expect(decoded).toEqual(question);
+  });
+
+  test('rejects a term without its kind tag', ({ expect }) => {
+    expect(() =>
+      Schema.decodeUnknownSync(Fact)({
+        ...ALICE_FACT,
+        assertion: { ...ALICE_FACT.assertion, subject: { entity: 'alice' } },
+      }),
+    ).toThrow();
   });
 
   test('rejects an invalid illocutionary force', ({ expect }) => {

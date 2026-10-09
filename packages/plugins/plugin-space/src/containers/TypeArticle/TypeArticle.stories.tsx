@@ -4,23 +4,22 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
 import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -32,9 +31,9 @@ import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
 import { SpaceCapabilities } from '#types';
 
-import { MergePreview } from '../MergePreview/MergePreview';
-import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
-import { TypeArticle } from './TypeArticle';
+import { MergePreview } from '../MergePreview/MergePreview.tsx';
+import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack.tsx';
+import { TypeArticle } from './TypeArticle.tsx';
 
 /**
  * Type that opts in to a content preview card via `CardAnnotation`.
@@ -44,7 +43,7 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cards--regular', hue: 'emerald' }),
     CardAnnotation.set(true),
   ),
@@ -140,7 +139,7 @@ const DefaultStory = ({ type }: StoryArgs) => {
  * merge preview has nowhere to render and the review cannot be walked end to end in a story.
  */
 const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) => {
-  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { mergePreview } = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   if (mergePreview?.typeUri === Type.getURI(type)) {
     return <MergePreview type={type} preview={mergePreview} />;
   }
@@ -151,7 +150,6 @@ const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) =>
 /** Ephemeral state the toolbar and the merge preview read; normally contributed by `state.ts`. */
 const ephemeralState = () =>
   Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    awaiting: undefined,
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},
@@ -177,7 +175,7 @@ const meta = {
         Capability.contributeAll(SpaceCapabilities.IdentitySpec, [personIdentitySpec, organizationIdentitySpec]),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({

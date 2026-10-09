@@ -17,8 +17,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId } from '@dxos/keys';
 
-import { AssistantTestLayer } from '../testing';
-import * as AgentService from './AgentService';
+import { AssistantTestLayer } from '../testing/index.ts';
+import * as AgentService from './AgentService.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 

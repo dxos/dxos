@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 3,
+    "trust": 2,
+    "reasons": {
+      "order": "It opens with the scope bug ('The scope was never the attended node'), then reconciliation, then the stale-closure fix, and defers store config, environment exclusion and test/build plumbing to the end, which is a real dependency order rather than file order.",
+      "why": "Sections supply constraints rather than narration — 'The scope a component sets with setHotkeyScope is a single node id, so that joined string never matched it' and 'churn proportional to the number of bindings rather than the number that actually changed' — though the environments section degenerates into 'matching the constraint stated in the accompanying comment'.",
+      "load": "The three keyboard.ts blocks overlap heavily (44-73 already contains 57-62 and 63-77), so the reader re-reads the same hunk three times before the prose distinguishes the three concerns.",
+      "trust": "The two test excerpts cite `plugin.browser.test.ts lines=209-230` and `lines=232-265` for a file the patch creates with only 159 lines, so those citations point at code that does not exist; the moon.yml change is asserted in prose ('moon to know a browser test task exists') but never cited."
+    }
+  },
+  "B": {
+    "order": 5,
+    "why": 4,
+    "load": 4,
+    "trust": 5,
+    "reasons": {
+      "order": "Scope fix first, then the reconcile early-return it makes safe, then the stale-closure consequence of keeping bindings, then the store's conflictBehavior with its dependent test-comment cleanup, and finally environments/vite/moon plumbing — each section is a consequence of the previous one.",
+      "why": "It names the failure avoided ('the joined string never matched an id the store would ever see', 'each store mutation notifies every subscriber', 'an unchanged binding keeps the closure it was registered under', 'needs a running DOM to dispatch key events against'), though the conflict rationale drops the N²/2 figure the store comment gives.",
+      "load": "Hunk ranges are disjoint (44-56, 57-61, 68-76) so nothing is re-read, and terms like scope, binding and the store are introduced in the opening paragraph before use; the only slight stumble is the long second sentence of 'Skip re-registering an unchanged binding'.",
+      "trust": "Every claim checks out against the patch — `path.at(-2)` as parent scope, the hotkey/label comparison, `conflictBehavior: 'allow'`, the removed `conflictBehavior: 'warn'` sentence in hotkeys.test.tsx, `environments: []`, the moon.yml tag and `browser: 'chromium'` — and no cited line range falls outside a real hunk."
+    }
+  }
+}

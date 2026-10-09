@@ -3,12 +3,45 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Schema from 'effect/Schema';
 
 import { Alarm } from '@dxos/assistant';
 import * as Process from '@dxos/compute/Process';
 import { Message } from '@dxos/types';
 
-import { computeAlarmDelay, isAgentWorkPending } from './agent-process';
+import { AgentInput, computeAlarmDelay, isAgentWorkPending, makeInputMessage } from './agent-process.ts';
+
+describe('makeInputMessage', () => {
+  it('keeps a bare string prompt as a plain user message', ({ expect }) => {
+    const message = makeInputMessage('hello');
+    expect(message.sender).toEqual({ role: 'user' });
+    expect(Message.extractText(message)).toBe('hello');
+  });
+
+  it('keeps a bare block prompt as a plain user message', ({ expect }) => {
+    const message = makeInputMessage([{ _tag: 'text', text: 'hello' }]);
+    expect(message.sender).toEqual({ role: 'user' });
+    expect(Message.extractText(message)).toBe('hello');
+  });
+
+  it('records the sender and properties of an attributed prompt', ({ expect }) => {
+    const input = Schema.decodeUnknownSync(Schema.toType(AgentInput))({
+      prompt: 'hello',
+      sender: { name: 'Alice', identityDid: 'did:key:alice' },
+      properties: { discord: { userId: '1234' } },
+    });
+    const message = makeInputMessage(input);
+    expect(message.sender).toEqual({ role: 'user', name: 'Alice', identityDid: 'did:key:alice' });
+    expect(message.properties).toEqual({ discord: { userId: '1234' } });
+    expect(Message.extractText(message)).toBe('hello');
+  });
+
+  it('rejects a malformed sender', ({ expect }) => {
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(AgentInput))({ prompt: 'hello', sender: { name: 1 } }),
+    ).toThrow();
+  });
+});
 
 const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
 

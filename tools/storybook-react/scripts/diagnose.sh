@@ -212,7 +212,7 @@ capture() {
     # macOS exposes no per-process rlimit for another process. This watcher is spawned by `serve.sh`
     # in the server's own shell, so its limit is the server's — but only when armed that way.
     echo "soft limit (inherited from the shell that armed this watcher): $(ulimit -n)"
-    echo "the dev server watches with fs.watch: one descriptor per watched directory, ~12k here."
+    echo "the dev server watches with fs.watch: one descriptor per transformed file outside the root, ~13k here."
     echo
 
     echo "--- tab log stream ---"

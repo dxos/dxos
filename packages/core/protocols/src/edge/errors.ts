@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
+
 import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } from './edge.ts';
 
-// TODO(burdon): Reconcile with @dxos/errors.
 /**
  * Error thrown when a call to the Edge service fails.
  * There 3 possible sources of failure:
@@ -13,13 +14,14 @@ import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } 
  *                               -> Unhandled exception on EDGE side, EDGE would provide serialized error in the response body.
  * 3. Processing failure -> Unhandled exception on client side while processing the response.
  */
-export class EdgeCallFailedError extends Error {
+export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError', 'EDGE call failed.') {
   public static fromUnsuccessfulResponse(response: Response, body: EdgeFailure): EdgeCallFailedError {
     const error = new EdgeCallFailedError({
       message: body.message,
       data: body.data,
       isRetryable: body.data == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
+      status: response.status,
       cause: body.error ? ErrorCodec.decode(body.error) : undefined,
     });
 
@@ -31,6 +33,7 @@ export class EdgeCallFailedError extends Error {
       message: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
+      status: response.status,
       cause: await EdgeHttpErrorCodec.decode(response),
     });
   }
@@ -46,18 +49,21 @@ export class EdgeCallFailedError extends Error {
   readonly data?: EdgeErrorData;
   readonly isRetryable?: boolean;
   readonly retryAfterMs?: number;
+  /** HTTP status of the response, absent when no response arrived (a network or client-side failure). */
+  readonly status?: number;
 
   constructor(args: {
     message: string;
     isRetryable?: boolean;
     data?: EdgeErrorData;
     retryAfterMs?: number;
+    status?: number;
     cause?: Error;
   }) {
-    super(args.message, { cause: args.cause });
-    this.message = args.message;
+    super({ message: args.message, cause: args.cause });
     this.data = args.data;
     this.retryAfterMs = args.retryAfterMs;
+    this.status = args.status;
     this.isRetryable = Boolean(args.isRetryable);
   }
 }

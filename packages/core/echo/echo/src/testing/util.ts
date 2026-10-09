@@ -4,12 +4,19 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { TypeSchema, getSchemaTypename, getStaticTypeSchema, makeObject, subscribe, toJsonSchema } from '../internal';
-import type * as Type from '../Type';
+import {
+  TypeSchema,
+  getSchemaTypename,
+  getStaticTypeSchema,
+  makeObject,
+  subscribe,
+  toJsonSchema,
+} from '../internal/index.ts';
+import type * as Type from '../Type.ts';
 
 /**
  * Create an in-memory `Type.Type` entity (a `TypeSchema` object) for tests.

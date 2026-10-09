@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useDeckState } from './useDeckState';
+import { useDeckState } from './useDeckState.ts';
 
 /**
  * Dismisses a toast by id. Shared by every root layout that renders the deck's toaster, since the

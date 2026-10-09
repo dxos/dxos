@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 /**
  * Hook to get the current layout state.
  * Automatically subscribes to changes.
  */
-export const useLayout = (): AppCapabilities.Layout => useAtomCapability(AppCapabilities.Layout);
+export const useLayout = (): AppCapabilities.Layout => Hooks.useAtomCapability(AppCapabilities.Layout);

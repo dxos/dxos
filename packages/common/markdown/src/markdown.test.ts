@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { normalizeText } from './markdown';
+import { normalizeText } from './markdown.ts';
 
 describe('markdown', () => {
   test('stripNewlines', ({ expect }) => {

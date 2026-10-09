@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DESKTOP_ORIGINS, DEV_SERVER_ORIGIN } from './constants';
+import { DESKTOP_ORIGINS, DEV_SERVER_ORIGIN } from './constants.ts';
 
 /** Origins a native build may reach a deployment from, adding the `tauri dev` server outside production. */
 export const nativeOrigins = (environment: string | undefined): ReadonlySet<string> =>

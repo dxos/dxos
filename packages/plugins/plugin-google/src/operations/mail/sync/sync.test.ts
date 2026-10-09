@@ -9,17 +9,17 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { PROGRESS_STATUS_CANCELLED } from '@dxos/app-toolkit';
-import { RunAgainError } from '@dxos/compute';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { ambientSyncServices, seedMailboxBinding, seedSenderOrganizations } from '@dxos/plugin-inbox/testing/sync';
 import { TagIndex } from '@dxos/schema';
@@ -28,12 +28,12 @@ import { Message, Person } from '@dxos/types';
 import { type GmailDataset, GoogleMailApi } from '#services';
 import { GoogleOperation } from '#types';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture';
-import { GMAIL_TAG_SOURCE } from '../tags';
-import { GMAIL_SYSTEM_TAGS } from './system-tags';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { GoogleApiError } from '../../../errors.ts';
+import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
+import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
+import { GMAIL_TAG_SOURCE } from '../tags.ts';
+import { GMAIL_SYSTEM_TAGS } from './system-tags.ts';
 
 /** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
 const seedGmailBinding = (
@@ -243,8 +243,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     const result = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withDeletedMessages([deletedId], dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withDeletedMessages([deletedId], dataset))),
       ),
     );
 
@@ -290,7 +289,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(statusUpdates.some((update) => update.progress?.total !== undefined && update.progress.total > 0)).toBe(
       true,
     );
-    expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
+    expect(statusUpdates.every((update) => update.progress?.key === MailSync.createSyncProgressKey(mailbox))).toBe(
+      true,
+    );
     // Names the phase as well as the mailbox: two meters run over one mailbox (sync, then analyze),
     // so the bare name left the user unable to tell which was moving.
     expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
@@ -335,8 +336,8 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
 
     expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true);
-    expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
-    expect(statusUpdates.at(-1)?.progress?.key).toBe(createSyncProgressKey(mailbox));
+    expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_CANCELLED);
+    expect(statusUpdates.at(-1)?.progress?.key).toBe(MailSync.createSyncProgressKey(mailbox));
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
@@ -423,8 +424,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     // a committed page is durable.
     const exit = await EffectEx.runPromise(
       Effect.exit(runGoogleSync({ binding: Ref.make(binding) })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterMessages(18, dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterMessages(18, dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -477,7 +477,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       expect(ids.length).toBeGreaterThanOrEqual(previousCount);
       previousCount = ids.length;
       if (Exit.isFailure(exit)) {
-        expect(RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+        expect(Process.RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
       }
     } while (Exit.isFailure(exit) && runs < 10);
 
@@ -782,7 +782,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       );
       runs += 1;
       if (Exit.isFailure(exit)) {
-        expect(RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+        expect(Process.RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
       }
     } while (Exit.isFailure(exit) && runs < 10);
 
@@ -858,8 +858,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     };
     const exit = await EffectEx.runPromise(
       Effect.exit(runGoogleSync({ binding: Ref.make(binding), now })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterMessages(10, run2Dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterMessages(10, run2Dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -903,8 +902,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     const result = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withDeletedMessages([deletedId], dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withDeletedMessages([deletedId], dataset))),
       ),
     );
 

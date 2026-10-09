@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Obj, Query } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Tree, type TreeComponentProps, type TreeNode } from '@dxos/react-ui-graph';
@@ -17,8 +17,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasConnection, Organization, Person } from '@dxos/types';
 
-import { buildOrgHierarchy, connectionsToEdges, generateConnectedOrgs } from '../../testing';
-import { getNodeFillForObject } from '../../util';
+import { buildOrgHierarchy, connectionsToEdges, generateConnectedOrgs } from '../../testing/index.ts';
+import { getNodeFillForObject } from '../../util/index.ts';
 
 const generator = random as any as ValueGenerator;
 
@@ -99,14 +99,14 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Organization.Organization, Person.Person, HasConnection.HasConnection],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
-                generateConnectedOrgs(defaultSpace, generator, {
+                generateConnectedOrgs(defaultSpace.db, generator, {
                   organizationCount: 16,
                   personCount: 24,
                   connectionCount: 22,

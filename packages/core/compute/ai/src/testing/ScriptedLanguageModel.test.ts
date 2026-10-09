@@ -3,12 +3,16 @@
 //
 
 import { describe, it, test } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Stream from 'effect/Stream';
 
-import * as ScriptedLanguageModel from './ScriptedLanguageModel';
+import { getWorkMarks, resetWorkMarks } from '@dxos/util';
 
-const { text, toolCall, promptIncludes, scriptedLanguageModelLayer, __testing } = ScriptedLanguageModel;
+import * as AiTelemetry from '../AiTelemetry.ts';
+import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
+
+const { text, reasoning, toolCall, promptIncludes, layer, __testing } = ScriptedLanguageModel;
 
 describe('ScriptedLanguageModel', () => {
   describe('encoders', () => {
@@ -23,6 +27,24 @@ describe('ScriptedLanguageModel', () => {
       ]);
       expect(parts.find((part) => part.type === 'text-delta')).toMatchObject({ delta: 'Hello' });
       expect(parts.find((part) => part.type === 'finish')).toMatchObject({ reason: 'stop' });
+    });
+
+    test('encodes reasoning as provider-native reasoning parts', ({ expect }) => {
+      const streamed = __testing.encodeStreamTurn([reasoning('Thinking'), text('Done')], 0, 'stop');
+      expect(streamed.map((part) => part.type)).toEqual([
+        'response-metadata',
+        'reasoning-start',
+        'reasoning-delta',
+        'reasoning-end',
+        'text-start',
+        'text-delta',
+        'text-end',
+        'finish',
+      ]);
+      expect(__testing.encodeTurn([reasoning('Thinking')], 0, 'stop')).toContainEqual({
+        type: 'reasoning',
+        text: 'Thinking',
+      });
     });
 
     test('encodes a tool call turn with JSON-serialized input and deterministic id', ({ expect }) => {
@@ -41,6 +63,27 @@ describe('ScriptedLanguageModel', () => {
       expect(parts.find((part) => part.type === 'tool-params-delta')).toMatchObject({
         delta: JSON.stringify({ input: '2 + 2' }),
       });
+    });
+
+    // The default nesting models Anthropic's wire shape, which is why no scripted test could
+    // reproduce the OpenAI-dialect crash until this option existed.
+    test('defers every tool-params-end to the end of the turn when asked', ({ expect }) => {
+      const parts = __testing.encodeStreamTurn(
+        [toolCall('alpha', { x: 1 }), toolCall('beta', { y: 2 })],
+        0,
+        'tool-calls',
+        { deferToolEnds: true },
+      );
+      expect(parts.map((part) => [part.type, (part as { id?: string }).id])).toEqual([
+        ['response-metadata', 'msg_0'],
+        ['tool-params-start', 'toolu_0_0'],
+        ['tool-params-delta', 'toolu_0_0'],
+        ['tool-params-start', 'toolu_0_1'],
+        ['tool-params-delta', 'toolu_0_1'],
+        ['tool-params-end', 'toolu_0_0'],
+        ['tool-params-end', 'toolu_0_1'],
+        ['finish', undefined],
+      ]);
     });
 
     test('encodes an aggregated (non-streamed) tool call', ({ expect }) => {
@@ -72,13 +115,63 @@ describe('ScriptedLanguageModel', () => {
         const exit = yield* LanguageModel.generateText({ prompt: 'ignored' }).pipe(Effect.exit);
         expect(exit._tag).toEqual('Failure');
       },
-      Effect.provide(scriptedLanguageModelLayer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+      Effect.provide(layer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+    ),
+  );
+
+  it.effect(
+    'computes each turn from the request with a generator script',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        expect((yield* LanguageModel.generateText({ prompt: 'alpha' })).text).toEqual('0:alpha');
+        expect((yield* LanguageModel.generateText({ prompt: 'beta' })).text).toEqual('1:beta');
+      },
+      Effect.provide(layer((request, index) => ({ parts: [text(`${index}:${request.text}`)] }))),
+    ),
+  );
+
+  it.effect(
+    'brackets every call with request and response marks',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        resetWorkMarks();
+        yield* LanguageModel.generateText({ prompt: 'first' });
+        const stream = LanguageModel.streamText({ prompt: 'second' });
+        // A stream marks when it runs, not when it is built.
+        expect(getWorkMarks()).toHaveLength(2);
+        yield* Stream.runDrain(stream);
+        expect(getWorkMarks().map(({ name }) => name)).toEqual([
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.response,
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.response,
+        ]);
+      },
+      Effect.provide(layer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+    ),
+  );
+
+  it.effect(
+    'marks no response for a call that fails',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        resetWorkMarks();
+        const failed = yield* LanguageModel.generateText({ prompt: 'one' }).pipe(Effect.exit);
+        const streamed = yield* Stream.runDrain(LanguageModel.streamText({ prompt: 'two' })).pipe(Effect.exit);
+        expect([failed._tag, streamed._tag]).toEqual(['Failure', 'Failure']);
+        expect(getWorkMarks().map(({ name }) => name)).toEqual([
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.request,
+        ]);
+      },
+      // An empty script fails every call as exhausted.
+      Effect.provide(layer([])),
     ),
   );
 
   describe('routed scripts', () => {
     const routedLayer = () =>
-      scriptedLanguageModelLayer([
+      layer([
         {
           name: 'supervisor',
           match: promptIncludes('You are the supervisor'),

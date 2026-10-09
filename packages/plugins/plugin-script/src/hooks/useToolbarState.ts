@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
-import { type DeployState } from './deploy';
+import { type DeployState } from './deploy.ts';
 
 export type ScriptToolbarState = Partial<DeployState>;
 
@@ -20,7 +20,7 @@ export type ScriptToolbarStateStore = {
 };
 
 export const useToolbarState = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const atom = useMemo(() => Atom.make<ScriptToolbarState>(initialState), []);
 
   return useMemo(

@@ -8,11 +8,11 @@ import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { GUTTER_WIDTH } from '../blocks';
+import { GUTTER_WIDTH } from '../blocks/index.ts';
+import { treeFacet } from './tree.ts';
 
-// Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
-// No size constant: the trigger is a `dx-button` whose box follows the theme, so it is centred on a point
+// No size constant: the trigger is a square `dx-button` whose box follows the size scale, so it is centred on a point
 // by CSS (`translate(-50%, -50%)`) — see `.cm-outliner-menu` below.
 
 export type MenuOptions = {
@@ -38,11 +38,11 @@ export const menu = (options: MenuOptions = {}): Extension => [
           container.style.position = 'relative';
         }
 
-        // Outer `dx-anchor` (fires `dx-anchor-activate`, driving the popover) styled as a `dx-button`;
+        // Outer `dx-anchor` (fires `dx-anchor-activate`, driving the popover) styled as an `dx-button`;
         // inner element holds the phosphor glyph. Mirrors the drag grip's construction.
         this.tag = Domino.of('dx-anchor')
-          .classNames('dx-button aspect-square cm-popover-trigger cm-outliner-menu')
-          .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
+          .classNames('dx-control dx-button dx-button-square cm-popover-trigger cm-outliner-menu')
+          .attributes({ 'data-variant': 'ghost', 'data-size': 'sm' })
           .append(
             Domino.of('div')
               .classNames('cm-popover-trigger-icon')
@@ -94,6 +94,12 @@ export const menu = (options: MenuOptions = {}): Extension => [
         const { x, width } = this.view.contentDOM.getBoundingClientRect();
 
         const pos = this.view.state.selection.main.head;
+        // The actions act on an item; a prose line has none to offer.
+        if (!this.view.state.facet(treeFacet).find(pos)) {
+          this.tag.style.display = 'none';
+          return;
+        }
+
         const line = this.view.lineBlockAt(pos);
         const coords = this.view.coordsAtPos(line.from);
         if (!coords) {
@@ -144,7 +150,7 @@ const styles = EditorView.theme({
     display: 'grid',
     placeContent: 'center',
     fontSize: '16px',
-    color: 'var(--color-description, currentColor)',
+    color: 'var(--color-fg-muted, currentColor)',
   },
   '&:focus-within .cm-popover-trigger': {
     opacity: '1',

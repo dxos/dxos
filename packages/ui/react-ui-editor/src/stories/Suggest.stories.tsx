@@ -8,8 +8,8 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { createObject } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { useThemeContext } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
@@ -21,7 +21,7 @@ import {
   suggestions,
 } from '@dxos/ui-editor';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // The parent (main) content and a branch proposal that rewrites three words — three independent,
 // reviewable changes (like a branch's edits against a style guide).
@@ -56,7 +56,7 @@ const documentText = (canvasElement: HTMLElement): string => {
 };
 
 const Render = (args: EditorViewProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -82,7 +82,7 @@ const ALICE = 'The fast brown fox jumps over the sleepy dog.';
 const BOB = 'The swift brown fox leaps over the lazy dog.';
 
 const MultiAuthorRender = (args: EditorViewProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

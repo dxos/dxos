@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { FactViewer } from '@dxos/react-ui-rdf';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry } from '../../capabilities/fact-store';
-import { useFacts } from './use-facts';
+import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
+import { useFacts } from './use-facts.ts';
 
 /**
  * Companion surface rendering the semantic facts extracted for the active space. Reads the shared
@@ -19,8 +19,8 @@ import { useFacts } from './use-facts';
  * presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} — no container coupling.
  */
 export const FactsCompanion = () => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const space = useActiveSpace();
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const space = ToolkitHooks.useActiveSpace();
   const facts = useFacts(registry, space?.id);
   return <FactViewer.Root facts={facts} />;
 };

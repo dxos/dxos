@@ -8,18 +8,20 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
-import { Button } from '@dxos/react-ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Button from '@dxos/react-ui/Button';
 
-import { PlaygroundRoles } from '../roles';
-import { Number, createAlertOperation, createPluginId } from './generator';
+import { PlaygroundRoles } from '../roles.ts';
+import { Number, createAlertOperation, createPluginId } from './generator.ts';
 
 export const Toolbar = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleAdd = useCallback(
     () =>
@@ -31,21 +33,21 @@ export const Toolbar = () => {
     [manager],
   );
 
-  const count = (useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
+  const count = (Hooks.useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
 
   const generatorPlugins = plugins.filter((plugin) => plugin.meta.profile.key.startsWith('org.dxos.test.generator.'));
 
   return (
     <>
-      <Button onClick={handleAdd}>Add</Button>
+      <Button.Root onClick={handleAdd}>Add</Button.Root>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
-        <Button
+        <Button.Root
           key={plugin.meta.profile.key}
           onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}
         >
           {plugin.meta.profile.key.replace('org.dxos.test.generator.', '')}
-        </Button>
+        </Button.Root>
       ))}
     </>
   );

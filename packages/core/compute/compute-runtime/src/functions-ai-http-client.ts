@@ -3,15 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Headers from 'effect/http/Headers';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as Headers from 'effect/unstable/http/Headers';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
+import * as FunctionsAiError from '@dxos/compute/FunctionsAiError';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
 
@@ -121,12 +121,12 @@ const parseUpstreamError = async (response: Response): Promise<Error | undefined
   const inner = body.error;
   const message = inner.message ?? `Upstream AI service responded with HTTP ${response.status}`;
   if (inner.type === 'memoization_miss' && typeof inner.cacheKey === 'string') {
-    return new FunctionsAiMemoizationMissError({
+    return new FunctionsAiError.MemoizationMissError({
       message,
       context: { cacheKey: inner.cacheKey, status: response.status },
     });
   }
-  return new FunctionsAiUpstreamError({
+  return new FunctionsAiError.UpstreamError({
     message,
     context: { type: inner.type, status: response.status, ...(inner.cacheKey ? { cacheKey: inner.cacheKey } : {}) },
   });

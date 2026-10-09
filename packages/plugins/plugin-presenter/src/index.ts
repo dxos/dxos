@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as PresenterPlugin from './PresenterPlugin';
-export * from '#meta';
+export * as PresenterPlugin from './PresenterPlugin.ts';
 export * from '#types';

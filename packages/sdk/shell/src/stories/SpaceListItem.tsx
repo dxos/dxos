@@ -5,14 +5,15 @@
 import React, { type ForwardedRef, forwardRef } from 'react';
 
 import type { Space } from '@dxos/react-client/echo';
-import { Avatar, useId } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 import { humanize, keyToEmoji } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(
   ({ space, onClick }: { space: Space; onClick?: () => void }, ref: ForwardedRef<HTMLLIElement>) => {
     const fallbackValue = keyToEmoji(space.key);
-    const labelId = useId('identityListItem__label');
+    const labelId = Hooks.useId('identityListItem__label');
     const displayName = space.properties.name ?? humanize(space.key.toHex());
 
     return (
@@ -22,10 +23,10 @@ export const SpaceListItem = forwardRef(
         ref={ref}
         data-testid='space-list-item'
       >
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content fallback={fallbackValue} />
-          <Avatar.Label classNames='text-sm truncate'>{displayName}</Avatar.Label>
-        </Avatar.Root>
+        <Avatar.Root aria-labelledby={labelId} fallback={fallbackValue} />
+        <span id={labelId} className='text-sm truncate'>
+          {displayName}
+        </span>
       </li>
     );
   },

@@ -4,12 +4,12 @@
 
 import { type AsyncIterator, wrap } from 'asynciterator';
 import * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
-import type * as Statement from 'effect/unstable/sql/Statement';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 import { DataFactory, type Quad, type Term as RdfTerm } from 'n3';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const { namedNode, literal, quad, defaultGraph } = DataFactory;
 

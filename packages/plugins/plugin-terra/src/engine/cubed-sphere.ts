@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3 } from './noise';
+import { type Vec3 } from './noise.ts';
 
 // Six cube faces via local-up basis (Sebastian Lague style).
 export const FACE_UPS: Vec3[] = [

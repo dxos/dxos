@@ -5,13 +5,17 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Banner, Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
@@ -25,8 +29,8 @@ type Status = {
 export type PaymentsSettingsProps = AppSurface.SettingsData;
 
 export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
   // Resolved per action rather than held in state: the presentation signer is only valid while the
@@ -36,7 +40,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
     return edgeIdentity && Option.getOrUndefined(edgeIdentity);
   }, [identityService]);
 
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const paymentsUrl = settings.paymentsUrl?.trim();
 
   const handleBuyPremium = useCallback(async () => {
@@ -95,28 +99,29 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.FieldSet />
-            <Flex column gap='sm' classNames='my-2'>
-              <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
+          >
+            <Form.Fields />
+            <Layout.Flex column gap='sm' classNames='my-2'>
+              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
-              </Button>
-              <Button disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
+              </Button.Root>
+              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
                 {pending ? t('pending.label') : t('buy-credits.label')}
-              </Button>
+              </Button.Root>
               {status.kind === 'result' && (
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
               {status.kind === 'error' && (
                 <Banner.Root valence='error'>
-                  <Banner.Content>
-                    <Banner.Title>{t('error.label')}</Banner.Title>
-                    <Banner.Body>{status.text}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Title>{t('error.label')}</Banner.Title>
+                  <Banner.Body>{status.text}</Banner.Body>
                 </Banner.Root>
               )}
-            </Flex>
-          </Form.Section>
+            </Layout.Flex>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -6,10 +6,10 @@ import type * as Schema from 'effect/Schema';
 import { type FC, type FocusEvent, type ReactElement } from 'react';
 
 import { type Database, type Entity, type Format, type Obj, type Type } from '@dxos/echo';
-import type { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { type URI } from '@dxos/keys';
-import { type Palette } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
+import { type Palette } from '@dxos/ui-types';
 
 //
 // Field component contracts.
@@ -21,6 +21,32 @@ import { type ProjectionModel } from '@dxos/schema';
 export type FormFieldStatus = {
   status?: 'error';
   error?: string;
+  /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
+  indeterminate?: boolean;
+};
+
+/**
+ * Per-instance overrides for one field (keyed by json-path in `Form.Root`'s `fieldOverrides`), for what the schema
+ * cannot say about this use of the form: e.g. a value several edited objects disagree on.
+ */
+export type FormFieldOverride = {
+  /**
+   * Show no value until the user edits it (several edited objects disagree on it); the placeholder says so and a
+   * required field is not flagged. The form's values should still hold a valid value here so the form validates.
+   */
+  indeterminate?: boolean;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  readonly?: boolean;
+  hidden?: boolean;
+  /**
+   * Numeric bounds and step for this use of the field, narrower than the schema's: e.g. a range the editor
+   * offers that stored data need not satisfy (a check on the schema would reject such a record outright).
+   */
+  min?: number;
+  max?: number;
+  step?: number;
 };
 
 /**
@@ -38,7 +64,8 @@ export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
 export type FormFieldStateProps<T = any> = {
   getStatus: () => FormFieldStatus;
   getValue: () => T | undefined;
-  onBlur: (event: FocusEvent<HTMLElement>) => void;
+  /** Marks the field touched, so its error may show; the event is not read. */
+  onBlur: (event?: FocusEvent<HTMLElement>) => void;
   onValueChange: (type: SchemaAST.AST, value: T) => void;
 };
 
@@ -67,9 +94,27 @@ export type FormFieldRendererProps<T = any> = {
   presentation?: FormPresentation;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
+  /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */
+  indeterminate?: boolean;
+  /** Numeric bounds and step from the caller's override, applied on top of the schema's. */
+  min?: number;
+  max?: number;
+  step?: number;
 } & FormFieldStateProps<T>;
 
-export type FormFieldRenderer = FC<FormFieldRendererProps>;
+/** Where a row puts its label: above the control, or beside it on one line, after a toggle. */
+export type FormFieldLabelPlacement = 'above' | 'beside';
+
+/**
+ * A field renderer. The built-in ones are controls the dispatcher places in a `Form.Field` row;
+ * `standalone` declares that a control holds several labelled inputs (a coordinate pair), so the
+ * row's label is text rather than a `<label>`; `labelPlacement` that the row lays its label beside
+ * the control (a toggle). A renderer from `fieldMap` renders its own row.
+ */
+export type FormFieldRenderer = FC<FormFieldRendererProps> & {
+  standalone?: boolean;
+  labelPlacement?: FormFieldLabelPlacement;
+};
 
 export type FormFieldMap = Record<string, FormFieldRenderer>;
 

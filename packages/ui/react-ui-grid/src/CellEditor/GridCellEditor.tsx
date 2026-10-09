@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { type DxGridCellIndex, useGridContext } from '../Grid';
-import { CellEditor, type CellEditorProps } from './CellEditor';
+import { type DxGridCellIndex, useGridContext } from '../Grid/index.ts';
+import { CellEditor, type CellEditorProps } from './CellEditor.tsx';
 
 export type GridCellEditorProps = Pick<CellEditorProps, 'extensions' | 'onBlur' | 'slots'> & {
   getCellContent: (index: DxGridCellIndex) => string | undefined;

@@ -5,14 +5,14 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { createEchoSchema } from '../../../testing';
-import * as Type from '../../../Type';
-import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
-import { EchoObjectSchema } from '../../Entity';
+import { createEchoSchema } from '../../../testing/index.ts';
+import * as Type from '../../../Type.ts';
+import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation/index.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
 
 // Test-local: introspect a Type.Type entity's properties via its rebuilt Effect
 // Schema, filter the implicit `id` field, and unwrap `T | undefined` optionality.
@@ -110,6 +110,16 @@ describe('dynamic schema', () => {
     const [property] = SchemaAST.getPropertySignatures(Type.getSchema(registered).ast).filter(
       (signature) => signature.name !== 'id',
     );
+    expect(getPropertyMetaAnnotation(property, metaNamespace)).to.deep.eq(metaInfo);
+  });
+
+  test('property meta is read through an optional property', () => {
+    const metaNamespace = 'dxos.test';
+    const metaInfo = { maxLength: 10 };
+    const schema = Schema.Struct({
+      status: Schema.String.pipe(PropertyMeta(metaNamespace, metaInfo), Schema.optional),
+    });
+    const [property] = SchemaAST.getPropertySignatures(schema.ast);
     expect(getPropertyMetaAnnotation(property, metaNamespace)).to.deep.eq(metaInfo);
   });
 });

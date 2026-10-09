@@ -5,15 +5,15 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { OllamaError } from '../../errors';
-import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver';
+import { OllamaError } from '../../errors.ts';
+import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver.ts';
 
 /**
  * An Ollama model as reported by `GET /api/tags`.

@@ -5,10 +5,10 @@
 import { createTLSchema } from '@tldraw/tlschema';
 import { describe, test } from 'vitest';
 
-import { type Scene } from '@dxos/plugin-illustrator/model';
+import { type Scene } from '@dxos/diagram';
 
-import { applyCommands } from './builder';
-import { readScene } from './read';
+import { applyCommands } from './builder.ts';
+import { readScene } from './read.ts';
 
 /** A face made of every element category: boxes, circles, arc sugar, polyline, text. */
 const face: Scene.WorldObject = {
@@ -137,6 +137,7 @@ describe('scene DSL', () => {
           { kind: 'arrow', id: 'inherits', from: 'a', to: 'b', head: 'triangle' },
           { kind: 'arrow', id: 'has-many', from: 'a', to: 'b', head: 'crowsfoot' },
           { kind: 'arrow', id: 'contains', from: 'a', to: 'b', tail: 'circle' },
+          { kind: 'arrow', id: 'two-way', from: 'a', to: 'b', tail: 'arrow' },
         ],
       }),
     ]);
@@ -150,6 +151,7 @@ describe('scene DSL', () => {
     // tldraw has no crow's foot; the inverted triangle is the nearest distinct marker.
     expect(heads('has-many')).to.deep.eq(['none', 'inverted']);
     expect(heads('contains')).to.deep.eq(['dot', 'arrow']);
+    expect(heads('two-way')).to.deep.eq(['arrow', 'arrow']);
   });
 
   test('upsert-elements replaces by id and keeps the rest', ({ expect }) => {

@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import * as Error from './Error';
-import * as internal from './internal';
-import * as Obj from './Obj';
+import * as Error from './Error.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
 
 /**
  * A key path addressing a string value within an object, mirroring `Obj.getValue` / `Obj.setValue`.
@@ -30,6 +30,8 @@ export type Edit = {
  * anchors, and merging cleanly with concurrent edits); for in-memory objects it is a plain assignment.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
+ *
+ * @performance O(text length) diff, so concurrent edits merge minimally.
  */
 export const update = (obj: Obj.Unknown, path: KeyPath | string | number, newText: string): void => {
   const { handler, target } = resolve(obj, 'update');
@@ -44,6 +46,8 @@ export const update = (obj: Obj.Unknown, path: KeyPath | string | number, newTex
  * remove `deleteCount` characters at `start` and insert `insert`. Returns the removed substring.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
+ *
+ * @performance O(delete count + insert length) CRDT splice.
  */
 export const splice = (
   obj: Obj.Unknown,
@@ -67,6 +71,9 @@ export const splice = (
  * `oldString` is not found throws {@link Error.TextEditNotFoundError}.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
+ *
+ * @performance O(N) per edit plus O(M · N) for `replaceAll` (N = text length, M = matches): it re-reads and searches the
+ * whole string after every splice, so one `replaceAll` edit can be O(N²).
  */
 export const apply = (obj: Obj.Unknown, path: KeyPath | string | number, edits: readonly Edit[]): string => {
   const keyPath = normalizePath(path);

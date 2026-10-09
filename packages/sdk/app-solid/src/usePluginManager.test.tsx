@@ -5,11 +5,10 @@
 import { render, screen } from '@solidjs/testing-library';
 import { describe, expect, test } from 'vitest';
 
-import { PluginManagerContext } from '@dxos/app-framework';
-import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
-import { usePluginManager } from './usePluginManager';
+import { usePluginManager } from './usePluginManager.ts';
 
 describe('usePluginManager', () => {
   test('returns the plugin manager from context', () => {
@@ -25,7 +24,7 @@ describe('usePluginManager', () => {
     };
 
     render(() => (
-      <ContextProtocolProvider context={PluginManagerContext} value={mockManager}>
+      <ContextProtocolProvider context={PluginManager.Context} value={mockManager}>
         <TestComponent />
       </ContextProtocolProvider>
     ));

@@ -6,8 +6,8 @@ import { ark } from '@ark-ui/react/factory';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, forwardRef } from 'react';
 
-import { withLayout, withTheme } from '../testing';
-import { composable, composableProps, slottable } from './slots';
+import { withLayout, withTheme } from '../testing/index.ts';
+import { composable, composableProps, slottable } from './slots.ts';
 
 //
 // A slottable host and two candidate children: one built with `composable()`, one a plain
@@ -21,7 +21,7 @@ const Host = slottable<HTMLDivElement>(({ children, asChild, ...props }, forward
   return (
     <ark.div
       asChild={asChild}
-      {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-base-fg' })}
+      {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-fg' })}
       ref={forwardedRef}
     >
       {children}
@@ -44,7 +44,7 @@ const BadChild = forwardRef<HTMLDivElement, { children?: ReactNode }>(({ childre
 
 const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className='flex flex-col gap-1'>
-    <span className='text-sm text-description'>{label}</span>
+    <span className='text-sm text-fg-muted'>{label}</span>
     {children}
   </div>
 );

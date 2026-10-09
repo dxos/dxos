@@ -6,36 +6,42 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { addEventListener } from '@dxos/async';
-import { ProcessManager } from '@dxos/compute-runtime';
-import { FeedTraceSink } from '@dxos/compute-runtime';
+import { FeedTraceSink, ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Feed, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
-import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { ViewStateProvider } from '@dxos/react-ui-attention';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
+import {
+  PLAYBACK_INTERVAL_MS,
+  STEP_STORAGE_KEY,
+  runScenario,
+  subAgentDelegationFixture,
+  useLocalStorageNumber,
+} from '@dxos/react-ui-trace/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { buildExecutionGraph } from '#execution-graph';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
-import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
-import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, runScenario, useLocalStorageNumber } from './testing';
-import { TracePanel } from './TracePanel';
+import { initClientFromSpaceSnapshot } from '../../testing/snapshot.ts';
+import { TracePanel } from './TracePanel.tsx';
 
 type BaseStoryArgs = PropsWithChildren<{
   toolbar: ReactNode;
@@ -43,22 +49,16 @@ type BaseStoryArgs = PropsWithChildren<{
 
 const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
   <Panel.Root classNames='h-full min-h-0'>
-    <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-    <Panel.Content>{children}</Panel.Content>
+    <Panel.Header>{toolbar}</Panel.Header>
+    <Panel.Body>{children}</Panel.Body>
   </Panel.Root>
 );
 
 const JsonInspectorPanel = ({ data }: { data: unknown }) => (
   <ScrollContainer.Root pin>
-    <ScrollContainer.Content thin>
+    <ScrollContainer.Content width='thin'>
       <ScrollContainer.Viewport>
-        <Syntax.Root data={data}>
-          <Syntax.Content>
-            <Syntax.Viewport>
-              <Syntax.Code classNames='text-xs' />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
+        <JsonHighlighter data={data} classNames='text-xs' />
       </ScrollContainer.Viewport>
       <ScrollContainer.ScrollDownButton />
       <ScrollContainer.Fade />
@@ -68,7 +68,7 @@ const JsonInspectorPanel = ({ data }: { data: unknown }) => (
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const runtime = useProcessManagerRuntime();
+  const runtime = Hooks.useProcessManagerRuntime();
 
   // Advances through `agentScenarios` so repeated clicks show different shapes (nesting, concurrency, failure).
   const scenarioRef = useRef(0);
@@ -99,7 +99,7 @@ const DefaultStory = () => {
   }, [runtime, space, handleStart]);
 
   const handleStop = useCallback(
-    (process: Process.Info) => {
+    (process: Process.Process) => {
       if (!runtime) {
         return;
       }
@@ -125,11 +125,14 @@ const DefaultStory = () => {
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <IconButton icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
+          <Button.Root icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
         </Toolbar.Root>
       }
     >
-      <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+      {/* The process selection is view state, which needs a provider to hold it. */}
+      <ViewStateProvider>
+        <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+      </ViewStateProvider>
     </BaseStory>
   );
 };
@@ -156,7 +159,7 @@ const SnapshotStory = () => {
 // Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()` (see
 // TracePanel). External JSON → typed at this boundary; `buildExecutionGraph` only reads
 // `meta`/`events`, so the plain data shape is sufficient.
-const subAgentMessages = subAgentFixture as unknown as Trace.Message[];
+const subAgentMessages = subAgentDelegationFixture as unknown as Trace.Message[];
 
 const FixtureStory = () => {
   const sortedMessages = useMemo(
@@ -182,6 +185,7 @@ const TimelinePlayback = ({
   const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
   const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+  const [timelineViewport, setTimelineViewport] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setStep((current) => Math.min(Math.max(current, 0), total));
@@ -278,16 +282,16 @@ const TimelinePlayback = ({
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <IconButton icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
-          <IconButton icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
-          <IconButton
+          <Button.Root icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <Button.Root icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
+          <Button.Root
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
             iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <IconButton icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
-          <IconButton icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
+          <Button.Root icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <Button.Root icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>
@@ -299,9 +303,15 @@ const TimelinePlayback = ({
 
         <div className='min-h-0'>
           <ScrollContainer.Root pin>
-            <ScrollContainer.Content thin>
-              <ScrollContainer.Viewport>
-                <Timeline branches={branches} commits={commits} showTimestamp onSelect={setSelectedCommit} />
+            <ScrollContainer.Content width='thin'>
+              <ScrollContainer.Viewport ref={setTimelineViewport}>
+                <Timeline
+                  branches={branches}
+                  commits={commits}
+                  showTimestamp
+                  scroller={timelineViewport}
+                  onSelect={setSelectedCommit}
+                />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
               <ScrollContainer.Fade />
@@ -336,7 +346,7 @@ export const Default: Story = {
       // Fire SetupSettings so the assistant settings module activates and contributes
       // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: ({ client }) =>
@@ -365,7 +375,7 @@ export const WithSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
@@ -383,7 +393,7 @@ export const WithRemoteSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(
@@ -403,7 +413,7 @@ export const WithRemoteMultipleSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(

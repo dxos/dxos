@@ -10,35 +10,35 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type FC, type PropsWithChildren, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
-import { useApp } from '@dxos/app-framework/ui';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
-import { type ClientPluginOptions } from '@dxos/plugin-client/ClientOptions';
+import type * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { StoryLayout } from './layout';
-import { type ModuleLayout } from './ModuleContainer';
-import { initClientFromSpaceSnapshot } from './snapshot';
+import { StoryLayout } from './layout.ts';
+import { type ModuleLayout } from './ModuleContainer.tsx';
+import { initClientFromSpaceSnapshot } from './snapshot.ts';
 
 type LazyPluginsResult = {
   plugins: Plugin.Plugin[];
@@ -58,7 +58,7 @@ export type StoryDecoratorsProps = {
   setupEvents?: WithPluginManagerOptions['setupEvents'];
   /** Rendered inside the plugin-manager context, wrapping the story (e.g. a chat-context binder). */
   Wrapper?: FC<PropsWithChildren>;
-} & Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'>;
+} & Omit<ClientOptions.ClientPluginOptions, 'onClientInitialized' | 'onSpacesAvailable'>;
 
 /**
  * Props, or a function of the story context — the function form gives seeding code access to the
@@ -70,7 +70,7 @@ export type StoryDecoratorsInput<Args = any> =
 
 /**
  * Owns the runtime story layout: contributes the atom {@link ModuleContainer} reads, and publishes
- * the layout built by `onInit` (which runs during client init, before `SpacesReady`).
+ * the layout built by `onInit` (which runs during client init, before `SpacesAvailable`).
  */
 type LayoutPluginOptions = {
   layoutAtom: Atom.Writable<ModuleLayout | undefined>;
@@ -89,7 +89,7 @@ const StoryLayoutPlugin = Plugin.define<LayoutPluginOptions>(
     id: 'org.dxos.storybook.plugin.layout.module.publish',
     // Runtime event: the layout references space objects, so it is only publishable once the
     // client observes the space.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
     requires: [Capabilities.AtomRegistry],
     activate: Effect.fnUntraced(function* () {
       if (layoutHolder.current) {
@@ -124,14 +124,14 @@ const buildStoryPluginOptions = ({
     ? persistentClientServices(config)
     : { config };
 
-  // `onInit` fills the holder during client init; the layout plugin publishes it on SpacesReady.
+  // `onInit` fills the holder during client init; the layout plugin publishes it on SpacesAvailable.
   const layoutHolder: { current?: ModuleLayout } = {};
   const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
 
   return {
     setupEvents,
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
@@ -253,7 +253,7 @@ const PluginManagerHost = ({
   // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
   // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy
   // `withPluginManager` path forwards them automatically).
-  const App = useApp({ pluginManager: manager, setupEvents: options.setupEvents });
+  const App = Hooks.useApp({ pluginManager: manager, setupEvents: options.setupEvents });
   return <App />;
 };
 

@@ -8,22 +8,30 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
-import { type Space, SpaceState } from '@dxos/react-client/echo';
+import { SpaceState } from '@dxos/react-client/echo';
 
-import { DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
+import { DebugConsole, DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
 import { Settings } from '#types';
+
+//
+// DebugConsoleArticle
+//
+
+/** `react-surface.ts` is a plain `.ts` file, so the JSX for the console page's article surface lives here. */
+export const DebugConsoleArticle = () => <DebugConsole fit />;
 
 //
 // DebugSettings
@@ -36,10 +44,16 @@ export type DebugSettingsSurfaceProps = {
 };
 
 export const DebugSettingsSurface = ({ subject, logStore, onUpload }: DebugSettingsSurfaceProps) => {
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
 
   return (
-    <DebugSettings settings={settings} onSettingsChange={updateSettings} logStore={logStore} onUpload={onUpload} />
+    <DebugSettings
+      settings={settings}
+      onSettingsChange={updateSettings}
+      logStore={logStore}
+      onUpload={onUpload}
+      scope={<SettingsScope.Root prefix={subject.prefix} />}
+    />
   );
 };
 
@@ -49,17 +63,17 @@ export const DebugSettingsSurface = ({ subject, logStore, onUpload }: DebugSetti
 
 export type SpaceGeneratorSurfaceProps = {
   role: string;
-  space: Space;
 };
 
-/** Generated objects are added to the space's root collection, resolved at invocation time. */
-export const SpaceGeneratorSurface = ({ role, space }: SpaceGeneratorSurfaceProps) => {
-  const { invokePromise } = useOperationInvoker();
+/** Generated objects are added to the active space's root collection, resolved at invocation time. */
+export const SpaceGeneratorSurface = ({ role }: SpaceGeneratorSurfaceProps) => {
+  const space = ToolkitHooks.useActiveSpace();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleCreateObjects = useCallback(
     (objects: Obj.Unknown[]) => {
       const collection =
-        space.state.get() === SpaceState.SPACE_READY &&
+        space?.state.get() === SpaceState.SPACE_READY &&
         Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
       if (!Obj.instanceOf(Collection.Collection, collection)) {
         return;
@@ -71,6 +85,10 @@ export const SpaceGeneratorSurface = ({ role, space }: SpaceGeneratorSurfaceProp
     },
     [space, invokePromise],
   );
+
+  if (!space) {
+    return null;
+  }
 
   return <SpaceGenerator role={role} space={space} onCreateObjects={handleCreateObjects} />;
 };
@@ -85,7 +103,7 @@ export type ObjectDebugSurfaceProps = {
 };
 
 export const ObjectDebugSurface = ({ role, companionTo }: ObjectDebugSurfaceProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
 
   return <DebugObjectPanel role={role} companionTo={companionTo} onOpen={onOpen} canOpen={canOpen} />;
@@ -96,8 +114,8 @@ export const ObjectDebugSurface = ({ role, companionTo }: ObjectDebugSurfaceProp
 //
 
 export const SpaceObjectsSurface = () => {
-  const space = useActiveSpace();
-  const { invokePromise } = useOperationInvoker();
+  const space = ToolkitHooks.useActiveSpace();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
   if (!space) {
     return null;
@@ -107,9 +125,9 @@ export const SpaceObjectsSurface = () => {
 };
 
 /** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
-const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {
+const useObjectOpenAction = (invokePromise: ReturnType<typeof Hooks.useOperationInvoker>['invokePromise']) => {
   const client = useClient();
-  const spaceSettings = useAtomCapability(SpaceCapabilities.SettingsAtom);
+  const spaceSettings = Hooks.useAtomCapability(SpaceCapabilities.SettingsAtom);
   const showHidden = spaceSettings?.showHidden ?? false;
 
   const allTypes = useAtomValue(useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]));
@@ -117,8 +135,7 @@ const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoke
   const hiddenTypenames = useMemo(() => {
     const result = new Set<string>();
     for (const typeEntity of allTypes) {
-      const schema = Type.getSchema(typeEntity);
-      if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+      if (!TypeOptions.isUserType(typeEntity)) {
         result.add(Type.getTypename(typeEntity));
       }
     }

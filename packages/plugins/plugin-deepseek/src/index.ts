@@ -2,9 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as DeepSeekPlugin from './DeepSeekPlugin';
-export * from './events';
-export * from '#meta';
-export * from '#skills';
-export * from './constants';
-export * from './errors';
+export * as DeepSeekEvents from './DeepSeekEvents.ts';
+export * as DeepSeekPlugin from './DeepSeekPlugin.ts';

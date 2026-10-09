@@ -6,9 +6,13 @@ import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -16,10 +20,10 @@ const MAX_RENDERED_COUNT = 80;
 
 export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
-export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
+export const ItemList = Util.composable<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
+      <ScrollArea.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <ScrollArea.Viewport>
           {objects
             .slice(0, MAX_RENDERED_COUNT)
@@ -71,25 +75,25 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
           <div key={property} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
             {property === 'id' && (
-              <Input.Root>
-                <Input.Label classNames={labelProps}>{property}</Input.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
-              </Input.Root>
+              </Field.Root>
             )}
             {type === 'boolean' && (
-              <Input.Root>
-                <Input.Label classNames={labelProps}>{property}</Input.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <Input.Checkbox
                   checked={(object as any)[property]}
-                  onCheckedChange={(state) => setValue(object, property, !!state)}
+                  onCheckedChange={({ checked: state }) => setValue(object, property, !!state)}
                 />
-              </Input.Root>
+              </Field.Root>
             )}
             {property !== 'id' && type === 'string' && (
-              <Input.Root>
-                <Input.Label classNames={labelProps}>{property}</Input.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <Editor object={object} prop={property} />
-              </Input.Root>
+              </Field.Root>
             )}
           </div>
         ))}
@@ -97,14 +101,20 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <IconButton icon='ph--x--regular' iconOnly label='Delete' onClick={() => onDelete(object.id)} variant='ghost' />
+        <Button.Root
+          icon='ph--x--regular'
+          iconOnly
+          label='Delete'
+          onClick={() => onDelete(object.id)}
+          variant='ghost'
+        />
       </div>
     </div>
   );
 };
 
 const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const { parentRef } = useTextEditor(() => {
     return {
       initialValue: object[prop],
@@ -127,7 +137,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
+      <Button.Root icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '#types';
 
-import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources';
+import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources/index.ts';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
@@ -61,7 +61,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       const { feed: feedMeta, posts } = yield* fetcher(url, { corsProxy: browserCorsProxy() }).pipe(
         // The meter must not outlive the run: a fetch that fails leaves the monitor with no terminal
         // status, and it holds the statusbar forever with a control that cancels nothing.
-        Effect.tapError(() => Effect.sync(() => reportStatus({ message: PROGRESS_STATUS_FAILED }))),
+        Effect.tapError(() => Effect.sync(() => reportStatus({ message: Progress.STATUS_FAILED }))),
       );
       reportStatus({ total: posts.length });
 
@@ -139,7 +139,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
             guid: post.guid,
           }),
         );
-        yield* Feed.append(echoFeed, postObjects);
+        yield* Feed.append(echoFeed, postObjects).pipe(Effect.provideService(Database.Origin, 'system'));
 
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;
@@ -162,7 +162,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
         }
       }
 
-      reportStatus({ current: posts.length, message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ current: posts.length, message: Progress.STATUS_COMPLETE });
     }),
   ),
 );

@@ -4,20 +4,72 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - ts-test-workerd
   - pack
 
 tasks:
+  test:
+    # The mermaid/UML layout suites run ~180s locally but exceed the 600s preset default under CI
+    # contention, so the task was killed with every test passing. Raised until the CI-side slowdown
+    # is understood; see https://github.com/dxos/dxos/pull/12985 for the measurements.
+    options:
+      timeout: 1800
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:
-    # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
-    command: vite-node scripts/render-diagrams.tsx
+    # Straight from source (`scripts/vite.render.config.ts` resolves the `source` condition), so a
+    # render never waits on the plugin's ~150 upstream builds. vite-node, not tsx: the ECHO types the
+    # `.dx.svg` payload needs carry legacy decorators, and the diagram rules load as `?raw`. Not bun:
+    # its CJS interop cannot construct elkjs's bundled fake worker.
+    command: vite-node
+    args:
+      - '-c'
+      - scripts/vite.render.config.ts
+      - scripts/render-diagrams.tsx
     inputs:
       - scripts/render-diagrams.tsx
+      - scripts/raw-loader.mjs
+      - scripts/vite.render.config.ts
       - docs/diagrams/*.mmd
       - src/**/*
     outputs:
       - docs/diagrams/*.svg
+    options:
+      cache: false
+      runInCI: false
+
+  judge-diagrams:
+    # Same runner and prerequisites as render-diagrams; the architecture rows need TYPESAFE_API_KEY.
+    command: vite-node scripts/judge-diagrams.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
+    options:
+      cache: false
+      runInCI: false
+
+  eval-layout-views:
+    # Compares System One reading each `View` rendering with a reference that saw the image; needs TYPESAFE_API_KEY.
+    command: vite-node scripts/eval-layout-views.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
+    options:
+      cache: false
+      runInCI: false
+
+  appeal-diagrams:
+    # Scores diagrams against @dxos/diagram's rule library, by code and, with --judge clef, from the rendered image.
+    command: vite-node scripts/appeal-diagrams.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
     options:
       cache: false
       runInCI: false

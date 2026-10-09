@@ -10,13 +10,15 @@ import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
-import { STORY_AGENTS, seedAgentSuggestions } from '../../testing';
-import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources';
+import { STORY_AGENTS, seedAgentSuggestions } from '../../testing/index.ts';
+import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources.tsx';
 
 // A single, deliberately distinct author/content for the second document — neither this DID nor this
 // text overlaps `STORY_AGENTS`, so any trace of it (or of `STORY_AGENTS`' content) on the wrong side
@@ -32,8 +34,8 @@ const SECOND_DOC_CONTENT = 'Zephyr proposes an entirely different rewrite of the
 const seedSingleSuggestion = async (doc: Markdown.Document, parent: Text.Text, did: string, content: string) => {
   const branch = await Branch.suggestion(doc, parent, did);
   const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
+  Obj.update(binding.object, (object) => {
+    EchoText.update(object, 'content', content);
   });
   binding.dispose();
 };
@@ -104,18 +106,18 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
   return (
     <Panel.Root>
       {swap && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Toolbar.Button
+            <Button.Root
               data-testid='swap-document'
               onClick={() => setActive((current) => (current + 1) % documents.length)}
             >
               Swap
-            </Toolbar.Button>
+            </Button.Root>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <SuggestionSources document={documents[active]} onResolved={onResolved}>
           {(resolved) => (
             <div data-testid='resolved-content'>
@@ -125,7 +127,7 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
             </div>
           )}
         </SuggestionSources>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

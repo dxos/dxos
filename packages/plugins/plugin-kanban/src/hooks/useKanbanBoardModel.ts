@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -17,7 +17,7 @@ import {
   getOrderByColumnFromArrangement,
   getOrderFromArrangement,
   orderItemsInColumn,
-} from '../util';
+} from '../util/index.ts';
 
 /**
  * Builds a board model that maps kanban arrangement and projection onto columns and per-column items.

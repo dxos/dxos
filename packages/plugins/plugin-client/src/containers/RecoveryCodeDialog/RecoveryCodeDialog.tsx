@@ -4,7 +4,11 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 
@@ -14,7 +18,7 @@ export type RecoveryCodeDialogProps = {
 
 // TODO(burdon): Should have cancel button.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [confirmation, setConfirmation] = useState(false);
 
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
@@ -24,31 +28,25 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
       <AlertDialog.Body>
         <AlertDialog.Title>{t('recovery-code-dialog.title')}</AlertDialog.Title>
         <AlertDialog.Description classNames='py-4'>{t('recovery-code-dialog.description')}</AlertDialog.Description>
-        <Clipboard.Provider>
-          <Code code={code} />
-        </Clipboard.Provider>
-        <Flex column gap='sm' classNames='py-4'>
+        <Code code={code} />
+        <Layout.Flex column gap='sm' classNames='py-4'>
           <p>{t('recovery-code-dialog-warning-1.message')}</p>
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
-        </Flex>
-        <Flex gap='sm' align='center' classNames='pb-4'>
-          <Input.Root>
-            <Input.Checkbox
-              data-testid='recoveryCode.confirm'
-              checked={confirmation}
-              onCheckedChange={handleConfirmation}
-            />
-            <Input.Label>{t('recovery-code-confirmation.label')}</Input.Label>
-          </Input.Root>
-        </Flex>
+        </Layout.Flex>
+        <Layout.Flex gap='sm' align='center' classNames='pb-4'>
+          <Input.Checkbox
+            data-testid='recoveryCode.confirm'
+            checked={confirmation}
+            onCheckedChange={({ checked }) => handleConfirmation(checked === true)}
+            label={t('recovery-code-confirmation.label')}
+          />
+        </Layout.Flex>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
-        <AlertDialog.Action asChild>
-          <Button data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
-            {t('continue.label')}
-          </Button>
+      <AlertDialog.Footer>
+        <AlertDialog.Action data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
+          {t('continue.label')}
         </AlertDialog.Action>
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };
@@ -57,15 +55,15 @@ const Code = ({ code }: { code: string }) => {
   const words = code.split(' ');
   return (
     <div className='relative p-2 border border-separator rounded-sm group'>
-      <Clipboard.IconButton value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
-      <div className='grid grid-cols-4'>
+      <SystemButton.Clipboard iconOnly value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
+      <Layout.Grid cols={4} data-testid='recoveryCode.code' data-code={code}>
         {words.map((word, i) => (
-          <Flex key={i} gap='sm' align='center' classNames='p-2'>
-            <div className='w-4 text-xs text-center text-subdued'>{i + 1}</div>
+          <Layout.Flex key={i} gap='sm' align='center' classNames='p-2'>
+            <div className='w-4 text-xs text-center text-fg-subtle'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
-          </Flex>
+          </Layout.Flex>
         ))}
-      </div>
+      </Layout.Grid>
     </div>
   );
 };

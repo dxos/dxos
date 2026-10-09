@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel } from '@dxos/react-ui';
-import { Attention, useManager } from '@dxos/react-ui-attention';
+import { useManager } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
@@ -27,18 +27,16 @@ import {
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
-import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths';
-import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
+import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths.ts';
+import { dedupeSupersededDrafts, orderThreadItems } from '../../util/index.ts';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
 
 /**
- * `subject` is the opened message; its whole conversation (thread) is looked up here. The companion graph node
- * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
- * re-querying; section/other callers may pass a single message. The thread already includes any
- * inline reply/forward drafts (the connector merges synced feed messages and local drafts in one
- * combined-scope query), interleaved chronologically.
+ * `subject` is the opened message; its whole conversation (thread), synced messages and this mailbox's
+ * reply/forward drafts interleaved, is looked up here by `threadId`. Without a `mailbox` the subject
+ * renders alone.
  */
 export type MessageArticleProps = AppSurface.ArticleProps<
   MessageType.Message,
@@ -61,15 +59,11 @@ export const MessageArticle = ({
   role,
   subject,
   attendableId,
-  companionTo,
-  mailbox: mailboxProp,
+  nodeId = attendableId,
+  mailbox,
   testId,
   onOpenAttachment,
 }: MessageArticleProps) => {
-  const toolbarAttendableId =
-    attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
-  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
-
   // The subject is one message; its conversation is correlated by threadId across space + feed in one
   // combined query.
   const mailboxDb = mailbox ? Obj.getDatabase(mailbox) : undefined;
@@ -136,11 +130,11 @@ export const MessageArticle = ({
   });
 
   // Settings + view state.
-  const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
+  const settingsAtom = Hooks.useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const viewState = useManager();
   const viewModeAtom = useMemo(
-    () => viewState.atom(messageViewModeAspect, toolbarAttendableId ?? 'default'),
-    [viewState, toolbarAttendableId],
+    () => viewState.atom(messageViewModeAspect, attendableId ?? 'default'),
+    [viewState, attendableId],
   );
   const optionsAtom = useMemo(
     () =>
@@ -151,22 +145,22 @@ export const MessageArticle = ({
         }),
         (ctx, next) => {
           ctx.set(settingsAtom, { ...ctx.get(settingsAtom), loadRemoteImages: next.loadRemoteImages });
-          viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
+          viewState.set(messageViewModeAspect, attendableId ?? 'default', next.viewMode);
         },
       ),
-    [settingsAtom, viewModeAtom, viewState, toolbarAttendableId],
+    [settingsAtom, viewModeAtom, viewState, attendableId],
   );
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
   // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
-  const invoker = useOperationInvoker();
-  const runtime = useProcessManagerRuntime();
-  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const invoker = Hooks.useOperationInvoker();
+  const runtime = Hooks.useProcessManagerRuntime();
+  const graph = Hooks.useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
+  const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
   // No contributed generator means nothing to invoke, so the AI-reply affordance is omitted rather
   // than shown and failing.
-  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
-  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  const replyGenerator = Hooks.useCapabilities(InboxCapabilities.ReplyGenerator)[0];
+  const sendOperations = Hooks.useCapabilities(InboxCapabilities.MailSendOperation);
   const getExtractActions = useCallback(
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
     [extractors, invoker],
@@ -174,7 +168,7 @@ export const MessageArticle = ({
 
   // Sender-scoped actions contributed by other plugins (plugin-crm's research). Resolved here and
   // bound per message so the component never touches a capability or an invoker.
-  const senderActionDefs = useCapabilities(InboxCapabilities.SenderAction);
+  const senderActionDefs = Hooks.useCapabilities(InboxCapabilities.SenderAction);
   const getSenderActions = useCallback(
     (message: Mailbox.MessageLike) => {
       const actor = message.sender;
@@ -245,7 +239,11 @@ export const MessageArticle = ({
   // Per-message delete action, backed by the space operation for removing objects.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
-      void invoker.invokePromise(SpaceOperation.RemoveObjects, { objects: [message] });
+      void invoker.invokePromise(
+        SpaceOperation.RemoveObjects,
+        { objects: [message] },
+        { spaceId: Obj.getDatabase(message)?.spaceId },
+      );
     },
     [invoker],
   );
@@ -303,10 +301,12 @@ export const MessageArticle = ({
       if (mailbox && db) {
         void invoker.invokePromise(LayoutOperation.Open, {
           subject: [getMailboxAttachmentPath(db.spaceId, mailbox.id, message.id, index)],
+          pivotId: nodeId,
+          disposition: 'detail',
         });
       }
     },
-    [onOpenAttachment, invoker, mailbox, db],
+    [onOpenAttachment, invoker, mailbox, db, nodeId],
   );
 
   const handleArchived = useCallback(
@@ -322,12 +322,13 @@ export const MessageArticle = ({
 
   return (
     <ConversationStack.Root
-      attendableId={toolbarAttendableId}
+      attendableId={attendableId}
+      nodeId={nodeId}
+      companion={nodeId !== attendableId}
       items={orderedMessages}
       summaries={summaries}
       conversationSummary={conversationSummary}
       mailbox={mailbox}
-      companion={!!companionTo}
       options={optionsAtom}
       expanded={expanded}
       graph={graph}
@@ -347,12 +348,12 @@ export const MessageArticle = ({
       onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <ConversationStack.Toolbar classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <ConversationStack.Content />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </ConversationStack.Root>
   );

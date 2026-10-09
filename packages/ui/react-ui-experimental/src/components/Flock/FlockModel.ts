@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { Vec2 } from '../../util';
+import { Vec2 } from '../../util/index.ts';
 
 /**
  * One body in the flocking simulation.

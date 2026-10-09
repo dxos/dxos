@@ -5,13 +5,13 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 
 import { Blog, Publisher } from '#types';
 
-import { runSyncPosts } from './sync-posts';
+import { runSyncPosts } from './sync-posts.ts';
 
 const SOURCE = 'stub.test';
 
@@ -99,7 +99,8 @@ const makePublicationWithPost = ({
     }
   });
   Obj.update(publication, (publication) => {
-    publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+    publication.posts ??= [];
+    publication.posts.push(Ref.make(post));
   });
   return { publication, post };
 };

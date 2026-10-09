@@ -4,10 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { meta as connectorMeta } from '@dxos/plugin-connector';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as ConnectorsSkill from '@dxos/plugin-connector/ConnectorsSkill';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as CalendarSkill from '@dxos/plugin-inbox/CalendarSkill';
@@ -18,7 +18,7 @@ import * as TranscriptionSkill from '@dxos/plugin-transcription/TranscriptionSki
 import { Cell } from '@dxos/storybook-testing';
 import { Event, Message, Transcript } from '@dxos/types';
 
-import { StoryRole } from '../modules';
+import { StoryRole } from '../modules/index.ts';
 import {
   ModuleContainer,
   addToRootCollection,
@@ -27,7 +27,7 @@ import {
   createTestMailbox,
   createTestTranscription,
   storyParameters,
-} from '../testing';
+} from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Connectors',
   render: ModuleContainer,
@@ -79,10 +79,7 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
-        import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-connector/ConnectorPlugin'),
-      ]);
+      const [InboxPlugin] = await Promise.all([import('@dxos/plugin-inbox/InboxPlugin')]);
       return {
         plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
@@ -96,7 +93,10 @@ export const WithGmail: Story = {
         [StoryRole.Chat],
         [
           Cell.article(mailbox),
-          { type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } },
+          {
+            type: AppSurface.Article,
+            data: { subject: `${ConnectorPlugin.meta.profile.key}.space-settings` },
+          },
         ],
         [StoryRole.Context],
       ];
@@ -121,10 +121,7 @@ export const WithGmail: Story = {
 export const WithConnectorPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
-        import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-connector/ConnectorPlugin'),
-      ]);
+      const [InboxPlugin] = await Promise.all([import('@dxos/plugin-inbox/InboxPlugin')]);
       return {
         plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
@@ -153,10 +150,7 @@ export const WithConnectorPrompt: Story = {
 export const WithCalendar: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
-        import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-connector/ConnectorPlugin'),
-      ]);
+      const [InboxPlugin] = await Promise.all([import('@dxos/plugin-inbox/InboxPlugin')]);
       return {
         plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
@@ -177,7 +171,7 @@ export const WithCalendar: Story = {
   args: {
     layout: [
       [StoryRole.Chat],
-      [{ type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } }],
+      [{ type: AppSurface.Article, data: { subject: `${ConnectorPlugin.meta.profile.key}.space-settings` } }],
       [StoryRole.Context],
     ],
   },

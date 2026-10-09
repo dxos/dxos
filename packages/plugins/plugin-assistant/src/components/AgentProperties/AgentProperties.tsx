@@ -9,8 +9,10 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -26,7 +28,7 @@ export type AgentPropertiesProps = {
 };
 
 export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
 
   // Build a filter matching objects of any schema annotated as a feed.
@@ -83,24 +85,21 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
   }
 
   return (
-    <Form.Section>
-      <Input.Root>
-        <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
-      </Input.Root>
+    <Form.FieldSet>
+      <Field.Root>
+        <Field.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Field.Label>
+      </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Input.Root key={object.id}>
-          <div className='flex items-center gap-2'>
-            <Input.Checkbox
-              checked={subscribedUris.has(Obj.getURI(object))}
-              onCheckedChange={(checked) => {
-                handleSubscriptionChange(object, checked === true);
-              }}
-            />
-            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
-          </div>
-        </Input.Root>
+        <Input.Checkbox
+          key={object.id}
+          checked={subscribedUris.has(Obj.getURI(object))}
+          onCheckedChange={({ checked }) => {
+            handleSubscriptionChange(object, checked === true);
+          }}
+          label={Obj.getLabel(object) ?? object.id}
+        />
       ))}
-    </Form.Section>
+    </Form.FieldSet>
   );
 };

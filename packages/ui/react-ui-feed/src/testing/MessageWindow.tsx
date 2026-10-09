@@ -4,12 +4,12 @@
 
 import React, { type ComponentType, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Column } from '@dxos/react-ui';
 import { Window, type WindowController, type WindowState, useListModel } from '@dxos/react-ui-virtual';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Message } from '@dxos/types';
 
-import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components';
-import { type MessageRenderer, defaultRenderer } from '../model';
+import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components/index.ts';
+import { type MessageRenderer, defaultRenderer } from '../model/index.ts';
 
 /**
  * A feed of real messages placed by `Window`, and nothing else.
@@ -97,13 +97,11 @@ export const MessageWindow = ({
         }
 
         return (
-          <Column.Root gutter={gutter}>
-            <Column.Center>
-              <Chrome message={message} index={index} selected={selectedIds.has(message.id)} onSelect={onSelect}>
-                <Item content={renderer(message)} message={message} Custom={Custom} />
-              </Chrome>
-            </Column.Center>
-          </Column.Root>
+          <Layout.Container gutter={gutter ?? 'lg'}>
+            <Chrome message={message} index={index} selected={selectedIds.has(message.id)} onSelect={onSelect}>
+              <Item content={renderer(message)} message={message} Custom={Custom} />
+            </Chrome>
+          </Layout.Container>
         );
       }}
     </Window>

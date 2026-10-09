@@ -8,13 +8,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
-import { MailboxFilter } from './MailboxFilter';
+import { MailboxFilter } from './MailboxFilter.tsx';
 
 // Sample tags so the `#` autocomplete has something to offer, created at render time to avoid
 // Storybook serialization issues with ECHO objects (see the QueryEditor story for the same pattern).

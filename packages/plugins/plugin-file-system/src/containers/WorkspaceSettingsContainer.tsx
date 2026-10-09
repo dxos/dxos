@@ -6,22 +6,23 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { useActiveFileSystemWorkspace } from '#hooks';
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { writeComposerConfig } from '../util';
+import { writeComposerConfig } from '../util.ts';
 
 const WorkspaceSettingsSchema = Schema.Struct({
   icon: Schema.optional(Schema.String).annotate({ title: 'Icon' }),
@@ -30,11 +31,11 @@ const WorkspaceSettingsSchema = Schema.Struct({
 
 /** Renders nothing until a filesystem workspace is active; the workspace comes from context. */
 export const WorkspaceSettingsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const workspace = useActiveFileSystemWorkspace();
-  const [, updateState] = useAtomCapabilityState(FileSystemCapabilities.State);
+  const [, updateState] = Hooks.useAtomCapabilityState(FileSystemCapabilities.State);
 
   const values = useMemo(
     () => ({
@@ -104,23 +105,23 @@ export const WorkspaceSettingsContainer = () => {
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('icon.description')}>
+          <Form.Field standalone label={label} description={t('icon.description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
               onReset={handleReset}
               classNames='justify-self-end'
             />
-          </Form.Row>
+          </Form.Field>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('hue.description')}>
+          <Form.Field standalone label={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
-          </Form.Row>
+          </Form.Field>
         );
       },
     }),
@@ -141,16 +142,16 @@ export const WorkspaceSettingsContainer = () => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('folder-properties.title')}>
-            <Form.FieldSet />
-          </Form.Section>
-          <Form.Section title={t('remove-folder.label')}>
-            <Form.Row label={t('remove-folder.label')} description={t('remove-folder.description')}>
-              <Button variant='destructive' onClick={handleRemove}>
+          <Form.FieldSet label={t('folder-properties.title')}>
+            <Form.Fields />
+          </Form.FieldSet>
+          <Form.FieldSet label={t('remove-folder.label')}>
+            <Form.Field standalone label={t('remove-folder.label')} description={t('remove-folder.description')}>
+              <Button.Root variant='destructive' onClick={handleRemove}>
                 {t('remove-folder.label')}
-              </Button>
-            </Form.Row>
-          </Form.Section>
+              </Button.Root>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

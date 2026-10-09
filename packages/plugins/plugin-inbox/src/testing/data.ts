@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '#types';
 
-import { Builder } from './builder';
+import { Builder } from './builder.ts';
 
 /** Fixture tag dictionary — keys are stable across runs so builder can reference them. */
 export const LABELS: Record<string, { label: string }> = Object.fromEntries(

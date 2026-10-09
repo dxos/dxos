@@ -8,8 +8,8 @@ import React from 'react';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { TaskListExample } from '../examples';
-import { NetworkToggle } from '../template/src/components';
+import { TaskListExample } from '../examples/index.ts';
+import { NetworkToggle } from '../template/src/components/index.ts';
 
 const meta = {
   title: 'sdk/examples/DXOS',

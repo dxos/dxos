@@ -4,18 +4,20 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
 
-import { useChatReportContext } from '../../components/Chat/context';
+import { useChatReportContext } from '../../components/Chat/context.ts';
 
 const INTEGRATION_PROMPT_NAME = 'IntegrationPrompt';
 
@@ -35,9 +37,9 @@ export type IntegrationPromptProps = {
  * silently.
  */
 export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const space = useActiveSpace();
-  const connectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const space = ToolkitHooks.useActiveSpace();
+  const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
   const connectorIds = useMemo(() => matched.map((connector) => connector.id), [matched]);
   const label = matched[0]?.label ?? service;
@@ -48,24 +50,24 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
-      <Flex gap='sm' align='center'>
-        <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
-        <Flex column classNames='min-w-0'>
+    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+      <Layout.Flex gap='sm' align='center'>
+        <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
+        <Layout.Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
-          <p className='text-sm text-subdued'>
+          <p className='text-sm text-fg-subtle'>
             {/* With no connector matched, nothing can satisfy the request, so the unavailable
                 message outranks the agent's reason. */}
             {connectorIds.length > 0
               ? (reason ?? t('integration-prompt.description', { service: label }))
               : t('integration-prompt.unavailable', { service: label })}
           </p>
-        </Flex>
-      </Flex>
+        </Layout.Flex>
+      </Layout.Flex>
       {scopes && scopes.length > 0 && (
         <div>
-          <p className='text-sm text-subdued'>{t('integration-prompt.scopes')}</p>
-          <ul className='text-sm text-subdued list-disc list-inside'>
+          <p className='text-sm text-fg-subtle'>{t('integration-prompt.scopes')}</p>
+          <ul className='text-sm text-fg-subtle list-disc list-inside'>
             {scopes.map((scope) => (
               <li key={scope}>{scope}</li>
             ))}
@@ -73,11 +75,11 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
         </div>
       )}
       {connectorIds.length > 0 && (
-        <Flex justify='end'>
+        <Layout.Flex justify='end'>
           <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} onSelect={armReport} />
-        </Flex>
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 

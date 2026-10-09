@@ -3,18 +3,20 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import { type Fact } from '../types';
-import { FactStore } from './fact-store';
-import * as FactStoreLive from './fact-store-live';
+import { type Fact } from '../types/index.ts';
+import * as FactStoreLive from './fact-store-live.ts';
+import { FactStore } from './fact-store.ts';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
-  assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
+  assertion: {
+    subject: { kind: 'entity', entity: 'alice' },
+    predicate: 'travelsTo',
+    object: { kind: 'entity', entity: 'paris' },
+  },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
   attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',
@@ -23,10 +25,7 @@ const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   ...over,
 });
 
-const TestLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-);
+const TestLayer = FactStoreLive.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
 describe('FactStore', () => {
   it.effect(
@@ -54,7 +53,11 @@ describe('FactStore', () => {
         mk({ id: 'f1' }),
         mk({
           id: 'f2',
-          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } },
+          assertion: {
+            subject: { kind: 'entity', entity: 'alice' },
+            predicate: 'travelsTo',
+            object: { kind: 'entity', entity: 'rome' },
+          },
           attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
         }),
       ]);
@@ -74,7 +77,11 @@ describe('FactStore', () => {
       yield* store.putFacts([
         mk({
           id: 'f1',
-          assertion: { subject: { entity: 'bob' }, predicate: 'Works At', object: { entity: 'dxos' } },
+          assertion: {
+            subject: { kind: 'entity', entity: 'bob' },
+            predicate: 'Works At',
+            object: { kind: 'entity', entity: 'dxos' },
+          },
         }),
       ]);
       // Different case + tense than stored, but the same relation key.
@@ -85,6 +92,33 @@ describe('FactStore', () => {
         }
       });
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'preserves illocution through put → query',
+    Effect.fnUntraced(function* () {
+      const store = yield* FactStore;
+      yield* store.putFacts([
+        mk({ id: 'f1', illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' } }),
+        mk({ id: 'f2', illocution: { force: 'commissive' } }),
+        mk({ id: 'f3' }),
+      ]);
+      const facts = yield* store.query({ subjectEntity: 'alice' });
+      const byId = new Map(facts.map((fact) => [fact.id, fact]));
+      expect(byId.get('f1')?.illocution).toEqual({ force: 'directive', mood: 'interrogative', addressee: 'bob' });
+      expect(byId.get('f2')?.illocution).toEqual({ force: 'commissive' });
+      expect(byId.get('f3')?.illocution).toBeUndefined();
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'preserves illocution through put → query (in-memory store)',
+    Effect.fnUntraced(function* () {
+      const store = yield* FactStore;
+      yield* store.putFacts([mk({ id: 'f1', illocution: { force: 'directive', mood: 'imperative' } })]);
+      const [fact] = yield* store.query({});
+      expect(fact.illocution).toEqual({ force: 'directive', mood: 'imperative' });
+    }, Effect.provide(FactStoreLive.layerMemory)),
   );
 
   it.effect(

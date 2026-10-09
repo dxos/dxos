@@ -10,29 +10,24 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
 
-import * as Support from './Support';
+import * as Support from './Support.ts';
+import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
 export const IssueType = Schema.Literals(['bug', 'feature']).annotate({
   title: 'Type',
-  description: 'Whether this is a bug report or a feature request.',
+  description: 'Bug report or a feature request.',
 });
 export type IssueType = Schema.Schema.Type<typeof IssueType>;
 
 export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Low priority']).annotate({
   title: 'Severity',
-  description: 'How disruptive the issue is.',
+  description: 'Level of impact.',
 });
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
-/**
- * Form payload shared by all three FeedbackPanel submit actions (PostHog
- * feedback, Discord help thread, GitHub issue). `version` is a hidden form
- * field populated by the panel from runtime config and forwarded to the
- * backend for triage. `area` is a free-form plugin id; the panel
- * pre-populates options from the active plugin list.
- */
+/** Form payload for the FeedbackPanel submit action. */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
     Schema.check(Schema.isNonEmpty()),
@@ -52,47 +47,62 @@ export const SupportRequest = Schema.Struct({
   ),
   area: Schema.String.annotate({
     title: 'Area',
-    description: 'The plugin or area this relates to (optional).',
+    description: 'The plugin or area this relates to.',
   }).pipe(Schema.optional),
-  type: IssueType,
-  severity: Severity,
+  type: IssueType.pipe(Schema.optional),
+  severity: Severity.pipe(Schema.optional),
   image: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Attach screenshot',
-      description: 'Capture the current view and attach it to the report. Form fields are obscured for privacy.',
+      description: 'Capture the current view and attach it to the report. Posted publicly with the report.',
     }),
     Schema.optional,
   ),
   includeLogs: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Include debug logs',
+      description: 'Attach the debug log bundle to the report. Sent to our team only — never posted publicly.',
     }),
     Schema.optional,
   ),
   // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
   version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  // Hidden — set by callers filing on the team's behalf (the debug console) so the issue lands
+  // under the same Linear label the PostHog submissions sync under.
+  labels: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 });
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-/** Legacy observability-backend input. Derived from {@link SupportRequest} by the FeedbackPanel. */
-export const UserFeedback = Schema.Struct({
-  message: Schema.String,
-  includeLogs: Schema.Boolean.pipe(Schema.optional),
-});
-
-export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
-
-export const CaptureUserFeedback = Operation.make({
+export const SubmitReport = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.support.captureFeedback'),
-    name: 'Capture User Feedback',
-    description: 'Capture one-shot user feedback (sent to the observability backend).',
-    icon: 'ph--chat-text--regular',
+    key: DXN.make('org.dxos.operation.support.submitReport'),
+    name: 'Submit Support Report',
+    description: 'Files a user report as a PostHog support ticket with a public Discord help thread.',
+    icon: 'ph--lifebuoy--regular',
   },
   services: [Capability.Service],
-  input: UserFeedback,
-  output: Schema.UndefinedOr(Schema.String),
+  input: Schema.Struct({
+    report: SupportRequest,
+    did: Schema.optional(Schema.String),
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportReportResult,
+});
+
+export const SubmitIssue = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.support.submitIssue'),
+    name: 'File Linear Issue',
+    description: 'Files a report as a Linear issue with logs attached.',
+    icon: 'ph--bug--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    report: SupportRequest,
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportIssueResult,
 });
 
 export const CreateTicket = Operation.make({

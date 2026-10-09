@@ -14,9 +14,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import AgentSkillDef from '../skill';
-import * as AgentSkillOperations from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import * as AgentSkill from '../AgentSkill.ts';
+import * as AgentSkillOperations from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -63,7 +63,7 @@ describe('GetContext', () => {
 const setupBoundAgent = Effect.fnUntraced(function* () {
   const agent = yield* Agent.makeInitialized(
     { name: 'Test Agent', instructions: 'A test agent for context.' },
-    AgentSkillDef.make(),
+    AgentSkill.make(),
   );
   yield* Database.flush();
 

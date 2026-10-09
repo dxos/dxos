@@ -4,7 +4,7 @@
 
 import { useHotkeys } from '@dxos/react-focus';
 
-import { useEditorContext } from './useEditorContext';
+import { useEditorContext } from './useEditorContext.ts';
 
 /**
  * Handle keyboard shortcuts.

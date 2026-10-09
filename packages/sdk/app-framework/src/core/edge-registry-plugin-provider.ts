@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
 import { type PluginView } from '@dxos/protocols';
 
-import type * as Plugin from './plugin';
-import * as Registry from './registry';
+import { PluginManagerError } from './plugin-manager/errors.ts';
+import type * as Plugin from './plugin.ts';
+import type * as Registry from './registry.ts';
 
 /**
  * Maps a wire-format `PluginView` (from `@dxos/protocols`) to a runtime `Plugin.Meta`: the nested
@@ -46,31 +48,61 @@ const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
  * `listVersions` is served directly from the `releases` array inlined on each
  * entry — no separate endpoint is needed.
  */
+/** The plugin registry behind EDGE did not answer, or answered with something unusable. */
+export class RegistryError extends BaseError.extend('RegistryError', 'Plugin registry request failed.') {}
+
+export type EdgeRegistryPluginProviderOptions = {
+  /**
+   * `public` (default) lists the curator-verified AT Protocol catalog; `private` lists the plugins the
+   * client's identity published privately, so it needs a client with an identity set.
+   */
+  catalog?: 'public' | 'private';
+};
+
+/** The slice of {@link EdgeHttpClient} the provider calls. */
+export type RegistryHttpClient = Pick<EdgeHttpClient, 'getRegistryPlugins' | 'getPrivateRegistryPlugins'>;
+
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Plugin.Meta[] = [];
   #cachedEntries: readonly PluginView[] = [];
+  readonly #catalog: 'public' | 'private';
+  /** Bumped per {@link listPlugins}, so a slower earlier response cannot overwrite the cache a later one wrote. */
+  #request = 0;
 
-  constructor(private readonly _client: EdgeHttpClient) {}
+  constructor(
+    private readonly _client: RegistryHttpClient,
+    { catalog = 'public' }: EdgeRegistryPluginProviderOptions = {},
+  ) {
+    this.#catalog = catalog;
+  }
 
-  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
-    return Effect.tryPromise({
-      try: () => this._client.getRegistryPlugins(Context.default()),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-    }).pipe(
-      Effect.map((body) => {
-        this.#cachedEntries = body.plugins;
-        const plugins = body.plugins.map(toRegistryPlugin).filter((entry): entry is Plugin.Meta => entry !== null);
-        this.#cachedPlugins = plugins;
-        return plugins;
-      }),
-    );
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], RegistryError> {
+    return Effect.suspend(() => {
+      const request = ++this.#request;
+      return Effect.tryPromise({
+        try: () =>
+          this.#catalog === 'private'
+            ? this._client.getPrivateRegistryPlugins(Context.default())
+            : this._client.getRegistryPlugins(Context.default()),
+        catch: RegistryError.wrap(),
+      }).pipe(
+        Effect.map((body) => {
+          const plugins = body.plugins.map(toRegistryPlugin).filter((entry): entry is Plugin.Meta => entry !== null);
+          if (request === this.#request) {
+            this.#cachedEntries = body.plugins;
+            this.#cachedPlugins = plugins;
+          }
+          return plugins;
+        }),
+      );
+    });
   }
 
   listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {
     const entry = this.#cachedEntries.find((candidate) => candidate.profile.key === id);
     if (!entry) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
+      return Effect.fail(new PluginManagerError({ message: `Plugin not found in catalog: ${id}` }));
     }
     // Releases are already `PluginRelease`-shaped on the wire view; serve them directly.
     return Effect.succeed(entry.releases);
@@ -79,11 +111,13 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error> {
     const plugin = this.#cachedPlugins.find((candidate) => candidate.profile.key === id);
     if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
+      return Effect.fail(new PluginManagerError({ message: `Plugin not found in catalog: ${id}` }));
     }
     if (version && version !== plugin.release?.version) {
       return Effect.fail(
-        new Error(`Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`),
+        new PluginManagerError({
+          message: `Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`,
+        }),
       );
     }
     return Effect.succeed(plugin);

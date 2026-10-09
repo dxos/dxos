@@ -6,15 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
-import { type Label } from '../../common';
-import { EmptyHistoryError } from './errors';
-import type { HistoryEntry } from './types';
-import { resolveMessage } from './undo-mapping';
-import type { UndoRegistry } from './undo-registry';
+import { type Label } from '../../common/translations.ts';
+import { EmptyHistoryError } from './errors.ts';
+import type { HistoryEntry } from './types.ts';
+import { resolveMessage } from './undo-mapping.ts';
+import type { UndoRegistry } from './undo-registry.ts';
 
 const HISTORY_LIMIT = 100;
 
@@ -142,3 +142,6 @@ export const make = (
     undoable,
   };
 };
+
+export { EmptyHistoryError } from './errors.ts';
+export type { HistoryEntry } from './types.ts';

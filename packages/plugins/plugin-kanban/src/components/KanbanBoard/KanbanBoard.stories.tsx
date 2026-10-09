@@ -4,15 +4,15 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { Filter, JsonSchema, Obj, Query, type View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback, createEchoChangeCallback } from '@dxos/schema';
-import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
 import { createEchoChangeCallback as createKanbanChangeCallback } from '#hooks';
@@ -20,7 +20,7 @@ import { KanbanCardTileSimple } from '#testing';
 import { translations } from '#translations';
 import { Kanban } from '#types';
 
-import { KanbanBoard } from './KanbanBoard';
+import { KanbanBoard } from './KanbanBoard.tsx';
 
 random.seed(1);
 
@@ -155,3 +155,41 @@ type Story = StoryObj<typeof meta>;
  * In-memory board with Echo-shaped objects. No plugin manager, client, or Space.
  */
 export const Default: Story = {};
+
+/**
+ * Every column header, the uncategorized one included, has the same height and underline, and the cards sit a gutter in
+ * from their column's edges.
+ */
+export const TestLayout: Story = {
+  play: async ({ canvasElement }) => {
+    const headers = await waitFor(
+      () => {
+        const found = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="board-column-header"]'));
+        if (found.length < 2) {
+          throw new Error('Columns not rendered.');
+        }
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+    const heights = new Set(headers.map((header) => Math.round(header.getBoundingClientRect().height)));
+    await expect(heights.size).toBe(1);
+    for (const header of headers) {
+      await expect(Number.parseFloat(getComputedStyle(header).borderBottomWidth)).toBeGreaterThan(0);
+    }
+
+    const cards = await waitFor(() => {
+      const found = Array.from(canvasElement.querySelectorAll<HTMLElement>('.dx-card'));
+      if (found.length === 0) {
+        throw new Error('No cards.');
+      }
+      return found;
+    });
+    for (const card of cards) {
+      const column = card.closest<HTMLElement>('.dx-scroll-root')?.getBoundingClientRect();
+      const rect = card.getBoundingClientRect();
+      await expect(rect.left - (column?.left ?? Number.NaN)).toBeGreaterThanOrEqual(4);
+      await expect((column?.right ?? Number.NaN) - rect.right).toBeGreaterThanOrEqual(4);
+    }
+  },
+};

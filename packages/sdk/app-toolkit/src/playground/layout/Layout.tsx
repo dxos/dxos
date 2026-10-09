@@ -7,9 +7,9 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 
-import { PlaygroundRoles } from '../roles';
+import { PlaygroundRoles } from '../roles.ts';
 
 export const Layout = () => {
   return (

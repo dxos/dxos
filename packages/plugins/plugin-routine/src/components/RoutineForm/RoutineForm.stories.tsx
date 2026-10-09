@@ -4,11 +4,12 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Instructions from '@dxos/compute/Instructions';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { DXN, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -16,7 +17,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { RoutineForm } from './RoutineForm';
+import { isRunInstructions, makeRoutine } from '../../util/index.ts';
+import { RoutineForm } from './RoutineForm.tsx';
 
 // Exposes the live automation to the play function (module scope is shared with the story render)
 // so it can assert the primary trigger's spec kind.
@@ -39,7 +41,7 @@ const withSeededSpace = (seed: (space: Space) => void) =>
   withClientProvider({
     createIdentity: true,
     createSpace: true,
-    types: [Routine.Routine, Trigger.Trigger, Feed.Feed],
+    types: [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed],
     onCreateSpace: async ({ space }) => seed(space),
   });
 
@@ -120,3 +122,45 @@ export const CreateWebhookTrigger: Story = { ...createKindStory('webhook', /^Web
 
 /** Create an Email trigger via the picker. */
 export const CreateEmailTrigger: Story = { ...createKindStory('email', /^Email/), tags: ['!test'] };
+
+// Shaped like a connector's sync routine: the operation is a registry key, not a persisted object.
+const syncOperation = Ref.fromURI(DXN.make('org.example.operation.sync'));
+
+const primaryTrigger = (): Trigger.Trigger | undefined => {
+  const target = liveAutomation?.triggers?.[0]?.target;
+  return target && Obj.instanceOf(Trigger.Trigger, target) ? target : undefined;
+};
+
+/** Switching the action to Instructions and back restores the operation, and the trigger stays bound to it. */
+export const OperationRoundTrip: Story = {
+  decorators: [
+    withSeededSpace((space) => {
+      const trigger = Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *') });
+      space.db.add(makeRoutine({ name: 'Sync', spec: { kind: 'runnable', runnable: syncOperation }, trigger }));
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByText('Instructions', {}, { timeout: 10_000 }));
+    await waitFor(() => expect(isRunInstructions(primaryTrigger()?.runnable)).toBe(true));
+    await userEvent.click(await canvas.findByText('Operation'));
+    await waitFor(() => expect(primaryTrigger()?.runnable?.uri).toBe(syncOperation.uri));
+    await expect(liveAutomation && Routine.runnableRef(liveAutomation)?.uri).toBe(syncOperation.uri);
+    await expect(canvas.queryByTestId('routine-form.action-unset')).toBeNull();
+  },
+};
+
+/** Switching an enabled routine with no operation to restore leaves it with nothing to run, which the editor flags. */
+export const ActionUnsetWarning: Story = {
+  decorators: [
+    withSeededSpace((space) => {
+      const trigger = Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *') });
+      space.db.add(makeRoutine({ name: 'Digest', instructions: Instructions.make({}), trigger }));
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByText('Operation', {}, { timeout: 10_000 }));
+    await expect(await canvas.findByTestId('routine-form.action-unset')).toBeInTheDocument();
+  },
+};

@@ -6,17 +6,17 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type DXN } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
-import { presetsForProvider, resolveProvider } from '../../processor';
-import { OllamaModels } from './OllamaModels';
+import { presetsForProvider, resolveProvider } from '../../chat-model/index.ts';
+import { OllamaModels } from './OllamaModels.tsx';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
 
@@ -27,12 +27,12 @@ const presetOptions = (provider: DXN.DXN, installed?: ReadonlySet<string>) =>
     .filter((preset) => !installed || installed.has(preset.backend))
     .map((preset) => ({ value: preset.model, label: preset.label }));
 
-export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const AssistantSettings = ({ settings, onSettingsChange, scope }: AssistantSettingsProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   // The Ollama manager is the bundled sidecar (desktop only). Its presence selects the local
   // provider: the managed `built-in` vs. an external `ollama` server.
-  const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
   const localProvider = ollamaManager ? Provider.builtIn : Provider.ollama;
   const localProviderKey = ollamaManager ? 'built-in' : 'ollama';
 
@@ -79,9 +79,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.FieldSet fieldMap={fieldMap} />
-          </Form.Section>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
+            <Form.Fields fieldMap={fieldMap} />
+          </Form.FieldSet>
           <OllamaModels />
         </Form.Content>
       </Form.Viewport>

@@ -7,9 +7,9 @@ import { useMemo } from 'react';
 import { type Database } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { TypeOptions } from '../../echo';
+import { TypeOptions } from '../../echo/index.ts';
 
 export const useTypeOptions = ({
   db,
@@ -18,7 +18,7 @@ export const useTypeOptions = ({
   db?: Database.Database;
   annotation: TypeOptions.TypeInputOptions;
 }) => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const types = useQuery(db, TypeOptions.allTypesQuery);
   // `annotation` is recreated each render; depend on its primitive contents, not its identity.
   const options = useMemo(

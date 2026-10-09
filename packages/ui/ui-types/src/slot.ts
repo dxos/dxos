@@ -4,7 +4,7 @@
 
 import { HTMLAttributes } from 'react';
 
-import { type ThemedClassName } from './theme';
+import { type ThemedClassName } from './theme.ts';
 
 // TODO(burdon): Define base type for component with `testId`, etc.
 

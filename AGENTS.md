@@ -203,10 +203,15 @@ writes wedge the other, which is how a debugging session ends up chasing its own
   you are editing, restart it against yours (`moon run storybook-react:serve` from your
   worktree) rather than adding a second server. Say so in your reply — you are moving a
   window the user may be looking at.
-- **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
-  file under `packages/` is written (a chokidar fsevents pathology — see
-  `tools/storybook-react/scripts/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
-  concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
+- **Restart with `moon run storybook-react:serve-nodeps`** when the worktree is already
+  built. `serve` first runs every `:build` it depends on, and if another moon run (e.g.
+  `composer-app:bundle`) is building the same packages, both rewrite the same `dist/types`
+  and the builds fail with TS7016. Use `serve` only on a fresh worktree.
+- **A stale module is not a hung server.** If `/@fs/<file>` still serves old code but
+  `index.json` answers fast, the file watch was lost, not the server; the `dxos:rearm-watch`
+  plugin in `tools/storybook-react/.storybook/main.ts` exists for exactly this, so suspect a regression there.
+- **Unresponsive is usually not dead.** Wait ~3 minutes before concluding anything. If it
+  is still down, run `tools/storybook-react/scripts/diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
 - **Never `pkill -f storybook`.** Kill by the PID you own, established via
   `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
@@ -252,6 +257,9 @@ Universal rules. Deeper conventions live in skills — see the pointers below.
   dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
   `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
   tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
+- Relative imports carry the real source extension: `from './module.ts'`, `from './dir/index.ts'`
+  (never extensionless, never a `.js` projection) — `tsc` rewrites them on emit via
+  `rewriteRelativeImportExtensions`. Enforced by `import/extensions` in `.oxlintrc.json`.
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.
@@ -278,6 +286,9 @@ Deeper conventions:
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
   skill.
 - Do not use deprecated functions if an alternative is available.
+- Prose a human reads — PR bodies, commit messages, walkthroughs, design docs, review
+  comments, long chat replies → `readable-prose` skill. Review is the bottleneck; write for
+  one pass.
 
 ## Git & PR workflow
 
@@ -288,9 +299,20 @@ Deeper conventions:
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
   `gh run view <id> --log-failed`.
+- **Check runs on Depot, not GitHub Actions** (`.depot/workflows/check.yml`), so the
+  GitHub API returns empty output for every `Check / …` check run and its `details_url`
+  redirects to SSO. That is not "logs unreachable": `DEPOT_TOKEN` is in the environment
+  and the `depot` CLI reads it — `depot ci logs <job-id>`, `depot tests <job-id> --ci`,
+  `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
+  `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
+- **Every PR body is built from the `pr-description` skill's templates.** Summary
+  and Safety always; Bugfix, Architecture (diagrams, new cross-component
+  dependencies) and UI (screenshots, Autocue videos) whenever they apply, and
+  several can apply at once. This holds for every PR an agent opens or edits,
+  whether or not `submit-pr` is in use.
 - Consumer-relevant changes need a `.changeset/*.md`: written when opening the
   PR and rewritten before landing, as a summary of the whole PR — see
   [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
@@ -298,7 +320,13 @@ Deeper conventions:
 
 ## Handing an agent a credential
 
-Put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
+**In the cloud sandbox, prefer the 1Password CLI.** When `OP_SERVICE_ACCOUNT_TOKEN` is set, read the
+credential with `op run` / `op read` before asking the user for anything, since the value then never
+passes through the conversation → `1password` skill. **In a local session (no token) never run
+`op`** — not even `op whoami` — because each call pops a desktop-app authorization prompt; use the
+`.secrets/` flow below instead.
+
+Otherwise, put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
 prompt writes it to the transcript permanently; a file can be deleted.
 
 - `.secrets/` is gitignored at every depth. That is default exclusion, not enforcement — `git add -f`
@@ -306,15 +334,16 @@ prompt writes it to the transcript permanently; a file can be deleted.
   rather than a guarantee git gives you. Verify with `git ls-files | grep -i secret`; the only
   expected hits are `scripts/secrets.mjs` and its edge-compute twin, which are tooling, not
   credentials.
-- **The user creates the file** (agents cannot sign in or complete an OAuth consent) and
-  names the path in chat. One file per credential, `chmod 600`, `key=value` lines.
-- **The agent deletes it** when the task that needed it is done, and revokes the grant if
-  the credential was minted for that task alone.
+- **The agent creates the empty file** (`umask 077`, `chmod 600`, `KEY=` lines with no value)
+  and names its path; **the user pastes the value** (agents cannot sign in or complete an OAuth
+  consent). One file per credential.
+- **The agent never deletes it.** The file outlives any one task — a review or test that needs it
+  re-runs as the work moves — so the user decides when to remove it or revoke the grant.
 - Prefer a credential that can be renewed over one that expires mid-task: an OAuth access
   token lasts an hour, so a long task needs the refresh token **plus** the `client_id` and
   `client_secret` it was minted under — a refresh token alone cannot be exchanged.
 - Never echo a credential's value back into chat, a log, a commit message, or an error
-  report. Read it, use it, delete it.
+  report. Read it and use it; leave the file where it is.
 
 Example (Gmail, for the live tag-sync test — see `packages/plugins/plugin-inbox/docs/TAG-SYNC.md`):
 
@@ -344,7 +373,12 @@ Do not paste real credential values into any shell command, and do not paste the
   use `agents/superpowers/…` instead.
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
-  operations, testing, code-style, submit-pr, land, …).
+  operations, testing, code-style, submit-pr, pr-description, land, …).
+- **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
+  job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
+  (`.agents/skills/depot-ci/SKILL.md`).
+- **Credentials (API keys, tokens, passwords)** — the `op` CLI in remote sessions only, `.secrets/` otherwise →
+  `1password` skill (`.agents/skills/1password/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
@@ -354,6 +388,11 @@ Do not paste real credential values into any shell command, and do not paste the
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
   Read it before reaching for Prisma: there is no driver adapter for the
   browser client, which is why the schema is hand-written SQL.
+- **Working a task with no questions asked** — `/autonomous [task]` pins a task the
+  session must finish against a written definition of done, resolving scope from a
+  verbatim log of what the user already said → `autonomous-mode` skill
+  (`.agents/skills/autonomous-mode/SKILL.md`); Claude-harness specifics in
+  `.claude/CLAUDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

@@ -10,6 +10,7 @@ export default defineConfig({
     FilePlugin: 'src/FilePlugin.ts',
     plugin: 'src/plugin.tsx',
     skills: 'src/skills/index.ts',
+    FileSkill: 'src/skills/FileSkill.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
@@ -21,10 +22,11 @@ export default defineConfig({
     FileEvents: 'src/types/FileEvents.ts',
     FileOperation: 'src/types/FileOperation.ts',
     Settings: 'src/types/Settings.ts',
+    StagedUpload: 'src/StagedUpload.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
   // The first story in a file pays the whole lazy module-load bill — for pdf.js that includes the
   // worker — which the 15s browser-mode default cannot cover.
-  test: { node: true, storybook: { timeout: 60_000 } },
+  test: { node: true, storybook: { timeout: 60_000 }, workerd: true },
 });

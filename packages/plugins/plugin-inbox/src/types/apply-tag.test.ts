@@ -7,13 +7,13 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Obj, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import * as Mailbox from './Mailbox';
-import * as SystemTags from './SystemTags';
+import * as Mailbox from './Mailbox.ts';
+import * as SystemTags from './SystemTags.ts';
 
 /**
  * Bulk labelling has to be a SET, not a flip. `toggleTag` over a batch would untag whichever members

@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 // DX-1125: the swarm-backed remote monitor derives the coarse subscription tag from the filter,
 // decodes each broadcast payload, and re-applies the exact filter client-side.

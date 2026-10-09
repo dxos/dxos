@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -38,7 +39,7 @@ import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
-import { type ObjectGenerator } from './ObjectGenerator';
+import { type ObjectGenerator } from './ObjectGenerator.tsx';
 
 export enum PresetName {
   DXOS_TEAM = 'dxos-team',
@@ -162,7 +163,6 @@ export const generator = () => ({
           const researchPrompt = space.db.add(
             Instructions.make({
               name: 'Research',
-              description: 'Research organization',
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
@@ -179,7 +179,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              runnable: Ref.make(Operation.serialize(RunInstructions)),
+              runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
               input: {
                 instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',

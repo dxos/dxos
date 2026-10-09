@@ -8,17 +8,18 @@ import React, { Profiler, useState } from 'react';
 import { describe, test, vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import { ActivationEvents, Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
-import { Capability, Plugin } from '../../../core';
-import { createTestApp } from '../../../testing/harness';
-import { render } from '../../../testing/react';
-import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent';
-import { setSurfaceDebug } from './SurfaceDebug';
-import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create, makeFilter } from './types';
+import { ActivationEvents, Capabilities } from '../../../common/index.ts';
+import * as Role from '../../../common/Role.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { createTestApp } from '../../../testing/harness.ts';
+import { render } from '../../../testing/react.tsx';
+import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent.tsx';
+import { getMountedSurfaces, setSurfaceDebug } from './SurfaceDebug.tsx';
+import { surfaceMetrics } from './SurfaceMetrics.ts';
+import { SurfaceProfilerProvider } from './SurfaceProfilerContext.tsx';
+import { type Definition, create, makeFilter } from './types.ts';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>
@@ -521,6 +522,78 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   });
 });
 
+const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
+
+const stableMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceStable'),
+  name: 'SurfaceStableTest',
+});
+
+const StablePlugin = (counts: { value: number }) =>
+  Plugin.define(stableMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activate: () =>
+        Effect.succeed([
+          Capability.contributeAll(Capabilities.ReactSurface, [
+            create({
+              id: 'stable',
+              filter: makeFilter(RoleStable),
+              component: ({ data: { subject } }) => {
+                counts.value++;
+                return <span data-testid='stable'>{subject.id}</span>;
+              },
+            }),
+          ]),
+        ]),
+    }),
+    Plugin.make,
+  )();
+
+/** Mounts a host that passes `data` as an object literal, and hands back the two ways to move it. */
+const mountStableHost = async (harness: Awaited<ReturnType<typeof createTestApp>>, initial: { id: string }) => {
+  const controls = { rerender: () => {}, setSubject: (_: { id: string }) => {} };
+  const Host = () => {
+    const [, setNonce] = useState(0);
+    const [subject, setSubject] = useState(initial);
+    controls.rerender = () => setNonce((nonce) => nonce + 1);
+    controls.setSubject = setSubject;
+    return <SurfaceComponent type={RoleStable} data={{ subject }} />;
+  };
+
+  const view = render(harness, <Host />);
+  await view.findByTestId('stable');
+  return { view, ...controls };
+};
+
+describe('SurfaceComponent data stability', () => {
+  test('an inline `data` literal does not re-render the subtree when an ancestor renders', async ({ expect }) => {
+    const counts = { value: 0 };
+    await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
+    const { rerender } = await mountStableHost(harness, { id: 'x' });
+    const baseline = counts.value;
+
+    for (let i = 0; i < 5; i++) {
+      act(() => rerender());
+    }
+
+    expect(counts.value).toBe(baseline);
+  });
+
+  test('a genuine `data` change still re-renders the subtree', async ({ expect }) => {
+    const counts = { value: 0 };
+    await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
+    const { view, setSubject } = await mountStableHost(harness, { id: 'first' });
+    const baseline = counts.value;
+
+    act(() => setSubject({ id: 'second' }));
+
+    expect(counts.value).toBeGreaterThan(baseline);
+    expect((await view.findByTestId('stable')).textContent).toBe('second');
+  });
+});
+
 describe('SurfaceComponent dev metrics', () => {
   test('records dispatch + candidate count and flags unstable data', async ({ expect }) => {
     setSurfaceDebug(true);
@@ -579,6 +652,30 @@ describe('SurfaceComponent dev metrics', () => {
       expect(metric?.dataUnstable).toBe(false);
     } finally {
       setSurfaceDebug(false);
+    }
+  });
+});
+
+describe('SurfaceComponent mount registry', () => {
+  test('a production build registers surfaces only under a profiler provider', async ({ expect }) => {
+    vi.stubEnv('DEV', false);
+    try {
+      await using harness = await createTestApp({ plugins: [TestPlugin()] });
+
+      const plain = render(harness, <SurfaceComponent type={RoleA} />);
+      await plain.findByTestId('a');
+      expect(getMountedSurfaces().some((surface) => surface.id === 'alpha')).toBe(false);
+      plain.unmount();
+
+      // The devtools Surfaces card lists this registry; it must be populated in production too.
+      const profiled = render(harness, <SurfaceComponent type={RoleA} />, {
+        reactContexts: [SurfaceProfilerProvider],
+      });
+      await profiled.findByTestId('a');
+      expect(getMountedSurfaces().some((surface) => surface.id === 'alpha')).toBe(true);
+      profiled.unmount();
+    } finally {
+      vi.unstubAllEnvs();
     }
   });
 });

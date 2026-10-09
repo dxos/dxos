@@ -32,6 +32,12 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -50,6 +56,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {
@@ -63,6 +72,9 @@
     },
     {
       "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../plugins/plugin-agent"
     },
     {
       "path": "../../plugins/plugin-assistant"
@@ -83,10 +95,16 @@
       "path": "../../plugins/plugin-crm"
     },
     {
+      "path": "../../plugins/plugin-debug"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-higgsfield"
     },
     {
       "path": "../../plugins/plugin-illustrator"
@@ -116,10 +134,16 @@
       "path": "../../plugins/plugin-routine"
     },
     {
+      "path": "../../plugins/plugin-sandbox"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-studio"
     },
     {
       "path": "../../plugins/plugin-table"
@@ -137,6 +161,9 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../plugins/plugin-uml"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -144,6 +171,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/react-client"
@@ -158,10 +188,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-chat"
+      "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
+      "path": "../../ui/react-ui-chat"
     },
     {
       "path": "../../ui/react-ui-debug"
@@ -177,6 +207,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

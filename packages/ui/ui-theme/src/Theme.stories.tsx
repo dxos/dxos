@@ -7,8 +7,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { hues } from '@dxos/ui-types';
 
-import { hueShades } from './defs';
-import { mx } from './util';
+import { hueShades } from './defs.ts';
+import { mx } from './util/index.ts';
 
 // prettier-ignore
 const neutralShades: [number, string][] = [
@@ -161,24 +161,24 @@ export const Neutral = {
 const surfaces: [surface: string, foreground: string, label: string][] = [
   // Sorted lightest -> darkest at runtime (see Surfaces story); surfaces without a dedicated
   // foreground fall back to base-fg.
-  ['bg-base-surface',    'text-base-fg',     'base'],
-  ['bg-deck-surface',    'text-base-fg',     'deck'],
-  ['bg-card-surface',    'text-base-fg',     'card'],
-  ['bg-toolbar-surface', 'text-base-fg',     'toolbar'],
-  ['bg-sidebar-surface', 'text-base-fg',     'sidebar'],
-  ['bg-group-surface',   'text-base-fg',     'group'],
-  ['bg-header-surface',  'text-base-fg',     'header'],
-  ['bg-modal-surface',   'text-base-fg',     'modal'],
-  ['bg-l1-surface',      'text-base-fg',     'l1'],
-  ['bg-r1-surface',      'text-base-fg',     'r1'],
+  ['bg-base-surface',    'text-fg',     'base'],
+  ['bg-deck-surface',    'text-fg',     'deck'],
+  ['bg-card-surface',    'text-fg',     'card'],
+  ['bg-toolbar-surface', 'text-fg',     'toolbar'],
+  ['bg-sidebar-surface', 'text-fg',     'sidebar'],
+  ['bg-group-surface',   'text-fg',     'group'],
+  ['bg-header-surface',  'text-fg',     'header'],
+  ['bg-modal-surface',   'text-fg',     'modal'],
+  ['bg-l1-surface',      'text-fg',     'l1'],
+  ['bg-r1-surface',      'text-fg',     'r1'],
   ['bg-hover-surface',   'text-hover-fg',    'hover'],
   ['bg-current-surface', 'text-current-fg',  'current'],
   ['bg-selected-surface','text-selected-fg', 'selected'],
-  ['bg-l0-surface',      'text-base-fg',     'l0'],
-  ['bg-r0-surface',      'text-base-fg',     'r0'],
+  ['bg-l0-surface',      'text-fg',     'l0'],
+  ['bg-r0-surface',      'text-fg',     'r0'],
   ['bg-input-surface',   'text-input-fg',    'input'],
   ['bg-inverse-surface', 'text-inverse-fg',  'inverse'],
-  ['bg-scrim-surface',   'text-base-fg',     'scrim'],
+  ['bg-scrim-surface',   'text-fg',     'scrim'],
 ];
 
 // Resolve any CSS color (oklch, light-dark(), rgb, ...) to a 0-1 luminance via a 1x1 canvas.
@@ -222,7 +222,7 @@ export const Surfaces = {
       return () => observer.disconnect();
     }, []);
     return (
-      <div className='dx-fullscreen overflow-auto bg-white dark:bg-black'>
+      <div className='dx-cover overflow-auto bg-white dark:bg-black'>
         <div className='flex flex-col'>
           {order.map(([surface, foreground, label]) => (
             <div
@@ -254,7 +254,7 @@ export const Tags = {
           {['neutral', ...hues].map((hue) => (
             <div key={hue} className='grid grid-cols-[8rem_8rem]'>
               <div>
-                <span className='dx-tag' data-hue={hue}>
+                <span className='dx-tag dx-tag-inline' data-hue={hue}>
                   {hue}
                 </span>
               </div>
@@ -274,11 +274,11 @@ export const Tags = {
 export const Animation = {
   render: () => {
     return (
-      <div className='dx-fullscreen grid place-items-center'>
+      <div className='dx-cover grid place-items-center'>
         <div className='dx-density-lg border border-separator rounded-md'>
           <div
             className={mx(
-              'flex items-center font-mono text-2xl text-test-experimental',
+              'flex items-center font-mono text-2xl text-error-text',
               'p-form-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
             )}
           >

@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
@@ -18,9 +18,9 @@ import {
 import { meta } from '#meta';
 import { SheetRange, SheetUtil } from '#types';
 
-import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetRoot';
-import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
+import { type SheetModel } from '../../model/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
+import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState.ts';
 
 export type StyleState = Partial<Record<SheetRange.StyleValue, boolean>>;
 

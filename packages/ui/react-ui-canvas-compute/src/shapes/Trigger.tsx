@@ -7,25 +7,28 @@ import React, { useEffect } from 'react';
 import * as Trigger from '@dxos/compute/Trigger';
 import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/Obj';
+import { useResolveRef } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as Select from '@dxos/react-ui/Select';
 
-import { FunctionBody, getHeight } from './common';
-import { type TriggerShape } from './trigger-def';
-import { createTriggerSpec, getOutputSchema } from './trigger-spec';
+import { FunctionBody, getHeight } from './common/index.ts';
+import { type TriggerShape } from './trigger-def.ts';
+import { createTriggerSpec, getOutputSchema } from './trigger-spec.ts';
 
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
 export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   const [space] = useSpaces();
-  const functionTrigger = shape.functionTrigger?.target;
+  const functionTrigger = useResolveRef(shape.functionTrigger);
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
       Obj.update(functionTrigger, (functionTrigger) => {
-        functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
+        functionTrigger.spec = createTriggerSpec({
+          triggerKind: 'email',
+          spaceId: space?.id,
+        }) as Obj.Mutable<Trigger.Spec>;
       });
     }
   }, [functionTrigger, functionTrigger?.spec]);
@@ -37,7 +40,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   const setKind = (kind: Trigger.Kind) => {
     if (functionTrigger?.spec?.kind !== kind) {
       Obj.update(functionTrigger!, (obj) => {
-        obj.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id }) as Mutable<Trigger.Spec>;
+        obj.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id }) as Obj.Mutable<Trigger.Spec>;
       });
     }
   };
@@ -49,9 +52,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   return (
     <FunctionBody
       shape={shape}
-      status={
-        <TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={(kind) => setKind(kind as Trigger.Kind)} />
-      }
+      status={<TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={setKind} />}
       inputSchema={VoidInput}
       outputSchema={getOutputSchema(functionTrigger.spec!.kind!)}
     />
@@ -59,21 +60,29 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 };
 
 // TODO(burdon): Factor out.
-const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
+type TriggerKindSelectProps = {
+  value?: Trigger.Kind;
+  onValueChange: (kind: Trigger.Kind) => void;
+};
+
+const TriggerKindSelect = ({ value, onValueChange }: TriggerKindSelectProps) => {
   return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {Trigger.Kinds.map((kind) => (
-              <Select.Option key={kind} value={kind}>
-                {kind}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+    <Select.Root
+      value={value === undefined ? [] : [value]}
+      onValueChange={({ value: [next] }) => {
+        const kind = Trigger.Kinds.find((kind) => kind === next);
+        if (kind) {
+          onValueChange(kind);
+        }
+      }}
+      items={Trigger.Kinds.map((kind) => ({ value: kind, label: kind }))}
+    >
+      <Select.Trigger classNames='w-full px-0!' />
+      <Select.Content>
+        {Trigger.Kinds.map((kind) => (
+          <Select.Item key={kind} item={{ value: kind, label: kind }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

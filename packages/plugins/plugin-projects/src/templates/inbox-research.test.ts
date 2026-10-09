@@ -12,11 +12,11 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
-import { inboxResearch } from './inbox-research';
+import { inboxResearch } from './inbox-research.ts';
 
 describe('inbox research project template', () => {
   let builder: EchoTestBuilder;

@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -26,6 +26,7 @@ export const translations = [
         'plugin.name': 'File',
         'file-input.placeholder': 'Drop an image, video, or PDF here, or click to browse.',
         'pdf-error.message': 'This PDF could not be displayed.',
+        'file-size.label': '{{size}}',
         'page-of.label': '{{page}} / {{count}}',
         'first-page.label': 'First page',
         'previous-page.label': 'Previous page',
@@ -43,7 +44,6 @@ export const translations = [
         'no-preview.message': 'No preview available for this file type.',
         'file-details.label': '{{type}} · {{size}}',
         'too-large-error.message': 'File is too large. Maximum size is 4MB.',
-        'unsupported-type-error.message': 'Unsupported file type. Only images, videos, and PDFs are allowed.',
         'settings.backend.label': 'Storage backend',
         'settings.backend.description':
           'Where uploaded files are stored. Install additional plugins (e.g. WNFS) to add backends.',
@@ -57,4 +57,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

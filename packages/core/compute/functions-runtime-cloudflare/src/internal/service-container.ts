@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AnyEntity } from '@dxos/echo/Type';
+import type * as Type from '@dxos/echo/Type';
 import { EID, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { DataServiceImpl } from './data-service-impl';
-import { FeedServiceImpl } from './feed-service-impl';
-import { QueryServiceImpl } from './query-service-impl';
+import { DataServiceImpl } from './data-service-impl.ts';
+import { FeedServiceImpl } from './feed-service-impl.ts';
+import { QueryServiceImpl } from './query-service-impl.ts';
 
 /**
  * Constructs the ECHO/queue service handlers for the edge (Cloudflare) runtime. The handlers
@@ -74,7 +74,7 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void> {
+  async insertIntoQueue(queue: EID.EID, objects: Type.AnyEntity[]): Promise<void> {
     const spaceId = EID.getSpaceId(queue);
     const queueId = EID.getEntityId(queue);
     if (!spaceId || !queueId) {

@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Root } from './Root';
+import { translations } from '../../translations.ts';
+import { Root } from './Root.tsx';
 
 const meta = {
   title: 'apps/composer-crx/Root',
@@ -24,6 +24,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     name: 'story',
-    children: <div className='p-4 text-base-fg'>Themed content inside the Root wrapper.</div>,
+    children: <div className='p-4 text-fg'>Themed content inside the Root wrapper.</div>,
   },
 };

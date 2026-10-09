@@ -6,16 +6,15 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/sql/SqlClient';
 import * as Stream from 'effect/Stream';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SemanticIndexError } from './errors';
-import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
-import { FactPipeline } from './pipeline';
+import { SemanticIndexError } from './errors.ts';
+import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract.ts';
+import { FactPipeline } from './pipeline.ts';
 import {
   type DocumentFacts,
   extractFacts,
@@ -23,11 +22,11 @@ import {
   indexFactsStage,
   normalizeEntityId,
   normalizeFactsStage,
-} from './stages';
-import { FactStore, FactStoreLive } from './store';
-import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
-import { type ExtractDocument } from './types';
-import { type Fact } from './types';
+} from './stages/index.ts';
+import { FactStore, FactStoreLive } from './store/index.ts';
+import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
+import { type ExtractDocument } from './types/index.ts';
+import { type Fact } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -88,13 +87,11 @@ const QUESTION_OUTPUT = {
 };
 
 const TestLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
 );
 
 const FailingLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(failingAiService()),
 );
@@ -271,7 +268,6 @@ describe('FactPipeline', () => {
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
       const layer = FactStoreLive.layer.pipe(
-        Layer.provideMerge(SqlTransaction.layer),
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
         Layer.provideMerge(ai.layer),
       );
@@ -322,11 +318,11 @@ describe('FactPipeline', () => {
             throw new Error(`expected 1 fact, got ${facts.length}`);
           }
           const [fact] = facts;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'alice') {
             throw new Error('subject not linked');
           }
           // The original surface form is preserved as the display label (the entity id is the slug).
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.label !== 'Alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.label !== 'Alice') {
             throw new Error(`subject label not preserved: ${JSON.stringify(fact.assertion.subject)}`);
           }
           if (fact.assertion.predicate !== 'travelsTo') {
@@ -380,7 +376,7 @@ describe('FactPipeline', () => {
             throw new Error(`expected 1 grounded fact, got ${facts.length}`);
           }
           const [fact] = facts;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'alice') {
             throw new Error('the grounded fact was dropped');
           }
         });
@@ -460,7 +456,7 @@ describe('FactPipeline', () => {
             throw new Error(`fuzzy predicate query returned ${byFuzzyPredicate.length}, expected ${byEntity.length}`);
           }
           const [fact] = byEntity;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'composer') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'composer') {
             throw new Error('subject entity not linked');
           }
           if (fact.assertion.predicate !== 'discussedIn') {
@@ -479,9 +475,9 @@ describe('FactPipeline', () => {
 const testFact = (predicate: string): Fact => ({
   id: `test:doc#hash#${predicate}`,
   assertion: {
-    subject: { entity: 'alice', label: 'Alice' },
+    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
     predicate,
-    object: { entity: 'acme', label: 'Acme' },
+    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
   },
   factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },

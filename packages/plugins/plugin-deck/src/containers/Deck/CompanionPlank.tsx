@@ -4,34 +4,43 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph/hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Attention } from '@dxos/react-ui-attention';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { Companion } from '#components';
 import { useCompanions } from '#hooks';
 
-import { PlankCompanionControls } from './PlankControls';
+import { PlankCompanionControls } from './PlankControls.tsx';
 
-export type CompanionPlankProps = ThemedClassName<{
-  /** The companion node id (`<contextPlankId>/~<variant>`). */
+export type CompanionPlankProps = Util.ThemedClassName<{
+  /**
+   * The companion to show (`<plank>/~<variant>`), or the plank itself when it has no companions — the
+   * pane belongs to the plank either way, and a linked segment names its plank as its parent.
+   */
   id: string;
+  /** Render only the selected companion's content, without the tab strip. */
+  fullscreen?: boolean;
 }>;
 
 /**
- * A companion rendered as an ordinary plank (no nested splitter): its context is the preceding plank
- * (`id` minus the trailing `~<variant>` segment), whose companions populate the variant switcher.
- * Switching a tab re-points the trailing companion plank; the close control turns the deck companion
- * off. Attention is shared with the context plank via `attendableId`.
+ * A companion rendered as an ordinary plank (no nested splitter). Switching a tab re-points the
+ * trailing companion plank; the close control turns the deck companion off. Attention is shared with
+ * the context plank via `attendableId`.
+ *
+ * A plank with no companions still has a pane: the reader opened it and only the reader closes it, so
+ * the tab strip is empty and {@link Companion} says so rather than the pane collapsing.
  */
-export const CompanionPlank = ({ id, classNames }: CompanionPlankProps) => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+export const CompanionPlank = ({ id, fullscreen, classNames }: CompanionPlankProps) => {
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
-  const contextId = id.slice(0, id.lastIndexOf('/'));
-  const contextNode = useNode(graph, contextId);
+  const companion = Attention.isLinkedSegment(id);
+  const contextId = (companion ? Attention.getParentId(id) : undefined) ?? id;
+  const contextNode = GraphHooks.useNode(graph, contextId);
   const companions = useCompanions(contextId);
 
   const onValueChange = useCallback(
@@ -45,11 +54,12 @@ export const CompanionPlank = ({ id, classNames }: CompanionPlankProps) => {
     <Companion
       classNames={classNames}
       companions={companions}
-      value={id}
+      value={companion ? id : undefined}
       onValueChange={onValueChange}
       attendableId={contextId}
       companionTo={contextNode?.data}
       controls={controls}
+      headless={fullscreen}
     />
   );
 };

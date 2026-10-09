@@ -3,18 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { MobileAppBar, type MobileAppBarProps } from './MobileAppBar';
-import { MobileLayout } from './MobileLayout';
+import { MobileAppBar, type MobileAppBarProps } from './MobileAppBar.tsx';
+import { MobileLayout } from './MobileLayout.tsx';
 
 const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 

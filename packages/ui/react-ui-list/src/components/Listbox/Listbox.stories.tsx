@@ -4,296 +4,166 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { random } from '@dxos/random';
-import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/ui-theme';
+import '@dxos/react-ui/theme.css';
+import * as Input from '@dxos/react-ui/Input';
+import * as UiListbox from '@dxos/react-ui/Listbox';
+import * as Panel from '@dxos/react-ui/Panel';
+import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { translations } from '@dxos/react-ui/translations';
+import * as Typography from '@dxos/react-ui/Typography';
 
-import { useListDisclosure } from '../../hooks';
-import { Listbox } from './Listbox';
+import { Listbox } from './Listbox.tsx';
+import { listboxSelection } from './selection.ts';
 
-random.seed(1);
+const ITEMS: UiListbox.Option[] = [
+  { value: 'alpha', label: 'Alpha', description: 'The first letter' },
+  { value: 'bravo', label: 'Bravo' },
+  { value: 'charlie', label: 'Charlie', disabled: true },
+  { value: 'delta', label: 'Delta' },
+  { value: 'echo', label: 'Echo' },
+];
 
-type TestItem = { id: string; name: string; description: string };
-
-const allItems: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
-  id: `item-${i}`,
-  name: random.commerce.productName(),
-  description: random.lorem.sentences(2),
+const LONG: UiListbox.Option[] = Array.from({ length: 40 }, (_, index) => ({
+  value: `item-${index + 1}`,
+  label: `Item ${index + 1}`,
 }));
 
-//
-// Configurable basic story (Default / Thin / WithDisabled / Compact share this body).
-//
-
-type StoryArgs = {
-  /** Items to render. Defaults to the full 24-item catalog. */
-  items?: TestItem[];
-  /** Forwards to `Listbox.Viewport thin`. */
-  thin?: boolean;
-  /** Forwards to `Listbox.Viewport padding`. */
-  padding?: boolean;
-  /** Index into `items` that should render disabled. */
-  disabledIndex?: number;
-  /** Render the description line under each row's name. */
-  showDescription?: boolean;
-};
-
-const DefaultStory = ({
-  items = allItems,
-  thin = false,
-  padding = false,
-  disabledIndex,
-  showDescription = true,
-}: StoryArgs = {}) => {
-  const [selected, setSelected] = useState<string | undefined>(items[0]?.id);
-  return (
-    <Listbox.Root value={selected} onValueChange={setSelected}>
-      <Listbox.Viewport thin={thin} padding={padding}>
-        <Listbox.Content aria-label='Items'>
-          {items.map((item, i) => {
-            const disabled = i === disabledIndex;
-            return (
-              <Listbox.Item key={item.id} id={item.id} disabled={disabled}>
-                <div className='flex flex-col gap-0.5 overflow-hidden'>
-                  <div className='font-medium'>
-                    {item.name}
-                    {disabled && ' (disabled)'}
-                  </div>
-                  {showDescription && <div className='text-sm text-description line-clamp-1'>{item.description}</div>}
-                </div>
-              </Listbox.Item>
-            );
-          })}
-        </Listbox.Content>
-      </Listbox.Viewport>
-    </Listbox.Root>
-  );
-};
-
-//
-// Master/detail — list is one pane of a layout.
-//
-
-const MasterDetailStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(allItems[0].id);
-  const detail = allItems.find(({ id }) => id === selected);
-  return (
-    <div className='dx-expand grid grid-cols-[20rem_1fr] divide-x divide-separator'>
-      <Listbox.Root value={selected} onValueChange={setSelected}>
-        <Listbox.Viewport>
-          <Listbox.Content aria-label='Items'>
-            {allItems.map((item) => (
-              <Listbox.Item key={item.id} id={item.id}>
-                <div className='font-medium'>{item.name}</div>
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
-        </Listbox.Viewport>
-      </Listbox.Root>
-      <div role='region' aria-label='Detail' className='dx-expand p-4 overflow-auto'>
-        {detail && (
-          <>
-            <h2 className='text-lg font-semibold'>{detail.name}</h2>
-            <p className='text-description mt-2'>{detail.description}</p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-//
-// Toolbar + viewport siblings — Root is headless, so layout is the caller's responsibility.
-// `Panel` is the canonical chrome wrapper.
-//
-
-const WithToolbarStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(allItems[0].id);
+/**
+ * A single-selection list with icons, a description, a disabled row and the indicator; a plain list; and a long list
+ * scrolling in a `Panel` under a filtering toolbar (the current Default, WithDisabled, Plain and WithToolbar).
+ */
+const DefaultStory = ({ size = 'md' }: SizeArgs) => {
+  const [selected, setSelected] = useState<string | undefined>('alpha');
   const [filter, setFilter] = useState('');
-  const filtered = allItems.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set(['bravo']));
+  const filtered = LONG.filter((item) => item.label.toLowerCase().includes(filter.toLowerCase()));
   return (
-    <Listbox.Root value={selected} onValueChange={setSelected}>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>Filter items</Input.Label>
-              <Input.TextInput
-                placeholder='Filter…'
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Input.Root>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Listbox.Viewport>
-            <Listbox.Content aria-label='Items'>
-              {filtered.map((item) => (
-                <Listbox.Item key={item.id} id={item.id}>
-                  {item.name}
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Viewport>
-        </Panel.Content>
-      </Panel.Root>
-    </Listbox.Root>
-  );
-};
-
-//
-// Popover variant — no Viewport (caller's popover/dialog owns scroll). Uses the
-// `Listbox.ItemLabel` + `Listbox.Indicator` slots for a confirmatory checkmark.
-//
-
-type Option = { value: string; label: string };
-
-const popoverOptions: Option[] = random.helpers.multiple(
-  () => ({ value: random.string.uuid(), label: random.commerce.productName() }) satisfies Option,
-  { count: 8 },
-);
-
-const PopoverStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(popoverOptions[0]?.value);
-  return (
-    <div className='max-w-xs p-2 border-1 border-subdued-separator rounded'>
-      <Listbox.Root value={selected} onValueChange={setSelected}>
-        <Listbox.Content aria-label='Models'>
-          {popoverOptions.map((option) => (
-            <Listbox.Item
-              key={option.value}
-              id={option.value}
-              // Compact / popover styling (the previous standalone `Listbox.Option` look).
-              classNames='px-2 py-1 dx-focus-ring rounded-xs'
-            >
-              <Listbox.ItemLabel>{option.label}</Listbox.ItemLabel>
-              <Listbox.Indicator />
+    <>
+      <Listbox.Root
+        items={ITEMS}
+        value={selected}
+        onValueChange={setSelected}
+        onDeselect={() => setSelected(undefined)}
+      >
+        <Listbox.Label>Letters</Listbox.Label>
+        <Listbox.Content>
+          {ITEMS.map((item) => (
+            <Listbox.Item key={item.value} id={item.value} data-testid={`letter-${item.value}-${size}`}>
+              <Listbox.ItemIcon icon='ph--circle--regular' />
+              <Listbox.ItemText />
+              {item.description && <Listbox.ItemDescription />}
+              <Listbox.ItemIndicator />
             </Listbox.Item>
           ))}
         </Listbox.Content>
       </Listbox.Root>
-    </div>
-  );
-};
-
-//
-// Plain (non-selectable) — no value model on Root, so rows render as `role=list`/`listitem`
-// with hover but no `aria-selected`. This is the styled-content-list mode that replaces the
-// deprecated `@dxos/react-ui` `List`/`ListItem`.
-//
-
-const PlainStory = () => (
-  <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label='Items'>
-        {allItems.slice(0, 6).map((item) => (
-          <Listbox.Item key={item.id} id={item.id}>
-            <Listbox.ItemLabel>{item.name}</Listbox.ItemLabel>
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
-    </Listbox.Viewport>
-  </Listbox.Root>
-);
-
-//
-// Disclosure — expandable rows showing icon + title, each with a single full-row header
-// button (icon + title + caret on one line) that toggles a description panel via the
-// `useListDisclosure` aspect. Plain (non-selectable) list, so the header button is the only
-// focusable element per row — arrow keys move row-to-row, not into the caret.
-//
-
-const DisclosureStory = () => {
-  const disclosure = useListDisclosure({ mode: 'multi' });
-  return (
-    <Listbox.Root>
-      <Listbox.Viewport>
-        <Listbox.Content aria-label='Items'>
-          {allItems.slice(0, 8).map((item) => {
-            const { expanded, triggerProps, panelProps } = disclosure.bind(item.id);
-            return (
-              <Listbox.Item key={item.id} id={item.id} classNames='flex-col items-stretch p-0'>
-                <button
-                  {...triggerProps}
-                  type='button'
-                  className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
-                >
-                  <Icon icon='ph--package--regular' size={5} classNames='shrink-0' />
-                  <span className='flex-1 min-w-0 truncate'>{item.name}</span>
-                  <Icon
-                    icon='ph--caret-right--regular'
-                    size={4}
-                    classNames={mx('shrink-0 transition-transform', expanded && 'rotate-90')}
-                  />
-                </button>
-                {expanded && (
-                  // `ps-10` = the header's `px-3` + the icon's `size-5` + its `gap-2`, so the
-                  // description starts under the title rather than under the icon.
-                  <div {...panelProps} className='ps-10 pe-3 pb-2 text-sm text-description'>
-                    {item.description}
-                  </div>
-                )}
-              </Listbox.Item>
-            );
-          })}
+      <Typography.Text data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography.Text>
+      <Listbox.Root items={ITEMS}>
+        <Listbox.Content aria-label='Plain'>
+          {ITEMS.map((item) => (
+            <Listbox.Item key={item.value} id={item.value} />
+          ))}
         </Listbox.Content>
-      </Listbox.Viewport>
-    </Listbox.Root>
+      </Listbox.Root>
+      <UiListbox.Root items={ITEMS} {...listboxSelection({ mode: 'multi', value: picked, onValueChange: setPicked })}>
+        <UiListbox.Content aria-label='Picked'>
+          {ITEMS.map((item) => (
+            <UiListbox.Item key={item.value} item={item}>
+              <UiListbox.ItemText />
+              <UiListbox.ItemIndicator />
+            </UiListbox.Item>
+          ))}
+        </UiListbox.Content>
+      </UiListbox.Root>
+      <Typography.Text data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography.Text>
+      <div className='h-48'>
+        <Panel.Root>
+          <Panel.Header>
+            <Toolbar.Root>
+              <Input.Root
+                aria-label='Filter'
+                placeholder='Filter…'
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body>
+            <Listbox.Root items={filtered} value={undefined} onValueChange={() => {}}>
+              <Listbox.Content aria-label='Long'>
+                {filtered.map((item) => (
+                  <Listbox.Item key={item.value} id={item.value} />
+                ))}
+              </Listbox.Content>
+              <Listbox.Empty>No matches</Listbox.Empty>
+            </Listbox.Root>
+          </Panel.Body>
+        </Panel.Root>
+      </div>
+    </>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-list/Listbox',
-  render: (args) => <DefaultStory {...args} />,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
-} satisfies Meta<StoryArgs>;
+  render: DefaultStory,
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Thin: Story = {
-  args: {
-    thin: true,
-    padding: true,
-    showDescription: false,
+/**
+ * Selection is opt-in and single, keyed by the item id: the selected row reports `aria-selected`, clicking another
+ * selects it, clicking it again deselects (`onDeselect`), and the disabled row is skipped. Without a value model the
+ * list selects nothing; `listboxSelection` adapts a set of ids to multiple selection. The filter narrows the long list
+ * inside the Panel, down to its Empty part.
+ */
+export const Test: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const letters = canvas.getByRole('listbox', { name: 'Letters' });
+    await expect(within(letters).getByRole('option', { name: /Alpha/ })).toHaveAttribute('aria-selected', 'true');
+    await expect(within(letters).getByRole('option', { name: /Charlie/ })).toHaveAttribute('aria-disabled', 'true');
+
+    await userEvent.click(within(letters).getByRole('option', { name: /Delta/ }));
+    await waitFor(() => expect(canvas.getByTestId('selected-md')).toHaveTextContent('delta'));
+    await expect(within(letters).getByRole('option', { name: /Alpha/ })).toHaveAttribute('aria-selected', 'false');
+    await userEvent.click(within(letters).getByRole('option', { name: /Delta/ }));
+    await waitFor(() => expect(canvas.getByTestId('selected-md')).toHaveTextContent('None'));
+
+    letters.focus();
+    await userEvent.keyboard('{Home}{ArrowDown}{ArrowDown}{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('selected-md')).toHaveTextContent('delta'));
+
+    // Without a value model the list selects nothing but keeps the listbox machine.
+    const plain = canvas.getByRole('listbox', { name: 'Plain' });
+    await expect(within(plain).getAllByRole('option')).toHaveLength(ITEMS.length);
+    await userEvent.click(within(plain).getByRole('option', { name: 'Bravo' }));
+    await expect(within(plain).queryByRole('option', { selected: true })).toBeNull();
+
+    // `listboxSelection` adapts a set of ids to Ark's multiple selection.
+    const picked = canvas.getByRole('listbox', { name: 'Picked' });
+    await expect(picked).toHaveAttribute('aria-multiselectable', 'true');
+    await expect(within(picked).getByRole('option', { name: 'Bravo' })).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(within(picked).getByRole('option', { name: 'Delta' }));
+    await waitFor(() => expect(canvas.getByTestId('picked-md')).toHaveTextContent('bravo delta'));
+
+    const long = canvas.getByRole('listbox', { name: 'Long' });
+    await expect(within(long).getAllByRole('option')).toHaveLength(LONG.length);
+    await userEvent.type(canvas.getByRole('textbox', { name: 'Filter' }), 'Item 1');
+    await waitFor(() => expect(within(long).getAllByRole('option')).toHaveLength(11));
+    await expect(canvas.queryByText('No matches')).toBeNull();
+    await userEvent.type(canvas.getByRole('textbox', { name: 'Filter' }), 'x');
+    await waitFor(() => expect(canvas.getByText('No matches')).toBeVisible());
   },
-};
-
-export const WithDisabled: Story = {
-  args: {
-    items: allItems.slice(0, 6),
-    disabledIndex: 2,
-  },
-};
-
-export const MasterDetail: Story = {
-  render: () => <MasterDetailStory />,
-};
-
-export const WithToolbar: Story = {
-  render: () => <WithToolbarStory />,
-};
-
-export const Popover: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
-  render: () => <PopoverStory />,
-};
-
-/** Non-selectable: opt-out of the selection model — plain styled rows (role=list/listitem). */
-export const Plain: Story = {
-  render: () => <PlainStory />,
-};
-
-/** Items with icon + title + description and a per-row expand caret (disclosure aspect). */
-export const Disclosure: Story = {
-  render: () => <DisclosureStory />,
 };

@@ -11,12 +11,12 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database, DXN, Obj, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type CreateObjectOption, CreateObjectPanel, type Metadata } from './CreateObjectPanel';
+import { type CreateObjectOption, CreateObjectPanel, type Metadata } from './CreateObjectPanel.tsx';
 
 const mockOptions: CreateObjectOption[] = [
   { id: 'org.dxos.type.document', label: 'Document', plugin: 'Markdown', icon: 'ph--file-text--regular' },
@@ -34,21 +34,19 @@ const DefaultStory = () => {
 
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Body>
-            <CreateObjectPanel
-              options={mockOptions}
-              spaces={mockSpaces}
-              typename={typename}
-              target={{} as Database.Database}
-              resolve={() => mockMetadata}
-              onTypenameChange={setTypename}
-              onCreateObject={async () => {}}
-            />
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog.Overlay>
+      <Dialog.Content>
+        <Dialog.Body>
+          <CreateObjectPanel
+            options={mockOptions}
+            spaces={mockSpaces}
+            typename={typename}
+            target={{} as Database.Database}
+            resolve={() => mockMetadata}
+            onTypenameChange={setTypename}
+            onCreateObject={async () => {}}
+          />
+        </Dialog.Body>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };
@@ -88,8 +86,9 @@ export const Default: Story = {
 // "Table" contains no match for the query — impossible before plugin/description were searchable.
 export const FilterByPlugin: Story = {
   render: DefaultStory,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async () => {
+    // The dialog portals its content out of the canvas.
+    const canvas = within(document.body);
     const input = await canvas.findByTestId('create-object-form.schema-input', undefined, { timeout: 10_000 });
     await userEvent.type(input, 'Kanban');
     void expect(await canvas.findByText('Table', undefined, { timeout: 10_000 })).toBeVisible();

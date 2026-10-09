@@ -7,13 +7,13 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { FileSystemCapabilities } from '#types';
 
-import { readComposerConfig, writeComposerConfig } from '../../util';
+import { readComposerConfig, writeComposerConfig } from '../../util.ts';
 
 const FILE_SYSTEM_MIRROR_TAG = 'org.dxos.space.fileSystemMirror';
 
@@ -66,7 +66,7 @@ export class MirrorSpaceManager {
 
     const space = await this._client.spaces.create(
       {},
-      { tags: [FILE_SYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED },
+      { tags: [FILE_SYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED, origin: 'system' },
     );
     await space.waitUntilReady();
 

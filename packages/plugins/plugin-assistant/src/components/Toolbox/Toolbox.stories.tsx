@@ -13,11 +13,11 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map/testing';
 import { TablePlugin } from '@dxos/plugin-table/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 
 import { translations } from '#translations';
 
-import { Toolbox, type ToolboxProps } from './Toolbox';
+import { Toolbox, type ToolboxProps } from './Toolbox.tsx';
 
 const DefaultStory = (props: ToolboxProps) => {
   return <Toolbox {...props} classNames='h-[15rem] w-[30rem] py-1 rounded-xs border border-separator' />;
@@ -30,7 +30,7 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

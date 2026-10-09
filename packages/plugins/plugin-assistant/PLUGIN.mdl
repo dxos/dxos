@@ -16,10 +16,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|-------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`      |
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
-| `test`      | `org.dxos.mdl.test@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.1`        |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
 
 ## Types
 
@@ -48,6 +48,8 @@ type Settings
     chatView?: ChatView
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
+    codeMode?: boolean
+    reportStruggles?: boolean
     tracePanelDebug?: boolean
 ```
 
@@ -156,6 +158,15 @@ op UpdateChatName
     chat: Chat
   output: void
   effects: [echo:write, ai:infer]
+```
+
+```mdl
+op AnalyzeTurn
+  key: org.dxos.operation.assistant.analyzeTurn
+  desc: TurnReviewSkill's background end-request hook. Judges the turn that just ended with a small model and reports it when the agent struggled because of its prompting or tooling.
+  input: {}
+  output: void
+  effects: [echo:read, ai:infer, http:post]
 ```
 
 ```mdl
@@ -269,6 +280,12 @@ feat F-5: Tool Execution
   req F-5.3:
     when: AI invokes a tool during a conversation
     then: operation is dispatched via the compute runtime and result returned to the model
+  req F-5.4: Code mode is opt-in via `Settings.codeMode`, off by default; the host supplies the engine
+             through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
+  req F-5.5:
+    when: Settings.codeMode is enabled, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
+          instead of AiSession
 ```
 
 ```mdl
@@ -288,10 +305,25 @@ feat F-7: Execution Trace
   req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
 ```
 
+```mdl
+feat F-8: Agent Struggle Reports
+
+  req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
+  req F-8.2:
+    when: the chat processor issues a request with reporting enabled
+    then: TurnReviewSkill is bound to the chat; its end-request hook (op:AnalyzeTurn) runs in the background, so
+          the request settles without waiting for the review and the agent process awaits it before finishing
+  req F-8.3:
+    when: the reviewer judges the agent struggled from missing/wrong instructions or a missing/faulty tool
+    then: the trajectory is uploaded to the feedback-logs bucket under `trajectories/` and an `agent_struggle` event is captured
+          carrying the cause, model DXN, code mode, and enabled skills
+  req F-8.4: A review that fails is logged and dropped; it never surfaces to the user.
+```
+
 ## Acceptance
 
 ```mdl
-test T-1: Create chat and send message
+scenario T-1: Create chat and send message
   given: a space is open and the assistant plugin is active
   when: user creates a new Chat and sends "Hello"
   then:
@@ -301,7 +333,7 @@ test T-1: Create chat and send message
 ```
 
 ```mdl
-test T-2: Companion chat provisioning
+scenario T-2: Companion chat provisioning
   given: user opens a document with no companion chat
   when: companion panel initializes
   then:
@@ -310,7 +342,7 @@ test T-2: Companion chat provisioning
 ```
 
 ```mdl
-test T-3: Skill binding
+scenario T-3: Skill binding
   given: a chat exists
   when: user binds the "WebSearch" skill key
   then:
@@ -319,7 +351,7 @@ test T-3: Skill binding
 ```
 
 ```mdl
-test T-4: Model provider switch
+scenario T-4: Model provider switch
   given: assistant settings are open
   when: user switches provider from edge to ollama
   then:
@@ -328,7 +360,7 @@ test T-4: Model provider switch
 ```
 
 ```mdl
-test T-5: Run prompt in background
+scenario T-5: Run prompt in background
   given: a database and a prompt string are available
   when: op:RunPromptInNewChat is called with background: true
   then:
@@ -337,7 +369,7 @@ test T-5: Run prompt in background
 ```
 
 ```mdl
-test T-7: Trace panel debug toggle
+scenario T-7: Trace panel debug toggle
   given: trace panel is showing commit-graph view
   when: op:ToggleTracePanelDebug is invoked with no argument
   then:
@@ -347,11 +379,11 @@ test T-7: Trace panel debug toggle
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a chat and send a message
+test QA-1: Create a chat and send a message
   desc: The core assistant round-trip — create a Chat, send a prompt, get a streamed AI response.
   actors: both
   covers: [F-1.1, F-1.2, F-1.3, F-1.4, T-1]
@@ -359,8 +391,8 @@ flow QA-1: Create a chat and send a message
   given:
     - an identity exists
     - space: a space is open
-    - no Chat named "QA Chat" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Chat named "QA Chat" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the chat
       do: Open the assistant panel and click "New chat".
       invoke: [op:CreateChat] { name: "QA Chat" }
@@ -395,7 +427,7 @@ flow QA-1: Create a chat and send a message
 ```
 
 ```mdl
-flow QA-2: Companion chat is provisioned and bound
+test QA-2: Companion chat is provisioned and bound
   desc: op:EnsureCompanionChat + op:BindChatContext — the chat a companioned object gets automatically.
   actors: both
   covers: [F-2.1, F-2.2, F-2.3, T-2]
@@ -404,7 +436,7 @@ flow QA-2: Companion chat is provisioned and bound
     - an identity exists
     - space: a space is open
     - subject: a Document in the space that has no companion chat yet
-  test:
+  steps:
     - name: Ensure the companion chat
       do: Open the document; the companion chat panel initializes automatically.
       invoke: [op:EnsureCompanionChat] { companionTo: $given.subject }
@@ -453,8 +485,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

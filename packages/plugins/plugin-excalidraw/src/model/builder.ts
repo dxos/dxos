@@ -14,14 +14,14 @@ import {
   type Identity,
   type Scene,
   applyCommands as applyContentCommands,
-  makeBuilder,
   nextIndex,
-} from '@dxos/plugin-illustrator/model';
+} from '@dxos/diagram';
+import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 
 import { Excalidraw } from '#types';
 
-import { readScene } from './read';
-import { rebind, renderObject } from './render';
+import { readScene } from './read.ts';
+import { rebind, renderObject } from './render.ts';
 
 const handler: ContentHandler = {
   identify: (record) => {
@@ -76,7 +76,7 @@ const elementBoxesOf = (content: ContentMap) => {
   return boxes;
 };
 
-export const ExcalidrawBuilder = makeBuilder({ schema: Excalidraw.EXCALIDRAW_SCHEMA, handler });
+export const ExcalidrawBuilder = IllustratorModel.makeBuilder({ schema: Excalidraw.EXCALIDRAW_SCHEMA, handler });
 
 /**
  * Apply commands straight to a content map, bypassing ECHO — for tests and tooling that hold

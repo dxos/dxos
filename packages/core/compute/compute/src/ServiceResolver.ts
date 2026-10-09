@@ -13,8 +13,8 @@ import * as Scope from 'effect/Scope';
 
 import type { SpaceId, URI } from '@dxos/keys';
 
-import { ServiceNotAvailableError } from './errors';
-import * as Process from './Process';
+import { ServiceNotAvailableError } from './errors.ts';
+import * as Process from './Process.ts';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;
@@ -201,3 +201,5 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
 export const empty: ServiceResolver = make((tag, context) => {
   return Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
 });
+
+export { ServiceNotAvailableError } from './errors.ts';

@@ -7,13 +7,13 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 
-import { GITHUB_SOURCE } from '../constants';
-import { GitHubApi } from '../services';
-import { pushRepoUpdates, setTaskContainer, upsertMilestone, upsertTask } from './sync';
+import { GITHUB_SOURCE } from '../constants.ts';
+import { GitHubApi } from '../services/index.ts';
+import { pushRepoUpdates, setTaskContainer, upsertMilestone, upsertTask } from './sync.ts';
 
 const repo = (overrides: Partial<GitHubApi.GitHubRepo> = {}): GitHubApi.GitHubRepo => ({
   id: 1234,
@@ -377,6 +377,46 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(project.tasks).toEqual([]);
     expect(other.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
     expect(Obj.getParent(task)?.id).toBe(other.id);
+  });
+
+  test('a mirrored task filed as a sub-task leaves its parent when re-rooted', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const layer = Database.layer(db);
+    const parent = TaskSet.addTask(db, project, 'Local parent');
+
+    const task = await Effect.gen(function* () {
+      const { task } = yield* upsertTask(binding, issue(), undefined, undefined);
+      TaskSet.moveTask(project, task, { parentTask: parent });
+      yield* Database.flush();
+      yield* setTaskContainer(task, project);
+      return task;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(parent.subtasks ?? []).toEqual([]);
+    expect(project.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, task.id]);
+    expect(Obj.getParent(task)?.id).toBe(project.id);
+  });
+
+  test('a stale set entry for a task parented elsewhere does not stop it being re-rooted', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const layer = Database.layer(db);
+    const parent = TaskSet.addTask(db, project, 'Local parent');
+
+    const task = await Effect.gen(function* () {
+      const { task } = yield* upsertTask(binding, issue(), undefined, undefined);
+      TaskSet.moveTask(project, task, { parentTask: parent });
+      // The entry a concurrent peer's list write can leave behind.
+      Obj.update(project, (project) => {
+        project.tasks.push(Ref.make(task));
+      });
+      yield* Database.flush();
+      yield* setTaskContainer(task, project);
+      return task;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(parent.subtasks ?? []).toEqual([]);
+    expect(project.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, task.id]);
+    expect(Obj.getParent(task)?.id).toBe(project.id);
   });
 
   test('milestones are mirrored onto the set with a date-only target', async ({ expect }) => {

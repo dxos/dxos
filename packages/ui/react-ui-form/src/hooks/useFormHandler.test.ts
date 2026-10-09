@@ -5,9 +5,11 @@
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import { describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
-import { useFormHandler } from './useFormHandler';
+import { type LogEntry, type LogProcessor, log } from '@dxos/log';
+
+import { useFormHandler } from './useFormHandler.ts';
 
 const schema = Schema.Struct({
   name: Schema.NonEmptyString,
@@ -80,5 +82,48 @@ describe('useFormHandler reactive buffering', () => {
     act(() => rerender({ values: { name: 'Dave', city: 'SF' } }));
     expect(result.current.getValue(['name'])).toBe('Bob');
     expect(result.current.getValue(['city'])).toBe('SF');
+  });
+});
+
+describe('useFormHandler field overrides', () => {
+  test('an indeterminate path reads as unset until it is edited', ({ expect }) => {
+    const fieldOverrides = { city: { indeterminate: true }, name: { label: 'Display name' } };
+    const { result } = renderHook(() =>
+      useFormHandler<Values>({ schema, values: { name: 'Alice', city: 'NYC' }, fieldOverrides }),
+    );
+    expect(result.current.getValue(['city'])).toBeUndefined();
+    expect(result.current.getStatus(['city']).indeterminate).toBe(true);
+    expect(result.current.getStatus(['name']).indeterminate).toBe(false);
+    expect(result.current.getOverride(['name'])?.label).toBe('Display name');
+
+    // The source still holds a valid value at the indeterminate path, so the form validates.
+    act(() => result.current.onValueChange(['city'], stringAst, 'LA'));
+    expect(result.current.getValue(['city'])).toBe('LA');
+    expect(result.current.getStatus(['city']).indeterminate).toBe(false);
+    expect(result.current.isValid).toBe(true);
+  });
+});
+
+describe('useFormHandler logging', () => {
+  test('never writes field values to the log', ({ expect }) => {
+    const entries: LogEntry[] = [];
+    const capture: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    onTestFinished(log.addProcessor(capture));
+
+    // Stands in for a pasted credential; any field may hold one, so no field's value may be logged.
+    const secret = 'placeholder-secret-0123456789';
+    const { result } = renderHook(() => useFormHandler<Values>({ schema, values: { name: 'Alice', city: 'NYC' } }));
+    act(() => result.current.onValueChange(['city'], stringAst, secret));
+    act(() => result.current.onValueChange(['name'], stringAst, ''));
+    expect(result.current.getValue(['city'])).toBe(secret);
+
+    const messages = entries.map((entry) => entry.message);
+    expect(messages).toContain('onValueChange');
+    expect(messages).toContain('validate');
+    for (const entry of entries) {
+      expect(JSON.stringify({ message: entry.message, context: entry.computedContext })).not.toContain(secret);
+    }
   });
 });

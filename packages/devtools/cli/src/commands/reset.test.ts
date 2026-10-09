@@ -6,7 +6,7 @@ import { describe, test } from '@effect/vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { runDx, withIsolatedHome } from '../testing';
+import { runDx, withIsolatedHome } from '../testing/index.ts';
 
 /**
  * Subprocess tests for `dx reset`. Uses an isolated HOME so we can safely

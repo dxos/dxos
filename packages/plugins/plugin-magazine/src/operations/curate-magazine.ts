@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { collectCandidates, partitionByKeepBound } from './util';
+import { collectCandidates, partitionByKeepBound } from './util.ts';
 
 export default FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
@@ -50,7 +50,7 @@ export default FeedOperation.CurateMagazine.pipe(
       const synced = yield* syncFeeds(validFeeds).pipe(
         // A run that dies without a terminal status leaves the meter holding the statusbar forever,
         // offering a cancel control for work that is no longer happening.
-        Effect.tapError(() => Effect.sync(() => reportStatus({ message: PROGRESS_STATUS_FAILED }))),
+        Effect.tapError(() => Effect.sync(() => reportStatus({ message: Progress.STATUS_FAILED }))),
       );
       reportStatus({ current: validFeeds.length });
 
@@ -96,7 +96,7 @@ export default FeedOperation.CurateMagazine.pipe(
         }
       }
 
-      reportStatus({ current: selected.length, message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ current: selected.length, message: Progress.STATUS_COMPLETE });
 
       return { synced, curated };
     }),
@@ -182,7 +182,11 @@ const selectPostIds = (
       })),
     };
 
-    return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
+    return yield* Operation.invoke(
+      AgentOperation.RunInstructions,
+      { instructions: magazine.instructions, input },
+      { spaceId },
+    ).pipe(
       Effect.flatMap(Schema.decodeUnknownEffect(Magazine.CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catch((error) =>

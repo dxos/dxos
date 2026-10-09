@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 
@@ -16,8 +16,8 @@ import {
   DEFAULT_TRIP_GAP_DAYS,
   setPlanningWindowDays,
   setTripGapDays,
-} from '../operations/extractor/config';
-import { Settings } from '../types/Settings';
+} from '../operations/extractor/config.ts';
+import { Settings } from '../types/Settings.ts';
 
 /**
  * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and bridges the
@@ -26,7 +26,7 @@ import { Settings } from '../types/Settings';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings,
       defaultValue: (): Settings => ({}),

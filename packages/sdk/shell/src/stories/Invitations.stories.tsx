@@ -2,25 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceMember_PresenceState, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { ButtonGroup, Clipboard, IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { IdentityListItem } from '../components';
-import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
-import { translations } from '../translations';
-import { SpaceListItem } from './SpaceListItem';
+import { IdentityListItem } from '../components/index.ts';
+import { IdentityPanel, JoinPanel, SpacePanel } from '../panels/index.ts';
+import { translations } from '../translations.ts';
+import { SpaceListItem } from './SpaceListItem.tsx';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 
@@ -65,9 +68,9 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     default: {
       // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
-        <ButtonGroup classNames='mb-4'>
+        <Button.Group classNames='mb-4'>
           {/* <Tooltip content='Create Space'> */}
-          <IconButton
+          <Button.Root
             icon='ph--plus-circle--regular'
             label='Create Space'
             iconOnly
@@ -76,7 +79,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           />
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
-          <IconButton
+          <Button.Root
             icon='ph--sign-in--fill'
             label='Join Space'
             iconOnly
@@ -84,7 +87,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
             data-testid='invitations.open-join-space'
           />
           {/* </Tooltip> */}
-        </ButtonGroup>
+        </Button.Group>
       );
 
       const header = (
@@ -99,13 +102,11 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <div>
           <h1>{header}</h1>
           {spaces.length > 0 ? (
-            <Listbox.Root>
-              <Listbox.Content aria-label='Spaces'>
-                {spaces.map((space) => (
-                  <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
-                ))}
-              </Listbox.Content>
-            </Listbox.Root>
+            <ul aria-label='Spaces'>
+              {spaces.map((space) => (
+                <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
+              ))}
+            </ul>
           ) : (
             <div className='text-center'>No spaces</div>
           )}
@@ -137,19 +138,21 @@ const Invitations = () => {
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
-    <ButtonGroup classNames='mb-4'>
+    <Button.Group classNames='mb-4'>
       {/* <Tooltip content='Create Identity'> */}
-      <IconButton
+      <Button.Root
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: random.person.firstName() })}
+        onClick={() =>
+          client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: random.person.firstName() }))
+        }
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />
       {/* </Tooltip>
       <Tooltip content='Join Existing Identity'> */}
-      <IconButton
+      <Button.Root
         icon='ph--qr-code--fill'
         label='Join Existing Identity'
         iconOnly
@@ -159,7 +162,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Devices'> */}
-      <IconButton
+      <Button.Root
         icon='ph--laptop--fill'
         label='Devices'
         iconOnly
@@ -169,7 +172,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='List Spaces'> */}
-      <IconButton
+      <Button.Root
         icon='ph--planet--fill'
         label='List Spaces'
         iconOnly
@@ -179,7 +182,7 @@ const Invitations = () => {
       />
       {/* </Tooltip> */}
       {/* <ToolTip content='Toggle Network'> */}
-      <IconButton
+      <Button.Root
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
         label='Toggle Network'
         iconOnly
@@ -191,7 +194,7 @@ const Invitations = () => {
         data-testid='invitations.toggle-network'
       />
       {/* </ToolTip> */}
-    </ButtonGroup>
+    </Button.Group>
   );
 
   return (
@@ -199,9 +202,23 @@ const Invitations = () => {
       <div className='dx-base-surface rounded-sm p-2 mb-2'>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
-          <Listbox.Root>
+          <Listbox.Root
+            items={[
+              {
+                value: requirePublicKey(identity.identityKey).toHex(),
+                label: identity.profile?.displayName ?? '',
+              },
+            ]}
+          >
             <Listbox.Content aria-label='Identity'>
-              <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+              <IdentityListItem
+                identity={identity}
+                presence={
+                  networkStatus === ConnectionState.ONLINE
+                    ? SpaceMember_PresenceState.ONLINE
+                    : SpaceMember_PresenceState.OFFLINE
+                }
+              />
             </Listbox.Content>
           </Listbox.Root>
         ) : (
@@ -231,12 +248,7 @@ type Story = StoryObj<typeof meta>;
 //   This does not seem to be a problem in other browsers nor in Safari in the app.
 export const Default: Story = {
   render: () => {
-    return (
-      // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.
-      <Clipboard.Provider>
-        <Invitations />
-      </Clipboard.Provider>
-    );
+    return <Invitations />;
   },
   decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
   tags: ['test'],

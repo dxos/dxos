@@ -4,19 +4,19 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
-import { makeTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from './AiModelResolver';
-import * as AiService from './AiService';
-import * as AiTelemetry from './AiTelemetry';
+import * as AiModelResolver from './AiModelResolver.ts';
+import * as AiService from './AiService.ts';
+import * as AiTelemetry from './AiTelemetry.ts';
 
 const makeStub = (inputTokens: Record<string, number>) =>
   LanguageModel.make({
@@ -110,7 +110,7 @@ describe('AiTelemetry', () => {
       expect(transformer._tag).toEqual('Some');
     }).pipe(
       Effect.provide(
-        AiService.model(DXN.getName(DXN.make('example.com.model.stub'))).pipe(
+        AiService.languageModel(DXN.getName(DXN.make('example.com.model.stub'))).pipe(
           Layer.provide(
             AiModelResolver.buildAiService.pipe(
               Layer.provide(
@@ -167,7 +167,7 @@ describe('AiTelemetry', () => {
       const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
       yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
         Effect.provide(Layer.effect(LanguageModel.LanguageModel, stubModel)),
-        Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')),
+        Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')),
       );
       yield* Effect.promise(() => provider.forceFlush());
 
@@ -181,7 +181,7 @@ const setup = (options?: AiTelemetry.SpanTransformerOptions, model = stubModel) 
   const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
   const layer = Layer.mergeAll(
     Layer.effect(LanguageModel.LanguageModel, model),
-    Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+    Layer.succeed(Tracer.Tracer, OtelTracer.make(provider, 'test')),
     Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer(options)),
   );
   return { exporter, provider, layer };

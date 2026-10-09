@@ -5,12 +5,12 @@
 import { useAtomSet } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -30,7 +30,7 @@ export type UseToolbarProps = {
  * `ActionToolbar`) plus `viewAtom`, which the article also reads to filter the visible posts.
  */
 export const useToolbar = ({ magazine }: UseToolbarProps) => {
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(magazine);
   const viewAtom = useMemo(() => Atom.make<MagazineView>('default'), []);
@@ -83,7 +83,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
         const subscription = feed?.target;
         if (Obj.instanceOf(Subscription.Subscription, subscription)) {
           Obj.update(magazine, (magazine) => {
-            magazine.feeds = [...magazine.feeds, Ref.make(subscription)];
+            magazine.feeds.push(Ref.make(subscription));
           });
         }
       }),

@@ -12,7 +12,7 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -20,9 +20,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '#plugin';
 import { Provider } from '#types';
 
-import { makeSampleProvider } from '../../testing';
-import { translations } from '../../translations';
-import { ProviderArticle } from './ProviderArticle';
+import { makeSampleProvider } from '../../testing.ts';
+import { translations } from '../../translations.ts';
+import { ProviderArticle } from './ProviderArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -51,7 +51,7 @@ const meta: Meta<typeof DefaultStory> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Provider.Provider],
           onClientInitialized: seedSpace,

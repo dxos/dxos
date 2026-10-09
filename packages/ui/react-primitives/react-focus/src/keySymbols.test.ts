@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { SEQUENCE_SYMBOL, keySymbols } from './keySymbols';
+import { SEQUENCE_SYMBOL, keySymbols } from './keySymbols.ts';
 
 describe('keySymbols', () => {
   test('splits a chord into one cap per key', () => {
@@ -21,5 +21,9 @@ describe('keySymbols', () => {
   test('names the special keys', () => {
     expect(keySymbols('Escape')).toEqual(['⎋']);
     expect(keySymbols('shift+Enter')).toEqual(['⇧', '⏎']);
+  });
+
+  test('reads control as ctrl', () => {
+    expect(keySymbols('control+k')).toEqual(keySymbols('ctrl+k'));
   });
 });

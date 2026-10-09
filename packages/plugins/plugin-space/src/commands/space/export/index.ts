@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './export';
+export * from './export.ts';

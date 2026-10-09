@@ -9,7 +9,7 @@ import * as GraphEdge from '@dxos/graph/GraphEdge';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -19,8 +19,8 @@ import {
   GraphRenderer,
   type GraphRendererOptions,
   createGraphDrag,
-} from '../../graph';
-import { useSvgContext } from '../../hooks';
+} from '../../graph/index.ts';
+import { useSvgContext } from '../../hooks/index.ts';
 
 export type GraphController = {
   refresh: () => void;
@@ -31,7 +31,7 @@ export type GraphController = {
 /** Cursor position expressed in the same SVG model coordinates that node `x/y` live in (centered origin, post-zoom). */
 export type ModelPoint = { x: number; y: number };
 
-export type GraphProps<Node extends GraphNode.Any = any, Edge extends GraphEdge.Any = any> = ThemedClassName<
+export type GraphProps<Node extends GraphNode.Any = any, Edge extends GraphEdge.Any = any> = Util.ThemedClassName<
   Pick<
     GraphRendererOptions<Node>,
     'labels' | 'subgraphs' | 'attributes' | 'renderNode' | 'highlightOnHover' | 'applyNode' | 'edgeOpacity'

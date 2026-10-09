@@ -8,11 +8,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { URI } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import * as NavigationResolver from './NavigationResolver';
+import * as NavigationResolver from './NavigationResolver.ts';
 
 const PAGES = [{ path: 'root/settings/test', label: 'Test settings', type: 'settings' }];
 

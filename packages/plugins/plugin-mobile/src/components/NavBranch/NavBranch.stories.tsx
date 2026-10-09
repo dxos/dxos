@@ -16,16 +16,16 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { NavBranch } from './NavBranch';
+import { NavBranch } from './NavBranch.tsx';
 
 // The graph composes a child's id from its parent's path, so an extension matching a contributed node
 // has to name the full path, not the id the connector declared.
@@ -87,7 +87,7 @@ const NavBranchStoryPlugin = Plugin.define({
 }).pipe(Plugin.addModule(storyGraph), Plugin.addModule(AppCapability.translations(translations)), Plugin.make);
 
 const StoryRoot = ({ id }: { id: string }) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
 
   // Expanded during this first render, before `NavBranch` mounts, so the branch arrives with its own
   // children already resolved — the state the panel above it leaves behind in the app. The cold-mount
@@ -138,7 +138,7 @@ const meta = {
   render: ({ id }) => <StoryRoot id={id} />,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager({ plugins: [...corePlugins(), NavBranchStoryPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), NavBranchStoryPlugin()] }),
   ],
   parameters: {
     layout: 'fullscreen',

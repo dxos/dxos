@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
@@ -87,16 +87,16 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
   const settingsSchema = (isView ? KanbanSchema.KanbanViewSettingsSchema : KanbanSchema.KanbanSettingsSchema) as any;
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Form.Root
         schema={settingsSchema}
         values={initialValues}
         fieldMap={fieldMap}
         onValuesChanged={handleValuesChanged}
       >
-        <Form.FieldSet />
+        <Form.Fields />
       </Form.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

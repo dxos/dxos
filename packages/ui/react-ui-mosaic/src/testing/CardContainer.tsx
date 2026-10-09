@@ -5,8 +5,11 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Card, Icon, Popover } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 
 const DEFAULT_BLOCK_SIZE = 22;
 const MIN_BLOCK_SIZE = 8;
@@ -48,28 +51,25 @@ export const PopoverCardContainer = ({
   icon = 'ph--arrow-line-down--regular',
 }: PopoverCardContainerProps) => {
   return (
-    <Popover.Root open>
+    <Popover.Root open autoFocus={false}>
       <Popover.Trigger asChild>
-        <Icon icon={icon} />
+        <Icon.Icon icon={icon} />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-          <Popover.Viewport>
-            {/* Mirrors the deck's popover card host (plugin-deck Overlays/Popover.tsx) so card
+      <Popover.Content>
+        <Popover.Body>
+          {/* Mirrors the deck's popover card host (plugin-deck Overlays/Popover.tsx) so card
                 stories exercise the real composition: Card.Root grid + header + content. */}
-            <Card.Root border={false} classNames='dx-card-popover'>
-              <Card.Header>
-                <Card.Block>
-                  <Icon icon={icon} />
-                </Card.Block>
-                <Card.Title>Popover</Card.Title>
-              </Card.Header>
-              {children}
-            </Card.Root>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+          <Card.Root border={false} classNames='dx-card-popover'>
+            <Card.Header>
+              <Layout.Block>
+                <Icon.Icon icon={icon} />
+              </Layout.Block>
+              <Card.Title>Popover</Card.Title>
+            </Card.Header>
+            {children}
+          </Card.Root>
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };

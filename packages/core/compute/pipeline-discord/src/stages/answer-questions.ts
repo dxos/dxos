@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { type Stage } from '@dxos/pipeline';
-import { FactStore, type RDF, generateQuery } from '@dxos/pipeline-rdf';
+import { FactStore, RDF, generateQuery } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { type StoreError } from '../errors';
-import { QuestionStore } from '../stores';
+import { type StoreError } from '../errors.ts';
+import { QuestionStore } from '../stores/index.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -21,12 +21,10 @@ const AnswerShape = Schema.Struct({
   answer: Schema.optional(Schema.String),
 });
 
-const termValue = (term: RDF.Term): string => ('entity' in term ? term.entity : term.literal);
-
 const answerPrompt = (question: string, facts: readonly RDF.Fact[]): string => {
   const lines = facts.map(
     (fact) =>
-      `- ${termValue(fact.assertion.subject)} ${fact.assertion.predicate} ${termValue(fact.assertion.object)}` +
+      `- ${RDF.termValue(fact.assertion.subject)} ${fact.assertion.predicate} ${RDF.termValue(fact.assertion.object)}` +
       ` (source: ${fact.attribution.source})`,
   );
   return trim`
@@ -77,7 +75,7 @@ export const answerOpenQuestions = (
         const { value } = yield* LanguageModel.generateObject({
           schema: AnswerShape,
           prompt: answerPrompt(question.text, facts),
-        }).pipe(Effect.provide(AiService.model(DEFAULT_MODEL)));
+        }).pipe(Effect.provide(AiService.languageModel(DEFAULT_MODEL)));
         const text = value.answer?.trim();
         if (!text) {
           return false;

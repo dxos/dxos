@@ -4,18 +4,18 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { type XmlWidgetState } from '@dxos/ui-editor';
+import type * as Util from '@dxos/react-ui/Util';
+import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
@@ -29,11 +29,11 @@ import {
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
-} from './MarkdownEditorContent';
+} from './MarkdownEditorContent.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
-} from './MarkdownEditorToolbar';
+} from './MarkdownEditorToolbar.tsx';
 
 //
 // Context
@@ -74,6 +74,10 @@ export type MarkdownEditorProviderProps = Merge<
   Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectLink'>
 >;
 
+/**
+ * Builds the editor's extensions and menu options and shares them with `MarkdownEditor.Content` and
+ * `MarkdownEditor.Toolbar`. `attendableId` reaches the extensions so inline embeds nest under it.
+ */
 export const MarkdownEditorProvider = ({
   children,
   id,
@@ -94,7 +98,7 @@ export const MarkdownEditorProvider = ({
   onViewModeChange,
 }: MarkdownEditorProviderProps) => {
   // Widget portals driven by xmlTags.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
@@ -102,6 +106,7 @@ export const MarkdownEditorProvider = ({
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
+    attendableId,
     object,
     compact,
     viewMode,
@@ -210,7 +215,7 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
-type MarkdownEditorToolbarProps = ThemedClassName<
+type MarkdownEditorToolbarProps = Util.ThemedClassName<
   Omit<NaturalMarkdownToolbarProps, 'getView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 

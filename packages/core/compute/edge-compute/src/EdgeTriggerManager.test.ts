@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as TestClock from 'effect/testing/TestClock';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { vi } from 'vitest';
 
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
@@ -17,7 +17,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
-import * as EdgeTriggerManager from './EdgeTriggerManager';
+import * as EdgeTriggerManager from './EdgeTriggerManager.ts';
 
 const SPACE_ID = SpaceId.random();
 
@@ -95,7 +95,11 @@ const forkInvoke = (edgeClient: EdgeHttpClient) =>
     const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
     yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
   }).pipe(
-    Effect.provide(EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID)),
-    Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+    Effect.provide(
+      Layer.provideMerge(
+        EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID),
+        Layer.succeed(Registry.AtomRegistry, Registry.make()),
+      ),
+    ),
     Effect.forkChild,
   );

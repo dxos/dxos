@@ -11,10 +11,8 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Organization, Person } from '@dxos/types';
+import { Organization, Person, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
-
-import * as ProfileOf from './ProfileOf';
 
 /**
  * Downloads an external image URL, uploads it to the DXOS image service, and

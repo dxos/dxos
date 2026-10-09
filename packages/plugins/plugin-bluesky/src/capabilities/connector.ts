@@ -7,15 +7,15 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { BlueskyOperation } from '#operations';
 import { BlueskyTargetOptions } from '#types';
 
-import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
-import { BlueskyApi } from '../services';
+import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
 
 /**
  * OAuth scopes for Bluesky.
@@ -71,11 +71,13 @@ const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof Atp
  */
 const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(
-    Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
+    Effect.provide(BlueskyApi.fromConnection(Ref.make(connection), client.config)),
     Effect.asVoid,
     Effect.mapError(
       () =>
-        new ConnectionTestError({ message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.' }),
+        new ConnectorError.ConnectionTestError({
+          message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 

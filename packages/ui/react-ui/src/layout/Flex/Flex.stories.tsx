@@ -7,9 +7,9 @@ import React from 'react';
 
 import { type ChromaticPalette } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing';
-import { type Gap, gapClasses } from '../layout';
-import { Flex } from './Flex';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { type Gap, gapClasses } from '../layout.ts';
+import { Flex } from './Flex.tsx';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
   <div data-hue={hue} className='flex w-full dx-callout p-2 text-sm font-mono border rounded-sm'>
@@ -48,7 +48,7 @@ const GapsStory = () => (
   <Flex column gap='lg' classNames='p-2'>
     {(Object.keys(gapClasses) as Gap[]).map((gap) => (
       <Flex key={gap} gap={gap} align='center'>
-        <div className='w-28 shrink-0 font-mono text-xs text-description'>{gap}</div>
+        <div className='w-28 shrink-0 font-mono text-xs text-fg-muted'>{gap}</div>
         <Cell label='A' hue='red' />
         <Cell label='B' hue='green' />
         <Cell label='C' hue='blue' />
@@ -59,7 +59,7 @@ const GapsStory = () => (
 
 /** The empty-state shape: one centered child filling the available block size. */
 const CenterStory = () => (
-  <Flex center classNames='h-[10rem] m-2 text-subdued border border-separator rounded-sm'>
+  <Flex center classNames='h-[10rem] m-2 text-fg-subtle border border-separator rounded-sm'>
     Nothing here yet
   </Flex>
 );

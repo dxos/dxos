@@ -9,8 +9,8 @@ import { expect, waitFor } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -18,7 +18,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MapRole from '@dxos/plugin-map/MapRole';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { initHotkeys } from '@dxos/react-focus';
@@ -29,9 +29,9 @@ import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
 import { Booking, Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
-import { TripPlugin } from '../../testing';
-import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
-import { TripArticle } from './TripArticle';
+import { TripPlugin } from '../../testing.ts';
+import { SegmentArticle } from '../SegmentArticle/SegmentArticle.tsx';
+import { TripArticle } from './TripArticle.tsx';
 
 /** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
 const RoutingStoryPlugin = (service: Routing.RoutingService) =>
@@ -186,7 +186,7 @@ const baseDecorators = (
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>

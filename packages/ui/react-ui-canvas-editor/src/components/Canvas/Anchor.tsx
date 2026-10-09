@@ -8,18 +8,18 @@ import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/elem
 import React, { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { type Dimension, useCanvasContext } from '@dxos/react-ui-canvas';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties } from '../../layout';
-import { type Polygon } from '../../types';
-import { type Anchor, resizeCursor } from '../anchors';
-import { styles } from '../styles';
-import { anchorAttrs, defaultAnchorSize } from './anchor-defs';
+import { type DragDropPayload, useEditorContext } from '../../hooks/index.ts';
+import { getBoundsProperties } from '../../layout/index.ts';
+import { type Polygon } from '../../types/index.ts';
+import { type Anchor, resizeCursor } from '../anchors.ts';
+import { styles } from '../styles.tsx';
+import { anchorAttrs, defaultAnchorSize } from './anchor-defs.ts';
 
-export type AnchorProps = ThemedClassName<{
+export type AnchorProps = Util.ThemedClassName<{
   type: 'anchor' | 'resize';
   shape: Polygon;
   anchor: Anchor;

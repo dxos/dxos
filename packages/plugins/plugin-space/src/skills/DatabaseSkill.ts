@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
@@ -22,6 +24,7 @@ export const operations = [
   SpaceOperation.GetObjects,
   SpaceOperation.QueryObjects,
   SpaceOperation.QueryTypes,
+  SpaceOperation.ResolveUrl,
   SpaceOperation.UpdateObject,
   SpaceOperation.RemoveObjects,
   SpaceOperation.AddTag,
@@ -42,6 +45,8 @@ export const make = (): Skill.Skill =>
 
         # Finding things
         - Query before you write: an object the user refers to usually exists already.
+        - Given a Composer link, resolve it with the ${Operation.toolName(SpaceOperation.ResolveUrl)} tool
+          to get references to the objects it shows.
         - Query by typename to narrow, by text to search, or by neither to list everything.
         - Query returns identifiers only unless you pass includeContent; read the ones you need with
           the ${Operation.toolName(SpaceOperation.GetObjects)} tool, passing every reference in one

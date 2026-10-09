@@ -4,19 +4,19 @@
 
 import { it } from '@effect/vitest';
 import { SpanStatusCode } from '@opentelemetry/api';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { describe, expect, test } from 'vitest';
 
 import { AiTelemetry } from '@dxos/ai';
-import { makeTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 
-import type * as ObservabilityExtension from '../ObservabilityExtension';
-import { AiSpanProcessor } from './AiObservability';
+import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
+import * as AiObservability from './AiObservability.ts';
 
 const setup = async ({
   allowContent = () => true,
@@ -28,7 +28,7 @@ const setup = async ({
   const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
   const provider = new BasicTracerProvider({
     spanProcessors: [
-      new AiSpanProcessor({
+      new AiObservability.AiSpanProcessor({
         captureInference: (inference) => inferences.push(inference),
         captureTurn: (turn) => turns.push(turn),
         captureToolCall: (toolCall) => toolCalls.push(toolCall),
@@ -270,7 +270,7 @@ describe('AiSpanProcessor', () => {
     const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
     const provider = new BasicTracerProvider({
       spanProcessors: [
-        new AiSpanProcessor({
+        new AiObservability.AiSpanProcessor({
           captureInference: () => {
             throw new Error('sink exploded');
           },
@@ -383,7 +383,7 @@ const setupWired = ({
     const { BasicTracerProvider } = yield* Effect.promise(() => import('@opentelemetry/sdk-trace-base'));
     const provider = new BasicTracerProvider({
       spanProcessors: [
-        new AiSpanProcessor({
+        new AiObservability.AiSpanProcessor({
           captureInference: (inference) => events.push(inference),
           captureTurn: () => {},
           captureToolCall: () => {},
@@ -395,7 +395,7 @@ const setupWired = ({
 
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
-      Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+      Layer.succeed(Tracer.Tracer, OtelTracer.make(provider, 'test')),
       Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 

@@ -4,10 +4,10 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site';
+import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site.ts';
 
 // The Standard.site fetchers are Effects (they provide their own HTTP layer); run them for assertions.
 // `fetchStandardSite` now takes the publication site reference (`at://` or `https://`) as `url`.

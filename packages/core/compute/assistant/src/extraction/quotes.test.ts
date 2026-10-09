@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { findReferences, insertReferences } from './quotes';
+import { findReferences, insertReferences } from './quotes.ts';
 
 describe('insertReferences', () => {
   test('should replace quotes with DXN references', () => {
@@ -68,7 +68,7 @@ describe('findReferences', () => {
     const { db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] });
     const amco = db.add(Obj.make(Organization.Organization, { name: 'Amco' }));
     const sarah = db.add(Obj.make(Person.Person, { fullName: 'Sarah Johnson' }));
-    await db.flush({ indexes: true });
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const { references } = await findReferences(['Amco', 'Sarah', 'Nonexistent'], db);
     const byQuote = new Map(references.map((reference) => [reference.quote, reference.id]));
@@ -83,7 +83,7 @@ describe('findReferences', () => {
   test('deduplicates and trims nouns before lookup', async () => {
     const { db } = await builder.createDatabase({ types: [Organization.Organization] });
     db.add(Obj.make(Organization.Organization, { name: 'Amco' }));
-    await db.flush({ indexes: true });
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const { references } = await findReferences(['Amco', 'Amco', '  Amco  ', ''], db);
 

@@ -6,9 +6,9 @@ import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 
-import { ANTHROPIC_SOURCE } from '../constants';
-import * as ClaudeAgentSession from './ClaudeAgentSession';
-import * as ClaudeManagedAgent from './ClaudeManagedAgent';
+import { ANTHROPIC_SOURCE } from '../constants.ts';
+import * as ClaudeAgentSession from './ClaudeAgentSession.ts';
+import * as ClaudeManagedAgent from './ClaudeManagedAgent.ts';
 
 describe('Anthropic ids as foreign keys', () => {
   test('a new agent carries no Anthropic key until it is deployed', ({ expect }) => {

@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 
-import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
+import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format.ts';
 
 describe('format', () => {
   test('get format schema', ({ expect }) => {

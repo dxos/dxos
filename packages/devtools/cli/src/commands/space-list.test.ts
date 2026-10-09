@@ -5,7 +5,7 @@
 import { describe, test } from '@effect/vitest';
 import fs from 'node:fs';
 
-import { hasErrorTrace, runDx, withIsolatedHome } from '../testing';
+import { hasErrorTrace, runDx, withIsolatedHome } from '../testing/index.ts';
 
 /**
  * End-to-end subprocess test for `dx space list`. Uses a throwaway HOME so

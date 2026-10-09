@@ -2,16 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { createContext } from '@dxos/react-hooks';
 
 import { type FieldContext, type FormFieldStateProps } from '#types';
 
-import { type FormVariant } from '../components/Form/Form.theme';
-import { type FormHandler } from './useFormHandler';
+import { type FormHandler } from './useFormHandler.ts';
+
+/** Visual variants of a form: `settings` is the two-column settings-panel layout. */
+export type FormVariant = 'default' | 'settings';
 
 //
 // Context
@@ -30,6 +34,9 @@ export type FormContextValue<T extends AnyProperties = any> = {
 
   /** Visual variant applied across the form's parts (see Form.theme). */
   variant?: FormVariant;
+
+  /** Editor extensions for the form's markdown fields, beyond their own (what a host's plugins contribute). */
+  markdownExtensions?: Extension[];
 } & FieldContext;
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');

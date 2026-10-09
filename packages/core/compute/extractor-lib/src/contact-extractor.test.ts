@@ -7,10 +7,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { extractContact } from './contact-extractor';
+import { extractContact } from './contact-extractor.ts';
 
 describe('extractContact', () => {
   let builder: EchoTestBuilder;

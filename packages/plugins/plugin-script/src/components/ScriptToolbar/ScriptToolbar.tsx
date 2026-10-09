@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Script from '@dxos/compute/Script';
-import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -16,6 +13,8 @@ import {
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import {
   type CreateDeployOptions,
@@ -32,9 +31,9 @@ export type ScriptToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
   state: ScriptToolbarStateStore;
 };
 
-export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
+export const ScriptToolbar = Util.composable<HTMLDivElement, ScriptToolbarProps>(
   ({ script, attendableId, role, state, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const options = useDeployDeps({ script });
     const menuCreator = useMemo(
       () => createToolbarActions({ state, script, t, ...options }),
@@ -43,9 +42,7 @@ export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
     const menuActions = useMenuActions(menuCreator);
 
     return (
-      <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
-        <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
-      </ElevationProvider>
+      <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
     );
   },
 );

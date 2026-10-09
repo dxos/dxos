@@ -5,14 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Event as EventType } from '@dxos/types';
 import { automerge } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { Editor } from '../Editor';
+import { Editor } from '../Editor/index.ts';
 
-export type EventBodyEditorProps = ThemedClassName<{
+export type EventBodyEditorProps = Util.ThemedClassName<{
   event: EventType.Event;
   /** Render markdown decorations; pass `false` for plain text. */
   markdown?: boolean;

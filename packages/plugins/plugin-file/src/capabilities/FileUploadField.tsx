@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { FileInput } from '#components';
@@ -33,5 +33,5 @@ export const FileUploadField = ({ data, onValueChange }: FileUploadFieldProps) =
     return null;
   }
 
-  return <FileInput schema={data.schema} onChange={handleChange} />;
+  return <FileInput onChange={handleChange} />;
 };

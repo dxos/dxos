@@ -5,6 +5,8 @@ mod audio_input;
 mod asset_cache;
 pub mod channel;
 #[cfg(desktop)]
+mod last_url;
+#[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
@@ -12,8 +14,13 @@ mod window_state;
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+mod passkey;
 #[cfg(target_os = "macos")]
 mod spotlight;
+mod web_process;
+#[cfg(target_os = "linux")]
+mod webkit_features;
 
 #[cfg(desktop)]
 use oauth::OAuthServerState;
@@ -36,6 +43,12 @@ pub fn webview_port(identifier: &str) -> u16 {
     }
 }
 
+/// Root of the app the desktop webview loads.
+#[cfg(desktop)]
+fn app_root_url(identifier: &str) -> tauri::Url {
+    format!("http://localhost:{}", webview_port(identifier)).parse().expect("app root URL is valid")
+}
+
 /// Whether the asset server can still claim this channel's port. `tauri-plugin-localhost` only panics
 /// on a background thread when its bind fails, leaving the webview to load whatever else answers there
 /// — so the port is probed before the plugin is registered rather than after it has failed.
@@ -54,11 +67,47 @@ fn port_available(port: u16) -> bool {
     }
 }
 
+/// Navigates a webview whose WebContent process died back to its page. `reload()` would run as a
+/// back/forward load that accepts stale cached HTML, and wry's `url()` unwraps `WKWebView.URL`, which can
+/// be nil once the process is gone, so that case falls back to the app root.
+#[cfg(target_os = "macos")]
+fn recover_webview<R: tauri::Runtime>(webview: &tauri::Webview<R>) -> tauri::Result<()> {
+    use tauri::Manager;
+
+    let current = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| webview.url()))
+        .ok()
+        .and_then(Result::ok);
+    let url = match current {
+        Some(url) => url,
+        None => app_root_url(&webview.app_handle().config().identifier),
+    };
+    webview.navigate(url)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    web_process::mark_host_start();
+
+    // Installed before anything can panic; the message reaches the log once `setup` has registered it.
+    let default_panic_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        log::error!("panic: {info}");
+        default_panic_hook(info);
+    }));
+
     // `tauri.conf.json` is compiled in, so the identifier here is the one `.github/actions/cn-config`
     // rewrote for this channel — the only thing a running build knows about which channel it is.
     let context = tauri::generate_context!();
+
+    // App data and WebKit storage are keyed by the identifier, so an automation build under a shipped
+    // channel's identifier would drive that channel's real profile.
+    #[cfg(feature = "webdriver")]
+    assert_eq!(
+        channel::ReleaseChannel::from_identifier(&context.config().identifier),
+        channel::ReleaseChannel::Test,
+        "the webdriver feature needs the test identifier (`--config src-tauri/tauri.test.conf.json`), not {}",
+        context.config().identifier,
+    );
 
     #[cfg(all(not(debug_assertions), desktop))]
     let release_channel = channel::ReleaseChannel::from_identifier(&context.config().identifier);
@@ -66,6 +115,11 @@ pub fn run() {
     let localhost_port = release_channel.localhost_port();
     #[cfg(all(not(debug_assertions), desktop))]
     let port_taken = !port_available(localhost_port);
+
+    #[cfg(target_os = "macos")]
+    let native_passkeys = passkey::available(&context.config().identifier);
+    #[cfg(target_os = "ios")]
+    let native_passkeys = passkey::ios::bridge::available();
 
     let builder = tauri::Builder::default()
         .manage(asset_cache::AssetCacheState::default())
@@ -85,8 +139,19 @@ pub fn run() {
     let builder = if port_taken {
         builder
     } else {
-        builder.plugin(tauri_plugin_localhost::Builder::new(localhost_port).build())
+        builder.plugin(
+            tauri_plugin_localhost::Builder::new(localhost_port)
+                // `no-cache` still lets WebKit store the page, and a crash reload serves it stale (an older
+                // build whose chunks this binary answers with index.html). No validators are sent, so no
+                // load reuses the cache today.
+                .on_request(|_request, response| response.add_header("Cache-Control", "no-store"))
+                .build(),
+        )
     };
+
+    // Listens on `TAURI_WEBDRIVER_PORT` (default 4445) on loopback.
+    #[cfg(feature = "webdriver")]
+    let builder = builder.plugin(tauri_plugin_wdio_webdriver::init());
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -96,9 +161,18 @@ pub fn run() {
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]
-    let builder = builder
-        .plugin(tauri_nspanel::init())
-        .plugin(tauri_plugin_macos_passkey::init());
+    let builder = builder.plugin(tauri_nspanel::init());
+
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    let builder = builder.plugin(passkey::init(native_passkeys));
+
+    // Unregistered, a stray `invoke` fails at once instead of opening a sheet that never returns.
+    #[cfg(target_os = "macos")]
+    let builder = if native_passkeys {
+        builder.plugin(tauri_plugin_macos_passkey::init())
+    } else {
+        builder
+    };
 
     // Initialize haptics plugin for mobile platforms.
     // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).
@@ -170,6 +244,7 @@ pub fn run() {
         xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
+        web_process::take_web_process_terminations,
     ]);
 
     #[cfg(mobile)]
@@ -186,6 +261,11 @@ pub fn run() {
         audio_input::start_microphone_bridge,
         #[cfg(target_os = "ios")]
         audio_input::stop_microphone_bridge,
+        #[cfg(target_os = "ios")]
+        passkey::ios::bridge::login_passkey,
+        #[cfg(target_os = "ios")]
+        passkey::ios::bridge::register_passkey,
+        web_process::take_web_process_terminations,
     ]);
 
     #[cfg(desktop)]
@@ -199,8 +279,10 @@ pub fn run() {
     let builder = builder.on_web_content_process_terminate(|webview| {
         let window = webview.window();
         let visible = window.is_visible().unwrap_or(true) && !window.is_minimized().unwrap_or(false);
+        log::warn!("web process terminated ({}, visible={visible})", webview.label());
+        web_process::record(webview.label(), visible);
         if webview.label() != MAIN_WINDOW_LABEL || visible {
-            if let Err(error) = webview.reload() {
+            if let Err(error) = recover_webview(webview) {
                 log::error!("reload after web process termination failed ({}): {error}", webview.label());
             }
         } else {
@@ -211,13 +293,26 @@ pub fn run() {
 
     builder
         .setup(move |app| {
-            // Initialize logging in debug mode.
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
+            // Every build logs, iOS included, since the host sees failures the page cannot report. The
+            // default 40 KB single file would lose the failed session's record as soon as the app restarts.
+            app.handle().plugin(
+                tauri_plugin_log::Builder::default()
+                    .level(log::LevelFilter::Info)
+                    .max_file_size(5_000_000)
+                    .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
+                    .build(),
+            )?;
+
+            #[cfg(target_os = "macos")]
+            if !native_passkeys {
+                log::warn!(
+                    "native passkeys disabled: the signed application identifier does not name {}",
+                    app.config().identifier
+                );
+            }
+            #[cfg(target_os = "ios")]
+            if !native_passkeys {
+                log::warn!("native passkeys disabled: the passkey bridge is not built into this app");
             }
 
             // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).
@@ -255,15 +350,26 @@ pub fn run() {
                     return Ok(());
                 }
 
-                let app_port = webview_port(&app.config().identifier);
-                let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
-                let main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
+                let root = app_root_url(&app.config().identifier);
+                let url = last_url::initial_url(app.handle(), root.clone());
+                let window_builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
                     .title("Composer")
                     .inner_size(1600.0, 1200.0)
                     .resizable(true)
-                    .fullscreen(false)
+                    .fullscreen(false);
+                // The overlay title bar is an NSWindow style; the builder has no such methods elsewhere.
+                #[cfg(target_os = "macos")]
+                let window_builder = window_builder
                     .hidden_title(true)
-                    .title_bar_style(tauri::TitleBarStyle::Overlay)
+                    .title_bar_style(tauri::TitleBarStyle::Overlay);
+                // An unbundled binary shares WebKit's container (named after the executable) with every other
+                // one, so an automation build keeps its web storage in a store of its own that a reset can
+                // delete: `WebsiteDataStore/6175746f-6375-6500-0000-000000000001` there.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                let window_builder = window_builder.data_store_identifier([
+                    0x61, 0x75, 0x74, 0x6f, 0x63, 0x75, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                ]);
+                let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
                     // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
@@ -280,12 +386,66 @@ pub fn run() {
                     .devtools(true)
                     .build()?;
 
+                // A covered window otherwise stops rendering and reports itself hidden, which stalls a driven
+                // take whenever another window is in front. WKWebView SPI; skipped where WebKit lacks it.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                main_window.with_webview(|webview| unsafe {
+                    use std::ffi::{c_char, c_void};
+                    extern "C" {
+                        fn sel_registerName(name: *const c_char) -> *const c_void;
+                        fn objc_msgSend();
+                    }
+                    let view = webview.inner();
+                    let responds: unsafe extern "C" fn(*mut c_void, *const c_void, *const c_void) -> bool =
+                        std::mem::transmute(objc_msgSend as *const ());
+                    let set: unsafe extern "C" fn(*mut c_void, *const c_void, bool) =
+                        std::mem::transmute(objc_msgSend as *const ());
+                    let selector = sel_registerName(c"_setWindowOcclusionDetectionEnabled:".as_ptr());
+                    if responds(view, sel_registerName(c"respondsToSelector:".as_ptr()), selector) {
+                        set(view, selector, false);
+                    }
+                })?;
+
+                // Before anything runs in the page: the client opens its storage during boot.
+                #[cfg(target_os = "linux")]
+                main_window.with_webview(|webview| {
+                    use webkit2gtk::WebViewExt;
+                    let view = webview.inner();
+                    webkit_features::enable(&view);
+                    // Through WebKit, not `navigate`, which dispatches to this (main) thread and would wait on itself.
+                    view.reload();
+                    // Tauri's termination hook is macOS-only; without this a dead WebContent process freezes the window.
+                    const COOLDOWN: std::time::Duration = std::time::Duration::from_secs(60);
+                    let last_reload = std::rc::Rc::new(std::cell::Cell::new(None::<std::time::Instant>));
+                    view.connect_web_process_terminated(move |view, reason| {
+                        web_process::record(MAIN_WINDOW_LABEL, true);
+                        // At most one reload a minute: a page that dies straight after its reload would crash-loop.
+                        let wait = last_reload.get().map_or(std::time::Duration::ZERO, |at| COOLDOWN.saturating_sub(at.elapsed()));
+                        log::warn!("web process terminated ({reason:?}); reloading in {}s", wait.as_secs());
+                        let (view, last_reload) = (view.clone(), last_reload.clone());
+                        glib::timeout_add_local_once(wait, move || {
+                            last_reload.set(Some(std::time::Instant::now()));
+                            view.reload();
+                        });
+                    });
+                })?;
+
                 if let Some(saved_state) = WindowState::load(&app.handle()) {
                     if let Err(e) = saved_state.apply_to_window(&main_window) {
                         log::warn!("Failed to restore window state: {}", e);
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+
+                // Saved on blur as well as close, so a crash or force quit still reopens a recent page.
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if matches!(event, tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Focused(false)) {
+                            last_url::save(&window, &root);
+                        }
+                    });
+                }
 
                 #[cfg(target_os = "macos")]
                 {
@@ -294,7 +454,7 @@ pub fn run() {
                         if matches!(event, tauri::WindowEvent::Focused(true))
                             && RELOAD_ON_FOCUS.swap(false, std::sync::atomic::Ordering::SeqCst)
                         {
-                            if let Err(error) = window.reload() {
+                            if let Err(error) = recover_webview(AsRef::<tauri::Webview<_>>::as_ref(&window)) {
                                 log::error!("deferred reload after web process termination failed: {error}");
                             }
                         }
@@ -326,6 +486,16 @@ pub fn run() {
 
             Ok(())
         })
-        .run(context)
-        .expect("error while running tauri application");
+        .build(context)
+        .expect("error while building tauri application")
+        .run(|_app, _event| {
+            // Quit from the menu, Cmd+Q and the updater's relaunch exit without closing the window first.
+            #[cfg(desktop)]
+            if let tauri::RunEvent::ExitRequested { .. } = _event {
+                use tauri::Manager;
+                if let Some(window) = _app.get_webview_window(MAIN_WINDOW_LABEL) {
+                    last_url::save(&window, &app_root_url(&_app.config().identifier));
+                }
+            }
+        });
 }

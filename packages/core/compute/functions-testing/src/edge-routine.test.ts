@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -20,11 +20,11 @@ import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ErrorCodec } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { sync } from './testing';
+import { sync } from './testing/index.ts';
 
 /**
  * Cron trigger on EDGE runs {@link RunInstructions} for a {@link Routine} that uses the Database
@@ -76,7 +76,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         skills: [Ref.make(databaseSkill)],
       }),
     );
-    const fn = Operation.serialize(RunInstructions);
+    const fn = Operation.serialize(AgentOperation.RunInstructions);
     dbg(Obj.toJSON(fn));
 
     const trigger = space.db.add(

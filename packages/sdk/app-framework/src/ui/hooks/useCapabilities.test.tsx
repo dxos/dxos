@@ -10,15 +10,15 @@ import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { Capability, Plugin } from '../../core';
-import { ProcessManagerPlugin } from '../../plugin-process-manager';
-import { createTestApp } from '../../testing/harness';
-import { render } from '../../testing/react';
-import { useOperationHandler } from './useCapabilities';
+import { ActivationEvents, Capabilities } from '../../common/index.ts';
+import { Capability, Plugin } from '../../core/index.ts';
+import * as ProcessManagerPlugin from '../../plugin-process-manager/ProcessManagerPlugin.ts';
+import { createTestApp } from '../../testing/harness.ts';
+import { render } from '../../testing/react.tsx';
+import { useOperationHandler } from './useCapabilities.ts';
 
 const testMeta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.test.useOperationHandler'),
@@ -60,7 +60,7 @@ type MappedAddFn = ReturnType<typeof useMappedAdd>;
 
 describe('useCapabilities', () => {
   test('useOperationHandler resolves a lazy handler to a callable effect fn', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin(), HandlerPlugin()] });
+    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin.make(), HandlerPlugin()] });
     let handler: AddFn | undefined;
     let view!: RenderResult;
     // Async act: RTL's sync-act render leaves an initial-mount suspension unresumable in jsdom.
@@ -79,7 +79,7 @@ describe('useCapabilities', () => {
   });
 
   test('useOperationHandler with map binds callback args to the operation input', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin(), HandlerPlugin()] });
+    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin.make(), HandlerPlugin()] });
     let handler: MappedAddFn | undefined;
     let view!: RenderResult;
     await act(async () => {

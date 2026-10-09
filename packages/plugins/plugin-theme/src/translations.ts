@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 // TODO(burdon): Rename translationKey.
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -34,6 +34,16 @@ export const translations = [
         'open-plugin-registry.label': 'Open plugin registry',
         'pending.label': 'Pending',
         'more-options.label': 'More options',
+        'settings-scope.synced.label': 'Shared across your devices',
+        'settings-scope.local.label': 'Only on this device',
+        'settings-scope.conflict-dialog.title': 'These settings differ',
+        'settings-scope.conflict-dialog.description_one':
+          'One setting differs between this device and your other devices. Whichever you keep replaces the other.',
+        'settings-scope.conflict-dialog.description_other':
+          '{{count}} settings differ between this device and your other devices. Whichever you keep replaces the others.',
+        'settings-scope.conflict-dialog.cancel.label': 'Cancel',
+        'settings-scope.conflict-dialog.keep-local.label': "Keep this device's",
+        'settings-scope.conflict-dialog.keep-shared.label': 'Keep shared',
         'not-found.heading': 'Not Found',
         'not-found.description': "This object doesn't exist or is no longer available.",
         'empty-space.message': 'Nobody else is in this space… yet.',
@@ -88,6 +98,7 @@ export const translations = [
         'back.label': 'Back',
         'next.label': 'Next',
         'open.label': 'Open',
+        'add-to-collection.label': 'Add to collection',
         'close.label': 'Close',
         'auth-choices.label': 'Choose an identity',
         'create-identity.label': 'Create an identity',
@@ -149,4 +160,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

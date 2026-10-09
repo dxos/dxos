@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
-import { type Mutable } from '../common/proxy';
-import { EntityKindSchema } from '../common/types';
-import { FormatAnnotation, TypeFormat } from '../Format';
+import { type Mutable } from '../common/proxy/index.ts';
+import { EntityKindSchema } from '../common/types/index.ts';
+import { FormatAnnotation, TypeFormat } from '../Format/index.ts';
 
 //
 // JSON Schema
@@ -55,6 +55,12 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * {@link PropertyMeta} annotations get serialized here.
    */
   meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+
+  /**
+   * Render a referenced object's fields inline in forms.
+   * Mapped from {@link FormInlineAnnotationId}.
+   */
+  formInline: Schema.optional(Schema.Boolean),
 
   /**
    * @deprecated

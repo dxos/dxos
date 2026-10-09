@@ -8,15 +8,15 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import { FactPipeline, FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { type FactIndexer, extractFactsStage } from './extract-facts';
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from './facts';
+import { type FactIndexer, extractFactsStage } from './extract-facts.ts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from './facts.ts';
 
 // One fact per message from the mock LLM; proves the stage persists into the store.
 const LLM_OUTPUT = {
@@ -66,8 +66,8 @@ describe('extractFactsStage', () => {
     expect(facts.length).toBeGreaterThan(0);
     const { object } = facts[0].assertion;
     // Extraction always produces an entity-ref Term (never a literal), so `label` is present here.
-    expect('entity' in object).toBe(true);
-    expect('entity' in object && object.label).toBe('Q2 report');
+    expect(object.kind).toBe('entity');
+    expect(object.kind === 'entity' && object.label).toBe('Q2 report');
     expect(facts[0].factuality.value).toBe('CT+');
     expect(facts[0].attribution.source).toBe('<m-1@enron.com>');
   });

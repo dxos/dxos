@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import { ActivationEvents, Capabilities } from '../../../common';
-import { ActivationEvent, type CapabilityManager, type PluginManager } from '../../../core';
-import { type Definition } from './types';
+import { ActivationEvents, Capabilities } from '../../../common/index.ts';
+import { ActivationEvent, type CapabilityManager, type PluginManager } from '../../../core/index.ts';
+import { type Definition } from './types.ts';
 
 const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 

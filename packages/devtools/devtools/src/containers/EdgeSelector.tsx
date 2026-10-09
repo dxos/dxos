@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { EDGE_URLS, SaveConfig, Storage } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 
-import { Select } from '../components';
-import { getTarget } from './VaultSelector';
+import { Select } from '../components/index.ts';
+import { getTarget } from './VaultSelector.tsx';
 
 const edgeServers = [
   { value: EDGE_URLS.local, label: 'Local' },
@@ -30,6 +30,8 @@ export const EdgeSelector = () => {
           runtime: {
             services: {
               edge: { url: value },
+              // EDGE checks accounts against the hub it serves under `/hub`, so the hub entry moves with it.
+              hub: { url: `${value}/hub/` },
             },
           },
         },

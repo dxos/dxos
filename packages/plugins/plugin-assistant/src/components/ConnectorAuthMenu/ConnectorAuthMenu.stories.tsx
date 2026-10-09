@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -19,8 +19,8 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ActionToolbar, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -28,7 +28,7 @@ import { Expando } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { ConnectorAuthMenu } from './ConnectorAuthMenu';
+import { ConnectorAuthMenu } from './ConnectorAuthMenu.tsx';
 
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
@@ -86,8 +86,8 @@ const TOOLBAR_NODE_ID = 'story-toolbar-target';
 const ToolbarStory = () => {
   const [space] = useSpaces();
   const registry = useContext(RegistryContext);
-  const runAction = useActionRunner();
-  const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const runAction = GraphHooks.useActionRunner();
+  const allConnectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(space?.db, Filter.type(Connection.Connection));
   const targets = useQuery(space?.db, Filter.type(Expando.Expando));
   const target = targets[0];
@@ -132,7 +132,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(ConnectorSpec.Connector, testConnectors)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>

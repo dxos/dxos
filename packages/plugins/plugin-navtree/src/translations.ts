@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -17,10 +17,11 @@ export const translations = [
         'node-actions-menu-invoker.label': 'More options',
         'tree-item-actions.label': 'More actions',
         'button-back.button': 'Back to Space',
+        'pending-workspace.label': 'Loading workspace…',
         'workspace-unavailable.heading': 'Workspace unavailable',
         'workspace-unavailable.description':
           'You don’t have this workspace, or it no longer exists. Select one of your workspaces to continue.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

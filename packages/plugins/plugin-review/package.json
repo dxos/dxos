@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-review",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Comments plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,19 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -76,18 +78,12 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./AgentIdentity": {
       "source": "./src/types/AgentIdentity.ts",
       "types": "./dist/types/src/types/AgentIdentity.d.ts",
       "import": "./dist/lib/AgentIdentity.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./CommentCapabilities": {
       "source": "./src/types/CommentCapabilities.ts",
       "types": "./dist/types/src/types/CommentCapabilities.d.ts",
@@ -98,6 +94,22 @@
       "types": "./dist/types/src/types/CommentOperation.d.ts",
       "import": "./dist/lib/CommentOperation.mjs"
     },
+    "./CommentOperationHandlerSet": {
+      "source": "./src/operations/CommentOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/CommentOperationHandlerSet.d.ts",
+      "import": "./dist/lib/CommentOperationHandlerSet.mjs"
+    },
+    "./CommentSkill": {
+      "source": "./src/skills/CommentSkill.ts",
+      "types": "./dist/types/src/skills/CommentSkill.d.ts",
+      "import": "./dist/lib/CommentSkill.mjs"
+    },
+    "./Containers": {
+      "source": "./src/Containers.ts",
+      "types": "./dist/types/src/Containers.d.ts",
+      "import": "./dist/lib/ns/Containers.mjs"
+    },
+    "./package.json": "./package.json",
     "./ReviewCapabilities": {
       "source": "./src/types/ReviewCapabilities.ts",
       "types": "./dist/types/src/types/ReviewCapabilities.d.ts",
@@ -118,15 +130,10 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./CommentOperationHandlerSet": {
-      "source": "./src/operations/CommentOperationHandlerSet.ts",
-      "types": "./dist/types/src/operations/CommentOperationHandlerSet.d.ts",
-      "import": "./dist/lib/CommentOperationHandlerSet.mjs"
-    },
-    "./CommentSkill": {
-      "source": "./src/skills/CommentSkill.ts",
-      "types": "./dist/types/src/skills/CommentSkill.d.ts",
-      "import": "./dist/lib/CommentSkill.mjs"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -174,7 +181,6 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/halo-react": "workspace:*",
@@ -186,12 +192,13 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
+    "@dxos/react-ui-trace": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
@@ -203,6 +210,7 @@
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",

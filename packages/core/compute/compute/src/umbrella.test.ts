@@ -6,7 +6,6 @@ import { describe, test } from 'vitest';
 
 import {
   Credential,
-  FunctionNotFoundError,
   Instructions,
   Operation,
   OperationHandlerSet,
@@ -21,7 +20,7 @@ import {
   Trace,
   Trigger,
   TriggerEvent,
-} from './index';
+} from './index.ts';
 
 describe('umbrella re-exports', () => {
   test('top-level re-exports preserve source-package namespace nesting', ({ expect }) => {
@@ -47,7 +46,7 @@ describe('umbrella re-exports', () => {
     expect(StorageService).toBeDefined();
     expect(Credential).toBeDefined();
 
-    // Error classes exported top-level.
-    expect(FunctionNotFoundError).toBeDefined();
+    // Errors live in the namespace that owns them.
+    expect(Operation.FunctionNotFoundError).toBeDefined();
   });
 });

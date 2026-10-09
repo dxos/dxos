@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
-import { buildUnionFormSchema, mergeJsonSchemas } from './unionSchema';
+import { buildUnionFormSchema, mergeJsonSchemas } from './unionSchema.ts';
 
 const propertyNames = (ast: SchemaAST.AST): string[] => {
   // v4 has no `Transformation` node: a transformed schema carries an encoding chain instead.

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { AccessToken } from '@dxos/link';
@@ -14,7 +14,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { CodeSettings } from './CodeSettings';
+import { CodeSettings } from './CodeSettings.tsx';
 
 // The container reads and writes the contributed settings entry, so the story owns one per render.
 const DefaultStory = () => {

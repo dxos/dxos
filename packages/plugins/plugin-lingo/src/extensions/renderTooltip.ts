@@ -5,8 +5,8 @@
 import { Domino } from '@dxos/ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
-import { type VocabularyLookup, normalizeToken } from './deck-segments';
-import { type SegmentTooltipProps } from './segments';
+import { type VocabularyLookup, normalizeToken } from './deck-segments.ts';
+import { type SegmentTooltipProps } from './segments.ts';
 
 export type TooltipHandlers = {
   t: (key: string, options?: Record<string, unknown>) => string;
@@ -61,10 +61,9 @@ export const createTooltipRenderer =
       const label = t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label');
       root.append(
         Domino.of('button')
-          // The class list `IconButton` emits for a labelled ghost button (`buttonTheme.root` plus
-          // `iconButtonTheme.root`'s non-icon-only gap); geometry comes from the density knobs on
+          // The classes a labelled ghost `Button` renders; geometry comes from the size scope on
           // `.dx-button`, so no padding utility belongs here.
-          .classNames('dx-button dx-focus-ring group gap-1 [&_span]:truncate', 'gap-1.5', 'mt-1 self-start')
+          .classNames('dx-control dx-button dx-focus-ring group [&_span]:truncate', 'mt-1 self-start')
           .attributes({ 'type': 'button', 'data-variant': 'ghost', 'aria-label': label })
           .append(Domino.svg('ph--plus--regular'))
           .append(Domino.of('span').text(label))

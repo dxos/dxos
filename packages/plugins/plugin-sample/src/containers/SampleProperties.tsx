@@ -12,8 +12,10 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { SampleItem, SampleOperation } from '#types';
@@ -23,19 +25,19 @@ export type SamplePropertiesProps = {
 };
 
 export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleRandomize = useCallback(() => {
     void invokePromise(SampleOperation.Randomize, { item: subject });
   }, [invokePromise, subject]);
 
   return (
-    <Input.Root>
-      <Input.Label>{t('randomize-item.label')}</Input.Label>
-      <Input.DescriptionAndValidation>{t('randomize-item-description.label')}</Input.DescriptionAndValidation>
-      <Button onClick={handleRandomize}>{t('randomize-item.label')}</Button>
-    </Input.Root>
+    <Field.Root>
+      <Field.Label>{t('randomize-item.label')}</Field.Label>
+      <Field.HelperText>{t('randomize-item-description.label')}</Field.HelperText>
+      <Button.Root onClick={handleRandomize}>{t('randomize-item.label')}</Button.Root>
+    </Field.Root>
   );
 };
 

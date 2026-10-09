@@ -8,10 +8,10 @@ import { Leva } from 'leva';
 import React, { useMemo, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
-import { useAsyncState } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { loadTopology } from '../../data';
+import { loadTopology } from '../../data.ts';
 import {
   type GlobeController,
   type Level,
@@ -23,11 +23,11 @@ import {
   useTopology,
   useTour,
   useWheel,
-} from '../../hooks';
-import { type LatLngLiteral } from '../../types';
-import { type StyleSet, closestPoint } from '../../util';
-import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe';
+} from '../../hooks/index.ts';
+import { type LatLngLiteral } from '../../types.ts';
+import { type StyleSet, closestPoint } from '../../util/index.ts';
+import { type ControlProps } from '../Toolbar/index.ts';
+import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe.tsx';
 
 const defaultStyles: StyleSet = {
   water: {
@@ -151,15 +151,15 @@ const DefaultStory = ({
   level = '110m',
 }: StoryArgs) => {
   const [controller, setController] = useState<GlobeController | null>(null);
-  const [dots] = useAsyncState(async () => {
+  const [dots] = Hooks.useAsyncState(async () => {
     const points = (await import('../../../data/countries-dots-3.ts')).default;
     return {
       type: 'Topology',
       objects: { dots: points },
     } as any as Topology;
   });
-  const [topology] = useAsyncState(() => loadTopology(level), [level]);
-  const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
+  const [topology] = Hooks.useAsyncState(() => loadTopology(level), [level]);
+  const [airports] = Hooks.useAsyncState(async () => (await import('../../../data/airports.ts')).default);
 
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
@@ -248,7 +248,7 @@ const meta = {
 export default meta;
 
 const Earth = ({ level }: { level: Level }) => {
-  const [topology] = useAsyncState(() => loadTopology(level), [level]);
+  const [topology] = Hooks.useAsyncState(() => loadTopology(level), [level]);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -352,6 +352,18 @@ export const Mercator = () => {
       <Globe.Viewport>
         <Globe.Canvas topology={topology} projection='mercator' styles={monochrome} />
         <Globe.Zoom onAction={handleAction} />
+      </Globe.Viewport>
+    </Globe.Root>
+  );
+};
+
+/** The flat world map a world clock sits on: equirectangular, unrotated, no interaction. */
+export const Equirectangular = () => {
+  const topology = useTopology();
+  return (
+    <Globe.Root zoom={1}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} projection='equirectangular' fit='contain' styles={monochrome} />
       </Globe.Viewport>
     </Globe.Root>
   );

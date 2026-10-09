@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { htmlToMarkdown, markdownToHtml } from './html-markdown';
+import { htmlToMarkdown, markdownToHtml } from './html-markdown.ts';
 
 describe('html <-> markdown', () => {
   test('converts BookHive description HTML to markdown', ({ expect }) => {

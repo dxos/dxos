@@ -11,7 +11,7 @@ import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/
 import { type TestSwarmConnection } from '@dxos/network-manager/testing';
 import { trace } from '@dxos/tracing';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
 
 //
 // Copyright 2023 DXOS.org

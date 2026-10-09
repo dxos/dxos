@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 /**
@@ -16,14 +15,15 @@ import { Text } from '@dxos/schema';
 export class Script extends Type.makeObject<Script>(DXN.make('org.dxos.type.script', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    description: Schema.String.pipe(Schema.optional),
+    description: Format.Text.pipe(Schema.optional),
     // TODO(burdon): Change to hash of deployed content.
     // Whether source has changed since last deploy.
-    changed: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
-    source: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    changed: Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    source: Ref.Ref(Text.Text).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--code--regular', hue: 'sky' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

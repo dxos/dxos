@@ -10,7 +10,7 @@ import * as Struct from 'effect/Struct';
 import { debounce } from '@dxos/async';
 import { isTruthy } from '@dxos/util';
 
-import { singleValueFacet } from '../../util';
+import { singleValueFacet } from '../../util/index.ts';
 
 /**
  * Currently edited document id as FQ string.
@@ -50,6 +50,9 @@ const stateRestoreAnnotation = 'org.dxos.cm.state-restore';
 /** Window after a restore during which scroll events are not recorded. */
 const RESTORE_SUPPRESS_MS = 500;
 
+/** Dedupes the recorder's measure requests: CodeMirror keeps one request per key until its measure phase runs. */
+const recordKey = {};
+
 /**
  * Builds the transaction that puts a recorded state back: applies the selection, anchors
  * `scrollTo` at the top of the viewport (falling back to revealing the selection when no position
@@ -72,6 +75,23 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
  * creep upwards by the fraction of the line that was originally scrolled past.
  */
 export const restoreEditorState = (view: EditorView, state: EditorSelectionState) => {
+  // An editor that does not scroll itself — auto-height, embedded in a form or a card — has no
+  // position to restore, and CodeMirror would satisfy the request by scrolling an ANCESTOR instead:
+  // the host's own scroller jumps to put the editor's first line at its top, on every mount. Only an
+  // editor with its own overflow can honour the anchor; the caret is restored either way, without a
+  // scroll to reveal it.
+  const { scrollHeight, clientHeight } = view.scrollDOM;
+  if (scrollHeight <= clientHeight + 1) {
+    if (state.selection) {
+      view.dispatch({
+        selection: state.selection,
+        scrollIntoView: false,
+        annotations: Transaction.userEvent.of(stateRestoreAnnotation),
+      });
+    }
+    return;
+  }
+
   view.dispatch(createEditorStateTransaction(state));
   const { scrollTo, scrollOffset } = state;
   if (scrollTo != null && scrollOffset) {
@@ -91,25 +111,40 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
   // before the document has finished laying out; ignore scroll events for a beat afterwards.
   let suppressUntil = 0;
 
-  const record = (view: EditorView) => {
-    const id = view.state.facet(documentId);
-    if (!id || !setState || performance.now() < suppressUntil) {
-      return;
-    }
-
-    // `posAtCoords` takes client coordinates, so measure from the scroller's own rect rather
-    // than from `scrollTop` (which only coincides when the scroller sits at the top of the window).
-    const { top, left } = view.scrollDOM.getBoundingClientRect();
-    const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
-    if (pos !== null) {
+  // Read in CodeMirror's own measure phase, once per frame however many scroll events and updates arrive: reading
+  // the coordinates straight from each event forced a synchronous layout per event while scrolling.
+  const measure = {
+    key: recordKey,
+    read: (view: EditorView): EditorSelectionState | undefined => {
+      // `posAtCoords` takes client coordinates, so measure from the scroller's own rect rather
+      // than from `scrollTop` (which only coincides when the scroller sits at the top of the window).
+      const { top, left } = view.scrollDOM.getBoundingClientRect();
+      const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
+      if (pos === null) {
+        return undefined;
+      }
       const { anchor, head } = view.state.selection.main;
       // Measure against the position's own visual row (`coordsAtPos`), not its line block: with
       // line wrapping the top of the viewport is often a continuation row, and a block-relative
       // offset would then overshoot the restore by every wrapped row above it.
       const coords = view.coordsAtPos(pos);
       const scrollOffset = coords ? Math.round(top - coords.top) : 0;
-      setStateDebounced(id, { scrollTo: pos, scrollOffset, selection: { anchor, head } });
+      return { scrollTo: pos, scrollOffset, selection: { anchor, head } };
+    },
+    write: (state: EditorSelectionState | undefined, view: EditorView) => {
+      const id = view.state.facet(documentId);
+      if (state && id) {
+        setStateDebounced(id, state);
+      }
+    },
+  };
+
+  const record = (view: EditorView) => {
+    const id = view.state.facet(documentId);
+    if (!id || !setState || performance.now() < suppressUntil) {
+      return;
     }
+    view.requestMeasure(measure);
   };
 
   return [

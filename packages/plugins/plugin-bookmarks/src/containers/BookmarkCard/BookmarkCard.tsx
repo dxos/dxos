@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 
 import { Bookmark } from '#types';
 
-import { useImageLoads } from '../useImageLoads';
+import { useImageLoads } from '../useImageLoads.ts';
 
 export type BookmarkCardProps = AppSurface.ObjectCardProps<Bookmark.Bookmark>;
 
@@ -26,14 +26,14 @@ export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
   return (
     <Card.Body>
       {bookmark.image && imageLoads && (
-        <Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />
+        <Card.Poster alt={bookmark.title} src={bookmark.image} fit='cover' classNames='rounded-t-xs' />
       )}
       <Card.Row>
-        <Card.Title classNames='line-clamp-2'>{bookmark.title}</Card.Title>
+        <Card.Title lines={2}>{bookmark.title}</Card.Title>
       </Card.Row>
       {bookmark.excerpt && (
         <Card.Row>
-          <Card.Text variant='description' classNames='line-clamp-3'>
+          <Card.Text variant='muted' classNames='line-clamp-3'>
             {bookmark.excerpt}
           </Card.Text>
         </Card.Row>

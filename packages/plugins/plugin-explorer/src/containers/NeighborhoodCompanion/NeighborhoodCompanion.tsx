@@ -5,8 +5,13 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DxAnchorActivate, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import { DxAnchorActivate } from '@dxos/ui-types';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { Visualization } from '#components';
@@ -27,7 +32,7 @@ export type NeighborhoodCompanionProps = {
  * with the active node at the centre. Depth (number of hops traversed) is adjustable in the toolbar.
  */
 export const NeighborhoodCompanion = ({ role = 'article', subject }: NeighborhoodCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [depth, setDepth] = useState<number>(DEFAULT_NEIGHBORHOOD_DEPTH);
   const model = useNeighborhoodModel(subject, depth);
 
@@ -38,10 +43,10 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     }
   }, []);
 
-  // Dismiss the preview popover. The dxn/label/trigger fields are placeholders ignored on `state: false`.
+  // Dismiss the preview popover. The eid/label/trigger fields are placeholders ignored on `state: false`.
   const handleDismiss = useCallback(() => {
     document.defaultView?.dispatchEvent(
-      new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
+      new DxAnchorActivate({ eid: '', label: '', trigger: document.body, state: false }),
     );
   }, []);
 
@@ -54,13 +59,13 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     if (!obj || !Obj.isObject(obj)) {
       return;
     }
-    const dxn = Obj.getURI(obj);
-    if (!dxn) {
+    const eid = Obj.getURI(obj);
+    if (!eid) {
       return;
     }
 
     const target = event.target as HTMLElement;
-    target.dispatchEvent(new DxAnchorActivate({ dxn, kind: 'card', trigger: target, label: Obj.getLabel(obj) ?? dxn }));
+    target.dispatchEvent(new DxAnchorActivate({ eid, kind: 'card', trigger: target, label: Obj.getLabel(obj) ?? eid }));
   }, []);
 
   if (!subject || !model) {
@@ -69,24 +74,19 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <div className='grow' />
           <Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
             {DEPTHS.map((value) => (
-              <Toolbar.ToggleGroupItem
-                key={value}
-                value={String(value)}
-                aria-label={t('depth.label', { count: value })}
-                title={t('depth.label', { count: value })}
-              >
-                {value}
-              </Toolbar.ToggleGroupItem>
+              <Tooltip.Trigger key={value} asChild content={t('depth.label', { count: value })}>
+                <ToggleGroup.Item value={String(value)} label={String(value)} />
+              </Tooltip.Trigger>
             ))}
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           model={model}
@@ -96,7 +96,7 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

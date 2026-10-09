@@ -12,13 +12,13 @@ import { AiContext, Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
 
-import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index';
-import { SkillManagerHandlers } from './operations';
-import { EnableSkills, QuerySkills } from './operations/definitions';
+import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index.ts';
+import { EnableSkills, QuerySkills } from './operations/definitions.ts';
+import { SkillManagerHandlers } from './operations/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

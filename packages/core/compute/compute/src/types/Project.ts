@@ -6,13 +6,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { SessionConfig } from '@dxos/ai';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { ArchivableAnnotation } from '@dxos/schema';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
-import * as Instructions from './Instructions';
-import * as Routine from './Routine';
-import * as Skill from './Skill';
+import * as Instructions from './Instructions.ts';
+import * as Routine from './Routine.ts';
+import * as Skill from './Skill.ts';
 
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
@@ -28,45 +29,65 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.6.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
 
     /** Work-stream lifecycle state. */
     status: Schema.optional(ProjectStatus),
 
     /** Owned agent instructions (created at the plugin layer; parented by `SetParent`). */
     instructions: Schema.optional(
-      Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(true), FormInlineAnnotation.set(true)),
+      Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(), Annotation.FormInlineAnnotation.set(true)),
     ),
 
-    /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
-    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Artifacts (documents, outliners, tables, ...), in order. */
+    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+      Annotation.SetParent.set({ override: false }),
+      Annotation.FormInputAnnotation.set(false),
+    ),
 
     /** Routines the project owns, in order, parented so they cascade-delete with it. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
 
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
-    outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set(true))),
+    outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set())),
 
     /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */
-    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).pipe(Annotation.SetParent.set(true))),
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).pipe(Annotation.SetParent.set())),
 
     /**
      * Source repository this project's work lands in. Independent of `taskSet`: a project that
      * mirrors a repository adopts its synced task set AND names it here, while a project whose
      * tasks are local can still reference the repository its issues are filed against.
      */
+    // TODO(burdon): Change to array? Move into taskSet?
     repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
+
+    /**
+     * Repositories the project's coding agents work on. A cloud session checks each one out in its
+     * sandbox; a session on this computer works in the folder chosen for the project there.
+     */
+    repositories: Schema.optional(
+      Schema.Array(Ref.Ref(Repo.Repo)).annotate({
+        title: 'Repositories',
+        description: 'Checked out for coding agents that run in the cloud.',
+      }),
+    ),
+
+    /** The default configuration (model, ...) for the sessions this project starts; a chat's own overrides it. */
+    session: Schema.optional(SessionConfig.SessionConfig.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+    ArchivableAnnotation.set(true),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
     // the type does not depend on the plugin that owns the skill.
     Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -101,7 +122,7 @@ export const make = (
 /** Adds a routine to the project as an owned child; `SetParent` on the field cascades it. */
 export const addRoutine = (project: Project, routine: Routine.Routine): void => {
   Obj.update(project, (project) => {
-    project.routines = [...project.routines, Ref.make(routine)];
+    project.routines.push(Ref.make(routine));
   });
 };
 

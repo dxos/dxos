@@ -1,8 +1,0 @@
-layer: tool
-language: typescript
-tags:
-  - ts-compile
-tasks:
-  build:
-    deps:
-      - esbuild-plugins:build

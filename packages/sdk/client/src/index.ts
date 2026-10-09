@@ -35,21 +35,21 @@ export {
   SystemError,
   UnknownModelError,
 } from '@dxos/protocols';
-export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+export { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 export {
   type AppContextRequest,
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
   ShellLayout,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 
 // TODO(burdon): Use "export *" and @internal to restrict exports.
 // TODO(wittjosiah): Should all api errors be exported here?
 
 // For some reason the * re-export from ./client gets removed by TSC. Looks like a compiler bug.
-export { Client } from './client';
-export * from './client';
-export * from './edge';
-export * from './services';
-export * from './version';
+export { Client } from './client/index.ts';
+export * from './client/index.ts';
+export * from './edge/index.ts';
+export * from './services/index.ts';
+export * from './version.ts';

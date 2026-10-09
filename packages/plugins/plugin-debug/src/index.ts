@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as DebugPlugin from './DebugPlugin';
-export * from '#meta';
+export * as DebugPlugin from './DebugPlugin.ts';
+export * from './samples/index.ts';
 export * from '#types';

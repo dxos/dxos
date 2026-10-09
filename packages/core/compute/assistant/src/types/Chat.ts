@@ -9,11 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { SessionConfig } from '@dxos/ai';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
+import { ArchivableAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 /**
@@ -25,14 +26,26 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     name: Schema.String.pipe(Schema.optional),
     viewType: Schema.String.pipe(Schema.optional),
 
+    /**
+     * Runs this conversation's agent on the edge rather than locally, mirroring a trigger's own
+     * `remote` flag. When unset, the agent runs locally on the client.
+     */
+    remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
+
     /** Message feed, owned by the chat so `SetParent` cascades it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
      * Held by reference (never copied), so a project's chats follow edits to its instructions.
      */
-    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(Annotation.FormInputAnnotation.set(false))),
+
+    /**
+     * How this conversation runs (its model), chosen in the chat rather than globally so it survives
+     * a remount and travels with the chat. Unset fields fall back to the project's, then the agent's.
+     */
+    session: Schema.optional(SessionConfig.SessionConfig.pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
@@ -41,13 +54,15 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * would silently move that task out of the set that owns it. Tasks the chat itself creates are
      * parented to it explicitly; see {@link addTask}.
      */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(FormInputAnnotation.set(false)),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
+    Annotation.UserType.set(),
+    ArchivableAnnotation.set(true),
   ),
 ) {}
 
@@ -74,15 +89,35 @@ export const CompanionChatAnnotation = Annotation.make({
  * subject via {@link CompanionChatAnnotation} plus the ECHO parent edge. Idempotent per chat.
  */
 export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unknown }): void => {
-  Obj.update(subject, (subject) => {
-    const chats = Annotation.get(subject, CompanionChatAnnotation).pipe(
-      Option.getOrElse((): readonly Ref.Ref<Chat>[] => []),
-    );
-    if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
-      Annotation.set(subject, CompanionChatAnnotation, [...chats, Ref.make(chat)]);
+  const existing = Annotation.get(subject, CompanionChatAnnotation);
+  const chats = existing.pipe(Option.getOrElse((): readonly Ref.Ref<Chat>[] => []));
+  if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
+    if (Option.isNone(existing)) {
+      Obj.update(subject, (subject) => {
+        Annotation.set(subject, CompanionChatAnnotation, [Ref.make(chat)]);
+      });
+    } else {
+      // Splice in place so only this ref is appended; Annotation.update validates the result.
+      Annotation.update(subject, CompanionChatAnnotation, (chats) => {
+        chats.push(Ref.make(chat));
+      });
     }
-  });
+  }
   Obj.setParent(chat, subject);
+};
+
+/**
+ * Starts a chat on a default session config — a project's, say — copied rather than referenced, so
+ * a model later picked in the chat is the chat's own. A chat already carrying a config keeps it.
+ */
+export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | undefined): void => {
+  if (!session || chat.session) {
+    return;
+  }
+
+  Obj.update(chat, (chat) => {
+    chat.session = { ...session };
+  });
 };
 
 /** Creates a task the chat owns and appends it to the checklist. */
@@ -92,13 +127,12 @@ export const addTask = (
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Task.Task => {
-  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
-  Obj.update(chat, (chat) => {
-    chat.tasks = [...chat.tasks, Ref.make(task)];
-  });
   // Ownership is decided at creation rather than by membership, so a task the chat made cascades
   // with it while a delegated one keeps the parent it arrived with.
-  Obj.setParent(task, chat);
+  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props, [Obj.Parent]: chat }));
+  Obj.update(chat, (chat) => {
+    chat.tasks.push(Ref.make(task));
+  });
   return task;
 };
 
@@ -121,7 +155,7 @@ export const assignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): R
       present.add(id);
       added.push(ref);
     }
-    chat.tasks = [...chat.tasks, ...added];
+    chat.tasks.push(...added);
   });
   return added;
 };
@@ -260,16 +294,18 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
   });
 
 /**
- * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order. Status/dependency notes go on
- * their own indented line — appended to the title, models paste them back through title-keyed
- * upserts and duplicate the task.
+ * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented
+ * note line carrying the task's ref and any status/dependency notes — appended to the title, models
+ * paste the notes back into it. The ref renders as `[MNEMONIC](uri)` so the mnemonic the user reads
+ * and the handle the tools take travel together and get pasted back verbatim.
  */
 const formatTasks = (tasks: readonly Task.Task[]): string => {
   const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
   return tasks
     .map((task, index) => {
       const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
-      const notes: string[] = [];
+      // The ref is the handle update-tasks takes, so every line carries one the model can pass back.
+      const notes: string[] = [`ref: [${Obj.getMnemonic(task)}](${Obj.getURI(task)})`];
       if (task.status && task.status !== 'todo' && task.status !== 'done') {
         notes.push(task.status);
       }
@@ -282,7 +318,7 @@ const formatTasks = (tasks: readonly Task.Task[]): string => {
         notes.push(`depends on ${deps.join(', ')}`);
       }
 
-      return notes.length > 0 ? `${line}\n   (${notes.join('; ')})` : line;
+      return `${line}\n   (${notes.join('; ')})`;
     })
     .join('\n');
 };

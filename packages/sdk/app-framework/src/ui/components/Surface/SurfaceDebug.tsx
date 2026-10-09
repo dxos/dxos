@@ -8,6 +8,7 @@ import React, {
   createElement,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -18,14 +19,17 @@ import { createRoot } from 'react-dom/client';
 import { addEventListener, combine } from '@dxos/async';
 import { mx } from '@dxos/ui-theme';
 
-import { type SurfaceContext } from './context';
-import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics';
+import { type SurfaceContext } from './context.ts';
+import { surfaceMetrics } from './SurfaceMetrics.ts';
 
 declare global {
   interface Window {
     __DX_DEBUG__?: boolean;
-    __DX__?: { surfaces: (component?: string) => HTMLElement[] };
+    __DX__?: { surfaces: (component?: string) => HTMLElement[]; mounted: () => MountedSurface[] };
   }
+
+  // oxlint-disable-next-line no-var
+  var __DX_SURFACE_DEBUG__: DebugState | undefined;
 }
 
 const DEBUG_FLAG = '__DX_DEBUG__';
@@ -53,6 +57,9 @@ const ensureDebugApi = (): void => {
           component ? `${DX_SURFACE_TAG}[data-component="${component}"]` : DX_SURFACE_TAG,
         ),
       ),
+    // The registry's view, as the Stats companion samples it — compare with `surfaces()` when a
+    // mounted surface is missing from the list.
+    mounted: () => getMountedSurfaces(),
   };
 };
 
@@ -74,11 +81,10 @@ export const isSurfaceWrapperEnabled = (): boolean =>
 
 // Notifies the overlay when the runtime highlight flag toggles: the overlay is a separate React root,
 // so it does not re-render on a surface render and needs an explicit signal to redraw.
-const flagListeners = new Set<() => void>();
 const subscribeFlag = (listener: () => void): (() => void) => {
-  flagListeners.add(listener);
+  state.flagListeners.add(listener);
   return () => {
-    flagListeners.delete(listener);
+    state.flagListeners.delete(listener);
   };
 };
 
@@ -96,10 +102,34 @@ export const setSurfaceDebug = (enabled: boolean): void => {
   } else {
     delete window[DEBUG_FLAG];
   }
-  for (const listener of flagListeners) {
+  for (const listener of state.flagListeners) {
     listener();
   }
 };
+
+// The role picked in the Surfaces card: the overlay draws its surfaces bold and the card shows their
+// data. Kept here, beside the flag, so the overlay (its own React root) can subscribe to it.
+const subscribeSelection = (listener: () => void): (() => void) => {
+  state.selectionListeners.add(listener);
+  return () => {
+    state.selectionListeners.delete(listener);
+  };
+};
+
+/** The selected role NSID, if any. */
+export const getSelectedSurfaceRole = (): string | undefined => state.selectedRole;
+
+/** Selects a role's surfaces (`undefined` clears the selection). */
+export const setSelectedSurfaceRole = (role: string | undefined): void => {
+  state.selectedRole = role;
+  for (const listener of state.selectionListeners) {
+    listener();
+  }
+};
+
+/** Subscribes to the selected role. */
+export const useSelectedSurfaceRole = (): string | undefined =>
+  useSyncExternalStore(subscribeSelection, getSelectedSurfaceRole, getSelectedSurfaceRole);
 
 let elementRegistered = false;
 
@@ -169,15 +199,69 @@ class SurfaceDebugManager {
   }
 }
 
-const manager = new SurfaceDebugManager();
+type DebugState = {
+  manager: SurfaceDebugManager;
+  flagListeners: Set<() => void>;
+  selectionListeners: Set<() => void>;
+  selectedRole?: string;
+  overlayMounted: boolean;
+};
 
-let overlayMounted = false;
+// Held on the global so it survives HMR: a re-evaluated module would otherwise start an empty
+// registry (listing only surfaces mounted afterwards) while the overlay root already in the
+// document kept reading the stale module's flag and selection.
+const state: DebugState = (globalThis.__DX_SURFACE_DEBUG__ ??= {
+  manager: new SurfaceDebugManager(),
+  flagListeners: new Set(),
+  selectionListeners: new Set(),
+  overlayMounted: false,
+});
+
+/** A surface currently mounted in the document, as registered by its `<dx-surface>` wrapper. */
+export type MountedSurface = {
+  id?: string;
+  role: string;
+  data?: Record<string, any>;
+  /** Ids of the surfaces this one is rendered inside, innermost first (anonymous ones skipped). */
+  ancestors: string[];
+};
+
+const enclosingSurfaceIds = (element: HTMLElement): string[] => {
+  const ids: string[] = [];
+  let node = element.parentElement?.closest<HTMLElement>(DX_SURFACE_TAG);
+  while (node) {
+    if (node.dataset.id) {
+      ids.push(node.dataset.id);
+    }
+    node = node.parentElement?.closest<HTMLElement>(DX_SURFACE_TAG);
+  }
+  return ids;
+};
+
+const toMounted = ({ element, infoRef }: DebugEntry): MountedSurface => ({
+  id: infoRef.current.id,
+  role: infoRef.current.role,
+  data: infoRef.current.data,
+  ancestors: enclosingSurfaceIds(element),
+});
+
+/**
+ * The surfaces mounted right now, without subscribing. Populated only while the wrapper is rendered
+ * (dev builds, or under a profiler provider).
+ */
+export const getMountedSurfaces = (): MountedSurface[] => state.manager.getSnapshot().map(toMounted);
+
+/** The mounted surfaces, re-read on every mount or unmount (never on a render, so a profiled caller cannot loop). */
+export const useMountedSurfaces = (): MountedSurface[] => {
+  const entries = useSyncExternalStore(state.manager.subscribe, state.manager.getSnapshot, state.manager.getSnapshot);
+  return useMemo(() => entries.map(toMounted), [entries]);
+};
 
 const ensureOverlay = (): void => {
-  if (overlayMounted || typeof document === 'undefined') {
+  if (state.overlayMounted || typeof document === 'undefined') {
     return;
   }
-  overlayMounted = true;
+  state.overlayMounted = true;
   const root = document.createElement('div');
   root.id = 'dx-surface-overlay';
   document.body.appendChild(root);
@@ -236,14 +320,21 @@ const EMPTY_RECTS: ReadonlyMap<number, DOMRect> = new Map();
  * One ResizeObserver plus one scroll/resize listener serve all surfaces.
  */
 const SurfaceDebugOverlay = (): ReactNode => {
-  const entries = useSyncExternalStore(manager.subscribe, manager.getSnapshot, manager.getSnapshot);
+  const all = useSyncExternalStore(state.manager.subscribe, state.manager.getSnapshot, state.manager.getSnapshot);
   // The `__DX_DEBUG__` flag gates only this visual overlay; the `<dx-surface>` wrappers stay mounted.
   const enabled = useSyncExternalStore(subscribeFlag, isSurfaceDebugEnabled, isSurfaceDebugEnabled);
+  const selected = useSelectedSurfaceRole();
+  // The selection shows even with the flag off, so picking a role in the Surfaces card always points at it.
+  // Memoized: the measuring effect keys on this array, so a fresh one per render would loop it.
+  const entries = useMemo(
+    () => (enabled ? all : all.filter((entry) => entry.infoRef.current.role === selected)),
+    [all, enabled, selected],
+  );
   const [rects, setRects] = useState<ReadonlyMap<number, DOMRect>>(EMPTY_RECTS);
 
   useLayoutEffect(() => {
-    // Draw nothing (and install no listeners) while the flag is off or there are no surfaces.
-    if (!enabled || entries.length === 0) {
+    // Draw nothing (and install no listeners) while there is nothing to show.
+    if (entries.length === 0) {
       setRects(EMPTY_RECTS);
       return;
     }
@@ -272,94 +363,31 @@ const SurfaceDebugOverlay = (): ReactNode => {
     return combine(addEventListener(window, 'scroll', measure, true), addEventListener(window, 'resize', measure), () =>
       observer?.disconnect(),
     );
-  }, [entries, enabled]);
-
-  if (!enabled) {
-    return null;
-  }
+  }, [entries]);
 
   return createPortal(
     <>
       {entries.map((entry) => {
         const rect = rects.get(entry.key);
-        return rect ? <SurfaceHighlight key={entry.key} infoRef={entry.infoRef} rect={rect} /> : null;
+        return rect ? (
+          <SurfaceHighlight key={entry.key} rect={rect} selected={entry.infoRef.current.role === selected} />
+        ) : null;
       })}
     </>,
     document.body,
   );
 };
 
-/** Subscribes to the metric for a single surface. */
-const useSurfaceMetric = (surfaceId: string, role: string): SurfaceMetric | undefined => {
-  const all = useSyncExternalStore(surfaceMetrics.subscribe, surfaceMetrics.getSnapshot, surfaceMetrics.getSnapshot);
-  const key = surfaceMetricKey(surfaceId, role);
-  return all.find((metric) => metric.id === key);
-};
-
-const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }): ReactNode => {
-  const [expand, setExpand] = useState(false);
-  const info = infoRef.current;
-  const metric = useSurfaceMetric(info.id ?? '', info.role);
-  // A surface with a likely problem (unstable data or a caught error) flags red.
-  const concern = !!metric && (metric.dataUnstable || metric.errors > 0);
-  return (
-    <div
-      className='z-[100] fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
-      style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
-    >
-      {expand ? (
-        <div
-          className='dx-fullscreen border-2 border-rose-500 border-dotted overflow-auto pointer-events-auto'
-          onPointerDown={(ev) => ev.stopPropagation()}
-          onClick={(ev) => {
-            ev.stopPropagation();
-            setExpand(false);
-          }}
-        >
-          <div className='absolute left-1 right-1 bottom-1 max-h-[20rem] overflow-auto dx-card-surface ring-2 ring-separator rounded-sm opacity-90'>
-            <pre className='inline-block p-2 text-xs text-description font-mono font-thin'>
-              {JSON.stringify({ info, metric }, null, 2)}
-            </pre>
-          </div>
-        </div>
-      ) : (
-        <span
-          className={mx(
-            concern ? 'text-rose-500' : 'text-green-500',
-            'absolute right-2 bottom-1 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto',
-          )}
-          title={metricSummary(info.id ?? '', metric)}
-          onPointerDown={(ev) => ev.stopPropagation()}
-          onClick={(ev) => {
-            ev.stopPropagation();
-            setExpand(true);
-          }}
-        >
-          {concern ? '⚠' : 'ⓘ'}
-        </span>
-      )}
-    </div>
-  );
-};
-
-const metricSummary = (surfaceId: string, metric: SurfaceMetric | undefined): string => {
-  if (!metric) {
-    return surfaceId;
-  }
-  const parts = [
-    surfaceId,
-    `dispatches=${metric.dispatches}`,
-    `candidates=${metric.candidates}${metric.truncated ? '(+truncated)' : ''}`,
-    `mounts=${metric.mounts}/unmounts=${metric.unmounts}`,
-  ];
-  if (metric.dataUnstable) {
-    parts.push(`UNSTABLE data (churn=${metric.dataChurn})`);
-  }
-  if (metric.errors > 0) {
-    parts.push(`errors=${metric.errors}`);
-  }
-  return parts.join(' · ');
-};
+/** A passive outline over one surface, bold for the selected role; selection happens in the Surfaces card. */
+const SurfaceHighlight = ({ rect, selected }: { rect: DOMRect; selected: boolean }): ReactNode => (
+  <div
+    className={mx(
+      'z-40 fixed pointer-events-none border',
+      selected ? 'border-2 border-error-text bg-error-text/10' : 'border-info-text',
+    )}
+    style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
+  />
+);
 
 /**
  * Recovers the rendered surface component's name from the React fiber. Surfaces are registered as
@@ -406,7 +434,7 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
       surfaceMetrics.recordMount(id, role);
     }
     const element = elementRef.current;
-    const unregister = element ? manager.register(element, infoRef) : undefined;
+    const unregister = element ? state.manager.register(element, infoRef) : undefined;
     // Names the rendered component (`data-component`) once mounted — read from the fiber because the
     // surface wrapper is anonymous, so no static name is available at render time.
     const component = element ? renderedComponentName(element) : undefined;

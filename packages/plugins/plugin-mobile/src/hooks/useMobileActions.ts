@@ -3,22 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { invariant } from '@dxos/invariant';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { type DeckStateHook, useDeckState } from '@dxos/plugin-deck/hooks';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { useTranslation } from '@dxos/react-ui';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Attention } from '@dxos/react-ui-attention';
 import {
   type ActionExecutor,
@@ -28,7 +27,8 @@ import {
   createMenuItemGroup,
   graphActions,
 } from '@dxos/react-ui-menu';
-import { Position } from '@dxos/util';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Position from '@dxos/util/Position';
 
 import { useMobileLayout } from '#components';
 import { meta } from '#meta';
@@ -55,7 +55,7 @@ type CompanionActionsConfig = {
   /** Highlight the companion matching this variant, when set. */
   selectedVariant?: string;
   /** Toggles the complementary sidebar's panel and open state. */
-  updateState: DeckStateHook['updateState'];
+  updateState: DeckHooks.DeckStateHook['updateState'];
 };
 
 /**
@@ -65,30 +65,27 @@ type CompanionActionsConfig = {
 const createMobileCompanionActions = (
   graph: AppCapabilities.AppGraph['graph'],
   stateAtom: Atom.Atom<DeckSchema.StoredDeckState>,
+  ephemeralAtom: Atom.Atom<DeckSchema.EphemeralDeckState>,
   get: Atom.AtomContext,
   config: CompanionActionsConfig,
 ): Pick<ActionGraphProps, 'nodes' | 'edges'> => {
   const { idPrefix, selectedVariant, updateState } = config;
 
   const state = get(stateAtom);
-  const deck = state.decks[state.activeDeck];
-  invariant(deck, `Deck not found: ${state.activeDeck}`);
+  const open = get(ephemeralAtom).open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
   // An atom body cannot call `useMobileStack`, so its root-panel fallback is mirrored inline here.
   const activeId =
-    deck.active[deck.active.length - 1] ??
+    open.active[open.active.length - 1] ??
     (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
-  // Keys off the active plank's own child connections rather than `deck.companionPlanks` (the desktop
-  // side-by-side flag a declared-chain open in open.ts carries onto a replacement plank), so that
-  // bookkeeping stays inert for the mobile companion picker.
-  const companions = get(graph.connections(activeId, 'child'))
-    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
+  const activePlankCompanions = get(graph.connections(activeId, AppNode.companion))
+    .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   const nodes: ActionGraphProps['nodes'] = [];
   const edges: ActionGraphProps['edges'] = [];
 
-  companions.forEach((companion) => {
+  activePlankCompanions.forEach((companion) => {
     const companionVariant = Attention.getLinkedVariant(companion.id);
     const companionAction = {
       id: `${idPrefix}-companion-${companion.id}`,
@@ -165,16 +162,17 @@ const createMobileAccountMenuSection = (
  * Builds the mobile navbar actions including companion tabs, separator, and main menu dropdown.
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
-  const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const { updateState } = useDeckState();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
+  const { updateState } = DeckHooks.useDeckState();
 
   const actionsAtom = useMemo(
     () =>
       Atom.make((get): ActionGraphProps => {
-        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, get, {
+        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, ephemeralAtom, get, {
           idPrefix: 'navbar',
           updateState,
         });
@@ -208,7 +206,7 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, updateState, t],
+    [graph, stateAtom, ephemeralAtom, updateState, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };
@@ -218,11 +216,12 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
  * Builds the mobile drawer actions including companion tabs and toolbar buttons.
  */
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
-  const { t } = useTranslation(meta.profile.key);
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
-  const { updateState } = useDeckState();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
+  const { updateState } = DeckHooks.useDeckState();
   const { keyboardOpen } = useMobileLayout(consumerName);
 
   const actionsAtom = useMemo(
@@ -230,7 +229,7 @@ export const useMobileDrawerActions = (consumerName: string): MobileDrawerAction
       Atom.make((get): ActionGraphProps => {
         const state = get(stateAtom);
 
-        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, get, {
+        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, ephemeralAtom, get, {
           idPrefix: 'drawer',
           selectedVariant: state.complementarySidebarState !== 'closed' ? state.complementarySidebarPanel : undefined,
           updateState,
@@ -285,7 +284,7 @@ export const useMobileDrawerActions = (consumerName: string): MobileDrawerAction
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, updateState, keyboardOpen, t],
+    [graph, stateAtom, ephemeralAtom, updateState, keyboardOpen, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };

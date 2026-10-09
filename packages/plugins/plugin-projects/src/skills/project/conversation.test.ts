@@ -9,11 +9,11 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -21,7 +21,7 @@ import { Message, Outline, TaskSet } from '@dxos/types';
 
 import { ProjectOperationHandlerSet } from '#operations';
 
-import * as ProjectSkill from './ProjectSkill';
+import * as ProjectSkill from './ProjectSkill.ts';
 
 const { text, toolCall } = ScriptedLanguageModel;
 
@@ -112,7 +112,7 @@ describe('Project conversation', () => {
             { parts: [text('Filed the document into the project.')] },
           );
 
-          const session = yield* getSession(chat);
+          const session = yield* AgentService.getSession(chat);
           yield* session.submitPrompt('File the trip notes into the project.');
           yield* session.waitForCompletion();
 
@@ -145,7 +145,7 @@ describe('Project conversation', () => {
           function* ({ expect }) {
             const { project, chat, feed, doc } = yield* seedProjectChat();
 
-            const session = yield* getSession(chat);
+            const session = yield* AgentService.getSession(chat);
             yield* session.submitPrompt(
               'A document with trip notes is bound into this chat, alongside the project. ' +
                 "File that document into the project's artifacts, then confirm in one sentence.",

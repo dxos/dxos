@@ -7,24 +7,24 @@ import React, { useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ThreadArticle } from './ThreadArticle';
+import { ThreadArticle } from './ThreadArticle.tsx';
 
 random.seed(1);
 
@@ -34,7 +34,7 @@ const DefaultStory = () => {
   const [space, setSpace] = useState<Space>();
   const [thread, setThread] = useState<Thread.Thread | null>();
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (identity) {
       const space = await client.spaces.create();
       const thread = space.db.add(Thread.make({ status: 'active' }));
@@ -60,7 +60,7 @@ const meta = {
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required because MessageThread renders an object tile via a Surface.
     withPluginManager({
-      plugins: corePlugins(),
+      plugins: CorePlugins.make(),
       capabilities: [
         Capability.contribute(
           Capabilities.ReactSurface,

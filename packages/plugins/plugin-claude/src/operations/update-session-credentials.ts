@@ -10,14 +10,14 @@ import { Database, Obj } from '@dxos/echo';
 import { archiveVaultCredential, createVaultCredential, listVaultCredentials, updateVaultCredential } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
-import { getApiKey, toVaultCredentials } from '../credentials';
+import { getApiKey, toVaultCredentials } from '../credentials.ts';
 import {
   CredentialConflictError,
   CredentialNotBoundError,
   NoCredentialChangeError,
   SessionNotLinkedError,
   SessionVaultMissingError,
-} from '../errors';
+} from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.UpdateSessionCredentials> =
   ClaudeAgentOperation.UpdateSessionCredentials.pipe(

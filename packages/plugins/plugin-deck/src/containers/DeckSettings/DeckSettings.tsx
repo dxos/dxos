@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form } from '@dxos/react-ui-form';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -17,25 +18,28 @@ const isSocket = !!(globalThis as any).__args;
 export type DeckSettingsProps = AppSurface.SettingsData;
 
 export const DeckSettings = ({ subject }: DeckSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
 
   return (
     <Form.Root
-      variant='settings'
       schema={Settings.Settings}
       values={settings}
+      variant='settings'
       onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.FieldSet
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
+          >
+            <Form.Fields
               filter={(properties) =>
                 isSocket ? properties.filter((property) => property.name !== 'enableNativeRedirect') : properties
               }
             />
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

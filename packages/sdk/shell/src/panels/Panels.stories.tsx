@@ -7,9 +7,9 @@ import React, { type FC } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
-import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
-import * as SpacePanels from './SpacePanel/SpacePanel.stories';
+import { translations } from '../translations.ts';
+import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories.tsx';
+import * as SpacePanels from './SpacePanel/SpacePanel.stories.tsx';
 
 const getComponentNames = (module: any): string[] =>
   module?.__namedExportsOrder ??
@@ -38,7 +38,7 @@ const StoryRow = ({ components }: { components: FC[] }) => {
 
 export const Default = (props: any) => {
   return (
-    <table className='bg-body'>
+    <table className='bg-base-surface'>
       <tbody>
         <StoryRow components={getComponents(IdentityPanels)} />
         <StoryRow components={getComponents(SpacePanels)} />

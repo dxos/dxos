@@ -7,17 +7,17 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import { unmetPrecondition } from '../precondition';
-import * as Topology from '../topology';
+import * as InboxCapabilities from '../../types/InboxCapabilities.ts';
+import * as InboxOperation from '../../types/InboxOperation.ts';
+import { unmetPrecondition } from '../precondition.ts';
+import * as Topology from '../topology.ts';
 
 /** Placeholder run for a pass that cannot be attempted; `skip` is what the loop reads. */
 const NEVER: Effect.Effect<unknown, unknown, Operation.Service> = Effect.void;
@@ -220,10 +220,10 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       reportStatus({
         current: passes.length,
         message: signal.aborted
-          ? PROGRESS_STATUS_CANCELLED
+          ? Progress.STATUS_CANCELLED
           : failed > 0
-            ? PROGRESS_STATUS_FAILED
-            : PROGRESS_STATUS_COMPLETE,
+            ? Progress.STATUS_FAILED
+            : Progress.STATUS_COMPLETE,
       });
 
       return { completed, failed, skipped, cancelled, stages: results };

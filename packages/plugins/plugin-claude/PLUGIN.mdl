@@ -14,6 +14,11 @@ locally and pushed to Anthropic by an explicit deploy step, so a half-configured
 agent never reaches the API. Session events are not mirrored into the space; the
 transcript is fetched on demand from the session id.
 
+In the desktop app the plugin also offers Claude Code on this computer as an
+agent a project's tasks can be assigned to. plugin-code's agent helper runs it
+through the Claude Code ACP adapter this plugin ships, against the user's own
+`claude`, and the chat holds its session.
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -23,8 +28,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 |--------|--------------------------------|
 | `type` | `org.dxos.mdl.type@1.0`        |
 | `feat` | `org.dxos.mdl.feat@1.0`        |
+| `scenario` | `org.dxos.mdl.scenario@1.0`    |
 | `test` | `org.dxos.mdl.test@1.0`        |
-| `flow` | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -251,10 +256,35 @@ feat F-7: Session credentials
       reporting a revocation that did not happen
 ```
 
+```mdl
+feat F-8: Claude Code on this computer
+
+  req F-8.1:
+    when: the plugin is enabled in the desktop app and `claude` is installed
+    then: Claude Code is a registered agent, and a task's menu offers "Assign to Claude Code"
+
+  req F-8.2:
+    when: the plugin is enabled outside the desktop app, or `claude` is not found
+    then: the menu entry is shown disabled with the reason
+
+  req F-8.3:
+    when: a task is assigned to Claude Code
+    then: |
+      Claude Code works in a git worktree of the project's code folder on this
+      device, its session streams into the chat, and a tool call it asks
+      permission for waits on a card in the chat until someone answers it
+
+  req F-8.4:
+    when: Claude Code runs a session
+    then: |
+      Composer's operations are offered as the `composer` MCP server, scoped to
+      the chat's space; its read-only tools run without asking
+```
+
 ## Acceptance
 
 ```mdl
-test T-1: Config projection defaults and omissions
+scenario T-1: Config projection defaults and omissions
   given: a ClaudeManagedAgent with only a name
   when: toAgentConfig is applied
   then:
@@ -264,14 +294,14 @@ test T-1: Config projection defaults and omissions
 ```
 
 ```mdl
-test T-2: Effort is projected onto the model object
+scenario T-2: Effort is projected onto the model object
   given: a ClaudeManagedAgent with effort "high"
   when: toAgentConfig is applied
   then: model === { id: "claude-opus-5", effort: "high" }
 ```
 
 ```mdl
-test T-3: Transcript keeps prose only
+scenario T-3: Transcript keeps prose only
   given: an event list mixing user.message, agent.message, agent.tool_use and
          session.status_idle events
   when: toTranscript is applied
@@ -281,7 +311,7 @@ test T-3: Transcript keeps prose only
 ```
 
 ```mdl
-test T-4: Method-specific retryable statuses
+scenario T-4: Method-specific retryable statuses
   given: GET and POST requests with ClaudeAgentApiError values
   when: isRetryable is applied
   then:
@@ -292,11 +322,11 @@ test T-4: Method-specific retryable statuses
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Configure, deploy and run a Claude managed agent
+test QA-1: Configure, deploy and run a Claude managed agent
   desc: |
     The full round-trip — create a local agent configuration, deploy it to Anthropic, start a
     session and read the transcript back. Deploy and everything after it calls the live
@@ -312,9 +342,9 @@ flow QA-1: Configure, deploy and run a Claude managed agent
     - plugin-claude is enabled — it is OFF by default, and no claude operation is
       registered until it is on. Enabling is a UI action (Settings -> plugin registry);
       `manager.enable()` returns without error from the debug port and does not enable it.
-    - no ClaudeManagedAgent named "QA Agent" exists — ABORT rather than deleting one this flow
+    - no ClaudeManagedAgent named "QA Agent" exists — ABORT rather than deleting one this test
       did not create
-  test:
+  steps:
     - name: Create the agent configuration
       do: In the navtree, click + on a collection and choose Claude Agent. Name it "QA Agent".
       invoke: org.dxos.operation.claude.createAgent { name: "QA Agent" }
@@ -358,13 +388,91 @@ flow QA-1: Configure, deploy and run a Claude managed agent
       expect: the row leaves the navtree
 ```
 
+```mdl
+test QA-2: Assign a project task to Claude Code
+  desc: |
+    A project task goes to Claude Code on this computer, which works in its own
+    git worktree, marks the task through Composer's tools, and continues the
+    same session in a follow-up. Coding agents keep their default permission
+    mode, auto, so Claude asks only before a risky action. Walked by the autocue
+    flow `packages/plugins/plugin-claude/autocue/claude-code-task.mjs`.
+  actors: human
+  covers: [F-8.1, F-8.3, F-8.4]
+  status: verified
+  given:
+    - Composer is the desktop app (for autocue, the test build from
+      `moon run composer-app:tauri-build-test`)
+    - `claude` is installed and signed in on this computer
+    - a git repository on this computer for the project (the flow seeds one)
+    - space: a space is open
+  steps:
+    - name: Enable the Claude plugin
+      do: Open Plugins, filter for "Claude" and switch it on.
+      expect: Claude is enabled, and the Code plugin with it
+    - name: Create a project
+      do: Click + on the space, choose Project, name it "Greeter" and save.
+      expect: the project opens on its Overview, which has a "Code folder on this device" section
+    - name: Choose the project's code folder
+      do: Click "Choose folder…" and pick the repository.
+      expect: the folder's path replaces "Not set"
+    - name: Add a task
+      do: |
+        Open Tasks and add "Add a --shout flag to greet.js", described as "With
+        --shout, print the greeting in capitals. Document the flag in the README."
+      expect: the task is listed
+    - name: Assign the task to Claude Code
+      do: Open the task's menu and choose "Assign to Claude Code".
+      expect: the task is started, and the project's chat holds the task brief as a context panel
+    - name: Watch Claude work, allowing what it asks to run
+      do: Open the Assistant companion and answer any permission card with Yes.
+      expect: |
+        commands, edits and Composer tool calls stream in, the turn ends with a
+        summary, and the task is in review or done
+    - name: Ask for more in a follow-up
+      do: Send "Also accept -s as a short form of --shout, then commit." and allow what it asks to run.
+      expect: |
+        the same session continues and commits on a `composer/` branch of the
+        repository, where `node greet.js Ada -s` prints HELLO, ADA!; `main` is unchanged
+```
+
+```mdl
+test QA-3: Claude Code asks before every edit and command
+  desc: |
+    QA-2 with coding agents set to the `default` permission mode: each file
+    edit and command Claude Code makes waits on a card in the chat. Walked by
+    the same autocue flow with `AUTOCUE_AGENT_PERMISSIONS=default`.
+  actors: human
+  covers: [F-8.3]
+  status: verified
+  given:
+    - as QA-2
+  steps:
+    - name: Enable the Claude plugin
+      do: As QA-2.
+      expect: Claude is enabled, and the Code plugin with it
+    - name: Set coding agents to default permissions
+      do: Open the Code plugin's settings and set "Coding agent permissions" to default.
+      expect: the setting reads default
+    - name: Assign a task as in QA-2
+      do: Walk QA-2 from "Create a project" through "Assign the task to Claude Code".
+      expect: the task is started
+    - name: Watch Claude work, allowing each request
+      do: Open the Assistant companion and answer each permission card with Yes.
+      expect: |
+        a card appears before each edit and command, Claude continues only once
+        it is answered, and the task ends in review or done
+    - name: Ask for more in a follow-up
+      do: As QA-2, answering each card with Yes.
+      expect: as QA-2, with a card before the commit
+```
+
 ---
 
 ## Appendix: Extension Definitions
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -375,7 +483,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -384,8 +492,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

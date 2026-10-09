@@ -20,7 +20,7 @@ export default Config2.make({
       naturally with the workspace navtree.
 
       The editing surface is a 2D piano-roll grid rendered by the canvas-based
-      CellGrid component from @dxos/react-ui-canvas. Pitch runs on the y-axis
+      CellGrid component (src/components/CellGrid). Pitch runs on the y-axis
       (high pitches at the top, matching standard piano-roll convention) and time
       runs on the x-axis at a configurable beats-per-cell resolution (default
       16th notes). Clicking an empty cell adds a note; clicking a filled cell

@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, waitFor } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Expando } from '@dxos/schema';
@@ -13,7 +14,7 @@ import { type Organization, type Person, type Pipeline, type Task } from '@dxos/
 
 import { translations } from '#translations';
 
-import { ExpandoCard, FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards/index.ts';
 import {
   createExpando,
   createOrganization,
@@ -23,8 +24,8 @@ import {
   createTableEmpty,
   createTask,
   createUnknown,
-} from './fixtures';
-import { DefaultStory } from './testing';
+} from './fixtures.ts';
+import { DefaultStory } from './testing.tsx';
 
 random.seed(999);
 
@@ -39,7 +40,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: corePlugins() }),
+    withPluginManager({ plugins: CorePlugins.make() }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -69,7 +70,7 @@ export const _FormEditable: StoryObj<typeof DefaultStory<Person.Person>> = {
 
 /**
  * Empty-state variant: the subject has no resolvable schema so `FormCard` renders
- * `<Card.Body><Card.Row><Card.Text variant='description'>No preview</Card.Text></Card.Row></Card.Body>`.
+ * `<Card.Body><Card.Row><Card.Text variant='muted'>No preview</Card.Text></Card.Row></Card.Body>`.
  * Use this story to verify the empty message lands in the card's center column.
  */
 export const _FormEmpty: StoryObj<typeof DefaultStory> = {
@@ -142,11 +143,16 @@ export const _Pipeline: StoryObj<typeof DefaultStory<Pipeline.Pipeline>> = {
   },
 };
 
+/** The status tag comes from the schema's `singleSelect` meta; a lookup that throws leaves the surface's error fallback instead. */
 export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
   args: {
     Component: TaskCard,
     createObject: createTask,
     image: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.dx-tag')).not.toBeNull(), { timeout: 10_000 });
+    await expect(canvasElement.querySelector('[data-testid="error-boundary-fallback"]')).toBeNull();
   },
 };
 

@@ -4,17 +4,19 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { Flashcard } from '#components';
 import { meta } from '#meta';
 import { LingoOperation, type Vocabulary, Word } from '#types';
 
-import { useDeckWords } from '../useDeckWords';
+import { useDeckWords } from '../useDeckWords.ts';
 
 export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vocabulary>;
 
@@ -23,8 +25,8 @@ export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
  * to the word's Leitner schedule so a session can be abandoned mid-way without losing progress.
  */
 export const FlashcardsArticle = ({ role, subject: deck, attendableId }: FlashcardsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   // `ActionToolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
   // permanently disabled; fall back to the subject's URI when the surface supplies none.
   const attentionId = attendableId ?? Obj.getURI(deck);
@@ -95,10 +97,10 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col'>
         {word ? (
           <Flashcard
             key={word.id}
@@ -108,12 +110,12 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
             onAnswer={handleAnswer}
           />
         ) : (
-          <div className='flex flex-col items-center gap-2 p-8 text-description'>
+          <Layout.Flex column align='center' gap='sm' classNames='p-8 text-fg-muted'>
             <span>{queue.length === 0 ? t('empty-deck.message') : t('session-complete.message')}</span>
             {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
-          </div>
+          </Layout.Flex>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -7,14 +7,16 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 
-import { ResetDialog } from '../components';
-import { resetComposerStorage } from '../recovery';
-import { LOG_STORE_DB_NAME, translations } from '../util';
+import { ResetDialog } from '../components/index.ts';
+import { resetComposerStorage } from '../recovery/index.ts';
+import { LOG_STORE_DB_NAME, translations } from '../util/index.ts';
 
 const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
 
@@ -42,10 +44,8 @@ const root = document.getElementById('root');
 invariant(root);
 createRoot(root).render(
   <StrictMode>
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
-      <Tooltip.Provider>
-        <ResetDialog logStore={logStore} onReset={handleReset} onRefresh={() => (window.location.href = '/')} />
-      </Tooltip.Provider>
-    </ThemeProvider>
+    <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
+      <ResetDialog logStore={logStore} onReset={handleReset} onRefresh={() => (window.location.href = '/')} />
+    </Theme.Provider>
   </StrictMode>,
 );

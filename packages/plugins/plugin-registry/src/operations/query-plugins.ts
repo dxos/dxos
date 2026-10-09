@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 
-import { QueryPlugins } from './definitions';
+import * as RegistryOperation from '../types/RegistryOperation.ts';
 
-const handler: Operation.WithHandler<typeof QueryPlugins> = QueryPlugins.pipe(
+const handler: Operation.WithHandler<typeof RegistryOperation.QueryPlugins> = RegistryOperation.QueryPlugins.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ enabled: enabledOnly }) {
       const manager = yield* Plugin.Service;

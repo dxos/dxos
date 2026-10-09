@@ -5,18 +5,18 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { memo, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import { CallsCapabilities } from '#types';
 
-import { type EncodedTrackName, type UserState } from '../../calls';
-import { VideoObject } from '../Media';
-import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
+import { type EncodedTrackName, type UserState } from '../../calls/index.ts';
+import { VideoObject } from '../Media/index.ts';
+import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid/index.ts';
 
 export const SCREENSHARE_SUFFIX = '_screenshare';
 
 export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const self = useAtomValue(call.selfAtom);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const localVideoStream = useAtomValue(call.localVideoStreamAtom);

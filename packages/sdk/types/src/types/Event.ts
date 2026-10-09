@@ -6,12 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { type MakeOptional } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as Geo from './Geo';
+import * as Actor from './Actor.ts';
+import * as Geo from './Geo.ts';
 
 /**
  * https://schema.org/Event
@@ -20,7 +19,7 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.event'
   Schema.Struct({
     id: Obj.ID,
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
     owner: Actor.Actor,
     attendees: Schema.Array(Actor.Actor),
     startDate: Schema.String, // TODO(burdon): Date.
@@ -39,9 +38,10 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.event'
 
     // TODO(burdon): Video link(s).
   }).pipe(
-    LabelAnnotation.set(['title']),
-    DescriptionAnnotation.set('description'),
+    Annotation.LabelAnnotation.set(['title']),
+    Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

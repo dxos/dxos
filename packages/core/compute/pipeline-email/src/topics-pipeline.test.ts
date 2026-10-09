@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { type TagResult } from './stages/tag';
-import { runTopicsPipeline } from './topics-pipeline';
+import { type TagResult } from './stages/tag.ts';
+import { runTopicsPipeline } from './topics-pipeline.ts';
 
 const OWNER = 'me@x.com';
 const NOW = '2026-01-10T00:00:00.000Z';

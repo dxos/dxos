@@ -8,7 +8,8 @@ import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
 
-import { type Size } from '../defs';
+import { type Size } from '../defs.ts';
+import { getFallbackGlyph } from './fallback.ts';
 
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -36,7 +37,6 @@ export type DxAvatarProps = Partial<
   >
 >;
 
-// TODO(burdon): Needs popover.
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
   private maskId: string;
@@ -125,7 +125,7 @@ export class DxAvatar extends LitElement {
 
     return html`<span
       role="none"
-      class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
+      class=${`dx-lit-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
       data-size=${this.size}
       data-variant=${this.variant}
       data-status=${this.status}
@@ -135,7 +135,7 @@ export class DxAvatar extends LitElement {
         viewBox=${`0 0 ${sizePx} ${sizePx}`}
         width=${sizePx}
         height=${sizePx}
-        class="dx-avatar__frame"
+        class="dx-lit-avatar__frame"
       >
         <defs>
           <mask id=${this.maskId}>
@@ -177,7 +177,7 @@ export class DxAvatar extends LitElement {
           this.icon
             ? svg`
               <use
-                class="dx-avatar__icon"
+                class="dx-lit-avatar__icon"
                 href=${this.icon}
                 x=${sizePx / 5}
                 y=${sizePx / 5}
@@ -188,7 +188,7 @@ export class DxAvatar extends LitElement {
               <text
                 x="50%"
                 y="50%"
-                class="dx-avatar__fallback-text"
+                class="dx-lit-avatar__fallback-text"
                 fill=${fg}
                 text-anchor="middle"
                 alignment-baseline="central"
@@ -196,7 +196,7 @@ export class DxAvatar extends LitElement {
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${/\p{Emoji_Presentation}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
+                ${getFallbackGlyph(this.fallback)}
               </text>`
         }
         ${
@@ -206,7 +206,7 @@ export class DxAvatar extends LitElement {
               width="100%"
               height="100%"
               preserveAspectRatio="xMidYMid slice"
-              class="dx-avatar__image"
+              class="dx-lit-avatar__image"
               href=${this.imgSrc}
               mask=${`url(#${this.maskId})`}
               crossorigin=${this.imgCrossOrigin}
@@ -214,7 +214,7 @@ export class DxAvatar extends LitElement {
               @error=${this.handleError}
             />`
         }
-      </svg>`}<span role="none" class="dx-avatar__ring" style=${styleMap({ borderWidth: ringWidth + 'px' })}
+      </svg>`}<span role="none" class="dx-lit-avatar__ring" style=${styleMap({ borderWidth: ringWidth + 'px' })}
     /></span>`;
   }
 
@@ -222,17 +222,3 @@ export class DxAvatar extends LitElement {
     return this;
   }
 }
-
-/**
- * Returns the first two renderable characters from a string that are separated by non-word characters.
- * Handles Unicode characters correctly.
- */
-const getInitials = (label = ''): string[] => {
-  return label
-    .trim()
-    .split(/\s+/)
-    .map((str) => str.replace(/[^\p{L}\p{N}\s]/gu, ''))
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0].toUpperCase());
-};

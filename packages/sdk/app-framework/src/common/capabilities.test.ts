@@ -5,12 +5,12 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
-import * as Capability from '../core/capability';
-import * as CapabilityManager from '../core/capability-manager';
-import { AtomRegistry, getAtomValue, getAtomValueOption } from './capabilities';
+import * as CapabilityManager from '../core/capability-manager.ts';
+import * as Capability from '../core/capability.ts';
+import { AtomRegistry, getAtomValue, getAtomValueOption } from './capabilities.ts';
 
 const Counter = Capability.makeSingleton<Atom.Writable<number>>()('org.dxos.test.capability.counter');
 

@@ -3,14 +3,15 @@
 //
 
 import * as Context from 'effect/Context';
+import * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { InvitationSchema } from './buf/proto/gen/dxos/client/invitation_pb.ts';
 import { QueryInvitationsResponseSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
-import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
+import { DeviceProfileDocumentSchema } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 
 //
 // RPC message schemas.
@@ -18,7 +19,7 @@ import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
 
 export const AcceptInvitationRequest = Schema.Struct({
   invitation: bufMessage(InvitationSchema),
-  deviceProfile: Schema.optional(protoMessage('dxos.halo.credentials.DeviceProfileDocument')),
+  deviceProfile: Schema.optional(bufMessage(DeviceProfileDocumentSchema)),
 });
 export interface AcceptInvitationRequest extends Schema.Schema.Type<typeof AcceptInvitationRequest> {}
 

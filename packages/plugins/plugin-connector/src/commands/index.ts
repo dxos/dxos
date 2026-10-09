@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './connector';
+export * from './connector/index.ts';

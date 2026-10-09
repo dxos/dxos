@@ -3,15 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { toMetrics, toSlots } from '@dxos/plugin-space/dashboard';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { getIconRegistry } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 import { isTauri } from '@dxos/util';
 
 import { StreamDeckBridge } from '#bridge';
@@ -54,9 +54,15 @@ export default Capability.makeModule(
     // rather than a re-query that may have moved on.
     let targets: (string | undefined)[] = [];
 
+    let unsubscribeDashboard: (() => void) | undefined;
+    let current: Dashboard.SpaceDashboard | undefined;
+
     const publish = () => {
-      const { stats, tasks, favorites } = registry.get(dashboard);
-      const keys = toSlots(favorites, DEVICE.keys);
+      if (!current) {
+        return;
+      }
+      const { stats, tasks, favorites } = current;
+      const keys = Dashboard.toSlots(favorites, DEVICE.keys);
       const icons: Record<string, IconMarkup> = {};
       for (const key of keys) {
         // Undefined until the sprite has the glyph; the icon-registry subscription republishes then.
@@ -69,7 +75,7 @@ export default Capability.makeModule(
       const frame = buildFrame({
         device: DEVICE,
         keys,
-        dials: toMetrics(tasks, stats, DEVICE.dials),
+        dials: Dashboard.toMetrics(tasks, stats, DEVICE.dials),
         icons,
       });
 
@@ -78,11 +84,26 @@ export default Capability.makeModule(
     };
 
     const bridge = new StreamDeckBridge({
-      onStateChange: (state) => registry.set(status, { state, device: bridge.device }),
+      onStateChange: (state) => {
+        registry.set(status, { state, device: bridge.device });
+        if (state !== 'connected') {
+          unsubscribeDashboard?.();
+          unsubscribeDashboard = undefined;
+          current = undefined;
+        }
+      },
       onHello: (device) => {
         registry.set(status, { state: 'connected', device });
+        unsubscribeDashboard?.();
         // Frames are dropped while disconnected, so a fresh connection needs the current one resent.
-        publish();
+        unsubscribeDashboard = registry.subscribe(
+          dashboard,
+          (next) => {
+            current = next;
+            publish();
+          },
+          { immediate: true },
+        );
       },
       onInput: (input) => {
         // Dial bindings are undecided. The events are transported anyway, so binding them later needs
@@ -100,19 +121,14 @@ export default Capability.makeModule(
       },
     });
 
-    const unsubscribe = [
-      registry.subscribe(dashboard, publish),
-      // Icons resolve asynchronously out of the sprite, so a key can be published without its glyph
-      // and needs republishing once the symbol lands.
-      getIconRegistry().subscribe(publish),
-    ];
+    const unsubscribeIcons = Theme.getIconRegistry().subscribe(publish);
 
     bridge.open();
-    publish();
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        unsubscribe.forEach((fn) => fn());
+        unsubscribeIcons();
+        unsubscribeDashboard?.();
         bridge.close();
       }),
     );

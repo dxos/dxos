@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -22,7 +22,7 @@ import { Organization, Person } from '@dxos/types';
 import { SearchContextProvider } from '#hooks';
 import { translations } from '#translations';
 
-import { SearchArticle } from './SearchArticle';
+import { SearchArticle } from './SearchArticle.tsx';
 
 random.seed(0);
 
@@ -47,7 +47,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Organization.Organization, Person.Person],

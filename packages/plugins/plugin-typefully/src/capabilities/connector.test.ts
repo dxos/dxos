@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
-import { createTypefullyConnectorEntry } from './connector';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
+import { createTypefullyConnectorEntry } from './connector.ts';
 
 describe('Typefully connector', () => {
   test('onSubmit maps the API key to AccessToken.token and links Connection to connector', ({ expect }) =>

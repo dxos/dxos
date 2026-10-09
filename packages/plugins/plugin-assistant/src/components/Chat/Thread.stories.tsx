@@ -12,14 +12,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Feed, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
 import { ChatThread, type ChatThreadEvent, type ChatView } from '@dxos/react-ui-assistant';
 import {
   type MessageGenerator,
@@ -28,11 +27,13 @@ import {
 } from '@dxos/react-ui-assistant/testing';
 import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { useFeedModel } from '@dxos/react-ui-feed';
+import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type Message as MessageType } from '@dxos/types';
-import { Message, Organization, Person } from '@dxos/types';
+import { Message, type Message as MessageType, Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
+
+import { objectCardWidget } from './ObjectCardWidget.tsx';
 
 random.seed(1);
 
@@ -55,9 +56,16 @@ const recordedEvents: ChatThreadEvent[] = [];
 
 const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewType?: ChatView }) => {
   const model = useFeedModel(messages, { stops: 'prompt' });
+  const [space] = useSpaces();
+  const objectImage = useMemo(() => objectCardWidget(space?.db), [space]);
   return (
-    <ChatThread.Root model={model} viewType={viewType} onEvent={(event) => recordedEvents.push(event)}>
-      <ChatThread.Viewport padding />
+    <ChatThread.Root
+      model={model}
+      viewType={viewType}
+      objectImage={objectImage}
+      onEvent={(event) => recordedEvents.push(event)}
+    >
+      <ChatThread.Viewport />
     </ChatThread.Root>
   );
 };
@@ -103,7 +111,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, remountable, viewType }
   }
 
   return (
-    <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
+    <EditorPreviewProvider onLookup={async ({ eid, label }) => ({ label, text: eid })}>
       {remountable ? (
         <RemountableThread messages={messages} viewType={viewType} />
       ) : (
@@ -122,9 +130,9 @@ const RemountableThread = (props: { messages: MessageType.Message[]; viewType?: 
   const [mounted, setMounted] = useState(true);
   return (
     <div className='flex flex-col h-full'>
-      <Button data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
+      <Button.Root data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
         {mounted ? 'Unmount' : 'Mount'}
-      </Button>
+      </Button.Root>
       {mounted && <Thread {...props} />}
     </div>
   );
@@ -138,7 +146,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({
@@ -214,6 +222,15 @@ export const Thinking: Story = {
         // Reasoning narrates the run it sits in rather than emitting `ReasoningWidget`, so the
         // prose arrives in the run's panel — `data-reasoning-text` is no longer rendered for it.
         await expect(canvasElement.querySelectorAll('[data-testid="assistant.tool-run"]').length).toBeGreaterThan(0);
+      },
+      { timeout: 10_000 },
+    );
+    // A closed panel does not build its body, so the prose is there once the reader opens it.
+    for (const header of canvasElement.querySelectorAll<HTMLElement>('[data-testid="assistant.tool-run"]')) {
+      await userEvent.click(header);
+    }
+    await waitFor(
+      async () => {
         await expect(canvasElement.textContent ?? '').toContain('Considering the question before answering.');
       },
       { timeout: 10_000 },

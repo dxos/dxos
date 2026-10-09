@@ -17,12 +17,12 @@ import { Obj, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Vocabulary } from '#types';
 
-import { getVocabulariesPath } from '../paths';
+import { getVocabulariesPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -50,6 +50,7 @@ export default Capability.makeModule(
       // Drill companion on every deck.
       AppGraphBuilder.createExtension({
         id: 'flashcardsCompanion',
+        relation: AppNode.companion,
         match: (node) => (Vocabulary.instanceOf(node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([
@@ -66,6 +67,7 @@ export default Capability.makeModule(
       // Reading companion on anything whose text this plugin can reach.
       AppGraphBuilder.createExtension({
         id: 'readerCompanion',
+        relation: AppNode.companion,
         match: (node) => (Obj.isObject(node.data) && isReadable(node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([

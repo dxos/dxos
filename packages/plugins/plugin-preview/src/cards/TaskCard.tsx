@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Type } from '@dxos/echo';
-import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { SchemaAST } from '@dxos/effect';
-import { Card } from '@dxos/react-ui';
+import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as Card from '@dxos/react-ui/Card';
 import { Task } from '@dxos/types';
 
 export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => {
-  const { title, status } = subject;
+  const { status } = subject;
   const statusOption = getActiveStatusOption(status);
 
   return (
@@ -20,7 +20,7 @@ export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => 
       <Card.Row>
         {statusOption && (
           <div>
-            <span className='dx-tag' data-hue={statusOption.color}>
+            <span className='dx-tag dx-tag-inline' data-hue={statusOption.color}>
               {statusOption.title}
             </span>
           </div>
@@ -30,16 +30,12 @@ export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => 
   );
 };
 
-// TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
-const getActiveStatusOption = (status?: string) => {
-  const properties = SchemaAST.getPropertySignatures(Type.getSchema(Task.Task).ast);
-  const statusProperty = properties.find((p) => p.name === 'status');
-  // TODO(thure): Typescript asserts `.type` doesn’t have `.types`, but in runtime it does.
-  const statusMeta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(
-    (statusProperty!.type as any).types[0],
+/** The option the schema's `singleSelect` property meta declares for the status, read off the `status` property. */
+const getActiveStatusOption = (status?: string): Task.Option<string> | undefined => {
+  const statusProperty = SchemaAST.getPropertySignatures(Type.getSchema(Task.Task).ast).find(
+    (property) => property.name === 'status',
   );
-
-  // TODO(thure): Typescript asserts `statusMeta` doesn’t have `.value`, but in runtime it does.
-  const options = (statusMeta as any).value.singleSelect.options as { id: string; title: string; color: string }[];
-  return options.find(({ id }) => id === status);
+  const meta =
+    statusProperty && getPropertyMetaAnnotation<{ options?: Task.Option<string>[] }>(statusProperty, 'singleSelect');
+  return meta?.options?.find(({ id }) => id === status);
 };

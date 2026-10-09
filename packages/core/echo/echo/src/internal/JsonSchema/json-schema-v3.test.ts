@@ -7,11 +7,11 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
-import { TypeAnnotationId } from '../Annotation/annotations';
-import { toEffectSchema } from './json-schema';
-import { type JsonSchemaType } from './json-schema-type';
+import { TypeAnnotationId } from '../Annotation/annotations.ts';
+import { type JsonSchemaType } from './json-schema-type.ts';
+import { toEffectSchema } from './json-schema.ts';
 
 //
 // Spaces hold JSON Schema written by Effect 3, so `toEffectSchema` stays a permanent read path:

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect, test } from 'vitest';
 
-import * as EffectEx from './EffectEx';
+import * as EffectEx from './EffectEx.ts';
 
 //
 // Effect 4 shares the layer memo map across `Effect.provide` calls, where v3 gave each call its own.

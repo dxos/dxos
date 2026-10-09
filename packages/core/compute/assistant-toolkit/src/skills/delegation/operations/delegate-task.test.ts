@@ -18,9 +18,9 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import DelegationSkill from '../skill';
-import { DelegateTask } from './definitions';
-import { DelegationSkillHandlers } from './index';
+import * as DelegationSkill from '../DelegationSkill.ts';
+import { DelegateTask } from './definitions.ts';
+import { DelegationSkillHandlers } from './index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

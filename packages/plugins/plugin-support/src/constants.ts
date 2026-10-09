@@ -4,11 +4,13 @@
 
 import { meta } from '#meta';
 
+export const WELCOME_TOUR_ID = `${meta.profile.key}.tour.welcome`;
+
 export const SHORTCUTS_DIALOG = `${meta.profile.key}.ShortcutsDialog`;
 
-export const DXOS_GUILD_ID = '837138313172353095';
+/** The About dialog: the help menu opens it, and the onboarding plugin contributes it. */
+export const ABOUT_DIALOG = `${meta.profile.key}.component.about-dialog`;
 
-/** GitHub repo the prefilled new-issue URL targets. Matches HelpMenu's GITHUB_URL. */
-export const GITHUB_NEW_ISSUE_URL = 'https://github.com/dxos/dxos/issues/new';
+export const DXOS_GUILD_ID = '837138313172353095';
 
 export const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);

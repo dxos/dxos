@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as InboxPlugin from './InboxPlugin';
-export * from '#meta';
+export * as InboxPlugin from './InboxPlugin.ts';
+export * from '#operations';
+export * from '#skills';
 export * from '#types';
-export { getCalendarRangeSelectionId } from './paths';
+export * as Containers from './Containers.ts';
+export * as MailSync from './MailSync.ts';

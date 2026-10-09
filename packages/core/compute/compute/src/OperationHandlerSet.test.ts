@@ -3,16 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
-import * as Operation from './Operation';
-import * as OperationHandlerSet from './OperationHandlerSet';
+import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
 
 const KEY_A = DXN.make('com.example.test.a');
 const KEY_B = DXN.make('com.example.test.b');

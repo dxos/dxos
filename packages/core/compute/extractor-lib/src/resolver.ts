@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   type IdentityIndex,
   Resolver,
@@ -16,7 +16,7 @@ import {
 } from '@dxos/extractor';
 import { type Organization, type Person } from '@dxos/types';
 
-import { identitySpecs } from './identity';
+import { identitySpecs } from './identity.ts';
 
 export type HasEmail = { email: string };
 

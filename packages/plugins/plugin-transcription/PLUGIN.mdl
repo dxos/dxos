@@ -20,10 +20,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -290,7 +290,7 @@ feat F-6: Skill Integration
 ## Acceptance
 
 ```mdl
-test T-1: Create transcript
+scenario T-1: Create transcript
   given: a DXOS space is available
   when: op:createTranscript is invoked
   then:
@@ -300,7 +300,7 @@ test T-1: Create transcript
 ```
 
 ```mdl
-test T-2: Record and persist segment
+scenario T-2: Record and persist segment
   given: a Transcript with a Feed, microphone capture active
   when: the user speaks and silence is detected
   then:
@@ -310,7 +310,7 @@ test T-2: Record and persist segment
 ```
 
 ```mdl
-test T-3: Deduplicate segments across chunk boundaries
+scenario T-3: Deduplicate segments across chunk boundaries
   given: two consecutive transcription tasks with overlapping Whisper output
   when: the second task produces segments whose end timestamps fall before lastTimestamp
   then:
@@ -319,7 +319,7 @@ test T-3: Deduplicate segments across chunk boundaries
 ```
 
 ```mdl
-test T-4: Open transcript
+scenario T-4: Open transcript
   given: a Transcript with three Messages in its Feed
   when: op:openTranscript is invoked
   then:
@@ -328,7 +328,7 @@ test T-4: Open transcript
 ```
 
 ```mdl
-test T-5: Summarize transcript
+scenario T-5: Summarize transcript
   given: a transcript string and optional notes string
   when: op:summarizeTranscript is invoked
   then:
@@ -338,7 +338,7 @@ test T-5: Summarize transcript
 ```
 
 ```mdl
-test T-6: Sentence normalization is pure
+scenario T-6: Sentence normalization is pure
   given: an array of raw word-level Messages
   when: op:normalizeSentences is called
   then:
@@ -348,7 +348,7 @@ test T-6: Sentence normalization is pure
 ```
 
 ```mdl
-test T-7: Toggle recording in UI
+scenario T-7: Toggle recording in UI
   given: TranscriptionArticle is mounted with a Transcript
   when: user clicks the Start Recording toolbar button
   then:
@@ -361,12 +361,12 @@ test T-7: Toggle recording in UI
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 Transcription is enabled by default in every environment (`plugin-defs.tsx` `getDefaults`).
 
 ```mdl
-flow QA-1: Create a transcript and read it back
+test QA-1: Create a transcript and read it back
   desc: |
     The ECHO round-trip that does not require a live microphone or Whisper endpoint — create a
     Transcript, and read its (empty) content back via op:openTranscript.
@@ -376,8 +376,8 @@ flow QA-1: Create a transcript and read it back
   given:
     - an identity exists
     - space: a space is open
-    - no Transcript named "QA Transcript" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Transcript named "QA Transcript" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the transcript
       do: In the navtree, click + on the space and choose Transcript. Name it "QA Transcript".
       invoke: [op:createTranscript] { name: "QA Transcript", space: $given.space }
@@ -401,7 +401,7 @@ flow QA-1: Create a transcript and read it back
 ```
 
 ```mdl
-flow QA-2: Record, transcribe, and summarize a meeting
+test QA-2: Record, transcribe, and summarize a meeting
   desc: The full audio round-trip — start recording, speak, stop, and summarize what was said.
   actors: both
   covers: [F-1.1, F-1.2, F-2.2, F-5.1, T-2, T-5, T-7]
@@ -415,7 +415,7 @@ flow QA-2: Record, transcribe, and summarize a meeting
     - recordedContent: a canned transcript string to summarize when the recording steps below are
       not run (they are `blocked` on hardware), so `summarizeTranscript` can still be exercised
       standalone
-  test:
+  steps:
     - name: Start recording
       do: Click the microphone toggle in the toolbar.
       expect: the toolbar button label changes to "Stop Recording" and recording state becomes true
@@ -476,8 +476,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

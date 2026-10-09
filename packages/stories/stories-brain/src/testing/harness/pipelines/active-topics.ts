@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, deriveThreadId, messageToDocument } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { type ActiveTopicsDeps, type TopicContext } from '../internal/active-topics';
-import { generateText, parseJsonArray, parseJsonObject } from '../llm';
-import { type ModelPolicy, resolveModel } from '../model-policy';
-import { type ModelVariant } from '../models';
-import { draftReply } from './draft';
+import { type ActiveTopicsDeps, type TopicContext } from '../internal/active-topics.ts';
+import { generateText, parseJsonArray, parseJsonObject } from '../llm.ts';
+import { type ModelPolicy, resolveModel } from '../model-policy.ts';
+import { type ModelVariant } from '../models.ts';
+import { draftReply } from './draft.ts';
 
 // Model-backed `ActiveTopicsDeps` for the driver: wires the injected LLM steps (confidence / status /
 // tasks / facts / drafts) to the harness pipelines + `generateText`, each run under its stage's model

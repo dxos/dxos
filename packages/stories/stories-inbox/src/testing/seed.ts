@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message, Organization } from '@dxos/types';
 
-import { importMessages } from './archive';
-import { TRIP_MESSAGES } from './trip';
+import { importMessages } from './archive.ts';
+import { TRIP_MESSAGES } from './trip.ts';
 
 /**
  * Organizations for the demo senders' domains: the contact-extraction gate is an allow-list, so a

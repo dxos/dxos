@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -22,9 +22,10 @@ import {
   DISCORD_SOURCE,
   DISCORD_USER_LABEL,
   DISCORD_USER_PROVIDER_ID,
-} from '../constants';
-import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
-import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
+} from '../constants.ts';
+import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors.ts';
+import { DiscordSyncError } from '../operations/errors.ts';
+import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken, resolveDiscordToken } from '../services/index.ts';
 
 /**
  * Manual-credential form for the Discord Bot connector.
@@ -62,13 +63,13 @@ const validateToken = (token: string) =>
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.mapError((error) => {
       if (isDiscordErrorResponse(error) && discordErrorStatus(error) === 401) {
-        return new Error(
-          'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
-        );
+        return new DiscordSyncError({
+          message: 'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
+        });
       }
       // Preserve Discord's code/message for 403/404/5xx etc. via formatDiscordSyncFailure
       // — `String(error)` would collapse a dfx tagged error to its `_tag` string.
-      return error instanceof Error ? error : new Error(formatDiscordSyncFailure(error));
+      return error instanceof Error ? error : new DiscordSyncError({ message: formatDiscordSyncFailure(error) });
     }),
   );
 
@@ -80,7 +81,7 @@ const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof Dis
     Effect.gen(function* () {
       const token = values.token.trim();
       if (token.length === 0) {
-        return yield* Effect.fail(new Error('Bot token is required.'));
+        return yield* Effect.fail(new DiscordSyncError({ message: 'Bot token is required.' }));
       }
       yield* validateToken(token);
     }),
@@ -119,10 +120,11 @@ const makeOnTokenCreated =
       if (accessToken.account) {
         return;
       }
+      const token = yield* resolveDiscordToken(accessToken);
       const self = yield* Effect.gen(function* () {
         const rest = yield* DiscordREST;
         return yield* rest.getMyUser();
-      }).pipe(Effect.provide(makeLayer(accessToken.token)));
+      }).pipe(Effect.provide(makeLayer(token)));
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       });
@@ -137,15 +139,18 @@ const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
  * connection UI can offer to reauthenticate.
  */
 const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
-  Effect.gen(function* () {
-    const rest = yield* DiscordREST;
-    yield* rest.getMyUser();
-  }).pipe(
-    Effect.provide(makeDiscordUserLayerFromToken(accessToken.token)),
+  Effect.flatMap(resolveDiscordToken(accessToken), (token) =>
+    Effect.gen(function* () {
+      const rest = yield* DiscordREST;
+      yield* rest.getMyUser();
+    }).pipe(Effect.provide(makeDiscordUserLayerFromToken(token))),
+  ).pipe(
     Effect.asVoid,
     Effect.mapError(
       () =>
-        new ConnectionTestError({ message: 'Discord rejected the credential. Reauthenticate to continue syncing.' }),
+        new ConnectorError.ConnectionTestError({
+          message: 'Discord rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 

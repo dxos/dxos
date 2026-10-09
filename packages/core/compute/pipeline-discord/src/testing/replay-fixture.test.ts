@@ -25,13 +25,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { AgentRegistry, StateStore } from '@dxos/crawler';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 
-import { replayStream } from '../replay';
-import { extractQuestionsStage } from '../stages';
-import { ExtractedQuestionStore, MessageStore } from '../stores';
-import { storesLayer } from './index';
+import { replayStream } from '../replay.ts';
+import { extractQuestionsStage } from '../stages/index.ts';
+import { ExtractedQuestionStore, MessageStore } from '../stores/index.ts';
+import { storesLayer } from './index.ts';
 
 const fixturePath =
   process.env.DISCORD_CRAWL_DB ?? fileURLToPath(new URL('./fixtures/discord-crawl.db', import.meta.url));

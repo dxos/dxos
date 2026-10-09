@@ -7,7 +7,13 @@ import { describe, it } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { type ContentBlock } from '@dxos/types';
 
-import { type ToolResultEvent, dropReportedToolResults, toolResultPrompt, wakeUpPrompt } from './agent-process';
+import {
+  type ToolResultEvent,
+  dropReportedToolResults,
+  isToolResultHandled,
+  toolResultPrompt,
+  wakeUpPrompt,
+} from './agent-process.ts';
 
 // Recovering a tool result across a reload was, until now, exercised only when a race inside
 // `AgentService.test.ts`'s `recovers queued tool results after reload` happened to land on it, and no
@@ -55,6 +61,22 @@ describe('dropReportedToolResults', () => {
   });
 });
 
+// A tool child that can no longer be reattached is answered with an error unless its result is already
+// accounted for; otherwise the call would stay pending and the agent could never complete.
+describe('isToolResultHandled', () => {
+  it('is handled when the result is queued for the next turn', ({ expect }) => {
+    expect(isToolResultHandled([toolResult('1')], Process.ID.make('1'), () => false)).toBe(true);
+  });
+
+  it('is handled when the result already reached the agent', ({ expect }) => {
+    expect(isToolResultHandled([], Process.ID.make('1'), (pid) => pid === Process.ID.make('1'))).toBe(true);
+  });
+
+  it('is not handled when the result was neither queued nor reported', ({ expect }) => {
+    expect(isToolResultHandled([toolResult('2')], Process.ID.make('1'), () => false)).toBe(false);
+  });
+});
+
 describe('toolResultPrompt', () => {
   it('redelivers a recovered tool result as a synthetic <result> block', ({ expect }) => {
     const [block] = toolResultPrompt(toolResult('9', 'listed on the NASDAQ'));
@@ -81,5 +103,12 @@ describe('wakeUpPrompt', () => {
 
   it('falls back to a generic continuation prompt without a reminder', ({ expect }) => {
     expect(wakeUpPrompt(NOW, null)).toContain('Continue with whatever you intended');
+  });
+
+  it('states the self-wake budget, and warns on the last wake', ({ expect }) => {
+    expect(wakeUpPrompt(NOW, null, { wake: 3, max: 10 })).toContain(
+      'self-wake 3 of 10 before the user must write again',
+    );
+    expect(wakeUpPrompt(NOW, null, { wake: 10, max: 10 })).toContain('further alarms will not wake you');
   });
 });

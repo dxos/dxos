@@ -7,6 +7,9 @@
       "path": "packages/core/compute/agent-claude/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/agent-code-mode/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
@@ -49,6 +52,9 @@
       "path": "packages/core/echo/blob/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/brain/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -70,7 +76,7 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
+      "path": "tools/code-index/tsconfig.json"
     },
     {
       "path": "tools/codemorph/tsconfig.json"
@@ -80,6 +86,9 @@
     },
     {
       "path": "packages/apps/composer-crx/tsconfig.json"
+    },
+    {
+      "path": "packages/e2e/composer-e2e/tsconfig.json"
     },
     {
       "path": "packages/apps/composer-stream-deck/tsconfig.json"
@@ -115,6 +124,9 @@
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
+      "path": "packages/common/datalog/tsconfig.json"
+    },
+    {
       "path": "packages/common/debug/tsconfig.json"
     },
     {
@@ -127,6 +139,9 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
+      "path": "packages/common/diagram/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -134,12 +149,6 @@
     },
     {
       "path": "packages/common/display-name/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-build/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-compile/tsconfig.json"
     },
     {
       "path": "tools/dx-tools/tsconfig.json"
@@ -179,6 +188,9 @@
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-sqlite/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
@@ -316,6 +328,9 @@
       "path": "packages/sdk/migrations/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ner/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
     },
     {
@@ -329,6 +344,9 @@
     },
     {
       "path": "packages/core/compute/operation/tsconfig.json"
+    },
+    {
+      "path": "packages/e2e/perf-harness/tsconfig.json"
     },
     {
       "path": "packages/common/phoenix/tsconfig.json"
@@ -347,6 +365,9 @@
     },
     {
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-agent/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
@@ -376,6 +397,9 @@
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-canvas/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
@@ -386,6 +410,9 @@
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -460,6 +487,9 @@
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
     },
     {
@@ -479,6 +509,9 @@
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-labeler/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-lametric/tsconfig.json"
@@ -509,6 +542,9 @@
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-messenger/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-mobile/tsconfig.json"
@@ -655,6 +691,12 @@
       "path": "packages/plugins/plugin-typefully/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-typesafe/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-uml/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
@@ -674,9 +716,6 @@
     },
     {
       "path": "packages/e2e/proto-guard/tsconfig.json"
-    },
-    {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"
@@ -781,6 +820,9 @@
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-html/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
@@ -805,6 +847,9 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-query/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-rdf/tsconfig.json"
     },
     {
@@ -824,6 +869,9 @@
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-trace/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-transcription/tsconfig.json"
@@ -860,6 +908,9 @@
     },
     {
       "path": "packages/stories/stories-brain/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-compute/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"
@@ -971,6 +1022,9 @@
     },
     {
       "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-module-url/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-shutdown/tsconfig.json"

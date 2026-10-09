@@ -7,18 +7,18 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { SLACK_API_BASE } from '../constants';
-import { SlackApiError } from '../errors';
+import { SLACK_API_BASE } from '../constants.ts';
+import { SlackApiError } from '../errors.ts';
 
 /** Slack bearer token (`xoxp-...` or `xoxb-...`). */
 type SlackCredentialsValue = {
@@ -402,3 +402,50 @@ export const fetchHistory = (
     } while (cursor);
     return all;
   });
+
+const SlackPostMessageResponseSchema = Schema.Struct({
+  ok: Schema.Boolean,
+  error: Schema.String.pipe(Schema.optional),
+  /** The conversation the message landed in (a DM's `D…` id when posting to a user). */
+  channel: Schema.String.pipe(Schema.optional),
+  /** The posted message's timestamp; its id within the conversation. */
+  ts: Schema.String.pipe(Schema.optional),
+});
+
+export type SlackPostMessageResponse = Schema.Schema.Type<typeof SlackPostMessageResponseSchema>;
+
+/**
+ * Posts a message into a conversation (`chat.postMessage`), as a reply when `threadTs` is given.
+ * Needs `chat:write`; Slack answers `missing_scope` without it and `not_in_channel` when the bot
+ * was never invited to the conversation.
+ */
+export const postMessage = (
+  channelId: string,
+  text: string,
+  options: { threadTs?: string } = {},
+): SlackEffect<SlackPostMessageResponse> =>
+  slackRequest(
+    (creds) =>
+      authedPost(creds, 'chat.postMessage', {
+        channel: channelId,
+        text,
+        ...(options.threadTs ? { thread_ts: options.threadTs } : {}),
+      }),
+    SlackPostMessageResponseSchema,
+  );
+
+const SlackConversationsOpenResponseSchema = Schema.Struct({
+  ok: Schema.Boolean,
+  error: Schema.String.pipe(Schema.optional),
+  channel: Schema.Struct({ id: Schema.String }).pipe(Schema.optional),
+});
+
+/** Opens (or returns) the token's direct-message conversation with a user (`conversations.open`); needs `im:write`. */
+export const openConversation = (userId: string): SlackEffect<string | undefined> =>
+  Effect.map(
+    slackRequest(
+      (creds) => authedPost(creds, 'conversations.open', { users: userId }),
+      SlackConversationsOpenResponseSchema,
+    ),
+    (response) => response.channel?.id,
+  );

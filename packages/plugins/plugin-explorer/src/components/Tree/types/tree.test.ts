@@ -8,8 +8,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Task } from '@dxos/types';
 
-import { createTree } from '../../../testing';
-import { type Tree } from './tree';
+import { createTree } from '../../../testing/index.ts';
+import { type Tree } from './tree.ts';
 
 random.seed(0);
 
@@ -128,8 +128,8 @@ describe('tree', () => {
 
     const tree = createTree();
     const node = tree.addNode(tree.root);
-    Obj.update(tree.tree, () => {
-      node.ref = Ref.make(task);
+    Obj.update(tree.tree, (treeObject) => {
+      treeObject.nodes[node.id].ref = Ref.make(task);
     });
   });
 });

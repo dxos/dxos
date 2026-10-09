@@ -10,9 +10,9 @@ import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '#types';
 
-import { CreateAgent } from './definitions';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof CreateAgent> = CreateAgent.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.CreateAgent> = ClientOperation.CreateAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);

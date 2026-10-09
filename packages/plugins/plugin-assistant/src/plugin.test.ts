@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
@@ -13,28 +13,30 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Query, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
 import { AssistantEvents, AssistantOperation } from '#types';
 
-import { AssistantSkill } from './skills/assistant';
-import { PluginManagerSkill } from './skills/plugin-manager';
+import { AssistantSkill } from './skills/assistant/index.ts';
+import { PluginManagerSkill } from './skills/plugin-manager/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -45,7 +47,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), AssistantPlugin()],
     });
 
@@ -84,14 +86,14 @@ describe('AssistantPlugin', () => {
     {
       // The curated production and mobile sets ship no registry, so the skill's verbs would have no
       // handlers there.
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [ClientPlugin.make({}), AssistantPlugin()],
       });
       expect(skillKeys(harness)).not.toContain(PluginManagerSkill.key);
     }
 
     {
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()],
       });
       expect(skillKeys(harness)).toContain(PluginManagerSkill.key);
@@ -102,7 +104,7 @@ describe('AssistantPlugin', () => {
     // The skill only helps if it reaches the model, and it does that by being bound to the chat --
     // a user who never opens chat settings would otherwise never see a plugin offered.
     const boundSkillUris = async (plugins: Plugin.Plugin[]) => {
-      await using harness = await createComposerTestApp({ plugins });
+      await using harness = await Harness.createComposerTestApp({ plugins });
       const { defaultSpace } = await EffectEx.runAndForwardErrors(
         initializeIdentity(harness.get(ClientCapabilities.Client)),
       );
@@ -136,7 +138,7 @@ describe('AssistantPlugin', () => {
   });
 
   test('resolves a language model through the plugin AI service', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({}),
         AssistantPlugin({
@@ -158,7 +160,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+          AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
             Layer.provideMerge(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService)),
           ),
         ),
@@ -167,7 +169,7 @@ describe('AssistantPlugin', () => {
   });
 
   test('runs instructions end to end through the plugin', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({}),
         AssistantPlugin({
@@ -195,7 +197,7 @@ describe('AssistantPlugin', () => {
         yield* Database.flush();
 
         const result = yield* Operation.invoke(
-          RunInstructions,
+          AgentOperation.RunInstructions,
           {
             instructions: Ref.make(instructions),
             input: {
@@ -214,7 +216,7 @@ describe('AssistantPlugin', () => {
     'boots the agent service with the standard skills and completes a turn',
     { timeout: 120_000 },
     async ({ expect }) => {
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [
           ClientPlugin.make({}),
           AssistantPlugin({

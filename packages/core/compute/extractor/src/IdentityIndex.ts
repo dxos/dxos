@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type Database, Filter, Obj, Type } from '@dxos/echo';
 
-import { type IdentitySpec, identityKeys } from './IdentitySpec';
+import { type IdentitySpec, identityKeys } from './IdentitySpec.ts';
 
 /**
  * Key → object map over every identity key in a space, kept current as objects are created.

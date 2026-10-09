@@ -10,8 +10,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import * as AiSummarizer from './AiSummarizer';
-import { ScriptedLanguageModel } from './testing';
+import * as AiSummarizer from './AiSummarizer.ts';
+import { ScriptedLanguageModel } from './testing/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -19,9 +19,7 @@ const SUMMARY = 'The user ordered a laptop stand; the order shipped on the 3rd.'
 
 // Scripting the model keeps the assertion on what `summarize` does with the response — the memoized
 // version could only check that a summary block existed.
-const TestLanguageModel = ScriptedLanguageModel.scriptedLanguageModelLayer([
-  { parts: [ScriptedLanguageModel.text(SUMMARY)] },
-]);
+const TestLanguageModel = ScriptedLanguageModel.layer([{ parts: [ScriptedLanguageModel.text(SUMMARY)] }]);
 
 describe('AiSummarizer', () => {
   it.effect(

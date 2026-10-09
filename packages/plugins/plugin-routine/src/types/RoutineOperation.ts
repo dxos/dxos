@@ -19,7 +19,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EID as _EchoURIReference } from '@dxos/keys';
 
-import { TriggerTemplate } from './Routine';
+import { TriggerTemplate } from './Routine.ts';
 export { _EchoURIReference };
 
 export const CreateTriggerFromTemplate = Operation.make({
@@ -98,7 +98,7 @@ export const RunRoutine = Operation.make({
     name: 'Run Routine',
     icon: 'ph--play--regular',
   },
-  services: [Capability.Service, Trigger.TriggerMonitorService],
+  services: [Capability.Service, Trigger.ManagerService],
   input: Schema.Struct({
     routine: Ref.Ref(Routine.Routine),
   }),

@@ -5,10 +5,11 @@
 import type * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
-import { getCodec } from './codecs';
-import { type Codec, type Converted, type Derived, type Mapping, type Plan, type ResolvedEntry } from './types';
+import { getCodec } from './codecs.ts';
+import { type Codec, type Converted, type Derived, type Mapping, type Plan, type ResolvedEntry } from './types.ts';
 
 /** `id` is identity, never lensed, so it never participates in a mapping. */
 const RESERVED = new Set(['id']);

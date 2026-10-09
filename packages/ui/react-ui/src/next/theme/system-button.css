@@ -1,0 +1,26 @@
+/*
+ * SystemButton: a preset's glyph takes a valence's text colour (a pressed Star, a landed copy) over the button's own
+ * fill, in place of the current presets' Tailwind colour classes.
+ */
+
+@layer dx-components {
+  .dx-button[data-icon-valence='warning'] > .dx-icon {
+    color: var(--color-warning-text);
+  }
+  .dx-button[data-icon-valence='success'] > .dx-icon {
+    color: var(--color-success-text);
+  }
+
+  /* Disclosure: one caret that turns a quarter to point down while its region is expanded. */
+  .dx-button[data-disclosure] > .dx-icon {
+    transition: transform 150ms ease;
+  }
+  .dx-button[data-disclosure][aria-expanded='true'] > .dx-icon {
+    transform: rotate(90deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dx-button[data-disclosure] > .dx-icon {
+      transition: none;
+    }
+  }
+}

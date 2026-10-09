@@ -15,14 +15,14 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { makeRoutine } from '../../util';
-import { RoutineTraceCompanion } from './RoutineTraceCompanion';
+import { makeRoutine } from '../../util/index.ts';
+import { RoutineTraceCompanion } from './RoutineTraceCompanion.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Feed.Feed, Trace.Message];
 
@@ -92,7 +92,7 @@ const seed = (space: Space) =>
 const withCompanion = () =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>

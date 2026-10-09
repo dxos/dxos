@@ -4,10 +4,15 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
-import { Banner, Button, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '#types';
@@ -18,6 +23,9 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
     activeDevPluginIds: readonly string[];
     onEnableDev: (url: string) => Promise<void>;
     onDisableDev: (id: string) => Promise<void>;
+    /** Whether this device uses its own plugin set rather than the account's; `undefined` hides the section. */
+    pluginScopeLocal?: boolean;
+    onPluginScopeLocalChange?: (local: boolean) => void;
   }
 >;
 
@@ -29,7 +37,7 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
  * dev server is offline at boot, the toggle stays on and a warning is logged
  * (the manager's `failed` atom also surfaces a badge on the plugin list).
  *
- * The URL input and toggle are rendered as `Form.Row` action rows (not schema
+ * The URL input and toggle are rendered as `Form.Field` action rows (not schema
  * fields): the input needs a dynamic disabled state and the toggle runs async
  * enable/disable side effects, neither of which a plain schema field expresses.
  */
@@ -39,8 +47,12 @@ export const RegistrySettings = ({
   activeDevPluginIds,
   onEnableDev,
   onDisableDev,
+  pluginScopeLocal,
+  onPluginScopeLocalChange,
+  scope,
 }: RegistrySettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
   const url = settings.devPluginUrl ?? '';
@@ -93,42 +105,82 @@ export const RegistrySettings = ({
     <Form.Root variant='settings' readonly={!onSettingsChange} schema={RegistrySettingsSchema} values={settings}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('dev-plugin.section.title')}>
+          {pluginScopeLocal !== undefined && (
+            <Form.FieldSet label={t('plugin-registry.label')} actions={scope}>
+              <Form.Field label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
+                <Field.Root>
+                  <Input.Switch
+                    data-testid='registrySettings.pluginScope'
+                    // The scope is still worth showing without a handler; flipping it is not.
+                    disabled={!onPluginScopeLocalChange}
+                    checked={pluginScopeLocal}
+                    // Only rejoining asks: it replaces this device's choices with the account's.
+                    onCheckedChange={({ checked: local }) =>
+                      local ? onPluginScopeLocalChange?.(true) : setRejoining(true)
+                    }
+                  />
+                </Field.Root>
+              </Form.Field>
+            </Form.FieldSet>
+          )}
+          <Form.FieldSet label={t('dev-plugin.section.title')}>
             <Banner.Root valence='neutral'>
-              <Banner.Content>
-                <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
-              </Banner.Content>
+              <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
             </Banner.Root>
-            <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Input.Root>
-                <Input.TextInput
-                  disabled={!onSettingsChange || enabled || busy}
-                  value={url}
-                  onChange={(event) =>
-                    onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
-                  }
-                />
-              </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
-              <Button
+            <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
+              <Input.Root
+                data-testid='registrySettings.devPluginUrl'
+                disabled={!onSettingsChange || enabled || busy}
+                value={url}
+                onChange={(event) =>
+                  onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
+                }
+              />
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('dev-plugin.toggle.label')}
+              description={t('dev-plugin.toggle.description')}
+            >
+              <Button.Root
+                data-testid='registrySettings.devPluginToggle'
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}
               >
                 {buttonLabel}
-              </Button>
-            </Form.Row>
+              </Button.Root>
+            </Form.Field>
             {enabled && !loadedDevId && !busy && (
               <Banner.Root valence='warning'>
-                <Banner.Content>
-                  <Banner.Body>{t('dev-plugin.not-loaded.message')}</Banner.Body>
-                </Banner.Content>
+                <Banner.Body>{t('dev-plugin.not-loaded.message')}</Banner.Body>
               </Banner.Root>
             )}
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
+      <AlertDialog.Root open={rejoining} onOpenChange={({ open }) => setRejoining(open)}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <div className='grow' />
+            <AlertDialog.Cancel>{t('plugin-scope.rejoin-dialog.cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action
+              data-testid='registrySettings.pluginScope.confirm'
+              variant='primary'
+              onClick={() => {
+                onPluginScopeLocalChange?.(false);
+                setRejoining(false);
+              }}
+            >
+              {t('plugin-scope.rejoin-dialog.confirm.label')}
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Form.Root>
   );
 };

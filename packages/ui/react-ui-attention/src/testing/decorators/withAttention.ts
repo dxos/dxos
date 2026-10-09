@@ -4,11 +4,11 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator } from '@storybook/react-vite';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { createElement, useMemo } from 'react';
 
-import { RootAttentionProvider, ViewStateProvider } from '../../components';
-import { Attention } from '../../types';
+import { RootAttentionProvider, ViewStateProvider } from '../../components/index.ts';
+import { Attention } from '../../types/index.ts';
 
 /**
  * Storybook decorator that provides attention context.

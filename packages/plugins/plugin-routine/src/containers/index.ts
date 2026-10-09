@@ -4,7 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const RoutineArticle: ComponentType<any> = lazy(() => import('./RoutineArticle'));
-export const RoutineTraceCompanion: ComponentType<any> = lazy(() => import('./RoutineTraceCompanion'));
-export const RoutineSettings: ComponentType<any> = lazy(() => import('./RoutineSettings'));
-export const SkillArticle: ComponentType<any> = lazy(() => import('./SkillArticle'));
+export const RoutineArticle: ComponentType<any> = lazy(() => import('./RoutineArticle/index.ts'));
+export const RoutineTraceCompanion: ComponentType<any> = lazy(() => import('./RoutineTraceCompanion/index.ts'));
+export const RoutineSettings: ComponentType<any> = lazy(() => import('./RoutineSettings/index.ts'));
+export const SkillArticle: ComponentType<any> = lazy(() => import('./SkillArticle/index.ts'));

@@ -9,6 +9,7 @@ import * as Stream from 'effect/Stream';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { ClientCapabilities } from '#types';
 
@@ -16,7 +17,7 @@ import { ClientCapabilities } from '#types';
  * Contributes a swarm-backed {@link Capabilities.RemoteTraceMonitor} (DX-1125). Remote runtimes
  * (edge intrinsics / function-invoker) broadcast their ephemeral trace messages over the space swarm;
  * this monitor subscribes via the client's network service and decodes them so the aggregate
- * {@link Process.Monitor.subscribeToTraceMessages} surfaces remote progress.
+ * {@link Process.Manager.subscribeToTraceMessages} surfaces remote progress.
  *
  * The client is resolved lazily inside the subscribe closure (invoked only when a consumer
  * subscribes, well after `ClientReady`), so this module can be collected at `SetupProcessManager`
@@ -41,7 +42,9 @@ export default Capability.makeModule(
                 // the WebSocket connection, not this object; it only affects point-to-point filtering.
                 const peer = {
                   peerKey:
-                    client.halo.device?.deviceKey.toHex() ?? client.halo.identity.get()?.identityKey.toHex() ?? '',
+                    toPublicKey(client.halo.device?.deviceKey)?.toHex() ??
+                    toPublicKey(client.halo.identity.get()?.identityKey)?.toHex() ??
+                    '',
                 };
                 return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta

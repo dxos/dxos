@@ -62,9 +62,9 @@ is being phased out — prefer the kebab forms):
 - **Surfaces:** `bg-base-surface`, `bg-card-surface`, `bg-modal-surface`, `bg-toolbar-surface`,
   `bg-sidebar-surface`, `bg-deck-surface`, `bg-group-surface`, `bg-input-surface`, `bg-hover-surface`,
   `bg-attention-surface`, `bg-accent-bg` (+ `-hover`).
-- **Text:** `text-base-fg` (body), `text-description` (muted), `text-subdued` (dimmest),
+- **Text:** `text-fg` (body), `text-fg-muted` (muted), `text-fg-subtle` (dimmest),
   `text-placeholder`, `text-accent-text`.
-- **Borders:** `border-separator`, `border-subdued-separator`, `border-primary-separator`,
+- **Borders:** `border-separator`, `border-separator-subtle`, `border-primary-separator`,
   `border-active-separator`, `border-focus-ring`.
 
 Themed primitives accept overrides via a `classNames` prop (string or array) — never `className`.
@@ -120,8 +120,8 @@ Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `reg
 `light`, `duotone`, `thin`). Use the `Icon` primitive or any primitive that takes an `icon` prop:
 
 ```tsx
-import { Icon } from '@dxos/react-ui';
-<Icon icon='ph--plus--regular' size={5} />;
+import * as Icon from '@dxos/react-ui/Icon';
+<Icon.Icon icon='ph--plus--regular' size={5} />;
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
@@ -201,7 +201,7 @@ the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra 
 ```tsx
 <Flex column gap='sm'>…</Flex>
 <Flex gap='sm' justify='end'>…</Flex>
-<Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+<Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
 <Flex asChild gap='sm'><header>…</header></Flex>
 ```
 
@@ -316,7 +316,7 @@ Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
-  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  Built with `KvsStore.make` (`@dxos/effect/KvsStore`) (one schema-validated blob per plugin, keyed by `meta.profile.key`);
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
 - **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
   view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
@@ -348,26 +348,35 @@ Never hand-roll native `<input>` / `<textarea>` / `<select>` in a plugin — the
 `Form` from `@dxos/react-ui-form`, which renders themed inputs from the Effect Schema (strings, numbers,
 booleans, enums via `Schema.Literal`/`Format`, nested `Schema.Struct`, `Schema.Array`, `Schema.Record`).
 
-**`Form` is composed — `Form.Root` renders nothing on its own.** The fields come from `Form.FieldSet` (or
-`Form.Layout`), nested inside the standard Radix wrapper pair: `Form.Viewport` (outer) → `Form.Content`
-(inner), which own scroll and padding (so, like List/Stack, don't pad them yourself):
+**`Form` is composed — `Form.Root` renders nothing on its own.** Three parts map one for one onto
+`react-ui`'s `Field` and `Fieldset`: `Form.Field` is a field (one row), `Form.FieldSet` is a
+`<fieldset>` (a titled group, chrome by depth), and `Form.Fields` walks the schema and renders no
+element. They nest inside the standard wrapper pair `Form.Viewport` (outer) → `Form.Content` (inner),
+which own scroll and padding (so, like List/Stack, don't pad them yourself):
 
 ```tsx
 <Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={handleSave}>
   <Form.Viewport>
     <Form.Content>
-      <Form.Section label='…' description='…' /> {/* optional grouping */}
-      <Form.FieldSet /> {/* fields, generated from the schema */}
+      <Form.FieldSet label='…' description='…'>
+        <Form.Fields /> {/* one Form.Field per schema property */}
+      </Form.FieldSet>
       <Form.Actions /> {/* Save/Cancel — omit when autoSave */}
     </Form.Content>
   </Form.Viewport>
 </Form.Root>
 ```
 
-- **`Form.FieldSet`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
-  visibility. Hide a field with `FormInputAnnotation.set(false)`; there's no manual field markup.
-- **`Form.Layout template={…}`** is the alternative to `FieldSet`: a custom layout DSL for arranging
-  fields (grouping, columns, ordering) when the default schema order isn't enough.
+- **`Form.Fields`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
+  visibility; `path`, `include`, `exclude`, `sort` narrow it. Hide a field with
+  `FormInputAnnotation.set(false)`. The simplest form is `<Form.Root schema={schema} values={values}><Form.Fields /></Form.Root>`.
+- **`Form.Field`** is the leaf and always a real field. `<Form.Field path='hue' />` is bound: label,
+  description, value and error come from the schema, and the dispatcher picks the control; put a
+  child in it for a custom control (read the binding with `useFormField()`). A hand-written row is
+  `<Form.Field label description><Field.Switch … /></Form.Field>`: the row's label names the control.
+  A row holding a button or a readout says `standalone`.
+- **`Form.Layout template={…}`** is the alternative to `Form.Fields`: a custom layout DSL for
+  arranging fields (columns, ordering) when the default schema order isn't enough.
 
 **Save model — the form never mutates `values`; the parent applies the change.** Pick a mode:
 
@@ -409,7 +418,7 @@ or wrap it in one element occupying slot 2:
     {' '}
     {/* slot 2 (1fr content) */}
     <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
-    {price && <span className='text-sm text-description'>{price}</span>}
+    {price && <span className='text-sm text-fg-muted'>{price}</span>}
   </div>
   <Card.IconBlock /> {/* slot 3 (action) */}
 </Card.Header>

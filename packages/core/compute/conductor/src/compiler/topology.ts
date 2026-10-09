@@ -4,12 +4,13 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types';
-import { pickProperty } from '../util';
+import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types/index.ts';
+import { pickProperty } from '../util/index.ts';
 
 /**
  * Structure derived from the compute graph.

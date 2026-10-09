@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Masonry } from '@dxos/react-ui-masonry';
 
-import { TileAdapter, type TileData } from './ObjectTile';
+import { TileAdapter, type TileData } from './ObjectTile.tsx';
 
 export type ObjectMasonryProps = {
   /** Keys the persisted column layout; stable per view, so the grid does not reflow on remount. */

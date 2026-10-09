@@ -4,12 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { setHeading } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const headingIcons: Record<string, string> = {
   0: 'ph--paragraph--regular',

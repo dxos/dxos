@@ -6,12 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type WindowController } from '@dxos/react-ui-virtual';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
-import { type FeedScenario, MessageWindow, createScenario } from '../testing';
+import { type FeedScenario, MessageWindow, createScenario } from '../testing/index.ts';
 
 /**
  * Real messages, placed by the new module.
@@ -50,7 +51,7 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <IconButton
+        <Button.Root
           icon='ph--plus--regular'
           iconOnly
           label='Append'
@@ -65,7 +66,7 @@ const DefaultStory = ({
             ])
           }
         />
-        <IconButton
+        <Button.Root
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'

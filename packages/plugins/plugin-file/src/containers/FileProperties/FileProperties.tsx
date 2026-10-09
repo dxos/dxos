@@ -6,11 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Blob, Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -27,7 +32,7 @@ export type FilePropertiesProps = AppSurface.ObjectPropertiesProps<File.File>;
  * the regenerate control rather than a value presented as permanent.
  */
 export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [reference, setReference] = useState<string | undefined>(undefined);
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [pending, setPending] = useState(false);
@@ -69,40 +74,34 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
   }
 
   return (
-    // Its own provider: `useClipboard` falls back to a no-op context, so a copy button outside one
-    // fails silently rather than visibly.
-    <Clipboard.Provider>
-      <Form.Section>
-        {reference && (
-          <Input.Root>
-            <Input.Label>{t('properties.reference.label')}</Input.Label>
-            <div className='flex w-full gap-1'>
-              <Input.TextInput readOnly value={reference} classNames='grow' />
-              <Clipboard.IconButton value={reference} label={t('properties.reference.copy.label')} />
-            </div>
-          </Input.Root>
-        )}
-        {url && (
-          <Input.Root>
-            <Input.Label>{t('properties.url.label')}</Input.Label>
-            <div className='flex w-full gap-1'>
-              <Input.TextInput readOnly value={url} classNames='grow' />
-              <Clipboard.IconButton value={url} label={t('properties.url.copy.label')} />
-              <IconButton
-                iconOnly
-                icon='ph--arrows-clockwise--regular'
-                label={t('properties.url.regenerate.label')}
-                disabled={pending}
-                onClick={() => void resolve()}
-              />
-            </div>
-            <Input.DescriptionAndValidation>
-              <Input.Description>{t('properties.url.description')}</Input.Description>
-            </Input.DescriptionAndValidation>
-          </Input.Root>
-        )}
-      </Form.Section>
-    </Clipboard.Provider>
+    <Form.FieldSet>
+      {reference && (
+        <Field.Root>
+          <Field.Label>{t('properties.reference.label')}</Field.Label>
+          <Layout.Flex gap='xs' classNames='w-full'>
+            <Input.Root readOnly value={reference} classNames='grow' />
+            <SystemButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
+          </Layout.Flex>
+        </Field.Root>
+      )}
+      {url && (
+        <Field.Root>
+          <Field.Label>{t('properties.url.label')}</Field.Label>
+          <Layout.Flex gap='xs' classNames='w-full'>
+            <Input.Root readOnly value={url} classNames='grow' />
+            <SystemButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
+            <Button.Root
+              iconOnly
+              icon='ph--arrows-clockwise--regular'
+              label={t('properties.url.regenerate.label')}
+              disabled={pending}
+              onClick={() => void resolve()}
+            />
+          </Layout.Flex>
+          <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
+        </Field.Root>
+      )}
+    </Form.FieldSet>
   );
 };
 

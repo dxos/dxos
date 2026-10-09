@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-doctor",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Self-introspection skill: query the browser tab's own logs.",
   "homepage": "https://dxos.org",
@@ -11,19 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
@@ -73,17 +75,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./diagnostics": {
-      "source": "./src/diagnostics/index.ts",
-      "types": "./dist/types/src/diagnostics/index.d.ts",
-      "import": "./dist/lib/diagnostics.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./DoctorCapabilities": {
       "source": "./src/types/DoctorCapabilities.ts",
       "types": "./dist/types/src/types/DoctorCapabilities.d.ts",
@@ -103,6 +94,12 @@
       "source": "./src/DoctorPlugin.ts",
       "types": "./dist/types/src/DoctorPlugin.d.ts",
       "import": "./dist/lib/DoctorPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -131,12 +128,14 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-client": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",

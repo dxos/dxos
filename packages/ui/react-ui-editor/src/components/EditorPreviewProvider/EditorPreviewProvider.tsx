@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
-import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
-import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext';
+import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';
 
 export type EditorPreviewProviderProps = PropsWithChildren<{
   onLookup?: (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
@@ -29,24 +30,29 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card.
+      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card — after
+      // a grace period, so the pointer may already have opened another anchor by then. Only the
+      // anchor currently shown may close the popover; a stale close from the one just left is dropped.
       if (event.state === false) {
+        if (event.trigger !== triggerRef.current) {
+          return;
+        }
         activationRef.current++;
         setOpen(false);
         return;
       }
 
       const sequence = ++activationRef.current;
-      const { dxn, label, trigger } = event;
+      const { eid, label, trigger } = event;
       setValue((value) => ({
         ...value,
-        link: { label, dxn },
+        link: { label, eid },
         pending: true,
       }));
 
       triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, dxn }).then((target) => {
+      void onLookup?.({ label, eid }).then((target) => {
         if (sequence !== activationRef.current) {
           return;
         }
@@ -82,8 +88,13 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   return (
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <Popover.Root open={open} onOpenChange={handleOpenChange}>
-        <Popover.VirtualTrigger virtualRef={triggerRef as unknown as RefObject<HTMLButtonElement>} />
+      <Popover.Root
+        open={open}
+        onOpenChange={({ open }) => handleOpenChange(open)}
+        positioning={VirtualAnchor.virtualAnchor(triggerRef)}
+        // A preview card shows beside the link; focus stays in the editor.
+        autoFocus={false}
+      >
         <div className='contents' ref={setRoot}>
           {children}
         </div>

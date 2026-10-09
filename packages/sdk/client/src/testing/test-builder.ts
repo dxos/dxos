@@ -2,14 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { ClientRpcServer } from '@dxos/client-protocol';
-import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { Rpc } from '@dxos/client-protocol';
+import { type IdentityManager, ServiceStack } from '@dxos/client-services';
+import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -29,17 +27,15 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
-import { Client } from '../client';
-import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services';
+import { Client } from '../client/index.ts';
+import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services/index.ts';
 // `@dxos/client/testing` is itself a test-only entry, so reaching the in-process host directly is
 // the point here (see `../services/local.ts`).
-import { LocalClientServices } from '../services/local';
-import { TestWorkerFactory } from './test-worker-factory';
+import { LocalClientServices } from '../services/local.ts';
+import { TestWorkerFactory } from './test-worker-factory.ts';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -92,30 +88,22 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    );
-
-    const services = new ClientServicesHost({
-      config: this.config,
-      runtimeProps,
-      runtime: runtime.contextEffect,
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => runtime.dispose());
-    this._ctx.onDispose(() => services.close(this._ctx));
+  createClientServicesHost(runtimeProps?: ServiceStack.ServiceContextRuntimeProps): ServiceContext {
+    const services = new ServiceContext({ config: this.config, runtimeProps, ...this.networking });
+    this._ctx.onDispose(() => services.destroy());
     return services;
   }
 
   /**
    * Create local services host.
-   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes;
+   *   inboxRelay: an inbox relay (e.g. `MemoryEdgeInbox`) shared with other clients in place of EDGE.
    */
-  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean; sqlitePath?: string }): LocalClientServices {
+  createLocalClientServices(options?: {
+    fastPeerPresenceUpdate?: boolean;
+    sqlitePath?: string;
+    inboxRelay?: IdentityManager.InboxRelay;
+  }): LocalClientServices {
     // When a sqlitePath is provided (options or builder or config.dataRoot), run FILE-backed SQLite; otherwise use MEMORY.
     const configDataRoot = this.config.get('runtime.client.storage.dataRoot');
     const sqlitePath =
@@ -131,6 +119,7 @@ export class TestBuilder {
         invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
       sqlitePath,
+      inboxRelay: options?.inboxRelay,
       ...this.networking,
     });
 
@@ -141,13 +130,12 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ClientRpcServer] {
+  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, Rpc.GroupServer] {
     const channel = new MessageChannel();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
-    const server = new ClientRpcServer({
-      services: () => host.services,
-      port: channel.port2,
-    });
+    // Served straight off the host's router, as a worker session serves a tab; resolved on open so
+    // a host opened after this call is served.
+    const server = Rpc.serveRouterOnPort(() => host.router, channel.port2);
 
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());

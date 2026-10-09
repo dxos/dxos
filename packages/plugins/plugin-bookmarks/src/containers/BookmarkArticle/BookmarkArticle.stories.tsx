@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -20,7 +20,7 @@ import { BookmarksPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Bookmark } from '#types';
 
-import { BookmarkArticle } from './BookmarkArticle';
+import { BookmarkArticle } from './BookmarkArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -45,7 +45,7 @@ const meta = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Bookmark.Bookmark, Text.Text],
           onClientInitialized: ({ client }) =>

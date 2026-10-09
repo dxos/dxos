@@ -2,6 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as SpotlightPlugin from './SpotlightPlugin';
-export * from '#meta';
+export * as SpotlightPlugin from './SpotlightPlugin.ts';
 export * from '#types';

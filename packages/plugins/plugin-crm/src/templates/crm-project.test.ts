@@ -12,11 +12,11 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
-import { crmProject } from './crm-project';
+import { crmProject } from './crm-project.ts';
 
 describe('crm sender-research project template', () => {
   let builder: EchoTestBuilder;

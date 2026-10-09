@@ -10,17 +10,19 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
-import type * as Entity from './Entity';
-import type * as Feed from './Feed';
-import * as internal from './internal';
-import type * as Obj from './Obj';
-import * as Ref from './Ref';
+import type * as Annotation from './Annotation.ts';
+import type * as Change from './Change.ts';
+import type * as Entity from './Entity.ts';
+import type * as Feed from './Feed.ts';
+import * as internal from './internal/index.ts';
+import type * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
+import type * as Type$ from './Type.ts';
 
 export const FilterTypeId = '~@dxos/echo/Filter' as const;
 export type FilterTypeId = typeof FilterTypeId;
@@ -49,17 +51,28 @@ class FilterClass implements Any {
   [FilterTypeId] = FilterClass.variance;
 }
 
+/**
+ * Type guard for filters.
+ *
+ * @performance O(1) brand check; no allocation.
+ */
 export const is = (value: unknown): value is Any => {
   return typeof value === 'object' && value !== null && FilterTypeId in value;
 };
 
-/** Construct a filter from an ast. */
+/**
+ * Construct a filter from an ast.
+ *
+ * @performance O(1); wraps the AST without copying it.
+ */
 export const fromAst = (ast: QueryAST.Filter): Any => {
   return new FilterClass(ast);
 };
 
 /**
  * Filter that matches all objects.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 // TODO(dmaretskyi): `Entity.Any` would be more type-safe, but causes annoying errors in existing code
 export const everything = (): FilterClass => {
@@ -72,6 +85,8 @@ export const everything = (): FilterClass => {
 
 /**
  * Filter that matches no objects.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const nothing = (): FilterClass => {
   return new FilterClass({
@@ -84,8 +99,10 @@ export const nothing = (): FilterClass => {
   });
 };
 
-/*
+/**
  * Filter by EntityId.
+ *
+ * @performance O(k) in the number of ids (validated); builds the AST without matching anything.
  */
 export const id = (...ids: EntityId[]): Any => {
   assertArgument(
@@ -107,12 +124,54 @@ export const id = (...ids: EntityId[]): Any => {
 };
 
 /**
+ * Filter by the id of an entity already in hand, keeping its type for the rest of the chain.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.entity(task)).reference('watchers'));
+ * ```
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
+ */
+export const entity: {
+  <T extends Entity.Unknown>(entity: T): Filter<T>;
+  <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Filter<T>;
+} = (entity: Entity.Unknown | Entity.Snapshot): Filter<any> => id(entity.id);
+
+/**
+ * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).
+ * Input is case-insensitive.
+ *
+ * @example
+ * ```ts
+ * const [task] = await db.query(Filter.mnemonic('7qk2zb')).run();
+ * ```
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
+ */
+export const mnemonic = (mnemonic: string): Any => {
+  const normalized = EntityId.normalizeMnemonic(mnemonic);
+  assertArgument(
+    EntityId.isValidMnemonic(normalized),
+    'mnemonic',
+    `mnemonic must be ${EntityId.mnemonicLength} base32 characters`,
+  );
+
+  return new FilterClass({
+    type: 'mnemonic',
+    mnemonic: normalized,
+  });
+};
+
+/**
  * Filter by type.
  *
  * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /
  * `Type.makeRelation`), a `Schema.Union` of such entities (for filtering across a
  * union of ECHO types), or a fully-qualified type URI — an `echo:` EID (stored schema)
  * or a `dxn:` DXN (static schema). To filter by a bare typename, wrap it: `DXN.make(typename)`.
+ *
+ * @performance O(1) plus O(p) for props (O(k) for a union); builds the AST without matching anything.
  */
 export const type: {
   <T extends Type$.AnyEntity>(type: T, props?: Props<Type$.InstanceType<T>>): Filter<Type$.InstanceType<T>>;
@@ -155,11 +214,31 @@ export const type: {
 
 /**
  * Filter by tag.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const tag = (tag: string): Any => {
   return new FilterClass({
     type: 'tag',
     tag,
+  });
+};
+
+/**
+ * Filter by an annotation set on the entity with `Annotation.set`.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
+ */
+export const annotation: {
+  /** Matches entities that carry the annotation, whatever its value. */
+  <T>(annotation: Annotation.Annotation<T>): Any;
+  /** Matches entities whose value equals `value`; only scalar values can be compared. */
+  <T extends string | number | boolean>(annotation: Annotation.Annotation<T>, value: T): Any;
+} = (annotation: Annotation.Annotation<unknown>, value?: string | number | boolean): Any => {
+  return new FilterClass({
+    type: 'annotation',
+    key: annotation.key,
+    ...(value !== undefined ? { value } : {}),
   });
 };
 
@@ -183,6 +262,8 @@ export type KeyFilterOptions = {
  * Filter.key('com.example.type.foo');
  * Filter.key('com.example.type.foo', { version: '^1.2.3' });
  * ```
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const key = (key: string, options?: KeyFilterOptions): Any => {
   return new FilterClass({
@@ -196,6 +277,8 @@ export const key = (key: string, options?: KeyFilterOptions): Any => {
 
 /**
  * Filter by properties.
+ *
+ * @performance O(p) in the number of predicates; builds the AST without matching anything.
  */
 export const props = <T>(props: Props<T>): Filter<T> => {
   return new FilterClass({
@@ -212,6 +295,8 @@ export type TextSearchOptions = {
 
 /**
  * Full-text or vector search.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const text = (
   // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
@@ -227,6 +312,8 @@ export const text = (
 
 /**
  * Filter by foreign keys.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const foreignKeys = <S extends Type$.AnyEntity | URI.URI>(
   schema: S,
@@ -243,6 +330,8 @@ export const foreignKeys = <S extends Type$.AnyEntity | URI.URI>(
 
 /**
  * Predicate for property to be equal to the provided value.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const eq = <T>(value: T): Filter<T | undefined> => {
   if (!Ref.isRef(value) && typeof value === 'object' && value !== null) {
@@ -258,6 +347,8 @@ export const eq = <T>(value: T): Filter<T | undefined> => {
 
 /**
  * Predicate for property to be not equal to the provided value.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const neq = <T>(value: T): Filter<T | undefined> => {
   return new FilterClass({
@@ -269,6 +360,8 @@ export const neq = <T>(value: T): Filter<T | undefined> => {
 
 /**
  * Predicate for property to be greater than the provided value.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const gt = <T>(value: T): Filter<T | undefined> => {
   return new FilterClass({
@@ -280,6 +373,8 @@ export const gt = <T>(value: T): Filter<T | undefined> => {
 
 /**
  * Predicate for property to be greater than or equal to the provided value.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const gte = <T>(value: T): Filter<T | undefined> => {
   return new FilterClass({
@@ -291,6 +386,8 @@ export const gte = <T>(value: T): Filter<T | undefined> => {
 
 /**
  * Predicate for property to be less than the provided value.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const lt = <T>(value: T): Filter<T | undefined> => {
   return new FilterClass({
@@ -302,6 +399,8 @@ export const lt = <T>(value: T): Filter<T | undefined> => {
 
 /**
  * Predicate for property to be less than or equal to the provided value.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const lte = <T>(value: T): Filter<T | undefined> => {
   return new FilterClass({
@@ -317,6 +416,8 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * see `Query.project`). The subquery may target a different scope than the parent query; it
  * is resolved once at execution time.
  * @param values - Values to check against, or a single subquery projection.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 const in$: {
   <T>(projection: internal.Projection<T>): Filter<T>;
@@ -340,6 +441,8 @@ export { in$ as in };
 /**
  * Predicate for an array property to contain the provided value.
  * @param value - Value to check against.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const contains = <T>(value: T): Filter<readonly T[] | undefined> => {
   return new FilterClass({
@@ -352,6 +455,8 @@ export const contains = <T>(value: T): Filter<readonly T[] | undefined> => {
  * Predicate for property to be in the provided range.
  * @param from - Start of the range (inclusive).
  * @param to - End of the range (exclusive).
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const between = <T>(from: T, to: T): Filter<T> => {
   return new FilterClass({
@@ -381,11 +486,15 @@ const _timeRangeFilter = (field: 'updatedAt' | 'createdAt', range: TimeRange): A
 
 /**
  * Filter objects by updatedAt timestamp.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', range);
 
 /**
  * Filter objects by createdAt timestamp.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
 
@@ -420,6 +529,8 @@ export type FeedCursorRange = {
  * // Everything between two known items, excluding both.
  * db.query(Query.select(Filter.feedCursor({ begin: first, end: last })).from(feed));
  * ```
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const feedCursor = (range: FeedCursorRange = {}): Any =>
   new FilterClass({
@@ -438,6 +549,8 @@ export type ChildOfOptions = {
  * Accepts ECHO objects, Refs, or arrays of either.
  * Refs are resolved to DXNs without loading; objects use {@link Obj.getURI}.
  * With transitive=true (default), also matches grandchildren and beyond.
+ *
+ * @performance O(k) in the number of parents; refs are read by URI without loading.
  */
 export const childOf = (
   parents: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
@@ -458,9 +571,41 @@ export const childOf = (
 };
 
 /**
+ * Select Automerge changes instead of objects: one {@link Change.Change} per change to the documents
+ * holding `targets`, or to every document in the space when called with no argument.
+ *
+ * Changes belong to documents, not entities. Entities that share a document share its changes, and
+ * content held by another entity (a document's `Text`) needs its own target. Only the host answers
+ * these queries; a space-wide query must aggregate, and the index answers it only at hour
+ * granularity (see `Aggregate.time`).
+ *
+ * @example
+ * ```ts
+ * Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), changes: Aggregate.count() });
+ * Query.select(Filter.changes([doc, doc.content])).orderBy(Order.property('time', 'desc')).limit(50);
+ * ```
+ *
+ * @performance O(k) in the number of targets; refs are read by URI without loading.
+ */
+export const changes = (
+  targets?: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+): Filter<Change.Change> => {
+  if (targets === undefined) {
+    return new FilterClass({ type: 'changes' });
+  }
+  const items = Array.isArray(targets) ? targets : [targets];
+  return new FilterClass({
+    type: 'changes',
+    targets: items.map((item) => (Ref.isRef(item) ? EID.parse(item.uri) : EID.parse(internal.getUri(item)))),
+  });
+};
+
+/**
  * Filter objects by whether they have a parent, regardless of which object it is.
  * `Filter.hasParent(false)` selects root objects — those never passed to `Obj.setParent`.
  * Unlike {@link childOf} this reads the object's own parent slot, so it costs no traversal.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const hasParent = (value = true): Any =>
   new FilterClass({
@@ -470,6 +615,8 @@ export const hasParent = (value = true): Any =>
 
 /**
  * Negate the filter.
+ *
+ * @performance O(1); builds a filter AST node without matching anything.
  */
 export const not = <F extends Any>(filter: F): Filter<Type<F>> => {
   return new FilterClass({
@@ -480,6 +627,8 @@ export const not = <F extends Any>(filter: F): Filter<Type<F>> => {
 
 /**
  * Combine filters with a logical AND.
+ *
+ * @performance O(k) in the number of filters; builds the AST without matching anything.
  */
 export const and = <Filters extends readonly Any[]>(...filters: Filters): Filter<Type<Filters[number]>> => {
   return new FilterClass({
@@ -490,6 +639,8 @@ export const and = <Filters extends readonly Any[]>(...filters: Filters): Filter
 
 /**
  * Combine filters with a logical OR.
+ *
+ * @performance O(k) in the number of filters; builds the AST without matching anything.
  */
 export const or = <Filters extends readonly Any[]>(...filters: Filters): Filter<Type<Filters[number]>> => {
   return new FilterClass({
@@ -550,11 +701,15 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
 
 /**
  * Returns a human-readable string representation of a Filter AST.
+ *
+ * @performance O(AST size) string build; meant for logs and tooling, not hot paths.
  */
 export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);
 
 /**
  * Create a predicate from a filter.
+ *
+ * @performance O(filter size) per entity in memory; a text-search clause serializes the whole entity on every match.
  */
 export const toPredicate: {
   <T extends Entity.Unknown>(filter: Filter<T>): (entity: Entity.Unknown) => entity is T;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-spacetime",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "3D modeling plugin with Babylon.js and Manifold",
   "homepage": "https://dxos.org",
@@ -11,19 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -78,6 +80,11 @@
       "source": "./src/types/Scene.ts",
       "types": "./dist/types/src/types/Scene.d.ts",
       "import": "./dist/lib/Scene.mjs"
+    },
+    "./SceneView": {
+      "source": "./src/types/SceneView.ts",
+      "types": "./dist/types/src/types/SceneView.d.ts",
+      "import": "./dist/lib/SceneView.mjs"
     },
     "./Settings": {
       "source": "./src/types/Settings.ts",
@@ -139,8 +146,10 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "babylonjs-gltf2interface": "catalog:",
@@ -152,6 +161,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

@@ -6,12 +6,12 @@ import * as SqliteClient from '@effect/sql-sqlite-bun/SqliteClient';
 import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import * as SqlExport from '../SqlExport';
+import * as SqlExport from '../SqlExport.ts';
 
 export const sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> =
   Layer.effect(

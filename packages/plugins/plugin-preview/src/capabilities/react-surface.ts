@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
-import { ExpandoCard, FormCard, JsonCard, PersonCardIcon, ProjectCard, TaskCard } from '../cards';
-import { UnsupportedType } from '../components';
-import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
+import { ExpandoCard, FormCard, JsonCard, PersonCardIcon, ProjectCard, TaskCard } from '../cards/index.ts';
+import { UnsupportedType } from '../components/index.ts';
+import { OrganizationCardContent, PersonCardContent } from './RelatedCards.tsx';
 
 /**
  * Checked against the type registry rather than "no other candidate matched" — the latter is also

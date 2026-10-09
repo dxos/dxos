@@ -1,6 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export { default as ChatContextSkill } from './skill';
-export { ChatContextHandlers, ChatContextOperations } from './operations';
+export * as ChatContextSkill from './ChatContextSkill.ts';

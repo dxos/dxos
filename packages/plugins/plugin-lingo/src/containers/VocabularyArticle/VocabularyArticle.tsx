@@ -4,16 +4,16 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { WordList } from '#components';
 import { meta } from '#meta';
 import { type Vocabulary, Word } from '#types';
 
-import { useDeckWords } from '../useDeckWords';
+import { useDeckWords } from '../useDeckWords.ts';
 
 /** Row order; `due` and `weakest` are what a learner actually wants before a drill. */
 const ORDERS = [
@@ -61,12 +61,12 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <WordList words={sorted} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

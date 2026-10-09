@@ -18,28 +18,22 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import {
-  IconButton,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  composeRefs,
-  usePx,
-  useTranslation,
-} from '@dxos/react-ui';
-import {
   type DndContainerHandler,
   type DndPlaceholderData,
   getSourceData,
   useContainerId,
   useDndRootContext,
 } from '@dxos/react-ui-dnd';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { BoardCell, type BoardCellProps } from './BoardCell';
-import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext';
+import { BoardCell, type BoardCellProps } from './BoardCell.tsx';
+import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext.ts';
 import {
   type Bounds,
   type DropResolver,
@@ -48,7 +42,7 @@ import {
   type GridPosition,
   type Layout,
   pushToFit,
-} from './engine';
+} from './engine.ts';
 import {
   type GridCellSize,
   type Rect,
@@ -59,7 +53,7 @@ import {
   getRowCount,
   gridBounds,
   viewportCenterAnchor,
-} from './geometry';
+} from './geometry.ts';
 
 /** Duration (ms) of the zoom-anchor and recenter scroll animations. */
 const ANIMATION_DURATION = 200;
@@ -147,7 +141,11 @@ type BoardRootProps = PropsWithChildren<{
 
 // Default to a compact cell (~half a default card) so a board fits more tiles on screen; consumers
 // can pass a larger `cellSize` for a card-sized board.
-const defaultCellSize: GridCellSize = { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 };
+const defaultCellSize: GridCellSize = {
+  width: cardDefaultInlineSize,
+  height: cardDefaultInlineSize,
+};
+
 const defaultGap = 1;
 
 const BoardRoot = forwardRef<BoardController, BoardRootProps>(
@@ -179,7 +177,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     },
     forwardedRef,
   ) => {
-    const remInPx = usePx(1);
+    const remInPx = Hooks.usePx(1);
     const cellSizePx = useMemo<GridCellSize>(
       () => ({ width: cellSize.width * remInPx, height: cellSize.height * remInPx }),
       [remInPx, cellSize.width, cellSize.height],
@@ -515,7 +513,7 @@ BoardRoot.displayName = BOARD_ROOT_NAME;
 
 const BOARD_VIEWPORT_NAME = 'Board.Viewport';
 
-type BoardViewportProps = ThemedClassName<PropsWithChildren>;
+type BoardViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
   const { cellSize, gap, margin, columns, rows, zoom, overscrollPad, viewportSize } =
@@ -573,9 +571,9 @@ BoardViewport.displayName = BOARD_VIEWPORT_NAME;
 
 const BOARD_CONTAINER_NAME = 'Board.Container';
 
-type BoardContainerProps = ThemedClassName<PropsWithChildren>;
+type BoardContainerProps = Util.ThemedClassName<PropsWithChildren>;
 
-const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const {
     viewportRef,
     pendingAnchor,
@@ -591,7 +589,7 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
     margin,
   } = useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
-  const ref = composeRefs(localRef, viewportRef);
+  const ref = Hooks.composeRefs(localRef, viewportRef);
 
   // Read the live resizing flag from a ref so the mount-once auto-scroll effect always sees it.
   const resizingRef = useRef(resizing);
@@ -797,7 +795,7 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
   return (
     // Forward the composable props + ref to ScrollArea.Root so this can be the `asChild` target of a
     // parent slot (e.g. `<Panel.Content asChild><Board.Container/></Panel.Content>`).
-    <ScrollArea.Root orientation='all' {...composableProps(props)} ref={forwardedRef}>
+    <ScrollArea.Root orientation='all' {...Util.composableProps(props)} ref={forwardedRef}>
       {/* `flex` so the viewport's `m-auto` centers the board; overflow scrolls both axes. (Scroll-snap
           was removed: proximity snapping re-snapped the viewport after programmatic scrolls, fighting
           the zoom-anchor / auto-scroll compensation.) */}
@@ -816,7 +814,7 @@ BoardContainer.displayName = BOARD_CONTAINER_NAME;
 
 const BOARD_CONTENT_NAME = 'Board.Content';
 
-type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type BoardContentProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => {
   return (
@@ -852,7 +850,7 @@ const BoardBackdrop = (_props: BoardBackdropProps) => {
   }, [columns, rows, cellSize, gap]);
 
   return (
-    <div className='dx-fullscreen'>
+    <div className='dx-cover'>
       {cells.map(({ position, rect }) => (
         <BoardDropTarget
           key={`${position.x}-${position.y}`}
@@ -878,7 +876,7 @@ type BoardDropTargetProps = {
 };
 
 const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: BoardDropTargetProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -905,7 +903,7 @@ const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: Boa
         </span>
       )}
       {onAddClick && (
-        <IconButton
+        <Button.Root
           icon='ph--plus--regular'
           iconOnly
           label={t('add-object.button')}
@@ -923,22 +921,28 @@ const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: Boa
 
 const BOARD_ZOOM_NAME = 'Board.Zoom';
 
-type BoardZoomProps = ThemedClassName<{}>;
+type BoardZoomProps = Util.ThemedClassName<{}>;
 
 // A compact −/+ zoom control (reusing the shared IconButton). Stepping is clamped to [minZoom, 1].
 const BoardZoom = ({ classNames }: BoardZoomProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
   return (
     <div role='group' className={mx('flex items-center rounded-sm dx-modal-surface', classNames)}>
-      <IconButton
+      <Button.Root
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out.button')}
         disabled={zoom <= minZoom}
         onClick={zoomOut}
       />
-      <IconButton icon='ph--plus--regular' iconOnly label={t('zoom-in.button')} disabled={zoom >= 1} onClick={zoomIn} />
+      <Button.Root
+        icon='ph--plus--regular'
+        iconOnly
+        label={t('zoom-in.button')}
+        disabled={zoom >= 1}
+        onClick={zoomIn}
+      />
     </div>
   );
 };
@@ -952,7 +956,7 @@ BoardZoom.displayName = BOARD_ZOOM_NAME;
 
 const BOARD_MAP_NAME = 'Board.Map';
 
-type BoardMapProps = ThemedClassName<{}>;
+type BoardMapProps = Util.ThemedClassName<{}>;
 
 const BoardMap = ({ classNames }: BoardMapProps) => {
   const { layout, columns, rows, cellSize, gap, margin, selected, viewportRef } = useBoardContext(BOARD_MAP_NAME);

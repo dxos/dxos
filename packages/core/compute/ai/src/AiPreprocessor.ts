@@ -10,19 +10,19 @@
 // be unused, and a runtime import would ship the module.
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray, safeParseJson } from '@dxos/util';
 
-import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { PromptPreprocessingError as PromptPreprocesorError } from './errors.ts';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -52,16 +52,23 @@ export const preprocessPrompt: (
       Effect.forEach(
         Effect.fnUntraced(function* (msg) {
           switch (msg.sender.role) {
-            case 'user':
+            case 'user': {
+              const content = yield* Function.pipe(
+                msg.blocks,
+                Effect.forEach(convertUserMessagePart),
+                Effect.map(Array.filter(Predicate.isNotUndefined)),
+              );
               return [
                 Prompt.makeMessage('user', {
-                  content: yield* Function.pipe(
-                    msg.blocks,
-                    Effect.forEach(convertUserMessagePart),
-                    Effect.map(Array.filter(Predicate.isNotUndefined)),
-                  ),
+                  // The prompt has no per-message author, so a named sender (e.g. a relayed chat
+                  // participant) is the only way the model can tell speakers apart.
+                  content:
+                    msg.sender.name && content.length > 0
+                      ? [Prompt.makePart('text', { text: formatSender(msg.sender) }), ...content]
+                      : content,
                 }),
               ];
+            }
             case 'assistant':
               return [
                 Prompt.makeMessage('assistant', {
@@ -92,6 +99,9 @@ export const preprocessPrompt: (
     Effect.map(setCacheControl(cacheControl)),
   );
 });
+
+/** Attribution line prepended to a user message whose sender is named. */
+const formatSender = (sender: Message.Message['sender']): string => `[From: ${sender.name}]`;
 
 /**
  * Fast regex-based token estimation.
@@ -361,7 +371,10 @@ const makeToolResultPart = (
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
-    result,
+    // `undefined` drops the key on serialization, and the part schema requires it — a single such
+    // part fails the decode of the entire prompt, permanently, for a conversation that already
+    // holds one. Normalized here so a history written before the parser guard still replays.
+    result: result === undefined ? null : result,
     isFailure,
     providerExecuted: false,
   });

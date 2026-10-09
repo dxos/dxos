@@ -7,7 +7,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SpaceOperation } from '#types';
 
-import { IMPORT_SPACE_DIALOG } from '../constants';
+import { IMPORT_SPACE_DIALOG } from '../constants.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenImportSpace> = SpaceOperation.OpenImportSpace.pipe(
   Operation.withHandler(

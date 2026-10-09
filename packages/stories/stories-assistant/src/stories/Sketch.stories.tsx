@@ -4,16 +4,22 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { DrawingSkill } from '@dxos/plugin-illustrator';
+import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import {
+  ModuleContainer,
+  addToRootCollection,
+  createDecorators,
+  storyParameters,
+  submitPrompt,
+} from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Sketch',
   render: ModuleContainer,

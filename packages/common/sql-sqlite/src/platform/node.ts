@@ -6,15 +6,15 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import * as SqlError from 'effect/sql/SqlError';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import * as SqlExport from '../SqlExport';
+import * as SqlExport from '../SqlExport.ts';
 
 // Effect 4's node client dropped `export`, and `node:sqlite` exposes no `serialize`, so SQLite's
 // online backup into a scratch file is the remaining way to take a consistent snapshot.

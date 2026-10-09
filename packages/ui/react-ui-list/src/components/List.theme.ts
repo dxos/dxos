@@ -17,27 +17,6 @@ import { tv } from '@dxos/ui-theme';
 const listStyles = tv({
   slots: {
     //
-    // Accordion
-    //
-    // No `overflow-hidden` here: the body does its own clipping for the slide, and clipping at the
-    // item would cut the top and bottom edges off the trigger's inset focus ring. The end items
-    // instead carry the frame's own rounding, which the header and trigger inherit so a focus ring
-    // at either end follows the corner rather than cutting across it.
-    accordionItem: 'first:rounded-t-md last:rounded-b-md',
-    // Row trigger: spans the full width and pins the trailing caret to the inline-end edge.
-    accordionTrigger:
-      'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start rounded-[inherit]',
-    // Leading / trailing icon wrappers: fixed height so they sit on the centerline of the first
-    // content line even when the header spans multiple lines.
-    accordionTriggerIcon: 'flex items-center h-(--dx-control-sm) shrink-0',
-    accordionTriggerContent: 'min-w-0 flex-1',
-    // Interactive controls that sit beside the trigger; matches its vertical padding.
-    accordionTrailing: 'flex items-center h-(--dx-control-sm) shrink-0 my-trim-sm me-trim-sm',
-    // Slide animations are driven by the Ark accordion's data-state attribute.
-    accordionBody: 'overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
-    accordionBodyContent: 'p-trim-sm',
-
-    //
     // Listbox
     //
     listboxViewport: 'dx-expand',
@@ -58,7 +37,7 @@ const listStyles = tv({
     // `dx-current` enables `aria-current` row styling (not listbox/option semantics).
     orderedListItem: 'relative dx-current',
     // Bordered column wrapping title + detail panel in the master-detail layout.
-    orderedListDetailColumn: 'flex flex-col ring-1 ring-subdued-separator rounded-sm overflow-hidden',
+    orderedListDetailColumn: 'flex flex-col ring-1 ring-separator-subtle rounded-sm overflow-hidden',
     // `min-h` matches the shared rail-item track so handles, title, and caret share a baseline.
     orderedListDetailTitleRow: 'flex items-center min-h-[var(--dx-rail-item)]',
     orderedListDetailPanel: 'px-trim-sm pb-trim-sm',
@@ -77,12 +56,12 @@ const listStyles = tv({
     //
     // `m-form-chrome mb-0` mirrors the rest of the form-chrome padding convention.
     comboboxInput: 'm-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]',
-    comboboxList: 'py-form-chrome',
+    comboboxList: 'p-form-chrome',
     // Trigger value / placeholder text — grows and truncates; subdued when placeholder.
     comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-trim-sm',
     // Item row adds flex layout; `dx-hover`/`dx-selected` and padding come from `Picker.Item`.
     comboboxItem: 'flex w-full gap-trim-sm items-center',
-    comboboxItemDescription: 'text-sm text-description truncate',
+    comboboxItemDescription: 'text-sm text-fg-muted truncate',
 
     //
     // ItemContent
@@ -90,21 +69,23 @@ const listStyles = tv({
     // Grid whose columns/placement come from the `hasIcon` variant: a leading rail-item icon track
     // only when an icon is present, so an icon-less row doesn't reserve (and indent past) empty space.
     itemContentRoot: 'grid items-center gap-x-trim-sm w-full min-w-0',
-    itemContentIcon: 'col-start-1 row-start-1 place-self-center',
+    // Flex so an inline icon (avatar span, svg) is blockified and gets no line-box descender gap below it.
+    itemContentIcon: 'col-start-1 row-start-1 place-self-center flex',
     itemContentTitle: 'row-start-1 min-w-0 truncate',
-    itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-description',
+    itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-fg-muted',
 
     //
     // Empty
     //
-    empty: 'flex flex-col items-center justify-center gap-trim-sm p-trim-lg text-sm text-center text-description',
+    empty: 'flex flex-col items-center justify-center gap-trim-sm p-trim-lg text-sm text-center text-fg-muted',
   },
   variants: {
     // Reserve the leading icon track only when an icon is rendered; otherwise the content occupies a
     // single full-width column instead of being indented past an empty icon slot.
     hasIcon: {
       true: {
-        itemContentRoot: 'grid-cols-[var(--dx-rail-item)_minmax(0,1fr)]',
+        // Grows past the rail width for wide icons (avatars) rather than letting them overflow.
+        itemContentRoot: 'grid-cols-[minmax(var(--dx-rail-item),auto)_minmax(0,1fr)]',
         itemContentTitle: 'col-start-2',
         itemContentDescription: 'col-start-2',
       },

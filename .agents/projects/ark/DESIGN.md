@@ -16,8 +16,8 @@ Viewport · Item · ItemIndicator · CheckboxItem · RadioGroup · RadioItem · 
 Separator · Arrow · Sub · SubTrigger · SubContent`. Ark's `Positioner` stays inside `Content`
   (elevation and placement live there); `Portal` stays a part because it is optional, takes a
   container and re-bridges React context across the DOM move; `Viewport` stays a part because it is
-  the bounded scroll area the `Arrow` must sit outside of. `DropdownMenu` and `ContextMenu` become
-  aliases of `Menu` and are removed in a later sweep of the ~100 part-level sites.
+  the bounded scroll area the `Arrow` must sit outside of. `DropdownMenu` and `ContextMenu` were
+  aliases of `Menu` until 2026-09-08, when the ~100 part-level sites moved to `Menu`.
 - **`react-ui-menu` builds from the action graph.** It keeps the data side as it is — `MenuBuilder`,
   `useMenuBuilder`, `useMenuActions`, `useGraphMenuActions`, `createMenuAction`, dispositions,
   `applyPresentation` — and renders through two builders that _compose_ `react-ui` rather than
@@ -75,3 +75,46 @@ design. The `keyBinding` field on the shared chrome stays.
 - Rename `react-ui-menu` → `react-ui-actions` in its own PR (46 manifests).
 - Remove the `DropdownMenu` / `ContextMenu` aliases once the part-level sites are re-pointed.
 - Data-fed `Select` in `react-ui-list`, beside `Combobox`.
+
+## Floating anatomy: Radix-era part names over Ark's parts
+
+Reviewed 2026-09-08 (Phase 17, goal 3). The rule: **a consumer composes Radix-shaped parts; the
+Ark part that has no Radix name stays inside the part that owns its concern.**
+
+| react-ui part    | Popover | Menu                 | Select                                 | Tooltip                                                  | Dialog | FloatingPanel  | Ark part                                 |
+| ---------------- | ------- | -------------------- | -------------------------------------- | -------------------------------------------------------- | ------ | -------------- | ---------------------------------------- |
+| `Root`           | ✓       | ✓                    | ✓                                      | `Provider` (one machine per provider, triggers register) | ✓      | ✓              | `Root` / `RootProvider`                  |
+| `Trigger`        | ✓       | ✓ + `ContextTrigger` | ✓ (+ `TriggerButton`, `Value`, `Icon`) | ✓ (carries `content`)                                    | ✓      | ✓              | `Trigger`                                |
+| `VirtualTrigger` | ✓       | ✓                    | –                                      | –                                                        | –      | –              | none: `positioning.getAnchorElement`     |
+| `Anchor`         | ✓       | –                    | –                                      | –                                                        | –      | –              | `Anchor`                                 |
+| `Portal`         | ✓       | ✓                    | ✓                                      | inside `Provider`                                        | ✓      | ✓              | `Portal` (optional, takes a container)   |
+| `Content`        | ✓       | ✓                    | ✓                                      | inside `Trigger`                                         | ✓      | ✓              | **`Positioner` + `Content`**             |
+| `Viewport`       | ✓       | ✓                    | ✓                                      | –                                                        | –      | `Body`         | none                                     |
+| `Arrow`          | ✓       | ✓                    | –                                      | inside `Trigger`                                         | –      | –              | `Arrow` + `ArrowTip`                     |
+| `Overlay`        | –       | –                    | –                                      | –                                                        | ✓      | –              | `Backdrop`, with `Content` nested inside |
+| `Close`          | ✓       | –                    | –                                      | –                                                        | ✓      | `CloseTrigger` | `CloseTrigger`                           |
+
+- **`Positioner` is never a part.** It is the machine's element (inline `--x`/`--y`, `--z-index`,
+  `--available-*`), and everything a consumer says about placement (`side`, `align`, offsets,
+  collision padding and boundary, `hideWhenDetached`) is a prop on `Content`, lifted to the root
+  through context because the machine that positions is the root's. All four positioned roots build
+  the machine's `positioning` with one hook, `usePositioning` (`PlacementOptions` is the one type;
+  `PopoverPlacementOptions`/`MenuPlacementOptions` are aliases), so the collision, offset, boundary
+  and virtual-anchor semantics have one implementation. The positioner's theme slot defaults
+  `--x`/`--y` off screen (`positionerUnplaced`): Zag sets them a frame after mount.
+- **`Viewport` means the bounded region inside the content.** It is where `--available-height`
+  (and `-width`) is applied and where scrolling happens, and it sits inside `Content` so the
+  `Arrow` stays outside the clipped, scrolled box. Popover's is a clipped grid (`constrainBlock` /
+  `constrainInline`, both default on); Menu's and Select's are a `ScrollArea`. That difference is
+  content, not anatomy: a menu is a list, a popover is anything. `Toast.Viewport` is a different
+  thing with the same name (Ark's toaster region) and is left as the Radix-era name it is.
+- **`Portal` stays a part** because it is optional, takes a container, and re-bridges React context
+  across the DOM move; Ark's is the same shape.
+- **`Dialog.Overlay` is Ark's `Backdrop` with `Content` nested**, not `Positioner` + `Content`:
+  the 27 consumers nest `Content` in `Overlay`, and the backdrop's own presence runs the exit
+  animation. Dialog is the one place the Ark positioner is skipped rather than hidden.
+- **Tooltip is one machine per `Provider`**, positioned at whichever registered trigger is active;
+  `side` is the only placement prop and lives on the trigger.
+
+Dropped in the review: `Menu.Content`'s `constrainBlockSize` (no consumer; `Menu.Viewport` already
+caps at `--available-height`).

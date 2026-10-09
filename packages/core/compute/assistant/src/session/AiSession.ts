@@ -4,43 +4,45 @@
 
 // @import-as-namespace
 
+import type * as Tool from 'effect/ai/Tool';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
-import type * as Tool from 'effect/unstable/ai/Tool';
-import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Scope from 'effect/Scope';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
-import { ToolExecutionServices } from '../tool-runtime';
-import { McpServerError, emitRequestPhase } from '../util';
-import * as AiContext from './AiContext';
-import * as Harness from './Harness';
-import { SessionStore } from './SessionStore';
-import * as SkillHooks from './SkillHooks';
-import { createToolkit } from './toolkit';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
+import { ToolExecutionServices } from '../tool-runtime/index.ts';
+import * as AiContext from './AiContext.ts';
+import * as Harness from './Harness.ts';
+import { SessionStore, isQueued } from './SessionStore.ts';
+import * as SkillHooks from './SkillHooks.ts';
+import { createToolkit } from './toolkit.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
+  /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
+  sender?: Message.Message['sender'];
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
@@ -48,7 +50,7 @@ export type RunProps<R = never> = {
   /**
    * Space-level MCP servers to connect alongside skill-defined ones.
    */
-  mcpServers?: readonly McpServer.McpServer[];
+  mcpServers?: readonly McpToolkit.Options[];
 
   /**
    * When false, messages from this request are not appended to the feed or persisted to trace.
@@ -175,21 +177,27 @@ export class Session extends Resource {
     const rewindFrom = this._feed.rewindFrom;
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
-    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Effect.gen({ self: this }, function* () {
-        yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
-        if (rewindFrom !== undefined) {
-          Obj.update(this._feed, (feed) => {
-            feed.rewindFrom = undefined;
-          });
-        }
-      }),
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined),
     );
+    if (rewindFrom !== undefined) {
+      // Cleared only once feed queries see the continuation: the thread truncates on the pointer, and
+      // clearing it before the index has the continuation shows the abandoned turn again until it does.
+      await this.#messagesInAppendOrder();
+      Obj.update(this._feed, (feed) => {
+        feed.rewindFrom = undefined;
+      });
+    }
   }
 
-  /** The message preceding `rewindFrom` in append order, which the continuation parents to. */
+  /**
+   * The message preceding `rewindFrom` in append order, which the continuation parents to.
+   *
+   * Queue entries are skipped: a turn's own user message is appended right after the entry it was
+   * taken from, and an entry never joins the thread, so parenting to one cuts the lineage off.
+   */
   async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
-    const messages = await this.#messagesInAppendOrder();
+    const messages = (await this.#messagesInAppendOrder()).filter((message) => !isQueued(message));
     const index = messages.findIndex((message) => message.id === rewindFrom);
     return index > 0 ? messages[index - 1].id : undefined;
   }
@@ -206,8 +214,9 @@ export class Session extends Resource {
         serializePrompt(params.prompt),
       );
 
-      yield* emitRequestPhase('loading-history');
+      yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
+      markWork('session.history-loaded');
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
@@ -216,6 +225,38 @@ export class Session extends Resource {
         skills: skills.length,
         objects: objects.length,
       });
+
+      // Formatted once per binding set and source text rather than per model call: formatting loads
+      // every skill's template, each a wait behind the page's other work, and an unchanged prompt is
+      // also what lets the provider's prompt cache hit across turns. The atoms keep their arrays'
+      // identity until a binding changes them; a source not loaded here cannot be compared, so it
+      // formats again.
+      const sources = (currentSkills: Skill.Skill[]): (string | undefined)[] => [
+        ...this.#instructions.map((instructions) => instructions.text.target?.content),
+        ...currentSkills.map((skill) => skill.instructions.source.target?.content),
+      ];
+      let formatted:
+        | { skills: Skill.Skill[]; objects: Obj.Unknown[]; sources: (string | undefined)[]; text: string }
+        | undefined;
+      const formatSystem = (currentSkills: Skill.Skill[], currentObjects: Obj.Unknown[]) =>
+        Effect.gen({ self: this }, function* () {
+          const currentSources = sources(currentSkills);
+          if (
+            formatted?.skills === currentSkills &&
+            formatted.objects === currentObjects &&
+            currentSources.every((source, index) => source !== undefined && source === formatted?.sources[index])
+          ) {
+            return formatted.text;
+          }
+          const text = yield* formatSystemPrompt({
+            system: params.system,
+            skills: currentSkills,
+            objects: currentObjects,
+            instructions: this.#instructions,
+          }).pipe(Effect.orDie);
+          formatted = { skills: currentSkills, objects: currentObjects, sources: currentSources, text };
+          return text;
+        });
 
       const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
@@ -230,8 +271,12 @@ export class Session extends Resource {
         objects,
         instructions: this.#instructions,
         prompt: params.prompt,
+        sender: params.sender,
         system: params.system,
+        systemPrompt: yield* formatSystem(skills, objects),
       });
+
+      markWork('session.request-begun');
 
       // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
       // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
@@ -242,37 +287,41 @@ export class Session extends Resource {
       });
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
-      do {
+      // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
+      const runIteration = Effect.gen({ self: this }, function* () {
+        markWork('session.iteration');
         yield* Effect.promise(() => this.context.sync());
+        markWork('session.context-synced');
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
-        yield* emitRequestPhase('building-toolkit');
+        yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           skills: currentSkills,
           opaqueToolkits: mcps,
         });
 
+        markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
-        const system = yield* formatSystemPrompt({
-          system: params.system,
-          skills: currentSkills,
-          objects: this.context.getObjects(),
-          instructions: this.#instructions,
-        }).pipe(Effect.orDie);
+        const system = yield* formatSystem(currentSkills, this.context.getObjects());
+        markWork('session.system-prompt-built');
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
-          break;
+          return 'done' as const;
         }
         // A paused server-tool turn (e.g. Anthropic `pause_turn`) resumes with another request and
         // no local tool execution; the trailing server tool call must be left intact for the provider.
         if (finishReason === 'pause') {
-          continue;
+          return 'continue' as const;
         }
 
         yield* request.runTools({ toolkit });
-      } while (true);
+        markWork('session.tools-done');
+        return 'continue' as const;
+      }).pipe(Effect.scoped);
+
+      while ((yield* runIteration) !== 'done') {}
 
       log('result', {
         messages: request.pending.length,
@@ -309,18 +358,13 @@ export class Session extends Resource {
 
 const connectMcpServers = (
   skills: readonly Skill.Skill[],
-  spaceMcpServers: readonly McpServer.McpServer[] = [],
-): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+  spaceServers: readonly McpToolkit.Options[] = [],
+): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService | Scope.Scope> => {
+  const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
-  const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
-    url,
-    protocol,
-    apiKey,
-  }));
   const allServers = [...skillServers, ...spaceServers];
   if (allServers.length === 0) {
     // Naming a phase that has nothing to do would misreport where the wait actually is.
@@ -345,10 +389,11 @@ const connectMcpServers = (
               protocol: error.protocol,
               message: error.message,
             });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: error.url,
               protocol: error.protocol,
               message: error.message,
+              unauthorized: error.unauthorized,
             });
           }),
         ),
@@ -358,7 +403,7 @@ const connectMcpServers = (
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);
             log.warn('Unexpected MCP defect', { url: options.url, message });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: options.url,
               protocol: options.protocol,
               message: `Unexpected MCP failure: ${message}`,
@@ -380,7 +425,7 @@ const connectMcpServers = (
 
   return Effect.gen(function* () {
     // Reported before the connections are opened, since opening them is the wait being reported.
-    yield* emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
+    yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
     return yield* connect;
   });
 };

@@ -8,9 +8,9 @@ import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 
@@ -19,14 +19,10 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DropdownMenu, Icon, IconButton, ScrollArea } from '@dxos/react-ui';
-import {
-  type ColumnRenderer,
-  type IconRenderer,
-  Tree,
-  type TreeItemDataProps,
-  type TreeModel,
-} from '@dxos/react-ui-list';
+import { Tree, type TreeItemDataProps, type TreeModel, type TreeNode } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
@@ -35,6 +31,8 @@ export interface ObjectsTreeProps {
   onSelect?: (entity: Entity.Snapshot) => void;
   onOpen?: (object: Obj.Unknown) => void;
   canOpen?: (entity: Entity.Snapshot) => boolean;
+  /** Narrows the top-level rows to those whose label contains this text (case-insensitive). */
+  filter?: string;
 }
 
 /**
@@ -42,7 +40,7 @@ export interface ObjectsTreeProps {
  * reachable from it, walked one level ahead of what is open so an unbounded graph is never queried
  * whole. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
  */
-export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTreeProps) => {
+export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
     setModel((prev) =>
@@ -53,6 +51,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
   }, [db, root]);
 
   const registry = useContext(RegistryContext);
+  useEffect(() => registry.set(model.filter, filter ?? ''), [registry, model, filter]);
   const contextValue = useMemo(() => ({ model, onOpen, canOpen }), [model, onOpen, canOpen]);
 
   // The walk is gated by id while rows are addressed by path, so a toggle writes both.
@@ -68,52 +67,58 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <ScrollArea.Root classNames='dx-expand' thin>
-        <ScrollArea.Viewport>
-          <Tree<ObjectsTreeItem>
-            id={ROOT_ANCHOR}
-            model={model.treeModel}
-            // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic
-            // minimum is the content's min-content width, so a long relation typename on a deep row
-            // would widen the track and push the trailing columns instead of truncating.
-            //
-            // The role sits in the SAME track as the actions rather than its own: a separate
-            // `min-content` column is sized from the widest role across the whole subgrid, so
-            // expanding a node whose child carries a role widened that track and visibly shifted
-            // every row's action button.
-            gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]'
-            classNames='w-full min-w-0'
-            renderIcon={ObjectsTreeIcon}
-            renderColumns={ObjectsTreeColumns}
-            onOpenChange={handleOpenChange}
-            onSelect={handleSelect}
-          />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <Tree.Root
+        id={ROOT_ANCHOR}
+        model={model.treeModel}
+        // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic minimum is the content's
+        // min-content width, so a long relation typename on a deep row would widen the track and push the trailing
+        // column instead of truncating. The role shares the actions' track: a `min-content` column of its own is sized
+        // from the widest role across every row, so opening a node whose child has a role shifted every row's button.
+        columns='var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content'
+        onOpenChange={handleOpenChange}
+        onSelect={handleSelect}
+      >
+        <Tree.Content>{renderRow}</Tree.Content>
+      </Tree.Root>
     </ObjectsTreeContext.Provider>
   );
 };
 
+/** A row: the relation direction and the entity's glyph, its label, then its role and action menu. */
+const renderRow = (node: TreeNode<ObjectsTreeItem>) =>
+  node.item ? (
+    <Tree.Item node={node}>
+      <Tree.ItemIndicator />
+      <Tree.ItemIcon>
+        <ObjectsTreeIcon item={node.item} path={node.path} />
+      </Tree.ItemIcon>
+      <Tree.ItemText />
+      <ObjectsTreeColumns item={node.item} path={node.path} />
+    </Tree.Item>
+  ) : null;
+
+type ObjectsTreeRowProps = { item: ObjectsTreeItem; path: string[] };
+
 /** Relation direction arrow plus the entity's own glyph, which a static icon name cannot express. */
-const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
+const ObjectsTreeIcon = ({ item, path }: ObjectsTreeRowProps) => {
   const { model } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const scoped = useAtomValue(model.itemAt(path)) ?? item;
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
   return (
     <>
       {scoped.type === 'outgoing-relation' && (
-        <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+        <Icon.Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />
       )}
       {scoped.type === 'incoming-relation' && (
-        <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+        <Icon.Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />
       )}
-      <Icon icon={scoped.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
+      <Icon.Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
     </>
   );
 };
 
-/** Trailing columns: the reference key this entity is held under, and the per-row action menu. */
-const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => {
+/** Trailing column: the reference key this entity is held under, and the per-row action menu. */
+const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
   const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const node = useAtomValue(model.itemAt(path)) ?? item;
 
@@ -150,10 +155,10 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
 
   return (
     <div className='flex shrink-0 items-center gap-1'>
-      {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <IconButton
+      {node.role && <span className='text-fg-subtle text-xs'>{node.role}</span>}
+      <Menu.Root>
+        <Menu.Trigger asChild>
+          <Button.Root
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -161,42 +166,39 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
             label='Actions'
             data-testid='objects-tree.row.actions'
           />
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
+        </Menu.Trigger>
+        <Menu.Content>
           {showOpen && (
-            <DropdownMenu.Item onClick={handleOpen}>
-              <Icon icon='ph--arrow-square-out--regular' />
-              Open
-            </DropdownMenu.Item>
+            <Menu.Item
+              onClick={handleOpen}
+              item={{ value: 'Open', label: 'Open', icon: 'ph--arrow-square-out--regular' }}
+            />
           )}
           {!node.deleted && (
-            <DropdownMenu.Item onClick={handleDelete}>
-              <Icon icon='ph--trash--regular' />
-              Delete
-            </DropdownMenu.Item>
+            <Menu.Item onClick={handleDelete} item={{ value: 'Delete', label: 'Delete', icon: 'ph--trash--regular' }} />
           )}
           {node.deleted && (
-            <DropdownMenu.Item onClick={handleRestore}>
-              <Icon icon='ph--arrow-counter-clockwise--regular' />
-              Restore
-            </DropdownMenu.Item>
+            <Menu.Item
+              onClick={handleRestore}
+              item={{ value: 'Restore', label: 'Restore', icon: 'ph--arrow-counter-clockwise--regular' }}
+            />
           )}
 
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item onClick={handleCopyDXN}>
-            <Icon icon='ph--copy--regular' />
-            Copy DXN
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={handleCopyJSON}>
-            <Icon icon='ph--brackets-curly--regular' />
-            Copy JSON
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={handlePrintToConsole}>
-            <Icon icon='ph--terminal-window--regular' />
-            Print to console
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+          <Menu.Separator />
+          <Menu.Item
+            onClick={handleCopyDXN}
+            item={{ value: 'Copy DXN', label: 'Copy DXN', icon: 'ph--copy--regular' }}
+          />
+          <Menu.Item
+            onClick={handleCopyJSON}
+            item={{ value: 'Copy JSON', label: 'Copy JSON', icon: 'ph--brackets-curly--regular' }}
+          />
+          <Menu.Item
+            onClick={handlePrintToConsole}
+            item={{ value: 'Print to console', label: 'Print to console', icon: 'ph--terminal-window--regular' }}
+          />
+        </Menu.Content>
+      </Menu.Root>
     </div>
   );
 };
@@ -236,6 +238,8 @@ class ObjectsTreeModel {
   #root: Entity.Unknown | null;
   #atoms = Atom.family((anchor: string | null) => this.#makeNodeAtom(anchor));
   #expandedState = Atom.family((_key: string) => Atom.make(false));
+  /** Top-level label filter, set by the component's `filter` prop. */
+  readonly filter = Atom.make('');
 
   constructor(database: Database.Database, root: Entity.Unknown | null, onSelect: (entity: Entity.Snapshot) => void) {
     this.#database = database;
@@ -296,7 +300,8 @@ class ObjectsTreeModel {
         return [];
       }
       const children = get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor));
-      return children.map((child) => child.id);
+      const filter = anchor === ROOT_ANCHOR ? get(this.filter).trim().toLowerCase() : '';
+      return children.filter((child) => !filter || child.label.toLowerCase().includes(filter)).map((child) => child.id);
     }),
   );
 

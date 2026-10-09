@@ -8,7 +8,7 @@ import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoDataStats, type EchoStatsDiagnostic } from '@dxos/echo-host';
 import { log } from '@dxos/log';
-import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { DiagnosticsChannel, type DiagnosticsRequest } from '@dxos/tracing';
@@ -29,19 +29,6 @@ export type MemoryInfo = {
   used: number;
 };
 
-/**
- * Represents the @info props in QueryState.
- */
-export type QueryInfo = {
-  // TODO(dmaretskyi): Remove.
-  filter: any;
-  metrics: any;
-  active: boolean;
-};
-
-/**
- *
- */
 export type DatabaseInfo = {
   spaces: number;
   /** Objects across every open space, from `db.stats()`. Summed: the panel reports the profile. */
@@ -56,13 +43,12 @@ export type DatabaseInfo = {
   dataStats?: EchoDataStats;
 };
 
-/**
- *
- */
+/** The slice of a `PerformanceEntry` the stats panels read; a plain object satisfies it in fixtures. */
+export type PerformanceEntryLike = Pick<PerformanceEntry, 'entryType' | 'name' | 'duration'>;
+
 export type Stats = {
-  performanceEntries?: PerformanceEntry[];
+  performanceEntries?: PerformanceEntryLike[];
   database?: DatabaseInfo;
-  queries?: QueryInfo[];
   memory?: MemoryInfo;
   network?: NetworkStatus;
   edge?: QueryEdgeStatusResponse;
@@ -206,16 +192,6 @@ export const useStats = (): [Stats, () => void] => {
   }
 
   return [stats, () => forceUpdate({})];
-};
-
-// TODO(burdon): Move to util.
-export const removeEmpty = (obj: any): any => {
-  const maybeTruncateKey = (str: string) => (str.length > 32 ? str.slice(0, 8) : str);
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([_, v]) => v !== undefined && v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
-      .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : typeof v === 'string' ? maybeTruncateKey(v) : v]),
-  );
 };
 
 const useDiagnostic = <T>(request: DiagnosticsRequest, refreshInterval: number): T | undefined => {

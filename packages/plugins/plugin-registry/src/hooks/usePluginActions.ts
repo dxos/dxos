@@ -5,17 +5,17 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { EffectEx } from '@dxos/effect';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 
-import { getPluginPath, getPluginSpecPath } from '../paths';
-import { useDisableConfirmation } from './useDisableConfirmation';
+import { getPluginPath, getPluginSpecPath } from '../paths.ts';
+import { useDisableConfirmation } from './useDisableConfirmation.ts';
 
 export type PluginActionsProps = {
   manager: PluginManager.PluginManager;
@@ -62,8 +62,8 @@ export const usePluginActions = ({
   selectedVersionTag,
   syncInstalledVersion,
 }: PluginActionsProps): PluginActions => {
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
 
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -73,12 +73,12 @@ export const usePluginActions = ({
   );
 
   const specPath = getPluginSpecPath(pluginId);
-  const hasSpecNode = !!useNode(graph, specPath);
+  const hasSpecNode = !!GraphHooks.useNode(graph, specPath);
   const handleOpenSpec = useCallback(() => {
     void invokePromise(LayoutOperation.Open, {
       subject: [specPath],
       pivotId: getPluginPath(pluginId),
-      disposition: 'add',
+      disposition: 'detail',
     });
   }, [invokePromise, specPath, pluginId]);
 

@@ -11,8 +11,8 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type JsonPath, type JsonProp } from './json-path';
-import * as Compat from './schema-ast';
+import { type JsonPath, type JsonProp } from './json-path.ts';
+import * as Compat from './schema-ast.ts';
 
 /** Annotation keys are strings in v4 (they were symbols in v3). */
 export type AnnotationKey = string;
@@ -53,10 +53,14 @@ export type SchemaProperty = {
 export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] =>
   getPropertySignatures(ast).map((prop) => {
     const { type, checks } = getBaseType(prop.type);
-    // Key annotations (v3's PropertySignature.annotations) now hang off the type's context.
-    const keyAnnotations = prop.type.context?.annotations;
+    // `Schema.optional(S).annotate(...)` annotates the `S | undefined` union that `getBaseType` strips, so those
+    // annotations are carried over to the base type; key annotations (v3's PropertySignature.annotations) hang off the
+    // type's context and win over both.
+    const optionalAnnotations =
+      SchemaAST.isOptional(prop.type) && SchemaAST.isUnion(prop.type) ? prop.type.annotations : undefined;
+    const keyAnnotations = { ...optionalAnnotations, ...prop.type.context?.annotations };
     const mergedType =
-      keyAnnotations && Object.keys(keyAnnotations).length > 0
+      Object.keys(keyAnnotations).length > 0
         ? annotateAst(type, keyAnnotations as Schema.Annotations.Annotations)
         : type;
     return {
@@ -381,16 +385,18 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Union': {
       return new SchemaAST.Union(
         ast.types.map((type) => f(type, undefined)),
-        ast.mode,
+        ast.options,
         ast.annotations,
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Arrays': {
@@ -402,6 +408,7 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Suspend': {

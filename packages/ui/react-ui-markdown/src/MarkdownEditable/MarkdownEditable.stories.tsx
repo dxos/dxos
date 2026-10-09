@@ -6,15 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { type EditableActivation } from '@dxos/react-ui';
+import type * as Editable from '@dxos/react-ui/Editable';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MarkdownEditable } from './MarkdownEditable';
+import { MarkdownEditable } from './MarkdownEditable.tsx';
 
 type StoryArgs = {
   initialValue?: string;
   placeholder?: string;
-  activation?: EditableActivation;
+  activation?: Editable.EditableActivation;
   readonly?: boolean;
   multiline?: boolean;
   editing?: boolean;
@@ -49,7 +49,7 @@ const DefaultStory = ({
         multiline={multiline}
         editing={editing}
       />
-      <div className='text-sm text-description' data-testid='markdownEditable.commits'>
+      <div className='text-sm text-fg-muted' data-testid='markdownEditable.commits'>
         {`Commits: ${commits}`}
       </div>
     </div>
@@ -137,5 +137,42 @@ export const TestReadonly: Story = {
     await userEvent.click(canvas.getByTestId('markdownEditable.preview'));
     // A read-only field has no way in, so the editor never appears.
     await expect(canvas.queryByTestId('markdownEditable.editor')).toBeNull();
+  },
+};
+
+export const TestBulletList: Story = {
+  args: { initialValue: '', multiline: true, editing: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('markdownEditable.editor');
+    const content = await waitFor(() => {
+      const found = editor.querySelector<HTMLElement>('.cm-content');
+      if (!found) {
+        throw new Error('Editor content not mounted.');
+      }
+      return found;
+    });
+
+    await userEvent.click(content);
+    await userEvent.keyboard('Samples:{Enter}- first{Enter}second');
+
+    // The marker is drawn as a bullet widget, which must land inside the field: the list item's
+    // hanging indent pushes it left of the line by its own width.
+    await waitFor(async () => expect(editor.querySelectorAll('.cm-list-mark-bullet').length).toEqual(2));
+    const bounds = editor.getBoundingClientRect();
+
+    // A plain line still starts flush with the field, as the preview's text does.
+    const plain = editor.querySelector<HTMLElement>('.cm-line:not(.cm-list-item)');
+    await expect(plain?.textContent).toEqual('Samples:');
+    await expect(getComputedStyle(plain ?? editor).paddingLeft).toEqual('0px');
+    for (const bullet of editor.querySelectorAll<HTMLElement>('.cm-list-mark-bullet')) {
+      const glyph = bullet.getBoundingClientRect();
+      await expect(glyph.width).toBeGreaterThan(0);
+      await expect(glyph.left).toBeGreaterThanOrEqual(bounds.left);
+    }
+
+    // Enter continues the list, so the second line is an item too.
+    await expect(editor.querySelectorAll('.cm-list-item').length).toEqual(2);
+    await expect(editor.textContent).toContain('second');
   },
 };

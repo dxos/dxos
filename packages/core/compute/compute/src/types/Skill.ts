@@ -9,17 +9,17 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Database, DXN, Filter, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
+import { Annotation, Database, DXN, Filter, Format, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 // Text is referenced in the inferred type of Skill (via Template.Template → Ref.Ref(Text.Text));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Text } from '@dxos/schema';
 
-import * as McpServer from '../McpServer';
-import * as Operation from '../Operation';
-import * as Template from './Template';
-import * as Trigger from './Trigger';
+import * as McpServer from '../McpServer.ts';
+import * as Operation from '../Operation.ts';
+import * as Template from './Template.ts';
+import * as Trigger from './Trigger.ts';
 
 /**
  * Skill schema defines the structure for AI assistant skills.
@@ -41,7 +41,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Description of the skill's purpose and functionality.
      */
-    description: Schema.optional(Schema.String).annotate({
+    description: Schema.optional(Format.Text).annotate({
       description: "Description of the skill's purpose and functionality",
     }),
 
@@ -70,7 +70,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Array of MCP servers that the AI assistant can use when this skill is active.
      */
-    mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+    mcpServers: Schema.optional(Schema.Array(McpServer.Spec)),
 
     /**
      * Hooks triggered automatically at certain points in the agent's lifecycle.
@@ -78,7 +78,8 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'amber' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--student--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -120,7 +121,16 @@ export const Hook = Schema.Struct({
    * Must match the function's input schema.
    */
   input: Trigger.InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Run in the background (end-request only): the request settles without waiting for the hook, and
+   * the agent process awaits it before it finishes. For work the user should not wait on, e.g.
+   * reviewing the turn that just ended.
+   */
+  async: Schema.optional(Schema.Boolean.annotate({ title: 'Run in background' })),
 });
+
+export type Hook = Schema.Schema.Type<typeof Hook>;
 
 /**
  * Create a new Skill.
@@ -230,6 +240,14 @@ export type Definition = {
  * TODO(wittjosiah): Should use Obj.getURI instead once it supports options to prefer meta key over EID.
  */
 export const registryURI = (key: DXN.Name<string>): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
+
+/**
+ * The ref a session binds for a resolved skill: a skill in a database is bound as-is (it is
+ * space-authored or a fork carrying the user's edits), anything else by its registry URI, so a
+ * rebind never substitutes the pristine copy for the fork or vice versa.
+ */
+export const makeRef = (skill: Skill): Ref.Ref<Skill> =>
+  Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(registryURI(getKey(skill)));
 
 /**
  * Registry skill refs declared by an object's type via {@link SkillsAnnotation}.

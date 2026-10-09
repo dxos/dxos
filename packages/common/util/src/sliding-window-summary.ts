@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { CircularBuffer } from './circular-buffer';
+import { CircularBuffer } from './circular-buffer.ts';
 
 export type SlidingWindowSummaryConfig = {
   dataPoints: number;

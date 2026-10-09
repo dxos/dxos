@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Command from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Path from 'effect/Path';
-import type * as Command from 'effect/unstable/cli/Command';
-import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
+import * as ChildProcessSpawner from 'effect/process/ChildProcessSpawner';
 
-import type { XtermBridge } from './bridge';
-import * as XtermConsole from './console';
-import * as XtermStdio from './stdio';
-import * as XtermTerminal from './terminal';
+import type { TerminalBridge } from './bridge.ts';
+import * as XtermConsole from './console.ts';
+import * as XtermStdio from './stdio.ts';
+import * as XtermTerminal from './terminal.ts';
 
 /**
  * The browser counterpart to `BunServices.layer`.
@@ -26,7 +26,7 @@ export type Provided = Command.Environment;
 
 const UNAVAILABLE = 'Not available in the browser terminal.';
 
-export const layer = (bridge: XtermBridge): Layer.Layer<Provided> =>
+export const layer = (bridge: TerminalBridge): Layer.Layer<Provided> =>
   Layer.mergeAll(
     XtermTerminal.layer(bridge),
     XtermConsole.layer(bridge),

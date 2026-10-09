@@ -9,10 +9,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EntityId } from '@dxos/keys';
 
-import * as StateMap from './StateMap';
+import * as StateMap from './StateMap.ts';
 
 /** Per-item state stored in the side-map (the non-tag metadata for a feed item). */
 const PostState = Schema.Struct({

@@ -4,7 +4,7 @@
 
 import { isBlockedHost } from '@dxos/util';
 
-import { DEFAULT_REGION, S3_SCHEME } from './constants';
+import { DEFAULT_REGION, S3_SCHEME } from './constants.ts';
 
 /**
  * A stored blob's address: `s3://<host>/<key>`, where `host` is the virtual-hosted-style bucket

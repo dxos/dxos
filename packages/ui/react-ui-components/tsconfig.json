@@ -13,43 +13,13 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/progress"
-    },
-    {
-      "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../react-primitives/react-hooks"
@@ -58,22 +28,13 @@
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-editor"
-    },
-    {
       "path": "../react-ui-markdown"
     },
     {
-      "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../ui"
-    },
-    {
-      "path": "../ui-editor"
-    },
-    {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

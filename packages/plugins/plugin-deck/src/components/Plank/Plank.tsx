@@ -11,25 +11,50 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Main from '@dxos/react-ui/Main';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Theme from '@dxos/react-ui/Theme';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { Pane } from '../Pane';
+import { Pane } from '../Pane/index.ts';
+import { PlankLoading } from './PlankLoading.tsx';
+
+/** A plank waiting: for the node the URL names, and then for that node's article to load. */
+const PLANK_LOADING = <PlankLoading />;
+
+/**
+ * How long a plank waits before it admits to waiting. A node that resolves inside this never shows a
+ * placeholder icon or a loading title at all, so the common case reads as an instant open.
+ */
+const PENDING_DELAY = '1s';
+const pendingStyle = { animationDelay: PENDING_DELAY, animationFillMode: 'backwards' } as const;
 
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
-export type PlankProps = ThemedClassName<{
-  node: AppGraphNode.Node;
+/**
+ * What a plank renders: its identity plus whatever chrome it can offer. A plank the URL names but
+ * nothing has resolved yet has only an id, which is why this is not a graph node.
+ */
+export type PlankSubject = Pick<AppGraphNode.Node, 'id'> & Partial<Pick<AppGraphNode.Node, 'properties' | 'data'>>;
+
+export type PlankProps = Util.ThemedClassName<{
+  node: PlankSubject;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
-  actions?: AttentionSigilAction[][];
-  onAction?: (action: AttentionSigilAction) => void;
+  actions?: AttentionSigil.Action[][];
+  onAction?: (action: AttentionSigil.Action) => void;
   /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
   breadcrumbs?: { id: string; label: string }[];
   onSelectBreadcrumb?: (id: string) => void;
@@ -49,8 +74,6 @@ export type PlankProps = ThemedClassName<{
   articleData?: Partial<AppSurface.ArticleData>;
   /** Error fallback for the content surface. */
   fallback?: SurfaceProps['fallback'];
-  /** Loading placeholder for the content surface. */
-  placeholder?: SurfaceProps['placeholder'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
   // TODO(burdon): Why is this required?
@@ -81,16 +104,22 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       popoverAnchorId,
       articleData,
       fallback,
-      placeholder,
       headless,
       onKeyDown,
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
+    // Each plank is a focus area of the shell; its companion follows it.
+    const landmark = Main.useMainLandmark(1, onKeyDown);
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
-    const label = toLocalizedString(node.properties?.label ?? '', t);
+    // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
+    const label = Theme.toLocalizedString(
+      node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
+      t,
+    );
     const data = useMemo<AppSurface.ArticleData>(
       () => ({
         attendableId,
@@ -107,19 +136,12 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root
-        ref={forwardedRef}
-        classNames={classNames}
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        {...attentionAttrs}
-        data-testid='deck.plank'
-      >
+      <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
         {!headless && (
           <Pane.Toolbar>
             <ActionRoot>
               {actions && actions.length > 0 ? (
-                <AttentionSigil
+                <AttentionSigil.Root
                   icon={icon}
                   related={related}
                   attendableId={attendableId}
@@ -128,11 +150,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   triggerLabel={label}
                 >
                   {sigilFooter}
-                </AttentionSigil>
+                </AttentionSigil.Root>
               ) : (
-                <Pane.Sigil attendableId={attendableId}>
+                <Pane.Sigil
+                  attendableId={attendableId}
+                  classNames={pending && 'animate-fade-in'}
+                  style={pending ? pendingStyle : undefined}
+                >
                   <span className='sr-only'>{label}</span>
-                  <Icon icon={icon} />
+                  <Icon.Icon icon={icon} />
                 </Pane.Sigil>
               )}
             </ActionRoot>
@@ -142,35 +168,42 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               // attention-aware Pane.Title, sized to its content so it keeps a stable width.
               // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
               // origin, so the leading label must not shift as a trail appears or disappears.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1 grow'>
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Breadcrumb.ListItem asChild>
-                        <button
-                          type='button'
-                          className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
-                          onClick={() => onSelectBreadcrumb?.(crumb.id)}
-                        >
-                          {crumb.label}
-                        </button>
-                      </Breadcrumb.ListItem>
+                      <Breadcrumb.Item>
+                        <Breadcrumb.Link asChild>
+                          <button type='button' onClick={() => onSelectBreadcrumb?.(crumb.id)}>
+                            {crumb.label}
+                          </button>
+                        </Breadcrumb.Link>
+                      </Breadcrumb.Item>
                       <Breadcrumb.Separator />
                     </Fragment>
                   ))}
-                  <Breadcrumb.ListItem>
-                    <Pane.Title
-                      attendableId={attendableId}
-                      related={related}
-                      classNames={[pending && 'text-description', 'w-auto grow-0']}
-                    >
-                      {label}
-                    </Pane.Title>
-                  </Breadcrumb.ListItem>
+                  <Breadcrumb.Item>
+                    {/* The crumb's own inset and weight rather than the title's, so a crumb keeps its size and place
+                        as it becomes (or stops being) the current page. */}
+                    <Breadcrumb.Current asChild>
+                      <Pane.Title
+                        attendableId={attendableId}
+                        related={related}
+                        classNames={[pending && 'text-fg-muted', 'w-auto grow-0 px-(--dx-control-inset) font-normal']}
+                      >
+                        {label}
+                      </Pane.Title>
+                    </Breadcrumb.Current>
+                  </Breadcrumb.Item>
                 </Breadcrumb.List>
               </Breadcrumb.Root>
             ) : (
-              <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+              <Pane.Title
+                attendableId={attendableId}
+                related={related}
+                classNames={pending && ['text-fg-muted', 'animate-fade-in']}
+                style={pending ? pendingStyle : undefined}
+              >
                 {label}
               </Pane.Title>
             )}
@@ -179,14 +212,21 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          <Surface.Surface
-            key={node.id}
-            type={AppSurface.Article}
-            data={data}
-            limit={1}
-            fallback={fallback}
-            placeholder={placeholder}
-          />
+          {node.data === undefined ? (
+            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
+            // no Article to ask for. The same shell stands in until the Article's own module lands,
+            // so the plank does not change under the reader on the way there.
+            PLANK_LOADING
+          ) : (
+            <Surface.Surface
+              key={node.id}
+              type={AppSurface.Article}
+              data={data}
+              limit={1}
+              fallback={fallback}
+              placeholder={PLANK_LOADING}
+            />
+          )}
         </Pane.Content>
       </Pane.Root>
     );

@@ -5,15 +5,36 @@
  * aspects (bar, well, hover, current, selected) derive from the actual surface and stay visible at
  * any elevation, and surface-matching elements (avatars, gradients) can read it directly.
  *
- * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`.
- * The `dx-*-surface` classes are role-named aliases of the same thing, kept because they read well
- * at call sites (`dx-card-surface` says more than `data-surface="raised"`).
+ * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`;
+ * in React, `elevation={0..5}` on Panel, Toolbar, Card, Dialog and Popover sets it.
+ * The `dx-*-surface` classes are role-named zones on the same ladder, kept because they read well
+ * at call sites (`dx-card-surface` says more than `data-surface="raised"`); a role names the level
+ * it reads at, and `theme/surfaces.css` is where that choice is stated.
  *
  * A bare `bg-*-surface` utility paints the colour but does NOT publish `--surface-bg`, so every
  * aspect inside it collapses onto the base-surface fallback — never use one to enter a zone.
  */
 
 @layer dx-components {
+  /*
+   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
+   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
+   * states from the aspect rather than from the level underneath it. They come first so that an
+   * explicit level (`data-surface="<level>"`, an `elevation` in React) wins on an element that also
+   * carries an aspect class — a toolbar merged into a `Panel.Toolbar` slot — rather than the two
+   * defining `--surface-bg` from each other and both going invalid.
+   */
+  [data-surface='bar'],
+  .dx-toolbar-surface {
+    --surface-bg: var(--color-toolbar-surface);
+  }
+
+  [data-surface='well'],
+  .dx-group-surface,
+  .dx-input-surface {
+    --surface-bg: var(--color-group-surface);
+  }
+
   /* The outer rails sit at the same depth as the deck gaps: they frame the panels rather than
      belonging to them, so L0/R0 read one step behind the L1/R1 sidebars they flank. */
   [data-surface='sunken'],
@@ -22,7 +43,6 @@
   }
 
   [data-surface='chrome'],
-  .dx-sidebar-surface,
   .dx-header-surface {
     --surface-bg: var(--dx-surface-chrome);
   }
@@ -44,41 +64,37 @@
     --surface-bg: var(--dx-surface-base);
   }
 
-  [data-surface='raised'],
+  /* Reads its own token rather than joining a level's group: a card's level is a design decision
+     stated once, in theme/surfaces.css, and the class is where a reader looks for it. */
   .dx-card-surface {
+    --surface-bg: var(--color-card-surface);
+  }
+
+  [data-surface='raised'],
+  .dx-modal-surface {
     --surface-bg: var(--dx-surface-raised);
   }
 
-  [data-surface='overlay'],
-  .dx-modal-surface {
+  /* Controls keep the same offset from these surfaces as from the base (`--color-input-bg`, `theme/roles.css`). */
+  [data-surface='overlay'] {
     --surface-bg: var(--dx-surface-overlay);
+    --color-input-bg: light-dark(
+      oklch(calc(0.995 - var(--dx-control-offset)) 0.001 190),
+      oklch(calc(0.269 + var(--dx-control-offset)) 0.001 190)
+    );
   }
 
-  [data-surface='popup'],
-  .dx-popover-surface {
+  [data-surface='popup'] {
     --surface-bg: var(--dx-surface-popup);
-  }
-
-  /*
-   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
-   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
-   * states from the aspect rather than from the level underneath it.
-   */
-  [data-surface='bar'],
-  .dx-toolbar-surface {
-    --surface-bg: var(--color-toolbar-surface);
-  }
-
-  [data-surface='well'],
-  .dx-group-surface,
-  .dx-input-surface {
-    --surface-bg: var(--color-group-surface);
+    --color-input-bg: light-dark(
+      oklch(calc(1 - var(--dx-control-offset)) 0.001 190),
+      oklch(calc(0.295 + var(--dx-control-offset)) 0.001 190)
+    );
   }
 
   /* Every zone paints its published surface and takes the default ink. */
   [data-surface],
   .dx-deck-surface,
-  .dx-sidebar-surface,
   .dx-header-surface,
   .dx-l0-surface,
   .dx-l1-surface,
@@ -88,20 +104,32 @@
   .dx-attention-surface,
   .dx-card-surface,
   .dx-modal-surface,
-  .dx-popover-surface,
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface {
     background-color: var(--surface-bg);
-    @apply text-base-fg;
+    @apply text-fg;
   }
 
   /* Floating levels frost whatever passes beneath them. */
   [data-surface='overlay'],
   [data-surface='popup'],
-  .dx-modal-surface,
-  .dx-popover-surface {
+  .dx-modal-surface {
     @apply backdrop-blur-md;
+  }
+
+  /*
+   * An explicit elevation (`elevation={3..5}` in React, which sets `data-surface`) also casts the
+   * level's shadow, as Material's elevation does; the chrome levels below the canvas cast none.
+   */
+  [data-surface='raised'] {
+    @apply shadow-sm;
+  }
+  [data-surface='overlay'] {
+    @apply shadow-md;
+  }
+  [data-surface='popup'] {
+    @apply shadow-lg;
   }
 }
 
@@ -117,7 +145,6 @@
    */
   [data-surface],
   .dx-deck-surface,
-  .dx-sidebar-surface,
   .dx-header-surface,
   .dx-l0-surface,
   .dx-l1-surface,
@@ -127,12 +154,10 @@
   .dx-attention-surface,
   .dx-card-surface,
   .dx-modal-surface,
-  .dx-popover-surface,
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface,
-  .dx-input,
-  .dx-main-sidebar {
+  .dx-input-box {
     --color-hover-surface: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
     );
@@ -140,10 +165,10 @@
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
     );
     --color-current-surface: oklch(
-      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.1) c h
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.06) c h
     );
     --color-current-surface-hover: oklch(
-      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.12) c h
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
     );
     --color-placeholder: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-placeholder) * 0.3) c h
@@ -163,7 +188,7 @@
     --color-input-separator: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c h
     );
-    --color-subdued-separator: oklch(
+    --color-separator-subtle: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
     );
     --color-primary-separator: oklch(
@@ -191,7 +216,6 @@
   [data-surface='overlay'],
   [data-surface='popup'],
   .dx-deck-surface,
-  .dx-sidebar-surface,
   .dx-header-surface,
   .dx-l0-surface,
   .dx-l1-surface,
@@ -200,9 +224,7 @@
   .dx-base-surface,
   .dx-attention-surface,
   .dx-card-surface,
-  .dx-modal-surface,
-  .dx-popover-surface,
-  .dx-main-sidebar {
+  .dx-modal-surface {
     --color-toolbar-surface: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-bar) * 0.025) c h
     );

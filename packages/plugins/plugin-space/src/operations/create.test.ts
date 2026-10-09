@@ -8,11 +8,11 @@ import { describe, test } from 'vitest';
 
 import { type Space } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { SpacePlugin } from '#plugin';
 import { SpaceOperation } from '#types';
@@ -21,12 +21,12 @@ describe('SpaceOperation.Create', () => {
   // `updateSpace` commits the preference on the host, so what can fail afterwards is only the local
   // snapshot catching up; the space must come back regardless, since the preference converges on its own.
   test('a failing edge replication preference does not fail the create', async ({ expect }) => {
-    const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+    const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
     await using _harness = harness;
 
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const create = client.spaces.create.bind(client.spaces);
     client.spaces.create = async (...args: Parameters<typeof create>) =>
@@ -39,6 +39,27 @@ describe('SpaceOperation.Create', () => {
     );
 
     expect(outcome).toMatchObject({ space: expect.anything() });
+  });
+
+  test('an explicit origin overrides the invoker origin', async ({ expect }) => {
+    const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+    await using _harness = harness;
+
+    const client = harness.get(ClientCapabilities.Client);
+    await EffectEx.runAndForwardErrors(initializeIdentity(client));
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
+
+    const origins: unknown[] = [];
+    const create = client.spaces.create.bind(client.spaces);
+    client.spaces.create = async (...args: Parameters<typeof create>) => {
+      origins.push(args[1]?.origin);
+      return create(...args);
+    };
+
+    await harness.runPromise(Operation.invoke(SpaceOperation.Create, { name: 'Seeded', origin: 'system' }));
+    await harness.runPromise(Operation.invoke(SpaceOperation.Create, { name: 'Default' }));
+
+    expect(origins).toEqual(['system', 'user']);
   });
 });
 

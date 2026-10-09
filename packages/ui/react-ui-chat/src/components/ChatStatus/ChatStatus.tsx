@@ -4,11 +4,11 @@
 
 import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext';
-import { formatElapsed } from './format';
+import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext.ts';
+import { formatElapsed } from './format.ts';
 
 const TICK_MS = 1_000;
 
@@ -27,7 +27,7 @@ export type ChatStatusController = {
 // Root
 //
 
-export type RootProps = ThemedClassName<
+export type RootProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Whether the tick starts running on mount. Defaults to `true`. */
     defaultRunning?: boolean;
@@ -75,7 +75,7 @@ const Root = forwardRef<ChatStatusController, RootProps>(
 
     return (
       <ChatStatusProvider elapsed={elapsed} running={running}>
-        <span className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}>
+        <span className={mx('inline-flex items-center gap-2 text-fg-muted font-mono tabular-nums', classNames)}>
           {children}
         </span>
       </ChatStatusProvider>
@@ -89,7 +89,7 @@ Root.displayName = 'ChatChatStatus.Root';
 // Icon
 //
 
-export type IconProps = ThemedClassName<PropsWithChildren>;
+export type IconProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Animated leading indicator. Defaults to a halo-pulse dot. Pass children to override.
@@ -98,10 +98,11 @@ const Icon = ({ classNames, children }: IconProps) => {
   if (children !== undefined) {
     return <>{children}</>;
   }
+
   return (
     <span
       aria-hidden='true'
-      className={mx('inline-block size-2 rounded-full bg-current animate-halo-pulse', classNames)}
+      className={mx('inline-block size-2 rounded-full bg-current text-info-text animate-pulse', classNames)}
     />
   );
 };
@@ -110,7 +111,7 @@ const Icon = ({ classNames, children }: IconProps) => {
 // Stopwatch
 //
 
-export type StopwatchProps = ThemedClassName<{
+export type StopwatchProps = Util.ThemedClassName<{
   /** Seconds to add to the context elapsed value before formatting. Defaults to 0. */
   offset?: number;
 }>;
@@ -133,7 +134,7 @@ const Stopwatch = ({ classNames, offset = 0 }: StopwatchProps) => {
 // Separator
 //
 
-export type SeparatorProps = ThemedClassName<unknown>;
+export type SeparatorProps = Util.ThemedClassName<unknown>;
 
 /**
  * Middle-dot separator. Decorative — `aria-hidden`.
@@ -148,7 +149,7 @@ const Separator = ({ classNames }: SeparatorProps) => (
 // Text
 //
 
-export type TextProps = ThemedClassName<PropsWithChildren>;
+export type TextProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Generic text node — useful for token counts and other inline metadata.

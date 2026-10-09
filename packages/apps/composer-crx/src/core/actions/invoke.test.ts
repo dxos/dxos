@@ -10,8 +10,8 @@ import { describe, test, vi } from 'vitest';
 // `search-proxy/handler.test.ts`).
 vi.mock('webextension-polyfill', () => ({ default: {} }));
 
-import { type InvokeBridgeApi, deliverInvoke } from './invoke';
-import { type InvokeRequest, PAGE_ACTION_INVOKE_MESSAGE_TYPE } from './types';
+import { type InvokeBridgeApi, deliverInvoke } from './invoke.ts';
+import { type InvokeRequest, PAGE_ACTION_INVOKE_MESSAGE_TYPE } from './types.ts';
 
 const request: InvokeRequest = {
   version: 1,

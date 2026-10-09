@@ -17,8 +17,11 @@ a retry, not a round trip.
 
 **Sibling skills.** [`composer-forensics`](../composer-forensics/SKILL.md) covers the safe-mode
 (`/recovery.html`) port and everything storage-level — export, import, SQLite, Automerge,
-compaction. This skill covers the **running app**: the live client, plugins and operations.
-Same wire protocol, same `composer-recovery.js`, different scope.
+compaction. [`composer-qa`](../composer-qa/SKILL.md) runs the `test` / `suite` blocks of `.mdl`
+specs on a disposable dev server it starts itself — mutating by design, with its own consent
+model. This skill covers the **running app on the user's own profile**: the live client, plugins
+and operations, read-only unless told otherwise. Same wire protocol, same `composer-recovery.js`,
+different scope.
 
 ## Safety
 
@@ -87,7 +90,7 @@ failed announce must not read as a failed connection:
 ```js
 const status = { origin: location.origin, spaces: dxos.client.spaces.get().length, hasComposer: !!globalThis.composer };
 try {
-  await composer.invoke('org.dxos.plugin.layout.operation.addToast', {
+  await composer.invoke('org.dxos.operation.appToolkit.addToast', {
     id: 'agent-connected',
     title: 'Agent connected',
     description: 'An agent is running commands via the debug port. Turn the switch off to end it.',

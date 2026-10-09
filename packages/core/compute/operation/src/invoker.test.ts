@@ -14,11 +14,11 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect, test } from 'vitest';
 
-import { NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import * as OperationInvoker from './OperationInvoker';
+import { OperationInvocationError } from './errors.ts';
+import * as OperationInvoker from './OperationInvoker.ts';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
@@ -73,7 +73,7 @@ const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] +
 
 const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
 
-const failHandler = Operation.withHandler(Fail, () => Effect.fail(new Error('boom')));
+const failHandler = Operation.withHandler(Fail, () => Effect.fail(new OperationInvocationError({ message: 'boom' })));
 
 //
 // Test Utilities
@@ -136,7 +136,7 @@ describe('OperationInvoker', () => {
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
-        expect(result.failure).toBeInstanceOf(NoHandlerError);
+        expect(result.failure).toBeInstanceOf(Operation.NoHandlerError);
       }
     }),
   );
@@ -277,7 +277,7 @@ describe('OperationInvoker.invokePromise', () => {
     const result = await invoker.invokePromise(ToString, { value: 42 });
 
     expect(result.error).toBeDefined();
-    expect(result.error).toBeInstanceOf(NoHandlerError);
+    expect(result.error).toBeInstanceOf(Operation.NoHandlerError);
   });
 });
 

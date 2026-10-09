@@ -7,10 +7,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { ThemedClassName } from '@dxos/ui-types';
 
-import { withTheme } from '../testing';
-import { composable, composableProps, slottable } from '../util';
-import { ThemedClassName } from '../util';
+import { withTheme } from '../testing/index.ts';
+import { composable, composableProps, slottable } from '../util/slots.ts';
 
 /**
  * `asChild` composition.

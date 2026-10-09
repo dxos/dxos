@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { EventLoopLagTracker } from './event-loop-lag';
+import { EventLoopLagTracker } from './event-loop-lag.ts';
 
 /** Closes the window and returns its published peak. */
 const rotated = (tracker: EventLoopLagTracker): number => {

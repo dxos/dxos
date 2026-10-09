@@ -8,20 +8,20 @@ import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import type * as Database from './Database';
-import * as Entity from './Entity';
-import * as internal from './internal';
-import * as entityInternal from './internal/Entity';
-import * as objInternal from './internal/Obj';
-import * as Obj from './Obj';
-import type * as Ref from './Ref';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import * as Entity from './Entity.ts';
+import * as entityInternal from './internal/Entity/index.ts';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import * as Obj from './Obj.ts';
+import type * as Ref from './Ref.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 export type Endpoints<Source, Target> = {
   [Source]: Source;
@@ -149,6 +149,9 @@ export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.Insta
  * @param props - Relation properties. Endpoints are passed as [Relation.Source] and [Relation.Target] keys.
  * @param meta - Relation metadata. (deprecated; use [Obj.Meta] instead)
  * @returns
+ *
+ * @performance O(n) in props size; validates props against the schema and allocates a reactive proxy, with no database
+ * I/O.
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
@@ -195,6 +198,8 @@ export const make = <T extends Type.AnyRelation>(
  *   // relation is EmployedBy
  * }
  * ```
+ *
+ * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
  */
 export const instanceOf: {
   <S extends Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
@@ -209,6 +214,8 @@ export const instanceOf: {
 /**
  * Type guard for relations.
  * Returns true for both reactive relations and relation snapshots.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isRelation = (value: unknown): value is Unknown => {
   if (typeof value !== 'object' || value === null) {
@@ -223,6 +230,11 @@ export const isRelation = (value: unknown): value is Unknown => {
   return kind === internal.EntityKind.Relation;
 };
 
+/**
+ * Determine if a value is an ECHO relation snapshot.
+ *
+ * @performance O(1) brand check; no allocation.
+ */
 export const isSnapshot = (value: unknown): value is Snapshot => {
   if (typeof value !== 'object' || value === null) {
     return false;
@@ -234,6 +246,8 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  * Sets a relation as the parent of an object: the object cascade-deletes with the relation and is
  * persisted transitively when the relation is added. The delete-cascade resolves the parent by id
  * regardless of kind. The object-parent counterpart is {@link Obj.setParent}.
+ *
+ * @performance O(1) slot write; unlike `Obj.setParent` it does not scan the parent.
  */
 export const setParent = (entity: Obj.Unknown, parent: Unknown): Obj.Unknown => {
   assertArgument(Obj.isObject(entity), 'Expected an object');
@@ -248,6 +262,8 @@ export const setParent = (entity: Obj.Unknown, parent: Unknown): Obj.Unknown => 
  * @returns Relation source URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
+ *
+ * @performance O(1) read of the stored endpoint URI.
  */
 export const getSourceURI = (value: Unknown | Snapshot): EID.EID => {
   assertArgument(isRelation(value), 'Expected a relation');
@@ -261,6 +277,8 @@ export const getSourceURI = (value: Unknown | Snapshot): EID.EID => {
  * @returns Relation target URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
+ *
+ * @performance O(1) read of the stored endpoint URI.
  */
 export const getTargetURI = (value: Unknown | Snapshot): EID.EID => {
   assertArgument(isRelation(value), 'Expected a relation');
@@ -274,6 +292,8 @@ export const getTargetURI = (value: Unknown | Snapshot): EID.EID => {
  * @returns Relation source.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
+ *
+ * @performance O(1); reads the endpoint slot (a working-set lookup for database relations, never a load).
  */
 export const getSource = <T extends Unknown | Snapshot>(relation: T): SourceOf<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
@@ -289,6 +309,8 @@ export const getSource = <T extends Unknown | Snapshot>(relation: T): SourceOf<T
  * @returns Relation target.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
+ *
+ * @performance O(1); reads the endpoint slot (a working-set lookup for database relations, never a load).
  */
 export const getTarget = <T extends Unknown | Snapshot>(relation: T): TargetOf<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
@@ -335,6 +357,8 @@ export type Mutable<T> = internal.Mutable<T>;
  * ```
  *
  * Note: Only accepts relations. Use `Obj.update` for objects.
+ *
+ * @performance Synchronous; costs the mutations made in the callback plus one batched notification.
  */
 export const update = <T extends Unknown>(relation: T, callback: internal.ChangeCallback<T>): void => {
   internal.change(relation, callback);
@@ -348,6 +372,9 @@ export const update = <T extends Unknown>(relation: T, callback: internal.Change
  * Returns an immutable snapshot of a relation.
  * The snapshot is branded with SnapshotKindId instead of KindId,
  * making it distinguishable from the reactive relation at the type level.
+ *
+ * @performance O(n) in entity size; deep-copies plain data (refs are shared, not resolved) into a frozen object per
+ * call.
  */
 export const getSnapshot: <T extends Unknown>(rel: T) => Snapshot<T> = internal.getSnapshot as any;
 
@@ -360,6 +387,8 @@ export const getSnapshot: <T extends Unknown>(rel: T) => Snapshot<T> = internal.
  * The callback is called synchronously when the relation is modified.
  * Only accepts reactive relations (not snapshots).
  * @returns Unsubscribe function.
+ *
+ * @performance O(1) listener registration; the callback runs synchronously after every committed change.
  */
 export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
   return internal.subscribe(rel, callback);
@@ -372,6 +401,8 @@ export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
 /**
  * Get a deeply nested property from a relation.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(path length) property walk; no schema lookup.
  */
 export const getValue = (rel: Unknown | Snapshot, path: readonly (string | number)[]): any => {
   return SchemaEx.getValue(rel, SchemaEx.createJsonPath(path));
@@ -383,6 +414,8 @@ export const getValue = (rel: Unknown | Snapshot, path: readonly (string | numbe
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(path length) schema-guided walk; each missing level scans its schema properties once.
  */
 export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
   internal.setValue as any;
@@ -397,12 +430,17 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
  *
  * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
+ *
+ * @performance O(1); returns the stored URI, constructing (and allocating) one only when `options.prefer` asks for
+ * another form.
  */
 export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI =>
   internal.getUri(entity, options);
 
 /**
  * @returns The DXN of the relation's type.
+ *
+ * @performance O(1) read of the stored type URI.
  */
 export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeURI;
 
@@ -413,6 +451,8 @@ export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = 
  * runtime (e.g. a freshly deserialized snapshot whose type entity hasn't been
  * wired up yet, or a relation loaded from storage before its schema is known).
  * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
+ *
+ * @performance O(1) read of the type back-reference.
  */
 export const getType = (relation: Unknown | Snapshot): Type.AnyRelation | undefined =>
   internal.getType(relation) as Type.AnyRelation | undefined;
@@ -420,6 +460,8 @@ export const getType = (relation: Unknown | Snapshot): Type.AnyRelation | undefi
 /**
  * @returns The typename of the relation's type.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(1); reads the schema type annotation (database objects resolve the schema by registry URI lookup).
  */
 export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
 
@@ -430,6 +472,8 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
 /**
  * Get the database the relation belongs to.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(1) slot read.
  */
 export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => internal.getDatabase(entity);
 
@@ -458,6 +502,8 @@ export type Meta = internal.Meta;
  * Get the metadata for a relation.
  * Returns mutable meta when passed a mutable relation (inside `Relation.update` callback).
  * Returns read-only meta when passed a regular relation or snapshot.
+ *
+ * @performance O(1); returns the live (memoized) meta proxy, not a copy.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
 export function getMeta(entity: Mutable<Unknown>): Meta;
@@ -469,6 +515,8 @@ export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | R
 /**
  * @returns Foreign keys for the relation from the specified source.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(k) in the foreign-key count; allocates a filtered array.
  */
 export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => internal.getKeys(entity, source);
 
@@ -478,6 +526,8 @@ export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(k) in the foreign-key count.
  */
 export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => internal.deleteKeys(entity, source);
 
@@ -487,6 +537,8 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(t) in the tag count; dedupes by ref URI before appending.
  */
 export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
@@ -496,12 +548,16 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(t) in the tag count.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the relation is deleted.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(1) slot read.
  */
 export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
 
@@ -515,6 +571,8 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDel
  *
  * @param options.fallback `'typename'` returns the relation's typename when no
  *   label is set (e.g. `org.dxos.type.table`).
+ *
+ * @performance O(label accessors); reads the fields named by the schema `LabelAnnotation`.
  */
 export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
   internal.getLabel(entity, options);
@@ -525,12 +583,16 @@ export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabel
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(1); writes the first `LabelAnnotation` accessor, a no-op without a schema.
  */
 export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of the relation.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(1); reads the field named by the schema `DescriptionAnnotation`.
  */
 export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
@@ -540,6 +602,8 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @performance O(1); writes the field named by the schema `DescriptionAnnotation`.
  */
 export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
   internal.setDescription(entity, description);
@@ -556,6 +620,8 @@ export type JSON = internal.ObjectJSON;
 /**
  * Converts relation to its JSON representation.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(n) in entity size; serializes the whole entity on every call.
  */
 export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSON(entity);
 
@@ -569,8 +635,24 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSO
  */
 export type Comparator = internal.Comparator<Unknown | Snapshot>;
 
+/**
+ * Comparator that orders relations by label.
+ *
+ * @performance O(label accessors) per comparison; labels are recomputed, not cached, so a sort costs O(n log n) label
+ * reads.
+ */
 export const sortByLabel: Comparator = internal.sortByLabel as Comparator;
+/**
+ * Comparator that orders relations by typename.
+ *
+ * @performance O(1) per comparison.
+ */
 export const sortByTypename: Comparator = internal.sortByTypename as Comparator;
+/**
+ * Compose comparators, applying each in order until one returns non-zero.
+ *
+ * @performance O(c) per comparison in the number of composed comparators.
+ */
 export const sort = (...comparators: Comparator[]): Comparator => internal.sort(...comparators) as Comparator;
 
 //
@@ -578,6 +660,11 @@ export const sort = (...comparators: Comparator[]): Comparator => internal.sort(
 //
 
 export const VersionTypeId = internal.VersionTypeId;
+/**
+ * Checks that a value is a version object.
+ *
+ * @performance O(1) brand check.
+ */
 export const isVersion = internal.isVersion;
 
 /**
@@ -588,6 +675,8 @@ export type Version = internal.EntityVersion;
 /**
  * Returns the version of the relation.
  * Accepts both reactive relations and snapshots.
+ *
+ * @performance O(h) in Automerge heads: database entities copy the current heads into a fresh array per call.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
 
@@ -595,4 +684,9 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
+/**
+ * Create a reactive snapshot atom for a relation.
+ *
+ * @performance O(1) memoized atom-family lookup; every emission takes an O(n) `getSnapshot` of the entity.
+ */
 export const atom = objInternal.makeRelation;

@@ -9,12 +9,12 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { parseFromHeader } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '#apis';
 
-import { GMAIL_SOURCE } from '../../constants';
+import { GMAIL_SOURCE } from '../../constants.ts';
 
 /**
  * Recursively searches a message's MIME part tree for the first part matching `mimeType`, depth-first
@@ -151,7 +151,7 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
   const created = new Date(parseInt(raw.internalDate)).toISOString();
 
   const fromHeader = raw.payload.headers.find(({ name }) => name === 'From');
-  const from = fromHeader && parseFromHeader(fromHeader.value);
+  const from = fromHeader && MailSync.parseFromHeader(fromHeader.value);
   // TODO(wittjosiah): This comparison should be done via foreignId probably.
   const sender = { ...from, ...(contact ? { contact: Ref.make(contact) } : {}) };
 
@@ -215,7 +215,7 @@ export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMe
     }
 
     const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
-    const from = fromHeader && parseFromHeader(fromHeader.value);
+    const from = fromHeader && MailSync.parseFromHeader(fromHeader.value);
     const contact = from ? yield* resolve(Person.Person, { email: from.email }) : undefined;
 
     return mapToMessage(decoded, contact ?? undefined);

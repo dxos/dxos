@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from './meta';
+import { meta } from './meta.ts';
 
 /**
  * Surface keys, apart from the components they address: the onboarding manager and app-graph
@@ -13,6 +13,6 @@ export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
 
 export const AUTHORIZING_DEVICE_DIALOG = `${meta.profile.key}.component.authorizing-device-dialog`;
 
-export const ABOUT_DIALOG = `${meta.profile.key}.component.about-dialog`;
-
 export const NATIVE_REDIRECT_DIALOG = `${meta.profile.key}.component.native-redirect-dialog`;
+
+export const BRAMBLE_TEMPLATE_ID = `${meta.profile.key}.template.bramble`;

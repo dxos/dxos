@@ -4,9 +4,9 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
-import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
+import { applyObjectTemplate, getObjectTemplateInputSchema } from './json.ts';
 
 describe('json template', () => {
   describe('getObjectTemplateInputSchema', () => {

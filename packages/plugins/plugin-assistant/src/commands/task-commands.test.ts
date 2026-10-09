@@ -4,13 +4,13 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { type OperationInvoke, type SlashCommandResult, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as Chat from '@dxos/assistant/Chat';
-import { Feed, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Task } from '@dxos/types';
 
-import { TaskSlashCommands } from './task-commands';
+import { TaskSlashCommands } from './task-commands.ts';
 
 describe('task slash commands', () => {
   let builder: EchoTestBuilder;
@@ -43,13 +43,12 @@ describe('task slash commands', () => {
     const { db, chat, run } = await setup(builder);
 
     const parent = Chat.addTask(db, chat, 'Ship the release');
-    Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
+    nest(parent, Chat.addTask(db, chat, 'Write the changelog'));
     Chat.addTask(db, chat, 'Unrelated');
     Chat.addTask(db, chat, 'Also unrelated');
     await db.flush();
 
-    // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child —
-    // every member's parent edge is the chat, so the database cascade cannot reach it.
+    // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child.
     expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted “Ship the release”.' });
     expect(titles(chat)).toEqual(['Unrelated', 'Also unrelated']);
 
@@ -61,7 +60,7 @@ describe('task slash commands', () => {
     const { db, chat, run } = await setup(builder);
 
     const parent = Chat.addTask(db, chat, 'Parent');
-    Chat.addTask(db, chat, 'Child', { parentTask: Ref.make(parent) });
+    nest(parent, Chat.addTask(db, chat, 'Child'));
     await db.flush();
 
     // The child is swept with the parent, so naming both must not report it twice.
@@ -96,7 +95,7 @@ describe('task slash commands', () => {
 });
 
 /** The commands under test never invoke an operation, so a call is a regression rather than a case. */
-const unexpectedInvoke: OperationInvoke = async () => {
+const unexpectedInvoke: SlashCommand.OperationInvoke = async () => {
   throw new Error('Unexpected operation invocation.');
 };
 
@@ -106,8 +105,8 @@ const setup = async (builder: EchoTestBuilder) => {
   await db.flush();
 
   /** Routes through `resolveSlashCommand`, so the tests exercise the prompt's own dispatch. */
-  const run = async (text: string): Promise<SlashCommandResult | Error> => {
-    const resolved = resolveSlashCommand(text, TaskSlashCommands);
+  const run = async (text: string): Promise<SlashCommand.SlashCommandResult | Error> => {
+    const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
     if (!resolved) {
       return new Error(`Not a task command: ${text}`);
     }
@@ -118,3 +117,14 @@ const setup = async (builder: EchoTestBuilder) => {
 };
 
 const titles = (chat: Chat.Chat) => Chat.resolveTasks(chat).map((task) => task.title);
+
+/**
+ * Files `child`, already on the checklist, as a sub-task of `parent`. The edge is moved explicitly:
+ * `subtasks` claims only an unparented task, and a checklist task is parented to its chat.
+ */
+const nest = (parent: Task.Task, child: Task.Task): void => {
+  Obj.update(parent, (parent) => {
+    parent.subtasks?.push(Ref.make(child));
+  });
+  Obj.setParent(child, parent);
+};

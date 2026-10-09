@@ -15,7 +15,9 @@ import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -24,7 +26,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -35,9 +37,11 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { AssistantE2eError } from './errors.ts';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
 // Memoized replays still initialize the test harness and process conversations — allow enough
@@ -199,7 +203,7 @@ const runInstructions = (
       }
 
       return yield* Operation.invoke(
-        RunInstructions,
+        AgentOperation.RunInstructions,
         {
           instructions: Ref.make(instructions),
           input: {},
@@ -259,7 +263,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
       Effect.gen(function* () {
         const harness = yield* Effect.acquireRelease(
           Effect.promise(async () =>
-            createComposerTestApp({
+            Harness.createComposerTestApp({
               plugins: await createDefaultPlugins(ctx, options),
             }),
           ),
@@ -291,7 +295,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         if (options.expect === 'failure') {
           console.log('exit', exit);
           if (Exit.isSuccess(exit)) {
-            return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
+            return yield* Effect.fail(
+              new AssistantE2eError({ message: 'Expected the agent to fail, but it succeeded' }),
+            );
           }
         } else if (Exit.isFailure(exit)) {
           return yield* Effect.fail(exit.cause);

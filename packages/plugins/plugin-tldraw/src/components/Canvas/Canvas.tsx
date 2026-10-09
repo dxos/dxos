@@ -15,13 +15,14 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';
 
-import { handleSnap } from '../actions';
-import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
+import { handleSnap } from '../actions.ts';
+import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom/index.ts';
 
 const threadToolId = 'thread';
 
@@ -37,6 +38,7 @@ export type CanvasProps = {
   hideUi?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
+  onSettingsChange?: (fn: (current: Settings.Settings) => Settings.Settings) => void;
   onThreadCreate?: () => void;
   /** Selected scene object ids (host-owned); mirrored onto the shapes stamped with that `meta.object`. */
   selection?: readonly string[];
@@ -56,7 +58,7 @@ const selectedObjectIds = (editor: Editor): string[] => [
 const sameSet = (left: readonly string[], right: readonly string[]) =>
   left.length === right.length && left.every((id) => right.includes(id));
 
-export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
+export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
   (
     {
       canvas,
@@ -65,6 +67,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
       hideUi = false,
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
+      onSettingsChange,
       onThreadCreate,
       selection,
       onSelectionChange,
@@ -75,6 +78,11 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
   ) => {
     const adapter = useStoreAdapter(canvas);
     const [editor, setEditor] = useState<Editor>();
+    // The app's colour mode, not `prefers-color-scheme`: the two differ whenever the theme is set
+    // by hand (a dark storybook on a light OS), and tldraw would then draw light-theme black on a
+    // dark canvas.
+    const themeMode = Hooks.useThemeMode();
+    const colorScheme = themeMode === 'dark' ? 'dark' : 'light';
 
     // Focus.
     useEffect(() => {
@@ -94,7 +102,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
               const fromInstance = from as TLInstance;
               const toInstance = to as TLInstance;
               if (fromInstance.isGridMode !== toInstance.isGridMode) {
-                settings.showGrid = toInstance.isGridMode;
+                onSettingsChange?.((current) => ({ ...current, showGrid: toInstance.isGridMode }));
               }
             }
           }
@@ -104,7 +112,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
 
       // TODO(burdon): Combine.
       return () => cleanup?.();
-    }, [settings, editor]);
+    }, [settings, onSettingsChange, editor]);
 
     // Editor events.
     useEffect(() => {
@@ -163,6 +171,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
         editor.user.updateUserPreferences({
           // TODO(burdon): Adjust snap threshold.
           isSnapMode: true,
+          colorScheme,
         });
         editor.updateInstanceState({
           isGridMode: settings?.showGrid !== false && !hideUi,
@@ -172,7 +181,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           editor.setCurrentTool('hand');
         }
       }
-    }, [editor, settings, hideUi, readonly]);
+    }, [editor, settings, hideUi, readonly, colorScheme]);
 
     // Zoom to fit.
     const { ref: resizeRef, width = 0, height } = useResizeDetector();
@@ -294,7 +303,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'dx-expand' })}
+        {...Util.composableProps(props, { classNames: 'dx-expand' })}
         style={{ visibility: ready ? 'visible' : 'hidden' }}
         ref={containerRef}
       >
@@ -304,7 +313,6 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           key={`${Obj.getURI(canvas)}:${adapter.store.id}`}
           store={adapter.store}
           hideUi={hideUi}
-          inferDarkMode
           className='outline-hidden!'
           maxAssetSize={1024 * 1024}
           assetUrls={assetUrls}

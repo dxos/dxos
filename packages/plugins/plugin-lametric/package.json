@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-lametric",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Show a space on a LaMetric TIME — progress while a task runs, statistics otherwise.",
   "homepage": "https://dxos.org",
@@ -11,19 +11,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -72,10 +74,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./LaMetric": {
+      "source": "./src/protocol/LaMetric.ts",
+      "types": "./dist/types/src/protocol/LaMetric.d.ts",
+      "import": "./dist/lib/LaMetric.mjs"
+    },
+    "./LaMetricCapabilities": {
+      "source": "./src/types/LaMetricCapabilities.ts",
+      "types": "./dist/types/src/types/LaMetricCapabilities.d.ts",
+      "import": "./dist/lib/LaMetricCapabilities.mjs"
     },
     "./LaMetricPlugin": {
       "source": "./src/LaMetricPlugin.ts",
@@ -83,27 +91,16 @@
       "import": "./dist/lib/LaMetricPlugin.mjs"
     },
     "./package.json": "./package.json",
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
-    "./LaMetricCapabilities": {
-      "source": "./src/types/LaMetricCapabilities.ts",
-      "types": "./dist/types/src/types/LaMetricCapabilities.d.ts",
-      "import": "./dist/lib/LaMetricCapabilities.mjs"
-    },
-    "./LaMetric": {
-      "source": "./src/protocol/LaMetric.ts",
-      "types": "./dist/types/src/protocol/LaMetric.d.ts",
-      "import": "./dist/lib/LaMetric.mjs"
-    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/types/Settings.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

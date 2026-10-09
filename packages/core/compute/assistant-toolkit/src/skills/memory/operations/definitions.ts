@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Memory } from '../../../types/Memory';
+import * as Memory from '../../../types/Memory.ts';
 
 export const QueryMemories = Operation.make({
   meta: {
@@ -65,7 +65,7 @@ export const DeleteMemory = Operation.make({
     icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
-    memory: Ref.Ref(Memory),
+    memory: Ref.Ref(Memory.Memory),
   }),
   output: Schema.Void,
   services: [Database.Service],

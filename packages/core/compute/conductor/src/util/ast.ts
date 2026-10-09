@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 /**
  * @param schema
@@ -40,7 +40,7 @@ export const getPropertyKeyIndexedAccess = (ast: SchemaAST.AST, name: PropertyKe
         name,
         new SchemaAST.Union(
           ast.types.map((member) => getPropertyKeyIndexedAccess(member, name).type),
-          ast.mode,
+          ast.options,
         ),
       );
     case 'Suspend':

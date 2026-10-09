@@ -12,7 +12,7 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -20,9 +20,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '#plugin';
 import { Provider, Result } from '#types';
 
-import { makeSampleProvider, makeSampleResults } from '../../testing';
-import { translations } from '../../translations';
-import { ResultCard } from './ResultCard';
+import { makeSampleProvider, makeSampleResults } from '../../testing.ts';
+import { translations } from '../../translations.ts';
+import { ResultCard } from './ResultCard.tsx';
 
 // `ResultCard` subscribes to its subject via `useObject`, so the story renders a live ECHO object
 // from a seeded space (a detached fixture throws in the chromium storybook run).
@@ -57,7 +57,7 @@ const meta: Meta<typeof DefaultStory> = {
     withLayout({ layout: 'centered', classNames: 'w-[20rem]' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Provider.Provider, Result.Result],
           onClientInitialized: seedSpace,

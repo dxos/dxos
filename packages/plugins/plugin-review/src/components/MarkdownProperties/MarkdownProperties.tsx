@@ -4,10 +4,12 @@
 
 import React, { useCallback } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Version } from '@dxos/versioning';
 
 import { useVersioning } from '#hooks';
@@ -20,7 +22,7 @@ export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.
  * The full manager lives in the History companion tab.
  */
 export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const versioning = useVersioning(subject);
   const { document, history, selection, activeBranch } = versioning;
 
@@ -40,25 +42,26 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
   const currentLabel = selection.kind === 'branch' && activeBranch ? activeBranch.name : t('main-branch.label');
 
   return (
-    <Form.Section title={t('versions.title')}>
-      {/* `standalone` labels nothing focusable, so it renders a span rather than an orphan <label>. */}
-      <Form.Label
+    <Form.FieldSet label={t('versions.title')}>
+      {/* `standalone` labels nothing focusable, so the label is text rather than an orphan <label>. */}
+      <Form.Field
         standalone
         label={currentLabel}
         labelEnd={
-          <span className='shrink-0 text-xs text-description'>
+          <span className='shrink-0 text-xs text-fg-muted'>
             {t('branch-count.label', { count: branchCount })} · {t('checkpoint-count.label', { count: versionCount })}
           </span>
         }
-      />
-      <div className='flex gap-1'>
-        <IconButton
-          icon='ph--bookmark-simple--regular'
-          label={t('create-checkpoint.label')}
-          onClick={handleCheckpoint}
-        />
-      </div>
-    </Form.Section>
+      >
+        <Layout.Flex gap='xs'>
+          <Button.Root
+            icon='ph--bookmark-simple--regular'
+            label={t('create-checkpoint.label')}
+            onClick={handleCheckpoint}
+          />
+        </Layout.Flex>
+      </Form.Field>
+    </Form.FieldSet>
   );
 };
 

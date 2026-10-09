@@ -9,12 +9,12 @@ import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -25,8 +25,8 @@ import {
   EditorView,
   type Extension,
   InputModeExtensions,
-  type XmlWidgetProps,
-  type XmlWidgetState,
+  type ObjectLinkProps,
+  type WidgetHostOptions,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -34,24 +34,27 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
+  objectLinks,
   selectionState,
   snippets,
   substitutions,
-  xmlTags,
+  widgetHost,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
-import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
-import { setFallbackName } from '../util';
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
+import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent.tsx';
+import { setFallbackName } from '../util.tsx';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
 export type ExtensionsOptions = {
   id: string;
+  /** The editor's attendable id; embeds nest under it so the document stays an attention ancestor. */
+  attendableId?: string;
   object?: DocumentType;
   settings?: Markdown.Settings;
   compact?: boolean;
@@ -65,7 +68,7 @@ export type ExtensionsOptions = {
    * with no client (awareness only activates when both a space and an identity are present).
    */
   identity?: Identity.Info | null;
-  setWidgets?: (widgets: XmlWidgetState[]) => void;
+  setWidgets?: WidgetHostOptions['setWidgets'];
   /**
    * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
    * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
@@ -74,9 +77,14 @@ export type ExtensionsOptions = {
   onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
 };
 
+/**
+ * The CodeMirror extensions for a document: data binding to its content, the markdown decorations,
+ * object-link widgets (embeds nest under `attendableId`), and the settings-driven extras.
+ */
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
   id,
+  attendableId,
   object,
   settings,
   compact,
@@ -87,15 +95,13 @@ export const useExtensions = ({
   setWidgets,
   onSelectLink,
 }: ExtensionsOptions): Extension[] => {
-  const { platform } = useThemeContext();
+  const platform = Hooks.usePlatform();
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
-  // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
-  useObject(contentRef);
-  // Get the actual live object target via .target (needed for Doc.createAccessor).
-  const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+  const loadedContent = useResolveRef(contentRef);
+  const target = loadedContent ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -106,6 +112,7 @@ export const useExtensions = ({
     () =>
       createBaseExtensions({
         id,
+        attendableId,
         object,
         space,
         settings,
@@ -118,6 +125,7 @@ export const useExtensions = ({
       }),
     [
       id,
+      attendableId,
       object,
       space,
       compact,
@@ -176,6 +184,7 @@ export const useExtensions = ({
  */
 const createBaseExtensions = ({
   id,
+  attendableId,
   object,
   space,
   onSelectLink,
@@ -204,41 +213,31 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
-          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
-          skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
         linkTooltip({ render: renderLinkTooltip }),
-        xmlTags({
-          registry: {
-            'dxn-preview': {
-              block: true,
-              urlSchemes: ['dxn:', 'echo:'],
-              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
-              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
-              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
-                label ? parseEmbedLabel(label).height : undefined,
-              Component: (props: Omit<PreviewComponentProps, 'db'>) => <PreviewComponent {...props} db={space?.db} />,
-            },
-            'link-preview': {
-              block: false,
-              urlSchemes: ['dxn:', 'echo:'],
+        widgetHost({ setWidgets }),
+        objectLinks({
+          link: {
+            factory: ({ label, eid }: ObjectLinkProps) => {
+              // TODO(burdon): Why support both "#" or "@"?
               // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
               // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
               // db's arrival as a change and rebuilds the chip.
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn
-                  ? new AnchorWidget(
-                      label,
-                      dxn,
-                      undefined,
-                      (label === '#' || label === '@') && space?.db
-                        ? createAnchorLabelResolver(space.db, dxn)
-                        : undefined,
-                    )
-                  : null,
+              const resolver =
+                ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, eid) : undefined;
+
+              return new AnchorWidget(label, eid, undefined, resolver);
             },
           },
-          setWidgets,
+          image: {
+            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+            // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+            estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
+            // An embed that released its reserved height (a card) must still keep its element across
+            // rebuilds, or a click that reconfigures the editor remounts it out from under the user.
+            keepAlive: true,
+            Component: (props) => <PreviewComponent {...props} db={space?.db} attendableId={attendableId} />,
+          },
         }),
         substitutions(),
       ],
@@ -284,13 +283,13 @@ const selectionChange = (viewState: ViewState.Manager) => {
 };
 
 /** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
-const createAnchorLabelResolver = (db: Space['db'], dxn: string) => async () => {
-  const eid = EID.tryParse(dxn);
-  if (!eid) {
+const createAnchorLabelResolver = (db: Space['db'], eid: string) => async () => {
+  const parsed = EID.tryParse(eid);
+  if (!parsed) {
     return undefined;
   }
   try {
-    const object = await db.makeRef(eid).load();
+    const object = await db.makeRef(parsed).load();
     return Obj.getLabel(object as Obj.Unknown) ?? undefined;
   } catch {
     return undefined;
@@ -303,7 +302,7 @@ const createRenderLink =
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
     const icon = Domino.of('span')
-      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
+      .classNames('dx-link-accent ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
@@ -334,7 +333,7 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // Not `dx-link-accent`: the tooltip sits on the inverse surface, where the accent link color has no
       // contrast — inherit the tooltip's own `text-inverse-fg` instead.
       .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)

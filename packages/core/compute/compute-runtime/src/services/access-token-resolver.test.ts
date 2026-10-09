@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 
 import * as Credential from '@dxos/compute/Credential';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { accessTokenResolverFromEdge, accessTokenResolverFromService } from './access-token-resolver';
+import { accessTokenResolverFromEdge, accessTokenResolverFromService } from './access-token-resolver.ts';
 
 const SPACE_ID = SpaceId.random();
 

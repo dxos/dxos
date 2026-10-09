@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+// The four directives below mark fixtures that hand the manager an untagged `Error` the way
+// misbehaving third-party plugin code would; surviving that is what they test, so tagging them
+// would remove the subject.
+
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
@@ -12,21 +16,27 @@ import * as Fiber from 'effect/Fiber';
 import * as Latch from 'effect/Latch';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
-import { ActivationEvents } from '../../common';
-import * as ActivationEvent from '../activation-event';
-import * as Capability from '../capability';
-import { DependencyCycleError, DuplicateProviderError, MissingProviderError, ProvidesMismatchError } from '../errors';
-import * as Plugin from '../plugin';
-import * as PluginManager from './plugin-manager';
+import { ActivationEvents } from '../../common/index.ts';
+import * as ActivationEvent from '../activation-event.ts';
+import * as Capability from '../capability.ts';
+import {
+  DependencyCycleError,
+  DuplicateProviderError,
+  MissingProviderError,
+  ProvidesMismatchError,
+} from '../errors.ts';
+import * as Plugin from '../plugin.ts';
+import { PluginManagerError } from './errors.ts';
+import * as PluginManager from './plugin-manager.ts';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
@@ -116,7 +126,7 @@ describe('PluginManager', () => {
         if (locator === urlLocator) {
           return { plugin: testPlugin };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: urlLoader });
@@ -126,6 +136,39 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEnabled(), []);
       yield* manager.enable(added.meta.profile.key);
       assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+    }),
+  );
+
+  it.effect('activates a plugin added after startup whose id was already enabled', () =>
+    Effect.gen(function* () {
+      const testPlugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          provides: [String],
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+        }),
+        Plugin.make,
+      )();
+      const urlLocator = 'https://example.com/manifest.json';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return { plugin: testPlugin };
+        }
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
+      });
+
+      // The persisted enabled set outlives the plugin itself, as it does across sessions.
+      const manager = PluginManager.make({ pluginLoader: urlLoader, enabled: [testMeta.profile.key] });
+      yield* manager.start();
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+
+      yield* manager.add(urlLocator);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['hello'],
+      );
     }),
   );
 
@@ -159,7 +202,7 @@ describe('PluginManager', () => {
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: loader });
@@ -211,7 +254,7 @@ describe('PluginManager', () => {
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: loader });
@@ -345,7 +388,7 @@ describe('PluginManager', () => {
             provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
-            activate: () => Effect.fail(new Error('test')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'test' })),
           }),
           Plugin.make,
         )(),
@@ -433,6 +476,7 @@ describe('PluginManager', () => {
             activate: (): Effect.Effect<void> => {
               // This throws immediately before even returning an Effect.
               // This is the most severe type of defect.
+              // @effect-diagnostics-next-line globalErrorInEffectFailure:off
               throw new Error('immediate throw before Effect');
             },
           }),
@@ -481,7 +525,7 @@ describe('PluginManager', () => {
             provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
-            activate: () => Effect.fail(new Error('test')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'test' })),
           }),
           Plugin.make,
         )(),
@@ -1695,6 +1739,7 @@ describe('PluginManager', () => {
     it.effect('wraps loader rejections in a descriptive error', () =>
       Effect.gen(function* () {
         const LazyTest = Plugin.lazy(lazyMeta, () =>
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
         );
         const lazyStub = LazyTest();
@@ -1720,6 +1765,7 @@ describe('PluginManager', () => {
     it.effect('publishes a lazy:<id> error message when resolution fails', () =>
       Effect.gen(function* () {
         const LazyTest = Plugin.lazy(lazyMeta, () =>
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
         );
         const lazyStub = LazyTest();
@@ -1932,7 +1978,7 @@ describe('PluginManager', () => {
             provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
-            activate: () => Effect.fail(new Error('boom')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'boom' })),
           }),
           Plugin.make,
         );
@@ -1967,7 +2013,7 @@ describe('PluginManager', () => {
             provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
-            activate: () => Effect.fail(new Error('boom')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'boom' })),
           }),
           Plugin.make,
         );
@@ -2001,7 +2047,7 @@ describe('PluginManager', () => {
             activatesOn: Event,
             activate: () =>
               shouldFail
-                ? Effect.fail(new Error('first try'))
+                ? Effect.fail(new PluginManagerError({ message: 'first try' }))
                 : Effect.succeed([Capability.contribute(String, { string: 'ok' })]),
           }),
           Plugin.make,
@@ -2201,6 +2247,7 @@ describe('PluginManager', () => {
           if (id === 'remote') {
             return { plugin: remote };
           }
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           throw new Error(`Unknown id: ${id}`);
         });
 
@@ -2234,7 +2281,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const dependent = makePlugin('dependent', ['remote-broken']);
         const failingLoader = Effect.fn(function* (_id: string) {
-          return yield* Effect.fail(new Error('fetch failed'));
+          return yield* Effect.fail(new PluginManagerError({ message: 'fetch failed' }));
         });
 
         const registry = Registry.make();

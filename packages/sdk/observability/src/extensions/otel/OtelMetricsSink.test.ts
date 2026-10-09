@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import * as OtelMetricsSink from './OtelMetricsSink';
+import * as OtelMetricsSink from './OtelMetricsSink.ts';
 
 const defaultInit: OtelMetricsSink.Init = {
   type: 'otel-metrics-init',
@@ -16,6 +16,11 @@ const defaultInit: OtelMetricsSink.Init = {
   resourceAttributes: { 'service.name': 'test-service' },
   tags: { team: 'blue' },
 };
+
+const batch = (...metrics: OtelMetricsSink.Metric[]): OtelMetricsSink.Batch => ({
+  type: 'otel-metric-batch',
+  metrics,
+});
 
 describe('OtelMetricsSink', () => {
   let sink: OtelMetricsSink.Sink | undefined;
@@ -44,8 +49,8 @@ describe('OtelMetricsSink', () => {
 
   test('counter sums forwarded increments and merges tags', async () => {
     const { sink, metric } = makeSink();
-    sink.append({ type: 'otel-metric', op: 'increment', name: 'test.count', value: 2, tags: { kind: 'a' } });
-    sink.append({ type: 'otel-metric', op: 'increment', name: 'test.count', value: 3, tags: { kind: 'a' } });
+    sink.append(batch({ op: 'increment', name: 'test.count', values: [2], tags: { kind: 'a' } }));
+    sink.append(batch({ op: 'increment', name: 'test.count', values: [3], tags: { kind: 'a' } }));
 
     const data = await metric('test.count');
     expect(data.dataPoints).toHaveLength(1);
@@ -55,8 +60,8 @@ describe('OtelMetricsSink', () => {
 
   test('gauge records the latest value with instrument metadata', async () => {
     const { sink, metric } = makeSink();
-    sink.append({ type: 'otel-metric', op: 'gauge', name: 'test.lag', value: 7, meta: { unit: 'ms' } });
-    sink.append({ type: 'otel-metric', op: 'gauge', name: 'test.lag', value: 11, meta: { unit: 'ms' } });
+    sink.append(batch({ op: 'gauge', name: 'test.lag', values: [7], meta: { unit: 'ms' } }));
+    sink.append(batch({ op: 'gauge', name: 'test.lag', values: [11], meta: { unit: 'ms' } }));
 
     const data = await metric('test.lag');
     expect(data.descriptor.unit).toBe('ms');
@@ -65,8 +70,8 @@ describe('OtelMetricsSink', () => {
 
   test('distribution feeds a histogram', async () => {
     const { sink, metric } = makeSink();
-    sink.append({ type: 'otel-metric', op: 'distribution', name: 'test.duration', value: 0.5 });
-    sink.append({ type: 'otel-metric', op: 'distribution', name: 'test.duration', value: 1.5 });
+    sink.append(batch({ op: 'distribution', name: 'test.duration', values: [0.5] }));
+    sink.append(batch({ op: 'distribution', name: 'test.duration', values: [1.5] }));
 
     const data = await metric('test.duration');
     const point = data.dataPoints[0].value;
@@ -75,11 +80,27 @@ describe('OtelMetricsSink', () => {
     expect(point.sum).toBe(2);
   });
 
+  test('one batch records every aggregated value', async () => {
+    const { sink, metric } = makeSink();
+    sink.append(
+      batch(
+        { op: 'distribution', name: 'test.batched', values: [1, 2, 3] },
+        { op: 'increment', name: 'test.batched-count', values: [7] },
+      ),
+    );
+
+    const histogram = (await metric('test.batched')).dataPoints[0].value;
+    invariant(typeof histogram === 'object' && histogram !== null && 'count' in histogram);
+    expect(histogram.count).toBe(3);
+    expect(histogram.sum).toBe(6);
+    expect((await metric('test.batched-count')).dataPoints[0].value).toBe(7);
+  });
+
   test('setTags applies to later records only', async () => {
     const { sink, metric } = makeSink();
-    sink.append({ type: 'otel-metric', op: 'increment', name: 'test.tagged', value: 1 });
+    sink.append(batch({ op: 'increment', name: 'test.tagged', values: [1] }));
     sink.setTags({ identity: 'alice' });
-    sink.append({ type: 'otel-metric', op: 'increment', name: 'test.tagged', value: 1 });
+    sink.append(batch({ op: 'increment', name: 'test.tagged', values: [1] }));
 
     const data = await metric('test.tagged');
     const attributeSets = data.dataPoints.map((point) => point.attributes);
@@ -90,7 +111,7 @@ describe('OtelMetricsSink', () => {
   test('does not register on the local TRACE_PROCESSOR', async () => {
     const { sink, exporter } = makeSink();
     TRACE_PROCESSOR.remoteMetrics.increment('worker.local', 1);
-    sink.append({ type: 'otel-metric', op: 'increment', name: 'forwarded', value: 1 });
+    sink.append(batch({ op: 'increment', name: 'forwarded', values: [1] }));
     await sink.flush();
 
     const names = exporter
@@ -103,7 +124,7 @@ describe('OtelMetricsSink', () => {
 
   test('resource carries the forwarded attributes', async () => {
     const { sink, exporter } = makeSink();
-    sink.append({ type: 'otel-metric', op: 'increment', name: 'test.resource', value: 1 });
+    sink.append(batch({ op: 'increment', name: 'test.resource', values: [1] }));
     await sink.flush();
 
     const [resourceMetrics] = exporter.getMetrics();

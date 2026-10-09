@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { DropdownMenu, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
 
 import { meta } from '#meta';
 import { Notebook } from '#types';
@@ -17,31 +18,31 @@ export type NotebookMenuProps = {
 
 // TODO(burdon): Better way to organize menu?
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <DropdownMenu.Portal>
-      <DropdownMenu.Content>
-        <DropdownMenu.Viewport>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
-            {t('notebook-cell-insert-script.label')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
-            {t('notebook-cell-insert-prompt.label')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
-            {t('notebook-cell-insert-query.label')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
-            {t('notebook-cell-insert-markdown.label')}
-          </DropdownMenu.Item>
-          {cell && onCellDelete && (
-            <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
-              {t('notebook-cell-delete.label')}
-            </DropdownMenu.Item>
-          )}
-        </DropdownMenu.Viewport>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Portal>
+    <Menu.Content>
+      <Menu.Item
+        onClick={() => onCellInsert?.('script', cell?.id)}
+        item={{ value: t('notebook-cell-insert-script.label'), label: t('notebook-cell-insert-script.label') }}
+      />
+      <Menu.Item
+        onClick={() => onCellInsert?.('prompt', cell?.id)}
+        item={{ value: t('notebook-cell-insert-prompt.label'), label: t('notebook-cell-insert-prompt.label') }}
+      />
+      <Menu.Item
+        onClick={() => onCellInsert?.('query', cell?.id)}
+        item={{ value: t('notebook-cell-insert-query.label'), label: t('notebook-cell-insert-query.label') }}
+      />
+      <Menu.Item
+        onClick={() => onCellInsert?.('markdown', cell?.id)}
+        item={{ value: t('notebook-cell-insert-markdown.label'), label: t('notebook-cell-insert-markdown.label') }}
+      />
+      {cell && onCellDelete && (
+        <Menu.Item
+          onClick={() => onCellDelete?.(cell.id)}
+          item={{ value: t('notebook-cell-delete.label'), label: t('notebook-cell-delete.label') }}
+        />
+      )}
+    </Menu.Content>
   );
 };

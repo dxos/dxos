@@ -8,13 +8,13 @@ import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { emailToMessage } from './email-fixtures';
-import { type ParquetRow, parquetSource } from './parquet';
+import { emailToMessage } from './email-fixtures.ts';
+import { type ParquetRow, parquetSource } from './parquet.ts';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) is exposed via ROOT_DIR;
 // its layout is `${ROOT_DIR}/data/train-*.parquet`.

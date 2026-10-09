@@ -4,8 +4,11 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useState } from 'react';
 
+import { SessionConfig } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
@@ -16,15 +19,29 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map/testing';
 import { TablePlugin } from '@dxos/plugin-table/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
+import { type Assistant, AssistantCapabilities } from '#types';
 
-import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions';
+import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions.tsx';
+
+/** Stands in for an agent another plugin registers: listed in the picker, never run by the story. */
+const stubAgent = (
+  id: string,
+  label: string,
+  availability: AssistantCapabilities.AgentAvailability,
+): AssistantCapabilities.Agent => ({
+  id,
+  label,
+  icon: id === SessionConfig.COMPOSER_HARNESS ? 'ph--sparkle--regular' : 'px--anthropic--regular',
+  availability: Atom.make(availability).pipe(Atom.keepAlive),
+  makeTurnProducer: () => Effect.succeed({ runTurn: () => Effect.succeed([]), getSkills: () => [] }),
+});
 
 const presets = [
   {
@@ -41,9 +58,9 @@ const presets = [
   },
 ];
 
-type StoryArgs = Pick<ChatOptionsProps, 'presets'>;
+type StoryArgs = Pick<ChatOptionsProps, 'presets' | 'started'>;
 
-const DefaultStory = ({ presets }: StoryArgs) => {
+const DefaultStory = ({ presets, started }: StoryArgs) => {
   const [space] = useSpaces();
   const [feed] = useQuery(space?.db, Filter.type(Feed.Feed));
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
@@ -60,6 +77,7 @@ const DefaultStory = ({ presets }: StoryArgs) => {
       db={space.db}
       context={binder}
       registry={registry}
+      started={started}
       presets={presets}
       preset={preset}
       onPresetChange={setPreset}
@@ -69,13 +87,12 @@ const DefaultStory = ({ presets }: StoryArgs) => {
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatOptions',
-  component: ChatOptions as any,
   render: DefaultStory,
   decorators: [
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Chat.Chat, Feed.Feed, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
@@ -100,7 +117,23 @@ const meta = {
         MapPlugin(),
         TablePlugin(),
       ],
-      capabilities,
+      capabilities: [
+        ...capabilities,
+        // The Models tab's online switch reads the assistant settings; without them it would suspend forever.
+        Capability.contribute(AssistantCapabilities.Settings, Atom.make<Assistant.Settings>({}).pipe(Atom.keepAlive)),
+        Capability.contribute(
+          AssistantCapabilities.Agent,
+          stubAgent(SessionConfig.COMPOSER_HARNESS, 'Composer', { available: true }),
+        ),
+        Capability.contribute(
+          AssistantCapabilities.Agent,
+          stubAgent('claude-code', 'Claude Code', { available: false, reason: 'needs the Composer desktop app' }),
+        ),
+        Capability.contribute(
+          AssistantCapabilities.Agent,
+          stubAgent('claude-code-edge', 'Claude Code (cloud)', { available: true }),
+        ),
+      ],
     }),
   ],
   parameters: {
@@ -119,6 +152,14 @@ export const Default: Story = {
   },
 };
 
+/** A chat that has begun shows its agent but no longer offers the others. */
+export const Started: Story = {
+  args: {
+    presets,
+    started: true,
+  },
+};
+
 export const _ObjectsPanel: Story = {
   render: () => {
     const [space] = useSpaces();
@@ -129,7 +170,7 @@ export const _ObjectsPanel: Story = {
     }
 
     return (
-      <div className='grid w-[300px] h-[300px] border border-separator'>
+      <div className='border border-separator'>
         <ObjectsPanel db={space.db} context={binder} />
       </div>
     );

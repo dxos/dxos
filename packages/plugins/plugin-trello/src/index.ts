@@ -2,6 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as TrelloPlugin from './TrelloPlugin';
-export * from '#meta';
+export * as TrelloPlugin from './TrelloPlugin.ts';
 export * from '#types';

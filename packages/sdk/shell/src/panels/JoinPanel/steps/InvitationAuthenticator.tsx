@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ChangeEvent, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
-import { Input, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 const pinLength = 6;
 
@@ -35,11 +37,12 @@ export const InvitationAuthenticator = ({
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
   const disabled = !active || pending;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 
-  const onChange = ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+  // The pin input reports the whole code; a DOM change event would carry only the digit just typed.
+  const handleValueChange = (value: string) => {
     setAuthCode(value);
     if (value.length === pinLength) {
       (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
@@ -49,33 +52,34 @@ export const InvitationAuthenticator = ({
   return (
     <>
       <div className='grow flex flex-col justify-center gap-4'>
-        <Input.Root
+        <Field.Root
           {...(failed && {
             validationValence: 'error',
           })}
         >
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
-            <Input.Label asChild>
+            <Field.Label asChild>
               <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Input.Label>
+            </Field.Label>
           ) : (
             <>
-              <Input.Label>
-                <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
-              </Input.Label>
+              <Field.Label>
+                <InputLabel classNames='text-fg-muted'>{t('authenticating.label')}</InputLabel>
+              </Field.Label>
               <div className='grow' />
             </>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            <Input.PinInput
+            <Input.Pin
               {...{
+                // The panel centres its content; the pin input's cell row otherwise starts at the inline start.
+                'classNames': 'justify-center',
                 disabled,
-                'density': 'lg',
                 'length': pinLength,
                 'inputMode': 'numeric',
                 'autoComplete': 'off',
                 'pattern': '\\d*',
-                onChange,
+                'onValueChange': handleValueChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,
                 'data-testid': `${invitationType}-auth-code-input`,
@@ -83,12 +87,8 @@ export const InvitationAuthenticator = ({
               }}
             />
           )}
-          {failed && (
-            <Input.DescriptionAndValidation classNames='text-center'>
-              <Input.Validation>{t('failed-to-authenticate.message')}</Input.Validation>
-            </Input.DescriptionAndValidation>
-          )}
-        </Input.Root>
+          {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
+        </Field.Root>
 
         {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
           <>

@@ -3,23 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Type } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -30,8 +30,8 @@ import {
   GOOGLE_CALENDAR_CONNECTOR_ID,
   GOOGLE_CONTACTS_CONNECTOR_ID,
   GOOGLE_INTEGRATION_SOURCE,
-} from '../constants';
-import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from '../scopes';
+} from '../constants.ts';
+import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from '../scopes.ts';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -96,7 +96,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   }).pipe(
     Effect.mapError(
       (error) =>
-        new ConnectionTestError({
+        new ConnectorError.ConnectionTestError({
           message: isGoogleAuthRejection(error)
             ? 'Google rejected the credential. Reauthenticate to continue syncing.'
             : 'Could not verify the connection. Check your network and try again.',
@@ -141,9 +141,9 @@ export default Capability.makeModule(
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: GoogleOperation.MaterializeGmailTarget,
           optionsSchema: SyncOptions.SyncOptions,
-          auto: MAIL_AUTO_SYNC,
-          trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote: MAIL_REMOTE_SYNC,
+          auto: MailSync.MAIL_AUTO_SYNC,
+          trigger: Trigger.specTimer(MailSync.MAIL_SYNC_CRON),
+          remote: MailSync.MAIL_REMOTE_SYNC,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,

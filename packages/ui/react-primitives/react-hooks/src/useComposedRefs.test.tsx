@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import React, { createRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { composeRefs } from './useComposedRefs';
+import { composeRefs } from './useComposedRefs.ts';
 
 describe('composeRefs', () => {
   test('sets every ref and clears them on unmount', () => {

@@ -12,10 +12,10 @@ import { useClientStory } from '@dxos/react-client/testing';
 import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
 import { type ProjectionModel, getTypeURIFromQuery } from '@dxos/schema';
 
-import { type TableController } from '../components';
-import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
-import { type TableModel, TablePresentation } from '../model';
-import { Table } from '../types';
+import { type TableController } from '../components/index.ts';
+import { useAddRow, useProjectionModel, useTableModel } from '../hooks/index.ts';
+import { type TableModel, TablePresentation } from '../model/index.ts';
+import { Table } from '../types/index.ts';
 
 random.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 

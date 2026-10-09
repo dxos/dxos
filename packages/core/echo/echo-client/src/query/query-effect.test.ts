@@ -9,9 +9,9 @@ import { describe, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { TestDatabaseLayer } from '../testing';
+import { TestDatabaseLayer } from '../testing/index.ts';
 
 const TestLayer = TestDatabaseLayer({ types: [TestSchema.Person] });
 

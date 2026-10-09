@@ -6,18 +6,18 @@ import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Header } from '../Header';
-import { MarkdownViewer } from '../MarkdownViewer';
-import { type ViewMode } from '../ViewMode';
-import { EventBodyEditor } from './EventBodyEditor';
-import { EventDetails } from './EventDetails';
-import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
+import { Header } from '../Header/index.ts';
+import { MarkdownViewer } from '../MarkdownViewer/index.ts';
+import { type ViewMode } from '../ViewMode/index.ts';
+import { EventBodyEditor } from './EventBodyEditor.tsx';
+import { EventDetails } from './EventDetails.tsx';
+import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar.tsx';
 
 //
 // Context
@@ -70,7 +70,7 @@ type EventToolbarProps = Pick<
 > &
   Pick<ActionToolbarProps, 'alwaysActive'>;
 
-const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
+const EventToolbar = Util.composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
     const { attendableId, nodeId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
     const menuActions = useEventToolbarActions({
@@ -90,7 +90,7 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
         {...menuActions}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
-        {...composableProps(props)}
+        {...Util.composableProps(props)}
         ref={forwardedRef}
       />
     );
@@ -107,9 +107,9 @@ const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
 type EventViewportProps = {};
 
-const EventViewport = composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
+const EventViewport = Util.composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+    <ScrollArea.Root {...Util.composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -161,7 +161,7 @@ EventHeader.displayName = EVENT_HEADER_NAME;
 
 const EVENT_BODY_NAME = 'Event.Body';
 
-type EventBodyProps = ThemedClassName<{
+type EventBodyProps = Util.ThemedClassName<{
   /** Render the description as an editor bound to the event (used for draft events). */
   editable?: boolean;
 }>;

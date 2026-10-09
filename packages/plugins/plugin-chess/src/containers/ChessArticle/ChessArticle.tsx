@@ -5,13 +5,16 @@
 import { Chess as ChessJS } from 'chess.js';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
-import { mx } from '@dxos/ui-theme';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
 import { meta } from '#meta';
@@ -20,7 +23,7 @@ import { Chess } from '#types';
 export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
   const controller = useRef<ChessboardController>(null);
@@ -69,29 +72,29 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
     <Chessboard.Root state={state} ref={controller}>
       <Panel.Root role={role} classNames='@container'>
         {role === AppSurface.Article.role && (
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              {isGameOver && <Toolbar.Button onClick={handleNewGame}>{t('new-game.button')}</Toolbar.Button>}
+              {isGameOver && <Button.Root onClick={handleNewGame}>{t('new-game.button')}</Button.Root>}
               <div className='grow' />
-              <Toolbar.IconButton
+              <Button.Root
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}
-                classNames={mx('invisible @4xl:visible')}
+                classNames='invisible @4xl:visible'
                 onClick={() => setShowInfo((open) => !open)}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
+          </Panel.Header>
         )}
-        <Panel.Content>
-          <div
-            className={mx(
-              'grid dx-fill',
+        <Panel.Body>
+          <Layout.Grid
+            classNames={[
+              'dx-fill',
               showInfo && '@4xl:grid-cols-[1fr_320px] gap-8',
               role === AppSurface.Article.role && 'p-4',
-              role === AppSurface.Section.role && 'aspect-square',
+              role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0',
               role === AppSurface.Section.role && showInfo && '@4xl:aspect-auto',
-            )}
+            ]}
           >
             <Chessboard.Content>
               <Chessboard.Board classNames='border rounded-xs' orientation={orientation} />
@@ -109,8 +112,8 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
                 />
               </div>
             )}
-          </div>
-        </Panel.Content>
+          </Layout.Grid>
+        </Panel.Body>
       </Panel.Root>
     </Chessboard.Root>
   );

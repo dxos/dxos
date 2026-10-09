@@ -6,18 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 import { Terra, TerraObject } from '#types';
 
-import { seaRadius } from '../../engine';
-import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim';
-import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
-import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel';
-import { TerraMap } from './TerraMap';
+import { seaRadius } from '../../engine/index.ts';
+import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim/index.ts';
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing/index.ts';
+import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel/index.ts';
+import { TerraMap } from './TerraMap.tsx';
 
 /**
  * The map is an overview of slow-moving objects, not a cockpit view: sampling the sim at ~15Hz
@@ -164,10 +164,10 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
 
   return (
     <Panel.Root role='article'>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow overflow-hidden'>
           <TerraMap
             objects={objects}
@@ -180,7 +180,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

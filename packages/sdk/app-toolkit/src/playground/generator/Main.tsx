@@ -8,12 +8,13 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface, usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
-import { IconButton } from '@dxos/react-ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
 
-import { PlaygroundRoles } from '../roles';
+import { PlaygroundRoles } from '../roles.ts';
 
 const Item = ({
   id,
@@ -28,8 +29,8 @@ const Item = ({
 
   return (
     <Listbox.Item id={id}>
-      <Listbox.ItemLabel>{id}</Listbox.ItemLabel>
-      <IconButton
+      <Listbox.ItemText>{id}</Listbox.ItemText>
+      <Button.Root
         iconOnly
         variant='ghost'
         icon='ph--x--regular'
@@ -42,7 +43,7 @@ const Item = ({
 };
 
 export const Main = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const core = useAtomValue(manager.core);
 
@@ -54,7 +55,7 @@ export const Main = () => {
   );
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={plugins.map((plugin) => ({ value: plugin.meta.profile.key, label: plugin.meta.profile.key }))}>
       <Listbox.Content aria-label='Plugins'>
         {plugins.map((plugin) => (
           <Item

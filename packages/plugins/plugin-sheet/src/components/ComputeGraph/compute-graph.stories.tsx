@@ -10,15 +10,18 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Input, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { withComputeGraphDecorator } from '#testing';
 import { Sheet } from '#types';
 
-import { useSheetModel } from '../../model';
-import { useComputeGraph } from './ComputeGraphContext';
+import { useSheetModel } from '../../model/index.ts';
+import { useComputeGraph } from './ComputeGraphContext.ts';
 
 const FUNCTION_NAME = 'TEST';
 
@@ -70,15 +73,10 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-2 '>
       <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput
-            ref={inputRef}
-            placeholder='Formula'
-            value={text}
-            onChange={(ev) => setText(ev.target.value)}
-          />
-        </Input.Root>
-        <Button onClick={handleTest}>Test</Button>
+        <Field.Root>
+          <Input.Root ref={inputRef} placeholder='Formula' value={text} onChange={(ev) => setText(ev.target.value)} />
+        </Field.Root>
+        <Button.Root onClick={handleTest}>Test</Button.Root>
       </Toolbar.Root>
       <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />
     </div>

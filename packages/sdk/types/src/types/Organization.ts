@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { CardAnnotation } from '@dxos/schema';
@@ -27,15 +26,15 @@ export const StatusOptions = [
 const OrganizationSchema = Schema.Struct({
   name: Schema.String.pipe(
     Schema.annotate({ title: 'Name' }),
-    GeneratorAnnotation.set({
+    Annotation.GeneratorAnnotation.set({
       generator: 'company.name',
       probability: 1,
     }),
     Schema.optional,
   ),
-  description: Schema.String.pipe(
+  description: Format.Text.pipe(
     Schema.annotate({ title: 'Description' }),
-    GeneratorAnnotation.set({
+    Annotation.GeneratorAnnotation.set({
       generator: 'lorem.paragraphs',
       args: [{ min: 1, max: 3 }],
     }),
@@ -44,7 +43,7 @@ const OrganizationSchema = Schema.Struct({
   // TODO(wittjosiah): Remove (change to relation).
   status: Schema.Literals(['prospect', 'qualified', 'active', 'commit', 'reject']).pipe(
     FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-    GeneratorAnnotation.set({
+    Annotation.GeneratorAnnotation.set({
       generator: 'helpers.arrayElement',
       args: [['prospect', 'qualified', 'active', 'commit', 'reject']],
     }),
@@ -59,10 +58,14 @@ const OrganizationSchema = Schema.Struct({
     Schema.optional,
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
-  image: Schema.String.pipe(Schema.annotate({ title: 'Image' }), GeneratorAnnotation.set('image.url'), Schema.optional),
+  image: Schema.String.pipe(
+    Schema.annotate({ title: 'Image' }),
+    Annotation.GeneratorAnnotation.set('image.url'),
+    Schema.optional,
+  ),
   website: Format.URL.pipe(
     Schema.annotate({ title: 'Website' }),
-    GeneratorAnnotation.set('internet.url'),
+    Annotation.GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
 });
@@ -72,20 +75,20 @@ const _OrganizationSchema = OrganizationSchema.pipe(
     location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
   }),
   Schema.annotate({ title: 'Organization', description: 'An organization.' }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
   CardAnnotation.set(true),
 );
 
 export class Organization extends Type.makeObject<Organization>(DXN.make('org.dxos.type.organization', '0.1.0'))(
-  _OrganizationSchema,
+  _OrganizationSchema.pipe(Annotation.UserType.set()),
 ) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
 
 const _LegacyOrganizationSchema = OrganizationSchema.pipe(
   Schema.annotate({ title: 'Organization', description: 'An organization.' }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
 );
 

@@ -2,16 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, onTestFinished, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
-import { type EdgeIdentity } from './edge-identity';
-import { WebSocketMuxer } from './edge-ws-muxer';
+import { version } from '../package.json';
+import { protocol } from './defs.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { type EdgeWsConnectionCallbacks } from './edge-ws-connection.ts';
+import { WebSocketMuxer } from './edge-ws-muxer.ts';
+import { type ReconnectReason } from './reconnect-reason.ts';
 
 // Segmented-message chunk count depends on the protobuf envelope overhead, which is
 // determined empirically (see chunk-count assertions below) rather than assumed.
@@ -25,7 +29,8 @@ const { FakeWebSocket } = vi.hoisted(() => {
   class FakeWebSocket {
     static instances: FakeWebSocket[] = [];
 
-    readyState = 1;
+    // Browsers hand back a socket in CONNECTING (0) until the handshake completes.
+    readyState = 0;
     protocol = '';
     binaryType = 'nodebuffer';
     onopen: (() => void) | null = null;
@@ -43,6 +48,10 @@ const { FakeWebSocket } = vi.hoisted(() => {
     }
 
     send(data: unknown): void {
+      if (this.readyState === 0) {
+        // Matches the DOM spec: `send()` on a CONNECTING socket throws `InvalidStateError`.
+        throw new Error("Failed to execute 'send' on 'WebSocket': Still in CONNECTING state.");
+      }
       this.sent.push(data);
     }
 
@@ -54,7 +63,7 @@ const { FakeWebSocket } = vi.hoisted(() => {
 
 vi.mock('isomorphic-ws', () => ({ default: FakeWebSocket }));
 
-const { EdgeWsConnection } = await import('./edge-ws-connection');
+const { EdgeWsConnection } = await import('./edge-ws-connection.ts');
 
 const testIdentity: EdgeIdentity = {
   peerKey: 'test-peer-key',
@@ -116,6 +125,144 @@ describe('EdgeWsConnection', () => {
     invariant(messageB.payload);
     expect(bufWkt.anyUnpack(messageA.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_A_CONTENT);
     expect(bufWkt.anyUnpack(messageB.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_B_CONTENT);
+  });
+
+  for (const [name, wsProtocol] of [
+    ['V0', EdgeWebsocketProtocol.V0],
+    ['muxer', EdgeWebsocketProtocol.V1],
+  ] as const) {
+    test(`buffers messages sent while the socket is still connecting (${name})`, async ({ expect }) => {
+      const { connection, ws } = await createTestConnection(0);
+      ws.protocol = wsProtocol;
+
+      expect(() => connection.send(textMessage(MESSAGE_A_CONTENT))).not.toThrow();
+      expect(ws.sent).toHaveLength(0);
+
+      ws.readyState = 1;
+      ws.onopen?.();
+      await vi.waitFor(() => expect(ws.sent.length).toBeGreaterThan(0));
+
+      const payloads = ws.sent.filter((data) => typeof data !== 'string');
+      expect(payloads).toHaveLength(1);
+    });
+  }
+});
+
+describe('EdgeWsConnection client version', () => {
+  test('advertises the SDK version alongside the protocols and auth header', async ({ expect }) => {
+    const connection = new EdgeWsConnection(
+      testIdentity,
+      { url: new URL('ws://localhost:1234'), protocolHeader: 'base64url.bearer.authorization.dxos.org.AAAA' },
+      { onConnected: () => {}, onMessage: () => {}, onRestartRequired: () => {} },
+    );
+    await connection.open();
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    expect(FakeWebSocket.instances.at(-1)?.protocols).toEqual([
+      EdgeWebsocketProtocol.V0,
+      EdgeWebsocketProtocol.V1,
+      `dxos-version.${version}`,
+      'base64url.bearer.authorization.dxos.org.AAAA',
+    ]);
+  });
+});
+
+//
+// A loop blocked for most of the 12s window frees up and fires the overdue ping and the watchdog, still
+// within its lateness tolerance, before it reads the pongs that arrived meanwhile.
+//
+describe('EdgeWsConnection keepalive watchdog', () => {
+  // Wall clock under test control, so a blocked loop can be modelled: timers fall due while it does
+  // not run, then fire late, all at once, when it frees up.
+  let now = 0;
+
+  /** The loop is blocked for `ms`, then runs every timer that fell due meanwhile. */
+  const block = async (ms: number) => {
+    now += ms;
+    await vi.advanceTimersByTimeAsync(ms);
+  };
+
+  /** The loop stays live for `ms`; timers fire within a step of their due time. */
+  const run = async (ms: number) => {
+    const step = 70;
+    for (let elapsed = 0; elapsed < ms; elapsed += step) {
+      now += step;
+      await vi.advanceTimersByTimeAsync(step);
+    }
+  };
+
+  const pingCount = (ws: { sent: unknown[] }) => ws.sent.filter((data) => data === '__ping__').length;
+
+  const openAnsweredConnection = async () => {
+    const restarts: ReconnectReason[] = [];
+    const handle = await createTestConnection(0, { onRestartRequired: (reason) => restarts.push(reason) });
+    handle.ws.readyState = 1;
+    handle.ws.onopen?.();
+    handle.ws.onmessage?.({ data: '__pong__', type: 'message' });
+    return { ...handle, restarts };
+  };
+
+  beforeEach(() => {
+    now = 1_000_000;
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  test('probes instead of restarting when the loop was blocked for most of the window', async ({ expect }) => {
+    const { ws, restarts } = await openAnsweredConnection();
+    const pingsBefore = pingCount(ws);
+
+    await block(12_600);
+
+    expect(restarts).toEqual([]);
+    expect(pingCount(ws)).toBeGreaterThan(pingsBefore);
+  });
+
+  test('still restarts a connection that stays silent after the block', async ({ expect }) => {
+    const { restarts } = await openAnsweredConnection();
+
+    await block(12_600);
+    await run(25_200);
+
+    expect(restarts).toEqual(['inactivity_timeout']);
+  });
+
+  test('restarts when a live loop gets no answer for a whole window', async ({ expect }) => {
+    const { restarts } = await openAnsweredConnection();
+
+    await run(12_600);
+
+    expect(restarts).toEqual(['inactivity_timeout']);
+  });
+
+  test('restarts a dead connection even when the loop blocks for most of every window', async ({ expect }) => {
+    const { restarts } = await openAnsweredConnection();
+
+    for (let cycle = 0; cycle < 12; cycle++) {
+      await block(8_000);
+      await run(2_000);
+    }
+
+    expect(restarts).toEqual(['inactivity_timeout']);
+  });
+
+  test('keeps probing a blocked connection that answers between blocks', async ({ expect }) => {
+    const { ws, restarts } = await openAnsweredConnection();
+
+    for (let cycle = 0; cycle < 4; cycle++) {
+      await block(12_600);
+      await block(12_600);
+      ws.onmessage?.({ data: '__pong__', type: 'message' });
+    }
+
+    expect(restarts).toEqual([]);
   });
 });
 
@@ -189,7 +336,10 @@ const buildSegmentedChunks = async (contents: string[]): Promise<Uint8Array[][]>
   return chunksByMessage;
 };
 
-const openTestConnection = async (expectedMessages: number) => {
+const createTestConnection = async (
+  expectedMessages: number,
+  { onRestartRequired = () => {} }: Partial<Pick<EdgeWsConnectionCallbacks, 'onRestartRequired'>> = {},
+) => {
   const received: Message[] = [];
   const allReceived = new Trigger();
   const connection = new EdgeWsConnection(
@@ -203,7 +353,7 @@ const openTestConnection = async (expectedMessages: number) => {
           allReceived.wake();
         }
       },
-      onRestartRequired: () => {},
+      onRestartRequired,
     },
   );
   await connection.open();
@@ -213,7 +363,13 @@ const openTestConnection = async (expectedMessages: number) => {
 
   const ws = FakeWebSocket.instances.at(-1);
   invariant(ws, 'FakeWebSocket instance not created');
-  ws.onopen?.();
 
   return { connection, ws, received, allReceived };
+};
+
+const openTestConnection = async (expectedMessages: number) => {
+  const handle = await createTestConnection(expectedMessages);
+  handle.ws.readyState = 1;
+  handle.ws.onopen?.();
+  return handle;
 };

@@ -21,16 +21,18 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
-import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type AutoScrollProps,
   PROMPT_ELEMENT,
   ThemeExtensionsOptions,
+  type WidgetState,
+  type WidgetStateManager,
   type XmlTagsOptions,
-  type XmlWidgetState,
-  type XmlWidgetStateManager,
   createBasicExtensions,
   createThemeExtensions,
   createTurnSource,
@@ -39,27 +41,29 @@ import {
   extendedMarkdown,
   fader,
   lineSpacing,
+  objectLinks,
   scroller,
   turnFolding,
   typewriter,
   typewriterBypass,
+  widgetContextEffect,
+  widgetHost,
+  widgetResetEffect,
   xmlBlockDecoration,
   xmlFormatting,
-  xmlTagContextEffect,
-  xmlTagResetEffect,
   xmlTags,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { createMarkdownStreamController } from './create-controller';
-import { footer, setFooterVisibleEffect } from './footer';
-import { type StreamerOptions, createStreamer } from './stream';
+import { createMarkdownStreamController } from './create-controller.ts';
+import { footer, setFooterVisibleEffect } from './footer.ts';
+import { type StreamerOptions, createStreamer } from './stream.ts';
 
 /** Document offset range (CodeMirror positions). */
 export type DocumentRange = { from: number; to: number };
 
-export interface MarkdownStreamController extends XmlWidgetStateManager {
+export interface MarkdownStreamController extends WidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
@@ -85,7 +89,7 @@ export type MarkdownStreamEvent = {
   value: string | null;
 };
 
-export type MarkdownStreamProps = ThemedClassName<
+export type MarkdownStreamProps = Util.ThemedClassName<
   {
     debug?: boolean;
 
@@ -171,7 +175,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     }, [view, footerVisible]);
 
     // Streaming text queue.
-    const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
+    const [queue, setQueue, queueRef] = Hooks.useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
 
     // Reset document.
     const onReset = useCallback(
@@ -185,7 +189,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // belongs to the host, not the document, so nulling it here would strand every widget in the
         // replacement document with `context: undefined`.
         viewRef.current.dispatch({
-          effects: [xmlTagContextEffect.of(pendingContextRef.current?.value ?? null), xmlTagResetEffect.of(null)],
+          effects: [widgetContextEffect.of(pendingContextRef.current?.value ?? null), widgetResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
           annotations: typewriterBypass.of(true),
           selection: EditorSelection.cursor(text.length),
@@ -209,7 +213,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     useEffect(() => {
       const pending = pendingContextRef.current;
       if (view && pending) {
-        view.dispatch({ effects: xmlTagContextEffect.of(pending.value) });
+        view.dispatch({ effects: widgetContextEffect.of(pending.value) });
       }
     }, [view]);
 
@@ -250,12 +254,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         <div className={mx('dx-expand', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorBoundary name='markdown-stream'>
+        <Status.ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
             <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
           {footerRoot && footerVisible && createPortal(footer, footerRoot)}
-        </ErrorBoundary>
+        </Status.ErrorBoundary>
       </>
     );
   },
@@ -271,7 +275,7 @@ type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'regis
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
-  widgets: XmlWidgetState[];
+  widgets: WidgetState[];
 };
 
 /**
@@ -288,10 +292,10 @@ const useMarkdownStreamTextEditor = (
     setFooterRoot,
   }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
 
   // Active widgets.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Editor.
   const { view, parentRef } = useTextEditor(() => {
@@ -306,24 +310,19 @@ const useMarkdownStreamTextEditor = (
         !debug &&
           [
             extendedMarkdown({ registry }),
-            decorateMarkdown({
-              // xmlTags extension will handle `dxn:`/`echo:` links/images.
-              skip: (node) =>
-                (node.name === 'Link' || node.name === 'Image') &&
-                (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
-            }),
-            // TODO(burdon): Make optional; Removes need for '\n\n'.
+            decorateMarkdown(),
             lineSpacing(),
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass:
-                'cm-prompt-line cm-prompt-bubble bg-group-surface text-base-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
+                'cm-prompt-line cm-prompt-bubble bg-group-surface text-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
               firstLineClass: 'pt-1.5 rounded-t-sm',
               lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,
             }),
-            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            // TODO(burdon): Folding gets progressively off due to some widgets?
+            widgetHost({ setWidgets, bookmarks: ['prompt'] }),
+            xmlTags({ registry }),
+            objectLinks(),
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
@@ -353,7 +352,7 @@ const useMarkdownStreamTextEditor = (
     extensionsProp,
   ]);
 
-  const viewRef = useDynamicRef(view);
+  const viewRef = Hooks.useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };
 };
 

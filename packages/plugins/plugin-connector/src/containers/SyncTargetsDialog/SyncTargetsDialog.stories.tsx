@@ -8,14 +8,14 @@ import React, { useMemo } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-import { corePlugins } from '@dxos/plugin-testing';
-import { Dialog } from '@dxos/react-ui';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 import { ConnectorSpec } from '#types';
 
-import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
+import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog.tsx';
 
 const availableTargets: ConnectorSpec.RemoteTarget[] = [
   { id: 'board-1', name: 'Product Roadmap', description: 'Quarterly planning board.' },
@@ -43,9 +43,7 @@ const DefaultStory = ({ availableTargets }: StoryArgs) => {
 
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <SyncTargetsDialog {...props} />
-      </Dialog.Overlay>
+      <SyncTargetsDialog {...props} />
     </Dialog.Root>
   );
 };
@@ -53,7 +51,7 @@ const DefaultStory = ({ availableTargets }: StoryArgs) => {
 const meta = {
   title: 'plugins/plugin-connector/containers/SyncTargetsDialog',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: corePlugins() })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: CorePlugins.make() })],
   parameters: {
     translations,
   },

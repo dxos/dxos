@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as AiError from 'effect/ai/AiError';
+import type * as Response from 'effect/ai/Response';
+import type * as Tool from 'effect/ai/Tool';
 import * as Cause from 'effect/Cause';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
-import type * as AiError from 'effect/unstable/ai/AiError';
-import type * as Response from 'effect/unstable/ai/Response';
-import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { log } from '@dxos/log';
 
@@ -20,12 +20,17 @@ import { log } from '@dxos/log';
  * `InvalidOutputError` failure or, depending on the provider, a raw `SyntaxError` defect — since
  * the raw delta parts consumers read have all been emitted by then.
  */
-export const withoutToolCallParsing = <Tools extends Record<string, Tool.Any>, E extends AiError.AiError, R>(
-  stream: Stream.Stream<Response.StreamPart<Tools>, E, R>,
-): Stream.Stream<Response.StreamPart<Tools>, E, R> => {
+export const withoutToolCallParsing = <
+  Tools extends Record<string, Tool.Any>,
+  ParametersMode extends Response.ToolParametersMode,
+  E extends AiError.AiError,
+  R,
+>(
+  stream: Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R>,
+): Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R> => {
   return stream.pipe(
     Stream.filter((part) => part.type !== 'tool-call'),
-    Stream.catchCause((cause: Cause.Cause<E>): Stream.Stream<Response.StreamPart<Tools>, E, R> => {
+    Stream.catchCause((cause: Cause.Cause<E>): Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R> => {
       if (isToolCallParseFailure(cause)) {
         log.warn('tool call parameters did not parse', { error: Cause.pretty(cause) });
         return Stream.empty;

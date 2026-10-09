@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { handler } from './update';
+import { handler } from './update.ts';
 
 describe('halo update', () => {
   test('should update identity display name', ({ expect }) =>

@@ -10,17 +10,19 @@ import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { ProcessManager } from '@dxos/compute-runtime';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { RunInstructions } from '../operations';
-import { DelegationSkill } from '../skills';
+import { ToolkitError } from '../errors.ts';
+import * as DelegationSkill from '../skills/delegation/DelegationSkill.ts';
+import * as AgentOperation from '../types/AgentOperation.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
@@ -32,7 +34,7 @@ const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Err
     const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
     if (!EntityId.isValid(candidate)) {
       // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
-      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
+      return yield* Effect.fail(new ToolkitError({ message: `Invalid artifact id: ${id}` }));
     }
     const { db } = yield* Database.Service;
     return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));
@@ -62,6 +64,15 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
+ * A task handed to a sub-agent by the delegation verbs, which assign `{ role: 'assistant' }` and
+ * nothing else. An assistant assignee carrying a `subject` names a concrete session that owns the
+ * task — the conversation's own agent starting it from the planning tool, or a remote session —
+ * so it is that session's work, not a spawn request for the supervisor.
+ */
+export const isSubAgentTask = (task: Task.Task): boolean =>
+  task.assignee?.role === 'assistant' && task.assignee.subject === undefined;
+
+/**
  * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
  * the chat's checklist whose assignee is an agent, all of whose dependencies are done. Ordinary
  * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
@@ -77,7 +88,7 @@ const findPendingTasks = (
     // The chat's `tasks` array is flat, so a delegated sub-task is found without descending.
     return tasks.filter(
       (task) =>
-        task.assignee?.role === 'assistant' &&
+        isSubAgentTask(task) &&
         (task.status ?? 'todo') === 'todo' &&
         !activeIds.has(task.id) &&
         Task.isTaskReady(tasks, task),
@@ -95,7 +106,7 @@ const sweepOrphanedTasks = (
   Effect.gen(function* () {
     const tasks = yield* Chat.loadTasks(chat);
     const orphans = tasks.filter(
-      (task) => task.assignee?.role === 'assistant' && task.status === 'started' && !activeIds.has(task.id),
+      (task) => isSubAgentTask(task) && task.status === 'started' && !activeIds.has(task.id),
     );
     if (orphans.length === 0) {
       return;
@@ -104,6 +115,32 @@ const sweepOrphanedTasks = (
       log.warn('orphaned delegated task failed', { taskId: task.id, title: task.title });
       Obj.update(task, (task) => {
         task.status = 'failed';
+      });
+    }
+    yield* Database.flush();
+  });
+
+/**
+ * Fails the tasks the conversation's own agent holds when its turn fails — a model error ends the
+ * process before any reconcile, so a task left `started` would read as underway indefinitely.
+ * Sub-agent tasks are left to their own process's exit, which may still succeed.
+ */
+const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Effect<void, never, Database.Service> =>
+  Effect.gen(function* () {
+    const held = (yield* Chat.loadTasks(chat)).filter((task) => Task.isAgentWorking(task) && !isSubAgentTask(task));
+    if (held.length === 0) {
+      return;
+    }
+
+    // The reader sees the error message; the full cause goes to the log.
+    const reason = Cause.prettyErrors(cause)
+      .map((error) => error.message)
+      .join('; ');
+    log.warn('agent turn failed; failing held tasks', { chatId: chat.id, cause: Cause.pretty(cause) });
+    for (const task of held) {
+      Task.setStatus(task, 'failed', {
+        actor: { role: 'assistant', subject: Ref.make(chat) },
+        description: `The agent's request failed${reason ? `: ${reason}` : '.'}`,
       });
     }
     yield* Database.flush();
@@ -166,20 +203,21 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         delegations.push({
           id: task.id,
           spawn: Effect.gen(function* () {
-            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
             // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
             // task id) — nothing is stamped on the durable task.
-            const fiber = yield* invoker.invokeFiber(RunInstructions, {
+            const handle = yield* Process.spawn(OperationProcess.make(AgentOperation.RunInstructions), {
               instructions: Ref.make(instructions),
               input: {},
             });
-            return fiber.pid;
+            return handle.pid;
           }),
         });
       }
       yield* Database.flush();
       return delegations;
     }),
+
+  onTurnFailed: failHeldTasks,
 
   onComplete: (chat, id, exit) =>
     Effect.gen(function* () {

@@ -5,26 +5,26 @@
 import * as Effect from 'effect/Effect';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as HubAccount from '@dxos/app-toolkit/Account';
+import * as ToolkitAccount from '@dxos/app-toolkit/Account';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Credential, DeviceType, type Identity } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
-import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
 
 import hero from '../assets/hero.webp?url';
-import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants';
-import { meta } from './meta';
-import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util';
+import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
+import { meta } from './meta.ts';
+import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -125,8 +125,8 @@ export class OnboardingManager {
     // is checked separately on the profile page (where users without an account see
     // a "no edge access" warning + request-access form).
     if (this._identity) {
-      // A device invitation targets a different identity, so accepting it requires a storage
-      // reset; confirm via the reset dialog rather than dropping the invitation silently. Stop
+      // A device invitation targets a different identity, so accepting it requires deleting this
+      // one; confirm via the reset dialog rather than dropping the invitation silently. Stop
       // here — no recovery/agent provisioning for an identity the user may be about to abandon.
       if (this._deviceInvitationCode !== undefined) {
         await this._confirmJoinNewIdentity();
@@ -189,20 +189,7 @@ export class OnboardingManager {
         await this._createAgent();
       }
     } else if (!this._identity && this._skipAuth) {
-      // Auth disabled (e.g. integration tests): just bring up a fresh identity.
-      await this._createIdentity();
-      if (aborted()) {
-        return;
-      }
-      await this._setupRecovery();
-      if (aborted()) {
-        return;
-      }
-      await this._startHelp();
-      if (aborted()) {
-        return;
-      }
-      await this._createAgent();
+      await this._startFreshIdentity();
     } else if (!this._identity && this._token) {
       // Login flow: redeem the recovery token from `/account/login` to restore
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
@@ -227,6 +214,22 @@ export class OnboardingManager {
     }
   }
 
+  /**
+   * Picks up after the local identity was deleted in place. A plain logout (no `target`) lands where a
+   * first run does — the welcome screen, or a fresh identity where auth is disabled; a `target` means
+   * the caller already opened the join or recovery flow that brings the next identity in.
+   */
+  async onIdentityDeleted({ target }: { target?: string } = {}): Promise<void> {
+    if (this._destroyed || target !== undefined) {
+      return;
+    }
+    if (this._skipAuth) {
+      await this._startFreshIdentity();
+    } else {
+      await this._showWelcome();
+    }
+  }
+
   async destroy(): Promise<void> {
     this._destroyed = true;
     await this._ctx.dispose();
@@ -234,8 +237,8 @@ export class OnboardingManager {
 
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
-    return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    return credentials.filter((credential) =>
+      credential.subject?.assertion?.typeUrl.endsWith('dxos.halo.credentials.IdentityRecovery'),
     );
   }
 
@@ -303,14 +306,19 @@ export class OnboardingManager {
     // typed errors are not matchable from a catch block. The catch-all matters: `initialize()` is a
     // fire-and-forget background side-effect, so a rejection here would vanish unhandled.
     const outcome = await EffectEx.runPromise(
-      HubAccount.signUpWithEmail({ hub: HubAccount.createHubClient(this._hubUrl), email, code, ensureIdentity }).pipe(
+      ToolkitAccount.signUpWithEmail({
+        hub: ToolkitAccount.createHubClient(this._hubUrl),
+        email,
+        code,
+        ensureIdentity,
+      }).pipe(
         Effect.map(() => 'redeemed' as const),
         Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
         Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
         Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('signup failed; leaving signup params for retry', {
-              error: HubAccount.accountErrorType(error) ?? String(error),
+              error: ToolkitAccount.accountErrorType(error) ?? String(error),
             });
             return 'failed' as const;
           }),
@@ -344,8 +352,8 @@ export class OnboardingManager {
     invariant(this._hubUrl);
 
     await EffectEx.runPromise(
-      HubAccount.redeemAccessCode({
-        hub: HubAccount.createHubClient(this._hubUrl),
+      ToolkitAccount.redeemAccessCode({
+        hub: ToolkitAccount.createHubClient(this._hubUrl),
         identity: this._identity,
         email: this._email,
         code: this._accountInvitationCode,
@@ -353,7 +361,7 @@ export class OnboardingManager {
         Effect.catch((err) =>
           Effect.sync(() => {
             log.info('skipped binding existing identity', {
-              error: HubAccount.accountErrorType(err) ?? err.message,
+              error: ToolkitAccount.accountErrorType(err) ?? err.message,
             });
           }),
         ),
@@ -400,6 +408,24 @@ export class OnboardingManager {
     });
   }
 
+  /** Auth disabled (e.g. integration tests): just bring up a fresh identity. */
+  private async _startFreshIdentity(): Promise<void> {
+    const aborted = () => this._destroyed;
+    await this._createIdentity();
+    if (aborted()) {
+      return;
+    }
+    await this._setupRecovery();
+    if (aborted()) {
+      return;
+    }
+    await this._startHelp();
+    if (aborted()) {
+      return;
+    }
+    await this._createAgent();
+  }
+
   private async _createIdentity(): Promise<void> {
     // `invokePromise` resolves with `{ error }` rather than rejecting, so rethrow it — otherwise a
     // failed creation only surfaces later as an invariant defect.
@@ -421,9 +447,13 @@ export class OnboardingManager {
     await this._invokePromise(ClientOperation.CreateAgent);
   }
 
-  /** The invitation code stays in the URL so it survives the reset reload. */
+  /** The reset dialog carries the code into the join flow it opens once the identity is deleted. */
   private async _confirmJoinNewIdentity(): Promise<void> {
-    await this._invokePromise(ClientOperation.ResetStorage, { mode: 'join-new-identity' });
+    invariant(this._deviceInvitationCode !== undefined);
+    await this._invokePromise(ClientOperation.ResetStorage, {
+      mode: 'join-new-identity',
+      invitationCode: this._deviceInvitationCode,
+    });
   }
 
   private async _openJoinIdentity(): Promise<void> {

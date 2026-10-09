@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as StackPlugin from './StackPlugin';
-export * from '#meta';
+export * as StackPlugin from './StackPlugin.ts';
 export * from '#types';

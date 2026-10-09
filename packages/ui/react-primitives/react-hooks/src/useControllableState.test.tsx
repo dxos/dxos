@@ -5,7 +5,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { useControllableState } from './useControllableState';
+import { useControllableState } from './useControllableState.ts';
 
 describe('useControllableState', () => {
   test('uncontrolled: seeds from defaultProp, stores, and reports each change', () => {

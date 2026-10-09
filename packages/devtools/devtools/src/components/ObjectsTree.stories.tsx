@@ -15,9 +15,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { DevtoolsContextProvider } from '../hooks';
-import { ObjectsTree } from './ObjectsTree';
-import { ObjectViewer } from './ObjectViewer';
+import { DevtoolsContextProvider } from '../hooks/index.ts';
+import { ObjectsTree } from './ObjectsTree.tsx';
+import { ObjectViewer } from './ObjectViewer.tsx';
 
 random.seed(1);
 
@@ -160,7 +160,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='dx-expand overflow-hidden text-base-fg'>
+      <div className='dx-expand overflow-hidden text-fg'>
         <ObjectsTree db={space.db} />
       </div>
     );

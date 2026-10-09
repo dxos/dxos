@@ -68,22 +68,17 @@ export const IconRegistryContext = createContext<IconRegistry>(NoopRegistry);
 // Singleton bridge so non-React renderers (Lit's <dx-icon>, etc.) and packages that don't
 // depend on @dxos/react-ui can access the same registry. The convention is intentionally a
 // globalThis property so that any package can read it without importing from this module.
-const REGISTRY_GLOBAL = '__dxIconRegistry' as const;
-
-type RegistryHost = { [REGISTRY_GLOBAL]?: IconRegistry };
-
-const getHost = (): RegistryHost => globalThis as unknown as RegistryHost;
+declare global {
+  // A `var` (rather than `let`/`const`) is what TypeScript requires to augment globalThis.
+  // eslint-disable-next-line no-var
+  var __dxIconRegistry: IconRegistry | undefined;
+}
 
 const setActiveRegistry = (registry: IconRegistry | undefined): void => {
-  const host = getHost();
-  if (registry === undefined) {
-    delete host[REGISTRY_GLOBAL];
-  } else {
-    host[REGISTRY_GLOBAL] = registry;
-  }
+  globalThis.__dxIconRegistry = registry;
 };
 
-export const getIconRegistry = (): IconRegistry => getHost()[REGISTRY_GLOBAL] ?? NoopRegistry;
+export const getIconRegistry = (): IconRegistry => globalThis.__dxIconRegistry ?? NoopRegistry;
 
 export const useIconRegistry = (): IconRegistry => useContext(IconRegistryContext);
 

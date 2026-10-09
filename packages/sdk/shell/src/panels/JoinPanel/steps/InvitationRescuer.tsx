@@ -5,12 +5,12 @@
 import React from 'react';
 
 import { Invitation_State } from '@dxos/react-client/invitations';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Action, ActionBar, InputLabel } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type FailReason } from '../../../types';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type FailReason } from '../../../types/index.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface InvitationRescuerProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
@@ -29,12 +29,12 @@ const InvitationActions = ({
   Kind,
   failReason,
 }: InvitationRescuerProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   if (failReason) {
     return (
       <>
-        <InputLabel classNames='text-description'>
+        <InputLabel classNames='text-fg-muted'>
           {t(
             failReason === 'timeout'
               ? 'timeout status label'
@@ -58,7 +58,7 @@ const InvitationActions = ({
   } else {
     return (
       <>
-        <InputLabel classNames='text-description'>{t('connecting-status.label')}</InputLabel>
+        <InputLabel classNames='text-fg-muted'>{t('connecting-status.label')}</InputLabel>
         <div className='grow' />
         <ActionBar>
           <Action disabled classNames='order-2' data-testid='next'>
@@ -75,14 +75,14 @@ const InvitationActions = ({
 
 export const InvitationRescuer = (props: InvitationRescuerProps) => {
   const { Kind, invitationState, active, send } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <>
       {typeof invitationState === 'undefined' ? (
         <>
           <div className='grow flex flex-col justify-center'>
-            <InputLabel classNames='text-description'>There was a problem joining the space</InputLabel>
+            <InputLabel classNames='text-fg-muted'>There was a problem joining the space</InputLabel>
           </div>
           <ActionBar>
             <Action

@@ -7,12 +7,13 @@ import * as Schema from 'effect/Schema';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
-import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
+import { InboxOperationError } from '../operations/errors.ts';
+import * as InboxOperation from '../types/InboxOperation.ts';
+import * as Mailbox from '../types/Mailbox.ts';
 
 /** Default cron for the cascade (daily, early); the user edits the schedule on the trigger. */
 const DEFAULT_CRON = '0 6 * * *';
@@ -37,11 +38,11 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
   scaffold: ({ name, input }) =>
     Effect.gen(function* () {
       if (!Ref.isRef(input?.mailbox)) {
-        return yield* Effect.fail(new Error('Analyze Mailbox template requires a mailbox.'));
+        return yield* Effect.fail(new InboxOperationError({ message: 'Analyze Mailbox template requires a mailbox.' }));
       }
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 
-      return makeRoutine({
+      return Wire.makeRoutine({
         name: name ?? `Analyze — ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({

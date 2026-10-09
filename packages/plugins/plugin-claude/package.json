@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-claude",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "private": true,
   "description": "Claude managed agents as ECHO objects, with an assistant skill to configure, deploy and run them",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#api": {
@@ -23,12 +23,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -129,20 +131,37 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-code": "workspace:*",
+    "@dxos/plugin-connector": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/assistant": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

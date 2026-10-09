@@ -6,10 +6,10 @@ import React from 'react';
 
 import { Entity, Obj } from '@dxos/echo';
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
-import { Icon } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { getStyles } from '@dxos/ui-theme';
 
-import { nameToHue } from './avatar-name';
+import { nameToHue } from './avatar-name.ts';
 
 /**
  * Conventional field holding an object's picture, as a URL.
@@ -55,7 +55,7 @@ export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIco
   // that has never been named.
   if (!image && !label) {
     const icon = fallbackIcon ?? iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
-    return <Icon icon={icon} classNames={iconAnnotation?.hue ? getStyles(iconAnnotation.hue).text : undefined} />;
+    return <Icon.Icon icon={icon} classNames={iconAnnotation?.hue ? getStyles(iconAnnotation.hue).text : undefined} />;
   }
 
   return (

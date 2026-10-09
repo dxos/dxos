@@ -4,8 +4,8 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
@@ -14,7 +14,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { MarkdownArticle, type MarkdownArticleProps } from '#containers';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { editorViewModeAspect } from './editor-view-state';
+import { editorViewModeAspect } from './editor-view-state.ts';
 
 export type MarkdownContainerProps = AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>;
 
@@ -24,9 +24,9 @@ export type MarkdownContainerProps = AppSurface.ObjectArticleProps<Markdown.Docu
  */
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
   ({ id, attendableId, subject, role }, forwardedRef) => {
-    const viewState = useCapability(AttentionCapabilities.ViewState);
-    const settings = useAtomCapability(MarkdownCapabilities.Settings);
-    const editorState = useCapability(MarkdownCapabilities.EditorState);
+    const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
+    const settings = Hooks.useAtomCapability(MarkdownCapabilities.Settings);
+    const editorState = Hooks.useCapability(MarkdownCapabilities.EditorState);
 
     // Per-document view mode is durable UI state (ViewState, keyed by document id); it overrides the
     // `defaultViewMode` setting when the user has picked a mode for this document.

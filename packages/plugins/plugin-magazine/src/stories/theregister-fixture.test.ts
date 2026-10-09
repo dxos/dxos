@@ -4,9 +4,9 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { fetchRss } from '../operations/sources';
+import { fetchRss } from '../operations/sources/index.ts';
 import registerFeedXml from './fixtures/theregister-ai.xml?raw';
 
 const REGISTER_FEED_URL = 'https://api.theregister.com/api/v1/article?remapper=rss';

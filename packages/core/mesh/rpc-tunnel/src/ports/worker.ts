@@ -5,7 +5,7 @@
 import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
-import { type MessageData } from '../message';
+import { type MessageData } from '../message.ts';
 
 export type WorkerPortOptions = {
   port: MessagePort;

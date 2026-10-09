@@ -6,10 +6,10 @@ import { curveCatmullRom, line, scaleLinear } from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { ThemedClassName } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useAudioStream } from '../../hooks';
+import { useAudioStream } from '../../hooks/index.ts';
 
 export type Point = { x: number; y: number };
 
@@ -22,7 +22,7 @@ const curveGenerator = line<Point>()
   .x((d) => d.x)
   .y((d) => d.y);
 
-type GraphProps = ThemedClassName<{
+type GraphProps = Util.ThemedClassName<{
   range?: [number, number];
   data?: number[];
   bins?: number;
@@ -127,7 +127,7 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
 
 export type OscilloscopeMode = 'frequency' | 'waveform';
 
-export type OscilloscopeProps = ThemedClassName<{
+export type OscilloscopeProps = Util.ThemedClassName<{
   active?: boolean;
   mode?: OscilloscopeMode;
   /** X-axis window as [startIndex, endIndex] into the data array. Shows all bins if omitted. */

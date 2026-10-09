@@ -5,11 +5,14 @@
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { type Database, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildContactFromActor } from '@dxos/extractor-lib';
 import { EID } from '@dxos/keys';
-import { Card, Icon, Popover } from '@dxos/react-ui';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 import { type Actor, type Person } from '@dxos/types';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
@@ -24,24 +27,21 @@ const ContactPreviewCard = () => {
   }
 
   return (
-    <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport classNames='dx-card-popover-width'>
-          <Card.Root border={false} data-testid='contact-preview'>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon='ph--user--regular' />
-              </Card.Block>
-              <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
-            </Card.Header>
-            <Card.Row>
-              <Card.Text variant='description'>{contact?.emails?.[0]?.value}</Card.Text>
-            </Card.Row>
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content>
+      <Popover.Body classNames='dx-card-popover-width'>
+        <Card.Root border={false} data-testid='contact-preview'>
+          <Card.Header>
+            <Layout.Block>
+              <Icon.Icon icon='ph--user--regular' />
+            </Layout.Block>
+            <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
+          </Card.Header>
+          <Card.Row>
+            <Card.Text variant='muted'>{contact?.emails?.[0]?.value}</Card.Text>
+          </Card.Row>
+        </Card.Root>
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 
@@ -54,11 +54,11 @@ const ContactPreviewCard = () => {
  * story that shows people gets the same behaviour rather than re-deriving it.
  */
 export const ContactPreview = ({ db, children }: PropsWithChildren<{ db?: Database.Database }>) => {
-  // Resolves the hovered row's DXN back to its Person, so the card shows the real contact.
+  // Resolves the hovered row's EID back to its Person, so the card shows the real contact.
   const handleLookup = useCallback(
-    async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-      const eid = EID.tryParse(dxn);
-      const id = eid && EID.getEntityId(eid);
+    async ({ eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+      const parsed = EID.tryParse(eid);
+      const id = parsed && EID.getEntityId(parsed);
       const object = id && db ? (await db.query(Filter.id(id)).run())[0] : undefined;
       return { label, object };
     },

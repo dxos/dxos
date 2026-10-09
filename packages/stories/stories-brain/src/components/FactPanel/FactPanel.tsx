@@ -5,31 +5,31 @@
 import React, { useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { FactViewer } from '@dxos/react-ui-rdf';
-import { mx } from '@dxos/ui-theme';
+import * as Util from '@dxos/react-ui/Util';
 
-import { EntityList } from '../EntityList';
-import { PredicateList } from '../PredicateList';
-import { entitiesFromFacts, predicatesFromFacts } from '../types';
+import { EntityList } from '../EntityList/index.ts';
+import { PredicateList } from '../PredicateList/index.ts';
+import { entitiesFromFacts, predicatesFromFacts } from '../types.ts';
 
-export type FactPanelProps = ThemedClassName<{
+export type FactPanelProps = {
   facts: RDF.Fact[];
-}>;
+};
 
 /**
  * Composite view over extracted facts: the {@link FactViewer} scoped by a selected entity (from the
  * {@link EntityList}) and a selected predicate (from the {@link PredicateList}). Owns the shared
  * entity/predicate selection state so callers pass only the facts.
  */
-export const FactPanel = ({ classNames, facts }: FactPanelProps) => {
+// Composable, so a host can slot it (`Panel.Body asChild`) and give it the body's height.
+export const FactPanel = Util.composable<HTMLDivElement, FactPanelProps>(({ facts, ...props }, forwardedRef) => {
   const [context, setContext] = useState<string | undefined>(undefined);
   const [predicate, setPredicate] = useState<string | undefined>(undefined);
   const entities = useMemo(() => entitiesFromFacts(facts), [facts]);
   const predicates = useMemo(() => predicatesFromFacts(facts), [facts]);
 
   return (
-    <div className={mx('grid grid-rows-[1fr_1fr] gap-2 min-h-0', classNames)}>
+    <div {...Util.composableProps(props, { classNames: 'grid grid-rows-[1fr_1fr] gap-2 min-h-0' })} ref={forwardedRef}>
       <FactViewer.Root facts={facts} context={context} predicate={predicate} />
       <div className='grid grid-cols-[1fr_1fr] min-h-0'>
         <EntityList entities={entities} selected={context} onSelect={setContext} />
@@ -37,4 +37,6 @@ export const FactPanel = ({ classNames, facts }: FactPanelProps) => {
       </div>
     </div>
   );
-};
+});
+
+FactPanel.displayName = 'FactPanel';

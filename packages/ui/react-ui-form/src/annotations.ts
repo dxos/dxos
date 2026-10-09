@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
-import { HueAnnotationId } from '@dxos/ui-types';
+import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
@@ -22,6 +22,11 @@ export type OptionsLookup = {
   readonly deps: readonly string[];
   readonly load: (values: any) => Effect.Effect<readonly OptionsLookupEntry[], unknown>;
   readonly combobox?: boolean;
+  /**
+   * List every loaded option before anything is typed (a combobox over a small, known catalogue —
+   * models, voices), rather than only once the query narrows a remote search.
+   */
+  readonly eager?: boolean;
 };
 
 export const OptionsLookupAnnotationId = '@dxos/schema/annotation/OptionsLookup';
@@ -30,15 +35,15 @@ export const OptionsLookupAnnotation = createAnnotationHelper<OptionsLookup>(Opt
 /**
  * Builds an {@link OptionsLookup} typed against a schema's value type `Values`: `deps` is checked
  * against its field names, and `load` receives only those fields, narrowed. Pass `{ combobox: true }` to
- * render an editable combobox.
+ * render an editable combobox, and `eager: true` to list the loaded options before anything is typed.
  */
 export const optionsLookup =
   <Values>() =>
   <const Deps extends readonly (keyof Values & string)[]>(
     deps: Deps,
     load: (values: Pick<Values, Deps[number]>) => Effect.Effect<readonly OptionsLookupEntry[], unknown>,
-    options?: { combobox?: boolean },
-  ): OptionsLookup => ({ deps, load, combobox: options?.combobox });
+    options?: { combobox?: boolean; eager?: boolean },
+  ): OptionsLookup => ({ deps, load, combobox: options?.combobox, eager: options?.eager });
 
 /**
  * Derives a (text) field's value from a declared subset of the form values, so a field can be pre-filled
@@ -65,3 +70,9 @@ export const autofill =
 
 /** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
 export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
+
+/**
+ * Increment for a number field's stepper buttons and arrow keys. Without it an integer field steps by 1 and
+ * any other by 0.1 or 0.01, by the size of its current value.
+ */
+export const StepAnnotation = createAnnotationHelper<number>(StepAnnotationId);

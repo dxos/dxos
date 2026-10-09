@@ -8,9 +8,9 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MessageList } from '../components';
-import { useFeedModel } from '../model';
-import { type FeedScenario, type ScenarioDefinition, createScenario } from '../testing';
+import { MessageList } from '../components/index.ts';
+import { useFeedModel } from '../model/index.ts';
+import { type FeedScenario, type ScenarioDefinition, createScenario } from '../testing/index.ts';
 
 /**
  * What one mounted row costs, with the fixtures already built.
@@ -197,7 +197,7 @@ const Mounted = ({ definition }: { definition: ScenarioDefinition }) => {
       estimateSize={definition.estimateSize}
       stickyBottom={definition.stickyBottom}
     >
-      <MessageList.Viewport classNames='dx-fullscreen' padding />
+      <MessageList.Viewport classNames='dx-cover' />
     </MessageList.Root>
   );
 };

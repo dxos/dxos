@@ -109,6 +109,9 @@
       "path": "../../ui/react-ui-task"
     },
     {
+      "path": "../../ui/react-ui-trace"
+    },
+    {
       "path": "../plugin-assistant"
     },
     {
@@ -122,6 +125,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-routine"

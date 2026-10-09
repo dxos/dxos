@@ -6,12 +6,12 @@
 import { type HierarchyNode, cluster, curveBundle, hierarchy, lineRadial, select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type TreeNode } from '../types';
-import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
-import { useContainerSize } from './useContainerSize';
+import { type TreeNode } from '../types.ts';
+import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots.ts';
+import { useContainerSize } from './useContainerSize.ts';
 
 const TRANSITION_MS = 350;
 
@@ -22,7 +22,7 @@ export type BundleEdge = {
   kind?: string;
 };
 
-export type HierarchicalEdgeBundlingProps = ThemedClassName<{
+export type HierarchicalEdgeBundlingProps = Util.ThemedClassName<{
   /** Hierarchical data; leaves are the connectable entities. */
   data: TreeNode;
   /** Edges between leaves (by id). Bundled through the hierarchy. */

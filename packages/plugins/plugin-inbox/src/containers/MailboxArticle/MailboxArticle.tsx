@@ -4,28 +4,22 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
-import {
-  useAtomCapability,
-  useAtomCapabilityState,
-  useCapabilities,
-  useOperationInvoker,
-  useOptionalCapability,
-} from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
+import { QueryBuilder, formatTag } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -37,6 +31,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -52,17 +48,18 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../../constants';
-import { messageMatchesQuery } from '../../util';
-import { InitializeMailbox } from './InitializeMailbox';
+import { POPOVER_SAVE_FILTER } from '../../constants.ts';
+import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
+import { messageMatchesQuery } from '../../util/index.ts';
+import { InitializeMailbox } from './InitializeMailbox.tsx';
 import {
   buildMailboxSelection,
   buildSystemTagSelection,
   buildThreadSemiJoin,
   getFilterTagUris,
   getSearchText,
-} from './mailbox-search';
-import { MailboxFilter } from './MailboxFilter';
+} from './mailbox-search.ts';
+import { MailboxFilter } from './MailboxFilter.tsx';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -89,23 +86,24 @@ export const MailboxArticle = ({
   systemTag,
   attendableId,
 }: MailboxArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const settings = useAtomCapability(InboxCapabilities.Settings);
-  const id = attendableId ?? Obj.getURI(mailbox);
-  const currentId = useSelection(id, 'single');
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const settings = Hooks.useAtomCapability(InboxCapabilities.Settings);
   const db = Obj.getDatabase(mailbox);
-  const showItem = useShowItem();
-  const runAction = useActionRunner();
+  // The mailbox view's graph node id: messages open as its children and it roots their level chain.
+  const id = attendableId ?? (db ? getMailboxPath(db.spaceId, mailbox.id) : Obj.getURI(mailbox));
+  const currentId = useSelection(id, 'single');
+  const showItem = ToolkitHooks.useShowItem();
+  const runAction = GraphHooks.useActionRunner();
 
   // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
-  const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const scanProgress = useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
+  const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
+  const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
   const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -286,27 +284,19 @@ export const MailboxArticle = ({
 
   const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
+  const openDetail = ToolkitHooks.useDetailNavigation({
+    contextId: id,
+    getPath: (messageId) => getFeedObjectPath(id, messageId),
+  });
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
-      const message = messages.find((m) => m.id === messageId);
-      if (!message || !db) {
+      if (!db || !messages.some((message) => message.id === messageId)) {
         return;
       }
-      // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
-      // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
-      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
-      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
-      // keeps whatever is already there.
-      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
-      void invokePromise(LayoutOperation.Open, {
-        subject: [`${id}/${message.id}`],
-        ...(newPlank ? {} : { root: id, level: 'message' }),
-        pivotId: id,
-        disposition: 'add',
-        navigation: 'immediate',
-      });
+
+      openDetail(messageId, { modified: newPlank });
     },
-    [db, id, messages, invokePromise],
+    [db, messages, openDetail],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });
@@ -314,9 +304,6 @@ export const MailboxArticle = ({
   const handleAction = useCallback<InboxStackActionHandler>(
     (action) => {
       switch (action.type) {
-        // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view — a single message is just a one-message conversation —
-        // as a standalone plank beside the mailbox.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);
@@ -382,10 +369,11 @@ export const MailboxArticle = ({
 
         case 'select-tag': {
           const previous = filterTextRef.current;
+          const token = formatTag(action.label);
           // Check if tag already exists.
           const tags = previous.split(/\s+/).filter(Boolean);
-          if (tags.at(-1)?.toLowerCase() !== '#' + action.label.toLowerCase()) {
-            applyFilterText([previous.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ');
+          if (tags.at(-1)?.toLowerCase() !== token.toLowerCase()) {
+            applyFilterText([previous.trim(), token].filter(Boolean).join(' ') + ' ');
           }
           filterEditorRef.current?.focus();
           break;
@@ -441,13 +429,11 @@ export const MailboxArticle = ({
 
   return (
     <Panel.Root data-testid='inbox.mailbox'>
-      <ElevationProvider elevation='positioned'>
-        <Panel.Toolbar asChild>
-          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Panel.Toolbar>
-      </ElevationProvider>
-      <Panel.Content>
-        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Panel.Header>
+      <Panel.Body>
+        <Status.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -463,15 +449,15 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred>
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+        </Status.Deferred>
+      </Panel.Body>
+      <Panel.Footer>
         <ProgressMeter
-          classNames='border-t border-subdued-separator'
+          classNames='border-t border-separator-subtle'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };
@@ -603,9 +589,9 @@ const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
   { sortDescending, nodeId, filterElement, hideFilterEditor }: MailboxActionsOptions,
 ) => {
-  const { graph } = useAppGraph();
-  const invoker = useOperationInvoker();
-  const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const invoker = Hooks.useOperationInvoker();
+  const [settings, setSettings] = Hooks.useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
@@ -617,8 +603,8 @@ const useMailboxActions = (
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
   // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
-  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
   const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];

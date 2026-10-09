@@ -4,17 +4,17 @@
 
 // @import-as-namespace
 
+import type * as AiError from 'effect/ai/AiError';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
-import type * as AiError from 'effect/unstable/ai/AiError';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as AiPreprocessor from './AiPreprocessor';
-import type { PromptPreprocessingError } from './errors';
+import * as AiPreprocessor from './AiPreprocessor.ts';
+import type { PromptPreprocessingError } from './errors.ts';
 
 export interface SummarizeOptions {
   instructions?: string;

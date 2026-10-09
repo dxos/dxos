@@ -4,15 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, it } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
-import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client';
-import { type TestServer, createTestServer, responseHandler } from './testing';
+import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client.ts';
+import { type TestServer, createTestServer, responseHandler } from './testing/index.ts';
 
 describe('HttpClient', () => {
   let server: TestServer | undefined;
@@ -47,8 +48,7 @@ describe('HttpClient', () => {
         HttpClient.get(server.url),
         withLogging,
         withRetryConfig,
-        Effect.provide(FetchHttpClient.layer),
-        Effect.provide(HttpConfig.default), // TODO(burdon): Swap out to mock.
+        Effect.provide(Layer.provideMerge(FetchHttpClient.layer, HttpConfig.default)), // TODO(burdon): Swap out to mock.
         Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
         EffectEx.runAndForwardErrors,
       );

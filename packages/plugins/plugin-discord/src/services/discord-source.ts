@@ -7,13 +7,14 @@ import type { GuildChannelResponse, MessageResponse, MyGuildResponse, UserRespon
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as Credential from '@dxos/compute/Credential';
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
 import { type Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants';
-import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord';
+import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants.ts';
+import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord.ts';
 
 const MESSAGE_PAGE_LIMIT = 100;
 const GUILD_PAGE_LIMIT = 200;
@@ -170,9 +171,9 @@ export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
 
 /**
  * Live {@link Source} authenticated from a persisted {@link Connection} ref (the operation path).
- * The connection's access token is loaded at layer construction, so the handler never sees it.
+ * The connection's token is resolved at layer construction, so the handler never sees it.
  */
 export const discordSourceLayerFromConnection = (
   connection: Ref.Ref<Connection.Connection>,
-): Layer.Layer<Source, Error.EntityNotFoundError> =>
+): Layer.Layer<Source, Error.EntityNotFoundError, Credential.CredentialsService> =>
   Layer.effect(Source, makeSource).pipe(Layer.provide(makeDiscordLayer(connection)));

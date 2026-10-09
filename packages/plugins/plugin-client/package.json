@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,19 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#commands": {
       "source": {
@@ -80,16 +82,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Account": {
       "source": "./src/types/Account.ts",
       "types": "./dist/types/src/types/Account.d.ts",
@@ -116,9 +108,9 @@
       "import": "./dist/lib/ClientEvents.mjs"
     },
     "./ClientOperation": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
+      "source": "./src/types/ClientOperation.ts",
+      "types": "./dist/types/src/types/ClientOperation.d.ts",
+      "import": "./dist/lib/ClientOperation.mjs"
     },
     "./ClientOptions": {
       "source": "./src/types/ClientOptions.ts",
@@ -130,10 +122,30 @@
       "types": "./dist/types/src/ClientPlugin.d.ts",
       "import": "./dist/lib/ClientPlugin.mjs"
     },
+    "./CliLogin": {
+      "source": "./src/types/CliLogin.ts",
+      "types": "./dist/types/src/types/CliLogin.d.ts",
+      "import": "./dist/lib/CliLogin.mjs"
+    },
+    "./HaloServices": {
+      "source": "./src/HaloServices.ts",
+      "types": "./dist/types/src/HaloServices.d.ts",
+      "import": "./dist/lib/ns/HaloServices.mjs"
+    },
     "./PasskeyError": {
       "source": "./src/types/PasskeyError.ts",
       "types": "./dist/types/src/types/PasskeyError.d.ts",
       "import": "./dist/lib/PasskeyError.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

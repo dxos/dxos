@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
 
-import { AiModelError } from './errors';
+import { AiModelError } from './errors.ts';
 
 const AnthropicErrorResponse = Schema.Struct({
   type: Schema.Literal('error'),

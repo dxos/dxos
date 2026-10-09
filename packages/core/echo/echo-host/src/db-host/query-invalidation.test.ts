@@ -3,20 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { describe, test } from 'vitest';
+import * as SqlClient from 'effect/sql/SqlClient';
+import { beforeAll, describe, test } from 'vitest';
 
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { AutomergeHost } from '../automerge';
-import { QueryExecutor } from '../query/query-executor';
-import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
-import { SpaceStateManager } from './space-state-manager';
+import { AutomergeHost } from '../automerge/index.ts';
+import { QueryExecutor } from '../query/query-executor.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { SpaceStateManager } from './space-state-manager.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -48,13 +51,31 @@ const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const,
 /** Never run, so a `never`-typed placeholder satisfies every dependency's `RuntimeProvider<R>`. */
 const testRuntime = Effect.never;
 
-/** Real but never-opened QueryExecutor dependencies, shared across the fixtures below. */
-const testDeps = {
-  indexEngine: new IndexEngine(),
-  runtime: testRuntime,
-  automergeHost: new AutomergeHost({ runtime: testRuntime }),
-  spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
+/**
+ * Real but never-opened QueryExecutor dependencies, shared across the fixtures below. The index
+ * engine holds a client, and resolving one is asynchronous, so the fixture is built in `beforeAll`
+ * — no query in this file reaches the engine.
+ */
+let testDeps: {
+  indexEngine: IndexEngine;
+  runtime: typeof testRuntime;
+  automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
+  sql: SqlClient.SqlClient;
 };
+
+beforeAll(async () => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+  testDeps = {
+    indexEngine: new IndexEngine(sql),
+    runtime: testRuntime,
+    automergeHost: new AutomergeHost({ runtime: testRuntime }),
+    spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
+    sql,
+  };
+  return () => dispose();
+});
 
 /** Creates a QueryExecutor whose plan and cached scopes come only from `query`, via extractScopes(). */
 const makeExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>
@@ -74,6 +95,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 0,
       done: true,
+      drained: true,
       spaces: new Set(),
       queues: new Set(),
       documents: new Set(),
@@ -89,6 +111,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 1,
       done: true,
+      drained: true,
       spaces: new Set([spaceId]),
       queues: new Set(),
       documents: new Set(['doc-1']),
@@ -111,6 +134,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 2,
       done: true,
+      drained: true,
       spaces: new Set([SpaceId.random()]),
       queues: new Set(),
       documents: new Set(),
@@ -457,5 +481,40 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
     // Hint with a different queue → no match.
     const nonMatchingHint = makeHint({ queueIds: makeObjectSet(EntityId.random()) });
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — compiled (sql) plan
+// ---------------------------------------------------------------------------
+
+// The compiled path folds the plan into one `SqlStep`; scope analysis must still see the steps it
+// absorbed, or every compiled query matches every hint and re-runs on every write.
+describe('QueryExecutor.matchesHint — compiled (sql) plan', () => {
+  const makeSqlExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>
+    new QueryExecutor({
+      ...testDeps,
+      queryId: 'test',
+      query: query.ast,
+      reactivity: QueryReactivity.REACTIVE,
+      executor: 'sql',
+    });
+
+  test('space query does NOT match when hint typenames are disjoint', ({ expect }) => {
+    const executor = makeSqlExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
+    expect(executor.compiled).toBe(true);
+    const disjoint = makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(ORG_TYPENAME) });
+    expect(executor.matchesHint(disjoint)).toBe(false);
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
+  });
+
+  test('feed query does NOT match a space write of an unrelated type', ({ expect }) => {
+    const executor = makeSqlExecutor(
+      Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]),
+    );
+    expect(executor.compiled).toBe(true);
+    const spaceWrite = makeHint({ spaceIds: makeSpaceSet(QUEUE_SPACE_ID), typenames: makeTypeSet(ORG_TYPENAME) });
+    expect(executor.matchesHint(spaceWrite)).toBe(false);
+    expect(executor.matchesHint(makeHint({ queueIds: makeObjectSet(QUEUE_ID) }))).toBe(true);
   });
 });

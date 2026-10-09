@@ -6,16 +6,21 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
-import { Input, ScrollArea, useMergeRefs } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
+
+import * as Hooks from '../hooks/Hooks.ts';
+import { Checkbox } from '../next/components/Checkbox/Checkbox.tsx';
+import * as Field from '../next/components/Field/Field.tsx';
+import { Input } from '../next/components/Input/Input.tsx';
+import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.
 
 // `dx-focus-ring` is the app's focus affordance; without it a focusable div falls back to the
 // browser's own outline, which is what these blocks were drawing.
-const border = 'dx-focus-ring rounded-xs border border-subdued-separator';
+const border = 'dx-focus-ring rounded-xs border border-separator-subtle';
 
 /** Horizontal group over the columns; each column is one stop. */
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
@@ -27,7 +32,7 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
 
   return (
     <div
-      ref={useMergeRefs<HTMLDivElement>([ref, focusGroupRef])}
+      ref={Hooks.useMergeRefs<HTMLDivElement>([ref, focusGroupRef])}
       tabIndex={0}
       {...focusGroupProps}
       className='flex dx-fill overflow-hidden dx-focus-ring rounded-xs'
@@ -50,7 +55,7 @@ const Column = ({ items }: { items: string[] }) => {
   });
 
   return (
-    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-subdued-separator')}>
+    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-separator-subtle')}>
       <ScrollArea.Viewport classNames='p-4'>
         <div
           {...focusGroupProps}
@@ -78,12 +83,12 @@ const Item = ({ value }: { value: string }) => {
       {...focusGroupProps}
       className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
-      <Input.Root>
-        <Input.Checkbox />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput defaultValue={value} />
-      </Input.Root>
+      <Field.Root>
+        <Checkbox />
+      </Field.Root>
+      <Field.Root>
+        <Input defaultValue={value} />
+      </Field.Root>
     </div>
   );
 };

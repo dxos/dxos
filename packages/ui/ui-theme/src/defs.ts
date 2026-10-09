@@ -23,3 +23,6 @@ export const cardDefaultInlineSize = 20; // 320px
 export const cardMaxInlineSize = 22;
 export const cardMinBlockSize = 18;
 export const cardMaxBlockSize = 30;
+
+/** How long a dialog takes to leave: `--animate-fade-out` and `--animate-slide-down-and-fade`, in ms. */
+export const dialogExitDuration = 400;

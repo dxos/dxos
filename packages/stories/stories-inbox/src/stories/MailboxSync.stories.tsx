@@ -27,15 +27,15 @@ import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -61,7 +61,7 @@ const DECORATORS = [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types: TYPES,
         ...CLIENT_SERVICES,

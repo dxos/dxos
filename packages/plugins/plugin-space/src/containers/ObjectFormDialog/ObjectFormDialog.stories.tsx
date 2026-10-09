@@ -12,22 +12,23 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import * as SpaceOperationHandlerSet from '../../operations/SpaceOperationHandlerSet';
-import { type ObjectFormHandle, makeObjectFormHandle } from '../../util';
-import { ObjectFormDialog } from './ObjectFormDialog';
+import * as SpaceOperationHandlerSet from '../../operations/SpaceOperationHandlerSet.ts';
+import { type ObjectFormHandle, makeObjectFormHandle } from '../../util/index.ts';
+import { ObjectFormDialog } from './ObjectFormDialog.tsx';
 
 /** A child object the bookmark's required ref points at — only the factory below can supply it. */
 class Visits extends Type.makeObject<Visits>(DXN.make('com.example.type.visits', '0.1.0'))(
@@ -43,7 +44,7 @@ class Bookmark extends Type.makeObject<Bookmark>(DXN.make('com.example.type.book
   Schema.Struct({
     name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
     url: Schema.optional(Schema.String.annotate({ title: 'Url' })),
-    visits: Ref.Ref(Visits).pipe(FormInputAnnotation.set(false)),
+    visits: Ref.Ref(Visits).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(FactoryAnnotation.set(((values) => makeBookmark(values)) as FactoryFn)),
 ) {}
 
@@ -56,7 +57,7 @@ const makeBookmark = (props: Omit<Obj.MakeProps<typeof Bookmark>, 'visits'>): Bo
 
 const typename = Type.getTypename(Bookmark);
 
-const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
+const DefaultStory = ({ mode = 'live', selectType = false }: { mode?: 'draft' | 'live'; selectType?: boolean }) => {
   const [space] = useSpaces();
   const bookmarks = useQuery(space?.db, Filter.type(Bookmark));
   // What the operation would receive: `pending` until the dialog settles, then `ref` or `dismissed`.
@@ -77,16 +78,14 @@ const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
       </div>
       {space ? (
         <Dialog.Root defaultOpen>
-          <Dialog.Overlay>
-            <ObjectFormDialog
-              target={space.db}
-              typename={typename}
-              mode={mode}
-              defaults={{ name: 'Seeded' }}
-              handle={handle}
-              shouldNavigate={() => false}
-            />
-          </Dialog.Overlay>
+          <ObjectFormDialog
+            target={space.db}
+            typename={selectType ? undefined : typename}
+            mode={mode}
+            defaults={{ name: 'Seeded' }}
+            handle={handle}
+            shouldNavigate={() => false}
+          />
         </Dialog.Root>
       ) : (
         <Loading />
@@ -106,9 +105,26 @@ const meta = {
         // Confirming files the object through `AddObject`, so the story registers the handler set
         // the space plugin would normally contribute.
         Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet.handlers),
+        // What a draft create builds from: a name is required, so a blank one holds the submit.
+        Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
+          id: typename,
+          inputSchema: Schema.Struct({
+            name: Schema.String.pipe(
+              Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Name cannot be empty.')),
+              Schema.annotate({ title: 'Name' }),
+            ),
+            url: Schema.optional(Schema.String.annotate({ title: 'Url' })),
+          }),
+          createObject: (props, options) =>
+            Operation.invoke(
+              SpaceOperation.AddObject,
+              { object: makeBookmark(props), target: options.target },
+              { spaceId: options.db.spaceId },
+            ),
+        }),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Bookmark, Visits],
@@ -183,5 +199,124 @@ export const LiveConfirmed: Story = {
         timeout: 5_000,
       },
     );
+  },
+};
+
+/** Enter in a single-line field confirms a live create, as the Create button does. */
+export const LiveEnterConfirms: Story = {
+  play: async () => {
+    const body = within(document.body);
+    await waitFor(async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1'), {
+      timeout: 15_000,
+    });
+
+    await userEvent.click(await body.findByLabelText(/^url$/i, undefined, { timeout: 15_000 }));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
+      { timeout: 5_000 },
+    );
+  },
+};
+
+/** No type given: the dialog opens on the type picker. */
+export const SelectType: Story = {
+  args: { mode: 'draft', selectType: true },
+};
+
+/** A draft create: nothing exists until the form is submitted. */
+export const Draft: Story = {
+  args: { mode: 'draft' },
+};
+
+/** Enter in a single-line field creates the object and closes the dialog. */
+export const DraftEnterCreates: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(await body.findByLabelText(/^url$/i, undefined, { timeout: 15_000 }));
+    await userEvent.paste('https://example.com');
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
+      { timeout: 5_000 },
+    );
+    await waitFor(() => expect(body.queryByTestId('create-object-form')).toBeNull());
+  },
+};
+
+/** The draft's Cancel and Create sit in the dialog's footer, as every dialog's actions do, not in its scrolling body. */
+export const DraftActionsInFooter: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const save = await body.findByTestId('save-button', undefined, { timeout: 15_000 });
+    const footer = save.closest<HTMLElement>('[data-scope="dialog"][data-part="footer"]');
+    await expect(footer).not.toBeNull();
+    await expect(footer?.contains(body.getByTestId('cancel-button'))).toBe(true);
+    // The footer keeps its bottom padding under the actions.
+    await expect(Number.parseFloat(getComputedStyle(footer ?? save).paddingBottom)).toBeGreaterThan(0);
+  },
+};
+
+/** With the required name blank, Enter creates nothing and leaves the dialog open. */
+export const DraftEnterInvalid: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const name = await body.findByLabelText(/^name$/i, undefined, { timeout: 15_000 });
+    await userEvent.clear(name);
+    await userEvent.keyboard('{Enter}');
+
+    await expect(body.getByTestId('counts')).toHaveTextContent('objects:0 settled:pending');
+    await expect(body.getByTestId('create-object-form')).toBeInTheDocument();
+  },
+};
+
+/** The Create button submits the draft. */
+export const DraftCreateButton: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(body.getByTestId('save-button'));
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
+      { timeout: 5_000 },
+    );
+  },
+};
+
+/** The Cancel button closes the dialog without creating anything. */
+export const DraftCancelButton: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(body.getByTestId('cancel-button'));
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:0 settled:dismissed'),
+      { timeout: 5_000 },
+    );
+    await expect(body.queryByTestId('create-object-form')).toBeNull();
+  },
+};
+
+/** Escape from a field closes the dialog without creating anything. */
+export const DraftEscapeCancels: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(await body.findByLabelText(/^name$/i, undefined, { timeout: 15_000 }));
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(
+      async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:0 settled:dismissed'),
+      { timeout: 5_000 },
+    );
+    await expect(body.queryByTestId('create-object-form')).toBeNull();
   },
 };

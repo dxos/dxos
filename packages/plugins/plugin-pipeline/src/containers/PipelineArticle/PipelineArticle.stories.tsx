@@ -13,7 +13,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -24,8 +24,8 @@ import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import PipelineProperties from '../PipelineProperties';
-import { PipelineArticle } from './PipelineArticle';
+import PipelineProperties from '../PipelineProperties/index.ts';
+import { PipelineArticle } from './PipelineArticle.tsx';
 
 random.seed(0);
 
@@ -55,7 +55,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [

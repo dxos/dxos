@@ -3,34 +3,27 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { configuredCredentialsLayer } from '@dxos/compute-runtime';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import * as Operation from '@dxos/compute/Operation';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { registryLayerNoop } from '@dxos/echo/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { DiagnosticOverlay } from './components';
-import { ComputeShapeLayout } from './compute-layout';
-import { type ComputeGraphController, createComputeGraphController } from './graph';
-import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
-import { computeShapes } from './registry';
-import { type ComputeShape } from './shapes';
+import { DiagnosticOverlay } from './components/index.ts';
+import { ComputeShapeLayout } from './compute-layout.ts';
+import { type ComputeGraphController, createComputeGraphController } from './graph/index.ts';
+import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks/index.ts';
+import { computeShapes } from './registry.ts';
+import { type ComputeShape } from './shapes/index.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -42,7 +35,8 @@ import {
   createLogicCircuit,
   createTemplateCircuit,
   createTransformCircuit,
-} from './testing';
+} from './testing/index.ts';
+import { createStoryRuntime } from './testing/services.ts';
 
 // TODO(burdon): Replace ServiceContainer.
 
@@ -125,7 +119,7 @@ const DefaultStory = ({
 
   return (
     <div className='grid grid-cols-[1fr_360px] dx-fill'>
-      <ComputeContext.Provider value={{ controller }}>
+      <ComputeContext.Provider value={{ controller, registry }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
             ref={editorRef}
@@ -150,19 +144,17 @@ const DefaultStory = ({
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Toolbar.Root>
-            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {sidebarTypes.map((type) => (
-                      <Select.Item key={type} value={type}>
-                        {type}
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+            <Select.Root
+              value={[sidebar]}
+              onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar'])}
+              items={sidebarTypes.map((type) => ({ value: type, label: type }))}
+            >
+              <Select.Trigger classNames='w-full' />
+              <Select.Content>
+                {sidebarTypes.map((type) => (
+                  <Select.Item key={type} item={{ value: type, label: type }} />
+                ))}
+              </Select.Content>
             </Select.Root>
           </Toolbar.Root>
 
@@ -172,7 +164,7 @@ const DefaultStory = ({
               <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>
@@ -222,69 +214,52 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const ServiceLayer = Layer.empty.pipe(
-  Layer.provideMerge(
-    Layer.mergeAll(
-      Layer.succeed(Operation.Service, {
-        invoke: () => Effect.die('Operation.Service not available in test.'),
-        schedule: () => Effect.die('Operation.Service not available in test.'),
-        invokePromise: async () => ({ error: new Error('Not available') }),
-      } as any),
-      registryLayerNoop,
-    ),
-  ),
-  Layer.provideMerge(
-    Layer.mergeAll(AiServiceTestingPreset('direct'), TestDatabaseLayer(), configuredCredentialsLayer([])),
-  ),
-  Layer.orDie,
-);
-
 export const Default: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createEmptyCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createEmptyCircuit(), createStoryRuntime()),
   },
 };
 
 export const Beacon: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createBasicCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createBasicCircuit(), createStoryRuntime()),
   },
 };
 
 export const Transform: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTransformCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createTransformCircuit(), createStoryRuntime()),
   },
 };
 
 export const Logic: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createLogicCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createLogicCircuit(), createStoryRuntime()),
   },
 };
 
 export const Control: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createControlCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createControlCircuit(), createStoryRuntime()),
   },
 };
 
 export const Template: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTemplateCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createTemplateCircuit(), createStoryRuntime()),
   },
 };
 
 export const GPT: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGptCircuit({ history: true }), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createGptCircuit({ history: true }), createStoryRuntime()),
   },
 };
 
@@ -293,7 +268,7 @@ export const Plugins: Story = {
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
-      ManagedRuntime.make(ServiceLayer),
+      createStoryRuntime(),
     ),
   },
 };
@@ -301,30 +276,27 @@ export const Plugins: Story = {
 export const Artifact: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createArtifactCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createArtifactCircuit(), createStoryRuntime()),
   },
 };
 
 export const ImageGen: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGptCircuit({ image: true, artifact: true }),
-      ManagedRuntime.make(ServiceLayer),
-    ),
+    ...createComputeGraphController(createGptCircuit({ image: true, artifact: true }), createStoryRuntime()),
   },
 };
 
 export const Audio: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createAudioCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createAudioCircuit(), createStoryRuntime()),
   },
 };
 
 export const Voice: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGPTRealtimeCircuit(), ManagedRuntime.make(ServiceLayer)),
+    ...createComputeGraphController(createGPTRealtimeCircuit(), createStoryRuntime()),
   },
 };

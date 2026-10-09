@@ -5,8 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ChatContextSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -14,20 +16,19 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { CrmSkill } from '@dxos/plugin-crm';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
+import * as CrmSkill from '@dxos/plugin-crm/CrmSkill';
 import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
-import { meta as automationMeta } from '@dxos/plugin-routine';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
-import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
+import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
+import { StoryRole } from '../modules/index.ts';
 import {
   ModuleContainer,
   ResearchInputQueue,
@@ -39,7 +40,7 @@ import {
   organizations,
   storyParameters,
   testTypes,
-} from '../testing';
+} from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Data',
   render: ModuleContainer,
@@ -141,7 +142,6 @@ export const WithResearchQueue: Story = {
       const researchPrompt = space.db.add(
         Instructions.make({
           name: 'Research',
-          description: 'Research organization',
           text: 'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked research (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],
         }),
@@ -149,7 +149,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          runnable: Ref.make(Operation.serialize(RunInstructions)),
+          runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
@@ -165,7 +165,7 @@ export const WithResearchQueue: Story = {
     layout: [
       [StoryRole.ResearchInput, StoryRole.ResearchOutput],
       [
-        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        { type: AppSurface.Article, data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` } },
         StoryRole.Invocations,
         StoryRole.Routine,
         StoryRole.Graph,
@@ -268,7 +268,6 @@ export const WithProject: Story = {
       const researchPrompt = space.db.add(
         Instructions.make({
           name: 'Research',
-          description: 'Research organization',
           text: trim`
             Research the organization provided as input.
             Absolutely, in all cases, create a research note for it at the end.
@@ -281,7 +280,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        runnable: Ref.make(Operation.serialize(RunInstructions)),
+        runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {
@@ -342,7 +341,10 @@ export const WithProject: Story = {
       return [
         [Cell.article(project)],
         [
-          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          {
+            type: AppSurface.Article,
+            data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` },
+          },
           StoryRole.Invocations,
         ],
       ];

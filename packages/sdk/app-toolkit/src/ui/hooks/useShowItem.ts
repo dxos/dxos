@@ -4,10 +4,10 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
-import { LayoutOperation } from '../../operations';
-import { useLayout } from './useLayout';
+import { LayoutOperation } from '../../operations/index.ts';
+import { useLayout } from './useLayout.ts';
 
 export type ShowItemOptions = {
   /** Attention context id — typically the master surface's attendableId. */
@@ -33,7 +33,7 @@ export type ShowItemOptions = {
  * - otherwise: swap the current plank's companion to the given segment.
  */
 export const useShowItem = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const layout = useLayout();
 
   return useCallback(

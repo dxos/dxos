@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createLoopback } from './index';
+import { createLoopback } from './index.ts';
 
 describe('createLoopback', () => {
   test('delivers a message from one end to the other', async ({ expect }) => {

@@ -7,9 +7,9 @@ import React from 'react';
 
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { type UserState } from '../../calls';
-import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing';
-import { Participant } from './Participant';
+import { type UserState } from '../../calls/index.ts';
+import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing/index.ts';
+import { Participant } from './Participant.tsx';
 
 const self = makeUser('self', 'Alice');
 const bob = makeUser('bob', 'Bob');

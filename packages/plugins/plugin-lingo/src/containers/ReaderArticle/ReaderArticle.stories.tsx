@@ -19,7 +19,7 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
@@ -28,8 +28,8 @@ import { LingoPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Language, Vocabulary, Word } from '#types';
 
-import { TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
-import { ReaderArticle } from './ReaderArticle';
+import { TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing.ts';
+import { ReaderArticle } from './ReaderArticle.tsx';
 
 /**
  * A scripted model, so the split view shows a real translation offline.
@@ -110,7 +110,7 @@ const meta = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Markdown.Document, Language.Language, Vocabulary.Vocabulary, Word.Word],
           onClientInitialized: ({ client }) =>

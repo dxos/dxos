@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -16,7 +18,7 @@ import {
   QueryDeployedFunctions,
   Read,
   Update,
-} from './functions';
+} from './functions/index.ts';
 
 const SKILL_KEY = 'org.dxos.skill.script';
 

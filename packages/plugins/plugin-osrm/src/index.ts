@@ -2,6 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as OsrmPlugin from './OsrmPlugin';
-export * from './events';
-export * from '#meta';
+export * as OsrmEvents from './OsrmEvents.ts';
+export * as OsrmPlugin from './OsrmPlugin.ts';

@@ -3,17 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
-import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter.ts';
 
 /**
  * Ollama resolver using the native Ollama API.

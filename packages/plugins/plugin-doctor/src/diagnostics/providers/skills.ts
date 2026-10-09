@@ -10,8 +10,8 @@ import { Filter, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces } from '../helpers';
-import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
+import { getReadyDatabases } from '../helpers.ts';
+import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
  * Scan saved skills and flag any that reference tools that cannot be resolved
@@ -24,7 +24,7 @@ export const skillToolsDiagnostic: DiagnosticProvider = {
   id: 'skill-tools',
   label: ['diagnostic.skill-tools.label', { ns: meta.profile.key }],
   description: ['diagnostic.skill-tools.description', { ns: meta.profile.key }],
-  run: async ({ client, capabilities, reportProgress, signal }) => {
+  run: async ({ spaces, graph, capabilities, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const knownTools = new Set<string>();
 
@@ -51,14 +51,14 @@ export const skillToolsDiagnostic: DiagnosticProvider = {
       }
     }
 
-    const spaces = getReadySpaces(client);
+    const databases = await getReadyDatabases({ spaces, graph });
 
     // Saved (deployed) operations across all spaces.
-    for (const space of spaces) {
+    for (const db of databases) {
       if (signal.aborted) {
         break;
       }
-      const persisted = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
+      const persisted = await db.query(Filter.type(Operation.PersistentOperation)).run();
       for (const op of persisted) {
         const opKey = Obj.getMeta(op).key;
         if (opKey) {
@@ -68,12 +68,12 @@ export const skillToolsDiagnostic: DiagnosticProvider = {
     }
 
     // Walk skills and flag any unresolved tool references.
-    for (const space of spaces) {
+    for (const db of databases) {
       if (signal.aborted) {
         break;
       }
-      reportProgress(space.id);
-      const skills = await space.db.query(Filter.type(Skill.Skill)).run();
+      reportProgress(db.spaceId);
+      const skills = await db.query(Filter.type(Skill.Skill)).run();
       for (const skill of skills) {
         if (signal.aborted) {
           break;
@@ -83,11 +83,11 @@ export const skillToolsDiagnostic: DiagnosticProvider = {
           const skillKey = Obj.getMeta(skill).key;
           const label = skill.name || skillKey || skill.id;
           issues.push({
-            id: `${space.id}:${skill.id}:unknown-tools`,
+            id: `${db.spaceId}:${skill.id}:unknown-tools`,
             severity: 'warning',
             message: `Skill "${label}" references unknown tool(s): ${unknownTools.join(', ')}.`,
             subjectLabel: skillKey ?? skill.id,
-            spaceId: space.id,
+            spaceId: db.spaceId,
           });
         }
       }

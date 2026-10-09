@@ -14,10 +14,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { trim } from '@dxos/util';
 
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits';
+import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits.ts';
 
 /**
  * Annotation key for fields whose value should be picked from a known

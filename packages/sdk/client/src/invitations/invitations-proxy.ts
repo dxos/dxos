@@ -8,8 +8,10 @@ import {
   AuthenticatingInvitation,
   CancellableInvitation,
   type ClientServices,
+  ClientTraceEvents,
   InvitationEncoder,
   type Invitations,
+  invitationEventAttributes,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -28,9 +30,10 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
+import { RPC_TIMEOUT } from '../common.ts';
 
 /**
  * Budget for the initial invitations snapshot. Bounded because `open()` sits on the client
@@ -126,7 +129,7 @@ export class InvitationsProxy implements Invitations {
               ?.filter((invitation) => this._matchesInvitationContext(invitation))
               .filter((invitation) => !this._invitations.has(invitation.invitationId))
               .forEach((invitation) => {
-                type === QueryInvitationsResponse_Type.CREATED ? this.share(invitation) : this.join(invitation);
+                type === QueryInvitationsResponse_Type.CREATED ? this.#share(invitation) : this.join(invitation);
               });
             if (existing) {
               type === QueryInvitationsResponse_Type.CREATED
@@ -220,25 +223,11 @@ export class InvitationsProxy implements Invitations {
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
   share(options?: Partial<Invitation>): CancellableInvitation {
-    const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
-    this._invitations.add(invitation.invitationId);
-
-    const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);
-    if (existing) {
-      return existing;
+    const { observable, created } = this.#share({ ...this.getInvitationOptions(), ...options });
+    // Admits and accepts are reported by the services, which see each success once across tabs and reloads.
+    if (created) {
+      trace.events.emit(ClientTraceEvents.invitationCreate, invitationEventAttributes(observable.get()));
     }
-
-    const observable = new CancellableInvitation({
-      initialInvitation: invitation,
-      subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
-      onCancel: async () => {
-        const invitationId = observable.get().invitationId;
-        invariant(invitationId, 'Invitation missing identifier');
-        await this._invitationsService.cancelInvitation({ invitationId });
-      },
-    });
-    this._createdUpdate.emit([...this._created.get(), observable]);
-
     return observable;
   }
 
@@ -261,7 +250,9 @@ export class InvitationsProxy implements Invitations {
       // drive the optional protobuf codec, which dereferences the missing message and throws,
       // silently stalling the accept RPC.
       subscriber: createObservable(
-        this._invitationsService.acceptInvitation(deviceProfile ? { invitation, deviceProfile } : { invitation }),
+        this._invitationsService.acceptInvitation(
+          deviceProfile ? { invitation, deviceProfile: deviceProfile } : { invitation },
+        ),
       ),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
@@ -278,6 +269,29 @@ export class InvitationsProxy implements Invitations {
     this._acceptedUpdate.emit([...this._accepted.get(), observable]);
 
     return observable;
+  }
+
+  /** Tracks an invitation this peer hosts; `created` is false when it was already tracked. */
+  #share(invitation: Invitation): { observable: CancellableInvitation; created: boolean } {
+    this._invitations.add(invitation.invitationId);
+
+    const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);
+    if (existing) {
+      return { observable: existing, created: false };
+    }
+
+    const observable = new CancellableInvitation({
+      initialInvitation: invitation,
+      subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
+      onCancel: async () => {
+        const invitationId = observable.get().invitationId;
+        invariant(invitationId, 'Invitation missing identifier');
+        await this._invitationsService.cancelInvitation({ invitationId });
+      },
+    });
+    this._createdUpdate.emit([...this._created.get(), observable]);
+
+    return { observable, created: true };
   }
 
   private _matchesInvitationContext(invitation: Invitation): boolean {

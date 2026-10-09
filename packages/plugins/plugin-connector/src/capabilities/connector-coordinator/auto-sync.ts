@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
-import { SyncRoutineMissingError } from '../../errors';
+import * as Binding from '../../Binding.ts';
+import { SyncRoutineMissingError } from '../../errors.ts';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new
@@ -25,7 +25,7 @@ import { SyncRoutineMissingError } from '../../errors';
  *
  * Forked: a first sync walks the whole remote history, and the setup flows it hangs off (the OAuth
  * finalize handler, the sync-targets dialog submit) must return before it finishes. Failures are
- * surfaced by the sync process itself — the auth-expired toast rides on `Process.Info.error` — so
+ * surfaced by the sync process itself — the auth-expired toast rides on `Process.Process.error` — so
  * nothing propagates back to the caller.
  */
 export const autoSyncConnection = (

@@ -7,14 +7,18 @@ import * as Option from 'effect/Option';
 import React, { type RefObject, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useObject } from '@dxos/react-client/echo';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 import { Book } from '#types';
 
-import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader';
+import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader.tsx';
 
 const ACCEPT = '.pdf,.epub,application/pdf,application/epub+zip';
 const EPUB_TYPE = 'application/epub+zip';
@@ -32,9 +36,9 @@ const fileType = (file: File): string => {
 };
 
 const Spinner = () => (
-  <Flex center classNames='h-full text-description'>
-    <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
-  </Flex>
+  <Layout.Flex center classNames='h-full text-fg-muted'>
+    <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
+  </Layout.Flex>
 );
 
 /**
@@ -44,7 +48,7 @@ const Spinner = () => (
  * Forwards a paging handle to the EPUB reader (null for PDF/no content) so the toolbar can page.
  */
 export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ book }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(book);
   // Subscribe so attaching (or replacing) the content blob re-renders and re-resolves.
   const [live] = useObject(book);
@@ -200,13 +204,11 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       );
     }
     return (
-      <Flex center classNames='h-full p-4'>
-        <Button asChild>
-          <a href={resolved.url} download>
-            {t('download-file.label')}
-          </a>
-        </Button>
-      </Flex>
+      <Layout.Flex center classNames='h-full p-4'>
+        <Typography.Link href={resolved.url} target='_self' download>
+          {t('download-file.label')}
+        </Typography.Link>
+      </Layout.Flex>
     );
   }
   if (error) {
@@ -236,9 +238,9 @@ type UploadPromptProps = {
 };
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
-  <Flex column gap='md' center classNames='h-full p-4 text-center'>
-    <Icon icon='ph--book-open--regular' size={10} classNames='text-description' />
-    <p className='text-sm text-description'>{message}</p>
+  <Layout.Flex column gap='md' center classNames='h-full p-4 text-center'>
+    <Icon.Icon icon='ph--book-open--regular' size='xl' tone='muted' />
+    <p className='text-sm text-fg-muted'>{message}</p>
     <input
       ref={inputRef}
       type='file'
@@ -252,9 +254,9 @@ const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: Upload
         event.target.value = '';
       }}
     />
-    <Button disabled={busy} onClick={() => inputRef.current?.click()}>
-      <Icon icon='ph--upload-simple--regular' size={4} classNames='me-2' />
+    <Button.Root disabled={busy} onClick={() => inputRef.current?.click()}>
+      <Icon.Icon icon='ph--upload-simple--regular' size='md' classNames='me-2' />
       {label}
-    </Button>
-  </Flex>
+    </Button.Root>
+  </Layout.Flex>
 );

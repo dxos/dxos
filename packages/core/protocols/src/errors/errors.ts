@@ -6,7 +6,14 @@ import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 
 import type { ObjectId } from '../types.ts';
+import { ApiError, DatabaseError, SystemError } from './base-errors.ts';
 import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.ts';
+
+// `toServiceError` mints these for anything that is not already a DXOS error, so the client
+// rebuilds the class rather than a bare `BaseError` carrying the right name.
+registerErrorMessageContext('SystemError', SystemError);
+registerErrorMessageContext('ApiError', ApiError);
+registerErrorMessageContext('DatabaseError', DatabaseError);
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.
@@ -46,6 +53,16 @@ registerErrorMessageContext('RemoteServiceConnectionError', RemoteServiceConnect
 export class RemoteServiceConnectionTimeout extends BaseError.extend('RemoteServiceConnectionTimeout') {}
 
 registerErrorMessageContext('RemoteServiceConnectionTimeout', RemoteServiceConnectionTimeout);
+
+/**
+ * The worker runtime failed to build, so the worker serves nothing.
+ */
+export class WorkerRuntimeStartError extends BaseError.extend(
+  'WorkerRuntimeStartError',
+  'Worker runtime failed to start.',
+) {}
+
+registerErrorMessageContext('WorkerRuntimeStartError', WorkerRuntimeStartError);
 
 export class DataCorruptionError extends BaseError.extend('DataCorruptionError') {}
 
@@ -151,3 +168,23 @@ registerError('UnknownModelError', (_, context) => {
 export class AuthorizationError extends BaseError.extend('AuthorizationError') {}
 
 registerErrorMessageContext('AuthorizationError', AuthorizationError);
+
+/**
+ * An inbox message whose encoded envelope exceeds what EDGE accepts; large content belongs in the linked object.
+ */
+export class InboxPayloadTooLargeError extends BaseError.extend(
+  'InboxPayloadTooLargeError',
+  'The inbox message is too large to send.',
+) {}
+
+registerErrorMessageContext('InboxPayloadTooLargeError', InboxPayloadTooLargeError);
+
+/**
+ * EDGE relays inbox messages only for identities linked to an account, so neither sending nor receiving works without one.
+ */
+export class InboxAccountRequiredError extends BaseError.extend(
+  'InboxAccountRequiredError',
+  'Inbox messages need an account linked to this identity.',
+) {}
+
+registerErrorMessageContext('InboxAccountRequiredError', InboxAccountRequiredError);

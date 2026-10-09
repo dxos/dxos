@@ -6,21 +6,27 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon, Panel, Splitter, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';
 import { Dream, Sequence } from '#types';
 
-import { MixerEngine } from '../../generator';
-import { Sound } from '../Sound';
+import { MixerEngine } from '../../generator/index.ts';
+import { Sound } from '../Sound/index.ts';
 
 //
 // Mixer
 //
 
-export type MixerProps = ThemedClassName<{
+export type MixerProps = Util.ThemedClassName<{
   dream: Dream.Dream;
   engine: MixerEngine;
 }>;
@@ -91,7 +97,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
     Obj.update(dream, (dream) => {
-      dream.sequences = [...(dream.sequences ?? []), sequence];
+      dream.sequences ??= [];
+      dream.sequences.push(sequence);
     });
     setSelected(sequence.id);
   }, [dream]);
@@ -139,32 +146,28 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     [dream],
   );
 
-  const isSequence = useCallback((item: unknown): item is Sequence.Sequence => {
-    return typeof item === 'object' && item !== null && 'id' in item && 'source' in item;
-  }, []);
-
   return (
     <Splitter.Root orientation='vertical' mode={selectedLayer ? 'split' : 'start'} classNames={classNames}>
       <Splitter.Panel asChild position='start'>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
+              <Button.Root icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
-              {playing && timed && <span className='tabular-nums text-description p-1'>{formattedTime}</span>}
-              <Toolbar.IconButton
+              {playing && timed && <span className='tabular-nums text-fg-muted p-1'>{formattedTime}</span>}
+              <Button.Root
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={playing ? 'Stop' : 'Play'}
                 onClick={handlePlay}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>
+          </Panel.Header>
+          <Panel.Body>
             <OrderedList.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
-              isItem={isSequence}
+              getLabel={(item) => item.name ?? Sequence.getSourceLabel(item.source)}
               onMove={handleMove}
             >
               {({ items }) => (
@@ -182,7 +185,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
                 </OrderedList.Content>
               )}
             </OrderedList.Root>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Splitter.Panel>
 
@@ -212,22 +215,13 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <OrderedList.Item
-      id={item.id}
-      item={item}
-      hover
-      selected={selected}
-      classNames='grid grid-cols-[var(--dx-rail-item)_var(--dx-rail-item)_1fr_var(--dx-rail-item)_var(--dx-rail-item)] gap-1 items-center cursor-pointer'
-      onClick={() => onLayerSelect(item.id)}
-    >
+    <OrderedList.Item id={item.id} highlightOnHover current={selected} onClick={() => onLayerSelect(item.id)}>
       <OrderedList.DragHandle />
-      <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
-      {/* Plain title row — there's no disclosure panel here, so we don't want
-          `OrderedList.Title`'s aria-expanded / trigger semantics. */}
-      <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>
-      <OrderedList.IconButton
+      <OrderedList.ItemIcon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <OrderedList.ItemText>{item.name ?? Sequence.getSourceLabel(item.source)}</OrderedList.ItemText>
+      <Button.Root
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {
@@ -235,7 +229,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
           onLayerUpdate({ ...item, muted: !item.muted });
         }}
       />
-      <OrderedList.DeleteButton
+      <SystemButton.Remove
         onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);

@@ -16,7 +16,7 @@ import { EditorState, EditorView } from '@dxos/ui-editor';
 
 import { Markdown } from '#types';
 
-import { useExtensions } from './useExtensions';
+import { useExtensions } from './useExtensions.tsx';
 
 describe('useExtensions content binding guard', () => {
   let client: Client;

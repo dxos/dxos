@@ -14,6 +14,19 @@
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
+# Autonomous-mode run state: the pinned task, the session that owns it, its
+# definition of done, and the block budget the Stop hook spends. Per-worktree
+# runtime, like the mode.
+.claude/.autonomous
+.claude/.autonomous-session
+.claude/.autonomous.lock
+.claude/.autonomous-dod
+.claude/.autonomous-reminders
+# Its two logs. Both are session evidence, not source: the user log is a verbatim
+# transcript of what the user typed, the decision log is what the agent chose.
+.claude/.autonomous-user.md
+.claude/.autonomous-log.md
+
 # Logs
 logs/
 npm-debug.log*
@@ -163,6 +176,11 @@ packages/sdk/observability/src/cli-observability-secrets.json
 heap-samples.ndjson
 profiles/
 
+# Memory-harness results. Both scripts hardcode their output next to themselves, so a
+# re-run overwrites whatever a previous run left; nothing reads either file.
+packages/apps/composer-app/scripts/memory/boot-census.json
+packages/apps/composer-app/scripts/memory/soak-run.json
+
 # Debug logging for require hooks
 .trace-compiled
 
@@ -182,10 +200,11 @@ build
 
 # Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
 # credential"). Ignored at every depth. An ignore rule is default exclusion, NOT enforcement:
-# `git add -f` still stages these, and a path already in the index stays tracked.
-.secrets
-.secrets/
-**/.secrets/
+# `git add -f` still stages these, and a path already in the index stays tracked. The contents
+# are ignored rather than the directory, so its `.gitkeep` can be tracked and the directory exists
+# in every checkout.
+**/.secrets/*
+!**/.secrets/.gitkeep
 
 # Custom git hooks
 .husky/post-applypatch
@@ -223,6 +242,9 @@ typedoc
 # aider assistant temp files
 .aider*
 
+# Per-machine Claude Code settings (permission grants, env) — never shared.
+.claude/settings.local.json
+
 # codex agent local state
 .codex/
 
@@ -253,8 +275,11 @@ node_modules
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
 
-# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# Agentic-review: finalize keeps only REVIEW.md per run
 # (STAGING.md / groups.json / groups/ are deleted on finalize).
+.agents/reviews/*/STAGING.md
+.agents/reviews/*/groups.json
+.agents/reviews/*/groups/
 
 # Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.

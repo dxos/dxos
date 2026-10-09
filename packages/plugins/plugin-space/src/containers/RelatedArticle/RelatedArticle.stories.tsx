@@ -13,7 +13,7 @@ import { type Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -21,7 +21,7 @@ import { HasRelationship, HasSubject, Message, Organization, Person, Task } from
 
 import { translations } from '#translations';
 
-import { RelatedArticle } from './RelatedArticle';
+import { RelatedArticle } from './RelatedArticle.tsx';
 
 const SUBJECT_NAME = 'Alice Ashe';
 
@@ -75,7 +75,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({

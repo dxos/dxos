@@ -6,16 +6,21 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Annotation, Obj } from '@dxos/echo';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
 import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
-import { translations } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { ChatThread, type ChatThreadController } from './ChatThread';
+import { translations } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView, DeliveryAnnotation, type DeliveryStatus } from '../../types.ts';
+import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
  * The canonical assistant thread: `ChatThread` end to end — the view-typed renderer, the real
@@ -133,9 +138,9 @@ const DefaultStory = ({
     <DebugProvider>
       <ChatThread.Root model={model} viewType={viewType} onEvent={handleEvent} controllerRef={controller}>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <IconButton
+              <Button.Root
                 icon={auto ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={auto ? 'Stop the agent' : 'Let the agent talk'}
@@ -145,16 +150,16 @@ const DefaultStory = ({
               <Toolbar.Separator />
               <MessageList.Nav ends={false} classNames='contents' />
             </Toolbar.Root>
-          </Panel.Toolbar>
+          </Panel.Header>
 
-          <Panel.Content classNames='flex flex-col'>
+          <Panel.Body classNames='flex flex-col'>
             <div className='dx-expand relative'>
               <PromptOutline model={model} />
-              <ChatThread.Viewport classNames='dx-fullscreen' padding />
+              <ChatThread.Viewport classNames='dx-cover' />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
         {debug && <Debug />}
       </ChatThread.Root>
@@ -185,15 +190,15 @@ const PromptInput = ({
 
   return (
     <div className='p-2'>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Input.Root
           placeholder={busy ? 'Answering…' : 'Ask something…'}
           value={prompt}
           data-testid='assistant.prompt'
           onChange={(event) => setPrompt(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && submit()}
         />
-      </Input.Root>
+      </Field.Root>
     </div>
   );
 };
@@ -334,6 +339,11 @@ const type = (input: HTMLInputElement, value: string) => {
 /** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
 export const Default: Story = {};
 
+/** The raw document, tags and all: no widgets, but the tags are highlighted so the structure reads. */
+export const DebugView: Story = {
+  args: { viewType: 'debug' },
+};
+
 /**
  * A turn that calls several tools, one of which fails.
  *
@@ -458,5 +468,70 @@ export const Interrupted: Story = {
 
     (canvasElement.querySelector('[data-testid="assistant.auto"]') as HTMLElement).click();
     await expect({ stayed, resumed }).toEqual({ stayed: true, resumed: true });
+  },
+};
+
+/** A prompt row as a host projects one still on its way to the agent. */
+const deliveryRow = (text: string, status: DeliveryStatus) => {
+  const message = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] });
+  Obj.update(message, (message) => Annotation.set(message, DeliveryAnnotation, status));
+  return message;
+};
+
+/** Events the delivery rows emitted, for the play to assert against. */
+const deliveryEvents: ChatThreadEvent[] = [];
+
+const DeliveryStory = () => {
+  const model = useMemo(
+    () =>
+      new FeedModel({
+        stops: 'prompt',
+        messages: [
+          Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Summarize the meeting notes.' }] }),
+          Message.make({
+            sender: { role: 'assistant' },
+            blocks: [{ _tag: 'text', text: 'Here is a summary of the three decisions the meeting took.' }],
+          }),
+          deliveryRow('Then draft a follow-up email to the team.', 'read'),
+          Message.make({
+            sender: { role: 'assistant' },
+            blocks: [{ _tag: 'text', text: 'Drafting the email now.' }],
+          }),
+          deliveryRow('Copy in the design leads.', 'delivered'),
+          deliveryRow('And attach the slides.', 'sent'),
+          deliveryRow('Book a follow-up for Thursday.', 'failed'),
+        ],
+      }),
+    [],
+  );
+
+  return (
+    <ChatThread.Root model={model} viewType='normal' onEvent={(event) => deliveryEvents.push(event)}>
+      <ChatThread.Viewport />
+    </ChatThread.Root>
+  );
+};
+
+/**
+ * Prompts on their way to the agent, one per delivery state: read (the agent took it up), delivered
+ * (its queue holds it), sent (the client holds it) and failed (with remove). Each renders
+ * exactly as an acknowledged prompt does, with the ticks on the bubble's edge and remove in its toolbar.
+ */
+export const Delivery: Story = {
+  render: () => <DeliveryStory />,
+  play: async ({ canvasElement }) => {
+    deliveryEvents.length = 0;
+    await settle(20);
+    const statuses = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="chat.delivery"]')].map(
+        (element) => element.dataset.delivery,
+      );
+    await expect(statuses()).toEqual(['read', 'delivered', 'sent', 'failed']);
+
+    const failed = canvasElement
+      .querySelector<HTMLElement>('[data-delivery="failed"]')
+      ?.closest('[data-testid="feed.message"]');
+    failed?.querySelector<HTMLElement>('[data-action="remove"]')?.click();
+    await expect(deliveryEvents.map(({ type }) => type)).toEqual(['remove-prompt']);
   },
 };

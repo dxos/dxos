@@ -5,8 +5,9 @@
 import { type URI } from '@dxos/keys';
 import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
+import { safeParseJson } from '@dxos/util';
 
-import { type ChatView } from './types';
+import { type ChatView } from './types.ts';
 
 export type CreateRendererOptions = {
   /** Resolves a reference's display label; the tag carries the DXN either way. */
@@ -41,7 +42,7 @@ export const createRenderer = (
 
     const flushRun = () => {
       if (run.length) {
-        segments.push(toolkitTag(run));
+        segments.push(toolkitTag(run, viewType === 'debug'));
         run = [];
       }
       if (deferred.length) {
@@ -53,6 +54,14 @@ export const createRenderer = (
     for (const block of blocks) {
       if (block._tag === 'toolCall' || block._tag === 'toolResult') {
         run.push(block);
+        continue;
+      }
+
+      // A background tool's result arrives as the next turn's synthetic prompt; it is a result, so it
+      // joins the tool panel rather than reading as a prompt nobody typed.
+      const recovered = isPrompt(message) ? undefined : recoveredToolResult(block);
+      if (recovered) {
+        run.push(recovered);
         continue;
       }
 
@@ -147,7 +156,7 @@ const blockToMarkdown = (
       if (message.sender.role === 'user') {
         return tag('prompt', block.text, block);
       }
-      return block.text.trim() || undefined;
+      return linkBareObjectUris(block.text, getObjectLabel).trim() || undefined;
     }
 
     case 'summary':
@@ -173,6 +182,10 @@ const blockToMarkdown = (
       // Only meaningful inside a tool run (grouped by the caller); bare stats render nothing.
       return undefined;
 
+    case 'request':
+      // The card answers on behalf of this message, so it carries the message's id.
+      return `<request message="${escapeAttribute(message.id)}">${escapeXml(JSON.stringify(block))}</request>`;
+
     case 'surface':
       return block.pending
         ? undefined
@@ -185,6 +198,30 @@ const blockToMarkdown = (
 };
 
 /** The prose a narration block carries; blank means the widget would render no row for it. */
+/** Tool name of a recovered background result; the widget names it, since the original call is gone. */
+export const BACKGROUND_TOOL = 'background';
+
+/** The agent runtime's `<result pid=…>` / `<error pid=…>` prompt for a background tool's outcome. */
+const RECOVERED_RESULT = /^<(result|error) pid=([^>\s]+)>([\s\S]*)<\/\1>$/;
+
+const recoveredToolResult = (block: ContentBlock.Any): ContentBlock.ToolResult | undefined => {
+  if (block._tag !== 'text' || block.disposition !== 'synthetic') {
+    return undefined;
+  }
+  const match = block.text.trim().match(RECOVERED_RESULT);
+  if (!match) {
+    return undefined;
+  }
+  const [, kind, pid, body] = match;
+  return {
+    _tag: 'toolResult',
+    toolCallId: pid,
+    name: BACKGROUND_TOOL,
+    providerExecuted: false,
+    ...(kind === 'error' ? { error: body } : { result: body }),
+  };
+};
+
 const narrationText = (block: ContentBlock.Any): string => {
   switch (block._tag) {
     case 'status':
@@ -197,9 +234,26 @@ const narrationText = (block: ContentBlock.Any): string => {
 };
 
 /** A run of tool blocks as one tag; the widget parses the payload back out. */
-const toolkitTag = (blocks: ContentBlock.Any[]): string => {
+/**
+ * Debug shows the tag as text, so its JSON is indented, with JSON-string payloads expanded in place;
+ * the widget parses either form.
+ */
+const toolkitTag = (blocks: ContentBlock.Any[], pretty = false): string => {
   const pending = blocks.some((block) => block.pending);
-  return `<toolkit${pending ? ' pending="true"' : ''}>${escapeXml(JSON.stringify(blocks))}</toolkit>`;
+  const open = `<toolkit${pending ? ' pending="true"' : ''}>`;
+  if (pretty) {
+    // One fenced block holding the tags and the run, so the markdown parser renders it as code.
+    const json = JSON.stringify(blocks, expandJsonStrings, 2);
+    return `\`\`\`json\n${open}\n${json}\n</toolkit>\n\`\`\``;
+  }
+  return `${open}${escapeXml(JSON.stringify(blocks))}</toolkit>`;
+};
+
+const expandJsonStrings = (key: string, value: unknown): unknown => {
+  if ((key === 'input' || key === 'result') && typeof value === 'string') {
+    return safeParseJson(value) ?? value;
+  }
+  return value;
 };
 
 /**
@@ -271,3 +325,31 @@ export const estimateRow = (message: Message.Message): number => {
 
   return height;
 };
+
+/** Code fences and spans, which a URI rewrite must leave alone. */
+const CODE = /(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g;
+
+/** A bare object URI in prose, with the `@` the model is told it may prefix an in-text reference with. */
+const BARE_OBJECT_URI = /(^|\s)@?(echo:\/\/[A-Za-z0-9]+(?:\/[A-Za-z0-9]+)?)(?=$|[\s.,;:!?)])/gm;
+
+/**
+ * Bare `echo://…` URIs in the model's prose become the markdown forms the editor renders: one alone
+ * on its line is the object shown, so it becomes an embed; one inside a sentence becomes a link.
+ * The model writes the bare form at least as readily as either, and unrewritten it is just text.
+ */
+export const linkBareObjectUris = (text: string, getObjectLabel: (uri: URI.URI) => string): string =>
+  text
+    .split(CODE)
+    .map((segment, index) =>
+      index % 2 === 1
+        ? segment
+        : segment.replace(BARE_OBJECT_URI, (match, lead: string, uri: string, offset: number, whole: string) => {
+            const label = getObjectLabel(uri as URI.URI);
+            const lineStart = whole.lastIndexOf('\n', offset) + 1;
+            const lineEnd = whole.indexOf('\n', offset + match.length);
+            const line = whole.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim();
+            const alone = line === match.trim();
+            return `${lead}${alone ? '!' : ''}[${label}](${uri})`;
+          }),
+    )
+    .join('');

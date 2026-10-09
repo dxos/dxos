@@ -21,8 +21,8 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline } from '@dxos/types';
 
-import { RunInstructions } from './definitions';
-import defaultAgentPrompt from './run-instructions';
+import * as AgentOperation from '../types/AgentOperation.ts';
+import defaultAgentPrompt from './run-instructions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -45,7 +45,7 @@ describe('RunInstructions', () => {
         );
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
           chat: Ref.make(chat),
@@ -76,7 +76,7 @@ describe('RunInstructions', () => {
         );
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
         });
@@ -107,7 +107,7 @@ describe('RunInstructions', () => {
         yield* Database.flush();
 
         // Models emit `null` rather than omitting a field, and the tool must accept that.
-        const exit = yield* Operation.invoke(RunInstructions, {
+        const exit = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
         }).pipe(Effect.exit);
@@ -139,7 +139,7 @@ describe('RunInstructions', () => {
         yield* Database.flush();
 
         // A placeholder in the unused branch must not lose the work the agent completed.
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
         });

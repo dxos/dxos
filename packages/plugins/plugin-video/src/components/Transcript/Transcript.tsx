@@ -8,8 +8,9 @@ import React, { useEffect } from 'react';
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -20,7 +21,7 @@ import {
   documentSlots,
 } from '@dxos/ui-editor';
 
-import { decorateTranscript, parseLineTimestamp, transcriptMarkdownExtensions } from './decorate-transcript';
+import { decorateTranscript, parseLineTimestamp, transcriptMarkdownExtensions } from './decorate-transcript.ts';
 
 export type TranscriptProps = {
   /** Stable editor/document id (used for collaboration + selection state). */
@@ -40,9 +41,9 @@ export type TranscriptProps = {
  * Read-only markdown view of a transcript text object, live-bound to its ECHO content.
  * Composable: forwards its ref and merges slot props onto the root element.
  */
-export const Transcript = composable<HTMLDivElement, TranscriptProps>(
+export const Transcript = Util.composable<HTMLDivElement, TranscriptProps>(
   ({ classNames, id, source, onSeek, currentSeconds, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Hooks.useThemeMode();
     // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s
     // `.target` loads asynchronously and isn't reactive on its own, so without this the editor
     // mounts empty (e.g. the Summary tab is blank until toggled away and back).
@@ -88,8 +89,8 @@ export const Transcript = composable<HTMLDivElement, TranscriptProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: ['dx-expand', classNames] })}
-        ref={composeRefs(parentRef, forwardedRef)}
+        {...Util.composableProps(props, { classNames: ['dx-expand', classNames] })}
+        ref={Hooks.composeRefs(parentRef, forwardedRef)}
       />
     );
   },

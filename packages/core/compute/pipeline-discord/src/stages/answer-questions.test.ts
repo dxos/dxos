@@ -3,17 +3,18 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { QuestionStore } from '../stores';
-import { answerOpenQuestions } from './answer-questions';
+import { QuestionStore } from '../stores/index.ts';
+import { answerOpenQuestions } from './answer-questions.ts';
 
 const TestLayer = (answer?: string) =>
   Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
@@ -96,7 +97,11 @@ describe('answerOpenQuestions', () => {
 
 const fact = (id: string): RDF.Fact => ({
   id,
-  assertion: { subject: { entity: 'carol' }, predicate: 'works on', object: { entity: 'opfs' } },
+  assertion: {
+    subject: { kind: 'entity', entity: 'carol' },
+    predicate: 'works on',
+    object: { kind: 'entity', entity: 'opfs' },
+  },
   factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
   attribution: { agent: 'carol', source: `discord:${id}`, generatedAtTime: '2026-06-01T00:00:00.000Z' },
   recordedAt: '2026-06-01T00:00:00.000Z',
@@ -108,24 +113,47 @@ const fact = (id: string): RDF.Fact => ({
  * Routes the two LLM calls the answer path makes: the query-generation prompt returns an
  * unconstrained query (match everything), the answer prompt returns the canned answer.
  */
+/** Concatenated user text of a prompt, which is what the routing below keys on. */
+const promptText = (prompt: Prompt.Prompt): string => {
+  let text = '';
+  for (const message of prompt.content) {
+    if (message.role === 'system') {
+      continue;
+    }
+    for (const part of message.content) {
+      if (part.type === 'text') {
+        text += part.text;
+      }
+    }
+  }
+  return text;
+};
+
 const fakeAi = (answer?: string): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    // The @effect/ai LanguageModel surface is large and external; this test fake fills only the
-    // methods the answer path calls, returning real response instances rather than duck-typed
-    // objects so the fake needs no cast to satisfy `LanguageModel.Service`.
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed(new LanguageModel.GenerateTextResponse([])),
-        // `generateObject`'s real signature is a self-referential generic (`Options extends
-        // NoExcessProperties<..., Options>`) that a concrete stub cannot restate; narrow the cast to
-        // this one member's type rather than the whole fake.
-        generateObject: ((request: { prompt: string }) =>
-          Effect.succeed(
-            new LanguageModel.GenerateObjectResponse(
-              request.prompt.includes('Answer the question') ? (answer ? { answer } : {}) : {},
-              [],
-            ),
-          )) as LanguageModel.Service['generateObject'],
-        streamText: () => Stream.empty,
-      }),
-  });
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      // Built through `LanguageModel.make` rather than as a literal service object: the interface is
+      // branded and its methods are self-referential generics, so only the provider-level hooks can
+      // be supplied concretely. `generateObject` is derived from the text the hook returns, hence the
+      // JSON body.
+      languageModel: () =>
+        Layer.effect(
+          LanguageModel.LanguageModel,
+          LanguageModel.make({
+            generateText: ({ prompt }) =>
+              Effect.succeed([
+                {
+                  type: 'text',
+                  // The query-generation prompt wants an unconstrained query; only the answer prompt
+                  // carries the canned answer.
+                  text: JSON.stringify(
+                    promptText(prompt).includes('Answer the question') ? (answer ? { answer } : {}) : {},
+                  ),
+                },
+              ]),
+            streamText: () => Stream.empty,
+          }),
+        ),
+    }),
+  );

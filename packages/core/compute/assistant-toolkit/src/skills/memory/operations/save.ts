@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 
-import { Memory } from '../../../types/Memory';
-import { SaveMemory } from './definitions';
+import * as Memory from '../../../types/Memory.ts';
+import { SaveMemory } from './definitions.ts';
 
 export default SaveMemory.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ title, content }) {
-      const memory = yield* Database.add(Obj.make(Memory, { title, content }));
+      const memory = yield* Database.add(Obj.make(Memory.Memory, { title, content }));
       return Entity.toJSON(memory);
     }),
   ),

@@ -5,18 +5,21 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { Avatar, Card, Icon } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Attention } from '@dxos/react-ui-attention/types';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
-  const { invoke } = useOperationInvoker();
+  const { invoke } = Hooks.useOperationInvoker();
   // Card.Action's onClick carries no event, so resolve the origin plank from the card element itself.
   const cardRef = useRef<HTMLDivElement>(null);
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
@@ -44,16 +47,14 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
     <Card.Body ref={cardRef}>
       {image && (
         <Card.Row>
-          <Avatar.Root>
-            <Avatar.Content
-              imgSrc={image}
-              icon='ph--user--regular'
-              size={20}
-              classNames={[!image && 'opacity-50']}
-              hue='neutral'
-              variant='square'
-            />
-          </Avatar.Root>
+          <Avatar.Root
+            src={image}
+            icon='ph--user--regular'
+            size='xl'
+            classNames={[!image && 'opacity-50']}
+            hue='neutral'
+            variant='square'
+          />
         </Card.Row>
       )}
       {organization?.name && (
@@ -61,9 +62,9 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       )}
       {emails.length > 0 && (
         <Card.Row>
-          <Card.Block>
-            <Icon icon='ph--at--regular' />
-          </Card.Block>
+          <Layout.Block>
+            <Icon.Icon icon='ph--at--regular' />
+          </Layout.Block>
           <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>

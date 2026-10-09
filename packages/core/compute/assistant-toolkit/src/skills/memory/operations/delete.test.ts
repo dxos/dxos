@@ -10,9 +10,9 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import { Memory } from '../../../types/Memory';
-import { DeleteMemory } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import * as Memory from '../../../types/Memory.ts';
+import { DeleteMemory } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -21,13 +21,13 @@ describe('DeleteMemory', () => {
     'removes the memory from the database',
     Effect.fnUntraced(
       function* (_) {
-        const memory = yield* Database.add(Obj.make(Memory, { title: 'Outdated fact', content: 'Stale.' }));
-        const kept = yield* Database.add(Obj.make(Memory, { title: 'Current fact', content: 'Fresh.' }));
+        const memory = yield* Database.add(Obj.make(Memory.Memory, { title: 'Outdated fact', content: 'Stale.' }));
+        const kept = yield* Database.add(Obj.make(Memory.Memory, { title: 'Current fact', content: 'Fresh.' }));
         yield* Database.flush();
 
         yield* Operation.invoke(DeleteMemory, { memory: Ref.make(memory) });
 
-        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
+        const memories = yield* Database.query(Query.select(Filter.type(Memory.Memory))).run;
         expect(memories.map((entry) => entry.id)).toEqual([kept.id]);
       },
       Effect.provide(OperationTestLayer),

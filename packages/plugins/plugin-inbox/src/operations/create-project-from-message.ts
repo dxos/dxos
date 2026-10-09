@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
 import { AnchoredTo, Message } from '@dxos/types';
 
@@ -43,7 +43,7 @@ const handler = InboxOperation.CreateProjectFromMessage.pipe(
       const summarize = (prompt: string) =>
         EffectEx.runPromise(
           LanguageModel.generateText({ prompt }).pipe(
-            Effect.provide(AiService.model(resolveModel('summarize-topic')).pipe(Layer.orDie)),
+            Effect.provide(AiService.languageModel(resolveModel('summarize-topic')).pipe(Layer.orDie)),
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('30 seconds'),
             Effect.map((response) => response.text),

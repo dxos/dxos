@@ -11,6 +11,8 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 
 import { ConnectorSpec } from '#types';
 
+import { OAuthFlowError } from './errors.ts';
+
 /**
  * Parses `postMessage` payload from the OAuth relay into a narrow result.
  * Unknown shapes are ignored so arbitrary messages do not reach domain logic.
@@ -65,7 +67,7 @@ export const beginOAuthFlow = (
   oauth: NonNullable<ConnectorSpec.ConnectorEntry['oauth']>,
   accessTokenId: string,
   loginHint: string | undefined,
-): Effect.Effect<void, Error> =>
+): Effect.Effect<void, OAuthFlowError> =>
   NativeOAuth.supportsNativeOAuth()
     ? Effect.tryPromise({
         try: async () =>
@@ -78,7 +80,7 @@ export const beginOAuthFlow = (
             authHeader: await edge.getAuthHeader(),
             ...(loginHint ? { loginHint } : {}),
           }),
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: OAuthFlowError.wrap(),
       })
     : Effect.gen(function* () {
         const { authUrl } = yield* Effect.tryPromise({
@@ -90,7 +92,7 @@ export const beginOAuthFlow = (
               accessTokenId,
               ...(loginHint ? { loginHint } : {}),
             }),
-          catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+          catch: OAuthFlowError.wrap(),
         });
 
         // `useRedirectFlow` connectors (e.g. atproto) get a top-level tab: their auth server
@@ -104,6 +106,6 @@ export const beginOAuthFlow = (
         // A null return means the popup was blocked. Fail so the caller's pending entry is cleaned
         // up rather than left waiting on a callback that can never arrive.
         if (!authWindow) {
-          return yield* Effect.fail(new Error('Unable to open OAuth window (popup blocked?).'));
+          return yield* Effect.fail(new OAuthFlowError({ message: 'Unable to open OAuth window (popup blocked?).' }));
         }
       });

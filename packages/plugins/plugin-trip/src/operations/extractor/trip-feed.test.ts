@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Filter, Obj, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
@@ -16,7 +16,7 @@ import { ContentBlock, Message } from '@dxos/types';
 
 import { Booking, Segment, Trip } from '#types';
 
-import { TripMessageExtractor } from './trip-extractor';
+import { TripMessageExtractor } from './trip-extractor.ts';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});

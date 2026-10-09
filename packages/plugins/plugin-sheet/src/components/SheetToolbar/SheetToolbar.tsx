@@ -3,13 +3,12 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type CompleteCellRange } from '@dxos/compute-hyperformula';
-import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -18,12 +17,13 @@ import {
   isToolbarAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Util from '@dxos/react-ui/Util';
 
-import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetRoot';
-import { createAlign, useAlignState } from './align';
-import { createStyle, useStyleState } from './style';
-import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
+import { type SheetModel } from '../../model/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
+import { createAlign, useAlignState } from './align.ts';
+import { createStyle, useStyleState } from './style.ts';
+import { type ToolbarStateAtom, useToolbarState } from './useToolbarState.ts';
 
 type ToolbarActionsContext = {
   model: SheetModel;
@@ -64,14 +64,14 @@ const createToolbarActions = ({
 
 export type SheetToolbarProps = {};
 
-export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
+export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
   useAlignState(stateAtom);
   useStyleState(stateAtom);
 
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const customActions = useMemo(() => {
     return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
   }, [graph, attendableId]);
@@ -82,7 +82,9 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
   );
   const menuActions = useMenuActions(actionsCreator);
 
-  return <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />;
+  return (
+    <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
+  );
 });
 
 SheetToolbar.displayName = 'SheetToolbar';

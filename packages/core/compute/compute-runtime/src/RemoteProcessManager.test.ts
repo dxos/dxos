@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import * as RemoteProcessManager from './RemoteProcessManager';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 describe('RemoteProcessManager', () => {
   test('layerNoop yields an empty process tree', async ({ expect }) => {
@@ -19,8 +19,9 @@ describe('RemoteProcessManager', () => {
     });
     const result = await EffectEx.runPromise(
       program.pipe(
-        Effect.provide(RemoteProcessManager.layerNoop),
-        Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+        Effect.provide(
+          Layer.provideMerge(RemoteProcessManager.layerNoop, Layer.succeed(Registry.AtomRegistry, Registry.make())),
+        ),
       ),
     );
     expect(result).toEqual([]);

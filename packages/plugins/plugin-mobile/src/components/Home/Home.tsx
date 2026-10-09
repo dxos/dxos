@@ -4,21 +4,26 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useExpandPath } from '../hooks';
+import { useExpandPath } from '../hooks.ts';
 
 export type HomeProps = {};
 
@@ -26,20 +31,20 @@ export type HomeProps = {};
  * Home screen.
  */
 export const Home = (_: HomeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // Profile and settings moved to the navbar's main menu; Home lists spaces only.
   const items = useItemsByDisposition('workspace');
   useExpandPath(GraphNode.RootId);
 
   const { results, handleSearch } = useSearchListResults({
     items,
-    extract: (node) => toLocalizedString(node.properties.label, t),
+    extract: (node) => Theme.toLocalizedString(node.properties.label, t),
   });
 
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
+        <ScrollArea.Root>
           <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='py-2 gap-1'
@@ -57,18 +62,20 @@ export const Home = (_: HomeProps) => {
 
 const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const name = toLocalizedString(data.properties.label, t);
+  const name = Theme.toLocalizedString(data.properties.label, t);
+  const titleId = UiHooks.useId('mobile-tile');
+  const pending = data.properties.pending === true;
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);
 
   useExpandPath(data.id);
 
   const handleSelect = useCallback(
-    () => invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id }),
-    [invokePromise, data.id],
+    () => (pending ? undefined : invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id })),
+    [invokePromise, data.id, pending],
   );
 
   // Register this workspace with the search context.
@@ -90,9 +97,10 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   return (
     <Card.Root
       role='button'
-      fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
+      aria-disabled={pending || undefined}
+      aria-busy={pending || undefined}
       // The search list auto-selects the first row for keyboard nav; a coarse (touch) pointer has no
       // keyboard focus to reflect, so the highlight would just read as an unexplained random row.
       classNames={mx('dx-focus-ring', isSelected && 'bg-selected-surface pointer-coarse:bg-transparent')}
@@ -100,26 +108,22 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       ref={cardRef}
     >
       <Card.Header>
-        <Avatar.Root>
-          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
-              `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Card.Block>
-            <Avatar.Content
-              icon={data.properties.icon}
-              hue={data.properties.hue}
-              hueVariant='transparent'
-              variant='square'
-              size={8}
-              fallback={name}
-            />
-          </Card.Block>
-          <Avatar.Label asChild>
-            <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
-          </Avatar.Label>
-          <Card.Block end>
-            <Icon icon='ph--caret-right--regular' />
-          </Card.Block>
-        </Avatar.Root>
+        {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+            `Card.Title` are what keep the icon, label, and caret on one row. */}
+        <Layout.Block>
+          <Avatar.Root
+            icon={data.properties.icon}
+            hue={Avatar.toAvatarHue(data.properties.hue)}
+            hueVariant='transparent'
+            variant='square'
+            fallback={name}
+            aria-labelledby={titleId}
+          />
+        </Layout.Block>
+        <Card.Title id={titleId} classNames='cursor-pointer'>
+          {name}
+        </Card.Title>
+        <Layout.Block rail='end'>{!pending && <Icon.Icon icon='ph--caret-right--regular' />}</Layout.Block>
       </Card.Header>
     </Card.Root>
   );
@@ -132,7 +136,7 @@ const filterItems = (node: AppGraphNode.Node, disposition: string) => {
 
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string) => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, GraphNode.RootId, 'child');
+  const { graph } = ToolkitHooks.useAppGraph();
+  const connections = GraphHooks.useConnections(graph, GraphNode.RootId, 'child');
   return useMemo(() => connections.filter((node) => filterItems(node, disposition)), [connections, disposition]);
 };

@@ -15,7 +15,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -28,7 +28,7 @@ import { Message, Organization, Outline, Person } from '@dxos/types';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AgentArticle } from './AgentArticle';
+import { AgentArticle } from './AgentArticle.tsx';
 
 random.seed(1);
 
@@ -62,7 +62,7 @@ const meta = {
     withTheme(),
     withPluginManager<StoryArgs>(({ args: { inputs } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [
             Agent.Agent,

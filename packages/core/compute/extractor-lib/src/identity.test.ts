@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { applyMerge, buildIdentityIndex, findDuplicates, identityKeys, planMerge } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
@@ -17,7 +17,7 @@ import {
   normalizePhone,
   organizationIdentitySpec,
   personIdentitySpec,
-} from './identity';
+} from './identity.ts';
 
 const GOOGLE = 'google.com/contacts';
 

@@ -7,12 +7,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import * as Magazine from './Magazine';
-import * as Subscription from './Subscription';
+import * as Magazine from './Magazine.ts';
+import * as Subscription from './Subscription.ts';
 
 describe('per-Post state keyed by entity id', () => {
   let builder: EchoTestBuilder;

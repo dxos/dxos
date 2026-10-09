@@ -6,20 +6,21 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import { type ReactNode } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
-import { type Label } from '@dxos/react-ui';
+import { type Obj } from '@dxos/echo';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { type Text } from '@dxos/schema';
 import { type EditorStateStore } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '#meta';
 
-import type * as Markdown from './Markdown';
+import type * as Markdown from './Markdown.ts';
 
 export type EditorViewEntry = { view: EditorView; documentId: string };
 
@@ -91,13 +92,13 @@ export const ViewModeExtension = Capability.make<ViewModeExtension>()(
 export type MenuExtension = {
   /** Stable id, unique across contributions. */
   id: string;
-  label: Label;
+  label: Theme.Label;
   icon?: string;
   /**
    * Group heading. One group per contributing plugin: pass the plugin's own key and name, and
    * several commands from one plugin merge under a single heading rather than each growing its own.
    */
-  group: { id: string; label: Label };
+  group: { id: string; label: Theme.Label };
   /** Sort order within the group. */
   order?: number;
   /** Invoked on select, with {@link MarkdownOperation.EditorCommandInput}. */
@@ -111,6 +112,11 @@ export type ReviewMode = 'editing' | 'suggesting' | 'viewing';
 
 export type MarkdownExtensionProvider = (props: {
   document?: Markdown.Document;
+  /**
+   * The object whose text the editor edits when it is not a markdown document — an outline, a task
+   * set — so a contribution that resolves against the object's project (a `#123` reference) can.
+   */
+  subject?: Obj.Unknown;
   viewMode?: EditorViewMode;
   /** The core branch the editor is currently showing (the branch under review); undefined = main. */
   reviewBranch?: string;

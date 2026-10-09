@@ -6,4 +6,4 @@ export {
   SubscriptionsArticle,
   type SubscriptionsArticleProps,
   SubscriptionsArticle as default,
-} from './SubscriptionsArticle';
+} from './SubscriptionsArticle.tsx';

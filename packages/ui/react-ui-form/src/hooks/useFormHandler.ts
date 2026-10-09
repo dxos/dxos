@@ -8,15 +8,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
-import { type FormFieldStatus } from '#types';
+import { type FormFieldOverride, type FormFieldStatus } from '#types';
 
-import { getDiscriminatorDefaults } from '../util';
+import { getDiscriminatorDefaults } from '../util/index.ts';
 
 /**
  * Form properties.
@@ -40,6 +41,9 @@ export interface FormHandlerProps<T extends AnyProperties> {
    * Seeds an uncontrolled form once at mount when `values` is not provided; not reconciled thereafter.
    */
   defaultValues?: Partial<T>;
+
+  /** Per-field overrides by json-path (`style.hue`); see {@link FormFieldOverride}. */
+  fieldOverrides?: Readonly<Record<string, FormFieldOverride>>;
 
   /**
    * Auto-save the form when the values change.
@@ -108,6 +112,8 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   //
 
   getStatus: (path: string | (string | number)[]) => FormFieldStatus;
+  /** The caller's override for the field at `path`, if any. */
+  getOverride: (path: (string | number)[]) => FormFieldOverride | undefined;
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
   onValueChange: <V>(path: (string | number)[], type: SchemaAST.AST, value: V) => void;
@@ -120,6 +126,7 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
 export const useFormHandler = <T extends AnyProperties>({
   schema,
   autoSave,
+  fieldOverrides,
   values: valuesProp,
   defaultValues: defaultValuesProp,
   onValuesChanged,
@@ -132,7 +139,7 @@ export const useFormHandler = <T extends AnyProperties>({
   const [touched, setTouched] = useState<Record<SchemaEx.JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<SchemaEx.JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-  const seed = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
+  const seed = Hooks.useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
   // A root discriminated union renders nothing but its select until the discriminator has a value, so
   // the form opens on the first member unless the caller seeded one of its own.
   const defaultValues = useMemo(
@@ -163,7 +170,6 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
-      log('validate', { values, errors });
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;
         errors = onValidate(validatedValues) ?? [];
@@ -171,6 +177,8 @@ export const useFormHandler = <T extends AnyProperties>({
 
       setErrors(flatMap(errors));
       const valid = errors.length === 0;
+      // Never log values or error messages: fields may hold secrets (passwords, API keys) and messages can echo them.
+      log('validate', { valid, errorPaths: errors.map((error) => error.path) });
       return valid;
     },
     [schema, onValidate],
@@ -252,21 +260,30 @@ export const useFormHandler = <T extends AnyProperties>({
             errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
         ) ?? [];
 
+      const indeterminate = isIndeterminate(fieldOverrides, overrides, jsonPath);
+
       // Only show errors for touched fields.
       const isTouched = touched[jsonPath as SchemaEx.JsonPath];
       if (!isTouched) {
         return {
           status: undefined,
           error: undefined,
+          indeterminate,
         };
       }
 
       return {
         status: error ? 'error' : undefined,
         error: error ? (error ?? undefined) : undefined,
+        indeterminate,
       };
     },
-    [errors, touched],
+    [errors, touched, fieldOverrides, overrides],
+  );
+
+  const getOverride = useCallback<FormHandler<T>['getOverride']>(
+    (path) => fieldOverrides?.[SchemaEx.createJsonPath(path)],
+    [fieldOverrides],
   );
 
   const getValue = useCallback<FormHandler<T>['getValue']>(
@@ -275,15 +292,19 @@ export const useFormHandler = <T extends AnyProperties>({
       if (Object.prototype.hasOwnProperty.call(overrides, jsonPath)) {
         return overrides[jsonPath] as any;
       }
+      // An indeterminate value has none to show until it is edited.
+      if (fieldOverrides?.[jsonPath]?.indeterminate) {
+        return undefined;
+      }
       // Un-edited fields reflect the current source value.
       return SchemaEx.getValue(source, jsonPath);
     },
-    [source, overrides],
+    [source, overrides, fieldOverrides],
   );
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
     (path, type, value) => {
-      log('onValueChange', { path, value });
+      log('onValueChange', { path });
 
       const jsonPath = SchemaEx.createJsonPath(path);
       const pathArray = path;
@@ -318,21 +339,27 @@ export const useFormHandler = <T extends AnyProperties>({
     [source, overrides, validate, onValuesChanged],
   );
 
-  const onBlur = useCallback(
-    async (path: (string | number)[]) => {
-      const jsonPath = SchemaEx.createJsonPath(path);
+  // A blur commits the field. The validation and auto-save run in an effect, after the render that carries the
+  // change, so a control that changes and blurs in one handler (a switch, a select, a picker) commits the value it
+  // just set rather than the one rendered before it.
+  const [committing, setCommitting] = useState(false);
+  const onBlur = useCallback((path: (string | number)[]) => {
+    const jsonPath = SchemaEx.createJsonPath(path);
 
-      // TODO(burdon): Check value has changed from original.
-      setTouched((touched) => ({ ...touched, [jsonPath]: true }));
-      const isValid = validate(values);
-
-      // Auto-save when a field is blurred and is valid.
-      if (Object.keys(changed).length > 0 && isValid && autoSave) {
-        await onSave?.(values as T, { changed, isValid });
-      }
-    },
-    [validate, values, changed, autoSave, onSave],
-  );
+    // TODO(burdon): Check value has changed from original.
+    setTouched((touched) => ({ ...touched, [jsonPath]: true }));
+    setCommitting(true);
+  }, []);
+  useEffect(() => {
+    if (!committing) {
+      return;
+    }
+    setCommitting(false);
+    const isValid = validate(values);
+    if (Object.keys(changed).length > 0 && isValid && autoSave) {
+      void onSave?.(values as T, { changed, isValid });
+    }
+  }, [committing, validate, values, changed, autoSave, onSave]);
 
   return useMemo<FormHandler<T>>(
     () => ({
@@ -352,6 +379,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // Field utils.
       getStatus,
+      getOverride,
       getValue,
       onBlur,
       onValueChange,
@@ -368,6 +396,7 @@ export const useFormHandler = <T extends AnyProperties>({
       canSave,
       isValid,
       getStatus,
+      getOverride,
       getValue,
       onBlur,
       onValueChange,
@@ -450,6 +479,13 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
   }
   return true;
 };
+
+/** Whether a path is indeterminate and still unedited: an edit is the user's own value, so it shows. */
+const isIndeterminate = (
+  fieldOverrides: FormHandlerProps<any>['fieldOverrides'],
+  overrides: Record<SchemaEx.JsonPath, unknown>,
+  jsonPath: string,
+): boolean => !!fieldOverrides?.[jsonPath]?.indeterminate && !Object.prototype.hasOwnProperty.call(overrides, jsonPath);
 
 /** Returns a copy of `record` without the given json-path keys. */
 const omitPaths = <V>(

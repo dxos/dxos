@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -17,9 +17,9 @@ import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import { GoogleCalendar } from '#apis';
 import { type GoogleCalendarApi, type GoogleCalendarApiError } from '#services';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { mapEvent } from '../mapper';
-import { fetchEvents } from './fetch';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
+import { mapEvent } from '../mapper.ts';
+import { fetchEvents } from './fetch.ts';
 
 /** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 const CALENDAR_SYNC_CONFIG = {
@@ -90,7 +90,7 @@ export const syncCalendar = ({
   pageSize = CALENDAR_SYNC_CONFIG.listPageSize,
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
-  GoogleCalendarApiError | EntityNotFoundError,
+  GoogleCalendarApiError | EchoError.EntityNotFoundError,
   Database.Service | Resolver | GoogleCalendarApi
 > =>
   Effect.gen(function* () {

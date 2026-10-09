@@ -14,8 +14,8 @@ import {
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
-import { type DocumentLease } from '../automerge/document-lease';
-import { type DocMetrics, measureDocMetrics } from './automerge-metrics';
+import { type DocumentLease } from '../automerge/document-lease.ts';
+import { type DocMetrics, measureDocMetrics } from './automerge-metrics.ts';
 
 export class DatabaseRoot implements Disposable {
   static mapLinks(document: DocumentLease<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {

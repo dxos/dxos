@@ -3,29 +3,32 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as FiberHandle from 'effect/FiberHandle';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { random } from '@dxos/random';
-import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading } from '@dxos/react-ui/testing';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
@@ -36,8 +39,8 @@ random.seed(1234);
 // TODO(burdon): Show/hide companions.
 // TODO(burdon): Companion width.
 
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -47,16 +50,16 @@ const storyDeckSettings = Capability.makeModule(() =>
   }),
 );
 
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const defaultStoredDeckState: DeckSchema.StoredDeckState = {
       sidebarState: 'expanded',
       complementarySidebarState: 'collapsed',
       complementarySidebarPanel: undefined,
-      activeDeck: 'default',
-      previousDeck: 'default',
+      activeDeck: STORY_WORKSPACE_PATH,
+      previousDeck: STORY_WORKSPACE_PATH,
       decks: {
-        default: { ...DeckSchema.defaultDeck },
+        [STORY_WORKSPACE_PATH]: { ...DeckSchema.defaultDeck },
       },
     };
 
@@ -75,6 +78,7 @@ const storyDeckState = Capability.makeModule(() =>
       toasts: [],
       currentUndoId: undefined,
       scrollIntoView: undefined,
+      open: {},
     };
 
     const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(
@@ -86,25 +90,35 @@ const storyDeckState = Capability.makeModule(() =>
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        active: open.active,
+        inactive: open.inactive,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, Error>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
+
+/** The workspace the story items live under. */
+const STORY_WORKSPACE = 'stories';
+
+/** Graph id of the story workspace, which is also the story deck's id. */
+export const STORY_WORKSPACE_PATH = `${GraphNode.RootId}/${STORY_WORKSPACE}`;
+
+const STORY_ITEM_KEY = 'item';
 
 export type StoryItem = { id: string; title: string; children?: StoryItem[] };
 
@@ -126,7 +140,7 @@ export const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
  * Graph id of a top-level story item. The graph addresses a node by its path from the root, so the bare
  * {@link STORY_ITEMS} id names no node and opening it yields a plank that never resolves.
  */
-export const storyItemId = (index: number): string => `${GraphNode.RootId}/${STORY_ITEMS[index].id}`;
+export const storyItemId = (index: number): string => `${STORY_WORKSPACE_PATH}/${STORY_ITEMS[index].id}`;
 
 /**
  * Maps a nested {@link StoryItem} tree to graph nodes so `AppGraph.getConnections` / `useConnections` see children.
@@ -163,7 +177,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
 
           return (
             <Panel.Root>
-              <Panel.Content classNames='grid grid-rows-[min-content_1fr]'>
+              <Panel.Body classNames='grid grid-rows-[min-content_1fr]'>
                 {attendableId && <ItemComponent id={attendableId} />}
                 <Syntax.Root data={subject}>
                   <Syntax.Content>
@@ -173,7 +187,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           );
         },
@@ -189,18 +203,12 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           return (
             // Stamped so a host's play test can assert the companion body resolved, not just its tab.
             <div className='contents' data-testid='story.companion' data-companion-variant={variant}>
-              <Syntax.Root
+              <JsonHighlighter
                 data={{
                   primaryItem: companionTo,
                   companion: { data: subject, properties, variant },
                 }}
-              >
-                <Syntax.Content>
-                  <Syntax.Viewport>
-                    <Syntax.Code />
-                  </Syntax.Viewport>
-                </Syntax.Content>
-              </Syntax.Root>
+              />
             </div>
           );
         },
@@ -215,12 +223,27 @@ const storyGraphBuilder = Capability.inlineModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
-        id: 'storyItems',
+        id: 'storyWorkspace',
         match: GraphNodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppGraphNode.make({
+              id: STORY_WORKSPACE,
+              type: 'story-workspace',
+              data: null,
+              properties: { label: 'Stories', icon: 'ph--folder--regular' },
+            }),
+          ]),
+      }),
+      AppGraphBuilder.createExtension({
+        id: 'storyItems',
+        match: GraphNodeMatcher.whenId(STORY_WORKSPACE_PATH),
+        url: { key: STORY_ITEM_KEY, kind: 'item', path: [] },
         connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
       }),
       AppGraphBuilder.createExtension({
         id: 'storyItemCompanions',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenNodeType('story-item'),
         connector: (node) =>
           Effect.succeed([
@@ -256,7 +279,12 @@ export const DeckStoryPlugin = Plugin.define(pluginMeta).pipe(
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),
@@ -270,29 +298,24 @@ type NavContainerProps = {
 };
 
 const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forwardedRef) => {
-  const { graph } = useAppGraph();
-  const layout = useLayout();
-  const { invokePromise } = useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const layout = ToolkitHooks.useLayout();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
-  const items = useConnections(graph, GraphNode.RootId, 'child');
+  const items = GraphHooks.useConnections(graph, STORY_WORKSPACE_PATH, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
     <div className='dx-expand overflow-y-auto p-2' ref={forwardedRef}>
-      <Listbox.Root>
+      <Listbox.Root items={items.map(toOption)}>
         <Listbox.Content aria-label='Navigation'>
           {items.map((node) => (
             <Listbox.Item
               key={node.id}
               id={node.id}
-              classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
+              current={activeSet.has(node.id)}
               onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-            >
-              <Listbox.ItemContent
-                icon={node.properties.icon}
-                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
-              />
-            </Listbox.Item>
+            />
           ))}
         </Listbox.Content>
       </Listbox.Root>
@@ -300,34 +323,30 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   );
 });
 
+/** A graph node as a list option: its icon, and its label when it is plain text. */
+const toOption = (node: AppGraphNode.Node) => ({
+  value: node.id,
+  label: typeof node.properties.label === 'string' ? node.properties.label : node.id,
+  icon: node.properties.icon,
+});
+
 type ItemComponentProps = {
   id: string;
 };
 
 const ItemComponent = ({ id }: ItemComponentProps) => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
-  const connections = useConnections(graph, id, 'child');
-  const items = useMemo(
-    () =>
-      connections.filter((node) => !AppGraphNode.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
-    [connections],
-  );
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const connections = GraphHooks.useConnections(graph, id, 'child');
+  const items = useMemo(() => connections.filter((node) => !AppGraphNode.isActionLike(node)), [connections]);
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={items.map(toOption)}>
       <Listbox.Content aria-label='Items'>
         {items.map((node) => {
           const open = () =>
             void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-          return (
-            <Listbox.Item key={node.id} id={node.id} classNames='dx-hover cursor-pointer' onClick={open}>
-              <Listbox.ItemContent
-                icon={node.properties.icon}
-                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
-              />
-            </Listbox.Item>
-          );
+          return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
         })}
       </Listbox.Content>
     </Listbox.Root>

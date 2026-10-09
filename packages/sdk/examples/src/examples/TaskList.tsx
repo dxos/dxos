@@ -7,9 +7,11 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { IconButton, Input } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 
-import { TaskType } from '../types';
+import { TaskType } from '../types.ts';
 
 const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   const space = useSpace(spaceId);
@@ -31,21 +33,21 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   return (
     <div className='grow max-w-lg mt-4 mx-1'>
       <h2 className='mb-2 font-bold'>{`Peer ${id + 1}`}</h2>
-      <Input.Root>
-        <Input.Label srOnly>Create new item</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label srOnly>Create new item</Field.Label>
+        <Input.Root
           classNames='mb-2'
           placeholder='New item'
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
-      </Input.Root>
+      </Field.Root>
       <ul>
         {tasks.map((task) => (
           <li key={task.id} className='flex items-center gap-2 mb-2 pl-3'>
-            <Input.Root>
-              <Input.Label srOnly>Complete {task.title}</Input.Label>
+            <Field.Root>
+              <Field.Label srOnly>Complete {task.title}</Field.Label>
               <Input.Checkbox
                 checked={!!task.completed}
                 onCheckedChange={() =>
@@ -54,14 +56,14 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
                   })
                 }
               />
-            </Input.Root>
+            </Field.Root>
             <div className='grow'>{task.title}</div>
-            <IconButton
+            <Button.Root
               icon='ph--x--regular'
-              size={4}
+              iconSize='md'
               label={`Delete ${task.title}`}
               iconOnly
-              noTooltip
+              showTooltip={false}
               variant='ghost'
               onClick={() => space?.db?.remove(task)}
             />

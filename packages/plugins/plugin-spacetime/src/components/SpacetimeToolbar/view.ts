@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-import { type EditorState } from '../../tools';
+import { type EditorState } from '../../tools/index.ts';
 
 /** Creates the view options toggle group. */
 export const createViewActions =

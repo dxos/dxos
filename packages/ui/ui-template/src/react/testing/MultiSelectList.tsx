@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 
-import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing';
+import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing/index.ts';
 
 export type MultiSelectItem = {
   id: string;
@@ -39,23 +39,21 @@ export const MultiSelectList = ({ items, onChange }: MultiSelectListProps) => {
   const api = connect(service);
 
   return (
-    <Listbox.Root>
-      <Listbox.Viewport>
-        <Listbox.Content aria-label='Tasks' aria-multiselectable>
-          {items.map(({ id, label }) => (
-            <Listbox.Item
-              key={id}
-              id={id}
-              classNames={api.isSelected(id) && 'bg-selected-surface text-selected-fg font-semibold'}
-              // A shift-click must not start a text selection before the row's click handler runs.
-              onMouseDown={(event) => event.shiftKey && event.preventDefault()}
-              onClick={(event) => (event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey))}
-            >
-              <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
+    <Listbox.Root items={items.map(({ id, label }) => ({ value: id, label: label }))}>
+      <Listbox.Content aria-label='Tasks' aria-multiselectable>
+        {items.map(({ id, label }) => (
+          <Listbox.Item
+            key={id}
+            id={id}
+            classNames={api.isSelected(id) && 'bg-selected-surface text-selected-fg font-semibold'}
+            // A shift-click must not start a text selection before the row's click handler runs.
+            onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+            onClick={(event) => (event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey))}
+          >
+            <Listbox.ItemText>{label}</Listbox.ItemText>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };

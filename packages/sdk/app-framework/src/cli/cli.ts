@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { Capability, Plugin, PluginManager } from '../core';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { Capability, Plugin, PluginManager } from '../core/index.ts';
 
 const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>

@@ -5,11 +5,11 @@
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind } from '../common/types';
+import { EntityKind } from '../common/types/index.ts';
 
 export interface AnnotationHelper<T> {
   /**

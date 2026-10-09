@@ -3,6 +3,5 @@
 //
 
 export * as TldrawModel from '#model';
-export * as TldrawPlugin from './TldrawPlugin';
-export * from '#meta';
+export * as TldrawPlugin from './TldrawPlugin.ts';
 export * from '#types';

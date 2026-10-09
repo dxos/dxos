@@ -7,15 +7,17 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
+import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { createBlockExtensions } from './extensions';
-import { type HighlightRange, setHighlights } from './highlight';
-import { useSelectionGroup } from './selection-group';
+import { diffRange } from './diff-range.ts';
+import { createBlockExtensions } from './extensions.ts';
+import { type HighlightRange, setHighlights } from './highlight.ts';
+import { useSelectionGroup } from './selection-group.ts';
 
-export type MarkdownBlockProps = ThemedClassName<{
+export type MarkdownBlockProps = Util.ThemedClassName<{
   text: string;
   /**
    * Drip appended text in per frame (the typewriter) instead of dispatching whole deltas. The
@@ -31,6 +33,8 @@ export type MarkdownBlockProps = ThemedClassName<{
    */
   editable?: boolean;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   hits?: readonly HighlightRange[];
   /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
   onWidgetsChange?: (count: number) => void;
@@ -43,12 +47,21 @@ export type MarkdownBlockProps = ThemedClassName<{
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
 export const MarkdownBlock = memo(
-  ({ classNames, text, stream, editable = false, registry, hits, onWidgetsChange }: MarkdownBlockProps) => {
-    const { themeMode } = useThemeContext();
+  ({
+    classNames,
+    text,
+    stream,
+    editable = false,
+    registry,
+    objectImage,
+    hits,
+    onWidgetsChange,
+  }: MarkdownBlockProps) => {
+    const themeMode = Hooks.useThemeMode();
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
     // to own them: a widget's tree belongs to the React root that rendered the item, not to CodeMirror.
-    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    const [widgets, setWidgets] = useState<WidgetState[]>([]);
     const rootRef = useRef<HTMLDivElement>(null);
 
     // Read through a ref so the group never lands in the extension deps: rebuilding extensions
@@ -59,14 +72,14 @@ export const MarkdownBlock = memo(
 
     const extensions = useMemo<Extension[]>(
       () => [
-        ...createBlockExtensions({ registry, editable, themeMode, setWidgets }),
+        ...createBlockExtensions({ registry, objectImage, editable, themeMode, setWidgets }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet && !update.state.selection.main.empty) {
             selectionGroupRef.current.claim(update.view);
           }
         }),
       ],
-      [editable, themeMode, registry],
+      [editable, themeMode, registry, objectImage],
     );
 
     // Deliberately NOT `useTextEditor`, which builds the view in a passive effect — i.e. after paint.
@@ -80,10 +93,12 @@ export const MarkdownBlock = memo(
         return;
       }
 
+      // Built detached and attached once: given a `parent`, the view writes its attributes on a live
+      // element, and each write invalidates the document's style for every row that mounts.
       const instance = new EditorView({
-        parent,
         state: EditorState.create({ doc: initialTextRef.current, extensions }),
       });
+      parent.appendChild(instance.dom);
       const unregister = selectionGroupRef.current.register(instance);
       setView(instance);
 
@@ -115,13 +130,14 @@ export const MarkdownBlock = memo(
         return;
       }
 
-      // A non-append (a rewrite, a view-type switch, a rewind) lands atomically — dripping a
-      // replacement would show the reader a half-rewritten document.
+      // A non-append (a rewrite, a view-type switch, a status tag changing) lands atomically —
+      // dripping a replacement would show the reader a half-rewritten document — and replaces only
+      // the span that differs, so the decorations and widgets either side of it survive.
       if (!text.startsWith(dispatchedRef.current)) {
         cancelAnimationFrame(dripRaf.current);
         dripRaf.current = 0;
         dispatchedRef.current = text;
-        view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+        view.dispatch({ changes: diffRange(view.state.doc.toString(), text) });
         return;
       }
 

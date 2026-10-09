@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
 import pdfUrl from '../../../fixtures/test.pdf?url';
-import { Preview } from './Preview';
+import { Preview } from './Preview.tsx';
 
 /** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
 const PNG_URL =
@@ -21,12 +21,12 @@ const PNG_URL =
 const DefaultStory = ({ type, url, name, size }: { type: string; url: string; name?: string; size?: number }) => (
   <Panel.Root>
     <Preview.Root type={type} url={url} name={name} size={size}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Preview.Toolbar />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Preview.Content />
-      </Panel.Content>
+      </Panel.Body>
     </Preview.Root>
   </Panel.Root>
 );

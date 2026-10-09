@@ -9,7 +9,7 @@ import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
+import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls/index.ts';
 
 export const Manager = Capability.makeSingleton<CallManagerImpl>()(`${meta.profile.key}.capability.callManager`);
 

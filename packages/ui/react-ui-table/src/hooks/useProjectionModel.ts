@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
-import { type Table } from '../types';
+import { type Table } from '../types/index.ts';
 
 export const useProjectionModel = <S extends Type.AnyEntity>(
   schema: S | undefined,
@@ -18,7 +18,7 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
 ) => {
   const [projection, setProjection] = useState<ProjectionModel | undefined>();
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (schema && table) {
       const view = await table.view.load();
       // Use the live jsonSchema reference for reactivity.

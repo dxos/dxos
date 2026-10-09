@@ -4,14 +4,14 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type MakeOptional } from '@dxos/util';
+import { type MakeOptional, deepMapValues } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as ContentBlock from './ContentBlock';
+import * as Actor from './Actor.ts';
+import * as ContentBlock from './ContentBlock.ts';
 
 /**
  * A file or object attached to a message, separate from its (textual/streamed) `blocks`. The
@@ -44,7 +44,7 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
     /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
     created: Schema.String.pipe(
       Schema.annotate({ description: 'ISO date string when the message was sent.' }),
-      GeneratorAnnotation.set('date.iso8601'),
+      Annotation.GeneratorAnnotation.set('date.iso8601'),
     ),
     sender: Actor.Actor.pipe(Schema.annotate({ description: 'Identity of the message sender.' })),
     blocks: Schema.Array(ContentBlock.Any).annotate({
@@ -68,8 +68,9 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
       }),
     ),
   }).pipe(
-    LabelAnnotation.set(['properties.subject']),
+    Annotation.LabelAnnotation.set(['properties.subject']),
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -93,4 +94,40 @@ export const make = ({
 
 export const extractText = (message: Message): string => {
   return message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
+};
+
+/** A message's fields without an ECHO identity, as carried between identities. */
+export type Data = Obj.MakeProps<typeof Message>;
+
+const MessageSchema = Type.getSchema(Message);
+
+/** Qualifies a ref to a stored object with its space, since a relative ref resolves against the reader's own space. */
+const toAbsoluteRef = (ref: Ref.Unknown): Ref.Unknown => {
+  const target = ref.target;
+  return target && Obj.getDatabase(target) ? Ref.fromURI(Obj.getURI(target, { prefer: 'absolute' })) : ref;
+};
+
+/**
+ * Encodes a message as JSON with its Effect Schema, for transport (e.g., an inbox payload).
+ * Refs to stored objects are written as absolute (`echo://<spaceId>/<objectId>`) URIs.
+ */
+export const encodeJson = (message: Message): string =>
+  JSON.stringify(
+    Schema.encodeUnknownSync(MessageSchema)(
+      deepMapValues({ ...message }, (value, recurse) => (Ref.isRef(value) ? toAbsoluteRef(value) : recurse(value))),
+    ),
+  );
+
+/**
+ * Decodes {@link encodeJson} output into message data; the sender's object id is dropped, since
+ * the recipient stores its own copy.
+ */
+export const decodeJson = (json: string): Option.Option<Data> => {
+  let value: unknown;
+  try {
+    value = JSON.parse(json);
+  } catch {
+    return Option.none();
+  }
+  return Schema.decodeUnknownOption(MessageSchema)(value).pipe(Option.map(({ id: _id, ...data }) => data));
 };

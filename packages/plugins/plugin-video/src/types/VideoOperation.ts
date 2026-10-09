@@ -10,8 +10,7 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-
-import * as Video from './Video';
+import { Video } from '@dxos/types';
 
 // TODO(burdon): @wittjosiah extend and factor out?
 

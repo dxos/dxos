@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { handler } from './list';
+import { handler } from './list.ts';
 
 describe('space schema list', () => {
   it('should list space schemas', () =>

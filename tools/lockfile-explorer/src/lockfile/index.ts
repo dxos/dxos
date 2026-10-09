@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './lockfile';
-export type * from './types';
+export * from './lockfile.ts';
+export type * from './types.ts';

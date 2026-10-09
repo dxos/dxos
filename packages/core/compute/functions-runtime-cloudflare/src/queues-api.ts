@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyEntity } from '@dxos/echo/Type';
+import type * as Type from '@dxos/echo/Type';
 import { type EID, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import type { ServiceContainer } from './internal';
+import type { ServiceContainer } from './internal/index.ts';
 
 export interface QueuesQueryResult {
-  objects: AnyEntity[];
+  objects: Type.AnyEntity[];
   nextCursor: string | null;
   prevCursor: string | null;
 }
@@ -21,7 +21,7 @@ export interface QueuesQueryResult {
  */
 export interface QueuesAPI {
   queryQueue(queue: EID.EID, options?: {}): Promise<FeedProtocol.QueryResult>;
-  insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void>;
+  insertIntoQueue(queue: EID.EID, objects: Type.AnyEntity[]): Promise<void>;
 }
 
 /**
@@ -37,7 +37,7 @@ export class QueuesAPIImpl implements QueuesAPI {
     return this._serviceContainer.queryQueue(queue);
   }
 
-  insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void> {
+  insertIntoQueue(queue: EID.EID, objects: Type.AnyEntity[]): Promise<void> {
     // TODO(dmaretskyi): Ugly.
     return this._serviceContainer.insertIntoQueue(queue, JSON.parse(JSON.stringify(objects)));
   }

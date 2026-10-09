@@ -16,19 +16,19 @@ import React, {
   useState,
 } from 'react';
 
-import { SelectionModel } from '@dxos/graph';
-import { type ThemedClassName } from '@dxos/react-ui';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { testId } from '@dxos/react-ui-canvas';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type ActionHandler } from '../../actions';
-import { DragMonitor, type EditingState, EditorContext, type EditorContextType } from '../../hooks';
-import { defaultShapes } from '../../shapes';
-import { type CanvasBoard, CanvasGraphModel } from '../../types';
-import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';
-import { type TestId } from '../defs';
-import { UI } from '../UI';
-import { defaultEditorOptions } from './editor-options';
+import { type ActionHandler } from '../../actions/index.ts';
+import { DragMonitor, type EditingState, EditorContext, type EditorContextType } from '../../hooks/index.ts';
+import { defaultShapes } from '../../shapes/index.ts';
+import { type CanvasBoard, CanvasGraphModel } from '../../types/index.ts';
+import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas/index.ts';
+import { type TestId } from '../defs.ts';
+import { UI } from '../UI/index.ts';
+import { defaultEditorOptions } from './editor-options.ts';
 
 interface EditorController {
   action?: ActionHandler;
@@ -36,7 +36,7 @@ interface EditorController {
   update(): void;
 }
 
-type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = ThemedClassName<
+type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = Util.ThemedClassName<
   PropsWithChildren<
     Pick<EditorContextType<S>, 'id'> &
       Partial<
@@ -81,7 +81,7 @@ const RootInner = <S extends CanvasBoard.Shape = CanvasBoard.Shape>(
   // External state.
   const graph = useMemo<CanvasGraphModel<S>>(() => graphProp ?? CanvasGraphModel.create(), [graphProp]);
   const clipboard = useMemo(() => CanvasGraphModel.create(), []);
-  const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+  const selection = useMemo(() => selectionProp ?? new SelectionModel.SelectionModel(), [selectionProp]);
   const registry = useMemo(() => registryProp ?? new ShapeRegistry(defaultShapes), [registryProp]);
   const layout = useMemo(() => layoutProp ?? new ShapeLayout(registry), [layoutProp, registry]);
 

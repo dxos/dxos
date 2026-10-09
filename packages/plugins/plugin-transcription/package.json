@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-transcription",
-  "version": "0.11.1",
+  "version": "0.13.0",
   "description": "Voice transcription.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,18 +10,21 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -81,26 +84,16 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./Dictatable": {
+      "source": "./src/types/Dictatable.ts",
+      "types": "./dist/types/src/types/Dictatable.d.ts",
+      "import": "./dist/lib/Dictatable.mjs"
     },
     "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./TranscriptOperation": {
-      "source": "./src/types/TranscriptOperation.ts",
-      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
-      "import": "./dist/lib/TranscriptOperation.mjs"
     },
     "./TranscriptionCapabilities": {
       "source": "./src/types/TranscriptionCapabilities.ts",
@@ -112,20 +105,30 @@
       "types": "./dist/types/src/types/TranscriptionEvents.d.ts",
       "import": "./dist/lib/TranscriptionEvents.mjs"
     },
-    "./TranscriptionPlugin": {
-      "source": "./src/TranscriptionPlugin.ts",
-      "types": "./dist/types/src/TranscriptionPlugin.d.ts",
-      "import": "./dist/lib/TranscriptionPlugin.mjs"
-    },
     "./TranscriptionOperationHandlerSet": {
       "source": "./src/operations/TranscriptionOperationHandlerSet.ts",
       "types": "./dist/types/src/operations/TranscriptionOperationHandlerSet.d.ts",
       "import": "./dist/lib/TranscriptionOperationHandlerSet.mjs"
     },
+    "./TranscriptionPlugin": {
+      "source": "./src/TranscriptionPlugin.ts",
+      "types": "./dist/types/src/TranscriptionPlugin.d.ts",
+      "import": "./dist/lib/TranscriptionPlugin.mjs"
+    },
     "./TranscriptionSkill": {
       "source": "./src/skills/TranscriptionSkill.ts",
       "types": "./dist/types/src/skills/TranscriptionSkill.d.ts",
       "import": "./dist/lib/TranscriptionSkill.mjs"
+    },
+    "./TranscriptOperation": {
+      "source": "./src/types/TranscriptOperation.ts",
+      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
+      "import": "./dist/lib/TranscriptOperation.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -158,7 +161,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",

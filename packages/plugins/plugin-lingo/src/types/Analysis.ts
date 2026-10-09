@@ -7,10 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Segment, sourceHash } from '@dxos/nlp';
 
-import * as Language from './Language';
+import * as Language from './Language.ts';
 
 /**
  * A cached structural analysis of one object's text: nested paragraph / sentence / clause /
@@ -36,7 +35,7 @@ export class Analysis extends Type.makeObject<Analysis>(DXN.make('org.dxos.type.
     translation: Schema.optional(Schema.String),
     segments: Schema.mutable(Schema.Array(Segment)),
   }).pipe(
-    LabelAnnotation.set(['sourceHash']),
+    Annotation.LabelAnnotation.set(['sourceHash']),
     Annotation.IconAnnotation.set({ icon: 'ph--brackets-angle--regular', hue: 'teal' }),
   ),
 ) {}

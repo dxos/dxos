@@ -5,27 +5,27 @@
 import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
 
-import type * as AppCapabilities from './AppCapabilities';
+import type * as AppCapabilities from './AppCapabilities.ts';
 
 /** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
-export const PROGRESS_STATUS_COMPLETE = 'progress.complete';
+export const STATUS_COMPLETE = 'progress.complete';
 
 /** Terminal status message — reducer calls `fail()` and leaves the monitor visible. */
-export const PROGRESS_STATUS_FAILED = 'Sync failed';
+export const STATUS_FAILED = 'Sync failed';
 
 /** Terminal status message — reducer calls `note()` then `remove()`. */
-export const PROGRESS_STATUS_CANCELLED = 'Cancelled';
+export const STATUS_CANCELLED = 'Cancelled';
 
 /**
  * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
  * or still be going — what is known is that its progress stopped arriving, and saying more than that
  * would be inventing an outcome.
  */
-export const PROGRESS_STATUS_STALLED = 'Stopped reporting';
+export const STATUS_STALLED = 'Stopped reporting';
 
 /** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
 const isTerminalMessage = (message: string | undefined): boolean =>
-  message === PROGRESS_STATUS_COMPLETE || message === PROGRESS_STATUS_FAILED || message === PROGRESS_STATUS_CANCELLED;
+  message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_CANCELLED;
 
 type StatusPayload = Trace.PayloadType<typeof Trace.StatusUpdate>;
 type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
@@ -60,14 +60,14 @@ type MonitorEntry = {
   target: CancelTarget;
   /** Fires when this monitor has gone `stallTimeout` without an update; re-armed by every update. */
   stall?: ReturnType<typeof setTimeout>;
-  /** Set once the stall fired, so the next update starts a clean run rather than reviving a dead one. */
-  stalled?: boolean;
+  /** Set once the run failed or stalled, so the next update starts a clean run rather than reviving a dead one. */
+  ended?: boolean;
   /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
   phase?: number;
 };
 
 /**
- * A cancelled key's tombstone (see {@link ProgressTraceSinkOptions.cancelScope}). `pid` scope
+ * A cancelled key's tombstone (see {@link TraceSinkOptions.cancelScope}). `pid` scope
  * releases when a different pid arrives (the next local run); `run` scope releases on the run's
  * terminal status (an edge chain spans many pids, so pid identity cannot bound it).
  */
@@ -92,7 +92,7 @@ const RUN_TOMBSTONE_TTL_MS = 60_000;
  */
 const DEFAULT_STALL_TIMEOUT_MS = 90_000;
 
-export type ProgressTraceSinkOptions = {
+export type TraceSinkOptions = {
   /** Cancels the process/trigger that emitted progress for a keyed monitor (wired from the process manager). */
   cancelProcess?: (target: CancelTarget) => void;
   /**
@@ -117,29 +117,24 @@ export type ProgressTraceSinkOptions = {
  * A getter lets the sink activate during SetupProcessManager (before
  * ProgressRegistry is contributed on Startup) without deadlocking.
  */
-export type ProgressRegistrySource =
-  | AppCapabilities.ProgressRegistry
-  | (() => AppCapabilities.ProgressRegistry | undefined);
+export type RegistrySource = AppCapabilities.ProgressRegistry | (() => AppCapabilities.ProgressRegistry | undefined);
 
 /**
  * Builds a {@link Trace.Sink} that projects ephemeral `status.update` events into a
  * {@link AppCapabilities.ProgressRegistry}. Intended as a parallel sink alongside feed
  * persistence — operations emit trace status; this adapter drives UI monitors.
  *
- * When {@link ProgressRegistrySource} is a getter that returns `undefined`, status
+ * When {@link RegistrySource} is a getter that returns `undefined`, status
  * updates are dropped until the registry becomes available.
  */
-export const createProgressTraceSink = (
-  progressRegistry: ProgressRegistrySource,
-  options: ProgressTraceSinkOptions = {},
-): Trace.Sink => {
+export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSinkOptions = {}): Trace.Sink => {
   const resolveRegistry = (): AppCapabilities.ProgressRegistry | undefined =>
     typeof progressRegistry === 'function' ? progressRegistry() : progressRegistry;
 
   const monitors = new Map<string, MonitorEntry>();
   // Keys the user cancelled, tombstoned so the dying run's tail (which keeps broadcasting until the
   // process/edge abort lands) cannot resurrect the removed monitor. Release is scoped so a genuinely
-  // later run still shows — see {@link ProgressTraceSinkOptions.cancelScope}.
+  // later run still shows — see {@link TraceSinkOptions.cancelScope}.
   const cancelled = new Map<string, Tombstone>();
 
   const stallTimeout = options.stallTimeout ?? DEFAULT_STALL_TIMEOUT_MS;
@@ -178,10 +173,10 @@ export const createProgressTraceSink = (
     entry.stall = setTimeout(() => {
       // The entry stays in the map: the meter shows the failure with its dismiss control, and that
       // control routes through `makeOnCancel` → `cancelMonitor`, both of which need the entry to
-      // still be here. `stalled` is what stops it from being mistaken for a live run.
+      // still be here. `ended` is what stops it from being mistaken for a live run.
       entry.stall = undefined;
-      entry.stalled = true;
-      entry.handle.fail(PROGRESS_STATUS_STALLED);
+      entry.ended = true;
+      entry.handle.fail(STATUS_STALLED);
     }, stallTimeout);
   };
 
@@ -190,7 +185,7 @@ export const createProgressTraceSink = (
     if (!entry) {
       return;
     }
-    entry.handle.note(PROGRESS_STATUS_CANCELLED);
+    entry.handle.note(STATUS_CANCELLED);
     entry.handle.remove();
     dropMonitor(key);
   };
@@ -216,7 +211,7 @@ export const createProgressTraceSink = (
     target: CancelTarget,
   ) => {
     const existing = monitors.get(key);
-    if (existing && !existing.stalled) {
+    if (existing && !existing.ended) {
       // Same run, new process — an EDGE continuation reports under a fresh pid. Re-registering here
       // would call `register`, which drops the prior entry so a genuine re-run starts clean, and the
       // total this run already reported would go with it: the meter falls back to a sweep mid-run,
@@ -226,8 +221,8 @@ export const createProgressTraceSink = (
       return existing.handle;
     }
 
-    // A stalled monitor is not resumed in place: `register` drops the dead entry so the reviving run
-    // starts from its own numbers, rather than inheriting a `current` the abandoned one left behind.
+    // An ended monitor is not resumed in place: `register` drops the dead entry so the reviving run
+    // starts from its own numbers and status, rather than inheriting the abandoned one's `current` or error.
     if (existing) {
       dropMonitor(key);
     }
@@ -275,22 +270,26 @@ export const createProgressTraceSink = (
 
     const handle = monitorFor(registry, key, data.message, target);
 
-    if (data.message === PROGRESS_STATUS_FAILED) {
+    if (data.message === STATUS_FAILED) {
       // Stays registered so the meter can show it, but the clock stops: a stall firing over a
       // reported failure would replace the producer's reason with a guess about silence.
       disarmStall(key);
-      handle.fail(PROGRESS_STATUS_FAILED);
+      handle.fail(STATUS_FAILED);
+      const entry = monitors.get(key);
+      if (entry) {
+        entry.ended = true;
+      }
       return;
     }
 
-    if (data.message === PROGRESS_STATUS_CANCELLED) {
-      handle.note(PROGRESS_STATUS_CANCELLED);
+    if (data.message === STATUS_CANCELLED) {
+      handle.note(STATUS_CANCELLED);
       handle.remove();
       dropMonitor(key);
       return;
     }
 
-    if (data.message === PROGRESS_STATUS_COMPLETE) {
+    if (data.message === STATUS_COMPLETE) {
       handle.done();
       handle.remove();
       dropMonitor(key);

@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities, DeckSchema } from '#types';
@@ -27,18 +27,21 @@ export type DeckStateHook = {
  * Returns the combined state, the active deck, and update functions for each atom.
  */
 export const useDeckState = (): DeckStateHook => {
-  const registry = useCapability(Capabilities.AtomRegistry);
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const persistedState = useAtomValue(stateAtom);
   const ephemeralState = useAtomValue(ephemeralAtom);
 
-  // Compute deck from decks[activeDeck] to ensure it's always current.
+  // The active workspace's preferences plus what the URL says is open; see `DeckCapabilities.getDeck`.
+  // Keyed on this workspace's own entry, not the whole `open` map: another workspace's planks
+  // changing must not hand every reader here a new deck.
+  const stored = persistedState.decks[persistedState.activeDeck];
+  const open = ephemeralState.open[persistedState.activeDeck] ?? DeckSchema.defaultOpenDeck;
   const deck = useMemo(() => {
-    const deck = persistedState.decks[persistedState.activeDeck];
-    invariant(deck, `Deck not found: ${persistedState.activeDeck}`);
-    return deck;
-  }, [persistedState.decks, persistedState.activeDeck]);
+    invariant(stored, `Deck not found: ${persistedState.activeDeck}`);
+    return { ...stored, ...open };
+  }, [stored, open, persistedState.activeDeck]);
 
   // Combine persisted and ephemeral state into a unified view.
   const state = useMemo(

@@ -6,20 +6,20 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { IdentityRecovery_Kind } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
-import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
+import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer.tsx';
 
-type SeedCredential = { label: string; kind: IdentityRecovery.Kind; algorithm: string };
+type SeedCredential = { label: string; kind: IdentityRecovery_Kind; algorithm: string };
 
 /**
  * Writes recovery credentials straight through `IdentityService` rather than clicking the create
@@ -50,15 +50,15 @@ const decorators = (credentials: SeedCredential[] = []) => [
             yield* seedCredentials(client, credentials);
           }),
       }),
-      ProcessManagerPlugin(),
+      ProcessManagerPlugin.make(),
     ],
   }),
 ];
 
-const PASSKEY: SeedCredential = { label: 'Laptop passkey', kind: IdentityRecovery.Kind.PASSKEY, algorithm: 'ES256' };
+const PASSKEY: SeedCredential = { label: 'Laptop passkey', kind: IdentityRecovery_Kind.PASSKEY, algorithm: 'ES256' };
 const RECOVERY_CODE: SeedCredential = {
   label: 'Backup code',
-  kind: IdentityRecovery.Kind.RECOVERY_CODE,
+  kind: IdentityRecovery_Kind.RECOVERY_CODE,
   algorithm: 'ED25519',
 };
 

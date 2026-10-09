@@ -3,5 +3,5 @@
 //
 
 // TODO(wittjosiah): StatusBar should be factored out of plugin-status-bar into a shared UI package.
-export * as StatusBarPlugin from './StatusBarPlugin';
-export * from '#meta';
+export * as StatusBar from './StatusBar.ts';
+export * as StatusBarPlugin from './StatusBarPlugin.ts';

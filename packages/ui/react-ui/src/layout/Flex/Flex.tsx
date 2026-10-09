@@ -7,8 +7,8 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util';
-import { type Align, type Gap, type Justify, alignClasses, gapClasses, justifyClasses } from '../layout';
+import { composableProps, slottable } from '../../util/slots.ts';
+import { type Align, type Gap, type Justify, alignClasses, gapClasses, justifyClasses } from '../layout.ts';
 
 export type FlexProps = {
   /** Stack on the block axis instead of the inline axis. */
@@ -40,7 +40,7 @@ export type FlexProps = {
  * ```tsx
  * <Flex column gap='sm'>…</Flex>
  * <Flex gap='sm' justify='end'>…</Flex>
- * <Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+ * <Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
  * ```
  */
 export const Flex = slottable<HTMLDivElement, FlexProps>(
@@ -70,3 +70,5 @@ export const Flex = slottable<HTMLDivElement, FlexProps>(
 );
 
 Flex.displayName = 'Flex';
+
+export * from '../layout.ts';

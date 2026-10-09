@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { DEEPSEEK_CONNECTOR_ID, DEEPSEEK_SOURCE } from '../constants';
-import { createDeepSeekConnectorEntry } from './connector';
+import { DEEPSEEK_CONNECTOR_ID, DEEPSEEK_SOURCE } from '../constants.ts';
+import { createDeepSeekConnectorEntry } from './connector.ts';
 
 describe('deepseek connector', () => {
   const connector = { id: DEEPSEEK_CONNECTOR_ID, label: 'DeepSeek' };

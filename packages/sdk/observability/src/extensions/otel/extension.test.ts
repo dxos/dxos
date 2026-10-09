@@ -9,10 +9,10 @@ import { join } from 'node:path';
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
 
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
-import { createResources, extensions } from './extension';
+import { createResources, extensions } from './extension.ts';
 
 const OtelLogs = vi.fn();
 const OtelMetrics = vi.fn();
@@ -22,7 +22,7 @@ const OtelTraces = vi.fn();
 // assertion below reads.
 let processorsWhenStored: unknown[] = [];
 
-vi.mock('../../storage', () => ({
+vi.mock('../../storage/index.ts', () => ({
   isObservabilityDisabled: async () => false,
   getOtelLogLevel: async () => null,
   storeObservabilityDisabled: async () => {
@@ -30,7 +30,7 @@ vi.mock('../../storage', () => ({
   },
 }));
 
-vi.mock('./logs', () => ({
+vi.mock('./logs.ts', () => ({
   OtelLogs: class {
     public readonly logProcessor = () => {};
     constructor(...args: unknown[]) {
@@ -42,7 +42,7 @@ vi.mock('./logs', () => ({
     }
   },
 }));
-vi.mock('./metrics', () => ({
+vi.mock('./metrics.ts', () => ({
   OtelMetrics: class {
     constructor(...args: unknown[]) {
       OtelMetrics(...args);
@@ -53,7 +53,7 @@ vi.mock('./metrics', () => ({
     }
   },
 }));
-vi.mock('./traces', () => ({
+vi.mock('./traces.ts', () => ({
   OtelTraces: class {
     constructor(...args: unknown[]) {
       OtelTraces(...args);
@@ -110,7 +110,7 @@ describe('otel extension', () => {
   test('detaches the log processor before the opt-out is written', async () => {
     processorsWhenStored = [];
     const extension = await make();
-    await EffectEx.runPromise(extension.initialize!());
+    await EffectEx.runPromise(extension.initialize!({ setTags: () => {} }));
     expect(log.runtimeConfig.processors).to.have.length.greaterThan(0);
     const processor = log.runtimeConfig.processors.at(-1);
 

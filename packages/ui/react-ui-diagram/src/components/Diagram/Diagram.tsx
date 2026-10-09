@@ -19,12 +19,13 @@ import {
 } from '@xyflow/react';
 import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import { composable, composableProps, createContext, useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { GRID, layout } from '../../model';
-import { type Node, type Overlay, type Point, type Projection, isGroup } from '../../types';
-import { DiagramGroup, DiagramNode } from './DiagramNode';
+import { GRID, layout } from '../../model/index.ts';
+import { type Node, type Overlay, type Point, type Projection, isGroup } from '../../types/index.ts';
+import { DiagramGroup, DiagramNode } from './DiagramNode.tsx';
 
 /**
  * Flow type keys, deliberately not `input`/`default`/`output`/`group`: React Flow styles those four
@@ -55,7 +56,7 @@ type DiagramContextValue = {
   shape: string;
 };
 
-const [DiagramProvider, useDiagramContext] = createContext<DiagramContextValue>('Diagram.Root');
+const [DiagramProvider, useDiagramContext] = Hooks.createContext<DiagramContextValue>('Diagram.Root');
 
 export type DiagramRootProps = PropsWithChildren<{
   diagram: Projection;
@@ -144,8 +145,8 @@ DiagramRoot.displayName = 'Diagram.Root';
 export type DiagramCanvasProps = ComposableProps<PropsWithChildren>;
 
 /** The pannable, zoomable surface. Controlled — every node and edge comes from the projection. */
-const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
-  const { themeMode } = useThemeContext();
+const DiagramCanvas = Util.composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
+  const themeMode = Hooks.useThemeMode();
   const { fitView } = useReactFlow();
   const { nodes, edges, grid, onNodesChange, onEdgesChange, onNodeMove, shape } = useDiagramContext('Diagram.Canvas');
 
@@ -163,7 +164,7 @@ const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children,
 
   return (
     <ReactFlow
-      {...composableProps(props, { classNames: 'dx-expand' })}
+      {...Util.composableProps(props, { classNames: 'dx-expand' })}
       ref={forwardedRef}
       colorMode={themeMode}
       nodes={nodes}

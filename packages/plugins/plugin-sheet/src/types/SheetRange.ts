@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ClassNameValue } from '@dxos/react-ui';
+import { type ClassNameValue } from '@dxos/ui-types';
 
-import type * as Sheet from '../types/Sheet';
+import type * as Sheet from '../types/Sheet.ts';
 
 export const alignKey = 'alignment';
 export type AlignKey = typeof alignKey;

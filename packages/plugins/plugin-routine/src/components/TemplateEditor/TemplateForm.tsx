@@ -7,12 +7,16 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 
 import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Grid, Input, Select, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { TemplateEditor } from './TemplateEditor';
+import { TemplateEditor } from './TemplateEditor.tsx';
 
 /**
  * Callback type for mutating template within a parent object's Obj.update context.
@@ -31,7 +35,7 @@ export type TemplateFormProps = {
 };
 
 export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   usePromptInputs(template, onChange);
 
   const handleInputKindChange = useCallback(
@@ -59,52 +63,47 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
   );
 
   return (
-    <div className='flex flex-col w-full overflow-hidden gap-4'>
+    <Layout.Flex column gap='lg' classNames='w-full overflow-hidden'>
       <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
-        <Grid cols={['10rem', '10rem', '1fr']} grow={false} align='center' classNames='gap-1'>
+        <Layout.Grid cols={['10rem', '10rem', 'fill']} align='center' classNames='gap-1'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>
 
-              <Input.Root>
+              <Field.Root>
                 <Select.Root
-                  value={input.kind}
-                  onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
+                  value={[input.kind]}
+                  onValueChange={({ value: [kind] }) => handleInputKindChange(input.name, kind as Template.InputKind)}
+                  items={inputs.map(({ kind, label }) => ({ value: kind, label: label }))}
                 >
-                  <Select.TriggerButton placeholder='Type' classNames='w-full' />
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {inputs.map(({ kind, label }) => (
-                          <Select.Option key={kind} value={kind}>
-                            {label}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
+                  <Select.Trigger placeholder='Type' classNames='w-full' />
+                  <Select.Content>
+                    {inputs.map(({ kind, label }) => (
+                      <Select.Item key={kind} item={{ value: kind, label: label }} />
+                    ))}
+                  </Select.Content>
                 </Select.Root>
-              </Input.Root>
+              </Field.Root>
 
               <div>
                 {input.kind === 'value' && (
-                  <Input.Root>
-                    <Input.TextInput
+                  <Field.Root>
+                    <Input.Root
                       placeholder={t('command.placeholder')}
                       classNames='w-full bg-transparent'
                       value={input.default ?? ''}
                       onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                 )}
               </div>
             </Fragment>
           ))}
-        </Grid>
+        </Layout.Grid>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 

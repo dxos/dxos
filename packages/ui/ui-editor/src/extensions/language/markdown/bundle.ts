@@ -5,17 +5,17 @@
 import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { jsonLanguage } from '@codemirror/lang-json';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { insertNewlineContinueMarkupCommand, markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { type LanguageDescription, foldNodeProp, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { type Extension } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { type MarkdownConfig } from '@lezer/markdown';
 
 import { isTruthy } from '@dxos/util';
 
-import { mermaidHighlighting, mermaidLanguageDescription } from '../mermaid';
-import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
+import { mermaidHighlighting, mermaidLanguageDescription } from '../mermaid/index.ts';
+import { markdownHighlightStyle, markdownTagsExtensions } from './highlight.ts';
 
 export type MarkdownBundleOptions = {
   /** Additional fenced-code languages prepended to the standard language-data list. */
@@ -35,6 +35,8 @@ export type MarkdownBundleOptions = {
  */
 export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): Extension[] => {
   return [
+    Prec.high(keymap.of([{ key: 'Enter', run: insertNewlineContinueMarkupCommand({ nonTightLists: false }) }])),
+
     // Main extension.
     // https://github.com/codemirror/lang-markdown
     // https://codemirror.net/5/mode/markdown/index.html (demo).

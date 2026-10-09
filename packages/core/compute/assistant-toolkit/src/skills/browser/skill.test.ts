@@ -21,14 +21,14 @@ import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOper
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { Person } from '@dxos/types';
 
-import { ChatContextHandlers, ChatContextSkill } from '../chat-context';
-import BrowserSkill from './skill';
+import * as ChatContextSkill from '../chat-context/ChatContextSkill.ts';
+import * as BrowserSkill from './BrowserSkill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(ChatContextHandlers, MarkdownOperationHandlerSet.handlers),
+  operationHandlers: OperationHandlerSet.merge(ChatContextSkill.Handlers, MarkdownOperationHandlerSet.handlers),
   types: [Skill.Skill, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection, Feed.Feed],
   skills: [BrowserSkill.make(), MarkdownSkill.make(), ChatContextSkill.make()],
   tracing: 'pretty',

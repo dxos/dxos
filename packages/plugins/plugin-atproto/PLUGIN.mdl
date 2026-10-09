@@ -15,8 +15,8 @@ publish/sync status, and reconciles records (publish / re-publish / unpublish) o
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `test`      | `org.dxos.mdl.test@1.0`        |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -66,14 +66,14 @@ feat F-4: PDS browser
 ## Acceptance
 
 ```mdl
-test T-1: Companion visibility
+scenario T-1: Companion visibility
   given: an object whose type is atproto-annotated
   when: the space has no atproto connection
   then: no publishing companion is offered
   when: an atproto connection is added to the space
   then: the publishing companion is offered
 
-test T-2: Publish then detect drift (against the mock repo)
+scenario T-2: Publish then detect drift (against the mock repo)
   given: an atproto-annotated object and a mock AtprotoRepo
   when: the object is published
   then: an AtprotoPublication exists and status is Published (in sync)
@@ -82,7 +82,7 @@ test T-2: Publish then detect drift (against the mock repo)
   when: the object is unpublished
   then: the record is gone from the repo and no AtprotoPublication remains
 
-test T-3: Browse and import (storybook, mock repo)
+scenario T-3: Browse and import (storybook, mock repo)
   given: a space with an atproto connection and a mock repo holding a mapped and an unmapped collection
   then: the PDS browser marks the mapped collection and shows both
   when: a record in the mapped collection is selected
@@ -93,16 +93,16 @@ test T-3: Browse and import (storybook, mock repo)
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 There is no `Operation` module in this plugin — `publish` / `unpublish` / `import` are called
 directly from the companion's own UI handlers (`publish.ts`, `PdsBrowser.tsx`), not through the
-operation invoker. Every step below is therefore human-only; a flow containing them cannot
+operation invoker. Every step below is therefore human-only; a test containing them cannot
 declare `actors: agent`.
 
 ```mdl
-flow QA-1: Publish an object, detect drift, unpublish
+test QA-1: Publish an object, detect drift, unpublish
   desc: The core publish/reconcile round-trip against a real PDS account.
   actors: human
   covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-3.3, F-3.4, F-3.5, T-2]
@@ -114,7 +114,7 @@ flow QA-1: Publish an object, detect drift, unpublish
       this is an external-service dependency the debug port cannot fabricate
     - an object exists whose type carries an AtprotoRecordAnnotation (e.g. a Bluesky post draft)
       and is not currently published
-  test:
+  steps:
     - name: Open the publishing companion
       do: Select the annotated object; open its "Publish" companion panel.
       expect: the panel lists the object's fields with globe/lock markers and status reads "Not published"
@@ -137,7 +137,7 @@ flow QA-1: Publish an object, detect drift, unpublish
 ```
 
 ```mdl
-flow QA-2: Browse the PDS and import a record
+test QA-2: Browse the PDS and import a record
   desc: The read side — list collections and records on the connected PDS, import one as an ECHO object.
   actors: human
   covers: [F-4.1, F-4.2, F-4.3, F-4.4, F-4.5, F-4.6, T-3]
@@ -146,7 +146,7 @@ flow QA-2: Browse the PDS and import a record
     - an identity exists
     - space: a space is open, with an atproto Connection to a real PDS account
     - the account's repo holds at least one record in a collection this app has a schema mapping for
-  test:
+  steps:
     - name: Open the PDS browser
       do: In the navigation system section, click the "PDS" node (visible only with a connection present).
       expect: an account selector shows the connection, defaulted to the first, and the repo's

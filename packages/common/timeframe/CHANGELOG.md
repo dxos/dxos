@@ -1,5 +1,35 @@
 # @dxos/timeframe
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [967b130]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [9d2466a]
+- Updated dependencies [56276cd]
+- Updated dependencies [e8088ea]
+- Updated dependencies [1a3de22]
+- Updated dependencies [4da1052]
+  - @dxos/util@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

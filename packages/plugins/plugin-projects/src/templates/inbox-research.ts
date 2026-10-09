@@ -11,12 +11,12 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { makeRoutine } from '@dxos/plugin-routine';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 import { ProjectCapabilities } from '#types';
 
-import { scaffoldProject } from './scaffold';
+import { scaffoldProject } from './scaffold.ts';
 
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.
@@ -74,7 +74,7 @@ export const inboxResearch: ProjectCapabilities.Template = {
       // The routine runs headless (`RunInstructions`), so everything it needs is on its own
       // instructions: the project ref as context (to file the table into the artifacts) and the
       // table + project skills. The message itself arrives as the trigger input.
-      const routine = makeRoutine({
+      const routine = Wire.makeRoutine({
         name: 'Sender Ledger',
         instructions: Instructions.make({
           name: 'Sender Ledger',

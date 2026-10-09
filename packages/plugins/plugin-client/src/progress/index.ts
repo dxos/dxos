@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './progress-keys';
-export * from './space-sync-progress';
+export * from './progress-keys.ts';
+export * from './space-sync-progress.ts';

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { type WatchSupervisorOptions, runWatchSupervisor } from '../commands/mcp/watch';
+import { type WatchSupervisorOptions, runWatchSupervisor } from '../commands/mcp/watch.ts';
 
 /**
  * Runs the MCP watch supervisor against a stub server so `watch.test.ts` can exercise both reload
