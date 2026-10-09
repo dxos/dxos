@@ -75,7 +75,12 @@ export type DigestRow = {
   base?: number;
 };
 
-type Group = { stage: string; realm: string; base: Map<string, FunctionCost>; candidate: Map<string, FunctionCost> };
+export type Group = {
+  stage: string;
+  realm: string;
+  base: Map<string, FunctionCost>;
+  candidate: Map<string, FunctionCost>;
+};
 
 /** Mean costs per stage and realm for each arm, from the results directories of each arm's runs. */
 export const groupCosts = (
@@ -129,4 +134,35 @@ export const digestRows = (groups: ReadonlyArray<Group>, comparing: boolean, lim
   );
   const weight = (row: DigestRow) => (comparing ? Math.abs(row.candidate - (row.base ?? 0)) : row.candidate);
   return rows.sort((left, right) => weight(right) - weight(left)).slice(0, limit);
+};
+
+/**
+ * A function's name and file, without line or chunk: a dev server's capture and a production
+ * scenario's profiles name the same function the same way only at this grain.
+ */
+export const functionIdentity = ({ label, source }: Pick<FunctionCost, 'label' | 'source'>): string => {
+  const [name, location = ''] = label.split(' ');
+  const file = (source ?? location.split(':')[0]).split('/').pop() ?? '';
+  return file ? `${name}@${file}` : name;
+};
+
+/** The functions with the most self time across every stage and realm, natives and idle frames excluded. */
+export const topFunctions = (
+  groups: ReadonlyArray<Group>,
+  limit: number,
+): Array<{ identity: string; selfMs: number }> => {
+  const totals = new Map<string, number>();
+  for (const { candidate } of groups) {
+    for (const cost of candidate.values()) {
+      if (cost.label.startsWith('(') || !cost.label.includes(' ')) {
+        continue;
+      }
+      const identity = functionIdentity(cost);
+      totals.set(identity, (totals.get(identity) ?? 0) + cost.selfMs);
+    }
+  }
+  return [...totals]
+    .map(([identity, selfMs]) => ({ identity, selfMs }))
+    .sort((left, right) => right.selfMs - left.selfMs)
+    .slice(0, limit);
 };

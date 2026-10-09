@@ -201,3 +201,41 @@ the changed files spent there at base. That is usually skipped work or a moved w
 
 `pnpm perf run --snapshots idle,end` takes heap snapshots (they perturb every later stage), and
 `pnpm perf summarize --heap` prints their composition through `scripts/memory/perf-snapshot-report.mjs`.
+
+### From a field report to a scenario
+
+A report says "it is slow when I do X". The projects flow may not do X, so the report needs its
+own reproduction before anyone can tell whether a fix helped. That reproduction is a scenario: a
+spec under `composer-app/src/playwright/scenarios/` with its own flow name, fixture, stages and
+(once calibrated) budgets, built and served like the projects flow.
+
+```bash
+pnpm perf capture --attach 9222 --seconds 30     # profile the app that showed it, every realm
+pnpm perf scenario new reload-populated --reproduces '<what the report said>'
+pnpm perf run --scenario reload-populated -n 1    # does it run, and is the symptom in the numbers?
+pnpm perf scenario check reload-populated --capture <capture run>
+pnpm perf compare --base main --scenario reload-populated --metric 'wall > first-answer'
+```
+
+`capture` attaches to any browser with a debugging port (a dev server tab, a preview, the desktop
+app) and keeps the same per-realm profiles a measured run keeps, so `summarize` reads both.
+`scenario new` writes a spec around `defineScenario` (`perf/scenario.ts`): a fixture built outside
+every stage, then one stage per step of the report.
+
+`scenario check` is the bar before anyone hillclimbs on a scenario:
+
+- **Stable**: an A/A run of the scenario makes no false call.
+- **Sensitive**: a known slowdown (`DX_PERF_INJECT`, busy main thread) is called a regression. By
+  default it goes into the wall-time stage the A/A run measured most tightly, sized past that
+  stage's threshold plus its interval width, so the size printed is about the smallest this
+  scenario sees at that round count. Injected rows are never published.
+- **Faithful**: given a capture, at least half of the capture's top functions by self time are
+  among the scenario's hot functions. A scenario that is fast and stable but spends its time
+  elsewhere reproduces some other problem.
+
+A scenario that reloads or navigates sets `navigates: true`, which leaves the coordinator shared
+worker unattached: an inspector session keeps it alive through the navigation, and the reloaded tab
+then never starts.
+
+Scenarios run only when asked (`--scenario` sets `DX_PERF_SCENARIOS`), so adding one never
+lengthens the nightly. Registering one there is its own change, once it passes `check`.

@@ -235,6 +235,9 @@ const attach = async (info: TargetInfo): Promise<Attached | undefined> => {
   }
 };
 
+/** Which of the measured targets a run attaches to. */
+export type TargetFilter = (target: TargetInfo) => boolean;
+
 /**
  * Reconciles the attached set against the targets that exist now, keeping live sessions open.
  *
@@ -243,8 +246,12 @@ const attach = async (info: TargetInfo): Promise<Attached | undefined> => {
  * the SET must still be refreshed: a shared worker can start, hibernate or be replaced mid-flow,
  * and one that appears during stage 2 has to be measured for stage 3.
  */
-export const refreshTargets = async (port: number, attached: Attached[]): Promise<Attached[]> => {
-  const targets = await listTargets(port);
+export const refreshTargets = async (
+  port: number,
+  attached: Attached[],
+  include: TargetFilter = () => true,
+): Promise<Attached[]> => {
+  const targets = (await listTargets(port)).filter(include);
   const live = new Set(targets.map((target) => target.id));
 
   const kept: Attached[] = [];
@@ -270,7 +277,8 @@ export const refreshTargets = async (port: number, attached: Attached[]): Promis
 };
 
 /** First attachment for a run. */
-export const attachAll = (port: number): Promise<Attached[]> => refreshTargets(port, []);
+export const attachAll = (port: number, include?: TargetFilter): Promise<Attached[]> =>
+  refreshTargets(port, [], include);
 
 /** Closes every session in the set; the run's own teardown. */
 export const detachAll = (attached: Attached[]): void => {
