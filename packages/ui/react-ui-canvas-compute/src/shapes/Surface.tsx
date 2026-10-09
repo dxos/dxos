@@ -24,7 +24,7 @@ export const SurfaceComponent = ({ node: shape }: ComputeNodeViewProps<SurfaceSh
       {/* No card until the input has a value: an empty one is a bare frame with nothing in it. */}
       {value !== null && (
         // The shape's frame already frames it, so the card fills the body without a border of its own.
-        <Card.Root grid border={false} classNames='grow min-h-0'>
+        <Card.Root grid border={false} classNames='dx-grow'>
           <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />
         </Card.Root>
       )}
