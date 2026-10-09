@@ -22,6 +22,7 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
       status: response.status,
       isRetryable: body.data == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
+      status: response.status,
       cause: body.error ? ErrorCodec.decode(body.error) : undefined,
     });
 
@@ -34,6 +35,7 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
       status: response.status,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
+      status: response.status,
       cause: await EdgeHttpErrorCodec.decode(response),
     });
   }
@@ -51,6 +53,8 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
   readonly status?: number;
   readonly isRetryable?: boolean;
   readonly retryAfterMs?: number;
+  /** HTTP status of the response, absent when no response arrived (a network or client-side failure). */
+  readonly status?: number;
 
   constructor(args: {
     message: string;
@@ -58,12 +62,14 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
     data?: EdgeErrorData;
     status?: number;
     retryAfterMs?: number;
+    status?: number;
     cause?: Error;
   }) {
     super({ message: args.message, cause: args.cause });
     this.data = args.data;
     this.status = args.status;
     this.retryAfterMs = args.retryAfterMs;
+    this.status = args.status;
     this.isRetryable = Boolean(args.isRetryable);
   }
 }

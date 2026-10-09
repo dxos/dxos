@@ -15,7 +15,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
-import { getDelivery, isUnread } from '../../types.ts';
+import { type DeliveryStatus, getDelivery, isUnread } from '../../types.ts';
 import { formatTime } from './format-time.ts';
 
 //
@@ -108,12 +108,13 @@ export type MessageToolbarProps = Util.ThemedClassName<{
 export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const { onRewind } = useMessageChromeContext('PromptToolbar');
+  const delivery = getDelivery(message);
 
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       {/* Nothing to rewind to until the agent has taken the prompt up: it is not in the history yet. */}
-      {onRewind && !isUnread(getDelivery(message)) && (
+      {onRewind && !isUnread(delivery) && (
         <Button.Root
           icon='ph--clock-counter-clockwise--regular'
           iconOnly
@@ -125,6 +126,19 @@ export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps)
         />
       )}
       <Time message={message} />
+      {/* A queued prompt the agent has not taken up can still be withdrawn; one it has, cannot. The
+          thread's delegated `data-action` listener turns the click into a `remove-prompt` event. */}
+      {isRemovable(delivery) && (
+        <button
+          type='button'
+          className='underline underline-offset-2 hover:text-fg-default'
+          data-action='remove'
+          data-value={message.id}
+          data-testid='chat.remove'
+        >
+          {t('delivery-remove.label')}
+        </button>
+      )}
       <MessageId message={message} />
     </div>
   );
@@ -172,6 +186,42 @@ const Stats = ({ classNames, message }: Util.ThemedClassName<{ message: Message.
 };
 
 Stats.displayName = 'Stats';
+
+//
+// Delivery
+//
+
+const DELIVERY_ICONS: Record<DeliveryStatus, string> = {
+  sent: 'ph--check--regular',
+  delivered: 'ph--checks--regular',
+  read: 'ph--checks--bold',
+  failed: 'ph--warning-circle--regular',
+};
+
+const isRemovable = (status: DeliveryStatus | undefined): boolean => status === 'failed' || status === 'delivered';
+
+/**
+ * The ticks of a prompt still on its way to the agent, straddling the bubble's bottom edge: out of
+ * flow, so a prompt carries no extra line for them and moving from sent to read never moves a row.
+ */
+const Delivery = ({ status }: { status: DeliveryStatus }) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const label = t(`delivery-${status}.label`);
+  return (
+    // An SVG takes no `title`, so the hover tooltip rides on a wrapper.
+    <span
+      className={mx(
+        'absolute end-1.5 -bottom-2 flex',
+        status === 'failed' ? 'text-error-text' : status === 'read' ? 'text-accent-text' : 'text-fg-subtle',
+      )}
+      title={label}
+      data-testid='chat.delivery'
+      data-delivery={status}
+    >
+      <Icon.Icon icon={DELIVERY_ICONS[status]} size='md' label={label} />
+    </span>
+  );
+};
 
 //
 // Context
@@ -263,6 +313,7 @@ const hasToolbar = (message: Message.Message): boolean =>
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
   const { streaming, userHue } = useMessageChromeContext(MESSAGE_CHROME_NAME);
   const prompt = isPrompt(message);
+  const delivery = prompt ? getDelivery(message) : undefined;
 
   return (
     <Row classNames={mx(selected && 'bg-hover-surface')} streaming={streaming}>
@@ -274,13 +325,16 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
                 relative timestamp changing width ("just now" → "1 minute ago") resized the bubble. */}
             <div
               className={mx(
-                'w-fit max-w-full ms-auto px-3 py-2 border-s-2 rounded-sm bg-input-surface',
+                'relative w-fit max-w-full ms-auto px-3 py-2 border-s-2 rounded-sm bg-input-surface',
                 userHue ? getStyles(userHue).border : 'border-accent-bg',
               )}
             >
               {children}
+              {delivery && <Delivery status={delivery} />}
             </div>
-            <PromptToolbar classNames={promptReveal} message={message} />
+            {/* A removable prompt keeps its toolbar shown: it waits behind a streaming answer, which
+                otherwise hides the toolbar, and remove is the one control it needs then. */}
+            <PromptToolbar classNames={isRemovable(delivery) ? 'justify-end pt-1' : promptReveal} message={message} />
           </div>
         </div>
       ) : (

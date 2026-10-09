@@ -15,7 +15,7 @@ across them, relays messages between people and watches facts for the people who
 
 - [x] **Agent plugin** — Agent article, Discord binding, bot status, skills (conversation, modes, relay, goals, interview, note-taker).
 - [x] **EDGE Discord bot** — `DiscordBot` Durable Object, gateway, inbox, thread ↔ chat mapping, mention gating (dxos/edge#1226).
-- [x] **Facts** — `readSource` reads documents and chats into per-source annotation feeds (pipeline-rdf shape); recall over facts.
+- [x] **Facts** — `readSource` reads documents and chats into the agent's brain (pipeline-rdf shape); recall over facts.
 - [x] **Goals and watches** — `watchFacts` (one-time and ongoing), in-memory trigger registry, end-of-turn `runTriggers`, updates composed under `RELAY_RULES`.
 - [x] **Stories** — AgentPlayground (scripted keep-me-posted exchange, Goals), AgentConversation (live, turn by turn).
 - [x] **Publish** — plugin-agent public; `ProfileOf` moved to `@dxos/types`; plugin-crm private again.
@@ -55,7 +55,8 @@ in-memory trigger registry ("durable triggers").
 - [x] **M1 Goal compilation spike** — Datalog confirmed; 6/8 goals compile reliably on Sonnet; replay (not read-back) catches miscompiles. Findings in BRAIN.md "M1 findings".
 - [x] **Engine and brain packages** — `@dxos/datalog` and `@dxos/brain` (public; 0.0.1 placeholders on npm, set up trusted publishing before 0.12.0); `CompilePrompt`; the eight scenarios as tests; GoalCompiler story.
 - [x] **pipeline-rdf as the common type** — `RDF.Vocab` / `RDF.Mapping` / `RDF.Predicate` exported; illocution kept in the RDF mapping; `Term` tagged (`kind`) so facts store in ECHO; `pass` on `Fact`; `FactTuple` removed.
-- [ ] **One feed item per fact** — `FactEntry { fact }` (0.2.0, no migration: chats re-read) with extraction-pass markers for atomicity and resume; `forgetFact`. In progress.
+- [x] **Facts only in the brain** — no `FactEntry`/`ExtractionPass` in ECHO; the chat read cursor moves with the facts (`PushOptions.read`, `readThrough`); EDGE's `BrainObject` needs the same two (dxos/edge follow-up).
+- [ ] **Forget a fact** — a `BrainService` removal (the ECHO `forgetFact` went with the feeds).
 - [ ] **Goal state in the index** — project `goal(G, owner|status|priority, …)`, `subgoal(P, C)` and task links as derived facts (BRAIN.md "State").
 - [ ] **M2 Facts and goals, in-process** — one fact per feed item; hierarchical `Goal` directives with feeds; Datalog engine; judgment in the session's private thread.
 - [ ] **M3 Brain on EDGE** — Durable Object per agent: follows feeds, wake rules, alarms, background sessions per actor; agent service routing.
