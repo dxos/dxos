@@ -82,7 +82,7 @@ export const translations = [
         'agent-state-memories.label': 'Memories',
         'agent-state-memories.description': '{{active}} active · {{expired}} expired',
         'agent-state-facts.label': 'Facts',
-        'agent-state-facts.description': 'read from {{sources}} sources',
+        'agent-state-facts.description': 'said by {{speakers}} speakers',
         'agent-state-goals.label': 'Goals',
         'agent-state-goals.description': '{{confirmed}} confirmed · {{proposed}} proposed',
         'agent-state-people.label': 'People',

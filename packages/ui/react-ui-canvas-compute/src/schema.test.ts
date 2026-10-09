@@ -7,26 +7,21 @@ import { describe, test } from 'vitest';
 
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import {
-  CanvasBoard,
-  CanvasGraphModel,
-  Polygon,
-  createEllipse,
-  createPath,
-  createRectangle,
-  isPath,
-  isPolygon,
-} from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createFunction, createSwitch } from './shapes/index.ts';
+import { ComputeShape, createReducer, createSwitch } from './shapes/index.ts';
+import { CanvasBoard, CanvasGraphModel } from './types/index.ts';
 
 describe('compute', () => {
+  test('a reducer keeps the id it is created with', ({ expect }) => {
+    const reducer = createReducer({ id: 'reducer-1', center: { x: 0, y: 0 } });
+    expect(reducer.id).toBe('reducer-1');
+  });
+
   test('model', ({ expect }) => {
     const model = CanvasGraphModel.create<ComputeShape>();
     const node = createSwitch({ id: 'x', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } });
     console.log(JSON.stringify(node, null, 2));
     expect(Schema.is(ComputeShape)(node)).toBe(true);
-    expect(Schema.is(Polygon)(node)).toBe(true);
     expect(Schema.is(CanvasBoard.Shape)(node)).toBe(true);
     expect(Schema.is(GraphNode.GraphNode)(node)).toBe(true);
 
@@ -35,29 +30,5 @@ describe('compute', () => {
 
     model.createNode(node);
     console.log(JSON.stringify(model, null, 2));
-  });
-});
-
-describe('schema', () => {
-  test('basic types', ({ expect }) => {
-    const shapes: CanvasBoard.Shape[] = [];
-    shapes.push(createRectangle({ id: 'shape-1', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } }));
-    shapes.push(createEllipse({ id: 'shape-2', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } }));
-    shapes.push(createFunction({ id: 'shape-3', center: { x: 0, y: 0 } }));
-    shapes.push(
-      createPath({
-        id: 'shape-4',
-        points: [
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-        ],
-      }),
-    );
-
-    const polygons = shapes.filter((shape) => isPolygon(shape)).map((shape) => shape.center);
-    expect(polygons).to.have.length(3);
-
-    const paths = shapes.filter((shape) => isPath(shape)).map((shape) => shape.path);
-    expect(paths).to.have.length(1);
   });
 });

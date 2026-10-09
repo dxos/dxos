@@ -294,6 +294,39 @@ describe('TriggerManager', () => {
   );
 
   it.effect(
+    'invokeTrigger refuses a disabled trigger without dispatching it',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const local = Trigger.make({ runnable: Ref.make(functionObj), enabled: false, spec: Trigger.specDirect() });
+        const remote = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: false,
+          remote: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(local);
+        yield* Database.add(remote);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const registry = yield* Registry.AtomRegistry;
+        yield* withMonitor((monitor) =>
+          Effect.gen(function* () {
+            for (const trigger of [local, remote]) {
+              const error = yield* Effect.flip(monitor.invokeTrigger({ trigger, event: { data: {} } }));
+              expect(error).toBeInstanceOf(Trigger.TriggerDisabledError);
+            }
+
+            expect(remoteInvocations).toEqual([]);
+            expect(registry.get(dispatcher.state).invocations).toEqual([]);
+          }),
+        );
+      },
+      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
+    ),
+  );
+
+  it.effect(
     'reactively re-derives state when the dispatcher changes',
     Effect.fnUntraced(function* ({ expect }) {
       const dispatcher = yield* TriggerDispatcher;

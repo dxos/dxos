@@ -20,15 +20,15 @@ import { AccessToken } from '@dxos/link';
 import * as EdgeAgent from '@dxos/plugin-code/EdgeAgent';
 import { Message, Outline, Repo, TaskSet } from '@dxos/types';
 
-import { anthropicCredential } from '../capabilities/claude-code-edge-agent.ts';
+import { credentials } from '../capabilities/claude-code-edge-agent.ts';
 import { CLAUDE_CODE_EDGE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
 import { OAUTH_TOKEN, TURN_TIMEOUT, turn } from './harness.ts';
 
 /**
  * End to end, remote: a chat on Claude Code (cloud) runs its turns on an EDGE stack started locally
  * (`wrangler dev`, with the sandbox's container on local Docker), through `EdgeAgent` and EDGE's
- * process routes, exactly as the app does. Each turn lends the space's subscription token, which EDGE
- * holds and proxies; the container never receives it.
+ * process routes, exactly as the app does. Each turn lends the space's subscription token, and its GitHub
+ * token where a test connects one, as the environment the agent runs with in the container.
  *
  * `DX_E2E_EDGE_URL` names the stack, as the container reaches it (on Docker, `http://172.17.0.1:8787`):
  * the process hands the container its own origin to call back on. With `DX_E2E_EDGE_FAKE_AGENT=1` the
@@ -37,6 +37,8 @@ import { OAUTH_TOKEN, TURN_TIMEOUT, turn } from './harness.ts';
 
 const EDGE_URL = process.env.DX_E2E_EDGE_URL ?? '';
 const FAKE_AGENT = process.env.DX_E2E_EDGE_FAKE_AGENT === '1';
+/** A GitHub token that can push to and open pull requests on dxos/dxos and dxos/edge. */
+const GITHUB_TOKEN = process.env.DX_E2E_GITHUB_TOKEN ?? '';
 
 /** The process routes of the local stack, with no identity: it runs with `functions.noAuth`. */
 const control = EdgeAgent.fromRemoteControl(EdgeProcessControl.make(() => new EdgeHttpClient(EDGE_URL)));
@@ -46,8 +48,7 @@ const options: EdgeAgent.Options = {
     id: CLAUDE_CODE_EDGE_AGENT,
     label: 'Claude Code (cloud)',
     icon: 'px--anthropic--regular',
-    credential: anthropicCredential,
-    gitCredential: EdgeAgent.githubCredential,
+    credentials,
   },
   control: () => control,
 };
@@ -112,8 +113,8 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
           const { rpc } = yield* processOf(chat);
           const state = yield* rpc.getState();
           expect(state.status).toBe('ready');
-          // Lent for the turn and held by EDGE, which proxies the agent's calls with it.
-          expect(state.hasCredential).toBe(OAUTH_TOKEN.length > 0);
+          // Lent for the turn as the environment the agent runs with; EDGE reports only the names it holds.
+          expect(state.credentials).toEqual(OAUTH_TOKEN.length > 0 ? ['CLAUDE_CODE_OAUTH_TOKEN'] : []);
         },
         Effect.scoped,
         Effect.provide(TestLayer),
@@ -164,7 +165,7 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
     );
 
     it.live.skipIf(FAKE_AGENT)(
-      "works in the project's repositories, checked out in the sandbox through EDGE's git proxy",
+      "works in the project's repositories, checked out in the sandbox",
       Effect.fnUntraced(
         function* (_) {
           const repo = yield* Database.add(Repo.make({ owner: 'octocat', name: 'Hello-World' }));
@@ -183,5 +184,84 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
       ),
       { timeout: TURN_TIMEOUT + 120_000 },
     );
+
+    it.live.skipIf(FAKE_AGENT || !GITHUB_TOKEN)(
+      "clones a public and a private repository with the space's GitHub token, and opens a pull request in each",
+      Effect.fnUntraced(
+        function* (_) {
+          // As a person connects GitHub and lists the repositories on the project.
+          yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: GITHUB_TOKEN }));
+          const repos = yield* Effect.forEach(PR_REPOS, (name) => Database.add(Repo.make({ owner: 'dxos', name })));
+          const project = yield* Database.add(Project.make({ repositories: repos.map((repo) => Ref.make(repo)) }));
+          const { chat, session } = yield* setup();
+          Obj.setParent(chat, project);
+
+          const branch = `e2e/coding-agent-${Date.now()}`;
+          yield* Effect.addFinalizer(() => closePullRequests(branch));
+          const reply = yield* turn(
+            session,
+            [
+              `In each of the directories ${PR_REPOS.map((name) => `\`${name}\``).join(' and ')} under the current directory:`,
+              `create a branch named \`${branch}\` from the checked-out branch;`,
+              'add a file `.e2e/coding-agent.md` containing the single line `Written by the coding-agent e2e test.`;',
+              'commit it, push the branch to `origin`,',
+              `and open a draft pull request for it with \`gh pr create --draft --title "[e2e] coding agent" --body "Opened by the coding-agent e2e test; closed by it." --head ${branch}\`.`,
+              'Reply with the URL of each pull request, one per line, and nothing else.',
+            ].join(' '),
+            PR_TURN_TIMEOUT,
+          );
+
+          for (const name of PR_REPOS) {
+            const pulls = yield* github(`/repos/dxos/${name}/pulls?state=open&head=dxos:${branch}`);
+            expect(pulls, `dxos/${name} has the pull request`).toHaveLength(1);
+            expect(pulls[0]).toMatchObject({ draft: true, title: '[e2e] coding agent' });
+            expect(reply).toContain(pulls[0].html_url);
+          }
+        },
+        Effect.scoped,
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: PR_TURN_TIMEOUT + 120_000 },
+    );
   },
 );
+
+/** dxos/dxos is public and dxos/edge private, so the run covers an anonymous-readable and a token-only clone. */
+const PR_REPOS = ['dxos', 'edge'];
+
+/** Cloning dxos/dxos and working in two repositories takes well beyond an ordinary turn. */
+const PR_TURN_TIMEOUT = 15 * 60_000;
+
+type PullRequest = { number: number; html_url: string; draft: boolean; title: string };
+
+/** The GitHub REST API, as the test's own check on what the agent did. */
+const github = (path: string, init: RequestInit = {}): Effect.Effect<PullRequest[]> =>
+  Effect.promise(async () => {
+    const response = await fetch(`https://api.github.com${path}`, {
+      ...init,
+      headers: { authorization: `Bearer ${GITHUB_TOKEN}`, accept: 'application/vnd.github+json', ...init.headers },
+    });
+    if (!response.ok && response.status !== 422 && response.status !== 404) {
+      throw new Error(`GitHub ${init.method ?? 'GET'} ${path}: ${response.status}`);
+    }
+    return response.status === 204 || init.method ? [] : response.json();
+  });
+
+/** Closes whatever the agent opened on the branch and deletes the branch, so a run leaves nothing behind. */
+const closePullRequests = (branch: string): Effect.Effect<void> =>
+  Effect.forEach(
+    PR_REPOS,
+    (name) =>
+      Effect.gen(function* () {
+        const pulls = yield* github(`/repos/dxos/${name}/pulls?state=open&head=dxos:${branch}`);
+        yield* Effect.forEach(pulls, (pull) =>
+          github(`/repos/dxos/${name}/pulls/${pull.number}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ state: 'closed' }),
+          }),
+        );
+        yield* github(`/repos/dxos/${name}/git/refs/heads/${branch}`, { method: 'DELETE' });
+      }),
+    { discard: true },
+  ).pipe(Effect.orDie);

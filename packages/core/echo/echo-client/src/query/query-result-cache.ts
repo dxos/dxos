@@ -3,14 +3,28 @@
 //
 
 import { type Query, type QueryResult } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { WeakDictionary } from '@dxos/util';
 
 /**
  * Serializes a (scope-normalized) query into a stable cache key. Two calls that build the same
  * query AST share a key — and therefore a cached {@link QueryResult.QueryResult} — so the
  * per-instance `.atom` getter hands back the same atom over one underlying subscription.
+ * A `debugLabel` does not change what a query returns, so it is left out of the key.
  */
-export const serializeQueryKey = (query: Query.Any): string => JSON.stringify(query.ast);
+export const serializeQueryKey = (query: Query.Any): string =>
+  JSON.stringify(query.ast, (_key, node: unknown) => withoutDebugLabel(node));
+
+const withoutDebugLabel = (node: unknown): unknown => {
+  if (!isOptionsClause(node) || node.options.debugLabel === undefined) {
+    return node;
+  }
+  const { debugLabel: _, ...options } = node.options;
+  return Object.keys(options).length > 0 ? { ...node, options } : withoutDebugLabel(node.query);
+};
+
+const isOptionsClause = (node: unknown): node is QueryAST.QueryOptionsClause =>
+  typeof node === 'object' && node !== null && 'type' in node && node.type === 'options';
 
 /**
  * Caches {@link QueryResult.QueryResult} instances keyed by serialized query AST so that repeated

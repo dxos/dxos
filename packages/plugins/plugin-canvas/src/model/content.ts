@@ -12,6 +12,8 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  DEFAULT_LAYER,
+  Layer,
   LINE_STYLES,
   Link,
   type Node,
@@ -22,7 +24,9 @@ import {
   type SceneMap,
   StyleClass,
   type StyleMap,
+  elementLayer,
   isPortalNode,
+  sortByZ,
 } from '@dxos/react-ui-canvas/scene';
 
 /**
@@ -54,6 +58,8 @@ export const SceneRecord = Schema.Struct({
   kind: Schema.Literal('scene'),
   id: Schema.String,
   name: Schema.optional(Schema.String),
+  /** The scene's layers, kept with it since they are few and change together. */
+  layers: Schema.optional(Schema.Record(Schema.String, Layer)),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -149,6 +155,76 @@ export const migrateContent = (content: ContentMap): boolean => {
       }
     } else if (isLinkRecord(record) && record.scene === LEGACY_ROOT_SCENE_ID) {
       content[key] = { ...clone(record), scene: ROOT_SCENE_ID } satisfies LinkRecord;
+    }
+  }
+  return true;
+};
+
+/** Each scene's layers, bottom first, as the engine reads them: a scene record naming none has the default one. */
+const layersByScene = (content: ContentMap): Map<SceneId, Layer[]> => {
+  const layers = new Map<SceneId, Layer[]>();
+  for (const value of Object.values(content)) {
+    const record: unknown = value;
+    if (isSceneRecord(record)) {
+      const named = sortByZ(Object.values(record.layers ?? {}));
+      layers.set(record.id, named.length > 0 ? named : [DEFAULT_LAYER]);
+    }
+  }
+  return layers;
+};
+
+/** The element record's element with its layer named: the one it is drawn on (`elementLayer`). */
+const placed = (record: ElementRecord, layers: readonly Layer[]): ElementRecord | undefined => {
+  const element = record.kind === 'node' ? record.node : record.link;
+  const layer = elementLayer(element, layers);
+  if (element.layer === layer) {
+    return undefined;
+  }
+  return record.kind === 'node'
+    ? { ...clone(record), node: { ...clone(record.node), layer } }
+    : { ...clone(record), link: { ...clone(record.link), layer } };
+};
+
+/**
+ * Whether the content was saved before layers, or has an element on a layer its scene does not have, so
+ * `migrateLayers` would change it.
+ */
+export const hasUnplacedLayers = (content: ContentMap): boolean => {
+  const layers = layersByScene(content);
+  return Object.values(content).some((value) => {
+    const record: unknown = value;
+    if (isSceneRecord(record)) {
+      return Object.keys(record.layers ?? {}).length === 0;
+    }
+    if (isElementRecord(record)) {
+      const scene = layers.get(record.scene);
+      return scene !== undefined && placed(record, scene) !== undefined;
+    }
+    return false;
+  });
+};
+
+/**
+ * Names every scene's layers and every element's layer in place, so what the panels show is what is stored: a scene
+ * with none gets the default layer, and an element with none (or one its scene lacks) the layer it is drawn on, the
+ * bottom one. Without it an element naming no layer follows whichever layer is at the bottom, so adding a layer there
+ * would take it. Returns whether anything changed.
+ */
+export const migrateLayers = (content: ContentMap): boolean => {
+  if (!hasUnplacedLayers(content)) {
+    return false;
+  }
+  const layers = layersByScene(content);
+  for (const [key, value] of Object.entries(content)) {
+    const record: unknown = value;
+    if (isSceneRecord(record) && Object.keys(record.layers ?? {}).length === 0) {
+      content[key] = { ...clone(record), layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } } satisfies SceneRecord;
+    } else if (isElementRecord(record)) {
+      const scene = layers.get(record.scene);
+      const next = scene && placed(record, scene);
+      if (next) {
+        content[key] = next;
+      }
     }
   }
   return true;
@@ -324,7 +400,13 @@ export const readScenes = (content: ContentMap): SceneMap => {
   }
   const scenes: Record<SceneId, Scene> = {};
   for (const header of Object.values(headers)) {
-    scenes[header.id] = { id: header.id, name: header.name, nodes: nodes[header.id], links: links[header.id] };
+    scenes[header.id] = {
+      id: header.id,
+      name: header.name,
+      nodes: nodes[header.id],
+      links: links[header.id],
+      ...(header.layers ? { layers: clone(header.layers) } : {}),
+    };
   }
   return scenes;
 };
@@ -340,7 +422,12 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
 
   for (const scene of Object.values(scenes)) {
     const key = sceneKey(scene.id);
-    const record: SceneRecord = { kind: 'scene', id: scene.id, ...(scene.name ? { name: scene.name } : {}) };
+    const record: SceneRecord = {
+      kind: 'scene',
+      id: scene.id,
+      ...(scene.name ? { name: scene.name } : {}),
+      ...(scene.layers ? { layers: clone(scene.layers) } : {}),
+    };
     if (!same(content[key], record)) {
       content[key] = record;
       changed = true;

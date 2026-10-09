@@ -28,7 +28,6 @@ import {
   AgentOperation,
   BrainService,
   ChatParticipant,
-  FactEntry,
   Goal,
   Memory,
   MemoryOperation,
@@ -43,7 +42,7 @@ import { TEST_MEMBERS, createLocalAgent, makeTestBrain, testSpaceLayer } from '.
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
-import { pushFacts } from './run-triggers.ts';
+import { pushFacts } from './deliver.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -316,8 +315,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Mode.Mode,
         Relay.Relay,
         Message.Message,
-        FactEntry.FactEntry,
-        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       extraServices: Layer.merge(brain.layer, testSpaceLayer),
@@ -325,6 +322,19 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
     }),
   ),
 );
+
+/** The quotes of the facts the agent's brain holds from a chat, in the order their messages were said. */
+const recordedQuotes = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat) {
+  const brainService = yield* BrainService.BrainService;
+  const feed = yield* Database.load(chat.feed);
+  const messages = [...(yield* Feed.query(feed, Filter.type(Message.Message)).run)].sort(
+    (left, right) => Feed.getPosition(left) - Feed.getPosition(right),
+  );
+  const facts = yield* Effect.forEach(messages, (message) =>
+    brainService.query(agent.id, { source: Obj.getURI(message) }),
+  );
+  return facts.flat().map(({ assertion }) => assertion.quote);
+});
 
 const texts = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
@@ -380,6 +390,7 @@ describe('end-of-turn triggers', () => {
         const dimaChat = yield* Database.load(dimaChatRef);
         yield* Database.flush();
         Object.assign(refs, { agent: Obj.getURI(agent), rich: Obj.getURI(rich) });
+        const feedsBefore = (yield* Database.query(Filter.type(Feed.Feed)).run).length;
 
         // 1. Rich asks; the watch is registered under a goal he owns, and nothing is sent yet.
         yield* say(richChat, 'Rich', PROMPTS.ask);
@@ -406,15 +417,9 @@ describe('end-of-turn triggers', () => {
         expect(brain.triggers.list(agent.id)).toEqual([]);
 
         // Each turn was read once, with the earlier one only as context: the chat's facts are the distractor's and
-        // the announcement's, never repeated.
-        const [annotations] = yield* Database.query(
-          Filter.and(
-            Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY }),
-            Filter.foreignKeys(Feed.Feed, [{ source: FactEntry.ANNOTATIONS_KEY, id: dimaChat.id }]),
-          ),
-        ).run;
-        const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entries.map(({ fact }) => fact.assertion.quote)).toEqual([PROMPTS.distractor, PROMPTS.up]);
+        // the announcement's, never repeated. They are in the brain only: the turns added no feed to the space.
+        expect(yield* recordedQuotes(agent, dimaChat)).toEqual([PROMPTS.distractor, PROMPTS.up]);
+        expect((yield* Database.query(Filter.type(Feed.Feed)).run).length).toBe(feedsBefore);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -593,8 +598,6 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Mode.Mode,
         Relay.Relay,
         Message.Message,
-        FactEntry.FactEntry,
-        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       extraServices: Layer.merge(brain.layer, testSpaceLayer),
@@ -602,19 +605,6 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
     }),
   ),
 );
-
-/** The quotes of the facts recorded from a chat, in the order they were read. */
-const recordedQuotes = (chat: Chat.Chat) =>
-  Effect.gen(function* () {
-    const [annotations] = yield* Database.query(
-      Filter.and(
-        Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY }),
-        Filter.foreignKeys(Feed.Feed, [{ source: FactEntry.ANNOTATIONS_KEY, id: chat.id }]),
-      ),
-    ).run;
-    const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-    return entries.map(({ fact }) => fact.assertion.quote);
-  });
 
 describe('keep me posted', () => {
   afterEach(() => {
@@ -722,7 +712,7 @@ describe('keep me posted', () => {
         expect(context).toContain(`Rich: ${POSTED.withMe}`);
         expect(fresh).toContain(`Dima: ${POSTED.start}`);
         expect(fresh).not.toContain(POSTED.withMe);
-        expect(yield* recordedQuotes(dimaChat)).toEqual([POSTED.withMe, POSTED.start]);
+        expect(yield* recordedQuotes(agent, dimaChat)).toEqual([POSTED.withMe, POSTED.start]);
 
         // (b) The composer was given the relay rules, Josiah's request, the earlier message and the new quote.
         const [compose, ...more] = postedPrompts.compose;

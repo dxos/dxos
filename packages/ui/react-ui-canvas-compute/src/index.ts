@@ -7,4 +7,4 @@ export * from './hooks/index.ts';
 export * from './registry.ts';
 export * from './scene/index.ts';
 export * from './shapes/index.ts';
-export * from './compute-layout.ts';
+export * from './types/index.ts';

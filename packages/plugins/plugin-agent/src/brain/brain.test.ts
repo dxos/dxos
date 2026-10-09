@@ -22,17 +22,7 @@ import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import {
-  AgentOperation,
-  ChatParticipant,
-  FactEntry,
-  Goal,
-  Memory,
-  Mode,
-  Relay,
-  type Trigger,
-  TriggerOperation,
-} from '#types';
+import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Relay, type Trigger, TriggerOperation } from '#types';
 
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
@@ -135,8 +125,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Mode.Mode,
         Relay.Relay,
         Message.Message,
-        FactEntry.FactEntry,
-        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
