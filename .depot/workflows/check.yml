@@ -360,7 +360,9 @@ jobs:
   # suites can provoke looks identical to an assertion failure from the outside).
   memory:
     needs: plan
-    if: ${{ needs.plan.outputs.memory == 'true' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ !cancelled() && inputs.only != 'e2e' &&
+      (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.memory == 'true')) }}
     permissions:
       contents: read
       packages: read
@@ -423,7 +425,6 @@ jobs:
     runs-on: depot-ubuntu-latest
     timeout-minutes: 10
     outputs:
-      browsers: ${{ steps.plan.outputs.browsers }}
       node: ${{ steps.plan.outputs.node }}
       browser: ${{ steps.plan.outputs.browser }}
       memory: ${{ steps.plan.outputs.memory }}
@@ -458,15 +459,15 @@ jobs:
   # 8 vCPU. Within each suite `moon exec --job N --job-total` partitions the targets by work. File
   # parallelism stays disabled — overloaded runners flake — so the win is concurrency across machines,
   # not within one. A suite the change does not affect is skipped, which branch protection reads as
-  # passing.
+  # passing, so a failed `plan` starts every cell rather than skipping them.
   #
   # Skipped on pushes to main: the merge queue already ran these targets on the same tree.
   test-node:
     name: test (node, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ needs.plan.outputs.node == 'true' && inputs.only != 'e2e' &&
-      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+      ${{ !cancelled() && inputs.only != 'e2e' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') &&
+      (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.node == 'true')) }}
     strategy:
       fail-fast: false
       matrix:
@@ -524,14 +525,14 @@ jobs:
           suite: node
           targets: ':test :test-workerd'
           shard: ${{ matrix.shard }}
-          of: 2
+          of: ${{ strategy.job-total }}
 
   test-browser:
     name: test (browser, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ needs.plan.outputs.browser == 'true' && inputs.only != 'e2e' &&
-      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+      ${{ !cancelled() && inputs.only != 'e2e' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') &&
+      (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.browser == 'true')) }}
     strategy:
       fail-fast: false
       matrix:
@@ -582,7 +583,7 @@ jobs:
           suite: browser
           targets: ':test-browser :test-storybook'
           shard: ${{ matrix.shard }}
-          of: 2
+          of: ${{ strategy.job-total }}
 
   # One cell per browser in each of two jobs: `e2e` runs composer, which dwarfs every other suite and is
   # CPU-bound on 8 vCPU; `e2e-rest` runs the rest of the pool on 4 vCPU. A cell costs ~160s of fixed

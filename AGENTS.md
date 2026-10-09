@@ -301,7 +301,8 @@ Deeper conventions:
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
-  skills. Always surface the Composer preview URL next to the PR link.
+  skills. A PR gets a Composer preview only with the `preview` label, added only on request; when it
+  has one, surface the preview URL next to the PR link.
 - **Every PR body is built from the `pr-description` skill's templates.** Summary
   and Safety always; Bugfix, Architecture (diagrams, new cross-component
   dependencies) and UI (screenshots, Autocue videos) whenever they apply, and

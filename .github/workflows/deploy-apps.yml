@@ -237,9 +237,10 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Composer version: $version (env=$ENVIRONMENT)"
 
-  # Publishes the triggering commit to pkg.pr.new, which the bundle's Composer Plugin template pins
-  # (`DX_PLUGIN_TOOLCHAIN_COMMIT` below); `main` itself publishes only once a day. Nothing waits on it,
-  # so a failed publish breaks that template in this build and nothing else.
+  # Publishes the triggering commit to pkg.pr.new, which the bundles' Composer Plugin template pins
+  # (`DX_PLUGIN_TOOLCHAIN_COMMIT` here and in deploy-tauri.yaml); `main` itself publishes only once a day.
+  # The deploy does not wait on it: a failed publish breaks that template in this build, and
+  # notify-prep-failure reports it.
   packages:
     needs: [plan]
     if: needs.plan.outputs.bundle == 'true'
@@ -465,8 +466,8 @@ jobs:
   # skips `deploy`, so its own failure ping never fires — and since preview successes are deliberately
   # silent, a silent broken preview deploy would read as a good one.
   notify-prep-failure:
-    needs: [plan, release, version, build-bundle]
-    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.release.result == 'failure' || needs.version.result == 'failure' || needs.build-bundle.result == 'failure') }}
+    needs: [plan, release, version, build-bundle, packages]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.release.result == 'failure' || needs.version.result == 'failure' || needs.build-bundle.result == 'failure' || needs.packages.result == 'failure') }}
     runs-on: ubuntu-latest
     continue-on-error: true
     env:
@@ -479,7 +480,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
-            '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed before deploying (release/version/build)\nRun: " + $url)}')
+            '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed before deploying (release/version/build/publish)\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # Desktop/mobile build for Composer — every environment ships a desktop app, so dogfooders on the

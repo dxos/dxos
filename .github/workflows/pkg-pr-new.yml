@@ -17,10 +17,10 @@ on:
   workflow_dispatch:
   workflow_call:
 
+# One group per commit: GitHub keeps a single pending run per group, so a shared group would let a
+# second deploy cancel the publish of a commit the first one's bundle already pins.
 concurrency:
-  group: pkg-pr-new-${{ github.ref }}
-  # Queue rather than cancel: a cancelled run uploads nothing, so the commit it was building stays
-  # un-installable for anything pinning pkg.pr.new.
+  group: pkg-pr-new-${{ github.sha }}
   cancel-in-progress: false
 
 env:
@@ -31,7 +31,23 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
+  # The 06:00 schedule and the 07:00 preview deploy often land on the same commit.
+  published:
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - id: check
+        run: |
+          if curl -sfIL -o /dev/null "https://pkg.pr.new/dxos/dxos/@dxos/compute@${GITHUB_SHA}"; then
+            echo "pkg.pr.new already serves ${GITHUB_SHA}."
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: published
+    if: needs.published.outputs.exists != 'true'
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

@@ -6,8 +6,9 @@
 
 // Decides which test and e2e cells a Check run starts, so a change that touches none of a suite's
 // targets starts none of its runners. Reads the affected scope the `affected` action exported: with
-// MOON_AFFECTED unset it is a full run and every cell starts. `--downstream deep` counts a task as
-// affected when anything it depends on changed. Any failure also starts every cell: skipping a suite
+// MOON_BASE unset it is a full run and every cell starts. `--downstream deep` counts a task as affected
+// when anything it depends on changed. A change to CI, toolchain or root config is an input of no task
+// yet changes how every test runs, so it starts every cell too, as does any failure: skipping a suite
 // that should have run is the one outcome this must never produce.
 
 import { execFileSync } from 'node:child_process';
@@ -15,6 +16,8 @@ import { appendFileSync } from 'node:fs';
 
 const NODE_TASKS = new Set(['test', 'test-workerd']);
 const BROWSER_TASKS = new Set(['test-browser', 'test-storybook']);
+// CI workflows and actions, moon and toolchain config, patches, and root files other than docs.
+const CONFIG_PATH = /^(?:\.depot|\.github|\.moon|patches)\/|^[^/]+$/;
 
 const main = () => {
   const browsers = pickBrowsers(process.env.GITHUB_EVENT_NAME ?? '', process.env.GITHUB_REF ?? '');
@@ -28,7 +31,6 @@ const main = () => {
     rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
   };
   const outputs = {
-    'browsers': JSON.stringify(browsers),
     'node': String(plan.node),
     'browser': String(plan.browser),
     'memory': String(plan.memory),
@@ -61,7 +63,8 @@ const pickBrowsers = (event, ref) => {
 
 /** Affected `[project, task]` pairs, or undefined for a full run. */
 const readAffected = () => {
-  if (!process.env.MOON_AFFECTED) {
+  const base = process.env.MOON_BASE;
+  if (!base) {
     console.error('plan: full run, every cell starts.');
     return undefined;
   }
@@ -69,6 +72,11 @@ const readAffected = () => {
   // whose env input is set as affected, which would start every e2e cell whatever changed.
   const { CI: _ci, ...env } = process.env;
   try {
+    const config = changedFiles(base).filter((file) => CONFIG_PATH.test(file) && !file.endsWith('.md'));
+    if (config.length > 0) {
+      console.error(`plan: config changed (${config.slice(0, 5).join(', ')}), every cell starts.`);
+      return undefined;
+    }
     const { tasks } = JSON.parse(
       execFileSync('moon', ['query', 'tasks', '--affected', '--downstream', 'deep'], {
         encoding: 'utf8',
@@ -91,5 +99,10 @@ const readAffected = () => {
     return undefined;
   }
 };
+
+const changedFiles = (base) =>
+  execFileSync('git', ['diff', '--name-only', base, process.env.MOON_HEAD ?? 'HEAD'], { encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean);
 
 main();

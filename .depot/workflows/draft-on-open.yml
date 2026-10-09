@@ -30,10 +30,20 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            await github.graphql(
-              'mutation($id: ID!) { convertPullRequestToDraft(input: { pullRequestId: $id }) { pullRequest { isDraft } } }',
-              { id: pr.node_id },
-            );
+            try {
+              await github.graphql(
+                'mutation($id: ID!) { convertPullRequestToDraft(input: { pullRequestId: $id }) { pullRequest { isDraft } } }',
+                { id: pr.node_id },
+              );
+            } catch (err) {
+              // The gates skipped this PR's `opened` run expecting a draft. Closing and reopening sends
+              // `reopened`, which they run on, so a failed conversion cannot leave it ready with only
+              // skipped checks.
+              await github.rest.pulls.update({ ...context.repo, pull_number: pr.number, state: 'closed' });
+              await github.rest.pulls.update({ ...context.repo, pull_number: pr.number, state: 'open' });
+              core.setFailed(`Could not convert #${pr.number} to a draft (${err.message}); reopened it to start CI.`);
+              return;
+            }
             await github.rest.issues.createComment({
               ...context.repo,
               issue_number: pr.number,
