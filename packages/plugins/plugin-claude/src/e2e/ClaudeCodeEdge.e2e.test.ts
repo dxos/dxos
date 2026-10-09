@@ -20,15 +20,15 @@ import { AccessToken } from '@dxos/link';
 import * as EdgeAgent from '@dxos/plugin-code/EdgeAgent';
 import { Message, Outline, Repo, TaskSet } from '@dxos/types';
 
-import { anthropicCredential } from '../capabilities/claude-code-edge-agent.ts';
+import { credentials } from '../capabilities/claude-code-edge-agent.ts';
 import { CLAUDE_CODE_EDGE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
 import { OAUTH_TOKEN, TURN_TIMEOUT, turn } from './harness.ts';
 
 /**
  * End to end, remote: a chat on Claude Code (cloud) runs its turns on an EDGE stack started locally
  * (`wrangler dev`, with the sandbox's container on local Docker), through `EdgeAgent` and EDGE's
- * process routes, exactly as the app does. Each turn lends the space's subscription token, which EDGE
- * holds and proxies; the container never receives it.
+ * process routes, exactly as the app does. Each turn lends the space's subscription token, and its GitHub
+ * token where a test connects one, as the environment the agent runs with in the container.
  *
  * `DX_E2E_EDGE_URL` names the stack, as the container reaches it (on Docker, `http://172.17.0.1:8787`):
  * the process hands the container its own origin to call back on. With `DX_E2E_EDGE_FAKE_AGENT=1` the
@@ -48,8 +48,7 @@ const options: EdgeAgent.Options = {
     id: CLAUDE_CODE_EDGE_AGENT,
     label: 'Claude Code (cloud)',
     icon: 'px--anthropic--regular',
-    credential: anthropicCredential,
-    gitCredential: EdgeAgent.githubCredential,
+    credentials,
   },
   control: () => control,
 };
@@ -114,8 +113,8 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
           const { rpc } = yield* processOf(chat);
           const state = yield* rpc.getState();
           expect(state.status).toBe('ready');
-          // Lent for the turn and held by EDGE, which proxies the agent's calls with it.
-          expect(state.hasCredential).toBe(OAUTH_TOKEN.length > 0);
+          // Lent for the turn as the environment the agent runs with; EDGE reports only the names it holds.
+          expect(state.credentials).toEqual(OAUTH_TOKEN.length > 0 ? ['CLAUDE_CODE_OAUTH_TOKEN'] : []);
         },
         Effect.scoped,
         Effect.provide(TestLayer),
