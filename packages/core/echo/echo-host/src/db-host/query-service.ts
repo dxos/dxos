@@ -98,8 +98,6 @@ type ActiveQuery = {
   /** Answered once and never re-run; its stream ends after the first response. */
   oneShot: boolean;
 
-  pointLookup: boolean;
-
   /** Cost (ms) of the last run; 0 until the query has run. */
   cost: number;
 
@@ -253,7 +251,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
-        if (queryEntry.pointLookup) {
+        if (!this._queries.has(queryEntry)) {
+          return;
+        }
+        if (queryEntry.oneShot && queryEntry.executor.selectsById) {
           await this.#runQuery(queryEntry);
           return;
         }
@@ -329,7 +330,6 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       firstResult: true,
       feedScoped: queryHasFeedScope(parsedQuery),
       oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
-      pointLookup: request.reactivity === QueryReactivity.ONE_SHOT && queryIsIdLookup(parsedQuery),
       cost: 0,
       debouncedUntil: 0,
       sendResults: (results) => {
@@ -490,18 +490,6 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     this.#wakeAt = Infinity;
   }
 }
-
-const queryIsIdLookup = (query: QueryAST.Query): boolean => {
-  switch (query.type) {
-    case 'from':
-    case 'options':
-      return queryIsIdLookup(query.query);
-    case 'select':
-      return query.filter.type === 'object' && (query.filter.id?.length ?? 0) > 0;
-    default:
-      return false;
-  }
-};
 
 /**
  * True when the query's `from` clause carries at least one feed scope (`Scope.feed(...)`).

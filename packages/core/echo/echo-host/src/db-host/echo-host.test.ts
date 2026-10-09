@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
@@ -141,18 +142,49 @@ describe('EchoHost query service', () => {
     );
     await batchStarted.wait();
 
-    const lookup: QueryService.QueryRequest = {
-      ...oneShotRequest(spaceId, 'lookup'),
-      query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
-    };
     const responses = await asyncTimeout(
-      EffectEx.runPromise(Stream.runCollect(host.queryService['QueryService.execQuery'](lookup))),
+      EffectEx.runPromise(
+        Stream.runCollect(host.queryService['QueryService.execQuery'](idLookupRequest(spaceId, 'lookup', objectId))),
+      ),
       1_000,
     );
     expect(responses.flatMap((response) => response.results ?? []).map((result) => result.id)).toEqual([objectId]);
 
     releaseBatch.wake();
     await batch;
+  });
+
+  test('a one-shot id lookup cancelled before it runs is never executed', async () => {
+    const { host, spaceId } = await setup({ queryExecutor: 'sql' });
+    const checkStarted = new Trigger();
+    const releaseCheck = new Trigger();
+    onTestFinished(() => {
+      releaseCheck.wake();
+    });
+    vi.spyOn(host.indexEngine, 'hasCompleteSnapshots').mockImplementation(() =>
+      Effect.promise(async () => {
+        checkStarted.wake();
+        await releaseCheck.wait();
+        return true;
+      }),
+    );
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const lookup = (queryId: string) => host.queryService['QueryService.execQuery'](idLookupRequest(spaceId, queryId));
+    const cancelled = Effect.runFork(Stream.runDrain(lookup('cancelled')));
+    await checkStarted.wait();
+    const answered = EffectEx.runPromise(Stream.runCollect(lookup('answered')));
+    await EffectEx.runPromise(Fiber.interrupt(cancelled));
+    releaseCheck.wake();
+    await answered;
+
+    expect(executed).toEqual(['answered']);
   });
 });
 
@@ -162,6 +194,15 @@ const oneShotRequest = (spaceId: SpaceId, queryId: string): QueryService.QueryRe
   queryId,
   reactivity: QueryReactivity.ONE_SHOT,
   query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+});
+
+const idLookupRequest = (
+  spaceId: SpaceId,
+  queryId: string,
+  objectId: EntityId = EntityId.random(),
+): QueryService.QueryRequest => ({
+  ...oneShotRequest(spaceId, queryId),
+  query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
 });
 
 const setup = async (options: Pick<EchoHostProps, 'queryExecutor'> = {}) => {

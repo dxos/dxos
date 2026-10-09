@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { EntityId, PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
@@ -134,7 +134,7 @@ describe('QueryResultImpl', () => {
     }
   });
 
-  test('an id lookup the working set can answer does not query the index', async ({ expect }) => {
+  test('an id lookup asks the index only for the ids the working set cannot answer', async ({ expect }) => {
     const tmpPath = createTmpPath();
     const builder = new EchoTestBuilder();
     await builder.open();
@@ -155,8 +155,15 @@ describe('QueryResultImpl', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Person], storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, rootUrl);
       const execQuery = vi.spyOn(peer.host.queryService, 'QueryService.execQuery');
+      const indexQueriesNaming = (objectId: string) =>
+        execQuery.mock.calls.filter(([request]) => request.query.includes(objectId));
       expect((await db.query(Filter.id(id)).run()).map((person) => person.name)).toEqual(['Alice']);
-      expect(execQuery.mock.calls.filter(([request]) => request.query.includes(id))).toEqual([]);
+      expect(indexQueriesNaming(id)).toEqual([]);
+
+      const missingId = EntityId.random();
+      expect((await db.query(Filter.id(id, missingId)).run()).map((person) => person.name)).toEqual(['Alice']);
+      expect(indexQueriesNaming(id)).toEqual([]);
+      expect(indexQueriesNaming(missingId)).toHaveLength(1);
     } finally {
       await builder.close();
     }
