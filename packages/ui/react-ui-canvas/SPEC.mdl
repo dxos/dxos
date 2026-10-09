@@ -17,7 +17,7 @@ apply, rewrite or reject each intent and then re-emits the scene. Freehand is th
 constrained, dynamic and compute projections own a model of their own and position the scene from it.
 
 Status 2026-09-22: **implemented** through migration milestone M3. Node types are open (`NodeBase` plus
-what a type adds), the editor surface is a superset of `react-ui-canvas-editor` minus auto layout, and
+what a type adds), the editor surface is a superset of the retired canvas editor minus auto layout, and
 `react-ui-canvas-compute` runs its shapes as node definitions over this engine. M4 (ECHO persistence,
 the `layout` intent and the plugin switch) is in flight; what M4 adds is marked below.
 
@@ -639,7 +639,7 @@ rule named-react-imports: Import React members by name, never through a `React.`
   `React.useMemo`, `React.FC`, `React.ReactNode` or `import React from 'react'`. A forwarded ref is
   named `forwardedRef`. Flag any `React.` member access and any default import of react in this
   package's source. Do not flag `import type * as React from 'react'` used solely in a `.d.ts`
-  ambient declaration, nor the archived canvas under `src/archive`.
+  ambient declaration.
   scope: dir
   files:
     - src/**/*.tsx

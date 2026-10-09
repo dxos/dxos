@@ -14,7 +14,7 @@ import { createEchoStore } from '../scene/index.ts';
 import { CanvasBoard } from './index.ts';
 
 /**
- * A board exactly as `@dxos/react-ui-canvas-editor` persisted it (`Obj.toJSON` of its `CanvasBoard`): a compute
+ * A board exactly as the legacy canvas editor persisted it (`Obj.toJSON` of its `CanvasBoard`): a compute
  * shape and a note, joined by one connection with both property names. The literal is the compatibility contract,
  * so it is never regenerated from the schema under test.
  */

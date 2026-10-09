@@ -27,7 +27,6 @@ import {
   createComputeProjection,
   createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
-import { KeyboardContainer } from '@dxos/react-ui-canvas-editor';
 import {
   type FreehandProjectionOptions,
   SceneView,
@@ -59,7 +58,6 @@ CanvasArticle.displayName = 'CanvasArticle';
 type CanvasSceneProps = Pick<CanvasArticleProps, 'role' | 'subject'> & { controller: ComputeGraphController };
 
 const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
-  const id = Obj.getURI(subject);
   const registry = useRegistry();
   const store = useMemo(() => createEchoStore(subject), [subject]);
   const sceneId = useMemo(() => boardSceneId(subject), [subject]);
@@ -90,21 +88,13 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   return (
     <ComputeContext.Provider value={{ controller, resize }}>
       <Root>
-        <KeyboardContainer id={id}>
-          <SceneView.Root
-            store={store}
-            root={sceneId}
-            atoms={atoms}
-            nodes={computeNodeRegistry}
-            projection={projection}
-          >
-            <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
-            <SceneView.Navigation />
-            <SceneView.Actions />
-            <SceneView.Debug />
-            <SceneView.Palette />
-          </SceneView.Root>
-        </KeyboardContainer>
+        <SceneView.Root store={store} root={sceneId} atoms={atoms} nodes={computeNodeRegistry} projection={projection}>
+          <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
+          <SceneView.Navigation />
+          <SceneView.Actions />
+          <SceneView.Debug />
+          <SceneView.Palette />
+        </SceneView.Root>
       </Root>
     </ComputeContext.Provider>
   );

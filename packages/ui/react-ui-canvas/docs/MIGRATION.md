@@ -1,6 +1,6 @@
 # Migrating canvas-editor and canvas-compute to the scene engine
 
-Status: M1–M4 done; M5 (retiring the old packages and `src/archive`) in progress, steps 1–2 of §5.3 done (updated 2026-10-08).
+Status: M1–M5 done: `react-ui-canvas-editor` and `src/archive` are deleted and the package root exports the scene engine (updated 2026-10-09).
 Original gap analysis and plan: 2026-09-20. Inputs: `DESIGN.md` (the engine), the source of
 `packages/ui/react-ui-canvas-editor` and `packages/ui/react-ui-canvas-compute` on `main`, and their consumers
 (`plugin-conductor`, `plugin-debug`). Every feature the two packages implement is mapped to what the engine has
@@ -249,13 +249,18 @@ also a declared workspace dependency (`package.json` and a `tsconfig.json` refer
    `GraphMonitor` is defined beside `useGraphMonitor`. The editor keeps its own identical copy of `types/` until step 6
    deletes it, since the editor must not depend on compute; both declare the same type, so only compute's is
    registered by plugin-conductor.
-5. **Drop the legacy paths.** Compute's part is done with step 3 (`compute.stories.tsx`, `useComputeGraphController`,
-   `ComputeShapeLayout`, `computeShapes`); left are plugin-conductor's `KeyboardContainer` (a plugin-local hotkey
-   scope) and plugin-debug's editor helpers.
+5. **Drop the legacy paths.** _Done (2026-10-09)._ Compute's part was done with step 3 (`compute.stories.tsx`,
+   `useComputeGraphController`, `ComputeShapeLayout`, `computeShapes`) and plugin-debug's with step 4. plugin-conductor's
+   `KeyboardContainer` is removed without a replacement: it only activated a `@dxos/react-focus` hotkey scope, which
+   nothing in the engine registers into, since `SceneView` handles every shortcut in the `onKeyDown` of its own focused
+   root — so the shortcuts already apply only to the board the user is in.
 6. **Delete.** Remove `packages/ui/react-ui-canvas-editor`, `src/archive`, the root `src/index.ts` re-export and the
    `./types` entry point of `@dxos/react-ui-canvas` (the root export then is the scene engine); drop the editor from
    Composer's `optimizeDeps`, the app-framework allowlist (`vite-plugin/packages.ts`), `tsconfig.all.json`, and the
    `package.json` dependency and `tsconfig.json` reference of each consumer above (then `pnpm install`). A changeset marks the removal as breaking.
+   _Done (2026-10-09)._ `src/index.ts` is the engine's barrel and `src/scene.ts` re-exports it, so `@dxos/react-ui-canvas`
+   and `@dxos/react-ui-canvas/scene` are the same module list; the editor's `@antv/graphlib` / `@antv/layout` left the
+   catalog with it.
 
 Order: 1 and 2 are independent of the rest and unblock the archive's removal except for the editor. 3–5 retire the
 editor; 6 needs all of them. Sizes: 1 small, 2 small (a move), 3 large (thirty shapes), 4 medium, 5 small, 6 small.

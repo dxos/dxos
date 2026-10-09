@@ -481,9 +481,8 @@ packages/plugins/plugin-canvas/src/            (phase 3: the illustrator drawing
   capabilities/     DrawingVariant (IllustratorCapabilities.VariantProvider), Translations
 
 packages/ui/react-ui-canvas/src/
-  index.ts                 the pre-engine canvas (`./archive`), kept for canvas-editor / canvas-compute / sequencer until phase 4
-  scene.ts                 the engine's barrel, exported as `@dxos/react-ui-canvas/scene` until it replaces the root export
-  archive/                 old Canvas, CellGrid, FPS, hooks and svg utils, untouched; `Grid` wraps the engine's GridComponent
+  index.ts                 the engine's barrel (the package root)
+  scene.ts                 re-exports the root as `@dxos/react-ui-canvas/scene`
   (the engine, phase 2+ files marked †)
     model/                 what a scene is and how it changes
       types.ts             Schema: Scene {nodes, links}, NodeBase + built-ins (rect/ellipse/class/text/scene) with guards, NodeStyle, Link (line/curve/spline) with ends markers, Endpoint (node | point), Port, Camera, Intent, Tool

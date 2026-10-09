@@ -8,7 +8,6 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     scene: 'src/scene.ts',
-    types: 'src/archive/types.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },
