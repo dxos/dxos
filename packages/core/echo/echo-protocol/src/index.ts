@@ -7,6 +7,7 @@ export * from './document-structure.ts';
 export * from './edge-peer.ts';
 export * from './echo-feed-codec.ts';
 export * from './foreign-key.ts';
+export * from './object-state.ts';
 export * from './query/index.ts';
 export * from './reference.ts';
 export * from './space-doc-version.ts';
