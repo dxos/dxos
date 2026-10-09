@@ -4,11 +4,9 @@
 
 import React from 'react';
 
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
-
-import { Box } from './common/index.ts';
+import { Box, type ComputeNodeViewProps } from './common/index.ts';
 import { type DatabaseShape } from './database-def.ts';
 
-export const DatabaseComponent = ({ shape }: ShapeComponentProps<DatabaseShape>) => {
+export const DatabaseComponent = ({ node: shape }: ComputeNodeViewProps<DatabaseShape>) => {
   return <Box shape={shape} />;
 };

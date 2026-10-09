@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 
+import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
 import * as Memory from './Memory.ts';
 
@@ -115,7 +116,7 @@ export const Recall = Operation.make({
       'Returns the active memories and the facts read from documents and conversations about a subject (newest first), and the goals it owns.',
     icon: 'ph--magnifying-glass--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     subject: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The entity to recall; all if omitted.' })),
     query: Schema.optional(Schema.String.annotate({ description: 'Only memories and facts containing this text.' })),

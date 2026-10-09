@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -25,6 +30,9 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/lang-json": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -43,10 +51,11 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-experimental": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
@@ -56,7 +65,6 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",

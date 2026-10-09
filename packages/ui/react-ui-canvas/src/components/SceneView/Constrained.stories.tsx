@@ -87,7 +87,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-canvas/scene/Constrained',
+  title: 'ui/react-ui-canvas/Constrained',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
 };

@@ -9,7 +9,7 @@ import type { AiService } from '@dxos/ai';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
 import { type RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
@@ -17,13 +17,11 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { AgentOperation, ChatParticipant, FactEntry } from '#types';
+import { AgentOperation, BrainService, ChatParticipant } from '#types';
 
-import { ensureAnnotationFeed } from './annotations.ts';
+import { pushFacts } from './deliver.ts';
 import { AgentOperationError } from './errors.ts';
 import { agentId, loadMembers, memberByDid, memberByName, personDid, resolveTerms } from './members.ts';
-
-const EXTRACTOR: FactEntry.Extractor = { id: 'org.dxos.pipeline-rdf.extract', model: 'default', version: '1' };
 
 /** One utterance of a source, so a fact quoting it can be attributed to its speaker and time. */
 type Segment = {
@@ -39,7 +37,6 @@ type Segment = {
 };
 
 type SourceText = {
-  name: string;
   /** DXN or URL every fact is attributed to unless it quotes a segment. */
   uri: string;
   text: string;
@@ -172,7 +169,6 @@ const readChat = Effect.fnUntraced(function* (
   const contextLines = context.map(renderSegment).join('\n');
   const last = messages.at(-1);
   return {
-    name: chat.name ?? 'Conversation',
     text: context.length === 0 ? lines : `${CONTEXT_HEADER}\n${contextLines}\n\n${NEW_HEADER}\n${lines}`,
     transcript: context.length === 0 ? lines : `${contextLines}\n${lines}`,
     segments,
@@ -188,10 +184,10 @@ const readObject = Effect.fnUntraced(function* (
 ) {
   if (Obj.instanceOf(Markdown.Document, source)) {
     const { content } = yield* Database.load(source.content);
-    return { name: source.name ?? 'Document', text: content, segments: segmentMarkdown(members, content) };
+    return { text: content, segments: segmentMarkdown(members, content) };
   }
   if (Obj.instanceOf(Text.Text, source)) {
-    return { name: 'Text', text: source.content, segments: segmentMarkdown(members, source.content) };
+    return { text: source.content, segments: segmentMarkdown(members, source.content) };
   }
   if (Obj.instanceOf(Chat.Chat, source)) {
     return yield* readChat(members, agent, source);
@@ -247,11 +243,14 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
 };
 
 export type ReadSourceResult = {
-  /** The marker closing the pass; absent when a chat has no messages since the last read. */
-  pass?: FactEntry.ExtractionPass;
+  /** The facts pushed to the brain; none when a chat has no messages since the last read. */
   facts: readonly RDF.Fact[];
   /** A chat's rendered window: the context lines before the new messages, then the new ones. */
   transcript?: string;
+  /** The ids of the triggers the facts fired. */
+  fired: string[];
+  /** Why a fired notification was not delivered. */
+  undelivered: string[];
 };
 
 export type ReadSourceProps = {
@@ -261,41 +260,51 @@ export type ReadSourceProps = {
   text?: string;
 };
 
+const NOTHING_READ = { facts: [], fired: [], undelivered: [] } satisfies ReadSourceResult;
+
 /**
- * Reads a source into its annotation feed — one entry per fact, then the pass's marker — and returns the
- * marker and the facts. A chat is read from the message after the last marker's cursor, so re-reading it never repeats a fact;
- * nothing is appended when no message was added since. The messages before the cursor are shown to the
- * extractor as context, but only facts quoting a new message are kept.
+ * Reads a source into the agent's brain and delivers what the facts woke. A chat is read from the message after
+ * the brain's read cursor for it, which moves with the facts, so re-reading it never repeats a fact; nothing is
+ * pushed when no message was added since. The messages before the cursor are shown to the extractor as context,
+ * but only facts quoting a new message are kept. Other sources are read whole, every time.
+ *
+ * Every source wakes watches, a document as much as a conversation: what a watch waits for is news to the agent
+ * wherever it was written. Only the agent's own words are quiet, since a watch matching its replies would wake
+ * the chat it just woke.
  */
 export const readSource: (
   agent: Agent.Agent,
   props: ReadSourceProps,
 ) => Effect.Effect<
   ReadSourceResult,
-  AgentOperationError | EntityNotFoundError | SemanticIndexError,
-  Database.Service | AiService.AiService | Space.Service
+  AgentOperationError | EntityNotFoundError | SemanticIndexError | BrainService.BrainError,
+  Database.Service | AiService.AiService | Space.Service | Operation.Service | BrainService.BrainService
 > = Effect.fnUntraced(function* (agent, { source, url, text }) {
   if (source && Obj.instanceOf(Chat.Chat, source) && text === undefined) {
-    const feed = yield* ensureAnnotationFeed(agent, { id: source.id, name: source.name ?? 'Conversation' });
-    const passes = inAppendOrder(yield* Feed.query(feed, Filter.type(FactEntry.ExtractionPass)).run);
-    const cursor = passes.findLast((pass) => pass.through !== undefined)?.through;
+    const brain = yield* BrainService.BrainService;
+    const uri = Obj.getURI(source);
+    const cursor = yield* brain.readThrough(agent.id, uri);
     const members = yield* loadMembers;
     const { through, transcript, ...read } = yield* readChat(members, agent, source, cursor);
-    if (through === cursor) {
-      return { facts: [] };
+    if (through === undefined || through === cursor) {
+      return NOTHING_READ;
     }
-    const facts = yield* extract(members, read, Obj.getURI(source));
+    const facts = yield* extract(members, read, uri);
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
-    return { ...(yield* record(feed, { source, name: read.name, through }, fresh)), transcript };
+    return {
+      facts: fresh,
+      transcript,
+      ...(yield* pushFacts(agent, fresh, { transcript, read: { source: uri, through } })),
+    };
   }
 
   const members = yield* loadMembers;
   const read: SourceText = source
     ? { uri: Obj.getURI(source), ...(yield* readObject(members, agent, source)) }
-    : { uri: url ?? '', name: url ?? '', text: '', segments: [] };
+    : { uri: url ?? '', text: '', segments: [] };
   const body = text === undefined ? read : { ...read, text, segments: segmentMarkdown(members, text) };
-  const feed = yield* ensureAnnotationFeed(agent, { id: source?.id ?? body.uri, name: body.name });
-  return yield* record(feed, { source, url, name: body.name }, yield* extract(members, body, body.uri));
+  const facts = yield* extract(members, body, body.uri);
+  return { facts, ...(yield* pushFacts(agent, facts)) };
 });
 
 // A direct model call rather than a chat turn: extraction is a pure derivation of the text.
@@ -305,30 +314,6 @@ const extract = (members: readonly Space.Member[], body: Pick<SourceText, 'text'
     : extractDocFacts({ text: body.text, source: uri }).pipe(
         Effect.map((facts) => facts.map((fact) => attribute(resolveTerms(members, fact), body.segments))),
       );
-
-/** Appends each fact as its own entry, then the pass marker: a pass is complete once its marker is in the feed. */
-const record = Effect.fnUntraced(function* (
-  feed: Feed.Feed,
-  { source, url, name, through }: { source?: Obj.Unknown; url?: string; name: string; through?: string },
-  extracted: RDF.Fact[],
-) {
-  const pass = Obj.make(FactEntry.ExtractionPass, {
-    ...(source ? { source: Ref.make(source) } : {}),
-    ...(url ? { url } : {}),
-    ...(through ? { through } : {}),
-    name,
-    recordedAt: new Date().toISOString(),
-    extractor: extracted[0]?.extractor ?? EXTRACTOR,
-    facts: extracted.length,
-  });
-  const facts = extracted.map((fact): RDF.Fact => ({ ...fact, pass: pass.id }));
-  const entries = facts.map((fact) =>
-    Obj.make(FactEntry.FactEntry, { [Obj.Meta]: { keys: [FactEntry.factKey(fact.id)] }, fact }),
-  );
-  yield* Feed.append(feed, [...entries, pass]);
-  yield* Database.flush();
-  return { pass, facts };
-});
 
 const handler: Operation.WithHandler<typeof AgentOperation.ReadSource> = AgentOperation.ReadSource.pipe(
   Operation.withHandler(
@@ -341,8 +326,8 @@ const handler: Operation.WithHandler<typeof AgentOperation.ReadSource> = AgentOp
 
       const agent = yield* Database.load(agentRef);
       const source = sourceRef ? yield* Database.load(sourceRef) : undefined;
-      const { pass, facts } = yield* readSource(agent, { source, url, text });
-      return { ...(pass ? { pass: Ref.make(pass) } : {}), facts: facts.length };
+      const { facts, fired, undelivered } = yield* readSource(agent, { source, url, text });
+      return { facts: facts.length, fired, undelivered };
     }),
   ),
 );

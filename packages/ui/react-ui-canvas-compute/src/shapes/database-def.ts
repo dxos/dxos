@@ -5,11 +5,9 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
+import { createPorts, defineComputeNode } from './common/index.ts';
 import { DatabaseComponent } from './Database.tsx';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 
 // Kept out of `Database.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -27,11 +25,13 @@ export type CreateDatabaseProps = CreateShapeProps<DatabaseShape>;
 export const createDatabase = (props: CreateDatabaseProps) =>
   createShape<DatabaseShape>({ type: 'database', size: { width: 128, height: 64 }, ...props });
 
-export const databaseShape: ShapeDef<DatabaseShape> = {
+export const databaseNodeDef = defineComputeNode<DatabaseShape>({
   type: 'database',
   name: 'ECHO',
   icon: 'ph--database--regular',
+  group: 'Transform',
+  schema: withZ(DatabaseShape),
   component: DatabaseComponent,
-  createShape: createDatabase,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-};
+  create: createDatabase,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+});

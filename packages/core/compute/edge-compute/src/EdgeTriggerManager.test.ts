@@ -3,6 +3,7 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -75,9 +76,63 @@ describe('EdgeTriggerManager', () => {
       expect(forceRun).toHaveBeenCalledTimes(6);
     }),
   );
+
+  it.effect('retries a disabled refusal while edge catches up with a re-enable', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValueOnce(refusedError('Trigger disabled'))
+        .mockResolvedValue(undefined);
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('5 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(2);
+    }),
+  );
+
+  it.effect('reports a trigger edge still refuses as disabled once the backoff is spent', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi.spyOn(edgeClient, 'forceRunCronTrigger').mockRejectedValue(refusedError('Trigger disabled'));
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      expect(yield* Effect.flip(Fiber.join(fiber))).toBeInstanceOf(Trigger.TriggerDisabledError);
+      expect(forceRun).toHaveBeenCalledTimes(6);
+    }),
+  );
+
+  it.effect('does not retry any other refusal', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValue(refusedError('Trigger has no runnable'));
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      const exit = yield* Effect.exit(Fiber.join(fiber));
+      expect(Exit.isFailure(exit) && Cause.hasDies(exit.cause)).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(1);
+    }),
+  );
 });
 
-const notReplicatedError = () => new EdgeCallFailedError({ message: 'HTTP code 404: Not Found.' });
+/** A failure envelope as `EdgeHttpClient` decodes it off the wire. */
+const edgeFailure = (status: number, message: string) =>
+  EdgeCallFailedError.fromUnsuccessfulResponse(new Response(null, { status }), { success: false, message });
+
+const notReplicatedError = () => edgeFailure(404, 'Trigger not found');
+
+const refusedError = (message: string) => edgeFailure(409, message);
 
 const identityNotAssociatedError = () =>
   new EdgeCallFailedError({

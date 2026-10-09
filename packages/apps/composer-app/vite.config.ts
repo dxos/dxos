@@ -266,8 +266,8 @@ const PLUGIN_SHARED_PACKAGES = [
 ];
 
 /**
- * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
- * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (`main` publishes daily, and every
+ * deploy publishes the commit it builds) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
  * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
  * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
  */

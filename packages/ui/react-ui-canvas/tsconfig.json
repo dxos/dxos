@@ -12,13 +12,13 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/diagram"
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/test-utils"
@@ -37,6 +37,12 @@
     },
     {
       "path": "../react-ui-form"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../ui-editor"

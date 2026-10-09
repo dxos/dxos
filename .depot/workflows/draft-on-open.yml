@@ -1,0 +1,51 @@
+name: Draft on open
+
+# Converts an agent's PR opened ready into a draft, so CI starts only once someone marks it ready. Runs
+# on open only, so marking a PR ready afterwards is never undone. Agent PRs are same-repo branches under
+# `claude/` or `dm/`, without the `ci` label; the workflows' `if:` gates skip their `opened` run for
+# exactly these PRs, so a new prefix goes in every copy (`git grep -n "'dm/'" .depot/workflows`).
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.labels.*.name, 'ci') &&
+      (startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 5
+    # GitHub's draft mutation refuses a token without `contents: write`.
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            try {
+              await github.graphql(
+                'mutation($id: ID!) { convertPullRequestToDraft(input: { pullRequestId: $id }) { pullRequest { isDraft } } }',
+                { id: pr.node_id },
+              );
+            } catch (err) {
+              // The gates skipped this PR's `opened` run expecting a draft. Closing and reopening sends
+              // `reopened`, which they run on, so a failed conversion cannot leave it ready with only
+              // skipped checks.
+              await github.rest.pulls.update({ ...context.repo, pull_number: pr.number, state: 'closed' });
+              await github.rest.pulls.update({ ...context.repo, pull_number: pr.number, state: 'open' });
+              core.setFailed(`Could not convert #${pr.number} to a draft (${err.message}); reopened it to start CI.`);
+              return;
+            }
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pr.number,
+              body: 'Converted to a draft: CI runs once this is marked ready for review (`gh pr ready`). To run CI on the draft, add the `ci` label and push.',
+            });

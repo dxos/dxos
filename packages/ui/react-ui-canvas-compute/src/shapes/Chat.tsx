@@ -5,24 +5,19 @@
 import React, { useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import {
-  type ShapeComponentProps,
-  TextBox,
-  type TextBoxControl,
-  type TextBoxProps,
-} from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
 import { type ChatShape } from './chat-def.tsx';
-import { Box } from './common/index.ts';
+import { Box, type ComputeNodeViewProps, TextBox, type TextBoxControl, type TextBoxProps } from './common/index.ts';
 
 //
 // Component
 //
 
-export type TextInputComponentProps = ShapeComponentProps<ChatShape> & TextBoxProps & { title?: string };
+export type TextInputComponentProps = ComputeNodeViewProps<ChatShape> &
+  Pick<TextBoxProps, 'placeholder'> & { title?: string };
 
-export const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps) => {
+export const TextInputComponent = ({ node: shape, title, placeholder }: TextInputComponentProps) => {
   const { runtime } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
 
@@ -36,7 +31,7 @@ export const TextInputComponent = ({ shape, title, ...props }: TextInputComponen
 
   return (
     <Box shape={shape} title={title}>
-      <TextBox ref={inputRef} onEnter={handleEnter} {...props} />
+      <TextBox ref={inputRef} onEnter={handleEnter} placeholder={placeholder} />
     </Box>
   );
 };

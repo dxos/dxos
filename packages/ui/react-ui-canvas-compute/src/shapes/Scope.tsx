@@ -6,13 +6,13 @@ import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { useAudioStream } from '@dxos/react-ui-audio';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { Chaos, shaderPresets } from '@dxos/react-ui-experimental';
 
 import { useComputeNodeState } from '../hooks/index.ts';
+import { type ComputeNodeViewProps } from './common/index.ts';
 import { type ScopeShape } from './scope-def.ts';
 
-export const ScopeComponent = ({ shape }: ShapeComponentProps<ScopeShape>) => {
+export const ScopeComponent = ({ node: shape }: ComputeNodeViewProps<ScopeShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
   const active = input?.type === 'executed' ? input.value : false;

@@ -19,15 +19,14 @@ import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
   Bullets,
+  type CanvasBoard,
   ComputeContext,
   ComputeGraphController,
   boardSceneId,
   computeNodeRegistry,
-  computeShapes,
   createComputeProjection,
   createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
-import { type CanvasBoard, KeyboardContainer, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
   type FreehandProjectionOptions,
   SceneView,
@@ -59,9 +58,7 @@ CanvasArticle.displayName = 'CanvasArticle';
 type CanvasSceneProps = Pick<CanvasArticleProps, 'role' | 'subject'> & { controller: ComputeGraphController };
 
 const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
-  const id = Obj.getURI(subject);
   const registry = useRegistry();
-  const shapeRegistry = useMemo(() => new ShapeRegistry(computeShapes), []);
   const store = useMemo(() => createEchoStore(subject), [subject]);
   const sceneId = useMemo(() => boardSceneId(subject), [subject]);
   const atoms = useMemo(() => createSceneViewAtoms(sceneId), [sceneId]);
@@ -89,23 +86,15 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   const Root = role === AppSurface.Section.role ? Container : Fragment;
 
   return (
-    <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
+    <ComputeContext.Provider value={{ controller, resize }}>
       <Root>
-        <KeyboardContainer id={id}>
-          <SceneView.Root
-            store={store}
-            root={sceneId}
-            atoms={atoms}
-            nodes={computeNodeRegistry}
-            projection={projection}
-          >
-            <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
-            <SceneView.Navigation />
-            <SceneView.Actions />
-            <SceneView.Debug />
-            <SceneView.Palette />
-          </SceneView.Root>
-        </KeyboardContainer>
+        <SceneView.Root store={store} root={sceneId} atoms={atoms} nodes={computeNodeRegistry} projection={projection}>
+          <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
+          <SceneView.Navigation />
+          <SceneView.Actions />
+          <SceneView.Debug />
+          <SceneView.Palette />
+        </SceneView.Root>
       </Root>
     </ComputeContext.Provider>
   );

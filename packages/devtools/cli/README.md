@@ -17,10 +17,28 @@ DX_DEBUG=debug ./bin/dx chat
 
 ## Where commands live
 
-`src/commands/*` holds only the CLI's own topics (`admin`, `chat`, `debug`, `function`, `hub`,
+`src/commands/*` holds only the CLI's own topics (`admin`, `chat`, `debug`, `eval`, `function`, `hub`,
 `mailbox`, `mcp`, `reflect`, `reset`). Everything else is contributed by the Composer plugins listed
 in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx registry publish` is
 `packages/plugins/plugin-registry/src/commands/registry/`. Run `dx --help` for the merged topic list.
+
+## Run code-mode programs
+
+`dx eval` runs a program against a space in the dialect a code-mode agent writes for its `eval` tool,
+and prints exactly what that tool would return — so an agent driving the CLI writes the same code it
+would write in Composer. `--dialect effect` (the default, and what Composer uses) takes the body of an
+`Effect.gen`; `--dialect plain` takes the body of an async function.
+
+```bash
+dx eval --space-id <id> "const Task = yield* Database.resolve('org.dxos.type.task');
+  const tasks = yield* Database.query(Filter.type(Task)).run;
+  yield* print(tasks.length);"
+dx eval --instructions          # the API reference the agent is given, with this profile's types and operations
+dx eval --file program.js       # or pipe the program on stdin
+```
+
+`--skill <key>` (repeatable) limits the operations in scope to those skills'; with none, every skill
+the CLI ships is bound. A failing program prints its output and the error, and exits non-zero.
 
 ## Serve as an MCP server
 
@@ -218,8 +236,9 @@ These constraints are easy to break and only observable in the published artifac
 
 ## Preview builds
 
-Every push to `main` publishes the generated packages to [pkg.pr.new](https://pkg.pr.new), so a fix is
-installable without waiting for an npm release. Install the package for your own platform:
+`main` publishes the generated packages to [pkg.pr.new](https://pkg.pr.new) once a day (06:00 UTC), and a
+dispatch of `pkg-pr-new.yml` publishes a branch tip on demand, so a fix is installable without waiting for an
+npm release. Install the package for your own platform:
 
 ```bash
 npm i https://pkg.pr.new/@dxos/cli-linux-x64@<commit-sha>

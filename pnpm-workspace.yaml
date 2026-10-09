@@ -20,8 +20,6 @@ catalog:
   '@ai-sdk/react': ^3.0.99
   '@anthropic-ai/claude-agent-sdk': ^0.3.233
   '@anthropic-ai/sdk': ^0.117.1
-  '@antv/graphlib': ^2.0.4
-  '@antv/layout': ^1.2.13
   '@ark-ui/react': ^5.39.1
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
@@ -627,7 +625,6 @@ catalog:
   tone: ^15.1.22
   topojson-client: ^3.1.0
   topojson-simplify: ^3.0.3
-  transformation-matrix: ^2.16.1
   ts-morph: ^16.0.0
   tsdown: ^0.22.14
   tslib: ^2.8.1

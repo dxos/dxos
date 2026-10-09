@@ -46,13 +46,16 @@ that binding before any call, and Composer's surface has no `whoami` to find the
 
 `src/e2e/ClaudeCodeEdge.e2e.test.ts` runs the same kind of chat on Claude Code (cloud): its turns go
 through `EdgeAgent` to an EDGE stack started locally (edge's `dev.mts` with sandbox-service added, so
-the sandbox's container runs on local Docker), and each turn lends the space's subscription token,
-which EDGE holds and proxies. Point it at the stack as the container reaches it:
+the sandbox's container runs on local Docker), and each turn lends the space's subscription token as
+the agent's `CLAUDE_CODE_OAUTH_TOKEN`. Point it at the stack as the container reaches it:
 
 ```bash
 DX_RUN_MANUAL_TESTS=1 DX_E2E_EDGE_URL=http://172.17.0.1:8787 DX_CLAUDE_CODE_OAUTH_TOKEN=<token> \
   moon run plugin-claude:test -- src/e2e/ClaudeCodeEdge
 ```
+
+Add `DX_E2E_GITHUB_TOKEN`, a token that can push to dxos/dxos and dxos/edge, to also run the test that
+clones both, opens a draft pull request in each and closes them again; it is lent as `GITHUB_TOKEN`.
 
 The stack must run compute-service with `functions.noAuth`. `DX_E2E_EDGE_FAKE_AGENT=1` runs only the
 plumbing test, for a container whose image runs edge's fake ACP agent instead of Claude Code. The
