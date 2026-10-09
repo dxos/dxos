@@ -47,8 +47,8 @@ const isRejection = (error: unknown): boolean =>
  * caller (`QueuedRemoteControl`) must not retry, and anything else as is.
  */
 const call = <A>(request: () => Promise<A>): Effect.Effect<A> =>
-  Effect.tryPromise({ try: request, catch: (error) => error }).pipe(
-    Effect.mapError((error) => (isRejection(error) ? RemoteCommandRejectedError.wrap()(error) : error)),
+  Effect.tryPromise(request).pipe(
+    Effect.mapError(({ cause }) => (isRejection(cause) ? RemoteCommandRejectedError.wrap()(cause) : cause)),
     Effect.orDie,
   );
 
