@@ -41,6 +41,7 @@
     "lint-fix": "pnpm exec moon run :lint-fix",
     "lockfile": "vite-node scripts/lockfile.ts",
     "moonx": "./scripts/moonx",
+    "perf": "node packages/e2e/perf-harness/src/cli/main.ts",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pkg-lint": "node scripts/pkg-lint.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",

@@ -54,6 +54,9 @@ vitest-results.json
 # Mocha
 test-results
 
+# perf CLI: cached arms, runs and the per-worktree ledger
+.perf
+
 # Vitest
 __screenshots__
 
