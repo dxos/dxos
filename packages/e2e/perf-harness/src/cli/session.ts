@@ -9,7 +9,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import { restorePatchFile } from './arms.ts';
 import { acquireLock } from './lock.ts';
-import { type Target, TARGETS } from './targets.ts';
+import { type Target, resolveTarget } from './targets.ts';
 import {
   HarnessError,
   type Ports,
@@ -54,6 +54,7 @@ export type Session = {
 export type OpenSessionOptions = {
   command: string;
   target: string;
+  scenario?: string;
   ignoreLoad: boolean;
   lockWaitMinutes: number;
 };
@@ -67,13 +68,11 @@ const runId = (): string => {
 export const openSession = async ({
   command,
   target: name,
+  scenario,
   ignoreLoad,
   lockWaitMinutes,
 }: OpenSessionOptions): Promise<Session> => {
-  const target = TARGETS[name];
-  if (!target) {
-    throw new HarnessError(`unknown target "${name}"; known: ${Object.keys(TARGETS).join(', ')}`);
-  }
+  const target = resolveTarget(name, scenario);
   if (!nodeSupported()) {
     throw new HarnessError(
       `node ${process.versions.node} cannot run this CLI; use the pinned one (~/.proto/shims/node)`,

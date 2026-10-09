@@ -265,13 +265,14 @@ export const runFlow = async ({
     DX_PERF_ITERATIONS: String(iterations),
     DX_PERF_MODES: 'measure',
     DX_PWA: 'false',
+    ...target.env,
     ...extraEnv,
   };
   // Unset CI so the config reuses this server rather than starting its own; no key, so nothing is published.
   delete env.CI;
   delete env.DX_POSTHOG_API_KEY;
   const started = Date.now();
-  const exitCode = await runLogged('pnpm', ['exec', 'playwright', 'test', `--config=${target.config}`], {
+  const exitCode = await runLogged('pnpm', ['exec', 'playwright', 'test', `--config=${target.config}`, target.spec], {
     cwd: path.join(root, target.appDir),
     env,
     logFile,

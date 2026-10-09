@@ -7,7 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { type Attached, type Cdp, detachAll, refreshTargets } from './cdp.ts';
+import { type Attached, type Cdp, type TargetFilter, detachAll, refreshTargets } from './cdp.ts';
 import { type CallCounter, startCallCounting } from './collectors/calls.ts';
 import {
   EMPTY_THREAD,
@@ -83,6 +83,8 @@ export type RunnerOptions = {
   counters?: CounterSet;
   /** Where the per-stage call and React breakdowns are written; defaults to a directory under the OS temp dir. */
   counterDir?: string;
+  /** The targets each boundary attaches to; defaults to every measured realm. */
+  include?: TargetFilter;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -187,7 +189,7 @@ export class StageRunner {
   async stage(id: string, body: () => Promise<void>): Promise<StageRow> {
     const { page, browserCdp, debugPort, network, mode } = this.#options;
 
-    this.#targets = await refreshTargets(debugPort, this.#targets);
+    this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
     const pageTarget = this.#targets.find((target) => target.kind === 'page');
     // A worker that appeared since the last boundary has no probe yet; the call is idempotent.
     await Promise.all(this.#targets.map(installWorkerProbe));
@@ -244,7 +246,7 @@ export class StageRunner {
     // Refreshed before the per-realm readings: a stage can BRING a realm into existence — `boot` is
     // where the shared worker running ECHO first appears — and a set captured only at the opening
     // boundary would report that stage's heap as the page's alone.
-    this.#targets = await refreshTargets(debugPort, this.#targets);
+    this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
 
     // AFTER the refresh, unlike the readings above, and the difference is load-bearing. SQLite runs
     // in the dedicated worker, and `boot` is the stage that creates it: read against the opening
