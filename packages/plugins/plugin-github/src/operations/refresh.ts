@@ -45,6 +45,31 @@ export const refreshPullRequest = Effect.fn('refreshPullRequest')(function* (
   return updated;
 });
 
+/** Code-unit order, so every peer and EDGE agree on it regardless of locale. */
+const byId = (left: { id: string }, right: { id: string }): number =>
+  left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+
+/** Most pull requests one run refreshes, so a run stays within GitHub's rate limit and EDGE's subrequest budget. */
+export const REFRESH_BATCH_SIZE = 20;
+
+/**
+ * The slice of `pullRequests` the run in window `window` refreshes: consecutive windows walk the list in
+ * id order and wrap, so every pull request is refreshed once every `ceil(count / size)` runs without
+ * storing a cursor.
+ */
+export const selectRefreshBatch = (
+  pullRequests: readonly PullRequest.PullRequest[],
+  window: number,
+  size = REFRESH_BATCH_SIZE,
+): PullRequest.PullRequest[] => {
+  if (pullRequests.length <= size) {
+    return [...pullRequests];
+  }
+  const ordered = [...pullRequests].sort(byId);
+  const start = (window * size) % ordered.length;
+  return Array.from({ length: size }, (_, index) => ordered[(start + index) % ordered.length]);
+};
+
 /** The space's pull requests GitHub may still change. */
 export const queryInFlightPullRequests = () =>
   Database.query(Filter.type(PullRequest.PullRequest)).run.pipe(
@@ -56,16 +81,21 @@ const isRefreshTrigger = (trigger: Trigger.Trigger): boolean =>
   trigger.runnable?.uri === GitHubOperation.RefreshPullRequests.meta.key.toString();
 
 /**
- * Give the space its pull-request refresh trigger, unless it has one already — including one the user
- * disabled, which stays disabled.
+ * Give the space its one pull-request refresh trigger, unless it has one already — including one the
+ * user disabled, which stays disabled.
  *
- * The trigger runs on EDGE, so pull requests keep refreshing while no client has the space open.
+ * Peers that race to create it each add their own, so every caller converges on the same keeper (the
+ * lowest id) and removes the rest. The trigger runs on EDGE, so pull requests keep refreshing while no
+ * client has the space open.
  */
 export const ensureRefreshTrigger = Effect.fn('ensureRefreshTrigger')(function* () {
   const triggers = yield* Database.query(Filter.type(Trigger.Trigger)).run.pipe(Effect.orDie);
-  const existing = triggers.find(isRefreshTrigger);
-  if (existing) {
-    return existing;
+  const [keeper, ...duplicates] = triggers.filter(isRefreshTrigger).sort(byId);
+  for (const duplicate of duplicates) {
+    yield* Database.remove(duplicate);
+  }
+  if (keeper) {
+    return keeper;
   }
 
   return yield* Database.add(

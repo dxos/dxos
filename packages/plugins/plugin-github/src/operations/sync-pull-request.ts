@@ -7,6 +7,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { GitHubOperation } from '#types';
 
@@ -20,7 +21,11 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncPullRequest> = G
       const token = yield* githubToken().pipe(Effect.provide(Database.layer(db)));
       const updated = yield* refreshPullRequest(pullRequest, token);
       // Spaces that imported pull requests before the scheduled refresh existed get it on next open.
-      yield* ensureRefreshTrigger().pipe(Effect.provide(Database.layer(db)));
+      yield* ensureRefreshTrigger().pipe(
+        Effect.provide(Database.layer(db)),
+        // The refresh already succeeded; the schedule is retried on the next open.
+        Effect.catchDefect((defect) => Effect.sync(() => log.warn('refresh trigger setup failed', { defect }))),
+      );
       return { updated };
     }, Effect.provide(FetchHttpClient.layer)),
   ),

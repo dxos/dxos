@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { PullRequest } from '@dxos/types';
 
@@ -135,7 +136,10 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
       }
 
       // The first pull request a space holds is what makes refreshing them worth a schedule.
-      yield* ensureRefreshTrigger();
+      yield* ensureRefreshTrigger().pipe(
+        // The import already succeeded; a missing schedule is recovered the next time a pull request opens.
+        Effect.catchDefect((defect) => Effect.sync(() => log.warn('refresh trigger setup failed', { defect }))),
+      );
 
       return { pullRequest: Ref.make(object), imported: true };
     }, Effect.provide(FetchHttpClient.layer)),
