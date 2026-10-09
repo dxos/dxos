@@ -80,9 +80,10 @@ const readAffected = () => {
     const pairs = Object.entries(tasks).flatMap(([project, projectTasks]) =>
       Object.keys(projectTasks).map((task) => [project, task]),
     );
-    const suites = pairs.filter(([, task]) => NODE_TASKS.has(task) || BROWSER_TASKS.has(task) || task === 'e2e');
+    const count = (tasks) => pairs.filter(([, task]) => tasks.has(task)).length;
+    const e2e = pairs.filter(([, task]) => task === 'e2e').map(([project]) => project);
     console.error(
-      `plan: ${pairs.length} affected tasks; test/e2e: ${suites.map((pair) => pair.join(':')).join(' ') || 'none'}`,
+      `plan: ${pairs.length} affected tasks; ${count(NODE_TASKS)} node, ${count(BROWSER_TASKS)} browser, e2e: ${e2e.join(' ') || 'none'}.`,
     );
     return pairs;
   } catch (err) {
