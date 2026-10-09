@@ -134,6 +134,24 @@ export type CreateDocOptions = {
  */
 const OPTIMIZED_SHARE_POLICY = true;
 
+type DivergedResyncEntry = {
+  collectionId: string;
+  peerId: PeerId;
+  documentId: DocumentId;
+  heads: string;
+  /** When the document was first seen diverged at these heads. */
+  since: number;
+};
+
+/**
+ * How long a document must stay diverged at the same heads before the edge is asked to sync it toward
+ * us: its own resync gets that long to land, and a document still being edited changes heads first.
+ */
+const DIVERGED_REPORT_DELAY = 10_000;
+
+/** Diverged documents named in one collection query; the rest ride the next poll. */
+const MAX_DIVERGED_PER_QUERY = 32;
+
 /**
  * Consecutive non-converging collection-sync passes before warning, at a ~10s poll — ~1min, so
  * in-flight replication of a large document does not trip it.
@@ -294,15 +312,13 @@ export class AutomergeHost extends Resource {
    * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
    * advanced, or we committed again) re-opens the retry. An evicted document spends it on the load that
-   * faults it in.
+   * faults it in. An entry still here a poll later is named in the collection query, so the edge syncs
+   * that document toward us — the round that delivers what our own cannot (see `_divergedDocumentIds`).
    *
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
    */
-  private _divergedResyncHeads = new Map<
-    string,
-    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
-  >();
+  private _divergedResyncHeads = new Map<string, DivergedResyncEntry>();
 
   /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
   private _sharePolicyKickNextAllowedAt = 0;
@@ -1544,7 +1560,37 @@ export class AutomergeHost extends Resource {
   }
 
   private _queryCollectionState(collectionId: string, peerId: PeerId): void {
-    this._echoNetworkAdapter.queryCollectionState(collectionId, peerId);
+    this._echoNetworkAdapter.queryCollectionState(
+      collectionId,
+      peerId,
+      this._divergedDocumentIds(collectionId, peerId),
+    );
+  }
+
+  /**
+   * Diverged documents whose own resync is already spent, for the edge to sync toward us: a commit
+   * on a fragment head reaches us only through a round the edge starts (see `divergedDocumentIds`).
+   */
+  private _divergedDocumentIds(collectionId: string, peerId: PeerId): DocumentId[] {
+    if (!isEdgePeerId(peerId)) {
+      return [];
+    }
+    const reported: [string, DivergedResyncEntry][] = [];
+    const settledBefore = Date.now() - DIVERGED_REPORT_DELAY;
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.collectionId === collectionId && entry.peerId === peerId && entry.since <= settledBefore) {
+        reported.push([resyncKey, entry]);
+        if (reported.length >= MAX_DIVERGED_PER_QUERY) {
+          break;
+        }
+      }
+    }
+    // Re-inserted so the next query starts after them and a backlog past the cap is served in turn.
+    for (const [resyncKey, entry] of reported) {
+      this._divergedResyncHeads.delete(resyncKey);
+      this._divergedResyncHeads.set(resyncKey, entry);
+    }
+    return reported.map(([, entry]) => entry.documentId);
   }
 
   private _sendCollectionState(collectionId: string, peerId: PeerId, state: CollectionState): void {
@@ -1591,13 +1637,16 @@ export class AutomergeHost extends Resource {
     });
 
     const syncKey = `${collectionId}:${peerId}`;
+    // A document that converged on its own leaves the set here: entries are the diverged documents
+    // named in the next collection query, and stale ones would crowd out the ones still stuck.
+    const differentSet = new Set(different);
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.collectionId === collectionId && entry.peerId === peerId && !differentSet.has(entry.documentId)) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
-      for (const [resyncKey, entry] of this._divergedResyncHeads) {
-        if (entry.collectionId === collectionId && entry.peerId === peerId) {
-          this._divergedResyncHeads.delete(resyncKey);
-        }
-      }
       return;
     }
 
@@ -1638,7 +1687,6 @@ export class AutomergeHost extends Resource {
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
-    const differentSet = new Set(different);
 
     if (toReplicate.length === 0) {
       return;
@@ -1701,7 +1749,7 @@ export class AutomergeHost extends Resource {
           });
           continue;
         }
-        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads });
+        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads, since: Date.now() });
         if (isDocumentLoaded(this._repo, documentId)) {
           log('resyncing diverged document', {
             collectionId,

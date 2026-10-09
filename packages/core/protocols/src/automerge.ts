@@ -284,6 +284,17 @@ export type CollectionQueryMessage = {
    * Remote peer will skip sending the state if it has the same tag.
    */
   stateTag?: string;
+
+  /**
+   * Documents the requester still holds at older heads than the responder after a sync round of its
+   * own, which the responder answers by syncing each one toward the requester itself.
+   *
+   * Subduction answers a pull without a commit whose parent heads a fragment the requester already
+   * holds (`automerge-subduction.test.ts`), so once that commit's push is lost — a reconnect, or a
+   * document nothing had subscribed — no round the requester starts can fetch it. A round the
+   * responder starts sends it. Optional: a responder that predates the field ignores it.
+   */
+  divergedDocumentIds?: string[];
   metadata?: Record<string, unknown>;
 };
 

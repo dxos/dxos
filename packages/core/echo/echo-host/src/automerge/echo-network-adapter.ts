@@ -192,12 +192,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldSyncCollection(params);
   }
 
-  queryCollectionState(collectionId: string, targetId: PeerId): void {
+  queryCollectionState(collectionId: string, targetId: PeerId, divergedDocumentIds: string[] = []): void {
     const message: CollectionQueryMessage = {
       type: 'collection-query',
       senderId: this.peerId as PeerId,
       targetId,
       collectionId,
+      ...(divergedDocumentIds.length > 0 ? { divergedDocumentIds } : {}),
     };
     this._send(message);
   }

@@ -446,6 +446,60 @@ describe('automerge-subduction', () => {
     expect((await subductionB.getBlobs(sid))[0]).toEqual(new Uint8Array([4, 5, 6]));
   }, 10_000);
 
+  // Pins the upstream behaviour EDGE's `divergedDocumentIds` works around: a round the requester starts
+  // never fetches a commit whose parent heads a fragment the requester already holds, while a round the
+  // holder starts sends it. If the first case starts passing, the workaround can go.
+  describe('commit on a fragment head', () => {
+    const setup = async () => {
+      const holder = new Subduction({
+        signer: MemorySigner.generate(),
+        storage: new MemoryStorage(),
+        serviceName: 'test-service',
+      });
+      const requesterSignal = withSaveSignal(new MemoryStorage());
+      const requester = new Subduction({
+        signer: MemorySigner.generate(),
+        storage: requesterSignal.storage,
+        serviceName: 'test-service',
+      });
+      const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
+      // A leading zero byte gives the commit fragment depth, so it can head a fragment.
+      const fragmentHeadBytes = new Uint8Array(32).fill(5);
+      fragmentHeadBytes[0] = 0;
+      const fragmentHead = CommitId.fromBytes(fragmentHeadBytes);
+      for (const peer of [holder, requester]) {
+        await peer.storeFragment(sid, fragmentHead, [], [], new Uint8Array([1, 1, 1]));
+        await peer.storeCommit(sid, commitIdOf(1), [], new Uint8Array([2, 2, 2]));
+      }
+      const missing = commitIdOf(9);
+      await holder.storeCommit(sid, missing, [fragmentHead], new Uint8Array([3, 3, 3]));
+      const [requesterTransport, holderTransport] = createMemoryTransportPair();
+      const [holderPeerId, requesterPeerId] = await Promise.all([
+        requester.connectTransport(requesterTransport, 'test-service'),
+        holder.acceptTransport(holderTransport, 'test-service'),
+      ]);
+      const hasMissing = async () =>
+        ((await requester.getHeads(sid)) ?? []).some((head) => head.toHexString() === missing.toHexString());
+      return { holder, requester, requesterSignal, sid, holderPeerId, requesterPeerId, hasMissing };
+    };
+
+    test('is not fetched by a round the requester starts', async ({ expect }) => {
+      const { requester, sid, holderPeerId, hasMissing } = await setup();
+      const result = await requester.syncWithPeer(holderPeerId, sid, true, 5_000);
+      expect(result.success).toBe(true);
+      expect(result.stats?.commitsReceived).toBe(0);
+      expect(await hasMissing()).toBe(false);
+    }, 10_000);
+
+    test('is sent by a round the holder starts', async ({ expect }) => {
+      const { holder, requesterSignal, sid, requesterPeerId, hasMissing } = await setup();
+      const result = await holder.syncWithPeer(requesterPeerId, sid, false, 5_000);
+      expect(result.stats?.commitsSent).toBe(1);
+      await requesterSignal.saved(sid);
+      await expect.poll(hasMissing).toBe(true);
+    }, 10_000);
+  });
+
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();

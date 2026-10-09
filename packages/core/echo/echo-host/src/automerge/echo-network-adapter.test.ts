@@ -45,6 +45,25 @@ describe('EchoNetworkAdapter', () => {
     expect(receivedMessage).to.deep.eq(PAYLOAD);
   });
 
+  test('a collection query names the diverged documents only when there are some', async () => {
+    const sent: SyncMessage[] = [];
+    const controller = createReplicatorController(async (message) => {
+      sent.push(message);
+    });
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    adapter.queryCollectionState('space:a:b', ANOTHER_PEER_ID, ['doc1', 'doc2']);
+    adapter.queryCollectionState('space:a:b', ANOTHER_PEER_ID);
+    await waitForCondition({ condition: () => sent.length === 2 });
+    const [withDiverged, without] = sent.map((message) => cbor.decode(message.payload));
+    expect(withDiverged).to.deep.include({
+      type: 'collection-query',
+      collectionId: 'space:a:b',
+      divergedDocumentIds: ['doc1', 'doc2'],
+    });
+    expect(without).not.to.have.property('divergedDocumentIds');
+  });
+
   test('peer disconnects when onClose callback is invoked', async () => {
     const controller = createReplicatorController();
     const adapter = await createConnectedAdapter(controller.replicator);
