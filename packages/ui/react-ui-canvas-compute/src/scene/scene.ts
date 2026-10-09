@@ -11,10 +11,10 @@
 import * as Schema from 'effect/Schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type Link, type Node, type Scene, initialKeys } from '@dxos/react-ui-canvas/scene';
 
 import { ComputeShape, createAnchorId } from '../shapes/index.ts';
+import { type CanvasGraphModel } from '../types/index.ts';
 
 export const sceneFromCircuit = (model: CanvasGraphModel<ComputeShape>, id = 'circuit', name?: string): Scene => {
   const shapes = model.nodes.filter(Schema.is(ComputeShape));

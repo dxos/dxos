@@ -7,9 +7,9 @@ import { describe, test } from 'vitest';
 
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { CanvasBoard, CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 
 import { ComputeShape, createReducer, createSwitch } from './shapes/index.ts';
+import { CanvasBoard, CanvasGraphModel } from './types/index.ts';
 
 describe('compute', () => {
   test('a reducer keeps the id it is created with', ({ expect }) => {

@@ -6,10 +6,19 @@ import { useMemo } from 'react';
 
 import { type ComputeEdge, ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { invariant } from '@dxos/invariant';
-import { type CanvasBoard, type CanvasGraphModel, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
 
 import { deleteTriggerObjects, syncCreate, syncDelete, syncLink } from '../graph/index.ts';
 import { type ComputeShape } from '../shapes/index.ts';
+import { type CanvasBoard, type CanvasGraphModel } from '../types/index.ts';
+
+/**
+ * Model callback.
+ */
+export interface GraphMonitor<S extends CanvasBoard.Shape = CanvasBoard.Shape> {
+  onCreate: (props: { graph: CanvasGraphModel<S>; node: S }) => void;
+  onLink: (props: { graph: CanvasGraphModel<S>; edge: CanvasBoard.Connection }) => void;
+  onDelete: (props: { graph: CanvasGraphModel<S>; subgraph: CanvasGraphModel<S> }) => void;
+}
 
 /**
  * Map canvas edge to compute edge.

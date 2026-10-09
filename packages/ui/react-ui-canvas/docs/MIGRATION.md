@@ -222,11 +222,11 @@ also a declared workspace dependency (`package.json` and a `tsconfig.json` refer
 
 ### 5.2 Who still uses `react-ui-canvas-editor`
 
-| Consumer                  | What                                                                                                                                                                                                                                                                                                 | Replacement                                                                                                                                                                                  |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plugin-conductor`        | `CanvasBoard` (ECHO type: schema, create-object, translations, article); `KeyboardContainer` (hotkey scope)                                                                                                                                                                                          | Move `CanvasBoard` (`types/`: schema, model, shapes) into `react-ui-canvas-compute`, its only real owner; a plain attention/hotkey wrapper in the plugin. (`ShapeRegistry` is gone: step 3.) |
-| `plugin-debug`            | `CanvasBoard`, `CanvasGraphModel`, `pointMultiply` / `pointsToRect` / `rectToPoints` (circuit presets written into `layout`)                                                                                                                                                                         | Build presets as scenes (`sceneFromCircuit` already exists) or keep writing `layout` through the moved `CanvasBoard` model; the point helpers become local or come from the engine.          |
-| `react-ui-canvas-compute` | `CanvasBoard` (`CanvasBoard.Shape` under `ComputeShape`, the store's layout), `CanvasGraphModel` (`graph/`, circuits, `sceneFromCircuit`), `GraphMonitor` (`useGraphMonitor`, the `createComputeGraph` seed); `testing/circuits.ts`: `createNote`, `pointMultiply` / `pointsToRect` / `rectToPoints` | Step 4. The shape authoring API, the editor stories and hooks, and `TextBox` are gone (step 3, with step 5's compute part).                                                                  |
+| Consumer                  | What                                                                                                                                                                                               | Replacement                                                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `plugin-conductor`        | `KeyboardContainer` (hotkey scope)                                                                                                                                                                 | A plain attention/hotkey wrapper in the plugin (step 5). `CanvasBoard` now comes from `react-ui-canvas-compute` (step 4). |
+| `plugin-debug`            | Nothing: `CanvasBoard` / `CanvasGraphModel` come from `react-ui-canvas-compute` and the grid-to-pixel helper is local (step 4).                                                                    | _Done._                                                                                                                   |
+| `react-ui-canvas-compute` | Nothing: it owns `CanvasBoard` (`src/types/`, also the `./types` entry point), `CanvasGraphModel` and `GraphMonitor`, and `testing/circuits.ts` has its own `createNote` and grid helper (step 4). | _Done._                                                                                                                   |
 
 ### 5.3 Steps (one PR each)
 
@@ -242,10 +242,13 @@ also a declared workspace dependency (`package.json` and a `tsconfig.json` refer
    plugin-conductor's `ShapeRegistry` are gone, as are `scene/defs.ts`'s adapter, `NodeView.tsx` and `ports.ts`.
    The editor's `TextBox` became compute's own (`shapes/common/TextBox.tsx`): the engine's `TextPart` edits only an
    opened part and focuses on mount, which an always-on input cannot use. Step 5's compute part is folded in.
-4. **Own the board type.** Move `CanvasBoard` (schema, `CanvasGraphModel`, shape types) from the editor's `types/` into
-   `react-ui-canvas-compute` (or a `types` entry of it), keeping the ECHO typename `org.dxos.type.canvasBoard` so
-   existing boards open unchanged; point plugin-conductor, plugin-debug and `createEchoStore` at it. Replace
-   `GraphMonitor` with the projection's sync (already shared through `graph/sync.ts`).
+4. **Own the board type.** _Done (2026-10-08)._ `CanvasBoard` (schema, `CanvasGraphModel`, shape types) lives in
+   `react-ui-canvas-compute/src/types` (root and `./types` exports) under the same ECHO typename
+   `org.dxos.type.canvasBoard` and version `0.1.0`; `types/canvas-board.test.ts` round-trips a board as the editor saved
+   it through a test database. plugin-conductor, plugin-debug and `createEchoStore` import it from compute, and
+   `GraphMonitor` is defined beside `useGraphMonitor`. The editor keeps its own identical copy of `types/` until step 6
+   deletes it, since the editor must not depend on compute; both declare the same type, so only compute's is
+   registered by plugin-conductor.
 5. **Drop the legacy paths.** Compute's part is done with step 3 (`compute.stories.tsx`, `useComputeGraphController`,
    `ComputeShapeLayout`, `computeShapes`); left are plugin-conductor's `KeyboardContainer` (a plugin-local hotkey
    scope) and plugin-debug's editor helpers.

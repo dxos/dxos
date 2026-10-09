@@ -10420,9 +10420,6 @@ importers:
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
-      '@dxos/react-ui-canvas-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-canvas-editor
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -22292,9 +22289,6 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../react-ui-canvas
-      '@dxos/react-ui-canvas-editor':
-        specifier: workspace:*
-        version: link:../react-ui-canvas-editor
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor

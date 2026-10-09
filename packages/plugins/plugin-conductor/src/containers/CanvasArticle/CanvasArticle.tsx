@@ -19,6 +19,7 @@ import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
   Bullets,
+  type CanvasBoard,
   ComputeContext,
   ComputeGraphController,
   boardSceneId,
@@ -26,7 +27,7 @@ import {
   createComputeProjection,
   createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
-import { type CanvasBoard, KeyboardContainer } from '@dxos/react-ui-canvas-editor';
+import { KeyboardContainer } from '@dxos/react-ui-canvas-editor';
 import {
   type FreehandProjectionOptions,
   SceneView,

@@ -5,10 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import { type Link, type Node, type NodeStyle, type Scene, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
 
 import { type ComputeShape } from '../shapes/index.ts';
+import { type CanvasBoard } from '../types/index.ts';
 import { applySceneToLayout, sceneFromLayout } from './echo-store.ts';
 
 type Layout = { nodes: ComputeShape[]; edges: CanvasBoard.Connection[] };
