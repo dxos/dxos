@@ -3,7 +3,7 @@
 Status: spec for review (2026-09-20, rev 8: open node types, port direction, free endpoints and markers (§4), toolbar, marquee modes, symmetric resize, ghost and palette drops (§8), e2e (§9); rev 7: text parts with in-place editing and node style (§4), grid-aligned portal frame and navigation shield (§5), always-on grid (§7); rev 6: typed nodes and links (§4, decision 9), palette and spline editing (§8), `MIGRATION.md`; rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
 navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and a throwaway spike (deleted once the engine's `Nested` story covered it; its findings are folded
-into §5). Engine: `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`; barrel `src/scene.ts`), stories `ui/react-ui-canvas/SceneView`.
+into §5). Engine: `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`; barrel `src/index.ts`, also served as `./scene`), stories `ui/react-ui-canvas/SceneView`.
 
 ## 1. Goal
 

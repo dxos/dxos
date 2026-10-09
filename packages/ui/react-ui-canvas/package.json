@@ -19,9 +19,9 @@
       "import": "./dist/lib/index.mjs"
     },
     "./scene": {
-      "source": "./src/scene.ts",
-      "types": "./dist/types/src/scene.d.ts",
-      "import": "./dist/lib/scene.mjs"
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
