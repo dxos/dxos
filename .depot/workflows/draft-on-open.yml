@@ -1,0 +1,40 @@
+name: Draft on open
+
+# Converts a PR opened ready into a draft, so CI starts only once someone marks it ready. Runs on open
+# only, so marking a PR ready afterwards is never undone. Leaves alone forks (read-only token),
+# release and dependency bots, and PRs opened with the `ci` label; Check's gate skips its `opened` run
+# for exactly the PRs this converts.
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.labels.*.name, 'ci') &&
+      !startsWith(github.head_ref, 'changeset-release/') && !startsWith(github.head_ref, 'bot/') &&
+      !startsWith(github.head_ref, 'dependabot/')
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            await github.graphql(
+              'mutation($id: ID!) { convertPullRequestToDraft(input: { pullRequestId: $id }) { pullRequest { isDraft } } }',
+              { id: pr.node_id },
+            );
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pr.number,
+              body: 'Converted to a draft: CI runs once this is marked ready for review (`gh pr ready`). To run CI on the draft, add the `ci` label and push.',
+            });

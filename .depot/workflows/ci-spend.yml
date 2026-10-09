@@ -1,0 +1,61 @@
+name: CI spend
+
+# Totals yesterday's Depot CI spend across dxos and edge, and posts to Discord when the day ran above the
+# pace of a $3,000 month (`scripts/ci-spend.mjs`). Needs two Depot CI secrets scoped to this workflow:
+# DEPOT_API_TOKEN, an org API token the `depot` CLI reads runs and metrics with, and
+# DISCORD_TEST_REPORT_WEBHOOK.
+
+on:
+  schedule:
+    - cron: '30 0 * * *'
+
+  workflow_dispatch:
+    inputs:
+      day:
+        type: string
+        description: 'UTC day to total, YYYY-MM-DD (default: yesterday)'
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  spend:
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            .depot/workflows
+            scripts/ci-spend.mjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # edge's workflow files size its jobs; without read access the script counts them at 8 vCPU.
+      - name: Checkout edge workflows
+        continue-on-error: true
+        uses: actions/checkout@v5
+        with:
+          repository: dxos/edge
+          path: edge
+          sparse-checkout: .depot/workflows
+          persist-credentials: false
+
+      - name: Install the Depot CLI
+        env:
+          DEPOT_CLI_VERSION: 2.102.7
+        run: |
+          curl -fsSL "https://github.com/depot/cli/releases/download/v${DEPOT_CLI_VERSION}/depot_${DEPOT_CLI_VERSION}_linux_amd64.tar.gz" |
+            tar xz -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Report
+        env:
+          CI_SPEND_DAY: ${{ inputs.day }}
+          CI_SPEND_REPOS: dxos/dxos=.depot/workflows,dxos/edge=edge/.depot/workflows
+          DEPOT_TOKEN: ${{ secrets.DEPOT_API_TOKEN }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-spend.mjs ${CI_SPEND_DAY:+--day "$CI_SPEND_DAY"}
