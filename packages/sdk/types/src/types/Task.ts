@@ -920,7 +920,7 @@ export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Ta
  * is what says "underway" — an agent-assigned task still in `todo` is queued, and a started task
  * assigned to a person is someone else's, not a running process.
  */
-export const isAgentWorking = (task: Pick<Task, 'assignee' | 'status'>): boolean =>
+export const isAgentWorking = (task: Task | Obj.Snapshot<Task>): boolean =>
   task.assignee?.role === 'assistant' && task.status === 'started';
 
 /**
