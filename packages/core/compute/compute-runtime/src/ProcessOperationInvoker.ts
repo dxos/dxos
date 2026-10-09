@@ -106,10 +106,25 @@ export const make = ({
       }),
     );
 
+  /** Whether `options` send the call through `remote` rather than spawning it. */
+  const goesRemote = (options: Operation.InvokeOptions | undefined): boolean =>
+    options?.on === 'edge' && options.spaceId !== undefined && remote !== undefined;
+
   /**
-   * The output of `op`, run on EDGE through `remote`; input and output cross the wire in their encoded form. The
-   * request carries only the space: a call that needs its `conversation` or `notify` is refused rather than run
-   * without them, and `tracing` (trace grouping only) is not forwarded.
+   * The remote request carries only the space, so a call that needs its `conversation` or `notify` is refused
+   * rather than run without them; `tracing` only groups traces and is not forwarded.
+   */
+  const refuseUnforwardable = (
+    op: Operation.Definition.Any,
+    options: Operation.InvokeOptions | undefined,
+  ): Effect.Effect<void> =>
+    goesRemote(options) && (options?.conversation !== undefined || options?.notify !== undefined)
+      ? Effect.die(new Error(`Operation '${op.meta.key}' cannot run on EDGE with a conversation or notify option.`))
+      : Effect.void;
+
+  /**
+   * The output of `op`, run on EDGE through `remote`: by its deployment id when it has one, else as the operation
+   * EDGE hosts under its key. Input and output cross the wire in their encoded form.
    */
   const invokeRemote = <I, O>(
     op: Operation.Definition<I, O>,
@@ -118,13 +133,10 @@ export const make = ({
     invoker: Effect.Effect<RemoteOperationInvoker.Invoker>,
   ): Effect.Effect<O> =>
     Effect.gen(function* () {
-      if (options.conversation !== undefined || options.notify !== undefined) {
-        return yield* Effect.die(
-          new Error(`Operation '${op.meta.key}' cannot run on EDGE with a conversation or notify option.`),
-        );
-      }
+      yield* refuseUnforwardable(op, options);
       const encoded = yield* Schema.encodeEffect(op.input)(input).pipe(Effect.orDie);
-      const output = yield* (yield* invoker).invoke(DxosContext.default(), String(op.meta.key), encoded, {
+      const target = op.meta.deployedId ?? String(op.meta.key);
+      const output = yield* (yield* invoker).invoke(DxosContext.default(), target, encoded, {
         spaceId: options.spaceId,
       });
       return yield* Schema.decodeUnknownEffect(op.output)(output).pipe(Effect.orDie);
@@ -141,7 +153,7 @@ export const make = ({
     options: Operation.InvokeOptions | undefined,
     detached: boolean,
   ): Effect.Effect<O> =>
-    options?.on === 'edge' && options.spaceId !== undefined && remote !== undefined
+    goesRemote(options) && options?.spaceId !== undefined && remote !== undefined
       ? invokeRemote(op, input, { ...options, spaceId: options.spaceId }, remote)
       : spawn(op, input, options, detached).pipe(Effect.flatMap((handle) => Process.awaitOutput(handle)));
 
@@ -174,6 +186,8 @@ export const make = ({
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(function* () {
+      // Before detaching: the scheduled call's own failure is only logged, so the caller would never see this one.
+      yield* refuseUnforwardable(op, options);
       yield* Ref.update(pendingCount, (count) => count + 1);
       // Through the output, not just the spawn: `awaitFollowups` waits for the operation to finish.
       const fiber = yield* run(op, input, options, true).pipe(

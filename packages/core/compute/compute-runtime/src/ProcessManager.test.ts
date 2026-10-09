@@ -1421,8 +1421,30 @@ describe('ProcessOperationInvoker edge dispatch', () => {
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
       const exit = yield* invoker.invoke(Double, { value: 1 }, { on: 'edge', spaceId, conversation }).pipe(Effect.exit);
       expect(Exit.hasDies(exit)).toEqual(true);
+      // A scheduled call is refused by `schedule` itself, not by the detached run whose failure is only logged.
+      const scheduled = yield* invoker
+        .schedule(Double, { value: 1 }, { on: 'edge', spaceId, conversation })
+        .pipe(Effect.exit);
+      expect(Exit.hasDies(scheduled)).toEqual(true);
+      expect(yield* invoker.pendingFollowups).toEqual(0);
       expect(calls).toEqual([]);
       expect(locations).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'invokes a deployed operation on EDGE by its deployment id',
+    Effect.fn(function* ({ expect }) {
+      const locations: Array<Process.Location | undefined> = [];
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }> = [];
+      const invoker = yield* makeRecordingInvoker(locations, makeRemote(calls));
+      const Deployed = Operation.make({
+        meta: { key: DXN.make('com.example.operation.test.deployedDouble'), name: 'Deployed', deployedId: 'fn-double' },
+        input: Double.input,
+        output: Double.output,
+      });
+      expect(yield* invoker.invoke(Deployed, { value: 4 }, { on: 'edge', spaceId })).toEqual(8);
+      expect(calls).toEqual([{ deployedId: 'fn-double', input: { value: 4 }, spaceId }]);
     }, Effect.provide(TestLayer)),
   );
 
