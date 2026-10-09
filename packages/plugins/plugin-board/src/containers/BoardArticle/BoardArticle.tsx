@@ -241,5 +241,14 @@ const BoardObjectPicker = ({ board, onSelect, trigger }: BoardObjectPickerProps)
     [objects, onSelect],
   );
 
-  return <ObjectPicker options={options} onSelect={handleSelect} onOpenChange={setOpen} trigger={trigger} />;
+  return (
+    <ObjectPicker
+      options={options}
+      // The board itself is always in the result, so an empty result means the query has not landed.
+      loading={open && objects.length === 0}
+      onSelect={handleSelect}
+      onOpenChange={setOpen}
+      trigger={trigger}
+    />
+  );
 };

@@ -31,3 +31,15 @@ export const useLabel = (
   const label = useAtomValue(atom);
   return label ?? (options?.fallback === 'typename' && entity ? Entity.getTypename(entity) : undefined);
 };
+
+/**
+ * The labels of a list of live ECHO entities, keyed by entity.
+ * Re-renders when the list or any label string changes.
+ */
+export const useLabels = <T extends Entity.Unknown>(entities: readonly T[]): ReadonlyMap<T, string | undefined> =>
+  useAtomValue(
+    useMemo(
+      () => Atom.make((get) => new Map(entities.map((entity) => [entity, get(Entity.labelAtom(entity))] as const))),
+      [entities],
+    ),
+  );

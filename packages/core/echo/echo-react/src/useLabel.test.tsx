@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useLabel } from './useLabel.ts';
+import { useLabel, useLabels } from './useLabel.ts';
 
 const createWrapper = (registry: AtomRegistry.AtomRegistry) => {
   return ({ children }: PropsWithChildren) => (
@@ -59,5 +59,40 @@ describe('useLabel', () => {
     const unnamed: TestSchema.Person = createObject(Obj.make(TestSchema.Person, {}));
     const { result: fallback } = renderHook(() => useLabel(unnamed, { fallback: 'typename' }), { wrapper });
     expect(fallback.current).toBe(Obj.getTypename(unnamed));
+  });
+});
+
+describe('useLabels', () => {
+  test('re-renders on a rename in the list and not on other edits', () => {
+    const alice: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Alice', email: 'a@example.com' }),
+    );
+    const bob: TestSchema.Person = createObject(Obj.make(TestSchema.Person, { name: 'Bob' }));
+    const people = [alice, bob];
+    const wrapper = createWrapper(AtomRegistry.make());
+    let renders = 0;
+    const { result } = renderHook(
+      () => {
+        renders++;
+        return useLabels(people);
+      },
+      { wrapper },
+    );
+    expect([...result.current.values()]).toEqual(['Alice', 'Bob']);
+    const baseline = renders;
+
+    act(() => {
+      Obj.update(alice, (alice) => {
+        alice.email = 'b@example.com';
+      });
+    });
+    expect(renders).toBe(baseline);
+
+    act(() => {
+      Obj.update(bob, (bob) => {
+        bob.name = 'Carol';
+      });
+    });
+    expect(result.current.get(bob)).toBe('Carol');
   });
 });

@@ -11,7 +11,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useLabel, useObject } from '@dxos/echo-react';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -217,7 +217,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
                       item={artifact}
                       key={artifact.id}
                       layout={itemLayout}
-                      title={<Card.Title>{Obj.getLabel(artifact)}</Card.Title>}
+                      title={<ArtifactTitle artifact={artifact} />}
                     >
                       <Surface.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
                     </Board.Cell>
@@ -233,3 +233,5 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
 };
 
 LightboxArticle.displayName = 'LightboxArticle';
+
+const ArtifactTitle = ({ artifact }: { artifact: Obj.Unknown }) => <Card.Title>{useLabel(artifact)}</Card.Title>;

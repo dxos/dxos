@@ -24,7 +24,7 @@ describe('makeItemsAtom', () => {
     await builder.close();
   });
 
-  test('follows the item refs and card edits, not arrangement writes', async ({ expect }) => {
+  test('follows the item refs, not arrangement writes or card edits', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Kanban.Kanban, TestSchema.Expando] });
     const a = db.add(Obj.make(TestSchema.Expando, { status: 'todo' }));
     const b = db.add(Obj.make(TestSchema.Expando, { status: 'todo' }));
@@ -54,7 +54,7 @@ describe('makeItemsAtom', () => {
     Obj.update(a, (a) => {
       a.status = 'done';
     });
-    expect(fires).toBeGreaterThan(beforeEdit);
+    expect(fires).toBe(beforeEdit);
 
     Obj.update(kanban, (kanban) => {
       kanban.spec.items.splice(0, 1);

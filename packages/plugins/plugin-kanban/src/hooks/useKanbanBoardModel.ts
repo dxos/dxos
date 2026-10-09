@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
+import { shallowEqual } from '@dxos/util';
 
 import { Kanban, KanbanLayout } from '#types';
 
@@ -16,6 +17,7 @@ import {
   computeColumnStructure,
   getOrderByColumnFromArrangement,
   getOrderFromArrangement,
+  makePivotFieldIdAtom,
   orderItemsInColumn,
 } from '../util/index.ts';
 
@@ -38,22 +40,7 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
   const arrangementAtom = useMemo(() => Obj.atomProperty(kanban, 'arrangement'), [kanban]);
 
-  /**
-   * Only changes when the discriminator-relevant pivot input changes.
-   * View-variant: derived from `view.projection.pivotFieldId`.
-   * Items-variant: the kanban's `spec.pivotField` (the property name itself acts as the field id).
-   */
-  const pivotFieldIdAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        const spec = get(Obj.atomProperty(kanban, 'spec'));
-        if (spec.kind === 'items') {
-          return spec.pivotField;
-        }
-        return get(Obj.atom(spec.view))?.projection?.pivotFieldId as string | undefined;
-      }),
-    [kanban],
-  );
+  const pivotFieldIdAtom = useMemo(() => makePivotFieldIdAtom(kanban), [kanban]);
 
   // Effective per-column ids: from kanban.arrangement.columns; empty when arrangement has no columns.
   const effectiveByColumnAtom = useMemo(
@@ -127,8 +114,15 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
           const selectOptions = fieldProj.props.options ?? [];
           const pivotPath = fieldProj.props.property;
           const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
-          return orderItemsInColumn(allItems, columnArr.ids, columnValue, pivotPath, validColumnValues);
-        }),
+          const getColumn = (item: T): string | undefined => {
+            const value =
+              pivotPath === undefined
+                ? undefined
+                : Reflect.get(Obj.isObject(item) ? get(Obj.atom(item)) : item, pivotPath);
+            return typeof value === 'string' ? value : undefined;
+          };
+          return orderItemsInColumn(allItems, columnArr.ids, columnValue, getColumn, validColumnValues);
+        }).pipe(Atom.withEquality<T[]>(shallowEqual)),
       ),
     [columnArrangementAtomFamily, itemsAtom, pivotFieldIdAtom, projection],
   );

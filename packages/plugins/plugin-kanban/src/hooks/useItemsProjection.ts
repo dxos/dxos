@@ -10,7 +10,7 @@ import type { ProjectionModel } from '@dxos/schema';
 
 import { Kanban } from '#types';
 
-import { makeColumnIdsAtom, makePivotFieldAtom } from '../util/index.ts';
+import { makeColumnIdsAtom, makePivotFieldIdAtom } from '../util/index.ts';
 
 /**
  * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`
@@ -19,7 +19,7 @@ import { makeColumnIdsAtom, makePivotFieldAtom } from '../util/index.ts';
  * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */
 export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel => {
-  const pivotField = useAtomValue(useMemo(() => makePivotFieldAtom(kanban), [kanban]));
+  const pivotField = useAtomValue(useMemo(() => makePivotFieldIdAtom(kanban), [kanban]));
   const optionIds = useAtomValue(useMemo(() => makeColumnIdsAtom(kanban), [kanban]));
 
   return useMemo(() => {
@@ -38,7 +38,7 @@ export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel 
       fields,
       tryGetFieldProjection: (id: string) => (id === pivotField ? fieldProjection : undefined),
       getFieldProjections: () => [],
-      getHiddenProperties: () => [pivotField],
+      getHiddenProperties: () => (pivotField ? [pivotField] : []),
     };
 
     // TODO(wittjosiah): Refactor ProjectionModel to be an interface that we can fulfill.
