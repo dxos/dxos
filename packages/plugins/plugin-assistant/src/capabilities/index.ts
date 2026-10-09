@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -28,7 +29,8 @@ export const AgentHydrator = Capability.lazyModule(
   {
     requires: [Capabilities.ProcessManagerRuntime],
     provides: [],
-    activatesOn: AssistantEvents.Start,
+    // Background work: kept out of the burst of queries the first article render triggers.
+    activatesOn: ActivationEvent.allOf(AssistantEvents.Start, ActivationEvents.Idle),
     environments: ['browser', 'node', 'tauri'],
   },
   () => import('./agent-hydrator.ts'),

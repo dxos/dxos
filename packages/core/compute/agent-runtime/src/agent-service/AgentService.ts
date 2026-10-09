@@ -15,7 +15,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
+import { Annotation, Database, Error as EchoError, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -230,13 +230,20 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
         ];
         log('agent hydrate', { count: agents.length });
         for (const { agent, executable } of agents) {
-          yield* agent
-            .hydrate(executable)
-            .pipe(
-              Effect.catchCause((cause) =>
-                Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
-              ),
-            );
+          yield* agent.hydrate(executable).pipe(
+            Effect.catchCause((cause) =>
+              isChatGone(cause)
+                ? Effect.sync(() => log.info('discarding agent whose chat is gone', { pid: agent.pid })).pipe(
+                    Effect.andThen(agent.terminate()),
+                    Effect.catchCause((cause) =>
+                      Effect.sync(() =>
+                        log.warn('agent discard failed', { pid: agent.pid, cause: Cause.pretty(cause) }),
+                      ),
+                    ),
+                  )
+                : Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
+            ),
+          );
         }
       });
 
@@ -380,6 +387,18 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
       return service;
     }),
   );
+
+/** The agent's chat no longer resolves, so its record would fail the same way on every boot. */
+const isChatGone = (cause: Cause.Cause<unknown>): boolean => {
+  let current: unknown = Cause.squash(cause);
+  while (current instanceof Error) {
+    if (current.name === EchoError.EntityNotFoundError.name) {
+      return true;
+    }
+    current = current.cause;
+  }
+  return false;
+};
 
 const makeSession = (
   process: AgentHandle,

@@ -793,6 +793,29 @@ describe('Agent Service (control plane)', () => {
     ),
   );
 
+  it.effect(
+    'hydrate discards an agent whose chat was deleted',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        yield* Database.flush();
+
+        yield* ComputeAgentService.getSession(chat);
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+        yield* Database.remove(chat);
+        yield* Database.flush();
+
+        yield* ComputeAgentService.hydrate();
+        expect(yield* processManager.list({ key: AGENT_PROCESS_KEY })).toHaveLength(0);
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path. The steering ref lives on the chat, so repointing the
   // chat is what makes the running process stale.
