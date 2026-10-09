@@ -6,6 +6,7 @@ import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
@@ -20,6 +21,7 @@ import { meta } from '#meta';
 
 import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
 import { downloadUrl } from './download.ts';
+import { UpdateMenuItem } from './UpdateMenuItem.tsx';
 
 const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
@@ -29,6 +31,7 @@ export const HelpMenu = () => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const config = useConfig();
+  const updateManager = Hooks.useOptionalCapability(AppCapabilities.UpdateManager);
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const releasedAt = timestamp ? new Date(timestamp) : undefined;
   const released = releasedAt && isValid(releasedAt) ? releasedAt : undefined;
@@ -115,6 +118,7 @@ export const HelpMenu = () => {
             )}
           </Layout.Flex>
         )}
+        {updateManager && <UpdateMenuItem manager={updateManager} />}
       </Menu.Content>
     </Menu.Root>
   );
