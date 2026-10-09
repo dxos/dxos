@@ -37,7 +37,7 @@ type StoryArgs = {
   select?: string;
 };
 
-/** The docked panels alone: the properties and layers sections, without the canvas they sit beside. */
+/** The docked panels alone: the properties, layers and about sections, without the canvas they sit beside. */
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
   const { store, root } = useMemo(() => {
@@ -52,6 +52,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
     <SceneView.Root store={store} root={root} atoms={atoms}>
       <SceneView.Properties />
       <SceneView.Layers />
+      <SceneView.About />
     </SceneView.Root>
   );
 };
@@ -87,5 +88,8 @@ export const Test: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
+    // 3. The about section follows the layers, its figures those of the scene.
+    await expect(within(dock).getByTestId('about-nodes')).toHaveTextContent('2');
+    await expect(within(dock).getByTestId('about-layers')).toHaveTextContent('2');
   },
 };

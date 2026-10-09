@@ -154,6 +154,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             {(settings.showPalette ?? true) && <SceneView.Palette />}
             <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
             <SceneView.Layers />
+            <SceneView.About />
           </SceneView.Root>
         )}
       </Panel.Body>

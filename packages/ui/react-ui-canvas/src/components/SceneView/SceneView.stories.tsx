@@ -66,6 +66,7 @@ const Editor = ({ store, root, liveDepth, readonly, lattice, panels }: EditorPro
     <SceneView.Palette />
     <SceneView.Properties />
     <SceneView.Layers />
+    <SceneView.About />
   </SceneView.Root>
 );
 
@@ -313,5 +314,7 @@ export const Floating: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
     await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
+    // About lives only in the dock.
+    await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
   },
 };

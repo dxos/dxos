@@ -81,6 +81,7 @@ import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { recordScenes, redo, undo } from '../../utils/undo.ts';
+import { About, type AboutStat } from '../About/About.tsx';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -1356,6 +1357,36 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
 
 SceneViewLayers.displayName = 'SceneView.Layers';
 
+//
+// About
+//
+
+const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--info--regular', order: 2 };
+
+export type SceneViewAboutProps = Util.ThemedClassName<{}>;
+
+/** Figures for the current scene and the drawing; a dock section only, since it has no place over the canvas. */
+const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
+  const { scene, store, selection, camera, path, panels } = useSceneViewContext('SceneView.About');
+  const scenes = useAtomValue(store.scenes);
+  const docked = panels === 'docked';
+  const stats = useMemo<AboutStat[]>(
+    () => [
+      { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
+      { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
+      { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
+      { id: 'selected', label: 'Selected', value: selection.size },
+      { id: 'scenes', label: 'Scenes', value: Object.keys(scenes).length },
+      { id: 'depth', label: 'Depth', value: path.length - 1 },
+      { id: 'zoom', label: 'Zoom', value: `${Math.round(camera.zoom * 100)}%` },
+    ],
+    [scene, scenes, selection, path, camera.zoom],
+  );
+  return useDockSection(ABOUT_SECTION, docked, <About classNames={mx('h-auto', classNames)} stats={stats} />);
+};
+
+SceneViewAbout.displayName = 'SceneView.About';
+
 export const SceneView = {
   Root: SceneViewRoot,
   Canvas: SceneViewCanvas,
@@ -1365,4 +1396,5 @@ export const SceneView = {
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
   Layers: SceneViewLayers,
+  About: SceneViewAbout,
 };

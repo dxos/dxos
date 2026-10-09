@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './About/index.ts';
 export * from './Breadcrumbs/index.ts';
 export * from './ControlFrame/index.ts';
 export * from './Grid/index.ts';
