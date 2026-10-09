@@ -163,9 +163,9 @@ export const IconsPlugin = ({
   // no fill defaults to black and disappears against a dark surface, and vector editors drop the
   // attribute on every re-export — patching the source SVG loses that race. Runs here rather than
   // via svg-sprite's `shape.transform` so it also applies to a caller-supplied `config`.
-  const normalizeSpriteFile = () => {
-    const { svg, hardcoded } = normalizeSprite(fs.readFileSync(spritePath, 'utf8'));
-    fs.writeFileSync(spritePath, svg);
+  const normalizeSpriteFile = (path: string) => {
+    const { svg, hardcoded } = normalizeSprite(fs.readFileSync(path, 'utf8'));
+    fs.writeFileSync(path, svg);
     const fresh = hardcoded.filter((id) => !warnedHardcoded.has(id));
     if (fresh.length > 0) {
       fresh.forEach((id) => warnedHardcoded.add(id));
@@ -196,8 +196,14 @@ export const IconsPlugin = ({
     // failed `makeSprite` leaves it unchanged and the next call retries instead of skipping.
     const written = fingerprint;
     const symbols = new Set(resolved.map(({ symbol }) => symbol));
-    await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, symbols);
-    normalizeSpriteFile();
+    // In dev the sprite is built aside and renamed into place: a request may be reading the served
+    // file, and both `makeSprite` and the normalize pass rewrite their target in place.
+    const target = devSpriteDir ? join(devSpriteDir, 'staging', spriteFile) : spritePath;
+    await makeSprite({ assetPath, symbolPattern, spritePath: target, contentPaths, config }, symbols);
+    normalizeSpriteFile(target);
+    if (target !== spritePath) {
+      fs.renameSync(target, spritePath);
+    }
     lastFingerprint = written;
     watchAssets(resolved.map(({ path }) => path));
     if (verbose) {

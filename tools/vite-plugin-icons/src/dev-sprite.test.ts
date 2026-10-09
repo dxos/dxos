@@ -77,12 +77,15 @@ describe('dev sprite', () => {
   test('a request during an in-flight write receives the completed sprite', async () => {
     const server = await startServer();
     await server.load('alpha');
-    const first = server.sprite();
+    expect(await server.sprite()).toContain('id="ph--alpha--regular"');
     await server.load('beta');
-    // The first request started the write for `alpha`; this one arrives while it is still running.
-    const [, second] = await Promise.all([first, server.sprite()]);
-    expect(second).toContain('id="ph--beta--regular"');
-    expect(second.trim().endsWith('</svg>')).toBe(true);
+    // Whichever request lands first flushes the pending write; the other finds it in flight with the
+    // `alpha`-only sprite still on disk, and must wait rather than serve that.
+    const sprites = await Promise.all([server.sprite(), server.sprite()]);
+    for (const sprite of sprites) {
+      expect(sprite).toContain('id="ph--beta--regular"');
+      expect(sprite.trim().endsWith('</svg>')).toBe(true);
+    }
   });
 
   test('a second server sharing the public dir cannot replace the sprite the first one serves', async () => {
