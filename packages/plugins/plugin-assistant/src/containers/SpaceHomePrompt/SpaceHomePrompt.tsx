@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -34,11 +34,9 @@ type SpaceScopedProps = {
 
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
-  const { invokePromise } = Hooks.useOperationInvoker();
 
   const registry = useRegistry();
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
-  const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
 
@@ -54,6 +52,41 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, skillDefinitions });
   const { preset, ...presetProps } = usePresets(settings, chat);
 
+  const startNewDraft = useCallback(() => setDraftGeneration((current) => current + 1), []);
+  const event = useDraftSend({ space, chat, context, onSettled: startNewDraft });
+
+  if (!space) {
+    return null;
+  }
+
+  return (
+    <ChatPrompt
+      {...presetProps}
+      outline
+      chat={chat}
+      db={space.db}
+      context={context}
+      registry={registry}
+      event={event}
+      preset={preset?.id}
+      placeholder={t('space-home.prompt.placeholder')}
+    />
+  );
+};
+
+SpaceHomePrompt.displayName = 'SpaceHomePrompt';
+
+type UseDraftSendProps = {
+  space?: Space;
+  chat?: Chat.Chat;
+  context?: AiContext.Binder;
+  onSettled: () => void;
+};
+
+const useDraftSend = ({ space, chat, context, onSettled }: UseDraftSendProps) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
   const event = useMemo(() => new Event<ChatEvent>(), []);
   const submitting = useRef(false);
   useEffect(() => {
@@ -81,31 +114,12 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
         .catch((err) => log.catch(err))
         .finally(() => {
           submitting.current = false;
-          setDraftGeneration((current) => current + 1);
+          onSettled();
         });
     });
-  }, [event, space, chat, context, atomRegistry, stateAtom, invokePromise]);
-
-  if (!space) {
-    return null;
-  }
-
-  return (
-    <ChatPrompt
-      {...presetProps}
-      outline
-      chat={chat}
-      db={space.db}
-      context={context}
-      registry={registry}
-      event={event}
-      preset={preset?.id}
-      placeholder={t('space-home.prompt.placeholder')}
-    />
-  );
+  }, [event, space, chat, context, atomRegistry, stateAtom, invokePromise, onSettled]);
+  return event;
 };
-
-SpaceHomePrompt.displayName = 'SpaceHomePrompt';
 
 type UseDraftContextProps = {
   db?: Database.Database;
