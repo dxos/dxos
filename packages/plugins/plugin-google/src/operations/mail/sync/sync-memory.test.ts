@@ -18,6 +18,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { ambientSyncServices, seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 
+import { type GoogleMail } from '#apis';
 import { type GmailDataset, GoogleMailApi } from '#services';
 
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
@@ -52,13 +53,20 @@ const collectGarbage = (() => {
   };
 })();
 
-/** Samples `heapUsed` on a timer while `run` executes, returning its peak above the pre-run baseline. */
-const measurePeak = async <T>(run: () => Promise<T>): Promise<{ result: T; baselineMb: number; peakMb: number }> => {
+/**
+ * Samples a `process.memoryUsage()` metric on a timer while `run` executes, returning its peak above the
+ * pre-run baseline. Defaults to `heapUsed`; attachment bytes are Node `Buffer`s that live off the V8 heap,
+ * so measuring them needs `arrayBuffers`.
+ */
+const measurePeak = async <T>(
+  run: () => Promise<T>,
+  metric: 'heapUsed' | 'arrayBuffers' | 'rss' = 'heapUsed',
+): Promise<{ result: T; baselineMb: number; peakMb: number }> => {
   collectGarbage();
-  const baseline = process.memoryUsage().heapUsed;
+  const baseline = process.memoryUsage()[metric];
   let peak = baseline;
   const sample = () => {
-    peak = Math.max(peak, process.memoryUsage().heapUsed);
+    peak = Math.max(peak, process.memoryUsage()[metric]);
   };
   const timer = setInterval(sample, 2);
   try {
@@ -181,6 +189,54 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     // The seed saturates at 2 × tail once the feed holds more than that.
     expect(rows.at(-1)?.seedItems).toBe(2 * SEED_TAIL);
   });
+
+  // Repro of the production OOM ("Worker exceeded memory limit.", operation-service/compute-service,
+  // syncMail `invokeOperation`) driven by a large attachment rather than body volume. `fetchAttachments`
+  // downloads every attachment into a Buffer before anything looks at its size, and the pipeline holds a
+  // commit page (10) + buffer (16) + fetch concurrency (5) of them at once, so a run pulls many copies of
+  // a big attachment into the 128 MB isolate. Worse, the inline blob cap is 4 MB, so `processAttachments`
+  // drops an oversized one AFTER the full download. Before the fix, peak heap scales with attachment size
+  // and every attachment is fetched; after it, oversized attachments are skipped before download.
+  test('a big attachment is not pulled into the isolate (OOM guard)', async ({ expect }) => {
+    const now = new Date();
+    const attachMb = Number.parseInt(process.env.DX_SYNC_ATTACH_MB ?? '8', 10);
+    const count = Number.parseInt(process.env.DX_SYNC_ATTACH_COUNT ?? '12', 10);
+    const dataset = withLargeAttachments(
+      generateGmailDataset({ count, seed: 7, start: subDays(now, 10), end: subDays(now, 1) }),
+      attachMb * MB,
+    );
+    const { db, binding } = await seedMailboxBinding(builder, {
+      source: GMAIL_SOURCE,
+      connectorId: GMAIL_CONNECTOR_ID,
+      options: { syncBackDays: 29 },
+    });
+    const counter = { downloads: 0 };
+    const services = Layer.mergeAll(attachmentCountingApi(dataset, counter), ambientSyncServices(db));
+    // Measure `arrayBuffers`: attachment bytes are Node Buffers held off the V8 heap, so `heapUsed`
+    // (dominated here by the per-run ECHO/pipeline churn) would not move with attachment size.
+    const { peakMb, baselineMb } = await measurePeak(
+      () =>
+        EffectEx.runPromise(
+          Effect.exit(
+            runGoogleSync({ binding: Ref.make(binding), maxMessages: count, now }).pipe(Effect.provide(services)),
+          ),
+        ),
+      'arrayBuffers',
+    );
+
+    // eslint-disable-next-line no-console
+    console.log(`\n=== attachment OOM: ${count} messages × ${attachMb} MB attachment ===`);
+    // eslint-disable-next-line no-console
+    console.table([
+      { attachMb, count, downloads: counter.downloads, peakAttachMb: round(peakMb), baselineMb: round(baselineMb) },
+    ]);
+
+    // Oversized attachments are skipped before download, so nothing is fetched and the off-heap buffer
+    // peak does not scale with attachment size (before the fix: `downloads === count` and peak ≈
+    // fetch concurrency × attachMb).
+    expect(counter.downloads).toBe(0);
+    expect(peakMb).toBeLessThan(attachMb * 2);
+  });
 });
 
 /** Mock Gmail that counts the message ids each run pushes tag changes for (`batchModify`). */
@@ -194,6 +250,48 @@ const countingApi = (dataset: GmailDataset, counter: { pushed: number }): Layer.
         batchModifyMessages: (userId, messageIds, labels) => {
           counter.pushed += messageIds.length;
           return inner.batchModifyMessages(userId, messageIds, labels);
+        },
+      });
+    }),
+  ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+
+/**
+ * Rewrites every message to a multipart payload — a `text/html` body part (so the message still decodes)
+ * plus one attachment part — and registers `sizeBytes` of attachment data in the dataset, so a run must
+ * download `sizeBytes` per message. One shared base64 blob keeps the fixture small; `getAttachment` hands
+ * out the same body each call and `fetchAttachments` decodes a fresh Buffer per message.
+ */
+const withLargeAttachments = (dataset: GmailDataset, sizeBytes: number): GmailDataset => {
+  const data = Buffer.alloc(sizeBytes, 0x61).toString('base64');
+  const attachments: Record<string, GoogleMail.MessagePartBody> = { ...dataset.attachments };
+  const messages = dataset.messages.map((message) => {
+    const attachmentId = `att-${message.id}`;
+    attachments[attachmentId] = { size: sizeBytes, data };
+    return {
+      ...message,
+      payload: {
+        ...message.payload,
+        parts: [
+          { mimeType: 'text/html', body: message.payload.body ?? { size: 0, data: '' } },
+          { mimeType: 'application/pdf', filename: 'big.pdf', body: { size: sizeBytes, attachmentId } },
+        ],
+      },
+    };
+  });
+  return { ...dataset, messages, attachments };
+};
+
+/** Mock Gmail that counts attachment downloads, so a test can assert oversized ones are never fetched. */
+const attachmentCountingApi = (dataset: GmailDataset, counter: { downloads: number }): Layer.Layer<GoogleMailApi> =>
+  Layer.effect(
+    GoogleMailApi,
+    Effect.gen(function* () {
+      const inner = yield* GoogleMailApi;
+      return GoogleMailApi.of({
+        ...inner,
+        getAttachment: (userId, messageId, attachmentId) => {
+          counter.downloads += 1;
+          return inner.getAttachment(userId, messageId, attachmentId);
         },
       });
     }),

@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
+import { Blob } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
@@ -279,8 +280,25 @@ export const fetchAttachments = (
 ): Effect.Effect<readonly EmailStage.Attachment[], never, GoogleMailApi> =>
   Effect.gen(function* () {
     const api = yield* GoogleMailApi;
+    // Skip an attachment larger than the inline blob cap BEFORE downloading it. The default blob store
+    // is inline (the EDGE operation runtime registers S3 without making it the default), so
+    // `processAttachments` drops anything past this cap anyway — downloading it first only pulls tens of
+    // MB into the 128 MB isolate and caused the production `syncMail` OOM ("Worker exceeded memory
+    // limit."). `size` is Gmail part metadata, known here without the download.
+    const downloadable = attachments.filter((attachment) => {
+      if (attachment.size > Blob.MAX_INLINE_SIZE) {
+        log.info('gmail sync: skipping attachment past the inline blob cap', {
+          messageId,
+          attachmentId: attachment.attachmentId,
+          size: attachment.size,
+          limit: Blob.MAX_INLINE_SIZE,
+        });
+        return false;
+      }
+      return true;
+    });
     const fetched = yield* Effect.forEach(
-      attachments,
+      downloadable,
       (attachment) =>
         api.getAttachment(userId, messageId, attachment.attachmentId).pipe(
           Effect.flatMap((body) =>
