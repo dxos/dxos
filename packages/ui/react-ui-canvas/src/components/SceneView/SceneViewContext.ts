@@ -7,7 +7,13 @@ import { type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
 import { createContext } from '@dxos/react-hooks';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type ControlPointRef, type Drag, type EditingPart, type SceneViewAtoms } from '../../model/atoms.ts';
+import {
+  type ControlPointRef,
+  type Drag,
+  type EditingPart,
+  type PanelMode,
+  type SceneViewAtoms,
+} from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
@@ -78,6 +84,8 @@ export type SceneViewContextValue = {
   drag: Drag | undefined;
   tool: Tool;
   debug: boolean;
+  /** Where the properties and layers panels sit. */
+  panels: PanelMode;
 
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;

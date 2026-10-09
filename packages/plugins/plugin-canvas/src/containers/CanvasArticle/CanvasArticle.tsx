@@ -140,6 +140,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             grid={record?.grid}
             initialCamera={savedCamera}
             onCameraChange={handleCameraChange}
+            panels={(settings.dockPanels ?? true) ? 'docked' : 'floating'}
           >
             <SceneView.Canvas liveDepth={settings.liveDepth} />
             {/* Unset means shown: settings saved before the default existed hold neither key. */}
@@ -151,9 +152,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               </>
             )}
             {(settings.showPalette ?? true) && <SceneView.Palette />}
-            {/* Floats over the canvas while something is selected; renders nothing otherwise. */}
             <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
             <SceneView.Layers />
+            <SceneView.About />
           </SceneView.Root>
         )}
       </Panel.Body>
