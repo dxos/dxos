@@ -2,17 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Entity, Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { useAttentionAttributes, useAttentionContext } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { FrameNodeView, type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, isFrameNode } from '@dxos/react-ui-canvas/scene';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { mx } from '@dxos/ui-theme';
 
 import { type FrameRole, frameRole, isSceneCanvas, objectRef, parseLinkedSceneId } from '#model';
 
@@ -32,7 +35,7 @@ export const CanvasFrameNodeView = (props: NodeViewProps) => {
   if (!object || !isFrameNode(node)) {
     return <FrameNodeView {...props} />;
   }
-  return <FrameSurface object={object} role={frameRole(node)} />;
+  return <FrameSurface object={object} role={frameRole(node)} selected={props.selected} />;
 };
 
 /** Above a frame showing an object, the control that opens it in the app; a scene frame keeps its own inside. */
@@ -55,39 +58,52 @@ export const CanvasFrameToolbar = ({ node, onOpen }: NodeViewProps) => {
   );
 };
 
-type FrameSurfaceProps = { object: Obj.Unknown; role: FrameRole };
+type FrameSurfaceProps = { object: Obj.Unknown; role: FrameRole; selected?: boolean };
 
 // The object's own scrolling content takes the wheel, rather than the canvas panning under it.
 const overlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
 
-/** An object shown in a frame as its surface of the frame's role. */
-const FrameSurface = ({ object, role }: FrameSurfaceProps) => {
-  if (role === 'card') {
-    return (
-      <>
-        {/* The frame already frames it, so the card fills the body without a border of its own. */}
-        <Card.Root grid border={false} classNames='dx-cover' data-testid='frame-surface' data-role={role} {...overlay}>
-          <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-        </Card.Root>
-      </>
-    );
-  }
-  // Section and article are sized by the frame rather than their content (`extrinsic`).
-  const data = { subject: object, attendableId: Entity.getURI(object), extrinsic: true };
+/**
+ * An object shown in a frame as its surface of the frame's role. It is attendable as the object, so its own toolbar
+ * acts: by focus within it, or by selecting the frame on the canvas, which moves no focus.
+ */
+const FrameSurface = ({ object, role, selected }: FrameSurfaceProps) => {
+  const attendableId = Entity.getURI(object);
+  const attentionAttributes = useAttentionAttributes(attendableId);
+  const { attention } = useAttentionContext('FrameSurface');
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = ref.current;
+    if (!selected || !element || !attention) {
+      return;
+    }
+    // Next frame: the click that selects the frame then focuses the canvas, which attends the drawing instead.
+    const frame = requestAnimationFrame(() => Attention.attendElement(attention, element));
+    return () => cancelAnimationFrame(frame);
+  }, [selected, attention]);
+
+  // A card is sized by its content; a section or article by the frame (`extrinsic`).
+  const card = role === 'card';
+  const data = card ? { subject: object, attendableId } : { subject: object, attendableId, extrinsic: true };
   return (
-    <>
-      <div
-        className='dx-cover grid grid-rows-[minmax(0,1fr)] overflow-hidden'
-        data-testid='frame-surface'
-        data-role={role}
-        {...overlay}
-      >
-        {role === 'section' ? (
-          <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-        ) : (
-          <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
-        )}
-      </div>
-    </>
+    <div
+      ref={ref}
+      className={mx('dx-cover grid overflow-hidden', !card && 'grid-rows-[minmax(0,1fr)]')}
+      data-testid='frame-surface'
+      data-role={role}
+      {...overlay}
+      {...attentionAttributes}
+    >
+      {card ? (
+        // The frame already frames it, so the card fills the body without a border of its own.
+        <Card.Root grid border={false}>
+          <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+        </Card.Root>
+      ) : role === 'section' ? (
+        <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+      ) : (
+        <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+      )}
+    </div>
   );
 };

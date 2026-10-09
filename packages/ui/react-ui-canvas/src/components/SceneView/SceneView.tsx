@@ -873,13 +873,15 @@ const SceneViewRoot = ({
       rootRef={rootRef}
     >
       <DockProvider>
-        {/* The canvas beside the dock, which docked panels move into; with none docked, it takes no space. */}
-        <div className={mx('flex dx-fill overflow-hidden', classNames)}>
+        {/* The canvas beside the dock, which docked panels move into; with none docked, it takes no space.
+            Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
+            caret) would scroll the whole canvas to reveal it, out from under the camera. */}
+        <div className={mx('flex dx-fill overflow-clip', classNames)}>
           <div
             ref={rootRef}
             tabIndex={0}
             className={mx(
-              'relative grow h-full overflow-hidden bg-base-surface outline-none touch-none select-none',
+              'relative grow h-full overflow-clip bg-base-surface outline-none touch-none select-none',
               tool.kind === 'hand' && 'cursor-grab',
               tool.kind === 'node' && 'cursor-crosshair',
             )}
