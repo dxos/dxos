@@ -2,11 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
+import { RawString, getHeads } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  EntityStructure,
+  SpaceDocVersion,
+  createIdFromSpaceKey,
+  decodeEntityStructure,
+} from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type IndexCursor } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
@@ -101,6 +107,37 @@ describe('AutomergeDataSource', () => {
     expect(result.cursors).toHaveLength(1);
     expect(result.cursors[0].resourceId).toBe(handle.documentId);
     expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
+  });
+
+  test('ships each object as its document holds it, at the heads it was read at', async () => {
+    const host = await setupAutomergeHost();
+    const handle = await createDatabaseDirectory(host, SpaceId.random(), {
+      'obj-1': EntityStructure.makeObject({
+        type: TEST_TYPE,
+        data: { title: 'saved', bytes: new Uint8Array([1, 2, 3]), body: new RawString('raw text') },
+      }),
+      'obj-2': EntityStructure.makeObject({ type: TEST_TYPE, data: { body: new RawString('x'.repeat(70_000)) } }),
+    });
+    await host.flush(Context.default());
+    // Not flushed, so the heads store the source scans still holds the saved heads.
+    handle.change((doc) => {
+      doc.objects!['obj-1'].data.title = 'unsaved';
+    });
+
+    const dataSource = new AutomergeDataSource(host);
+    const { objects } = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const small = objects.find((object) => object.data.id === 'obj-1');
+    const large = objects.find((object) => object.data.id === 'obj-2');
+    invariant(small?.state);
+
+    expect(small.state.heads).toEqual(getHeads(handle.doc()!));
+    const structure = decodeEntityStructure(small.state.structure, { makeRawString: (value) => new RawString(value) });
+    expect(structure.system?.type).toEqual(EntityStructure.makeObject({ type: TEST_TYPE, data: {} }).system?.type);
+    expect(structure.data.title).toBe('unsaved');
+    expect(structure.data.bytes).toEqual(new Uint8Array([1, 2, 3]));
+    expect(structure.data.body).toBeInstanceOf(RawString);
+    expect(structure.data.body.toString()).toBe('raw text');
+    expect(large?.state).toBeUndefined();
   });
 
   test('returns documents with changed heads', async () => {
