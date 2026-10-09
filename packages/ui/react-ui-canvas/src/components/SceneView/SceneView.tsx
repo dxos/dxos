@@ -1148,10 +1148,11 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 //
 
 /** The tool rail: what the next gesture will draw. */
-const SceneViewPalette = ({ classNames = 'absolute top-14 left-2' }: SceneViewBarProps) => {
+const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
   const { tool, nodeRegistry, linkRegistry, capabilities, setTool } = useSceneViewContext('SceneView.Palette');
   return (
-    <div className={mx(classNames)}>
+    // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
+    <div className={mx('pointer-events-none', classNames)}>
       <Palette
         tool={tool}
         nodes={nodeRegistry}
