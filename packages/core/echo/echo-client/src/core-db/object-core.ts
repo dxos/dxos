@@ -67,6 +67,21 @@ export type ObjectCoreOptions = {
 };
 
 /**
+ * The index's copy of an object, backing its core until the object's document loads: the structure
+ * mounted as a document would hold it, so the core's paths are unchanged, and the document heads and
+ * index stamp it was read at.
+ */
+export type ObjectSnapshot = {
+  root: { objects: Record<string, EntityStructure> };
+  heads: Heads;
+  version: number;
+  updatedAt: number | undefined;
+};
+
+/** The state an index row carries for an object, as `EntityManager.upsertSnapshot` takes it. */
+export type SnapshotState = Omit<ObjectSnapshot, 'root'> & { structure: EntityStructure };
+
+/**
  * The single key a write is touching, so the proxy targets are refreshed for that key alone.
  * @internal
  */
@@ -99,6 +114,9 @@ export class ObjectCore {
    * Set when the object is bound to a database.
    */
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
+
+  /** Set while the object is backed by the index's copy instead of a document. */
+  public snapshot?: ObjectSnapshot = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -262,6 +280,7 @@ export class ObjectCore {
     this.entityManager = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
+    this.snapshot = undefined;
 
     const doc = this.doc;
     this.doc = undefined;
@@ -289,14 +308,26 @@ export class ObjectCore {
       return this.docHandle.doc();
     }
 
+    if (this.snapshot) {
+      return this.snapshot.root;
+    }
+
     throw new Error('Invalid ObjectCore state');
   }
 
+  /** Backs this unbound core with the index's copy of the object until it binds to its document. */
+  setSnapshot(snapshot: ObjectSnapshot): void {
+    invariant(!this.doc && !this.docHandle, 'Only an unbound core is backed by a snapshot.');
+    this.snapshot = snapshot;
+    this.mountPath = ['objects', this.id];
+  }
+
   /**
-   * False only between construction and `initNewObject`/`bind`, while {@link getDoc} would throw.
+   * False only between construction and `initNewObject`/`bind`/`setSnapshot`, while {@link getDoc}
+   * would throw.
    */
   get hasDoc(): boolean {
-    return this.doc != null || this.docHandle != null;
+    return this.doc != null || this.docHandle != null || this.snapshot != null;
   }
 
   /**
@@ -723,6 +754,9 @@ export class ObjectCore {
    * The document's current heads, recorded when the entity is merged away.
    */
   getHeads(): Heads {
+    if (this.snapshot) {
+      return [...this.snapshot.heads];
+    }
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     return doc ? A.getHeads(doc) : [];
   }
@@ -768,6 +802,9 @@ export class ObjectCore {
    * decoded change contents.
    */
   getUpdatedAt(): number | undefined {
+    if (this.snapshot) {
+      return this.snapshot.updatedAt;
+    }
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     if (!doc) {
       return undefined;
@@ -830,6 +867,14 @@ export class ObjectCore {
   }
 
   /**
+   * A snapshot-backed core's dependencies are not loaded for it: the index already excluded a row
+   * whose parent or endpoint is deleted, so only a dependency the tab holds is consulted.
+   */
+  get #dependencyLookup(): GetObjectCoreByIdOptions {
+    return { load: this.snapshot === undefined };
+  }
+
+  /**
    * Whether the same-space entity referenced by `ref` is (transitively) deleted. Cross-space and
    * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
    * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
@@ -849,7 +894,7 @@ export class ObjectCore {
     if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
       return false;
     }
-    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId));
+    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId, this.#dependencyLookup));
     return core != null && core.isDeleted(remainingDepth - 1);
   }
 
@@ -866,7 +911,7 @@ export class ObjectCore {
       if (next === undefined || next >= current.id) {
         return current;
       }
-      current = this.entityManager?.getObjectCoreById(next);
+      current = this.entityManager?.getObjectCoreById(next, this.#dependencyLookup);
     }
     return undefined;
   }

@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { QueryAST } from '@dxos/echo-protocol';
+import { QueryAST, decodeEntityStructure } from '@dxos/echo-protocol';
 import {
   ATTR_PARENT,
   ATTR_RELATION_SOURCE,
@@ -693,7 +694,7 @@ export class IndexQuerySource implements QuerySource {
       return object;
     }
 
-    const object = await this._resolveIndexedObject(result);
+    const object = this._hydrateFromState(result) ?? (await this._resolveIndexedObject(result));
     if (!object) {
       return null;
     }
@@ -709,6 +710,26 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
     return object;
+  }
+
+  /**
+   * A lazy query's row as an object backed by the state the host shipped with it, so no document
+   * loads; undefined when the row carries none (too large, a branch document) or cannot back it.
+   */
+  private _hydrateFromState(result: QueryService.QueryResult): Entity.Unknown | undefined {
+    if (result.state === undefined || result.heads === undefined || result.version === undefined) {
+      return undefined;
+    }
+    const database = this._params.graph.getDatabase(SpaceId.make(result.spaceId));
+    if (!(database instanceof DatabaseImpl)) {
+      return undefined;
+    }
+    return database._upsertSnapshot(EntityId.make(result.id), {
+      structure: decodeEntityStructure(result.state, { makeRawString: (value) => new A.RawString(value) }),
+      heads: result.heads,
+      version: result.version,
+      updatedAt: result.updatedAt,
+    });
   }
 
   private _isSnapshotQuery(): boolean {

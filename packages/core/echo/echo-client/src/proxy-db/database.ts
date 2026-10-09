@@ -61,7 +61,13 @@ import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions, type SpaceDocumentHeads } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  EntityManager,
+  type LoadObjectOptions,
+  type SnapshotState,
+  type SpaceDocumentHeads,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -737,6 +743,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
     return this._getOrCreateFeedHandle(feedUri, namespace);
+  }
+
+  /**
+   * @internal
+   * The object for an index row whose document the tab has not loaded, backed by the row's state; see
+   * {@link EntityManager.upsertSnapshot}.
+   */
+  _upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
+    return this._entityManager.upsertSnapshot(id, state);
   }
 
   /**

@@ -50,7 +50,8 @@ import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../e
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
-import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
+import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
+import { shareStructure } from './share-structure.ts';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -496,6 +497,44 @@ export class EntityManager implements IDatabaseBinding {
       return undefined;
     }
     return core.rootProxy ?? this._createEntity(core);
+  }
+
+  /**
+   * The entity for an index row of an object whose document the tab has not loaded, backed by the
+   * row's state. A core the tab already holds wins: a bound one is authoritative and ignores the row,
+   * and a snapshot-backed one takes it only when the index stamped it later than the copy it holds.
+   * Undefined when the row cannot back the object, which then loads its document as usual.
+   */
+  upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
+    // A selected branch reads and writes another document, which the index row does not describe.
+    if (this.getCurrentBranch(id) !== 'main') {
+      return undefined;
+    }
+    const existing = this.getObjectCoreById(id, { load: false });
+    if (existing) {
+      if (existing.snapshot && state.version > existing.snapshot.version) {
+        existing.snapshot = {
+          root: { objects: { [id]: shareStructure(existing.snapshot.root.objects[id], state.structure) } },
+          heads: state.heads,
+          version: state.version,
+          updatedAt: state.updatedAt,
+        };
+        existing.notifyUpdate();
+      }
+      return existing.rootProxy ?? this._createEntity(existing);
+    }
+
+    const core = new ObjectCore();
+    core.id = id;
+    core.entityManager = this;
+    core.setSnapshot({
+      root: { objects: { [id]: state.structure } },
+      heads: state.heads,
+      version: state.version,
+      updatedAt: state.updatedAt,
+    });
+    this._objects.set(id, core);
+    return this._createEntity(core);
   }
 
   /** Like {@link getEntityById}, but loads the object's document first. */
@@ -2126,7 +2165,11 @@ export class EntityManager implements IDatabaseBinding {
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
 
-    const core = this._objects.get(objectId) ?? this._createObjectInDocument(handle, objectId);
+    const existing = this._objects.get(objectId);
+    if (existing?.snapshot) {
+      this._bindSnapshotCore(existing, handle);
+    }
+    const core = existing ?? this._createObjectInDocument(handle, objectId);
 
     // A ready handle does not mean the body arrived: a linked document settles empty while the peer
     // holding it is still replicating. The core is created either way so the object keeps one
@@ -2148,9 +2191,22 @@ export class EntityManager implements IDatabaseBinding {
 
   private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
-      invariant(!this._objects.has(id));
+      // An index row can back the object before the root change that adds it arrives.
+      const existing = this._objects.get(id);
+      if (existing?.snapshot) {
+        this._bindSnapshotCore(existing, docHandle);
+        continue;
+      }
+      invariant(!existing);
       this._createObjectInDocument(docHandle, id);
     }
+  }
+
+  /** Moves a snapshot-backed core onto its document, keeping the core and its proxy. */
+  private _bindSnapshotCore(core: ObjectCore, docHandle: DocHandleProxy<DatabaseDirectory>): void {
+    core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
+    this._markObjectAvailable(core.id);
+    this._onObjectBoundToDocument(docHandle, core.id);
   }
 
   private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
@@ -2188,8 +2244,9 @@ export class EntityManager implements IDatabaseBinding {
     return this._areDepsResolved(core);
   }
 
+  /** The index served a snapshot-backed core only with its closure present, so it is not re-resolved from disk. */
   private _areDepsSatisfied(core: ObjectCore): boolean {
-    return this._ensureSatisfactionRequest(core).state === 'ready';
+    return core.snapshot !== undefined || this._ensureSatisfactionRequest(core).state === 'ready';
   }
 
   /**
@@ -2198,6 +2255,9 @@ export class EntityManager implements IDatabaseBinding {
    * forever when a dependency is unreachable on disk.
    */
   private _areDepsResolved(core: ObjectCore): boolean {
+    if (core.snapshot !== undefined) {
+      return true;
+    }
     const state = this._ensureSatisfactionRequest(core).state;
     return state === 'ready' || state === 'unavailable';
   }

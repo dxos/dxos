@@ -4329,26 +4329,26 @@ describe('Query', () => {
     });
   });
 
+  /** A database reopened from storage, so the tab holds none of these objects' documents. */
+  const openReloaded = async (
+    populate: (db: EchoDatabase) => Entity.Any[],
+  ): Promise<{ db: DatabaseImpl; ids: string[] }> => {
+    const reloadBuilder = new EchoTestBuilder();
+    onTestFinished(async () => {
+      await reloadBuilder.close();
+    });
+    const { peer, db: initialDb } = await reloadBuilder.createDatabase();
+    const ids = populate(initialDb).map((object) => object.id);
+    await initialDb.flush({ secondaryIndexes: true });
+    await peer.reload();
+    const db = await peer.openLastDatabase();
+    invariant(db instanceof DatabaseImpl);
+    return { db, ids };
+  };
+
+  const isLoaded = (db: DatabaseImpl, id: string) => db.getObjectCoreById(id, { load: false }) !== undefined;
+
   describe('Snapshot queries', () => {
-    /** A database reopened from storage, so the tab holds none of these objects' documents. */
-    const openReloaded = async (
-      populate: (db: EchoDatabase) => Entity.Any[],
-    ): Promise<{ db: DatabaseImpl; ids: string[] }> => {
-      const reloadBuilder = new EchoTestBuilder();
-      onTestFinished(async () => {
-        await reloadBuilder.close();
-      });
-      const { peer, db: initialDb } = await reloadBuilder.createDatabase();
-      const ids = populate(initialDb).map((object) => object.id);
-      await initialDb.flush({ secondaryIndexes: true });
-      await peer.reload();
-      const db = await peer.openLastDatabase();
-      invariant(db instanceof DatabaseImpl);
-      return { db, ids };
-    };
-
-    const isLoaded = (db: DatabaseImpl, id: string) => db.getObjectCoreById(id, { load: false }) !== undefined;
-
     test('returns frozen snapshots without loading any document', async () => {
       const { db, ids } = await openReloaded((db) => [
         db.add(createTestObject({ value: 1 })),
@@ -4477,6 +4477,75 @@ describe('Query', () => {
       const after = new Map(query.results.map((snapshot) => [snapshot.id, snapshot]));
       expect(after.get(edited.id)).not.toBe(before.get(edited.id));
       expect(after.get(untouched.id)).toBe(before.get(untouched.id));
+    });
+  });
+
+  describe('Lazy queries', () => {
+    /** Whether the tab holds the object's document, as opposed to an index-backed core or nothing. */
+    const hasDocument = (db: DatabaseImpl, id: string) =>
+      db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
+
+    test('returns live objects backed by the index, without loading their documents', async () => {
+      const { db, ids } = await openReloaded((db) => [
+        db.add(createTestObject({ value: 1 })),
+        db.add(createTestObject({ value: 2 })),
+      ]);
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).options({ lazy: true }))
+        .run();
+      expect(results.map((object) => object.id).sort()).toEqual([...ids].sort());
+      expect(results.map((object) => object.value).sort()).toEqual([1, 2]);
+      for (const object of results) {
+        expect(Obj.isSnapshot(object)).toBe(false);
+        expect(hasDocument(db, object.id)).toBe(false);
+        expect(db.getObjectById(object.id)).toBe(object);
+        expect(Obj.version(object).automergeHeads?.length).toBeGreaterThan(0);
+      }
+    });
+
+    test('a full-text lazy query backs its objects too', async () => {
+      const { db, ids } = await openReloaded((db) => [
+        db.add(Obj.make(TestSchema.Expando, { title: 'lazy search target' })),
+      ]);
+
+      const results = await db
+        .query(Query.select(Filter.text('lazy search target', { type: 'full-text' })).options({ lazy: true }))
+        .run();
+      expect(results.map((object) => object.id)).toEqual(ids);
+      expect(results[0].title).toBe('lazy search target');
+      expect(hasDocument(db, ids[0])).toBe(false);
+    });
+
+    test('an object the tab already holds is returned as it is', async () => {
+      const { db } = await builder.createDatabase();
+      const object = db.add(createTestObject({ value: 1 }));
+      await db.flush({ indexes: true });
+
+      const [result] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      expect(result).toBe(object);
+      expect(hasDocument(db, object.id)).toBe(true);
+    });
+
+    test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      const snapshot = db.getObjectCoreById(object.id, { load: false })?.snapshot;
+      invariant(snapshot);
+      const structure = snapshot.root.objects[object.id];
+      let notified = 0;
+      onTestFinished(Obj.subscribe(object, () => notified++));
+
+      const withValue = (value: number) => ({ ...structure, data: { ...structure.data, value } });
+      expect(
+        db._upsertSnapshot(object.id, { ...snapshot, structure: withValue(2), version: snapshot.version + 1 }),
+      ).toBe(object);
+      expect(object.value).toBe(2);
+      expect(notified).toBe(1);
+
+      db._upsertSnapshot(object.id, { ...snapshot, structure: withValue(3), version: snapshot.version });
+      expect(object.value).toBe(2);
+      expect(notified).toBe(1);
     });
   });
 

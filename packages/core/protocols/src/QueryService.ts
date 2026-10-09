@@ -110,6 +110,8 @@ export const QueryResult = Schema.Struct({
   heads: Schema.optional(mutableArray(Schema.String)),
   /** Index stamp of the row, increasing with every re-index; orders two states of one object. */
   version: Schema.optional(Schema.Number),
+  /** Unix ms of the object's last change, sent with {@link state}. */
+  updatedAt: Schema.optional(Schema.Number),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 

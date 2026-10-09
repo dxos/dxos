@@ -779,6 +779,7 @@ export class QueryExecutor extends Resource {
         state: item.state?.structure,
         heads: item.state ? [...item.state.heads] : undefined,
         version: item.state?.version,
+        updatedAt: item.state ? (item.updatedAt ?? undefined) : undefined,
       };
     });
   }
@@ -2600,6 +2601,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           state: row.state ?? undefined,
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
           version: row.version ?? undefined,
+          updatedAt: row.state !== null ? (row.updatedAt ?? undefined) : undefined,
         };
   return {
     objectId: row.objectId,
