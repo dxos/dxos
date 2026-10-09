@@ -7,8 +7,8 @@ allowed-tools: Bash
 Arguments: `$ARGUMENTS`
 
 **Run the script by the absolute path the `AUTONOMOUS MODE` block prints.** The
-run's state lives in the session's project dir, which can be a different
-checkout from your cwd; the relative paths below are shorthand for that path.
+run's state is per session, under `~/.claude/autonomous/<session-id>/`, and your cwd may
+not be a dxos checkout; the relative paths below are shorthand for that script.
 
 **Never set the state yourself.** `.claude/hooks/autonomous.sh` runs on
 `UserPromptSubmit`, which carries the raw `/autonomous …` text and fires before

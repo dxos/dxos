@@ -14,20 +14,20 @@ A run is one pinned task plus a definition of done, and a standing instruction:
 **do not ask, decide.** The mechanism is `/autonomous [task]`; this skill is how
 to behave while it is on.
 
-The state and the two logs live under `.claude/` (all untracked, per-worktree):
+A run belongs to one session. Its state lives in `~/.claude/autonomous/<session-id>/`,
+outside any checkout (`autonomous.sh dir` prints it):
 
-| File                  | Written by                     | What it is                    |
-| --------------------- | ------------------------------ | ----------------------------- |
-| `.autonomous`         | the `UserPromptSubmit` hook    | the pinned task               |
-| `.autonomous-session` | the hook, with the task        | the session that owns the run |
-| `.autonomous-dod`     | **you**, once, before working  | the definition of done        |
-| `.autonomous-user.md` | the hook, every turn, verbatim | what the user told the owner  |
-| `.autonomous-log.md`  | **you**, as you decide         | the decision log              |
+| File      | Written by                     | What it is             |
+| --------- | ------------------------------ | ---------------------- |
+| `task`    | the `UserPromptSubmit` hook    | the pinned task        |
+| `dod`     | **you**, once, before working  | the definition of done |
+| `user.md` | the hook, every turn, verbatim | what the user told you |
+| `log.md`  | **you**, as you decide         | the decision log       |
 
-Only the owning session sees the block, is held by the Stop hook, or has its
-messages logged. Everything is driven through one script. Call it by the
-absolute path the `AUTONOMOUS MODE` block prints: the state can live in a
-different checkout from your cwd.
+Other sessions never see the block, are never held by the Stop hook, and never
+have their messages logged into your run. Everything is driven through one
+script. Call it by the absolute path the `AUTONOMOUS MODE` block prints: your
+cwd may not be a dxos checkout (a multi-repo session runs from their parent).
 
 ```bash
 bash .claude/scripts/autonomous.sh dod set '1. … 2. …'   # once, first
@@ -65,7 +65,7 @@ the answer already exists:
    before you decide anything about what is in or out:
 
    ```bash
-   grep -inE 'scope|small|minimal|separate|one PR|split|just |only |don.t bother' .claude/.autonomous-user.md
+   grep -inE 'scope|small|minimal|separate|one PR|split|just |only |don.t bother' "$(bash .claude/scripts/autonomous.sh user path)"
    ```
 
    The log is gitignored and never leaves the worktree, but it is a verbatim
