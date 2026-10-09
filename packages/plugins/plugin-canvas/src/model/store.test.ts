@@ -9,6 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { isFrameNode } from '@dxos/react-ui-canvas/scene';
 
 import { clone, isNodeRecord, nodeKey, readScenes } from './content.ts';
 import { objectRef, parseLinkedSceneId } from './frame-node.ts';
@@ -65,6 +66,38 @@ describe('bindCanvasStore', () => {
     expect(readScenes(clone(otherCanvas.content)).root.nodes.n).toMatchObject({ label: 'Added' });
     const record = canvas.content[nodeKey('f')];
     expect(isNodeRecord(record) && record.node).toMatchObject({ scene: 'f' });
+    bound.dispose();
+  });
+
+  test('a frame given a canvas drawing through the store opens it', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(createCanvas()) }));
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    Obj.update(canvas, (canvas) => {
+      canvas.content['scene:f'] = { kind: 'scene', id: 'f' };
+      canvas.content[nodeKey('f')] = {
+        kind: 'node',
+        scene: 'root',
+        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f' },
+      };
+    });
+    await db.flush();
+
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    // The properties panel picks the drawing: the edit reaches the canvas as the store's own write.
+    const scenes = registry.get(bound.store.scenes);
+    registry.set(bound.store.scenes, {
+      ...scenes,
+      root: { ...scenes.root, nodes: { ...scenes.root.nodes, f: { ...scenes.root.nodes.f, object: Ref.make(other) } } },
+    });
+    const shown = () => {
+      const node = registry.get(bound.store.scenes).root.nodes.f;
+      return isFrameNode(node) ? parseLinkedSceneId(node.scene)?.scene : undefined;
+    };
+    await expect.poll(shown).toBe('root');
     bound.dispose();
   });
 

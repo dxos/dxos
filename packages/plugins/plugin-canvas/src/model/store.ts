@@ -236,12 +236,43 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
       writing = false;
     }
   });
+  /**
+   * Whether a frame's object and the scene it opens disagree after an edit (the picker changed or cleared the object),
+   * so the store must read again; a drawing not yet bound is loaded, and its load reads again itself.
+   */
+  const stale = (scenes: SceneMap): boolean => {
+    let result = false;
+    for (const [id, scene] of Object.entries(scenes)) {
+      if (parseLinkedSceneId(id)) {
+        continue;
+      }
+      for (const node of Object.values(scene.nodes)) {
+        if (!isFrameNode(node)) {
+          continue;
+        }
+        const uri = objectUri(node);
+        if (!uri) {
+          result ||= parseLinkedSceneId(node.scene) !== undefined;
+          continue;
+        }
+        ensure(uri);
+        const link = linked.get(uri);
+        result ||= link ? node.scene !== linkedSceneId(uri, link.root) : parseLinkedSceneId(node.scene) !== undefined;
+      }
+    }
+    return result;
+  };
+
   const unsubscribeStore = registry.subscribe(store.scenes, (scenes) => {
     writing = true;
     try {
       write(scenes);
     } finally {
       writing = false;
+    }
+    // After the write settles, not within it: the read sets the atom this subscriber is reacting to.
+    if (stale(scenes)) {
+      queueMicrotask(refresh);
     }
   });
 
