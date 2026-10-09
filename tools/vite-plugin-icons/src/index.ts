@@ -323,22 +323,29 @@ export const IconsPlugin = ({
         // debounced write has flushed, or before the first write at all — which
         // yields blank icons until a hard reload, so a pending write is flushed
         // first and the served sprite reflects every symbol detected so far.
-        const serveSprite: Connect.NextHandleFunction = (_req, res, next) => {
-          if (!fs.existsSync(spritePath)) {
-            return next();
-          }
-          res.setHeader('Content-Type', 'image/svg+xml');
-          // The sprite grows as modules are served; a cached copy would hide icons found since.
-          res.setHeader('Cache-Control', 'no-store');
-          fs.createReadStream(spritePath).pipe(res);
+        // Read whole rather than streamed: a read error then falls through to `next()` instead of
+        // surfacing as an unhandled stream error that would take the dev server down.
+        const serveSprite: Connect.NextHandleFunction = (req, res, next) => {
+          fs.readFile(spritePath, (err, data) => {
+            if (err) {
+              return next();
+            }
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Content-Length', data.length);
+            // The sprite grows as modules are served; a cached copy would hide icons found since.
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(req.method === 'HEAD' ? undefined : data);
+          });
         };
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url ?? '').split('?')[0];
           if (pathname !== `/${spriteFile}` || (req.method !== 'GET' && req.method !== 'HEAD')) {
             return next();
           }
-          if (writeTimer || !fs.existsSync(spritePath)) {
-            void flushSprite().then(
+          // An in-flight write may be mid-rewrite of the file, so wait for it as well as for a pending one.
+          const pending = writeTimer || !fs.existsSync(spritePath) ? flushSprite() : flushing;
+          if (pending) {
+            void pending.then(
               () => serveSprite(req, res, next),
               () => next(),
             );

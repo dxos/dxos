@@ -74,6 +74,17 @@ describe('dev sprite', () => {
     expect(await server.sprite()).toContain('id="ph--alpha--regular"');
   });
 
+  test('a request during an in-flight write receives the completed sprite', async () => {
+    const server = await startServer();
+    await server.load('alpha');
+    const first = server.sprite();
+    await server.load('beta');
+    // The first request started the write for `alpha`; this one arrives while it is still running.
+    const [, second] = await Promise.all([first, server.sprite()]);
+    expect(second).toContain('id="ph--beta--regular"');
+    expect(second.trim().endsWith('</svg>')).toBe(true);
+  });
+
   test('a second server sharing the public dir cannot replace the sprite the first one serves', async () => {
     // The shared storybook and every storybook vitest run load the same config, and so the same publicDir.
     const shared = await startServer();
