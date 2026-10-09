@@ -88,7 +88,10 @@ export const Dock = () => {
   const { sections, closed, setSlot, setClosed } = dock;
   return (
     // The column is the scroll area itself: each section is as tall as its panel, and it scrolls them together.
-    <ScrollArea.Root classNames='w-80 shrink-0 border-l border-separator bg-base-surface' data-testid='scene-view-dock'>
+    <ScrollArea.Root
+      classNames='w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
+      data-testid='scene-view-dock'
+    >
       <ScrollArea.Viewport>
         <Accordion.Root
           border={false}
