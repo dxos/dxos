@@ -10,6 +10,10 @@
     border-radius: var(--radius-sm, 0.25rem);
     cursor: default;
   }
+  /* Rows that run edge to edge would show their rounding against the container's own edges. */
+  .dx-container[data-gutter='none'] > .dx-row {
+    border-radius: 0;
+  }
   .dx-row[data-selectable] {
     cursor: pointer;
   }
