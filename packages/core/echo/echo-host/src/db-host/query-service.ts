@@ -251,6 +251,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
+        if (queryEntry.oneShot && queryIsIdLookup(queryEntry.executor.query)) {
+          // A point lookup answered once never joins a batch, so it does not wait behind the queries in one.
+          await this.#runQuery(queryEntry);
+          return;
+        }
         queryEntry.open = true;
         this._updateQueries.schedule();
       });
@@ -483,6 +488,21 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     this.#wakeAt = Infinity;
   }
 }
+
+/**
+ * True when the query selects objects by id, which the index answers with a point lookup.
+ */
+const queryIsIdLookup = (query: QueryAST.Query): boolean => {
+  switch (query.type) {
+    case 'from':
+    case 'options':
+      return queryIsIdLookup(query.query);
+    case 'select':
+      return query.filter.type === 'object' && (query.filter.id?.length ?? 0) > 0;
+    default:
+      return false;
+  }
+};
 
 /**
  * True when the query's `from` clause carries at least one feed scope (`Scope.feed(...)`).

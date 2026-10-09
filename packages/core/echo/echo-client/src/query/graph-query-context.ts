@@ -146,7 +146,30 @@ export class GraphQueryContext implements QueryContext {
     query: QueryAST.Query,
     { timeout = 30_000 }: QueryResult.RunOptions = {},
   ): Promise<SourceEntry[]> {
-    const runTasks = [...this._sources.values()].map(async (s) => {
+    const sources = [...this._sources];
+    const ids = getLookupIds(query);
+    if (ids === undefined) {
+      return this.#runSources(ctx, sources, query, timeout);
+    }
+
+    // An id lookup asks the asynchronous sources (the worker's index) only for ids the local ones lack.
+    const local = sources.filter((source) => source.isSynchronous());
+    const results = await this.#runSources(ctx, local, query, timeout);
+    const found = new Set(results.map((entry) => entry.id));
+    if (ids.every((id) => found.has(id))) {
+      return results;
+    }
+    const remote = sources.filter((source) => !local.includes(source));
+    return [...results, ...(await this.#runSources(ctx, remote, query, timeout))];
+  }
+
+  async #runSources(
+    ctx: Context,
+    sources: QuerySource[],
+    query: QueryAST.Query,
+    timeout: number,
+  ): Promise<SourceEntry[]> {
+    const runTasks = sources.map(async (s) => {
       try {
         log('run query', {
           resolver: Object.getPrototypeOf(s).constructor.name,
@@ -468,4 +491,10 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
     case 'only':
       return core.isDeleted();
   }
+};
+
+/** The ids a query selects, when it is a lookup by id. */
+const getLookupIds = (query: QueryAST.Query): readonly string[] | undefined => {
+  const simple = isSimpleSelectionQuery(query);
+  return simple?.filter.type === 'object' && simple.filter.id?.length ? simple.filter.id : undefined;
 };

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -16,6 +17,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 
+import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost, type EchoHostProps } from './echo-host.ts';
 
@@ -111,6 +113,46 @@ describe('EchoHost query service', () => {
       ),
     );
     expect(check).toHaveBeenCalledTimes(1);
+  });
+
+  test('a one-shot id lookup answers while a query batch is still running', async () => {
+    const { host, spaceId, saveObject } = await setup();
+    const objectId = EntityId.random();
+    await saveObject(objectId);
+    await host.updateIndexes();
+
+    const batchStarted = new Trigger();
+    const releaseBatch = new Trigger();
+    onTestFinished(() => {
+      releaseBatch.wake();
+    });
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      if (this.queryId === 'batch') {
+        batchStarted.wake();
+        await releaseBatch.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const batch = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'batch'))),
+    );
+    await batchStarted.wait();
+
+    const lookup: QueryService.QueryRequest = {
+      ...oneShotRequest(spaceId, 'lookup'),
+      query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
+    };
+    const responses = await asyncTimeout(
+      EffectEx.runPromise(Stream.runCollect(host.queryService['QueryService.execQuery'](lookup))),
+      1_000,
+    );
+    expect(responses.flatMap((response) => response.results ?? []).map((result) => result.id)).toEqual([objectId]);
+
+    releaseBatch.wake();
+    await batch;
   });
 });
 

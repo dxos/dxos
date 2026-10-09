@@ -4,7 +4,7 @@
 
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
@@ -129,6 +129,35 @@ describe('QueryResultImpl', () => {
       } finally {
         unsubscribe();
       }
+    } finally {
+      await builder.close();
+    }
+  });
+
+  test('an id lookup the working set can answer does not query the index', async ({ expect }) => {
+    const tmpPath = createTmpPath();
+    const builder = new EchoTestBuilder();
+    await builder.open();
+    try {
+      const spaceKey = PublicKey.random();
+      let rootUrl: string;
+      let id: string;
+      {
+        const peer = await builder.createPeer({ types: [TestSchema.Person], storagePath: tmpPath });
+        const db = await peer.createDatabase(spaceKey);
+        id = db.add(Obj.make(TestSchema.Person, { name: 'Alice' })).id;
+        await db.flush({ indexes: true });
+        invariant(db.rootUrl);
+        rootUrl = db.rootUrl;
+        await peer.close();
+      }
+
+      const peer = await builder.createPeer({ types: [TestSchema.Person], storagePath: tmpPath });
+      const db = await peer.openDatabase(spaceKey, rootUrl);
+      const execQuery = vi.spyOn(peer.host.queryService, 'QueryService.execQuery');
+      // Nothing is loaded yet, so the working set loads the document the space directory links.
+      expect((await db.query(Filter.id(id)).run()).map((person) => person.name)).toEqual(['Alice']);
+      expect(execQuery.mock.calls.filter(([request]) => request.query.includes(id))).toEqual([]);
     } finally {
       await builder.close();
     }
