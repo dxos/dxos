@@ -20,6 +20,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SCENE_OVERLAY_ATTRIBUTE, useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
 import { type Drag, type PanelMode, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
+import { keyAction } from '../../model/keys.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
@@ -189,6 +190,13 @@ const SceneViewRoot = ({
   const undoState = useAtomValue(atoms.undo);
   const clipboard = useAtomValue(atoms.clipboard);
   const editing = useAtomValue(atoms.editing);
+  const active = useAtomValue(atoms.active);
+  // A node's content stays live only while the node is the selection; selecting anything else makes it inert again.
+  useEffect(() => {
+    if (active !== undefined && (selection.size !== 1 || !selection.has(active))) {
+      registry.set(atoms.active, undefined);
+    }
+  }, [active, selection, registry, atoms.active]);
   const debug = useAtomValue(atoms.debug);
   const guides = useAtomValue(atoms.guides);
   const latticeOn = useAtomValue(atoms.lattice);
@@ -424,9 +432,13 @@ const SceneViewRoot = ({
     (event) => {
       if (event.target === event.currentTarget) {
         onSceneKey(event);
+      } else if (keyAction(event) === 'cancel' && registry.get(atoms.active) !== undefined) {
+        // Escape out of a node's live content leaves it inert and the node selected, as a click outside would not.
+        registry.set(atoms.active, undefined);
+        rootRef.current?.focus();
       }
     },
-    [onSceneKey],
+    [onSceneKey, registry, atoms.active],
   );
 
   //
@@ -839,6 +851,7 @@ const SceneViewRoot = ({
       hover={hover}
       selectedPoint={selectedPoint}
       editing={editing}
+      active={active}
       clipboard={clipboard}
       drag={drag}
       tool={tool}
@@ -949,6 +962,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     hover,
     selectedPoint,
     editing,
+    active,
     clipboard,
     drag,
     debug,
@@ -1015,6 +1029,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             opening={opening}
             focus={focus}
             editing={editing}
+            active={active}
             ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
             debug={debug}
             handlers={handlers}

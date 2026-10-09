@@ -96,6 +96,8 @@ export type SceneLayerProps = {
   focus?: { id: ElementId; opacity: number };
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
+  /** The node whose embedded content takes input. */
+  active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
   ghost?: NodeId;
   /** Frames show their id, type and geometry. */
@@ -123,6 +125,7 @@ export const SceneLayer = memo(
     opening,
     focus,
     editing,
+    active,
     ghost,
     debug,
     handlers,
@@ -241,6 +244,7 @@ export const SceneLayer = memo(
                 fade={focus && focus.id !== node.id ? fadeStyle : undefined}
                 chromeFade={focus?.id === node.id ? fadeStyle : undefined}
                 editingPart={editing?.id === node.id ? editing.part : undefined}
+                active={active === node.id}
                 ghost={ghost === node.id}
                 debug={debug}
                 handlers={handlers}
@@ -448,7 +452,17 @@ const NodeFrame = memo(
           style={frameStyle}
           data-node-id={node.id}
           data-ghost={ghost || undefined}
-          onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
+          onPointerDown={
+            interactive
+              ? (event) => {
+                  // React bubbles a portal's events through the tree: a press in a menu the node's content opened is
+                  // not a press on the node.
+                  if (event.target instanceof Element && event.currentTarget.contains(event.target)) {
+                    handlers.onNodePointerDown?.(node, event);
+                  }
+                }
+              : undefined
+          }
         >
           {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
           {chromeFade && (

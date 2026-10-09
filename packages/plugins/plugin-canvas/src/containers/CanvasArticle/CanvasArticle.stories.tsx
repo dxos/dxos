@@ -105,6 +105,8 @@ export const ObjectFrame: Story = {
       canvasElement.querySelector(`[data-node-id="${id}"] [data-testid="frame-surface"]`);
     await expect(surfaceOf('card')).toHaveAttribute('data-role', 'card');
     await expect(surfaceOf('section')).toHaveAttribute('data-role', 'section');
+    // Until a frame is clicked its content is inert, so a press anywhere on the frame moves it.
+    await expect(surfaceOf('section')).toHaveClass('pointer-events-none');
     // The open control floats above each frame rather than inside it.
     for (const id of ['card', 'section']) {
       const frame = canvasElement.querySelector(`[data-node-id="${id}"]`);

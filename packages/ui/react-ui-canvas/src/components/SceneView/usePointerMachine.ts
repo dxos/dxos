@@ -269,10 +269,10 @@ export const usePointerMachine = ({
         return;
       }
       const next = clickSelect(node.id, event);
-      // A press on content embedded in the node (an object's own toolbar or editor) selects the node but starts no
-      // move: the drag's pointer capture would take the click from that content's controls.
+      // A press on the content of the active node (its own toolbar or editor) starts no move: the drag's pointer
+      // capture would take the click from that content's controls. Inactive, the content is inert and the node moves.
       const embedded = event.target instanceof Element && event.target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`);
-      if (capabilities.move && !node.locked && !embedded) {
+      if (capabilities.move && !node.locked && !(embedded && registry.get(atoms.active) === node.id)) {
         const { x, y } = nodeBounds(node);
         const ids = [...next].filter((id) => scene.nodes[id] !== undefined);
         startDrag(
@@ -281,7 +281,17 @@ export const usePointerMachine = ({
         );
       }
     },
-    [registry, atoms.tool, clickSelect, capabilities.move, capabilities.link, scene.nodes, toScene, startDrag],
+    [
+      registry,
+      atoms.tool,
+      atoms.active,
+      clickSelect,
+      capabilities.move,
+      capabilities.link,
+      scene.nodes,
+      toScene,
+      startDrag,
+    ],
   );
 
   const onLinkPointerDown = useCallback(
@@ -736,6 +746,14 @@ export const usePointerMachine = ({
         }
         case 'move': {
           if (current.delta.x === 0 && current.delta.y === 0) {
+            // A click on a node with embedded content makes that content live (`SceneViewAtoms.active`).
+            const [id] = current.ids;
+            if (
+              current.ids.length === 1 &&
+              rootRef.current?.querySelector(`[data-node-id="${id}"] [${SCENE_OVERLAY_ATTRIBUTE}]`)
+            ) {
+              registry.set(atoms.active, id);
+            }
             break;
           }
           // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
@@ -859,6 +877,8 @@ export const usePointerMachine = ({
       minor,
       cell,
       snapMinor,
+      rootRef,
+      atoms.active,
     ],
   );
 

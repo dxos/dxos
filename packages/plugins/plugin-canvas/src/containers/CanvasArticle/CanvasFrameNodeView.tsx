@@ -35,7 +35,7 @@ export const CanvasFrameNodeView = (props: NodeViewProps) => {
   if (!object || !isFrameNode(node)) {
     return <FrameNodeView {...props} />;
   }
-  return <FrameSurface object={object} role={frameRole(node)} selected={props.selected} />;
+  return <FrameSurface object={object} role={frameRole(node)} selected={props.selected} active={props.active} />;
 };
 
 /** Above a frame showing an object, the control that opens it in the app; a scene frame keeps its own inside. */
@@ -58,7 +58,7 @@ export const CanvasFrameToolbar = ({ node, onOpen }: NodeViewProps) => {
   );
 };
 
-type FrameSurfaceProps = { object: Obj.Unknown; role: FrameRole; selected?: boolean };
+type FrameSurfaceProps = { object: Obj.Unknown; role: FrameRole; selected?: boolean; active?: boolean };
 
 // The object's own scrolling content takes the wheel, rather than the canvas panning under it.
 const overlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
@@ -67,7 +67,7 @@ const overlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
  * An object shown in a frame as its surface of the frame's role. It is attendable as the object, so its own toolbar
  * acts: by focus within it, or by selecting the frame on the canvas, which moves no focus.
  */
-const FrameSurface = ({ object, role, selected }: FrameSurfaceProps) => {
+const FrameSurface = ({ object, role, selected, active }: FrameSurfaceProps) => {
   const attendableId = Entity.getURI(object);
   const attentionAttributes = useAttentionAttributes(attendableId);
   const { attention } = useAttentionContext('FrameSurface');
@@ -88,7 +88,12 @@ const FrameSurface = ({ object, role, selected }: FrameSurfaceProps) => {
   return (
     <div
       ref={ref}
-      className={mx('dx-cover grid overflow-hidden', !card && 'grid-rows-[minmax(0,1fr)]')}
+      // Inert until the frame is active (clicked), so a press anywhere on an inactive frame selects and moves it.
+      className={mx(
+        'dx-cover grid overflow-hidden',
+        !card && 'grid-rows-[minmax(0,1fr)]',
+        !active && 'pointer-events-none',
+      )}
       data-testid='frame-surface'
       data-role={role}
       {...overlay}
