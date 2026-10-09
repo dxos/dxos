@@ -145,8 +145,9 @@ pnpm perf ledger                              # what this worktree measured befo
 ```
 
 `compare` builds both refs in this worktree (patching the clean tree to the base and back; bundles
-are cached under `.perf/arms` by tree hash), then runs rounds: each round measures both arms back
-to back, in a random order, on the same port. Two runs of one commit differ by ~20% per stage
+are cached under `.perf/arms` by tree hash, keeping the six most recently used, or
+`DX_PERF_KEEP_ARMS`), then runs rounds: each round measures both arms back to back, in a random
+order, on the same port. Two runs of one commit differ by ~20% per stage
 (METRICS.md), while arms paired inside a round differ by a few percent, so pairing is what makes a
 per-change verdict possible at all.
 

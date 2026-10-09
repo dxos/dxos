@@ -21,7 +21,7 @@ import {
 } from '../compare/verdict.ts';
 import { readFreeze } from '../score/freeze.ts';
 import { type StageEvent, WORK_GROUP, groupOfId } from '../score/stages.ts';
-import { type Arm, buildArm, runFlow, runLogged, serveArm } from './arms.ts';
+import { type Arm, buildArm, keepArms, pruneArms, runFlow, runLogged, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { type Session, elapsedMinutes, openSession, settle } from './session.ts';
 import { ARMS_FILE, type ArmsRecord, touchedSelfMs } from './summarize.ts';
@@ -265,6 +265,10 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
     const base = await buildArm({ root, target, ref: options.base, logFile: path.join(dir, 'build.log') });
     progress(`base ${options.base} ${base.commit.slice(0, 9)} ${base.cached ? 'cached' : 'built'}`);
     const aa = base.dir === candidate.dir;
+    const pruned = pruneArms(root, keepArms(), [base.dir, candidate.dir]);
+    if (pruned.length > 0) {
+      progress(`pruned ${pruned.length} least recently used cached bundles`);
+    }
     writeFileSync(
       path.join(dir, ARMS_FILE),
       JSON.stringify({

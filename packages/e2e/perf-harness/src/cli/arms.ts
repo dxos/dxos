@@ -10,9 +10,11 @@ import {
   existsSync,
   mkdirSync,
   openSync,
+  readdirSync,
   renameSync,
   rmSync,
   statSync,
+  utimesSync,
   writeFileSync,
 } from 'node:fs';
 import { request as httpRequest } from 'node:http';
@@ -62,8 +64,36 @@ export type Arm = {
   cached: boolean;
 };
 
+const armsDir = (root: string) => path.join(perfDir(root), 'arms');
+
 const armDir = (root: string, target: Target, key: string) =>
-  path.join(perfDir(root), 'arms', [target.name, target.build.variant, key].filter(Boolean).join('-'));
+  path.join(armsDir(root), [target.name, target.build.variant, key].filter(Boolean).join('-'));
+
+/** Cached bundles kept per worktree, about 400 MB each; `DX_PERF_KEEP_ARMS` overrides. */
+export const keepArms = (): number => {
+  const keep = Number.parseInt(process.env.DX_PERF_KEEP_ARMS ?? '', 10);
+  return keep > 0 ? keep : 6;
+};
+
+/** Removes all but the `keep` most recently used cached bundles, never one in `holding`; returns the removed. */
+export const pruneArms = (root: string, keep: number, holding: ReadonlyArray<string>): string[] => {
+  const dir = armsDir(root);
+  if (!existsSync(dir)) {
+    return [];
+  }
+  const held = new Set(holding);
+  const removed = readdirSync(dir)
+    .map((name) => path.join(dir, name))
+    .filter((arm) => !held.has(arm))
+    .map((arm) => ({ arm, used: statSync(arm).mtimeMs }))
+    .sort((left, right) => right.used - left.used)
+    .slice(Math.max(0, keep - held.size))
+    .map(({ arm }) => arm);
+  for (const arm of removed) {
+    rmSync(arm, { recursive: true, force: true });
+  }
+  return removed;
+};
 
 const buildBundle = async (root: string, target: Target, logFile: string): Promise<void> => {
   const index = path.join(root, target.appDir, target.build.outDir, 'index.html');
@@ -106,6 +136,9 @@ export const buildArm = async ({ root, target, ref, logFile }: BuildArmOptions):
   const tree = git(root, ['rev-parse', `${commit}^{tree}`]);
   const dir = armDir(root, target, tree.slice(0, 12));
   if (existsSync(path.join(dir, 'index.html'))) {
+    // The directory's mtime is its last use, which `pruneArms` keeps by.
+    const now = new Date();
+    utimesSync(dir, now, now);
     return { ref, commit, dir, cached: true };
   }
 
