@@ -20,6 +20,7 @@ import {
   UnknownNodeView,
   nodeDef,
 } from '@dxos/react-ui-canvas/scene';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { ComputeNodeDefContext, useComputeContext } from '../../hooks/compute-context.ts';
 import { useControllerUpdates } from '../../hooks/useControllerUpdates.ts';
@@ -77,6 +78,17 @@ const computeNodeView = <S extends ComputeShape>(
     useControllerUpdates(controller);
     if (!isShape(node)) {
       return <UnknownNodeView {...props} />;
+    }
+    // A shape with no compute node behind it yet (the ghost of a create or palette drag) has no runtime state to
+    // read, so it shows what it will be rather than mounting the live component.
+    if (!node.node) {
+      const def = nodeDef(registry, node);
+      return (
+        <div className='dx-cover flex flex-col items-center justify-center gap-1 text-fg-muted'>
+          {def?.icon && <Icon.Icon icon={def.icon} size='lg' />}
+          <span className='text-sm truncate'>{def?.name ?? node.type}</span>
+        </div>
+      );
     }
 
     // The components lay out as a full-size flex container (centring with `grow` / `w-full`); the engine's

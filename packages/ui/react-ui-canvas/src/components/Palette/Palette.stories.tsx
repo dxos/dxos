@@ -114,5 +114,15 @@ export const Test: Story = {
         within(canvas.getByTestId('palette-group-Transform')).getByTestId('palette-transform-3'),
       ).toBeInTheDocument(),
     );
+
+    // 4. Resting the pointer on a folded group opens its grid.
+    await userEvent.hover(canvas.getByTestId('palette-group-Outputs'));
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByTestId(
+        'palette-group-Outputs-tools',
+        {},
+        { timeout: 2_000 },
+      ),
+    ).toBeInTheDocument();
   },
 };

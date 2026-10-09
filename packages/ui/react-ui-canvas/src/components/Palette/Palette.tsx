@@ -162,6 +162,31 @@ export const Palette = ({ tool, nodes, links, capabilities, collapse = 'auto', o
   );
 };
 
+/** How long the pointer rests on a folded group before its tools open. */
+const HOVER_OPEN_MS = 500;
+/** How long the tools stay open after the pointer leaves, so it can cross the gap between the rail and the grid. */
+const HOVER_CLOSE_MS = 250;
+
+/** Opens after the pointer rests on the trigger, and closes once it has left both the trigger and the content. */
+const useHoverOpen = (setOpen: (open: boolean) => void) => {
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return useMemo(
+    () => ({
+      enter: () => {
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => setOpen(true), HOVER_OPEN_MS);
+      },
+      keep: () => clearTimeout(timer.current),
+      leave: () => {
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
+      },
+    }),
+    [setOpen],
+  );
+};
+
 type PaletteFlyoutProps = { group: PaletteGroup; tool: Tool; onToolChange: (tool: Tool) => void };
 
 /**
@@ -170,6 +195,7 @@ type PaletteFlyoutProps = { group: PaletteGroup; tool: Tool; onToolChange: (tool
  */
 const PaletteFlyout = ({ group, tool, onToolChange }: PaletteFlyoutProps) => {
   const [open, setOpen] = useState(false);
+  const hover = useHoverOpen(setOpen);
   const [lastUsed, setLastUsed] = useState<Entry>(group.entries[0]);
   const active = group.entries.find((entry) => sameTool(tool, entry.tool));
   // A tool picked from elsewhere (its key, the grid) becomes the group's face, so the rail shows what is in use.
@@ -182,7 +208,12 @@ const PaletteFlyout = ({ group, tool, onToolChange }: PaletteFlyoutProps) => {
   return (
     <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'right-start' }}>
       <Popover.Anchor asChild>
-        <div className='relative' data-testid={`palette-group-${group.name}`}>
+        <div
+          className='relative'
+          data-testid={`palette-group-${group.name}`}
+          onPointerEnter={hover.enter}
+          onPointerLeave={hover.leave}
+        >
           <PaletteButton entry={shown} active={active !== undefined} onToolChange={onToolChange} />
           <Popover.Trigger asChild>
             <button
@@ -196,7 +227,7 @@ const PaletteFlyout = ({ group, tool, onToolChange }: PaletteFlyoutProps) => {
           </Popover.Trigger>
         </div>
       </Popover.Anchor>
-      <Popover.Content>
+      <Popover.Content onPointerEnter={hover.keep} onPointerLeave={hover.leave}>
         <div
           className='grid grid-cols-[repeat(3,min-content)] gap-1 p-1'
           data-testid={`palette-group-${group.name}-tools`}
