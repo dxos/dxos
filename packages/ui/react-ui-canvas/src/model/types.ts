@@ -92,10 +92,37 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
-/** Presentation choices a node carries; every field is optional and the frame supplies the default look. */
-export const NodeStyle = Schema.Struct({
-  /** One of the theme's hues, colouring fill, text and border together. */
+/** Where text sits across a shape, and down it. */
+export const HORIZONTAL_ALIGNS = ['left', 'center', 'right'] as const;
+export const VERTICAL_ALIGNS = ['top', 'middle', 'bottom'] as const;
+export type HorizontalAlign = (typeof HORIZONTAL_ALIGNS)[number];
+export type VerticalAlign = (typeof VERTICAL_ALIGNS)[number];
+
+/** How a line is drawn: a link's stroke, or a node's border. */
+export const LINE_STYLES = ['solid', 'dashed', 'dotted'] as const;
+
+/**
+ * The common base style every element shares, nodes and links alike: its colour and its line. Each kind extends it
+ * (`NodeStyle`), and a selection of several kinds edits only what they share. One field object per property, so
+ * the kinds declare the same field and the properties panel sees it as shared.
+ */
+export const lineStyleFields = {
+  /** One of the theme's hues: a link's stroke; a node's fill, text and border together. */
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  /** Solid, dashed or dotted: a link's stroke, or a node's border. */
+  lineStyle: Schema.optional(Schema.Literals(LINE_STYLES).annotate({ title: 'Line style' })),
+};
+
+/** A link's style: the common base, unset drawn neutral and solid. */
+export const LineStyle = Schema.Struct(lineStyleFields);
+export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
+
+/**
+ * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
+ * (`Schema.Struct({ ...styleFields, … })`).
+ */
+export const styleFields = {
+  ...lineStyleFields,
   /** The hue's fill; unset is 2, the look a hue had before tones. */
   tone: Schema.optional(NodeTone),
   rounded: Schema.optional(Schema.Boolean),
@@ -105,9 +132,14 @@ export const NodeStyle = Schema.Struct({
   guide: Schema.optional(Schema.Boolean),
   /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
-  /** Extra classes on the frame, for a host's own look. */
-  className: Schema.optional(Schema.String),
-});
+  /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
+  alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
+  /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
+  alignVertical: Schema.optional(Schema.Literals(VERTICAL_ALIGNS).annotate({ title: 'Vertical' })),
+};
+
+/** Presentation choices a node carries: the shape style. */
+export const NodeStyle = Schema.Struct(styleFields);
 export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
 
 /** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */
@@ -123,6 +155,10 @@ export const nodeBase = {
   ports: Schema.optional(Schema.Array(Port)),
   /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
   portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
+  /** A style class of the drawing (`StyleClass`) the node takes its look from; its own `style` wins over it. */
+  /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
+  layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
+  class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(NodeStyle),
 };
 
@@ -134,6 +170,14 @@ export type NodeBase = Schema.Schema.Type<typeof NodeBase>;
 export const boxFields = {
   label: Schema.optional(Schema.String),
 };
+
+/**
+ * The core base every node falls back to: its frame, ports, style and `label`. A node whose type the registry does
+ * not know (its plugin is off) is drawn and edited as this, a box showing its label, so a type that keeps its title
+ * in `label` still reads as itself.
+ */
+export const BaseNode = Schema.Struct({ type: Schema.String, ...nodeBase, ...boxFields });
+export type BaseNode = Schema.Schema.Type<typeof BaseNode>;
 
 export const RectNode = Schema.Struct({
   type: Schema.Literal('rect'),
@@ -226,12 +270,19 @@ export const LinkEnds = Schema.Struct({
 }).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
 export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 
-/** How a link's line is drawn; unset draws it neutral and solid. */
-export const LinkLine = Schema.Struct({
-  hue: Schema.optional(StyleHue.annotate({ title: 'Color' })),
-  dash: Schema.optional(Schema.Literals(['solid', 'dashed', 'dotted']).annotate({ title: 'Pattern' })),
+/**
+ * A named look of a drawing, kept beside its scenes: the nodes and links naming it derive their `style` from it (a
+ * link takes the common base, its colour and line style), so one class restyles both together.
+ */
+export const StyleClass = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  style: Schema.optional(NodeStyle),
 });
-export type LinkLine = Schema.Schema.Type<typeof LinkLine>;
+export type StyleClass = Schema.Schema.Type<typeof StyleClass>;
+
+/** A drawing's style classes by id. */
+export type StyleMap = Readonly<Record<string, StyleClass>>;
 
 const linkBase = {
   id: Schema.String,
@@ -241,7 +292,11 @@ const linkBase = {
   target: Endpoint,
   /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
-  line: Schema.optional(LinkLine.annotate({ title: 'Line' })),
+  /** A style class of the drawing the link takes its style from; its own `style` wins over it. */
+  /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
+  layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
+  class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
+  style: Schema.optional(LineStyle),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -283,6 +338,22 @@ export const isLink = (element: Element): element is Link => 'source' in element
 // Scene
 //
 
+/** A layer id, unique within its scene. */
+export type LayerId = string;
+
+/**
+ * A scene's layer: elements paint by their layer's order (`z`, bottom first), then by their own `z`. A hidden layer
+ * is neither drawn nor hit. A scene with no layers has one, implicitly (`DEFAULT_LAYER`).
+ */
+export const Layer = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  /** Fractional order key (see `order.ts`): the bottom layer has the least. */
+  z: Schema.String,
+  hidden: Schema.optional(Schema.Boolean),
+});
+export type Layer = Schema.Schema.Type<typeof Layer>;
+
 /**
  * The scene schema over a set of node schemas: a host composes it from its registry's types, so the
  * schema stays exact for every type while the engine only ever sees `NodeBase`.
@@ -293,6 +364,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
     name: Schema.optional(Schema.String),
     nodes: Schema.Record(Schema.String, Schema.Union(nodes)),
     links: Schema.Record(Schema.String, Link),
+    layers: Schema.optional(Schema.Record(Schema.String, Layer)),
   });
 
 /** The scene schema over the built-in node types. */
@@ -305,6 +377,7 @@ export type Scene = {
   readonly name?: string;
   readonly nodes: Readonly<Record<NodeId, Node>>;
   readonly links: Readonly<Record<LinkId, Link>>;
+  readonly layers?: Readonly<Record<LayerId, Layer>>;
 };
 
 /** A node or link of the scene by id. */
@@ -334,6 +407,10 @@ export type Intent =
    * rather than a view action, so a projection that owns its own positions may rewrite or refuse it.
    */
   | { kind: 'layout'; ids?: ElementId[] }
+  /** Adds a layer, or replaces the one of its id (a rename, a visibility toggle, a move in the order). */
+  | { kind: 'layer'; layer: Layer }
+  /** Removes a layer and every element on it; the last layer of a scene stays. */
+  | { kind: 'removeLayer'; id: LayerId }
   /** Several intents applied as one model change (one undo step), e.g. a paste. */
   | { kind: 'batch'; intents: Intent[] };
 

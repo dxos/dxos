@@ -10,10 +10,11 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
+import { BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
 
+import { compileGoal } from './compile-goal.ts';
 import { AgentOperationError } from './errors.ts';
-import { loadMembers, memberByDid, memberByName, membersNamed } from './members.ts';
+import { loadMembers, memberByDid, memberByName, membersNamed, personDid } from './members.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
   Operation.withHandler(
@@ -41,6 +42,23 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
+      const members = yield* loadMembers;
+      const resolved = resolvePattern(members, when);
+      if (typeof resolved === 'string') {
+        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
+      }
+
+      // Telling someone what they say themselves is never the ask: the requester was mixed up with the watched person.
+      const told = recipient ? yield* Database.load(recipient) : requester;
+      const toldDid = personDid(told);
+      if (toldDid !== undefined && resolved.speaker === toldDid) {
+        return yield* Effect.fail(
+          new AgentOperationError({
+            message: `${Profile.displayName(told)} would be told what they say themselves; the requester is the person asking you, not the person to watch.`,
+          }),
+        );
+      }
+
       const goal = goalRef
         ? yield* Database.load(goalRef)
         : outcome
@@ -60,11 +78,17 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
-      const resolved = resolvePattern(yield* loadMembers, when);
-      if (typeof resolved === 'string') {
-        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
-      }
-
+      const createdAt = DateTime.formatIso(yield* DateTime.now);
+      // The goal's text compiled to rules is the authority; the pattern, translated, is the fallback.
+      const compiled = yield* compileGoal({
+        goal: request ?? goal.title,
+        owner: personDid(requester) ?? Profile.displayName(requester),
+        people: members.flatMap(({ did, displayName }) =>
+          did !== undefined && displayName !== undefined ? [{ name: displayName, id: did }] : [],
+        ),
+        now: createdAt,
+      });
+      const rules = compiled?.rules ?? Trigger.toRules(resolved, { createdAt });
       const trigger: Trigger.Trigger = {
         id: Trigger.makeId(agent.id),
         agent: agent.id,
@@ -73,7 +97,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         when: resolved,
         then: { _tag: 'notify', recipient: recipient ?? requesterRef, message },
         ...(ongoing ? { ongoing } : {}),
-        createdAt: DateTime.formatIso(yield* DateTime.now),
+        rules,
+        createdAt,
       };
       if (!(yield* brain.subscribe(trigger))) {
         return yield* Effect.fail(registryFull());

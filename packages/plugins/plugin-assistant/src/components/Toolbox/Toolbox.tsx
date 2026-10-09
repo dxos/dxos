@@ -15,7 +15,7 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { AssistantService } from '#types';
 
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatModel } from '../../chat-model/index.ts';
 
 export type ToolboxProps = {
   services?: { service: AssistantService.ServiceType }[];
@@ -111,10 +111,10 @@ const Section = ({ title, items, striped }: SectionProps) => {
 
 export type ToolboxPanelProps = Util.ThemedClassName<{
   db?: Database.Database;
-  processor?: AiChatProcessor;
+  chatModel?: ChatModel;
 }>;
 
-export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) => {
+export const ToolboxPanel = ({ classNames, db, chatModel }: ToolboxPanelProps) => {
   // Registered services.
   const services = useQuery(db, Filter.type(AssistantService.ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: AssistantService.ServiceType }[]>([]);
@@ -135,7 +135,7 @@ export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) =
   return (
     <Toolbox
       classNames={classNames}
-      skills={processor?.context.getSkills()}
+      skills={chatModel?.context.getSkills()}
       services={serviceTools}
       functions={functions}
     />

@@ -119,6 +119,19 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     /** Local pid -> host pid, mirrored from the durable alias map so reads can resolve synchronously. */
     const aliases = new Map<Process.ID, Process.ID>();
     const localPids = new Map<Process.ID, Process.ID>();
+    /**
+     * Inputs queued for each process (by local pid) that the host has not acknowledged. The host answers
+     * an input only once the turn it starts has settled, so this also spans the turn itself.
+     */
+    const pendingInputs = new Map<Process.ID, number>();
+    const countInput = (localPid: Process.ID, delta: number) => {
+      const next = (pendingInputs.get(localPid) ?? 0) + delta;
+      if (next > 0) {
+        pendingInputs.set(localPid, next);
+      } else {
+        pendingInputs.delete(localPid);
+      }
+    };
 
     let wake = yield* Deferred.make<void>();
 
@@ -159,6 +172,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     const forget = (localPid: Process.ID): Effect.Effect<void> =>
       Effect.sync(() => {
         overlay.delete(localPid);
+        pendingInputs.delete(localPid);
         const remote = aliases.get(localPid);
         aliases.delete(localPid);
         if (remote !== undefined) {
@@ -179,9 +193,18 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           return snapshot;
         }
         const local = overlay.get(localPid);
-        return local?.state === Process.State.TERMINATING
-          ? { ...snapshot, state: Process.State.TERMINATING }
-          : snapshot;
+        if (local?.state === Process.State.TERMINATING) {
+          return { ...snapshot, state: Process.State.TERMINATING };
+        }
+        // An input the host has not acknowledged is work in flight: reported idle or hybernating, a
+        // caller waiting for the turn to settle would return before the turn has even started.
+        if (
+          pendingInputs.has(localPid) &&
+          (snapshot.state === Process.State.IDLE || snapshot.state === Process.State.HYBERNATING)
+        ) {
+          return { ...snapshot, state: Process.State.RUNNING };
+        }
+        return snapshot;
       });
 
     const startingSnapshot = (
@@ -230,6 +253,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           break;
         }
         case 'submitInput':
+          countInput(command.localPid, 1);
           break;
       }
     }
@@ -309,6 +333,9 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       const exit = yield* deliver(command).pipe(Effect.exit);
       if (Exit.isSuccess(exit)) {
         retryAt.delete(command.localPid);
+        if (command.payload._tag === 'submitInput') {
+          countInput(command.localPid, -1);
+        }
         return yield* queue.complete(command.id);
       }
       const { attempts } = yield* queue.recordAttempt(command.id);
@@ -363,7 +390,15 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         }),
 
       submitInput: ({ spaceId, pid, input }) =>
-        enqueue(localPidOf(pid), newId(), { _tag: 'submitInput', spaceId, pid, value: input }),
+        // Counted before the enqueue, since the flusher may deliver (and uncount) the command before
+        // this fiber resumes; uncounted again if the durable write dies.
+        Effect.sync(() => countInput(localPidOf(pid), 1)).pipe(
+          Effect.andThen(
+            enqueue(localPidOf(pid), newId(), { _tag: 'submitInput', spaceId, pid, value: input }).pipe(
+              Effect.tapCause(() => Effect.sync(() => countInput(localPidOf(pid), -1))),
+            ),
+          ),
+        ),
 
       terminate: ({ spaceId, pid }) =>
         Effect.gen(function* () {

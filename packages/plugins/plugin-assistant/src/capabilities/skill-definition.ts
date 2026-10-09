@@ -22,7 +22,7 @@ import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
-import { AssistantSkill, PluginManagerSkill } from '#skills';
+import { AssistantSkill, PluginManagerSkill, TurnReviewSkill } from '#skills';
 
 const skillDefinition = Effect.fnUntraced(function* () {
   const manager = yield* Plugin.Service;
@@ -48,6 +48,7 @@ const skillDefinition = Effect.fnUntraced(function* () {
       SkillManagerSkill,
       DelegationSkill,
       AlarmSkill,
+      TurnReviewSkill,
     ]),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents

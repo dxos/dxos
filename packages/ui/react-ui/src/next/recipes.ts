@@ -102,6 +102,7 @@ export const recipes = {
   editablePreview: () => `dx-control dx-editable-preview ${FOCUS_RING}`,
   editablePreviewIcon: () => 'dx-editable-preview-icon',
   editablePreviewText: () => 'dx-editable-preview-text',
+  editableSubmit: () => 'dx-editable-submit',
   empty: () => 'dx-empty',
   emptyText: () => 'dx-empty-text',
   errorFallback: () => 'dx-error-fallback',

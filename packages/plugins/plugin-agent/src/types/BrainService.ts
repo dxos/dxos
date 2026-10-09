@@ -44,21 +44,26 @@ export type WakeRequest = {
 export class BrainError extends BaseError.extend('BrainError', 'The agent brain failed.') {}
 
 /**
- * An event queued in a subscription's outbox: one pushed fact its pattern matched. Events stay queued
- * until acknowledged, so a consumer that fails between {@link Service.take} and {@link Service.ack}
- * sees them again.
+ * An event queued in a subscription's outbox: one wake of its rules (`@dxos/brain` `Evaluator`), with
+ * the facts behind it. Events stay queued until acknowledged, so a consumer that fails between
+ * {@link Service.take} and {@link Service.ack} sees them again.
  */
 export const Event = Schema.Struct({
-  /** Stable per subscription and fact, so pushing a fact twice queues it once. */
+  /** Stable per subscription, wake and facts, so a fact pushed twice queues once. */
   id: Schema.String,
   subscription: Schema.String,
-  fact: RDF.Fact,
+  /** The rules' wake label (`match` for a translated pattern), `achieved`, or a sub-goal id. */
+  label: Schema.String,
+  /** The facts behind the wake; empty for a wake the clock caused. */
+  facts: Schema.Array(RDF.Fact),
+  /** When it woke (ISO). */
+  at: Schema.String,
 });
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
 
 export type PushOptions = {
-  /** Speakers (entity slugs) whose facts are stored but queue no events: an agent's own words must not wake it. */
+  /** Speakers (entity ids) whose facts are stored but wake nothing on their own: an agent's own words must not wake it. */
   readonly quiet?: readonly string[];
 };
 
@@ -67,9 +72,12 @@ export type PushOptions = {
  *
  * - Knowledge base: {@link Service.push} stores facts extracted from conversations (an RDF store) and
  *   {@link Service.query} reads them back.
- * - Event base: a subscription (a {@link Trigger.Trigger}) is a standing pattern; every pushed fact it
- *   matches is queued in that subscription's own outbox, which its consumer drains with
+ * - Event base: a subscription (a {@link Trigger.Trigger}) carries goal rules; whenever pushed facts or the
+ *   clock wake them, an event is queued in that subscription's own outbox, which its consumer drains with
  *   {@link Service.take} and {@link Service.ack}.
+ *
+ * Both implementations evaluate rules with `@dxos/brain`'s `Evaluator`, so a subscription wakes the same
+ * way wherever the agent runs.
  *
  * One brain per agent, keyed by the agent's entity id. Implementations differ per platform: in memory
  * in the client (`BrainMemory`), a Durable Object with SQLite on EDGE.
@@ -85,12 +93,21 @@ export interface Service {
     options?: PushOptions,
   ) => Effect.Effect<number, BrainError>;
 
+  /**
+   * Re-evaluates the agent's time-driven rules (`elapsed`, `every`, `due`) now; returns how many events
+   * were queued. Hosts call it when {@link Service.nextDueAt} comes round.
+   */
+  readonly tick: (agent: string) => Effect.Effect<number, BrainError>;
+
+  /** When the agent's rules next read the clock (ISO), or `undefined` when none do. */
+  readonly nextDueAt: (agent: string) => Effect.Effect<string | undefined, BrainError>;
+
   /** The agent's facts matching the query. */
   readonly query: (agent: string, query: FactQuery) => Effect.Effect<RDF.Fact[], BrainError>;
 
   /**
-   * Adds or replaces a subscription; it matches facts pushed from its `createdAt` on. False when the
-   * agent already holds {@link MAX_TRIGGERS} others.
+   * Adds or replaces a subscription; it wakes on facts pushed from then on (its rules may read earlier
+   * ones). False when the agent already holds {@link MAX_TRIGGERS} others; fails when its rules do not compile.
    */
   readonly subscribe: (subscription: Trigger.Trigger) => Effect.Effect<boolean, BrainError>;
 
@@ -141,22 +158,27 @@ export const encodeTrigger = Schema.encodeSync(Trigger.Trigger);
 /** The inverse of {@link encodeTrigger}; refs come back unresolved, to be loaded through the database. */
 export const decodeTrigger = Schema.decodeUnknownSync(Trigger.Trigger);
 
-/** The id of the event a fact queues for a subscription. */
-export const eventId = (subscription: string, fact: string): string => `${subscription}:${fact}`;
+/** The brain's view of a trigger: its id, rules and start. */
+export const toSubscription = (trigger: Trigger.Trigger): { id: string; rules: string; createdAt: string } => ({
+  id: trigger.id,
+  rules: Trigger.rulesOf(trigger),
+  createdAt: trigger.createdAt,
+});
 
-/**
- * The event a fact queues for the subscription, or `undefined` when the subscription does not want it:
- * the fact does not match, was said before the subscription began, or comes from a quiet speaker.
- */
-export const matchEvent = (
-  subscription: Trigger.Trigger,
-  fact: RDF.Fact,
-  { quiet = [] }: PushOptions = {},
-): Event | undefined =>
-  (fact.attribution.agent !== undefined && quiet.includes(fact.attribution.agent)) ||
-  !Trigger.matchesPattern(subscription.when, fact, { after: subscription.createdAt })
-    ? undefined
-    : { id: eventId(subscription.id, fact.id), subscription: subscription.id, fact };
+/** An evaluator event as a queued {@link Event}. */
+export const fromEvaluator = (event: {
+  readonly id: string;
+  readonly subscription: string;
+  readonly label: string;
+  readonly facts: ReadonlyArray<RDF.Fact>;
+  readonly at: number;
+}): Event => ({
+  id: event.id,
+  subscription: event.subscription,
+  label: event.label,
+  facts: [...event.facts],
+  at: new Date(event.at).toISOString(),
+});
 
 /** An event as plain JSON, for brains across a wire. */
 export const encodeEvent = Schema.encodeSync(Event);

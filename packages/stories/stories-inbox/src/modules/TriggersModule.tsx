@@ -46,14 +46,14 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
   // `remote` is routed to the EDGE dispatcher, while a local trigger runs in-process.
   const invokeTrigger = Hooks.useSpaceCallback(
     space.db.spaceId,
-    [Trigger.TriggerMonitorService],
+    [Trigger.ManagerService],
     Effect.fnUntraced(function* () {
       const trigger = triggerToInvokeRef.current;
       if (!trigger) {
         return;
       }
 
-      const monitor = yield* Trigger.TriggerMonitorService;
+      const monitor = yield* Trigger.ManagerService;
       yield* monitor.invokeTrigger({
         trigger,
         event: { tick: Date.now() },

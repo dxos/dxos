@@ -37,7 +37,7 @@ Measured on branch `claude/ai-chat-interface-restructure-bdc043`.
 | `containers/`                                                                        | 2,971  | Surface-mounted containers (11 lazy entries)                      |
 | `capabilities/`                                                                      | 1,614  | 20+ plugin modules (AI service, agent runtime, graph, settings …) |
 | `hooks/`                                                                             | 1,261  | 15 hooks — half UI, half plugin/capability plumbing               |
-| `processor/`                                                                         | 1,020  | `AiChatProcessor` — the client-side request/stream state machine  |
+| `processor/`                                                                         | 1,020  | `ChatModel` — the client-side request/stream state machine        |
 | `operations/`, `types/`, `testing/`, `templates/`, `skills/`, `util/`, `extensions/` | ~2,600 | The rest                                                          |
 
 The plugin registers **20 modules** ([`plugin.ts`](../src/plugin.ts)) and exports **12 subpaths**.
@@ -47,7 +47,7 @@ Three consequences for chat work:
    full-fidelity harness is a storybook that boots `AssistantPlugin` plus ~10 peer plugins
    (`stories-assistant`).
 2. The two existing mid-level harnesses stop short: `ChatThread.stories.tsx` drives the syncer from
-   a scripted feed but has no prompt/processor; `processor/streaming.node.test.ts` drives the
+   a scripted feed but has no prompt/processor; `chat-model/streaming.node.test.ts` drives the
    processor but has no UI.
 3. Chat UI changes and agent-loop changes land in the same package, so neither can be reviewed or
    versioned independently.
@@ -72,7 +72,7 @@ Runtime composition for the primary entry point, `ChatArticle`. Coupling tags:
 ChatArticle                                        containers/ChatArticle          [plugin]
 ├── useChatServices                                hooks/                          [plugin] ProcessManagerRuntime capability
 ├── usePresets(settings)                           hooks/                          [plugin] Settings capability
-├── useChatProcessor → AiChatProcessor             hooks/, processor/              [plugin] Capability layers + Effect
+├── useChatModel → ChatModel             hooks/, processor/              [plugin] Capability layers + Effect
 ├── useSelectionContext(companionTo)               hooks/                          [plugin] plugin-attention
 ├── ClientOperation.OpenUsage (quota toast action) containers/ChatArticle          [plugin]
 └── Chat.Root                                      components/Chat/Chat.tsx        [echo]
@@ -156,13 +156,13 @@ Excluding `*.stories.tsx` / `*.test.ts`:
 
 Everything else is mechanical. These five are the actual design work:
 
-| #   | Coupling                                                                     | Where                                   | Nature                                  |
-| --- | ---------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------- |
-| 1   | `AiChatProcessor` — a concrete class built from Effect layers + capabilities | `Chat.Root`, `ChatPrompt`, `ChatStatus` | needs an interface (port)               |
-| 2   | `SurfaceWidget` → `Surface` + `ChatSurface` role                             | `ChatThread/widgets/SurfaceWidget.tsx`  | needs a widget-registry extension point |
-| 3   | `ChatActions` + `useChatVoiceInput` → plugin-transcription capabilities      | `ChatPrompt/`                           | needs a slot (children/render prop)     |
-| 4   | `useChatToolbarActions` → `Operation.invoke`                                 | `Chat.Toolbar`                          | stays in the plugin                     |
-| 5   | `meta.profile.key` translation namespace (`#meta`)                           | ~12 files                               | needs the package's own namespace       |
+| #   | Coupling                                                                | Where                                   | Nature                                  |
+| --- | ----------------------------------------------------------------------- | --------------------------------------- | --------------------------------------- |
+| 1   | `ChatModel` — a concrete class built from Effect layers + capabilities  | `Chat.Root`, `ChatPrompt`, `ChatStatus` | needs an interface (port)               |
+| 2   | `SurfaceWidget` → `Surface` + `ChatSurface` role                        | `ChatThread/widgets/SurfaceWidget.tsx`  | needs a widget-registry extension point |
+| 3   | `ChatActions` + `useChatVoiceInput` → plugin-transcription capabilities | `ChatPrompt/`                           | needs a slot (children/render prop)     |
+| 4   | `useChatToolbarActions` → `Operation.invoke`                            | `Chat.Toolbar`                          | stays in the plugin                     |
+| 5   | `meta.profile.key` translation namespace (`#meta`)                      | ~12 files                               | needs the package's own namespace       |
 
 **Point 1 splits into two tiers, and the split decides the phasing.** Consumers read:
 
@@ -586,7 +586,7 @@ plugin-assistant · plugin-thread · plugin-review · plugin-inbox · plugin-tra
 @dxos/react-ui-assistant     Chat.Root/Content/Prompt/Minimap/Status/TaskList
    (new)                     Chat.Thread = MessageList + AI registry + AI chrome
                              projectThread / resolveRewind (Feed lineage) + thread-tree UI
-                             ChatProcessor port + MockChatProcessor (scripted, no AI)
+                             ChatProcessor port + MockChatModel (scripted, no AI)
                              ✗ NO @dxos/assistant (no AiContext) in phase 1
     ↓
 @dxos/react-ui-chat          THE COMPOSER: ChatEditor (one composer) · extension packs
@@ -657,13 +657,13 @@ echo + editor + the widest reach, and would gain `react-ui-mosaic` and `Message`
 **Stays in `plugin-assistant`** (injected into the components above):
 
 - `capabilities/`, `operations/`, `containers/`, `skills/`, `templates/`, `execution-graph/`
-- `processor/` — `AiChatProcessor` becomes the production implementation of the port
+- `processor/` — `ChatModel` becomes the production implementation of the port
 - `SurfaceWidget` (widget-registry extension), `ChatActions` + `useChatVoiceInput` (prompt slot)
 - **`ChatOptions` + `ChatReferences`** and their hooks (`useSkillRegistry`, `useContextObjects`,
   `useContextBinder`, `useFilteredTypes`, `useReferencesProvider`) — these are the only tier-B
   (`AiContext`) consumers; keeping them behind the boundary is what makes the new package
   `@dxos/assistant`-free
-- `Chat.Toolbar`, `hooks/useChatProcessor`, `useChatServices`, `useSelectionContext`, `usePresets`,
+- `Chat.Toolbar`, `hooks/useChatModel`, `useChatServices`, `useSelectionContext`, `usePresets`,
   `useChatToolbarActions`, `useHomeSuggestions`, `useProcessEphemeralStatus`, `useTraceMessages`
 
 **Moves into `@dxos/react-ui-chat`** (the composer consolidation):
@@ -693,7 +693,7 @@ Arguments for:
    today; four consumers already assemble `Chat.*` differently; and `SpaceHomePrompt` already uses
    `ChatPrompt` outside the composite entirely. This is recognising an existing boundary, not
    inventing one.
-2. **It creates the missing harness tier.** With a `MockChatProcessor` (atoms fed from a scripted
+2. **It creates the missing harness tier.** With a `MockChatModel` (atoms fed from a scripted
    message list), the whole chat UI — prompt, thread, syncer, widgets, minimap, task list —
    renders with no ECHO space, no capabilities, no model, no `ScriptedLanguageModel`. Today the
    cheapest full-composite story boots ~10 plugins. DESIGN.md §2.5 names this exact gap: _"every
@@ -803,8 +803,8 @@ dropped.
 
 **Track A — the mock-processor loop (the immediate goal)**
 
-1. **Design the `ChatProcessor` port** in the plugin (no move yet): an interface + `AiChatProcessor
-implements ChatProcessor` + a `MockChatProcessor` in `#testing` driving the atoms from a scripted
+1. **Design the `ChatProcessor` port** in the plugin (no move yet): an interface + `ChatModel
+implements ChatProcessor` + a `MockChatModel` in `#testing` driving the atoms from a scripted
    message list. Prove it by rewriting `Chat/Error.stories.tsx` against the mock. _Test: existing
    plugin tests + the rewritten story._
 2. **Extract the prompt's actions slot**, moving `ChatOptions` / `ChatReferences` / `ChatActions`
@@ -817,9 +817,9 @@ implements ChatProcessor` + a `MockChatProcessor` in `#testing` driving the atom
    451 LOC of sync tests move with it. _Test: `sync.test.ts`, `tool-widget-state.test.ts`, widget
    stories, `MarkdownStream.stories.tsx`._
 4. **Move `Chat` + `ChatPrompt` + `TaskList`** onto the port and the slot. _Test: `thread.test.ts`
-   plus a new composite story driven only by `MockChatProcessor` — the deliverable._
+   plus a new composite story driven only by `MockChatModel` — the deliverable._
 5. **Repoint consumers**: plugin containers and `stories-assistant`. `ChatModule` takes `Chat` from
-   `@dxos/react-ui-assistant` and `useChatProcessor` from the plugin — a two-line change, and the
+   `@dxos/react-ui-assistant` and `useChatModel` from the plugin — a two-line change, and the
    right smoke test that the boundary is real. Per repo policy, **no compatibility re-exports**:
    every call site updates in the same change.
 
@@ -849,7 +849,7 @@ renders with no model. If track 0 fails, this still proceeds on the moved-as-is 
 
 `stories-assistant` is the full-stack integration surface (7 story files, ~10 peer plugins, live or
 scripted EDGE AI). It consumes exactly three things from the plugin —
-`@dxos/plugin-assistant/Chat` (`Chat`), `/Hooks` (`useChatProcessor`, `usePresets`), and
+`@dxos/plugin-assistant/Chat` (`Chat`), `/Hooks` (`useChatModel`, `usePresets`), and
 `/Assistant` (`ChatViews`) — so the move costs it one import rewrite.
 
 It should **stay full-stack**: its value is proving the composition against real plugins and a real

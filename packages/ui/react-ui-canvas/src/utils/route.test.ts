@@ -98,4 +98,14 @@ describe('route', () => {
     expect(half?.target).toEqual({ point: { x: 256, y: 64 }, side: 'e' });
     expect(half?.source.side).toBe('w');
   });
+
+  test('a route runs straight to a free end rather than turning to its side', ({ expect }) => {
+    const port = { point: { x: 0, y: 0 }, side: 'e' as const };
+    const free = { point: { x: 100, y: 37 }, side: 'w' as const, free: true };
+    // A curve's control point at a free end is the end itself, and a smart link has no stub there.
+    expect(
+      linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
+    ).toMatch(/, 100 37, 100 37$/);
+    expect(smartPoints(port, free)).toEqual([port.point, { x: 32, y: 0 }, free.point]);
+  });
 });

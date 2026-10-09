@@ -8,9 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
-import { type RDF } from '@dxos/pipeline-rdf';
 
-import * as FactEntry from './FactEntry.ts';
 import * as Goal from './Goal.ts';
 
 /** pipeline-rdf's illocutionary forces; a fact without an illocution is assertive. */
@@ -87,6 +85,11 @@ export const Trigger = Schema.Struct({
   then: Action,
   /** Keeps watching after it fires ("keep me posted"), passing each matching fact on; its goal stays open. */
   ongoing: Schema.optional(Schema.Boolean),
+  /**
+   * The goal rules (`@dxos/brain` Datalog) the brain evaluates: compiled from the goal's text, or `when`
+   * translated by {@link toRules}. Absent on triggers stored before rules existed; see {@link rulesOf}.
+   */
+  rules: Schema.optional(Schema.String),
   createdAt: Format.DateTime,
 });
 
@@ -135,71 +138,63 @@ export const renderMessage = (trigger: Trigger, fact: string): string =>
       : trigger.then.message;
 
 //
-// Matching
+// Rules
 //
 
-const words = (text: string): string[] => text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+/** A Datalog string constant. */
+const quote = (value: string): string => JSON.stringify(value);
 
-/** Every word of `needle` occurs in `haystack`; words of three letters or more also match as a prefix ("PR" ≠ "prior", "indexer" ~ "indexers"). */
-const mentions = (haystack: string, needle: string): boolean => {
-  const available = words(haystack);
-  return words(needle).every((word) =>
-    available.some((candidate) => (word.length < 3 ? candidate === word : candidate.startsWith(word))),
-  );
+/** An ISO time in the one format facts are stamped with, so comparing the strings compares the times. */
+const isoTime = (time: string): string => {
+  const parsed = Date.parse(time);
+  return Number.isNaN(parsed) ? time : new Date(parsed).toISOString();
 };
 
-/** A subject given as a member id matches that entity; otherwise its words must occur in the subject. */
-const isSubject = (term: RDF.Term, subject: string): boolean =>
-  (term.kind === 'entity' && term.entity === subject) || mentions(FactEntry.termText(term), subject);
+/** The label a translated pattern wakes with. */
+export const MATCH_LABEL = 'match';
 
-const nameKey = (name: string): string => name.trim().replace(/\s+/g, ' ').toLowerCase();
-
-/** A member id matches exactly; a bare name (someone who is no member) matches however it is cased or spaced. */
-const isSpeaker = (agent: string | undefined, speaker: string): boolean =>
-  agent !== undefined &&
-  (agent === speaker ||
-    (!speaker.startsWith('did:') && !agent.startsWith('did:') && nameKey(agent) === nameKey(speaker)));
-
-const time = (iso: string): number => Date.parse(iso);
-
-export type MatchOptions = {
-  /** Facts said before this instant never match, unless the pattern sets its own `after`. */
-  after?: string;
+export type RulesOptions = {
+  /** When the watch began: facts said earlier never wake it, unless the pattern sets its own `after`. */
+  createdAt: string;
 };
 
-/** Whether the fact satisfies every field the pattern sets. */
-export const matchesPattern = (pattern: FactPattern, fact: RDF.Fact, { after }: MatchOptions = {}): boolean => {
-  const { assertion, attribution, factuality, illocution } = fact;
-  const said = time(attribution.generatedAtTime);
-  const since = pattern.after ?? after;
-  if (since !== undefined && said < time(since)) {
-    return false;
+/** A member's id, as `watchFacts` resolves a name to; anything else is a bare name or words. */
+const isMemberId = (value: string): boolean => value.startsWith('did:');
+
+/**
+ * Translates a pattern into goal rules (`@dxos/brain`): one `wake` rule binding the fact, so every new
+ * matching fact wakes the subscription once. The speaker is matched as facts are attributed (a member's id,
+ * else the name as written); content (`about`, `text`, and a `subject` that is no member) is matched by
+ * `about`, the brain's stemmed keyword match over the quote and the triple.
+ */
+export const toRules = (pattern: FactPattern, { createdAt }: RulesOptions): string => {
+  const body = ['fact(F, _, _, _)'];
+  if (pattern.speaker !== undefined) {
+    body.push(`speaker(F, ${quote(pattern.speaker)})`);
   }
-  if (pattern.before !== undefined && said >= time(pattern.before)) {
-    return false;
+  if (pattern.subject !== undefined) {
+    body.push(
+      isMemberId(pattern.subject) ? `fact(F, ${quote(pattern.subject)}, _, _)` : `about(F, ${quote(pattern.subject)})`,
+    );
   }
-  // Watches store the speaker as facts are attributed: a member id (`watchFacts` resolves the name), else a bare name.
-  if (pattern.speaker !== undefined && !isSpeaker(attribution.agent, pattern.speaker)) {
-    return false;
+  for (const words of [pattern.about, pattern.text]) {
+    if (words !== undefined && words.trim().length > 0) {
+      body.push(`about(F, ${quote(words)})`);
+    }
   }
-  // pipeline-rdf records no illocution for a plain assertion.
-  if (pattern.force !== undefined && (illocution?.force ?? 'assertive') !== pattern.force) {
-    return false;
+  if (pattern.force !== undefined) {
+    body.push(`force(F, ${quote(pattern.force)})`);
   }
-  if (pattern.polarity !== undefined && factuality.polarity !== pattern.polarity) {
-    return false;
+  if (pattern.polarity !== undefined) {
+    body.push(`polarity(F, ${quote(pattern.polarity)})`);
   }
-  if (pattern.subject !== undefined && !isSubject(assertion.subject, pattern.subject)) {
-    return false;
+  body.push('saidAt(F, T)', `T >= ${quote(isoTime(pattern.after ?? createdAt))}`);
+  if (pattern.before !== undefined) {
+    body.push(`T < ${quote(isoTime(pattern.before))}`);
   }
-  if (pattern.about !== undefined && !mentions(`${FactEntry.factText(fact)} ${assertion.quote ?? ''}`, pattern.about)) {
-    return false;
-  }
-  if (
-    pattern.text !== undefined &&
-    !(assertion.quote ?? FactEntry.factText(fact)).toLowerCase().includes(pattern.text.toLowerCase())
-  ) {
-    return false;
-  }
-  return true;
+  return `wake(${MATCH_LABEL}) :- ${body.join(', ')}.`;
 };
+
+/** The rules a trigger is evaluated by: its own, or its pattern translated. */
+export const rulesOf = (trigger: Trigger): string =>
+  trigger.rules ?? toRules(trigger.when, { createdAt: trigger.createdAt });

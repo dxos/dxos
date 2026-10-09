@@ -54,10 +54,11 @@ describe('echo store', () => {
       nodes: [shape('a', 0, { guide: true, classNames: 'text-red-500' }), shape('b', 1, { style: { hue: 'sky' } })],
       edges: [],
     });
-    expect(scene.nodes.a.style).toEqual({ guide: true, className: 'text-red-500' });
+    expect(scene.nodes.a.style).toEqual({ guide: true });
     expect(scene.nodes.b.style).toEqual({ hue: 'sky' });
     expect('guide' in scene.nodes.a).toBe(false);
-    expect('classNames' in scene.nodes.a).toBe(false);
+    // The old editor's classes ride through untouched; the engine draws none.
+    expect(Reflect.get(scene.nodes.a, 'classNames')).toBe('text-red-500');
   });
 
   test('a move writes back the node and nothing else', ({ expect }) => {

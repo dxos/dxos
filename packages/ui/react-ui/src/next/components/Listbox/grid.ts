@@ -21,6 +21,7 @@ const CONTROL_SELECTOR = [
 ].join(', ');
 
 const ROW_SELECTOR = '[role="option"]';
+const EDITABLE_PREVIEW_SELECTOR = '[data-scope="editable"][data-part="preview"]';
 
 /** The row (`option`) holding `element` in this list, not in a list nested in a row's detail. */
 const rowOf = (list: HTMLElement, element: Element): HTMLElement | null => {
@@ -49,6 +50,11 @@ export const isFromControl = (row: HTMLElement, target: EventTarget | null) => {
     return false;
   }
   const control = target.closest(CONTROL_SELECTOR);
+  // A row's text edited in place (an Editable preview) is the row's for a pointer: a press selects the row and leaves the
+  // list its keys; a double-click, its pencil, or Enter once the row is entered still opens it.
+  if (control?.matches(EDITABLE_PREVIEW_SELECTOR)) {
+    return false;
+  }
   return control !== null && control !== row && row.contains(control);
 };
 
