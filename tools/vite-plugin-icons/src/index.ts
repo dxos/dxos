@@ -330,7 +330,15 @@ export const IconsPlugin = ({
           res.setHeader('Content-Type', 'image/svg+xml');
           // The sprite grows as modules are served; a cached copy would hide icons found since.
           res.setHeader('Cache-Control', 'no-store');
-          fs.createReadStream(spritePath).pipe(res);
+          // The sprite can vanish between the check and the open; an unhandled stream error would exit the server.
+          fs.createReadStream(spritePath)
+            .on('error', () => {
+              if (!res.headersSent) {
+                res.statusCode = 404;
+              }
+              res.end();
+            })
+            .pipe(res);
         };
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url ?? '').split('?')[0];
@@ -402,6 +410,8 @@ export const IconsPlugin = ({
         if (devSpriteDir) {
           fs.rmSync(devSpriteDir, { recursive: true, force: true });
           devSpriteDir = null;
+          // The sprite went with the directory, so a later server must write it again rather than skip as unchanged.
+          lastFingerprint = null;
         }
       },
     },

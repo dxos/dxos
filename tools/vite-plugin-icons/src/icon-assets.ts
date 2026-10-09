@@ -3,7 +3,7 @@
 //
 
 import { existsSync, readFileSync } from 'fs';
-import { cp } from 'fs/promises';
+import { cp, rm } from 'fs/promises';
 import { join, resolve } from 'path';
 import type { Plugin } from 'vite';
 
@@ -60,10 +60,18 @@ export const iconAssetsPlugin = ({ route, dir, copy = true }: IconAssets): Plugi
       });
     },
     closeBundle: async () => {
-      if (!copy || !outDir || !existsSync(dir)) {
+      if (!outDir) {
         return;
       }
       const dest = join(outDir, route.replace(/^\//, ''));
+      if (!copy) {
+        // A kept outDir would otherwise still ship the catalog an earlier build copied.
+        await rm(dest, { recursive: true, force: true });
+        return;
+      }
+      if (!existsSync(dir)) {
+        return;
+      }
       await cp(dir, dest, { recursive: true });
     },
   };
