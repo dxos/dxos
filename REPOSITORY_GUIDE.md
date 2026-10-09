@@ -173,7 +173,9 @@ working hours and near-vanishing overnight.
 
 `serve` therefore arms a watcher (`tools/storybook-react/scripts/serve.sh` →
 `diagnose.sh --ensure`) — ONE per machine, not one per server. It round-robins
-every known dev-server port (`.claude/launch.json` plus 9009/5199), and the
+every known dev-server port (`.claude/launch.json`, 9009/5199, and any custom
+`--port` that `serve.sh` registers via `--register-port`; `DX_WATCH_PORTS`
+overrides discovery), and the
 first time a port stops answering or holds ≥90% CPU for three polls it writes a
 report to that server's own `temp/` naming what the CPU is in, whether a Vite
 dep re-optimization was in flight, and how many storybook processes are alive;
