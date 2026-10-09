@@ -110,7 +110,7 @@ const LINK_HOVER_GRACE_MS = 150;
 const SETTLE_MS = 200;
 
 /** Where the properties and layers panels float: the top right, one at a time (properties with a selection). */
-const PANEL_CLASSES = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]';
+const PANEL_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)]';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -1148,10 +1148,11 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 //
 
 /** The tool rail: what the next gesture will draw. */
-const SceneViewPalette = ({ classNames = 'absolute top-14 left-2' }: SceneViewBarProps) => {
+const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
   const { tool, nodeRegistry, linkRegistry, capabilities, setTool } = useSceneViewContext('SceneView.Palette');
   return (
-    <div className={mx(classNames)}>
+    // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
+    <div className={mx('pointer-events-none', classNames)}>
       <Palette
         tool={tool}
         nodes={nodeRegistry}

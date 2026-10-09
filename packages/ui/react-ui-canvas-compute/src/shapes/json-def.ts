@@ -6,11 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { DefaultOutput, JsonTransformInput } from '@dxos/conductor';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, getHeight } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createFunctionPorts, createPorts, defineComputeNode, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { JsonComponent, JsonTransformComponent } from './Json.tsx';
 
 // Kept out of `Json.tsx`: react-refresh only fast-refreshes a module whose
@@ -45,19 +43,21 @@ export type CreateJsonProps = CreateShapeProps<JsonShape>;
 export const createJson = (props: CreateJsonProps) =>
   createShape<JsonShape>({ type: 'json', size: { width: 256, height: 256 }, ...props });
 
-export const jsonShape: ShapeDef<JsonShape> = {
+export const jsonNodeDef = defineComputeNode<JsonShape>({
   type: 'json',
   name: 'JSON',
   icon: 'ph--code--regular',
+  group: 'Outputs',
+  schema: withZ(JsonShape),
   component: JsonComponent,
-  createShape: createJson,
-  getAnchors: (shape) =>
-    createAnchorMap(shape, {
+  create: createJson,
+  ports: (shape) =>
+    createPorts(shape.size, {
       [createAnchorId('input')]: { x: -1, y: 0 },
       [createAnchorId('output')]: { x: 1, y: 0 },
     }),
   resizable: true,
-};
+});
 
 export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape> & { expression?: string };
 
@@ -68,12 +68,14 @@ export const createJsonTransform = (props: CreateJsonTransformProps) =>
     ...props,
   });
 
-export const jsonTransformShape: ShapeDef<JsonTransformShape> = {
+export const jsonTransformNodeDef = defineComputeNode<JsonTransformShape>({
   type: 'json-transform',
   name: 'Transform',
   icon: 'ph--shuffle-simple--regular',
+  group: 'Operations',
+  schema: withZ(JsonTransformShape),
   component: JsonTransformComponent,
-  createShape: createJsonTransform,
-  getAnchors: (shape) => createFunctionAnchors(shape, JsonTransformInput, DefaultOutput),
+  create: createJsonTransform,
+  ports: (shape) => createFunctionPorts(shape.size, JsonTransformInput, DefaultOutput),
   resizable: true,
-};
+});

@@ -2,11 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { createContext, useContext, useMemo } from 'react';
 
-import { Form, type FormFieldRenderer, SelectControl } from '@dxos/react-ui-form';
+import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { type Layer } from '../../model/types.ts';
+import { ClassField, StyleClassesContext } from './ClassField.tsx';
 
 /** The scene's layers, bottom first, for the layer field. */
 export const LayersContext = createContext<readonly Layer[]>([]);
@@ -29,5 +32,30 @@ export const LayerField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
         }}
       />
     </Form.Field>
+  );
+};
+
+/**
+ * The layer and the style class side by side in one row, rendered at `layer` (`class` is hidden); the class select
+ * only while the host offers classes.
+ */
+export const LayerClassField: FormFieldRenderer = (props) => {
+  const styles = useContext(StyleClassesContext);
+  const classField = useFormFieldState('LayerClassField', ['class']);
+  return (
+    <Layout.Container
+      layout='row'
+      gutter='inherit'
+      align='start'
+      gap='md'
+      columns='repeat(2, minmax(0, 1fr))'
+      // The properties panel is narrow, and the two selects fit side by side there, so the row never stacks.
+      fixed
+    >
+      <LayerField {...props} />
+      {styles && (
+        <ClassField {...classField} type={Schema.String.ast} label='Class' jsonPath='class' readonly={props.readonly} />
+      )}
+    </Layout.Container>
   );
 };

@@ -58,7 +58,7 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   rect: { width: 2, height: 1 },
   ellipse: { width: 2, height: 2 },
-  note: { width: 2, height: 2 },
+  note: { width: 4, height: 2 },
   scene: { width: 4, height: 2 },
 };
 
