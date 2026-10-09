@@ -11,9 +11,9 @@ import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { type Link, type Node, createMemoryStore, createSceneSchema, nodePorts } from '@dxos/react-ui-canvas/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
+import { computeNodeDefs, computeNodeRegistry } from '../registry.ts';
+import { createRowPorts } from '../shapes/index.ts';
 import { createControlCircuit, createTemplateCircuit, createTransformCircuit } from '../testing/index.ts';
-import { computeNodeDefs, computeNodeRegistry } from './defs.ts';
-import { anchorsToPorts } from './ports.ts';
 import { createComputeProjection } from './projection.ts';
 import { sceneFromCircuit } from './scene.ts';
 
@@ -98,7 +98,7 @@ describe('compute scene', () => {
     // Rows keep their order down the side.
     const offsets = inputs.map((port) => port.offset);
     expect([...offsets].sort((left, right) => left - right)).toEqual(offsets);
-    expect(anchorsToPorts({}, { width: 10, height: 10 })).toEqual([]);
+    expect(createRowPorts({ size: { width: 10, height: 10 }, inputs: [], outputs: [] })).toEqual([]);
   });
 });
 

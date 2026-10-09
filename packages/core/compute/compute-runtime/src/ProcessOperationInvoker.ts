@@ -6,6 +6,7 @@
 
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
@@ -22,6 +23,7 @@ import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 import { markWork } from '@dxos/util';
 
+import { RemoteRuntimeUnreachableError } from './errors.ts';
 import * as OperationProcess from './OperationProcess.ts';
 
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
@@ -29,6 +31,13 @@ export type ProcessOperationInvoker = Operation.OperationService & OperationInvo
 export class Service extends Context.Service<Service, ProcessOperationInvoker>()(
   '@dxos/functions/ProcessOperationInvoker',
 ) {}
+
+/**
+ * How long an awaited `on: 'edge'` invocation waits for EDGE to accept its process. A remote manager
+ * may queue the spawn while EDGE is unreachable, and the caller awaiting the output would otherwise
+ * wait for as long as the outage lasts.
+ */
+export const DEFAULT_REMOTE_ACCEPT_TIMEOUT = Duration.seconds(30);
 
 /**
  * Creates an invoker that runs every operation as a process spawned through `manager`, which owns service
@@ -39,12 +48,15 @@ export const make = ({
   manager,
   origin,
   tracer,
+  remoteAcceptTimeout = DEFAULT_REMOTE_ACCEPT_TIMEOUT,
 }: {
   /** Inside a process, the one whose spawns default their parent to that process. */
   manager: Process.Manager;
   /** Who the spawned processes attribute their database writes to (see `Database.Origin`). */
   origin?: Database.Origin;
   tracer?: Tracer.Tracer;
+  /** See {@link DEFAULT_REMOTE_ACCEPT_TIMEOUT}. */
+  remoteAcceptTimeout?: Duration.Duration;
 }): ProcessOperationInvoker => {
   // Beneath the caller's context: `invokePromise` starts a fresh, empty-context fiber that would otherwise
   // fall back to Effect's native tracer, whose spans never reach OpenTelemetry.
@@ -96,6 +108,33 @@ export const make = ({
       }),
     );
 
+  /**
+   * {@link Process.awaitOutput} for a process spawned on EDGE, failing if EDGE has not accepted it
+   * within `remoteAcceptTimeout`. The unaccepted spawn is terminated rather than left queued, so a
+   * caller that gave up does not start the operation when EDGE comes back.
+   */
+  const awaitRemoteOutput = <O>(handle: Process.Process<any, O, any>, key: string): Effect.Effect<O> =>
+    Effect.raceFirst(
+      Process.awaitOutput(handle),
+      Effect.sleep(remoteAcceptTimeout).pipe(
+        Effect.andThen(() =>
+          handle.status.state === Process.State.STARTING
+            ? handle.terminate().pipe(
+                // Best effort: the host is presumed unreachable, so reading back its state may die too.
+                Effect.catchCause(() => Effect.void),
+                Effect.andThen(
+                  Effect.die(
+                    new RemoteRuntimeUnreachableError({
+                      message: `EDGE did not accept '${key}' within ${Duration.format(remoteAcceptTimeout)}.`,
+                    }),
+                  ),
+                ),
+              )
+            : Effect.never,
+        ),
+      ),
+    );
+
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,
     ...args: any[]
@@ -104,7 +143,9 @@ export const make = ({
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(function* () {
       const handle = yield* spawn(op, input, options, false);
-      const output = yield* Process.awaitOutput(handle);
+      const output = yield* options?.on === 'edge'
+        ? awaitRemoteOutput(handle, op.meta.key.toString())
+        : Process.awaitOutput(handle);
       yield* PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() });
       return output;
     }).pipe(

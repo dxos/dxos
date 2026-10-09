@@ -1,1 +1,1 @@
-# @dxos/react-ui-canvas-editor
+# @dxos/react-ui-canvas

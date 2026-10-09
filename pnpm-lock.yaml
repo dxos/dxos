@@ -18,12 +18,6 @@ catalogs:
     '@anthropic-ai/sdk':
       specifier: ^0.117.1
       version: 0.117.1
-    '@antv/graphlib':
-      specifier: ^2.0.4
-      version: 2.0.4
-    '@antv/layout':
-      specifier: ^1.2.13
-      version: 1.2.13
     '@ark-ui/react':
       specifier: ^5.39.1
       version: 5.39.1
@@ -1455,9 +1449,6 @@ catalogs:
     topojson-simplify:
       specifier: ^3.0.3
       version: 3.0.3
-    transformation-matrix:
-      specifier: ^2.16.1
-      version: 2.16.1
     ts-morph:
       specifier: ^16.0.0
       version: 16.0.0
@@ -6920,6 +6911,9 @@ importers:
 
   packages/devtools/cli:
     dependencies:
+      '@dxos/agent-code-mode':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-code-mode
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -9936,9 +9930,6 @@ importers:
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
-      '@dxos/react-ui-canvas-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-canvas-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10420,9 +10411,6 @@ importers:
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
-      '@dxos/react-ui-canvas-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-canvas-editor
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -16161,9 +16149,6 @@ importers:
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio
-      '@dxos/react-ui-canvas':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
@@ -22141,9 +22126,6 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
@@ -22162,6 +22144,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
@@ -22171,22 +22156,19 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))(react@19.2.7)(scheduler@0.27.0)
-      bind-event-listener:
-        specifier: 'catalog:'
-        version: 3.0.0
       d3:
         specifier: 'catalog:'
         version: 7.9.0
-      react-resize-detector:
-        specifier: 'catalog:'
-        version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      transformation-matrix:
-        specifier: 'catalog:'
-        version: 2.16.1
     devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -22223,6 +22205,15 @@ importers:
 
   packages/ui/react-ui-canvas-compute:
     dependencies:
+      '@codemirror/lang-json':
+        specifier: 'catalog:'
+        version: 6.0.2
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -22277,9 +22268,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../react-ui-canvas
-      '@dxos/react-ui-canvas-editor':
+      '@dxos/react-ui-editor':
         specifier: workspace:*
-        version: link:../react-ui-canvas-editor
+        version: link:../react-ui-editor
       '@dxos/react-ui-experimental':
         specifier: workspace:*
         version: link:../react-ui-experimental
@@ -22289,6 +22280,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -22308,9 +22302,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -22332,130 +22323,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
-      effect:
-        specifier: 4.0.0
-        version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
-      react:
-        specifier: ~19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: ~19.2.7
-        version: 19.2.7(react@19.2.7)
-      vite:
-        specifier: '>=8.2.1'
-        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
-  packages/ui/react-ui-canvas-editor:
-    dependencies:
-      '@antv/graphlib':
-        specifier: 'catalog:'
-        version: 2.0.4
-      '@antv/layout':
-        specifier: 'catalog:'
-        version: 1.2.13
-      '@atlaskit/pragmatic-drag-and-drop':
-        specifier: 'catalog:'
-        version: 1.7.7
-      '@codemirror/lang-json':
-        specifier: 'catalog:'
-        version: 6.0.2
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.6
-      '@codemirror/view':
-        specifier: 'catalog:'
-        version: 6.43.13
-      '@dxos/conductor':
-        specifier: workspace:*
-        version: link:../../core/compute/conductor
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/graph':
-        specifier: workspace:*
-        version: link:../../common/graph
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-focus':
-        specifier: workspace:*
-        version: link:../react-primitives/react-focus
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
-      '@dxos/react-ui-canvas':
-        specifier: workspace:*
-        version: link:../react-ui-canvas
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../react-ui-syntax-highlighter
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../ui-editor
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@effect/atom-react':
-        specifier: 'catalog:'
-        version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))(react@19.2.7)(scheduler@0.27.0)
-      bind-event-listener:
-        specifier: 'catalog:'
-        version: 3.0.0
-      d3:
-        specifier: 'catalog:'
-        version: 7.9.0
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@storybook/react-vite':
-        specifier: 'catalog:'
-        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
-      '@types/d3':
-        specifier: 'catalog:'
-        version: 7.4.3
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
-      '@types/react':
-        specifier: ~19.2.17
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.17)
-      '@xyflow/react':
-        specifier: 'catalog:'
-        version: 12.8.1(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       effect:
         specifier: 4.0.0
         version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
@@ -25861,18 +25728,6 @@ packages:
     peerDependenciesMeta:
       zod:
         optional: true
-
-  '@antv/event-emitter@0.1.3':
-    resolution: {integrity: sha512-4ddpsiHN9Pd4UIlWuKVK1C4IiZIdbwQvy9i7DUSI3xNJ89FPUFt8lxDYj8GzzfdllV0NkJTRxnG+FvLk0llidg==}
-
-  '@antv/graphlib@2.0.4':
-    resolution: {integrity: sha512-zc/5oQlsdk42Z0ib1mGklwzhJ5vczLFiPa1v7DgJkTbgJ2YxRh9xdarf86zI49sKVJmgbweRpJs7Nu5bIiwv4w==}
-
-  '@antv/layout@1.2.13':
-    resolution: {integrity: sha512-yoGeA+R/Sk2Z6dVzmGY80tLx4rPqPcZJHIQr6sNejP1KsGZXjIry/NZMTxXRWmQ+XIfE5VIhiCo5P+y7LVxvxA==}
-
-  '@antv/util@3.3.10':
-    resolution: {integrity: sha512-basGML3DFA3O87INnzvDStjzS+n0JLEhRnRsDzP9keiXz8gT1z/fTdmJAZFOzMMWxy+HKbi7NbSt0+8vz/OsBQ==}
 
   '@apideck/better-ajv-errors@0.3.6':
     resolution: {integrity: sha512-P+ZygBLZtkp0qqOAJJVX4oX/sFo5JR3eBWwwuqHHhK0GIgQOKWrAfiAaWX0aArHkRWHMuggFEgAZNxVPwPZYaA==}
@@ -29624,11 +29479,6 @@ packages:
 
   '@multiformats/multiaddr@12.3.1':
     resolution: {integrity: sha512-yoGODQY4nIj41ENJClucS8FtBoe8w682bzbKldEQr9lSlfdHqAsRC+vpJAOBpiMwPps1tHua4kxrDmvprdhoDQ==}
-
-  '@naoak/workerize-transferable@0.1.0':
-    resolution: {integrity: sha512-fDLfuP71IPNP5+zSfxFb52OHgtjZvauRJWbVnpzQ7G7BjcbLjTny0OW1d3ZO806XKpLWNKmeeW3MhE0sy8iwYQ==}
-    peerDependencies:
-      workerize-loader: '*'
 
   '@napi-rs/canvas-android-arm64@1.0.8':
     resolution: {integrity: sha512-5+nkh8i3gt6lqS/d2jTZ1xAn6tdgtB4Lf1mW6T0Qm5/rXNwBuV1sAEyLEWan5o9gJPU/GuvHR3rvSeZ+FaGrbw==}
@@ -36185,9 +36035,6 @@ packages:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
 
-  comlink@4.4.2:
-    resolution: {integrity: sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==}
-
   comma-separated-tokens@1.0.8:
     resolution: {integrity: sha512-GHuDRO12Sypu2cV70d1dkA2EUmXHgntrzbpvOB+Qy+49ypNfGgFQIC2fhhXbnyrJRynDCAARsT7Ou0M6hirpfw==}
 
@@ -38127,9 +37974,6 @@ packages:
 
   github-slugger@2.0.0:
     resolution: {integrity: sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw==}
-
-  gl-matrix@3.4.3:
-    resolution: {integrity: sha512-wcCp8vu8FT22BnvKVPjXa/ICBWRq/zjFfdofZy1WSpQZpphblv12/bOQLBC1rMM7SGOFS9ltVmKOHil5+Ml7gA==}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -43616,9 +43460,6 @@ packages:
     resolution: {integrity: sha512-bLVMLPtstlZ4iMQHpFHTR7GAGj2jxi8Dg0s2h2MafAE4uSWF98FC/3MomU51iQAMf8/qDUbKWf5GxuvvVcXEhw==}
     engines: {node: '>=20'}
 
-  transformation-matrix@2.16.1:
-    resolution: {integrity: sha512-tdtC3wxVEuzU7X/ydL131Q3JU5cPMEn37oqVLITjRDSDsnSHVFzW2JiCLfZLIQEgWzZHdSy3J6bZzvKEN24jGA==}
-
   traverse@0.3.9:
     resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
 
@@ -45232,33 +45073,6 @@ snapshots:
       standardwebhooks: 1.0.0
     optionalDependencies:
       zod: 4.3.6
-
-  '@antv/event-emitter@0.1.3': {}
-
-  '@antv/graphlib@2.0.4':
-    dependencies:
-      '@antv/event-emitter': 0.1.3
-
-  '@antv/layout@1.2.13':
-    dependencies:
-      '@antv/event-emitter': 0.1.3
-      '@antv/graphlib': 2.0.4
-      '@antv/util': 3.3.10
-      '@naoak/workerize-transferable': 0.1.0
-      comlink: 4.4.2
-      d3-force: 3.0.0
-      d3-octree: 1.1.0
-      d3-quadtree: 3.0.1
-      ml-matrix: 6.12.1
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - workerize-loader
-
-  '@antv/util@3.3.10':
-    dependencies:
-      fast-deep-equal: 3.1.3
-      gl-matrix: 3.4.3
-      tslib: 2.8.1
 
   '@apideck/better-ajv-errors@0.3.6(ajv@8.18.0)':
     dependencies:
@@ -51612,8 +51426,6 @@ snapshots:
       multiformats: 13.3.0
       uint8-varint: 2.0.4
       uint8arrays: 5.1.0
-
-  '@naoak/workerize-transferable@0.1.0': {}
 
   '@napi-rs/canvas-android-arm64@1.0.8':
     optional: true
@@ -58411,8 +58223,6 @@ snapshots:
     dependencies:
       delayed-stream: 1.0.0
 
-  comlink@4.4.2: {}
-
   comma-separated-tokens@1.0.8: {}
 
   comma-separated-tokens@2.0.2: {}
@@ -60767,8 +60577,6 @@ snapshots:
   github-from-package@0.0.0: {}
 
   github-slugger@2.0.0: {}
-
-  gl-matrix@3.4.3: {}
 
   glob-parent@5.1.2:
     dependencies:
@@ -67788,8 +67596,6 @@ snapshots:
   tr46@6.0.0:
     dependencies:
       punycode: 2.3.1
-
-  transformation-matrix@2.16.1: {}
 
   traverse@0.3.9: {}
 

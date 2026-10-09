@@ -13,6 +13,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import { type LatticeSpec } from '../utils/lattice.ts';
+import { reduceLayerIntent } from '../utils/layers.ts';
 import { layoutScene } from '../utils/layout.ts';
 import { resizeNode } from '../utils/shapes.ts';
 import { type SceneStore, putScene, updateScene } from './store.ts';
@@ -135,6 +136,10 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
 
     case 'batch':
       return intent.intents.reduce(reduceIntent, scene);
+
+    case 'layer':
+    case 'removeLayer':
+      return reduceLayerIntent(scene, intent);
 
     case 'update': {
       const node = scene.nodes[intent.id];

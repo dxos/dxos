@@ -17,7 +17,7 @@ apply, rewrite or reject each intent and then re-emits the scene. Freehand is th
 constrained, dynamic and compute projections own a model of their own and position the scene from it.
 
 Status 2026-09-22: **implemented** through migration milestone M3. Node types are open (`NodeBase` plus
-what a type adds), the editor surface is a superset of `react-ui-canvas-editor` minus auto layout, and
+what a type adds), the editor surface is a superset of the retired canvas editor minus auto layout, and
 `react-ui-canvas-compute` runs its shapes as node definitions over this engine. M4 (ECHO persistence,
 the `layout` intent and the plugin switch) is in flight; what M4 adds is marked below.
 
@@ -225,7 +225,7 @@ type Tool
 
 ## Components
 
-One folder per component under `src/components`, stories beside it, all behind the `src/scene.ts`
+One folder per component under `src/components`, stories beside it, all behind the `src/index.ts`
 barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link and control layers
 (decision 7); no third-party canvas engine, and d3 only as pure functions (decision 8).
 
@@ -530,6 +530,11 @@ feat F-3: Selection and editing
     A selection of several kinds edits only the fields every kind declares (`commonSchema` intersects nested
     structs), with one style picker that offers the fill rows only when every element is a node; a class's style
     restyles nodes and links alike, a link taking its common base.
+  req F-3.15: A scene has ordered layers (`Scene.layers`, one implicit when it names none) and every node and link
+    is on exactly one (`layer`; unset, the bottom one). Elements paint by layer, then by their own order; a hidden
+    layer is neither drawn nor hit. The layers panel (`SceneView.Layers`) adds, deletes, merges down, shows or
+    hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
+    properties panel picks an element's layer.
   req F-3.13: "New scene from selection" moves the selected nodes, and the links between them, into a new
     scene opened by a scene shape over their bounds; a link crossing out of the group stays, re-attached to
     the shape. It is one undo step (`groupIntoScene`).
@@ -634,7 +639,7 @@ rule named-react-imports: Import React members by name, never through a `React.`
   `React.useMemo`, `React.FC`, `React.ReactNode` or `import React from 'react'`. A forwarded ref is
   named `forwardedRef`. Flag any `React.` member access and any default import of react in this
   package's source. Do not flag `import type * as React from 'react'` used solely in a `.d.ts`
-  ambient declaration, nor the archived canvas under `src/archive`.
+  ambient declaration.
   scope: dir
   files:
     - src/**/*.tsx
@@ -723,7 +728,7 @@ test QA-1: The editor surface end to end
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-5.1, T-1, T-3, T-4]
   status: partially-automated
   given:
-    - a storybook serving `ui/react-ui-canvas/scene/SceneView`
+    - a storybook serving `ui/react-ui-canvas/SceneView`
   steps:
     - name: Open Freehand
       do: Open the Freehand story at 1400×800.

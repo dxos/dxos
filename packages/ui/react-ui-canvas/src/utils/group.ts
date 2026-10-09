@@ -3,15 +3,18 @@
 //
 
 import {
+  type Element,
   type ElementId,
   type Endpoint,
   type Intent,
+  type LayerId,
   type Link,
   type PortalNode,
   type Scene,
   endpointNode,
 } from '../model/types.ts';
 import { unionBounds } from './hit.ts';
+import { elementLayer, sceneLayers } from './layers.ts';
 import { topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -28,9 +31,14 @@ const reattach = (end: Endpoint, inside: ReadonlySet<string>, portal: string): E
  * Moves the selected nodes into a new scene `id`, opened by a scene shape of the same id where they were. A link
  * between two grouped nodes moves with them; one crossing out of the group stays here, re-attached to the shape.
  * The nodes keep their coordinates: the shape frames whatever the child holds. None when no node is selected, or
- * when a selected node is locked.
+ * when a selected node is locked. The shape goes on `layer`; the new scene has the layers its elements were on.
  */
-export const groupIntoScene = (scene: Scene, ids: Iterable<ElementId>, id: string): SceneGroup | undefined => {
+export const groupIntoScene = (
+  scene: Scene,
+  ids: Iterable<ElementId>,
+  id: string,
+  layer?: LayerId,
+): SceneGroup | undefined => {
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
   const bounds = unionBounds(nodes.map(nodeBounds));
@@ -57,12 +65,20 @@ export const groupIntoScene = (scene: Scene, ids: Iterable<ElementId>, id: strin
     center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
     size: { width: bounds.width, height: bounds.height },
     scene: id,
+    ...(layer !== undefined ? { layer } : {}),
   };
+  // Each element names the layer it resolved to here, and the new scene has those layers, in their order.
+  const layers = sceneLayers(scene);
+  const placed = <T extends Element>(element: T): T => ({ ...element, layer: elementLayer(element, layers) });
+  const childNodes = nodes.map(placed);
+  const childLinks = moved.map(placed);
+  const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
   return {
     child: {
       id,
-      nodes: Object.fromEntries(nodes.map((node) => [node.id, node])),
-      links: Object.fromEntries(moved.map((link) => [link.id, link])),
+      nodes: Object.fromEntries(childNodes.map((node) => [node.id, node])),
+      links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
+      layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
     },
     intents: [
       { kind: 'create', node: portal },

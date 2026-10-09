@@ -62,14 +62,12 @@ export type Definition = {
    * permission request on the spot rather than parking it in the chat.
    */
   unattended?: boolean;
-  /** The Anthropic credential lent to the agent for each turn; read from the chat's space. */
-  credential: Effect.Effect<EdgeProtocol.AnthropicCredential | undefined, never, Database.Service>;
-  /** The git credential lent for the project's repositories each turn; read from the chat's space. */
-  gitCredential?: Effect.Effect<
-    EdgeProtocol.GitCredential | undefined,
-    never,
-    Database.Service | Credential.AccessTokenResolver
-  >;
+  /**
+   * The environment lent to the agent for each turn, read from the chat's space: its Claude credential and
+   * any service tokens, by the variable the agent reads each as. A token EDGE custodies is resolved
+   * through it.
+   */
+  credentials: Effect.Effect<Record<string, string>, never, Database.Service | Credential.AccessTokenResolver>;
 };
 
 /**
@@ -167,29 +165,18 @@ export const runTurn = (
     const started = Date.now();
     const target = yield* ensureProcess(options, chat);
     const rpc = yield* target.control.rpc(target);
-    const lendCredential = Effect.gen(function* () {
-      const credential = yield* options.definition.credential;
-      if (credential) {
-        yield* rpc.provideAuth(credential).pipe(Effect.orDie);
-      } else {
-        log.warn('no Anthropic credential to lend the agent', { chat: chat.id });
-      }
-    });
-    yield* lendCredential;
-    const lendGitCredential = Effect.gen(function* () {
-      const credential = options.definition.gitCredential
-        ? yield* options.definition.gitCredential.pipe(
-            Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
-          )
-        : undefined;
-      if (credential) {
-        // Not fatal: an EDGE without git support still runs the turn, and a public repository needs no credential.
-        yield* rpc
-          .provideGitAuth(credential)
-          .pipe(Effect.catch((error) => Effect.sync(() => log.warn('git credential not lent', { error }))));
-      }
-    });
-    yield* lendGitCredential;
+    const env = yield* options.definition.credentials.pipe(
+      Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
+    );
+    yield* rpc
+      .provideCredentials({ env })
+      .pipe(
+        Effect.catch((error) =>
+          error._tag === 'InvalidCredentials'
+            ? Effect.fail(new AgentError({ message: `EDGE refused the agent's credentials: ${error.message}` }))
+            : Effect.die(error),
+        ),
+      );
 
     // A turn some client started and never saw end (Composer closed mid-turn) ran on without it. This
     // prompt is that turn redelivered, so it is picked up where it is rather than sent as a new one.
@@ -256,12 +243,6 @@ export const runTurn = (
     const handle = (output: EdgeProtocol.Output) =>
       Effect.gen(function* () {
         switch (output._tag) {
-          case 'auth-required':
-            yield* lendCredential;
-            return false;
-          case 'git-auth-required':
-            yield* lendGitCredential;
-            return false;
           case 'status':
             if (output.status === 'restarting') {
               log.info('coding agent restarting', { chat: chat.id, detail: output.detail });
@@ -452,30 +433,33 @@ export const checkoutsOf = (
 
 const GITHUB_HOST = 'github.com';
 
+const NO_CREDENTIALS: Record<string, string> = {};
+
 /**
- * The space's GitHub connection as the credential the sandbox's git calls are proxied with. A token
- * EDGE custodies (the GitHub App's) is resolved through it; none, or one that cannot be resolved,
- * leaves the checkout to public repositories.
+ * The space's GitHub connection as the environment the agent's `git` and `gh` read: a token EDGE custodies
+ * (the GitHub App's) is resolved through it. None, or one that cannot be resolved, leaves the checkout to
+ * public repositories.
  */
-export const githubCredential: Effect.Effect<
-  EdgeProtocol.GitCredential | undefined,
+export const githubCredentials: Effect.Effect<
+  Record<string, string>,
   never,
   Database.Service | Credential.AccessTokenResolver
 > = Effect.gen(function* () {
   const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
   const accessToken = tokens.find((token) => token.source === GITHUB_HOST);
   if (!accessToken) {
-    return undefined;
+    return NO_CREDENTIALS;
   }
   const token = isManagedAccessToken(accessToken.token)
     ? yield* Credential.AccessTokenResolver.resolve({ spaceId: yield* Database.spaceId, accessTokenId: accessToken.id })
     : accessToken.token;
-  return { host: GITHUB_HOST, token };
+  const env: Record<string, string> = { GITHUB_TOKEN: token, GH_TOKEN: token };
+  return env;
 }).pipe(
   Effect.catchCause((cause) =>
     Effect.sync(() => {
       log.warn('no GitHub credential', { cause });
-      return undefined;
+      return NO_CREDENTIALS;
     }),
   ),
 );

@@ -44,6 +44,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, countWork, defaultMap } from '@dxos/util';
 
+import { SLOW_WORK_MS } from '../util.ts';
 import {
   type CollectionState,
   CollectionSynchronizer,
@@ -819,6 +820,7 @@ export class AutomergeHost extends Resource {
     if (lease.loaded) {
       return lease;
     }
+    const startedAt = performance.now();
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
     // query is read from the repo rather than through the lease, which does not hand it out.
     const progress = this._repo.findWithProgress<T>(lease.documentId);
@@ -874,6 +876,11 @@ export class AutomergeHost extends Resource {
     // to one retry, so an evict/re-fault oscillation cannot re-arm the caller's timeout forever.
     if (getHandleState(this._repo, lease.documentId) !== 'ready' && !opts?.retried) {
       return await this._loadLeasedDoc(ctx, lease, { ...opts, retried: true });
+    }
+    // A network load may legitimately wait on replication; a storage-only one should not.
+    const durationMs = performance.now() - startedAt;
+    if (opts?.fetchFromNetwork === false && durationMs >= SLOW_WORK_MS) {
+      log.warn('slow document load from storage', { documentId: lease.documentId, durationMs });
     }
     return lease;
   }

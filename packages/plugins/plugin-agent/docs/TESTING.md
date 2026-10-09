@@ -39,7 +39,7 @@ with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every promp
 passes a `sender` to `useChatModel`, the agent process records it on the user message, and the
 model sees `[From: Dima]`. On load the space holds the three people, the "DXOS Eng" team and a
 transcript of an earlier CI-triage conversation, which the agent reads on load (`readSource`: a
-direct pipeline-rdf extraction, no chat) into facts in the transcript's annotation feed — the state
+direct pipeline-rdf extraction, no chat) into facts in the agent's brain — the state
 panel counts them and the knowledge panel's Facts tab lists them. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
 Tagged `!test`.
 

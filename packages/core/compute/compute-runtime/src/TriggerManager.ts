@@ -24,8 +24,8 @@ import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger
  * triggers across local and edge environments. Provide
  * {@link RemoteTriggerManager.layerNoop} for local-only deployments.
  *
- * `invokeTrigger` routes by the trigger's `remote` flag: remote triggers are
- * dispatched via the remote manager, local ones via the local dispatcher.
+ * `invokeTrigger` refuses a disabled trigger, then routes by the trigger's `remote` flag: remote
+ * triggers are dispatched via the remote manager, local ones via the local dispatcher.
  */
 export const layer: Layer.Layer<
   Trigger.ManagerService,
@@ -110,9 +110,11 @@ export const layer: Layer.Layer<
       },
 
       invokeTrigger: (options: Trigger.InvokeOptions) =>
-        options.trigger.remote === true
-          ? remote.invokeTrigger(options)
-          : dispatcher.invokeTrigger({ trigger: options.trigger, event: options.event }).pipe(Effect.asVoid),
+        !options.trigger.enabled
+          ? Effect.fail(new Trigger.TriggerDisabledError(options.trigger.id))
+          : options.trigger.remote === true
+            ? remote.invokeTrigger(options)
+            : dispatcher.invokeTrigger({ trigger: options.trigger, event: options.event }).pipe(Effect.asVoid),
     };
 
     return monitor;
