@@ -85,7 +85,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     });
   }, [event, space, chat, atomRegistry, stateAtom, invokePromise]);
 
-  if (!chatModel || !chat || !space) {
+  if (!space) {
     return null;
   }
 
