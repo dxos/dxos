@@ -44,7 +44,7 @@ const MANY: NodeRegistry = Object.fromEntries(
   ),
 );
 
-type StoryArgs = Pick<PaletteProps, 'collapse'> & {
+type StoryArgs = Pick<PaletteProps, 'collapse' | 'flyout'> & {
   /** Many types in groups, or the built-in few. */
   many: boolean;
   /** The height of the view the rail floats in. */
@@ -52,7 +52,7 @@ type StoryArgs = Pick<PaletteProps, 'collapse'> & {
 };
 
 /** The rail floating in a view of `height`, as `SceneView.Palette` places it. */
-const DefaultStory = ({ collapse, many, height }: StoryArgs) => {
+const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
   const [tool, setTool] = useState<Tool>({ kind: 'select' });
   return (
     <div className='relative w-64 border border-separator rounded-sm' style={{ height }}>
@@ -63,6 +63,7 @@ const DefaultStory = ({ collapse, many, height }: StoryArgs) => {
           links={defaultLinkRegistry}
           capabilities={freehandCapabilities}
           collapse={collapse}
+          flyout={flyout}
           onToolChange={setTool}
         />
       </div>
@@ -77,8 +78,11 @@ const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/Palette',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
-  args: { collapse: 'auto', many: false, height: 640 },
-  argTypes: { collapse: { control: 'select', options: ['auto', true, false] } },
+  args: { collapse: 'auto', flyout: 'list', many: false, height: 640 },
+  argTypes: {
+    collapse: { control: 'select', options: ['auto', true, false] },
+    flyout: { control: 'select', options: ['list', 'grid'] },
+  },
 };
 
 export default meta;
@@ -90,6 +94,9 @@ export const Default: Story = {};
 
 /** Many types in a short view: the node groups fold into flyouts. */
 export const Many: Story = { args: { many: true } };
+
+/** Many types folded, each group's tools as a grid of icons rather than a list. */
+export const ManyGrid: Story = { args: { many: true, flyout: 'grid' } };
 
 /** Many types with room to spare: still flat, every tool one click away. */
 export const ManyTall: Story = { args: { many: true, height: 1400 } };

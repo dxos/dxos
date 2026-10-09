@@ -87,6 +87,8 @@ export type PaletteProps = {
    * not fit the space below it, so a small registry keeps every tool one click away.
    */
   collapse?: 'auto' | boolean;
+  /** How a folded group lists its tools: one per row with its name (the default), or a grid of icons. */
+  flyout?: 'list' | 'grid';
   onToolChange: (tool: Tool) => void;
 };
 
@@ -128,7 +130,15 @@ const useCollapsed = (
  * it where it drops (the canvas is a pragmatic-dnd drop target for `nodeDragData`). With many types the node
  * groups fold into flyouts (`collapse`), each showing its active or last-used tool.
  */
-export const Palette = ({ tool, nodes, links, capabilities, collapse = 'auto', onToolChange }: PaletteProps) => {
+export const Palette = ({
+  tool,
+  nodes,
+  links,
+  capabilities,
+  collapse = 'auto',
+  flyout = 'list',
+  onToolChange,
+}: PaletteProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const groups = useMemo(() => paletteGroups(nodes, links, capabilities), [nodes, links, capabilities]);
   const collapsed = useCollapsed(ref, groups, collapse);
@@ -143,7 +153,7 @@ export const Palette = ({ tool, nodes, links, capabilities, collapse = 'auto', o
       {groups.map((group) =>
         collapsed && group.collapsible ? (
           <div key={group.name} className='flex flex-col p-1'>
-            <PaletteFlyout group={group} tool={tool} onToolChange={onToolChange} />
+            <PaletteFlyout group={group} tool={tool} layout={flyout} onToolChange={onToolChange} />
           </div>
         ) : (
           <div key={group.name} className='flex flex-col gap-1 p-1'>
@@ -187,13 +197,18 @@ const useHoverOpen = (setOpen: (open: boolean) => void) => {
   );
 };
 
-type PaletteFlyoutProps = { group: PaletteGroup; tool: Tool; onToolChange: (tool: Tool) => void };
+type PaletteFlyoutProps = {
+  group: PaletteGroup;
+  tool: Tool;
+  layout: NonNullable<PaletteProps['flyout']>;
+  onToolChange: (tool: Tool) => void;
+};
 
 /**
  * A folded group: its active (else last-used, else first) tool as one button, picked with a click, and a corner
- * chevron opening the group's tools as a grid beside the rail.
+ * chevron (or a hover) opening the group's tools beside the rail, as a list or a grid (`layout`).
  */
-const PaletteFlyout = ({ group, tool, onToolChange }: PaletteFlyoutProps) => {
+const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps) => {
   const [open, setOpen] = useState(false);
   const hover = useHoverOpen(setOpen);
   const [lastUsed, setLastUsed] = useState<Entry>(group.entries[0]);
@@ -229,13 +244,18 @@ const PaletteFlyout = ({ group, tool, onToolChange }: PaletteFlyoutProps) => {
       </Popover.Anchor>
       <Popover.Content onPointerEnter={hover.keep} onPointerLeave={hover.leave}>
         <div
-          className='grid grid-cols-[repeat(3,min-content)] gap-1 p-1'
+          className={mx(
+            layout === 'list'
+              ? 'flex flex-col items-stretch gap-1 p-1'
+              : 'grid grid-cols-[repeat(3,min-content)] gap-1 p-1',
+          )}
           data-testid={`palette-group-${group.name}-tools`}
         >
           {group.entries.map((entry) => (
             <PaletteButton
               key={entry.label}
               entry={entry}
+              labelled={layout === 'list'}
               active={sameTool(tool, entry.tool)}
               onToolChange={(next) => {
                 onToolChange(next);
@@ -252,10 +272,13 @@ const PaletteFlyout = ({ group, tool, onToolChange }: PaletteFlyoutProps) => {
 const PaletteButton = ({
   entry,
   active,
+  labelled,
   onToolChange,
 }: {
   entry: Entry;
   active: boolean;
+  /** Shows the tool's name beside its icon (a flyout's list), rather than the icon alone. */
+  labelled?: boolean;
   onToolChange: (tool: Tool) => void;
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
@@ -275,10 +298,10 @@ const PaletteButton = ({
     <Button.Root
       ref={ref}
       variant='ghost'
-      iconOnly
+      iconOnly={!labelled}
       icon={entry.icon}
-      label={entry.key ? `${entry.label} (${entry.key})` : entry.label}
-      classNames={mx(active && 'bg-primary-500/20')}
+      label={labelled ? entry.label : entry.key ? `${entry.label} (${entry.key})` : entry.label}
+      classNames={mx(labelled && 'w-full justify-start', active && 'bg-primary-500/20')}
       data-testid={`palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`}
       onClick={() => onToolChange(entry.tool)}
     />
