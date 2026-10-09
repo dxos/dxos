@@ -253,9 +253,9 @@ export class IndexEngine {
    * `objectSnapshot` is filled by the indexing pass, so a database that predates it holds rows
    * without one, and the store fills over several passes after upgrade. The compiled query path
    * reads that store directly instead of loading documents, so until it is complete a query there
-   * would silently return fewer objects than exist — not stale data, missing data. The query
-   * service gates a compiled query's first execution on this and caches `true` once seen, since it
-   * never goes back to false. The in-memory path loads documents itself and is not gated.
+   * would silently return fewer objects than exist — not stale data, missing data. Until this is
+   * true the query service runs compiled queries on the in-memory path, which loads documents
+   * itself; it caches `true` once seen, since it never goes back to false.
    */
   hasCompleteSnapshots(): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectSnapshotIndex.countMissingSnapshots().pipe(Effect.map((missing) => missing === 0));

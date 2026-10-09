@@ -252,8 +252,7 @@ export class EchoHost extends Resource {
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
-      // decides a query must await indexing before its first result.
+      // `QueryEntry.feedScoped` decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
       debounce: queryDebounce,
