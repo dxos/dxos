@@ -40,6 +40,12 @@ const DIALECTS = {
   plain: PlainDialect,
 } as const satisfies Record<string, Dialect>;
 
+/** What `projectOperations` resolves skill tools through: the same services `dx chat` runs its tools with. */
+const toolExecutionLayer = ToolExecutionServices.pipe(
+  Layer.provideMerge(OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...toolkits))),
+  Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
+);
+
 /**
  * Runs a program against a space in the same dialect a code-mode agent writes for its `eval` tool,
  * so an agent driving the CLI writes the code it would write in Composer and reads back the same text.
@@ -79,12 +85,7 @@ export const evaluateCommand = Command.make(
     const { json } = yield* CommandConfig;
     const dialect = DIALECTS[dialectName];
     const operations = yield* projectOperations(yield* resolveSkills(skillKeys)).pipe(
-      Effect.provide(
-        ToolExecutionServices.pipe(
-          Layer.provideMerge(OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...toolkits))),
-          Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
-        ),
-      ),
+      Effect.provide(toolExecutionLayer),
     );
 
     if (instructions) {
@@ -129,41 +130,37 @@ export const evaluateCommand = Command.make(
 );
 
 /** The program from the argument, the file, or stdin, in that order. */
-const readProgram = (code: Option.Option<string>, file: Option.Option<string>) =>
-  Effect.gen(function* () {
-    if (Option.isSome(code) && code.value !== '-') {
-      return code.value;
-    }
-    if (Option.isSome(file)) {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.readFileString(file.value);
-    }
-    const stdio = yield* Stdio.Stdio;
-    if (yield* stdio.stdinIsTerminal) {
-      return yield* Effect.fail(
-        new CliError({ message: 'No program: pass it as an argument, with --file, or on stdin.' }),
-      );
-    }
-    return yield* stdio.stdin.pipe(Stream.decodeText(), Stream.mkString);
-  });
+const readProgram = Effect.fnUntraced(function* (code: Option.Option<string>, file: Option.Option<string>) {
+  if (Option.isSome(code) && code.value !== '-') {
+    return code.value;
+  }
+  if (Option.isSome(file)) {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.readFileString(file.value);
+  }
+  const stdio = yield* Stdio.Stdio;
+  if (yield* stdio.stdinIsTerminal) {
+    return yield* Effect.fail(
+      new CliError({ message: 'No program: pass it as an argument, with --file, or on stdin.' }),
+    );
+  }
+  return yield* stdio.stdin.pipe(Stream.decodeText(), Stream.mkString);
+});
 
 /** The registry's skills named by key, or all of them when none is named. */
-const resolveSkills = (keys: readonly string[]) =>
-  Effect.gen(function* () {
-    const available = skillRegistry
-      .list()
-      .filter((entity): entity is Skill.Skill => Obj.instanceOf(Skill.Skill, entity));
-    if (keys.length === 0) {
-      return available;
-    }
-    const keyOf = (skill: Skill.Skill) => Entity.getMeta(skill)?.key;
-    const unknown = keys.filter((key) => !available.some((skill) => keyOf(skill) === key));
-    if (unknown.length > 0) {
-      return yield* Effect.fail(
-        new CliError({
-          message: `Unknown skill: ${unknown.join(', ')}. Available: ${available.map(keyOf).join(', ')}`,
-        }),
-      );
-    }
-    return available.filter((skill) => keys.includes(keyOf(skill) ?? ''));
-  });
+const resolveSkills = Effect.fnUntraced(function* (keys: readonly string[]) {
+  const available = skillRegistry.list().filter((entity): entity is Skill.Skill => Obj.instanceOf(Skill.Skill, entity));
+  if (keys.length === 0) {
+    return available;
+  }
+  const keyOf = (skill: Skill.Skill) => Entity.getMeta(skill)?.key;
+  const unknown = keys.filter((key) => !available.some((skill) => keyOf(skill) === key));
+  if (unknown.length > 0) {
+    return yield* Effect.fail(
+      new CliError({
+        message: `Unknown skill: ${unknown.join(', ')}. Available: ${available.map(keyOf).join(', ')}`,
+      }),
+    );
+  }
+  return available.filter((skill) => keys.includes(keyOf(skill) ?? ''));
+});
