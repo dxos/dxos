@@ -39,6 +39,7 @@ import {
 import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting } from '../../utils/hit.ts';
+import { DEFAULT_LAYER, activeLayer } from '../../utils/layers.ts';
 import { topZ } from '../../utils/order.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { resizeBounds } from '../../utils/resize.ts';
@@ -532,6 +533,7 @@ export const usePointerMachine = ({
           const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
             ...current,
+            raw,
             delta: {
               x: snapMinor(current.anchor.x + raw.x) - current.anchor.x,
               y: snapMinor(current.anchor.y + raw.y) - current.anchor.y,
@@ -675,12 +677,18 @@ export const usePointerMachine = ({
       if (isPortalNode(node)) {
         registry.set(store.scenes, {
           ...registry.get(store.scenes),
-          [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
+          [node.scene]: {
+            id: node.scene,
+            name: 'Untitled',
+            nodes: {},
+            links: {},
+            layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+          },
         });
       }
-      projection.apply({ kind: 'create', node });
+      projection.apply({ kind: 'create', node: { ...node, layer: activeLayer(scene, registry.get(atoms.layer)) } });
     },
-    [projection, registry, store],
+    [projection, registry, store, scene, atoms.layer],
   );
 
   /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
@@ -794,7 +802,10 @@ export const usePointerMachine = ({
               // A link between ports that declare a direction is drawn with one.
               ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
             });
-            projection.apply({ kind: 'link', link });
+            projection.apply({
+              kind: 'link',
+              link: { ...link, layer: activeLayer(scene, registry.get(atoms.layer)) },
+            });
             // What the user just made is what they act on next (style, delete): the link, and the node
             // the drop created with it.
             select(created ? [link.id, created.id] : [link.id]);

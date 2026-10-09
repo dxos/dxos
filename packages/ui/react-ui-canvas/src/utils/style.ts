@@ -7,7 +7,20 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node, type NodeStyle, type NodeTone, STYLE_HUES, type StyleHue, isEllipseNode } from '../model/types.ts';
+import {
+  type HorizontalAlign,
+  type Link,
+  type Node,
+  type NodeStyle,
+  type NodeTone,
+  STYLE_HUES,
+  type StyleHue,
+  type StyleMap,
+  type VerticalAlign,
+  isEllipseNode,
+  isPortalNode,
+  showsContents,
+} from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -85,7 +98,7 @@ const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
   },
 };
 
-const isStyleHue = (hue: string): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
+const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 
 /** The default look: the base surface, the base text and the separator border. */
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
@@ -108,6 +121,33 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
   return base;
 };
 
+/** `base` with every field `own` sets over it; an `undefined` field of `own` is unset, so it leaves the base's. */
+const overlay = <T extends object>(base: T | undefined, own: T | undefined): T | undefined => {
+  if (!base || !own) {
+    return own ?? base;
+  }
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(own)) {
+    if (value !== undefined) {
+      Reflect.set(merged, key, value);
+    }
+  }
+  return merged;
+};
+
+/** A node as drawn: its class's style under its own (`StyleClass`). */
+export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
+  const style = node.class ? styles?.[node.class]?.style : undefined;
+  return style ? { ...node, style: overlay(style, node.style) } : node;
+};
+
+/** A link as drawn: its class's colour and line style under its own. */
+export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
+  const style = link.class ? styles?.[link.class]?.style : undefined;
+  // A link draws only the common base (`LineStyle`) of its class's style.
+  return style ? { ...link, style: overlay({ hue: style.hue, lineStyle: style.lineStyle }, link.style) } : link;
+};
+
 /**
  * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
  * the properties panel must show it as on rather than as an unset (off) toggle.
@@ -120,25 +160,29 @@ export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
 
 /**
  * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
- * dashed and unfilled, and the host's `className` comes last so it wins.
+ * dashed and unfilled.
  */
 export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
   const style = resolveStyle(node.style);
   const hue = hueClasses(style.hue, style.tone);
   const filled = style.fill && !style.guide;
+  // A scene shape drawing its contents is a window onto another canvas, so it is opaque even in outline: the
+  // grid behind it would read as part of the child scene.
+  const opaque = isPortalNode(node) && showsContents(node);
+  const clear = !filled || hue.surface === 'bg-transparent';
+  const surface = opaque && clear ? 'bg-base-surface' : filled ? hue.surface : '';
   return [
-    filled ? hue.surface : '',
+    surface,
     hue.text,
     selected
-      ? 'border-primary-500'
+      ? 'border-focus'
       : hovered
-        ? 'border-primary-500/50'
+        ? 'border-focus/50'
         : style.border === false && !style.guide
           ? 'border-transparent'
           : hue.border,
-    style.guide ? 'border-dashed' : '',
+    style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',
     isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
-    style.className ?? '',
   ];
 };
 
@@ -160,4 +204,55 @@ const LINE_CLASSES: Record<StyleHue, LineClasses> = {
 /** The default line: the grey every link drew before lines took a hue. */
 const DEFAULT_LINE: LineClasses = { stroke: 'stroke-neutral-500', fill: 'fill-neutral-500' };
 
-export const lineClasses = (hue: StyleHue | undefined): LineClasses => (hue ? LINE_CLASSES[hue] : DEFAULT_LINE);
+export const lineClasses = (hue: string | undefined): LineClasses =>
+  isStyleHue(hue) ? LINE_CLASSES[hue] : DEFAULT_LINE;
+
+/**
+ * Splits an edit of a classed element's look (`edited`, against what the panel `shown`): every field that changed
+ * goes to the class, so each element of the class derives it, and the element drops its own value for that field,
+ * which would otherwise hide the class's.
+ */
+export const splitClassEdit = <T extends object>(
+  shown: object | undefined,
+  edited: unknown,
+  classLook: T,
+  own: T | undefined,
+): { classLook: T; own: T | undefined } => {
+  const nextClass = { ...classLook };
+  const nextOwn = own ? { ...own } : undefined;
+  if (typeof edited === 'object' && edited !== null) {
+    for (const [key, value] of Object.entries(edited)) {
+      if (Reflect.get(shown ?? {}, key) !== value) {
+        Reflect.set(nextClass, key, value);
+        if (nextOwn) {
+          Reflect.deleteProperty(nextOwn, key);
+        }
+      }
+    }
+  }
+  return { classLook: nextClass, own: nextOwn };
+};
+
+const HORIZONTAL_CLASSES: Record<HorizontalAlign, string> = {
+  left: 'items-start text-left',
+  center: 'items-center text-center',
+  right: 'items-end text-right',
+};
+
+const VERTICAL_CLASSES: Record<VerticalAlign, string> = {
+  top: 'justify-start',
+  middle: 'justify-center',
+  bottom: 'justify-end',
+};
+
+/**
+ * Classes placing a text part in its shape by the style's alignment, else by the type's own (`defaults`): the part
+ * is a column, so `justify` places it down the shape and `items` across it.
+ */
+export const alignClasses = (
+  style: NodeStyle | undefined,
+  defaults: { horizontal: HorizontalAlign; vertical: VerticalAlign },
+): string =>
+  `flex flex-col ${HORIZONTAL_CLASSES[style?.alignHorizontal ?? defaults.horizontal]} ${
+    VERTICAL_CLASSES[style?.alignVertical ?? defaults.vertical]
+  }`;

@@ -7,6 +7,11 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { mx } from '@dxos/ui-theme';
+
+import { Note, Sequence, Track } from '#types';
+
+import { hueFor, hueToHex } from '../../util/hue.ts';
 import {
   type Cell,
   type CellCoord,
@@ -18,12 +23,7 @@ import {
   cellKey,
   createCellGridAtoms,
   toggleCell,
-} from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/ui-theme';
-
-import { Note, Sequence, Track } from '#types';
-
-import { hueFor, hueToHex } from '../../util/hue.ts';
+} from '../CellGrid/index.ts';
 import { LoopMarkers } from '../LoopMarkers/index.ts';
 
 export type SequenceGridProps = {

@@ -71,6 +71,8 @@ export type ChatPromptProps = Merge<
     queueSize?: number;
     /** The most prompts that may wait behind a running turn; past it the prompt takes no more until one is taken up. */
     maxQueue?: number;
+    /** Whether the conversation has begun, which fixes its agent. */
+    started?: boolean;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -96,6 +98,7 @@ export const ChatPrompt = ({
   presets,
   preset,
   companionTo,
+  started,
   onPresetChange,
 }: ChatPromptProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -246,6 +249,7 @@ export const ChatPrompt = ({
                   chat={chat}
                   registry={chatModel?.registry}
                   context={chatModel?.context}
+                  started={started}
                   preset={preset}
                   presets={presets}
                   onPresetChange={onPresetChange}

@@ -20,6 +20,7 @@ import {
   AiContext,
   Alarm,
   HarnessControl,
+  type HarnessControlRpcs,
   type PendingState,
   SessionStore,
   SkillHooks,
@@ -128,6 +129,13 @@ export const makeInputMessage = (input: AgentInput): Message.Message => {
   const blocks = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
   return Message.make({ sender: { role: 'user', ...sender }, blocks, properties });
 };
+
+/**
+ * A process that can run a chat in place of {@link AgentProcess}: it takes the same input and serves
+ * the same `HarnessControl` RPCs, so a session drives it without knowing which one it is. Its
+ * requirements are its own; the host resolves them when it spawns the process.
+ */
+export type AgentProcessDefinition = Operation.Durable<AgentInput, void, any, HarnessControlRpcs>;
 
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and

@@ -347,6 +347,7 @@ const ChatRoot = ({
       chat={chat}
       chatModel={chatModel}
       queueSize={queued}
+      started={messages.length > 0 || queued > 0}
       setController={setController}
       setVisibleRange={setVisibleRange}
       {...props}
@@ -718,7 +719,10 @@ ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
-type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'chatModel' | 'event' | 'tasksVisible'> & {
+type ChatPromptProps = Omit<
+  NaturalChatPromptProps,
+  'chat' | 'db' | 'chatModel' | 'event' | 'tasksVisible' | 'started'
+> & {
   /** Whether the checklist is disclosed on mount. */
   defaultTasksVisible?: boolean;
 };
@@ -735,7 +739,7 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'chatModel' 
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
 const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
-  const { chat, db, chatModel, event, queueSize } = useChatContext(CHAT_PROMPT_NAME);
+  const { chat, db, chatModel, event, queueSize, started } = useChatContext(CHAT_PROMPT_NAME);
 
   // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
@@ -778,6 +782,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
         chatModel={chatModel}
         event={event}
         queueSize={queueSize}
+        started={started}
         tasksVisible={hasTasks ? tasksVisible : undefined}
       />
     </Collapsible.Root>
