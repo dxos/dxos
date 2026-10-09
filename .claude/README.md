@@ -70,7 +70,7 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
-| [`hooks/autonomous.sh`](./hooks/autonomous.sh) → [`scripts/autonomous.sh`](./scripts/autonomous.sh) | `UserPromptSubmit`        | agent          | **persisted** `.claude/.autonomous*` (task, DoD, two logs) |
+| [`hooks/autonomous.sh`](./hooks/autonomous.sh) → [`scripts/autonomous.sh`](./scripts/autonomous.sh) | `UserPromptSubmit`        | agent          | **persisted** per session, `~/.claude/autonomous/<session>/` |
 | [`hooks/autonomous-stop.sh`](./hooks/autonomous-stop.sh)                                                          | `Stop`                    | block          | reads the same state                      |
 | `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
@@ -225,11 +225,11 @@ agent's own definition of done back at it. That placement is the whole design:
 kinds 1–2 decay as the session fills, and stopping early is precisely the
 failure that shows up late in a long session.
 
-Its state is five files, split by writer. The hook owns the task
-(`.autonomous`), the owning session id (`.autonomous-session`) and the **user
-log** (`.autonomous-user.md`, the owning session's messages verbatim); the agent owns
-the **definition of done** (`.autonomous-dod`) and the **decision log**
-(`.autonomous-log.md`). The two logs are not one file on purpose: the user log
+Its state is four files, split by writer, in a directory keyed by the session
+id: `~/.claude/autonomous/<session>/` (`AUTONOMOUS_STATE_DIR` overrides the
+base). The hook owns the task (`task`) and the **user log** (`user.md`, the
+session's messages verbatim); the agent owns the **definition of done** (`dod`)
+and the **decision log** (`log.md`). The two logs are not one file on purpose: the user log
 is evidence, the decision log is accountability, and mixing them would let a
 summary of what the user said sit where the quote belongs. An agent that may not
 ask a question still has to answer scoping and PR-size questions somehow, and
@@ -239,13 +239,16 @@ backfills the log from the event's `transcript_path`, for the same reason the
 focus pin is derived there: a record on disk is mechanism, an agent asked to
 remember is not.
 
-**A run belongs to the session that started it.** Every session whose project
-dir is the checkout reads the same files, including sessions in other worktrees
-that point `CLAUDE_PROJECT_DIR` at it, so the hooks compare the event's
-`session_id` with the recorded owner and inject, block `Stop`, and log only for
-the owner. Ownership is denied only on evidence: a run with no recorded owner
-or an owner file that cannot be read still binds every session. Another session
-can take a run over with `/autonomous <task>`; its `/autonomous off` is refused.
+**A run belongs to the session that started it, and lives outside any
+checkout.** Keying the state on the event's `session_id` means concurrent
+sessions — in one worktree or several — never inject into, block, or log into
+each other's runs, and a session's run follows it whatever its project dir is.
+That matters for a multi-repo cloud session, whose project dir is the parent of
+the `dxos` and `edge` clones: the repo's `.claude/settings.json` is not loaded
+there, so the user-scoped `dxos` plugin carries a forwarder
+([`hooks/autonomous.sh`](../tools/claude/plugins/dxos/hooks/autonomous.sh)) that
+runs the first `*/.claude/hooks/autonomous*.sh` it finds below the project dir,
+and stays idle when the project dir is itself a checkout, whose own hooks fire.
 
 The clean exit is `autonomous.sh stop <reason>` — the reason is mandatory and
 logged, because a run that ends without one is indistinguishable from one that
@@ -258,7 +261,8 @@ attempt the hook lets the turn end and tells the **user** — via `systemMessage
 the only channel they read — that the run is still open.
 
 [`scripts/autonomous.test.sh`](./scripts/autonomous.test.sh) drives both hooks
-with the JSON their events carry, against a throwaway `CLAUDE_PROJECT_DIR`.
+with the JSON their events carry, against a throwaway `AUTONOMOUS_STATE_DIR`,
+and the plugin forwarder against a mock multi-repo parent.
 The doctrine — how to resolve a question from evidence, what counts as trying
 to get around a blocker, the adversarial review expected before stopping — is
 the `autonomous-mode` skill, not the injection, which stays short enough to

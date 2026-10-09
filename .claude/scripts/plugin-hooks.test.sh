@@ -91,5 +91,11 @@ check 'SessionEnd closes only on the reasons that mean the work is over' 'logout
 check 'the project directive hook is still wired' '1' \
   "$(jq -r '[.hooks.UserPromptSubmit[].hooks[] | select(.type == "command") | select(.command | test("track.sh"))] | length' "$config")"
 
+# The forwarders are how autonomous mode works in a session whose project dir is not a checkout.
+check 'the autonomous prompt forwarder is wired' '1' \
+  "$(jq -r '[.hooks.UserPromptSubmit[].hooks[] | select(.type == "command") | select(.command | test("autonomous.sh\" prompt$"))] | length' "$config")"
+check 'the autonomous stop forwarder is wired' '1' \
+  "$(jq -r '[.hooks.Stop[].hooks[] | select(.type == "command") | select(.command | test("autonomous.sh\" stop$"))] | length' "$config")"
+
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

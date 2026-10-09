@@ -54,10 +54,14 @@
 - `.claude/hooks/autonomous.sh` (`UserPromptSubmit`) writes the state and injects
   the `AUTONOMOUS MODE` block; `.claude/hooks/autonomous-stop.sh` (`Stop`) blocks
   the turn from ending while a run is active, at most three times per user turn.
-- The state is four untracked files: `.claude/.autonomous` (task, hook-written),
-  `.claude/.autonomous-dod` (definition of done, **agent-written, first thing**),
-  `.claude/.autonomous-user.md` (every user message verbatim, hook-written every
-  turn) and `.claude/.autonomous-log.md` (the decision log, agent-written).
+- The state is **per session**, in `~/.claude/autonomous/<session-id>/` (outside
+  any checkout): `task` (hook-written), `dod` (definition of done,
+  **agent-written, first thing**), `user.md` (every user message verbatim,
+  hook-written every turn) and `log.md` (the decision log, agent-written).
+- In a multi-repo session (project dir is the parent of the clones) the repo's
+  hooks do not load; the user-scoped `dxos` plugin forwards both events to the
+  first `*/.claude/hooks/autonomous*.sh` it finds
+  (`tools/claude/plugins/dxos/hooks/autonomous.sh`).
 - **Answer scoping and PR-size questions from the user log**
   (`bash .claude/scripts/autonomous.sh user show`) rather than asking — that is
   what it is for.

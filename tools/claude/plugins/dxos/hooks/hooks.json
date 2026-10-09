@@ -12,6 +12,14 @@
       {
         "hooks": [
           {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous.sh\" prompt"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
             "type": "mcp_tool",
             "server": "plugin:dxos:composer",
             "tool": "invokeOperation",
@@ -45,6 +53,15 @@
       }
     ],
     "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous.sh\" stop",
+            "statusMessage": "Checking autonomous mode"
+          }
+        ]
+      },
       {
         "hooks": [
           {

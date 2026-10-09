@@ -2,10 +2,9 @@
 #
 # Copyright 2026 DXOS.org
 #
-# Stop hook for AUTONOMOUS MODE. While a run is active, ending the owning
-# session's turn is treated as an unfinished task: the hook blocks the stop and
-# hands the task back with the definition of done attached. Other sessions
-# sharing the checkout stop normally.
+# Stop hook for AUTONOMOUS MODE. While this session's run is active, ending the
+# turn is treated as an unfinished task: the hook blocks the stop and hands the
+# task back with the definition of done attached. Other sessions stop normally.
 #
 # This is the mechanism half of the feature. Every other part is text the agent
 # may drift away from as the session fills (see .claude/README.md §A); this one
@@ -24,8 +23,9 @@
 
 set -euo pipefail
 
-root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-script="$root/.claude/scripts/autonomous.sh"
+# Resolved from this file, not CLAUDE_PROJECT_DIR, so the dxos plugin can run it
+# in a session whose project dir is not this checkout.
+script="$(cd "$(dirname "${BASH_SOURCE[0]}")/../scripts" && pwd)/autonomous.sh"
 cap=3
 
 input=$(cat)

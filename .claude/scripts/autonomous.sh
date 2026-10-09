@@ -11,72 +11,61 @@
 # cannot be read is NOT the same as an absent one, and only the latter is safe
 # to treat as "inactive".
 #
-# Five pieces of state, in five files, because they have different writers:
-#
-#   .autonomous            the task           <- hook, from the raw `/autonomous` line
-#   .autonomous-session    owning session id  <- hook, alongside the task
-#   .autonomous-dod        definition of done <- the agent, once, before working
-#   .autonomous-user.md    owner's messages   <- hook, verbatim, append-only
-#   .autonomous-log.md     decisions taken    <- the agent, as it takes them
-#
-# A run belongs to the session that started it. Every session whose project dir
-# is this checkout reads these files, including sessions in other worktrees that
-# point CLAUDE_PROJECT_DIR here, so the hooks inject the block, block Stop, and
-# log user messages only for the owning session. The current session is
+# A run is PER SESSION. Its state lives in a directory keyed by the session id,
+# outside any checkout, so concurrent sessions never see each other's runs and a
+# session whose project dir is not a dxos checkout (a multi-repo cloud session
+# rooted at the parent of both clones) keeps its run wherever it works. The
+# directory is $AUTONOMOUS_STATE_DIR/<session>, defaulting to
+# ${CLAUDE_CONFIG_DIR:-~/.claude}/autonomous/<session>. The session is
 # $AUTONOMOUS_SESSION_ID (the hooks set it from the event's `session_id`), else
-# $CLAUDE_CODE_SESSION_ID (what the agent's own Bash calls see). Ownership is
-# denied only on evidence: a run with no recorded owner (started before scoping,
-# or by a caller with no session id), an owner file that exists but cannot be
-# read, or an unknown current session all count as owned here. The owner file
-# survives `stop`, so the last owner keeps feeding the user log between runs and
-# a restart in the same session needs no backfill. Starting a run from another
-# session takes it over; `stop` and `dod set` from another session are refused.
-# Entries carry their session, and `user show` returns only the owner's, so a
-# takeover never reads the previous owner's messages as its own.
+# $CLAUDE_CODE_SESSION_ID (what the agent's own Bash calls see). With neither,
+# reads report inactive and writes are refused.
+#
+# Five files, because they have different writers:
+#
+#   task        the task           <- hook, from the raw `/autonomous` line
+#   dod         definition of done <- the agent, once, before working
+#   user.md     user's messages    <- hook, verbatim, append-only
+#   log.md      decisions taken    <- the agent, as it takes them
+#   reminders   Stop-block budget  <- the Stop hook
 #
 # The user log is written by the hook rather than the agent for the same reason
 # the focus pin is derived in a hook: an agent asked to remember what the user
 # said is persuasion, while a transcript on disk is evidence it can grep. It is
 # the intended answer to a scoping question ("how big should this PR be?") —
-# the user has almost always already said, somewhere upstream.
+# the user has almost always already said, somewhere upstream. The directory
+# survives `stop`, so a session that has run once keeps feeding its user log
+# between runs and a restart needs no backfill.
 #
-#   autonomous.sh get              -> print the task, or nothing when inactive (any owner)
-#   autonomous.sh active           -> exit 0 iff a task is pinned and owned by this session
-#   autonomous.sh owner            -> print the owning session id, if recorded
-#   autonomous.sh set <task>       -> start (or take over) a run for this session; resets dod, reminders
+#   autonomous.sh get              -> print the task, or nothing when inactive
+#   autonomous.sh active           -> exit 0 iff a task is pinned for this session
+#   autonomous.sh dir              -> print this session's state directory
+#   autonomous.sh set <task>       -> start (or replace) this session's run; resets dod, reminders
 #   autonomous.sh dod get|set <text>
 #   autonomous.sh log add <text>   -> append a timestamped decision
 #   autonomous.sh log show [n]     -> tail the decision log
-#   autonomous.sh user add <text>  -> append a user message from the owner (hook only)
-#   autonomous.sh user show [n]    -> tail the owner's entries in the user log
+#   autonomous.sh user add <text>  -> append a user message (hook only)
+#   autonomous.sh user show [n]    -> tail the user log
 #   autonomous.sh reminders get|bump|reset
 #   autonomous.sh stop <reason>    -> end the run; the reason is required and logged
-#   autonomous.sh context          -> the block injected into every prompt of the owner
+#   autonomous.sh context          -> the block injected into every prompt
 #   autonomous.sh point            -> stdin with `bash .claude/scripts/autonomous.sh` made absolute
-#
-# The state lives under $CLAUDE_PROJECT_DIR when set (always, for the hooks),
-# else under the checkout containing this script. Sessions whose cwd is a
-# worktree but whose project dir is the main checkout therefore need the
-# absolute script path, which `context`, `point` and the Stop hook print.
-#
-# State is per-checkout runtime, not repo policy: every file is untracked and
-# ignored via the root .gitignore.
 
 set -euo pipefail
+# The user log is a verbatim transcript, so nothing this script creates is readable by other users.
+umask 077
 
-# The hooks pass CLAUDE_PROJECT_DIR; the agent's Bash calls often lack it, so
-# they fall back to the checkout holding this script, which is the one the
-# injected commands name. Its cwd may be a different worktree.
-root="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-task_file="$root/.claude/.autonomous"
-owner_file="$root/.claude/.autonomous-session"
-dod_file="$root/.claude/.autonomous-dod"
-user_log="$root/.claude/.autonomous-user.md"
-decision_log="$root/.claude/.autonomous-log.md"
-reminders="$root/.claude/.autonomous-reminders"
-lock_dir="$root/.claude/.autonomous.lock"
-
+script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/autonomous.sh"
 session="${AUTONOMOUS_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-}}"
+# A session id names a directory, so anything that could step outside the base is rejected.
+case "$session" in *[!A-Za-z0-9_.-]* | . | ..) session='' ;; esac
+base="${AUTONOMOUS_STATE_DIR:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/autonomous}"
+state_dir="${session:+$base/$session}"
+task_file="${state_dir:+$state_dir/task}"
+dod_file="${state_dir:+$state_dir/dod}"
+user_log="${state_dir:+$state_dir/user.md}"
+decision_log="${state_dir:+$state_dir/log.md}"
+reminders="${state_dir:+$state_dir/reminders}"
 
 # Cap on how long any single stored field may be. A pinned task or a log entry
 # long enough to crowd the turn is one nobody reads.
@@ -125,41 +114,24 @@ current_task() {
 
 current_dod() { read_file "$dod_file" 2>/dev/null || printf ''; }
 
-# Whether this session may act on the run. Only a readable owner that differs
-# from a known current session says no.
-owned_here() {
-  local owner
-  owner=$(read_file "$owner_file") || return 0
-  [ -n "$owner" ] && [ -n "$session" ] || return 0
-  [ "$owner" = "$session" ]
-}
-
-# Stricter than owned_here: with no run active there is no one to give the
-# benefit of the doubt to, so only a recorded, matching owner logs.
-logs_here() {
-  local owner
-  if [ -n "$(current_task 2>/dev/null)" ]; then
-    owned_here
-    return
-  fi
-  owner=$(read_file "$owner_file" 2>/dev/null) || return 1
-  [ -n "$owner" ] && [ "$owner" = "$session" ]
+# Every mutating command needs a session to key its state on.
+require_session() {
+  [ -n "$state_dir" ] || {
+    printf 'ERROR: no session id (AUTONOMOUS_SESSION_ID or CLAUDE_CODE_SESSION_ID); %s refused.\n' "$1" >&2
+    exit 3
+  }
+  mkdir -p "$state_dir" 2>/dev/null || { printf 'ERROR: could not create %s\n' "$state_dir" >&2; exit 1; }
+  chmod 700 "$state_dir" 2>/dev/null || { printf 'ERROR: could not restrict %s\n' "$state_dir" >&2; exit 1; }
 }
 
 # The injected text spells every command as `bash .claude/scripts/autonomous.sh`;
-# this rewrites it to the absolute script under $root, so the agent's calls land
-# on the state the hooks read even when its cwd is another worktree.
-point_at_root() {
+# this rewrites it to this script's absolute path, so the agent's calls work from
+# any cwd, including the parent of a multi-repo checkout.
+point_at_script() {
   local text cmd
   text=$(cat)
-  printf -v cmd 'bash %q' "$root/.claude/scripts/autonomous.sh"
+  printf -v cmd 'bash %q' "$script_path"
   printf '%s\n' "${text//bash .claude\/scripts\/autonomous.sh/$cmd}"
-}
-
-refuse_foreign() {
-  printf 'ERROR: the autonomous run belongs to session %s, not this one (%s); %s refused.\n' \
-    "$(read_file "$owner_file" 2>/dev/null)" "${session:-unknown}" "$1" >&2
-  exit 3
 }
 
 append_log() {
@@ -169,46 +141,12 @@ append_log() {
   printf '%s\n' "$entry" >> "$file" 2>/dev/null || return 1
 }
 
-# Serialises `set` and `stop`, so two sessions racing `/autonomous` cannot leave
-# one's task under the other's owner. mkdir is atomic and needs no flock, which
-# macOS lacks. A lock older than a minute is from a killed process.
-acquire_lock() {
-  local tries=0
-  until mkdir "$lock_dir" 2>/dev/null; do
-    if [ -n "$(find "$lock_dir" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
-      rm -rf "$lock_dir" 2>/dev/null || true
-      continue
-    fi
-    tries=$((tries + 1))
-    [ "$tries" -lt 50 ] || { printf 'ERROR: %s is held by another caller\n' "$lock_dir" >&2; exit 1; }
-    sleep 0.1
-  done
-  trap 'rm -rf "$lock_dir" 2>/dev/null || true' EXIT
-}
-
-# The user log entries recorded by the owner, or every entry when no owner is
-# recorded. Headers are matched outside code fences only, so a logged message
-# cannot forge one.
-owner_entries() {
-  local owner
-  owner=$(read_file "$owner_file" 2>/dev/null) || owner=''
-  if [ -z "$owner" ]; then
-    cat "$user_log"
-    return
-  fi
-  awk -v tag="(session $owner)" '
-    /^```$/ { fenced = !fenced }
-    !fenced && /^### / { keep = (index($0, tag) > 0) }
-    keep
-  ' "$user_log"
-}
-
 clear_run() {
   rm -f "$task_file" "$dod_file" "$reminders" 2>/dev/null || return 1
   return 0
 }
 
-# The block injected into the owner's every prompt.
+# The block injected into the session's every prompt.
 context_block() {
   local task=$1 dod=$2
   printf 'AUTONOMOUS MODE (re-injected every turn; this governs the WORK, not the reply).\n'
@@ -265,29 +203,22 @@ case "${1:-get}" in
 
   active)
     [ -n "$(current_task)" ] || exit 1
-    owned_here || exit 1
     ;;
 
-  owner)
-    value=$(read_file "$owner_file") || { printf 'ERROR: %s exists but could not be read\n' "$owner_file" >&2; exit 1; }
-    if [ -n "$value" ]; then printf '%s\n' "$value"; fi
+  dir)
+    [ -n "$state_dir" ] || exit 1
+    printf '%s\n' "$state_dir"
     ;;
 
   set)
     text=$(truncate_text "${2:-}")
     [ -n "$text" ] || { printf 'usage: autonomous.sh set <task>\n' >&2; exit 2; }
-    acquire_lock
-    # Owner before task, so no reader pairs the new task with the old owner.
-    if [ -n "$session" ]; then
-      write_file "$owner_file" "$session" || { printf 'ERROR: could not write %s\n' "$owner_file" >&2; exit 1; }
-    else
-      rm -f "$owner_file" 2>/dev/null || { printf 'ERROR: could not clear %s\n' "$owner_file" >&2; exit 1; }
-    fi
+    require_session 'set'
     write_file "$task_file" "$text" || { printf 'ERROR: could not write %s\n' "$task_file" >&2; exit 1; }
     # A new run must not inherit the previous run's definition of done or
     # reminder budget; the logs are append-only history and are kept.
     rm -f "$dod_file" "$reminders" 2>/dev/null || true
-    append_log "$decision_log" "$(printf '\n## Run started %s (session %s)\n\n- TASK: %s\n' "$(now)" "${session:-unknown}" "$text")" \
+    append_log "$decision_log" "$(printf '\n## Run started %s\n\n- TASK: %s\n' "$(now)" "$text")" \
       || printf 'WARNING: could not append to %s\n' "$decision_log" >&2
     printf 'Autonomous: %s\n' "$text"
     ;;
@@ -301,7 +232,7 @@ case "${1:-get}" in
       set)
         text=$(truncate_text "${3:-}")
         [ -n "$text" ] || { printf 'usage: autonomous.sh dod set <text>\n' >&2; exit 2; }
-        [ -z "$(current_task)" ] || owned_here || refuse_foreign 'dod set'
+        require_session 'dod set'
         write_file "$dod_file" "$text" || { printf 'ERROR: could not write %s\n' "$dod_file" >&2; exit 1; }
         append_log "$decision_log" "$(printf -- '- DOD %s: %s\n' "$(now)" "$text")" \
           || printf 'WARNING: could not append to %s\n' "$decision_log" >&2
@@ -316,12 +247,13 @@ case "${1:-get}" in
       add)
         text=$(truncate_text "${3:-}")
         [ -n "$text" ] || { printf 'usage: autonomous.sh log add <text>\n' >&2; exit 2; }
+        require_session 'log add'
         append_log "$decision_log" "$(printf -- '- %s: %s' "$(now)" "$text")" \
           || { printf 'ERROR: could not append to %s\n' "$decision_log" >&2; exit 1; }
         printf 'Logged.\n'
         ;;
       show)
-        [ -e "$decision_log" ] || exit 0
+        [ -n "$decision_log" ] && [ -e "$decision_log" ] || exit 0
         tail -n "${3:-40}" "$decision_log" 2>/dev/null || true
         ;;
       path) printf '%s\n' "$decision_log" ;;
@@ -334,16 +266,18 @@ case "${1:-get}" in
       add)
         text=${3:-}
         [ -n "$text" ] || exit 0
-        logs_here || exit 0
+        # Only a session that has started a run keeps a user log; any other
+        # session must look exactly as it did before this feature existed.
+        [ -n "$state_dir" ] && [ -d "$state_dir" ] || exit 0
         # Verbatim and unsummarised — the value of this log is that it is what
         # the user actually typed, not what the agent took from it. Fenced so a
         # message containing markdown cannot corrupt the file's structure.
-        append_log "$user_log" "$(printf '\n### %s (session %s)\n\n```\n%s\n```\n' "$(now)" "${session:-unknown}" "$text")" \
+        append_log "$user_log" "$(printf '\n### %s\n\n```\n%s\n```\n' "$(now)" "$text")" \
           || { printf 'ERROR: could not append to %s\n' "$user_log" >&2; exit 1; }
         ;;
       show)
-        [ -e "$user_log" ] || exit 0
-        owner_entries 2>/dev/null | tail -n "${3:-80}" || true
+        [ -n "$user_log" ] && [ -e "$user_log" ] || exit 0
+        tail -n "${3:-80}" "$user_log" 2>/dev/null || true
         ;;
       path) printf '%s\n' "$user_log" ;;
       *) printf 'usage: autonomous.sh user {add <text>|show [n]|path}\n' >&2; exit 2 ;;
@@ -354,13 +288,14 @@ case "${1:-get}" in
     case "${2:-get}" in
       get) printf '%s\n' "$(read_file "$reminders" 2>/dev/null || printf '')" ;;
       bump)
+        require_session 'reminders bump'
         value=$(read_file "$reminders" 2>/dev/null || printf '')
         case "$value" in ('' | *[!0-9]*) value=0 ;; esac
         value=$((value + 1))
         write_file "$reminders" "$value" || { printf 'ERROR: could not write %s\n' "$reminders" >&2; exit 1; }
         printf '%s\n' "$value"
         ;;
-      reset) rm -f "$reminders" 2>/dev/null || true ;;
+      reset) [ -z "$reminders" ] || rm -f "$reminders" 2>/dev/null || true ;;
       *) printf 'usage: autonomous.sh reminders {get|bump|reset}\n' >&2; exit 2 ;;
     esac
     ;;
@@ -371,30 +306,27 @@ case "${1:-get}" in
     # that was abandoned, which is the failure this whole mechanism exists to
     # prevent — so the reason is mandatory.
     [ -n "$reason" ] || { printf 'usage: autonomous.sh stop <reason>\n' >&2; exit 2; }
-    acquire_lock
     if [ -z "$(current_task)" ]; then
       printf 'Autonomous mode was not active.\n'
       exit 0
     fi
-    owned_here || refuse_foreign 'stop'
     append_log "$decision_log" "$(printf -- '- STOP %s: %s\n' "$(now)" "$reason")" \
       || printf 'WARNING: could not append to %s\n' "$decision_log" >&2
-    clear_run || { printf 'ERROR: could not clear autonomous state under %s/.claude\n' "$root" >&2; exit 1; }
+    clear_run || { printf 'ERROR: could not clear autonomous state under %s\n' "$state_dir" >&2; exit 1; }
     printf 'Autonomous mode: OFF (%s)\n' "$reason"
     ;;
 
   context)
     task=$(current_task)
     [ -n "$task" ] || exit 0
-    owned_here || exit 0
     dod=$(current_dod)
-    context_block "$task" "$dod" | point_at_root
+    context_block "$task" "$dod" | point_at_script
     ;;
 
-  point) point_at_root ;;
+  point) point_at_script ;;
 
   *)
-    printf 'usage: autonomous.sh {get|active|owner|point|set <task>|dod {get|set <text>}|log {add <text>|show [n]}|user {add <text>|show [n]}|reminders {get|bump|reset}|stop <reason>|context}\n' >&2
+    printf 'usage: autonomous.sh {get|active|dir|point|set <task>|dod {get|set <text>}|log {add <text>|show [n]|path}|user {add <text>|show [n]|path}|reminders {get|bump|reset}|stop <reason>|context}\n' >&2
     exit 2
     ;;
 esac
