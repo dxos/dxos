@@ -4,6 +4,7 @@
 
 import { formatValue } from '../score/render.ts';
 import { type Unit } from '../score/score.ts';
+import { WORK_GROUP } from '../score/stages.ts';
 import { type MetricComparison, type Verdict } from './verdict.ts';
 
 const unitOf = (id: string): Unit =>
@@ -72,10 +73,21 @@ export const renderComparison = ({
     .filter(({ id, verdict }) => !isTarget(id) && (verdict === 'regressed' || verdict === 'improved'))
     .sort(byVerdict);
   const rest = comparisons.length - targets.length;
+  // A stage that stopped doing half its work wins on every timing; only the flow's outcome says whether that is a fix.
+  const skipped = comparisons.filter(
+    ({ group, verdict, base, shift }) =>
+      group === WORK_GROUP && verdict === 'improved' && base > 0 && shift / base < -0.5,
+  );
   const unsettled = targets.filter(({ verdict }) => verdict !== 'no-change');
   return [
     `targets (${targets.length}): ${targets.length - unsettled.length} no change${unsettled.length > limit ? `, first ${limit} others shown` : ''}`,
     ...unsettled.slice(0, limit).map(renderMetric),
+    ...(skipped.length > 0
+      ? [
+          `work fell by more than half (${skipped.length}); confirm these stages still do their job:`,
+          ...skipped.map(renderMetric),
+        ]
+      : []),
     `other metrics (${rest}, not in the verdict): ${moved.length} moved${moved.length > others ? `, first ${others} shown` : ''}`,
     ...moved.slice(0, others).map(renderMetric),
   ];
