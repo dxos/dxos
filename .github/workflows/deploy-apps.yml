@@ -237,6 +237,17 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Composer version: $version (env=$ENVIRONMENT)"
 
+  # Publishes the triggering commit to pkg.pr.new, which the bundle's Composer Plugin template pins
+  # (`DX_PLUGIN_TOOLCHAIN_COMMIT` below); `main` itself publishes only once a day. Nothing waits on it,
+  # so a failed publish breaks that template in this build and nothing else.
+  packages:
+    needs: [plan]
+    if: needs.plan.outputs.bundle == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/pkg-pr-new.yml
+    secrets: inherit
+
   build-bundle:
     needs: [plan, release, version]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.version.result == 'success' }}
@@ -249,6 +260,9 @@ jobs:
     timeout-minutes: 90
     env:
       DEPLOY_ENV: ${{ needs.plan.outputs.env }}
+      # The commit `packages` publishes. On production the bundle builds the release commit, which only
+      # bumps app versions, so its `@dxos/*` packages are the triggering commit's.
+      DX_PLUGIN_TOOLCHAIN_COMMIT: ${{ github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5

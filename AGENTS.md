@@ -227,7 +227,8 @@ is invisible there until something publishes it.
   trip, depends on no external service, and picks up an export or subpath that does not exist in any
   published build yet — which is exactly the inner loop for a feature spanning both repos.
 - Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
-  commit someone else consumes (a catalog bump, edge CI), not for iterating.
+  commit someone else consumes (a catalog bump, edge CI), not for iterating. It publishes `main` once a
+  day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
 

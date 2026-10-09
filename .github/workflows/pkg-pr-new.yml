@@ -7,17 +7,20 @@ name: pkg.pr.new
 # pr-deploy.yml's artifact-download failure: third-party tools that verify against GitHub's own
 # run identity don't work once the workflow actually executes on Depot's infrastructure.
 
+# Publishes `main` once a day at 06:00 UTC, an hour before dxos/plugins' SDK nightly (07:00) pins the
+# newest commit pkg.pr.new serves; edge's catalog bump picks that commit the same way. `deploy-apps.yml`
+# calls this for every commit it deploys, since a Composer bundle pins its plugin template to its own
+# commit. Dispatch it to publish anything else.
 on:
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: pkg-pr-new-${{ github.ref }}
   # Queue rather than cancel: a cancelled run uploads nothing, so the commit it was building stays
-  # permanently un-installable for anything pinning pkg.pr.new — which is how the composer plugins
-  # repo tracks the SDK, and its nightly 404s when it lands on such a commit.
+  # un-installable for anything pinning pkg.pr.new.
   cancel-in-progress: false
 
 env:
