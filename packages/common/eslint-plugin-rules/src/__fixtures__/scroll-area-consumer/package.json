@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/scroll-area-consumer",
+  "private": true,
+  "dependencies": {
+    "@dxos/react-ui": "workspace:*"
+  }
+}

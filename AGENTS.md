@@ -206,6 +206,11 @@ writes wedge the other, which is how a debugging session ends up chasing its own
 - **Unresponsive is usually not dead.** Wait ~3 minutes before concluding anything. If it
   is still down, run `tools/storybook-react/diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
+- **If you started it, you watch it.** A broken server the user discovers is a round-trip wasted. Run a
+  background watchdog for as long as you own it: probe `index.json` (bounded, as above) and alert after ~3
+  minutes unresponsive, and tail its log for `module did not load` / `Failed to fetch dynamically imported
+module` — a story that cannot load renders blank while the server looks healthy. Restart after deleting
+  or moving modules under it (a stale import graph, blank icon sprites), and say so in your reply.
 - **Never `pkill -f storybook`.** Kill by the PID you own, established via
   `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
 - **Do not run `moon run <pkg>:build` while a server is up** unless you need it — a build

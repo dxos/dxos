@@ -20,6 +20,39 @@ laying out a container, picking a color class, wiring a toolbar, or writing a st
 Reaching for a raw `<div>` with custom classes, a native `<input>`, or a guessed color token is almost
 always a sign you missed an existing piece. Find it (grep an existing themed component) before inventing.
 
+## Non-negotiables — before writing any UI
+
+Each line is a correction a reviewer has had to make: **use** the primitive, **not** the anti-pattern. Lint
+flags the ones marked †, but only after the fact — get them right first time.
+
+1. **Scrolling** — `ScrollArea.Root` > `ScrollArea.Viewport` (`asChild` onto a `Layout.Container`); not a
+   `<div>` with `overflow-auto` / `overflow-y-auto` / `overflow-scroll`. †
+   → [Containers](#containers-panel--scrollarea)
+2. **Nested scrollers** — `scroll={false}` on an inner `Form.Viewport` / `Listbox.Content` /
+   `OrderedList.Content` inside a host that already scrolls; not two scrollers (the inner one's
+   `overscroll-behavior: contain` swallows the wheel).
+3. **Sizing** — `dx-grow` / `dx-fill` / `dx-expand` / `dx-cover`; not `grow min-h-0`, `flex-1 min-h-0`,
+   `h-full w-full`, `absolute inset-0`. No `min-w-0`/`min-h-0` beside an `overflow-*` — it is a no-op. †
+   → [Sizing](#sizing-vs-logical-utilities-post-tailwind-3)
+4. **Panels, floating ones included** — `Panel.Root` / `Panel.Header asChild` > `Toolbar.Root` /
+   `Panel.Body` / `Panel.Footer`; not ad-hoc `<div>`s around a bare `Toolbar.Root`. `Panel.Root` is
+   `height: 100%`, so a panel sized to its content adds `h-auto`.
+5. **Layout boxes, stories included** — `Layout.Container` (`columns`, `layout='row'`, `fixed`, `padBlock`),
+   `Layout.Flex`, `Layout.Grid`; not `<div className='grid grid-cols-2 …'>` / `<div className='flex …'>` or
+   `py-[var(--dx-gutter)]`. → [Layout](#layout-primitives-flex-grid-container)
+6. **Lists** — `Listbox` / `OrderedList`, whose grid mechanism owns arrow keys, Enter and row focus; not a
+   mapped `<div>` list or a new `onKeyDown`. Inline editing is `Editable.Root` / `Preview` / `Input` in the
+   row. → [Lists](#lists-pickers-and-stacks)
+7. **Wrappers** — `asChild` onto the composable child; not a styling `<div>` (it breaks the height chain).
+8. **Colors** — a token grepped from `ui-theme/src/css/theme/`; not a guessed `bg-input` / `text-primary`.
+   → [Theme tokens](#theme-tokens)
+9. **Forms** — composed `Form.*` from an Effect Schema; not native `<input>` / `<textarea>` / `<select>`.
+   → [Forms](#forms)
+10. **Toolbars** — menu actions with `attendableId`; not a chain of bare buttons. → [Toolbar](#toolbar--menu-wiring)
+
+Imports are per-primitive subpaths: `import * as ScrollArea from '@dxos/react-ui/ScrollArea'`, likewise
+`/Panel`, `/Layout`, `/Listbox`, `/Editable`, `/Toolbar`.
+
 Low-level components (plugin/_/src/components, react-ui-_). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit` capabilitiess.
 Instead aspects that may be derived from capabilites must be passed as properties.
 Each component lives in its own subdirectory with an `index.ts` barrel.
@@ -47,12 +80,12 @@ need a domain widget, check for a `react-ui-<domain>` package before building on
 ## Theme tokens
 
 Color/spacing tokens are **plain Tailwind classes** generated from CSS custom properties. The source of
-truth is [`packages/ui/ui-theme/src/css/theme/semantic.css`](../../../packages/ui/ui-theme/src/css/theme/semantic.css)
+truth is [`packages/ui/ui-theme/src/css/theme/`](../../../packages/ui/ui-theme/src/css/theme) (`surfaces.css`, `text.css`, `border.css`, …)
 and the per-component files under [`packages/ui/ui-theme/src/css/components/`](../../../packages/ui/ui-theme/src/css/components/).
 
 **The rule:** every `--color-<name>` custom property yields the utilities `bg-<name>`, `text-<name>`,
 `border-<name>`. So `--color-modal-surface` → `bg-modal-surface`. To find a valid token, grep
-`semantic.css` for `--color-`, or copy classes from an existing themed component — **never guess a name**.
+`ui-theme/src/css/theme/` for `--color-`, or copy classes from an existing themed component — **never guess a name**.
 Invented tokens (`bg-input`, `text-primary`) aren't in the theme and render wrong (e.g. white-on-white
 in dark mode), which is the kind of bug that's invisible until someone toggles the theme.
 
@@ -125,7 +158,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
-See [`packages/ui/react-ui/src/components/Icon/Icon.tsx`](../../../packages/ui/react-ui/src/components/Icon/Icon.tsx).
+See [`packages/ui/react-ui/src/next/components/Icon/Icon.tsx`](../../../packages/ui/react-ui/src/next/components/Icon/Icon.tsx).
 
 Nothing needs registering to use a new Phosphor icon — name it and it resolves. `dx--*` brand glyphs are
 `regular`-only. How resolution works (and why an icon might not appear) →
@@ -133,24 +166,37 @@ Nothing needs registering to use a new Phosphor icon — name it and it resolves
 
 ## Containers: Panel + ScrollArea
 
-`Panel.*` ([`packages/ui/react-ui/src/components/Panel/Panel.tsx`](../../../packages/ui/react-ui/src/components/Panel/Panel.tsx))
-is the container shell — a CSS grid with rows `auto 1fr auto` mapped to the `toolbar` / `content` /
-`statusbar` areas, so the content row absorbs the slack and the toolbar/statusbar hug their content. The
-canonical article shape:
+`Panel.*` ([`packages/ui/react-ui/src/next/components/Panel/Panel.tsx`](../../../packages/ui/react-ui/src/next/components/Panel/Panel.tsx))
+is the container shell — a grid whose header and footer rows hug their content while the body row absorbs
+the slack. The canonical article shape:
 
 ```tsx
 <Panel.Root role={role}>
-  <Panel.Toolbar>{/* Menu.Root toolbar — see below */}</Panel.Toolbar>
-  <Panel.Content asChild>
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport>{/* List / Stack / Form, or ad-hoc content */}</ScrollArea.Viewport>
+  <Panel.Header asChild>
+    <Toolbar.Root>{/* or a menu-action toolbar — see below */}</Toolbar.Root>
+  </Panel.Header>
+  <Panel.Body asChild>
+    <ScrollArea.Root>
+      <ScrollArea.Viewport asChild>
+        <Layout.Container padBlock>{/* Listbox / Stack / Form, or ad-hoc content */}</Layout.Container>
+      </ScrollArea.Viewport>
     </ScrollArea.Root>
-  </Panel.Content>
+  </Panel.Body>
 </Panel.Root>
 ```
 
-Parts: `Panel.Root` / `Panel.Toolbar` / `Panel.Content` / `Panel.Statusbar`. Add `Panel.Statusbar` (takes a
-`size`) only when the surface needs a persistent bottom status row — most articles don't.
+Parts: `Panel.Root` / `Panel.Header` / `Panel.Body` / `Panel.Footer`. `Panel.Body` neither scrolls nor pads:
+content composes its own frame, and the first `Layout.Container` under it takes the panel's gutter. Add
+`Panel.Footer` only when the surface needs a persistent bottom row — most articles don't.
+
+**Scrolling is always `ScrollArea`.** Never put `overflow-auto` / `overflow-y-auto` / `overflow-scroll` on a
+`<div>` (`@dxos/eslint-plugin-rules/prefer-scroll-area` warns): a raw overflow box has no themed scrollbar,
+does not host it in the end gutter, and drops out of the gutter grid. Scrollers do not nest: `Form.Viewport
+scroll`, `Listbox.Content` and `OrderedList.Content` (both `scroll` by default) set `overscroll-behavior:
+contain`, so inside a host that already scrolls they trap the wheel — pass `scroll={false}` to the inner one.
+
+**Floating panels** (a properties inspector over a canvas) are still `Panel.*`, not hand-built `<div>`s.
+`Panel.Root` is `height: 100%`, so a panel sized to its content needs `classNames='h-auto'`.
 
 **`role`:** `Panel.Root` defaults `role` to `none`. Only pass a `role` that the surface itself receives
 (the article/section/companion role threaded in via `AppSurface.*Props`) — don't invent ARIA roles to
@@ -160,7 +206,7 @@ hang behaviour on.
 single child instead of rendering its own `<div>`. Use `asChild` whenever the child is itself composable
 (e.g. `ScrollArea.Root`): one fewer DOM node, and the height chain passes straight through. `ScrollArea`
 provides the themed scrollbar **and** the height chain that lets content scroll — content that should
-scroll goes in `ScrollArea.Viewport` inside `Panel.Content asChild`.
+scroll goes in `ScrollArea.Viewport` inside `Panel.Body asChild`.
 
 **Let components own their spacing.** `Form`, `List`, and `Stack` each control their own padding and
 spacing — don't wrap them in a padded viewport or sprinkle `p-*`/`space-*` around them; that double-pads
@@ -175,46 +221,35 @@ rather than wrapping — and if there's genuinely no path without a wrapper, dis
 
 See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/`.
 
-## Layout primitives: Flex, Grid, Column, Container
+## Layout primitives: Flex, Grid, Container
 
-When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, anywhere the shell doesn't
-already give you one — reach for these before writing `<div className='flex …'>`. All take `asChild`, so
+When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, in a story, anywhere the shell
+doesn't already give you one — reach for these before writing `<div className='flex …'>` or
+`<div className='grid grid-cols-2 …'>`. All are exported from `@dxos/react-ui/Layout` and take `asChild`, so
 the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra DOM node.
-`Flex`/`Grid`/`Container` live in
-[`packages/ui/react-ui/src/layout/`](../../../packages/ui/react-ui/src/layout) (not
-`components/`); `Column` is in `components/Column`.
 
-- **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
+- **`Layout.Container`** — the gutter grid, and the default box: `[full-start] gutter [content-start] <columns>
+[content-end] gutter [full-end]`. This is what aligns icons, controls, and scrollbars to the same vertical
+  rules across every surface, so use it instead of hand-padding a content column. Props: `gutter`
+  (`rail | inset | sm | md | lg | none | inherit`), `columns` (inner template, e.g.
+  `'minmax(0, 1fr) minmax(0, 1fr)'` instead of `grid-cols-2`), `layout` (`stack` places each child across the
+  content track; `row` flows children through `columns`), `fixed` (a `row` that keeps its columns in a narrow
+  pane), `padBlock` (block-axis gutter padding — never `py-[var(--dx-gutter)]`), `gap`, `align`, `span`.
+  Containers nest as direct children and inherit their parent's tracks as a real `subgrid`.
+- **`Layout.Block`** — a gutter slot (`rail='start' | 'end'`) so a passive `<Icon>` and an interactive button
+  align to the pixel at any depth.
+- **`Layout.Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
   `flex-1 overflow-hidden` (the height-chain link); `center` centers on both axes.
-- **`Grid`** — `cols`, `rows`, `gap`, `align`, `center`, `grow`, `contents`. Tracks take a count for
-  equal columns (`cols={3}`) or a list for anything asymmetric
-  (`cols={['min-content', '1fr']}`, `cols={[2, 1]}` for `2fr 1fr`) — the list form replaces
-  `grid-cols-[min-content_1fr]`, which is the least readable class in the corpus. `cols='subgrid'`
-  adopts the parent's tracks and spans them. `overflow-hidden` comes only with `grow`, so a
-  `grow={false}` grid clips no more than the `<div>` it replaced.
-- **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
-  `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
-  every surface, so use it instead of hand-padding a content column.
-- **`Container`** — a bare `dx-expand` box, for when the only job is to fill the parent. Add
-  `overflow-hidden` yourself if a clip is also wanted; it is no longer implied.
+- **`Layout.Grid`** — `cols`, `rows`, `gap`, `align`, `center`, `grow`, `contents`, for a grid that is not
+  aligned to the gutters. Tracks take a count (`cols={3}`) or a list (`cols={['min-content', '1fr']}`,
+  `cols={[2, 1]}` for `2fr 1fr`) — the list form replaces `grid-cols-[min-content_1fr]`.
 
 ```tsx
-<Flex column gap='sm'>…</Flex>
-<Flex gap='sm' justify='end'>…</Flex>
-<Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
-<Flex asChild gap='sm'><header>…</header></Flex>
+<Layout.Container layout='row' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>…</Layout.Container>
+<Layout.Flex column gap='sm'>…</Layout.Flex>
+<Layout.Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Layout.Flex>
+<Layout.Flex asChild gap='sm'><header>…</header></Layout.Flex>
 ```
-
-**`Column` parts.** `Column.Root` (`gutter: sm|md|lg`, `subgrid`, `gap`) defines the tracks and exposes
-`--dx-col`; `Column.Center` puts plain content in the centre track and is the default choice;
-`Column.Row` is a 3-track subgrid row for content flanked by gutter items; `Column.Block` is a gutter
-slot sized to `--dx-rail-item` (`end` for the trailing gutter) so a passive `<Icon>` and an interactive
-`IconButton` align to the pixel. For slotted children that can't take a part, the `withColumn` helpers
-apply placement: `center()`, `placeContent()`, `propagate()`. Reach for `propagate()` — not `center()` —
-when a descendant must address the gutters, e.g. a `ScrollArea` that should span full width and keep its
-scrollbar out in the gutter; `Dialog.Body` depends on exactly that, and `center()` there confines the
-body and pulls the scrollbar inboard. Nest with `subgrid` when a `Column` (or `Card`) sits inside another
-3-track grid and must inherit its rules rather than invent new ones.
 
 **`gap` takes ramp steps, not Tailwind numbers.** `xs | sm | md | lg | xl | 2xl | form | form-section`
 ([`layout/layout.ts`](../../../packages/ui/react-ui/src/layout/layout.ts)) — a `gap-2` literal is
@@ -222,10 +257,8 @@ precisely the drift the prop exists to prevent. `Flex` grows **no** padding or c
 (components own their spacing); everything else goes through `classNames`. There is no implicit `align`:
 row-centering is common, but defaulting it would silently restyle consumers relying on CSS `stretch`.
 
-**This is a live migration, so match it rather than adding to the backlog.**
-[`packages/ui/react-ui/AUDIT.md`](../../../packages/ui/react-ui/AUDIT.md) is the wrapper-div census that
-produced `Flex` and drove the `Grid` extension: of 191 flex/grid wrappers in plugin containers, 145 are
-converted. A new hand-rolled flex or grid div is new debt in a count someone is actively driving down.
+**This is a live migration, so match it rather than adding to the backlog.** A new hand-rolled flex or grid
+div is new debt in a count someone is actively driving down.
 
 ## Lists, pickers, and stacks
 
@@ -262,6 +295,13 @@ themselves (via react-tabster keyboard navigation) — you don't set those class
 Like `Form`, both **own their own padding and spacing**, so drop them straight into a `ScrollArea.Viewport`
 without a padded wrapper.
 
+**Keyboard and inline editing come from the list, never a new handler.** `Listbox` implements the ARIA grid
+pattern ([`Listbox/grid.ts`](../../../packages/ui/react-ui/src/next/components/Listbox/grid.ts)): arrow keys
+move the highlight, ArrowRight/Enter enters a row and focuses its first control, Tab moves between the row's
+controls, Escape/ArrowLeft returns to the list. For an editable label put `Editable.Root` /
+`Editable.Preview` / `Editable.Input` (`@dxos/react-ui/Editable`) in the row — the grid opens it on Enter or
+double-click. An `onKeyDown` on a list or row reimplements this and drifts from it.
+
 ## Toolbar / menu wiring
 
 Container toolbars are **always** built from menu actions, never bare `Toolbar.IconButton` chains.
@@ -286,11 +326,11 @@ const actionsAtom = useMemo(
 const menuActions = useMenuActions(actionsAtom);
 
 return (
-  <Panel.Toolbar>
+  <Panel.Header>
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Menu.Toolbar />
     </Menu.Root>
-  </Panel.Toolbar>
+  </Panel.Header>
 );
 ```
 
@@ -401,7 +441,7 @@ never a native element. Choose how to register it by _when you know which fields
 - **`fieldProvider: (props) => FormFieldComponent | undefined`** — dynamic, when you must decide at runtime
   (e.g. by type or annotation rather than exact path). Preferred for plugin-specific input surfaces.
 
-See: [`packages/ui/react-ui-form/src/components/Form/Form.stories.tsx`](../../../packages/ui/react-ui-form/src/components/Form/Form.stories.tsx)
+See: [`packages/ui/react-ui-form/src/components/Form.stories.tsx`](../../../packages/ui/react-ui-form/src/components/Form.stories.tsx)
 (a dedicated canonical custom-field example is planned — tracked separately).
 
 ## Cards: 3-slot subgrid
@@ -517,19 +557,14 @@ See: `plugin-sample/src/containers/SampleArticle.stories.tsx`,
 
 ### Verifying a story in a worktree
 
-`preview_start` serves storybook from the **main repo**, so it won't include stories that exist only in a
-worktree. To verify worktree UI, run storybook from the worktree on a free port and drive it with
-Playwright:
-
-```bash
-moon run storybook-react:serve -- --port 9014 --no-open --ci
-```
-
-Find story ids via `curl -s localhost:9014/index.json`, navigate to
-`http://localhost:9014/iframe.html?id=<story-id>&viewMode=story`. Screenshots go to `temp/` (gitignored),
+There is **one** storybook server, on port 9009, shared with the user — never start a second on a free
+port. Confirm it serves your worktree before trusting it, and restart it from yours if not (AGENTS.md
+→ "Sharing long-running servers"; REPOSITORY_GUIDE.md §Storybooks for the watchdog). Find story ids via
+`curl -s localhost:9009/index.json` and drive
+`http://localhost:9009/iframe.html?id=<story-id>&viewMode=story`. Screenshots go to `temp/` (gitignored),
 never the repo root. If a story renders empty with "Invalid hook call" / "Cannot read … 'useEffect'" /
-504 "Outdated Optimize Dep", that's Vite dep-optimizer churn (dual React), not your code — kill storybook,
-`rm -rf node_modules/.cache/storybook`, restart. Clean up the port and cache when done.
+504 "Outdated Optimize Dep", that's Vite dep-optimizer churn (dual React), not your code —
+`rm -rf node_modules/.cache/storybook` and restart the server you own.
 
 ## Before/after screenshots
 
@@ -586,12 +621,11 @@ link `.../<branch>/<path>` — that 404s the moment the file goes.
 
 ## Checklist
 
-- Layout from `Panel.*` + `ScrollArea.*`; boxes inside them from `Flex`/`Grid`/`Column`/`Container`, never a
-  hand-rolled `<div className='flex …'>`; `gap` from the ramp (`sm`/`md`/…), not `gap-2`; no wrapper
-  `<div>`s for styling; `asChild` when the child is composable.
+- The [Non-negotiables](#non-negotiables--before-writing-any-ui) table at the top — scrolling, sizing, panels,
+  layout boxes, lists, wrappers.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
 - Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
-- Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
+- Colors from verified tokens (grep `ui-theme/src/css/theme/` / copy a component); no invented tokens, no `className`.
 - Toolbars via `MenuBuilder` + `useMenuActions` + `Menu.Root` with `attendableId`.
 - Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.
 - ECHO object passed into a component → wrap with `useObject` at the container boundary.

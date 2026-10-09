@@ -90,15 +90,15 @@ rule no-invented-theme-tokens: Color classes come from the theme's custom proper
 ```
 
 ```mdl
-rule no-styling-wrapper-divs: Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`
+rule no-styling-wrapper-divs: Boxes come from Layout.Container/Flex/Grid, not a hand-rolled `<div className='flex …'>`
   A wrapper `<div>` added for styling breaks the height chain `ScrollArea`
   depends on — a wrapper around an input once silently disabled scrolling — and
   a hand-rolled flex or grid div is new debt in a census someone is actively
-  driving down (`packages/ui/react-ui/AUDIT.md`: 145 of 191 converted). Use
-  `Flex` (`column`, `gap`, `align`, `justify`, `grow`, `center`), `Grid`
-  (`cols`, `rows`, `gap`, including the list form `cols={['min-content','1fr']}`
-  and `cols='subgrid'`), `Column` for the gutter grid, and `Container` to merely
-  fill the parent; all take `asChild`, so the layout projects onto a semantic
+  driving down. Use `Layout.Container` for the gutter grid (`columns` instead of
+  `grid-cols-*`, `layout='row'`, `fixed`, `padBlock` instead of
+  `py-[var(--dx-gutter)]`), `Layout.Flex` (`column`, `gap`, `align`, `justify`,
+  `grow`, `center`) and `Layout.Grid` (`cols`, `rows`, `gap`, including the list
+  form `cols={['min-content','1fr']}`) — stories included; all take `asChild`, so the layout projects onto a semantic
   element at no extra DOM node. `gap` takes ramp steps (`xs | sm | md | lg | xl |
   2xl | form | form-section`), never a Tailwind number. Prefer `asChild` on a
   `Panel.*` part whose single child is itself composable rather than nesting a
@@ -111,6 +111,73 @@ rule no-styling-wrapper-divs: Boxes come from Flex/Grid/Column/Container, not a 
     - packages/plugins/**/*.tsx
     - packages/ui/**/*.tsx
   grep: <div[^>]*className=['"`][^'"`]*(flex|grid)
+  severity: warn
+```
+
+```mdl
+rule scroll-regions-use-scroll-area: Every scrolling region is a `ScrollArea`, and scrollers do not nest
+  A `<div>` with `overflow-auto` / `overflow-y-auto` / `overflow-scroll` has no
+  themed scrollbar, does not host it in the end gutter, and drops out of the
+  Container gutter grid. Use `ScrollArea.Root` > `ScrollArea.Viewport`
+  (`@dxos/react-ui/ScrollArea`), with the Viewport `asChild` onto a
+  `Layout.Container` and the Root `asChild` of `Panel.Body` where there is one.
+  `@dxos/eslint-plugin-rules/prefer-scroll-area` catches the class literal; this
+  rule also catches the nesting it cannot see: `Form.Viewport scroll`,
+  `Listbox.Content` and `OrderedList.Content` (both scroll by default) set
+  `overscroll-behavior: contain`, so placed inside a host that already scrolls
+  they swallow the wheel — flag one without `scroll={false}` inside a
+  `ScrollArea.Viewport`. Overflow built from a template literal or a computed
+  class string is also in scope. `overflow-hidden` / `overflow-clip` only clip
+  and are NOT violations, nor is the ScrollArea implementation itself.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+    - packages/stories/**/*.tsx
+  grep: overflow(-[xy])?-(auto|scroll)|Form\.Viewport|Listbox\.Content|OrderedList\.Content
+  context: imports
+  severity: warn
+```
+
+```mdl
+rule panels-from-panel-parts: Panels, floating ones included, are `Panel.Root`/`Header`/`Body`/`Footer`
+  A panel assembled from styled `<div>`s around a bare `Toolbar.Root` loses the
+  surface level, the bar aspect of its header and footer, the pane query
+  container that collapses its rails, and the gutter the first Container under
+  its body inherits. Use `Panel.Root` with `Panel.Header asChild` around the
+  `Toolbar.Root`, `Panel.Body` (`asChild` onto a `ScrollArea.Root` when it
+  scrolls) and `Panel.Footer`. `Panel.Root` is `height: 100%`, so a floating
+  panel sized to its content (an inspector over a canvas) adds `h-auto` rather
+  than abandoning the parts. Flag a `<div>` stack that has a toolbar row over a
+  content region, and a `Toolbar.Root` that is the first child of a plain
+  `<div>`. A toolbar that is not a panel's header (inline in a row, in a
+  popover) is NOT a violation.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: Toolbar\.Root
+  context: imports
+  severity: warn
+```
+
+```mdl
+rule list-keyboard-from-listbox-grid: List keyboard navigation and inline editing come from `Listbox`, not new handlers
+  `Listbox` implements the ARIA grid pattern (`Listbox/grid.ts`): arrow keys
+  move the highlight, ArrowRight/Enter enters a row and focuses its first
+  control, Tab moves between the row's controls, Escape/ArrowLeft returns, and
+  Enter on an entered row opens an `Editable.Preview`. An `onKeyDown` on a list,
+  row or item that handles arrows, Enter or Escape reimplements this and drifts
+  from it; a hand-swapped `<span>`/`<input>` pair reimplements `Editable.Root` /
+  `Editable.Preview` / `Editable.Input` (`@dxos/react-ui/Editable`). Flag
+  either inside a list or row. A key handler for a shortcut the grid does not
+  define (e.g. Delete to remove a row) is NOT a violation.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: onKeyDown|ArrowDown|ArrowUp
+  context: imports
   severity: warn
 ```
 
