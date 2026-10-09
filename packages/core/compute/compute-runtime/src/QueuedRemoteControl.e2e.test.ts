@@ -347,9 +347,9 @@ describe('queued remote control (e2e against a local host)', () => {
       yield* withHarness(({ client, host }) =>
         Effect.gen(function* () {
           const { pid } = yield* client.spawn({ spaceId: SPACE, key: 'test.not-hosted' });
-          yield* waitUntil(
-            client.status({ spaceId: SPACE, pid }).pipe(Effect.map((info) => info.state === Process.State.FAILED)),
-          );
+          // Drains only because the refusal settled the spawn: a retried one would stay queued.
+          yield* client.drained;
+          expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.FAILED);
 
           // Every read reports the host's reason, which is what a caller waiting on the process surfaces.
           const status = yield* client.status({ spaceId: SPACE, pid });

@@ -97,6 +97,14 @@ const handlers = OperationHandlerSet.make(Double.pipe(Operation.withHandler(({ v
 const messageOf = (exit: Exit.Exit<unknown, unknown>): string =>
   Exit.isFailure(exit) ? String(Cause.squash(exit.cause)) : '';
 
+const TestLayer = Layer.mergeAll(
+  Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty),
+  KeyValueStore.layerMemory,
+  OperationHandlerSet.provide(handlers),
+  Registry.layer,
+  Trace.layerNoop,
+);
+
 interface Harness {
   readonly invoker: ProcessOperationInvoker.ProcessOperationInvoker;
   readonly client: QueuedRemoteControl.Queued;
@@ -108,11 +116,11 @@ interface Harness {
  * when `hosted`, and knows no process at all otherwise — EDGE's answer for an operation it was never
  * given.
  */
-const withInvoker = (
-  options: { hosted: boolean; remoteAcceptTimeout?: Duration.Duration },
-  body: (harness: Harness) => Effect.Effect<void, unknown, Scope.Scope>,
-) =>
-  Effect.gen(function* () {
+const withInvoker = Effect.fn(
+  function* (
+    options: { hosted: boolean; remoteAcceptTimeout?: Duration.Duration },
+    body: (harness: Harness) => Effect.Effect<void, unknown, Scope.Scope>,
+  ) {
     const registry = yield* Registry.AtomRegistry;
     const resolver = yield* ServiceResolver.ServiceResolver;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
@@ -178,12 +186,7 @@ const withInvoker = (
         ),
       ),
     );
-  }).pipe(Effect.scoped, Effect.provide(TestLayer));
-
-const TestLayer = Layer.mergeAll(
-  Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty),
-  KeyValueStore.layerMemory,
-  OperationHandlerSet.provide(handlers),
-  Registry.layer,
-  Trace.layerNoop,
+  },
+  Effect.scoped,
+  Effect.provide(TestLayer),
 );
