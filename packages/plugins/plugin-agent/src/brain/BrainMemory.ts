@@ -132,13 +132,15 @@ export const make = (
   };
 
   const service: BrainService.Service = {
-    push: (agent, entries, options) =>
-      facts(agent)
-        .putFacts(entries)
-        .pipe(
-          Effect.mapError(toError),
-          Effect.map(() => enqueue(evaluator(agent).push(entries, { at: now(), quiet: options?.quiet }))),
-        ),
+    push: Effect.fnUntraced(function* (agent, entries, options) {
+      const store = facts(agent);
+      yield* store.putFacts(entries).pipe(Effect.mapError(toError));
+      // The fact store's own ingest cursor, moved only once the facts are stored, so a failed push is read again.
+      if (options?.read) {
+        yield* store.setCursor(options.read.source, options.read.through).pipe(Effect.mapError(toError));
+      }
+      return entries.length === 0 ? 0 : enqueue(evaluator(agent).push(entries, { at: now(), quiet: options?.quiet }));
+    }),
     tick: (agent) => Effect.sync(() => enqueue(evaluator(agent).tick(now()))),
     nextDueAt: (agent) =>
       Effect.sync(() => {
@@ -152,6 +154,7 @@ export const make = (
           Effect.map((found): RDF.Fact[] => found),
           Effect.mapError(toError),
         ),
+    readThrough: (agent, source) => facts(agent).cursor(source).pipe(Effect.mapError(toError)),
     subscribe: Effect.fnUntraced(function* (trigger) {
       const held = triggers.list(trigger.agent).filter(({ id }) => id !== trigger.id);
       if (held.length >= BrainService.MAX_TRIGGERS) {

@@ -760,6 +760,57 @@ test QA-2: Interview a person and confirm their goals
       expect: the agent and its chat leave the navtree
 ```
 
+```mdl
+test QA-3: Two people, one agent — a watch fires across private chats
+  desc: |
+    Two members, each on their own device and HALO identity, talk to the same agent in their own
+    private chats. One asks to be kept posted on the other's work; when the other says what they are
+    working on, the agent reads it into its brain, the watch wakes, and the update reaches the first
+    member's chat. Facts live only in the agent's brain (BrainService), never in ECHO, so the Brain
+    companion's Facts tab is the only place they show. Recorded side by side by autocue's `pair.mjs`
+    (`autocue/two-people-one-agent.mjs`).
+  actors: human
+  covers: [F-1.1]
+  status: unverified         # needs a live model and an EDGE that hosts the agent's chats and brain
+  given:
+    - two devices, each with its own identity: Alice (host) and Bob (guest), display names set
+    - plugin-agent is enabled on both (it is tagged labs)
+    - Composer points at an EDGE that runs agent chats (`Agent.chatLocation` is `edge` for an agent's chat)
+      and serves a live model — ABORT without one
+  steps:
+    - name: Alice creates a space and an agent
+      do: Alice creates a space "Launch room", then clicks + on the AI group's Agents section.
+      invoke: [op:createAgent] { name: "" }
+      capture: agent
+      expect: the agent appears under Agents and its article opens Alice's private chat
+    - name: Alice invites Bob; Bob joins
+      do: Alice opens Members, creates a single-use invitation; Bob joins with the code and the auth code.
+      expect: Bob's navtree shows "Launch room" with the same agent under Agents
+    - name: Each opens a private chat with the agent
+      do: Both click the agent under Agents.
+      expect: |
+        each sees an empty chat ready for input; neither sees the other's conversation (each chat is the
+        member's own participant chat, hosted on EDGE)
+      note: NO `invoke` — the article opens the viewer's chat through op OpenPrivateChat with their identity DID.
+    - name: Alice asks to be kept posted on Bob
+      do: Alice sends "Keep me posted on what Bob is working on."
+      expect: the agent acknowledges; the Brain companion's Goals tab lists Alice's goal with a watch on Bob
+      note: NO `invoke` — the model chooses watchFacts.
+    - name: Bob says what he is working on
+      do: Bob sends "I'm working on the indexer migration this week."
+      expect: the agent replies to Bob
+      note: NO `invoke` — model-driven; the end-request hook (runTriggers) reads the turn into the brain.
+    - name: Alice receives the update
+      do: Watch Alice's chat, without sending anything.
+      expect: a message from the agent appears in Alice's chat telling her Bob is working on the indexer migration
+      note: A watch whose update never reaches Alice's chat is a failure of this step, not of the model.
+    - name: The facts are in the brain
+      do: Open the agent's Brain companion and its Facts tab.
+      expect: |
+        the Facts tab lists a fact that Bob works on the indexer migration, attributed to Bob; no Memory
+        or annotation object holds it in the space
+```
+
 ---
 
 ## Appendix: Extension Definitions

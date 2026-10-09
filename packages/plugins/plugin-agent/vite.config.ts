@@ -24,7 +24,6 @@ export default defineConfig({
     BrainService: 'src/types/BrainService.ts',
     BrainSkill: 'src/skills/BrainSkill.ts',
     ChatParticipant: 'src/types/ChatParticipant.ts',
-    FactEntry: 'src/types/FactEntry.ts',
     Goal: 'src/types/Goal.ts',
     InterviewSkill: 'src/skills/InterviewSkill.ts',
     ConversationSkill: 'src/skills/ConversationSkill.ts',

@@ -62,9 +62,22 @@ export const Event = Schema.Struct({
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
 
+/** How far a source has been read into facts: the URI of its last item read (e.g. a chat's last message). */
+export type ReadCursor = {
+  /** URI of the source read (e.g. the chat). */
+  readonly source: string;
+  /** URI of the last item read; the next read starts after it. */
+  readonly through: string;
+};
+
 export type PushOptions = {
   /** Speakers (entity ids) whose facts are stored but wake nothing on their own: an agent's own words must not wake it. */
   readonly quiet?: readonly string[];
+  /**
+   * Moves the source's read cursor with the facts, so the cursor is kept exactly as long as they are: a brain that
+   * loses its facts (the in-memory one, on reload) also forgets what it read, and the source is read again.
+   */
+  readonly read?: ReadCursor;
 };
 
 /**
@@ -84,8 +97,8 @@ export type PushOptions = {
  */
 export interface Service {
   /**
-   * Stores facts (one copy each) and queues an event in every matching subscription's outbox; returns
-   * how many events were queued.
+   * Stores facts (one copy each), moves the read cursor when given, and queues an event in every matching
+   * subscription's outbox; returns how many events were queued. A push with no facts only moves the cursor.
    */
   readonly push: (
     agent: string,
@@ -104,6 +117,9 @@ export interface Service {
 
   /** The agent's facts matching the query. */
   readonly query: (agent: string, query: FactQuery) => Effect.Effect<RDF.Fact[], BrainError>;
+
+  /** The URI of the last item of the source read into the agent's facts ({@link PushOptions.read}), if any. */
+  readonly readThrough: (agent: string, source: string) => Effect.Effect<string | undefined, BrainError>;
 
   /**
    * Adds or replaces a subscription; it wakes on facts pushed from then on (its rules may read earlier
@@ -179,6 +195,14 @@ export const fromEvaluator = (event: {
   facts: [...event.facts],
   at: new Date(event.at).toISOString(),
 });
+
+/** The text of a fact's subject or object. */
+export const termText = (term: RDF.Term): string =>
+  term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
+
+/** A fact as one line: subject, predicate, object. */
+export const factText = (fact: RDF.Fact): string =>
+  `${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;
 
 /** An event as plain JSON, for brains across a wire. */
 export const encodeEvent = Schema.encodeSync(Event);
