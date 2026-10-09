@@ -8,7 +8,7 @@ import path from 'node:path';
 import { formatValue } from '../score/render.ts';
 import { scoreMeasurements } from '../score/score.ts';
 import { STAGE_CPU_GROUP, STAGE_WALL_GROUP, WORK_GROUP, groupOfId, toMeasurements } from '../score/stages.ts';
-import { buildWorkingTree, runFlow, serveArm } from './arms.ts';
+import { buildWorkingTree, keepArms, pruneArms, runFlow, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { elapsedMinutes, openSession, settle } from './session.ts';
 import { ARMS_FILE, type ArmsRecord } from './summarize.ts';
@@ -52,6 +52,10 @@ export const runCommand = async ({
     progress(`run ${path.relative(root, dir)}`);
     const arm = await buildWorkingTree({ root, target, logFile: path.join(dir, 'build.log') });
     progress(`${arm.ref} ${arm.commit.slice(0, 9)} ${arm.cached ? 'cached' : 'built'}`);
+    const pruned = pruneArms(root, keepArms(), [arm.dir]);
+    if (pruned.length > 0) {
+      progress(`pruned ${pruned.length} least recently used cached bundles`);
+    }
     writeFileSync(
       path.join(dir, ARMS_FILE),
       JSON.stringify({
