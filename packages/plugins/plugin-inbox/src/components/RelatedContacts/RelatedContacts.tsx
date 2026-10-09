@@ -44,8 +44,6 @@ const ContactRow = ({ contact, onClick }: ContactRowProps) => {
 
   return (
     <Card.Row
-      // The avatar, not a generic glyph: a row standing for a person reads the same here as it does
-      // in every message and attendee row. Non-interactive, since the row is itself a button.
       leading={<Avatar actor={{ name: fullName, email }} size={5} />}
       trailing={<Icon.Icon icon='ph--arrow-right--regular' />}
       onClick={() => onClick?.(contact)}

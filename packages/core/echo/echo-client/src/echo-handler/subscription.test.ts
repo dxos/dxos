@@ -320,7 +320,6 @@ describe('create subscription', () => {
     });
     expect(fires).to.equal(baseline + 1);
 
-    // A rewrite to the same list is not a change.
     Obj.update(task, (task) => {
       Obj.getMeta(task).tags.splice(0, 1, Ref.make(urgent));
     });

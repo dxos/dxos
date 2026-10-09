@@ -28,6 +28,11 @@ import { useBoard } from './BoardContext.ts';
 
 const BOARD_ITEM_NAME = 'Board.Item';
 
+const useDescription = (object: Obj.Unknown | undefined): string | undefined =>
+  useAtomValue(
+    useMemo(() => Atom.make((get) => (object ? Obj.getDescription(get(Obj.atom(object))) : undefined)), [object]),
+  );
+
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
   MosaicTileProps<TItem>,
   'classNames' | 'location' | 'data' | 'debug' | 'draggable'
@@ -43,10 +48,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
     const label = useLabel(data);
-    // Emits only when the description string changes, as `useLabel` does for the label.
-    const description = useAtomValue(
-      useMemo(() => Atom.make((get) => (data ? Obj.getDescription(get(Obj.atom(data))) : undefined)), [data]),
-    );
+    const description = useDescription(data);
     const { model } = useBoard(BOARD_ITEM_NAME);
     const column = useBoardColumn();
     const items = useMemo(

@@ -23,6 +23,8 @@ import { snippet as snippetExtension } from './snippet.ts';
  * under the fade instead of growing an unbounded card. Relative to the card's inline size. */
 const SNIPPET_MAX_HEIGHT = '100cqi';
 
+const countWords = (text: string): number => text.split(/\s+/).filter(Boolean).length;
+
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
@@ -39,8 +41,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
     return text ? text + '\n' : undefined;
   }, [document, content]);
   const extensions = useMemo(() => [snippetExtension({ maxHeight: SNIPPET_MAX_HEIGHT, scale: 0.8 })], []);
-  // Split on runs of whitespace and drop empties, so an empty document counts 0 rather than 1.
-  const words = content.split(/\s+/).filter(Boolean).length;
+  const words = countWords(content);
 
   return (
     <Card.Body>

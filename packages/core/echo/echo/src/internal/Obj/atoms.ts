@@ -299,10 +299,6 @@ export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<st
 
 const readTags = (entity: Entity.Unknown): readonly Ref.Ref<Tag.Tag>[] => [...getMeta(entity).tags];
 
-/**
- * Atom family for an entity's meta tags.
- * Fires only when the tag list changes (see `snapshotEquals`), since every mutation of the entity re-reads it.
- */
 const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Ref.Ref<Tag.Tag>[]> => {
   return Atom.make<readonly Ref.Ref<Tag.Tag>[]>((get) => {
     let previous = readTags(entity);

@@ -746,7 +746,6 @@ describe('Obj', () => {
       expect(fires).toBe(baseline + 1);
       expect(registry.get(tagsAtom).map((ref) => ref.uri.toString())).toEqual([Ref.make(urgent).uri.toString()]);
 
-      // A rewrite to the same list is not a change.
       Obj.update(obj, (obj) => {
         Obj.getMeta(obj).tags.splice(0, 1, Ref.make(urgent));
       });

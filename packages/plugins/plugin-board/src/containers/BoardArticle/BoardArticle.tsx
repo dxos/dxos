@@ -213,10 +213,8 @@ type BoardObjectPickerProps = {
   trigger: ObjectPickerProps['trigger'];
 };
 
-/** The space's objects as picker options, queried and labelled only while the popup is open. */
 const BoardObjectPicker = ({ board, onSelect, trigger }: BoardObjectPickerProps) => {
   const [open, setOpen] = useState(false);
-  // TODO(burdon): Use search.
   const objects = useQuery(open ? Obj.getDatabase(board) : undefined, Filter.everything());
   const optionsAtom = useMemo(
     () =>

@@ -787,7 +787,6 @@ const PullRequestTag = ({
       {...anchor}
       hue='neutral'
       size='sm'
-      // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
       classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
       icon='ph--git-pull-request--regular'
       iconClassNames={pullRequestStateStyle[state]}

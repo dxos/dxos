@@ -91,7 +91,6 @@ export const CommentThread = ({
   const [status] = useObject(thread, 'status');
   const [messages] = useObject(thread, 'messages');
 
-  // `ref.atom` loads each target and re-emits when it arrives.
   const loadedMessagesAtom = useMemo(
     () =>
       Atom.make((get) =>

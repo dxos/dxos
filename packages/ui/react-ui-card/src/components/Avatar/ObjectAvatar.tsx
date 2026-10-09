@@ -26,13 +26,11 @@ const IMAGE_PROPERTY = 'image';
 const asImage = (value: unknown): string | undefined =>
   typeof value === 'string' && value.length > 0 ? value : undefined;
 
-/** A live object, which may carry the picture convention. */
 const isLiveObject = (value: unknown): value is Obj.Unknown & { readonly [IMAGE_PROPERTY]?: unknown } =>
   Obj.isObject(value);
 
 /** The object's picture URL, or `undefined` when it has none. */
 export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string | undefined =>
-  // Read by name: the property is a convention across unrelated types rather than part of any shared interface.
   asImage(Reflect.get(entity, IMAGE_PROPERTY));
 
 export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & {

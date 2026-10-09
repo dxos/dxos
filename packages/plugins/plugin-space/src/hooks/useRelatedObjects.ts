@@ -34,7 +34,6 @@ export const useRelatedObjects = (
   } = {},
 ) => {
   const objects = useQuery(db, Filter.everything());
-  // Only the subject's reference fields, so an edit to any other field does not rescan the space.
   const referencesAtom = useMemo(
     () =>
       Atom.make((get) => (subject ? getReferences(get(Obj.atom(subject))) : [])).pipe(

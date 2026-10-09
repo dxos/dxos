@@ -6,11 +6,11 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import type { ProjectionModel } from '@dxos/schema';
-import { shallowEqual } from '@dxos/util';
 
 import { Kanban } from '#types';
+
+import { makeColumnIdsAtom, makePivotFieldAtom } from '../util/index.ts';
 
 /**
  * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`
@@ -19,20 +19,8 @@ import { Kanban } from '#types';
  * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */
 export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel => {
-  // Derived rather than `useObject` on `spec` and `arrangement`: records re-emit on every kanban write, so each
-  // drag would re-render the board.
-  const pivotField = useAtomValue(
-    useMemo(() => Atom.make((get) => get(Obj.atomProperty(kanban, 'spec')).pivotField), [kanban]),
-  );
-  const optionIds = useAtomValue(
-    useMemo(
-      () =>
-        Atom.make((get) => Object.keys(get(Obj.atomProperty(kanban, 'arrangement'))?.columns ?? {})).pipe(
-          Atom.withEquality<string[]>(shallowEqual),
-        ),
-      [kanban],
-    ),
-  );
+  const pivotField = useAtomValue(useMemo(() => makePivotFieldAtom(kanban), [kanban]));
+  const optionIds = useAtomValue(useMemo(() => makeColumnIdsAtom(kanban), [kanban]));
 
   return useMemo(() => {
     const options = optionIds.map((id) => ({ id, title: id, color: 'neutral' as const }));
