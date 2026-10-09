@@ -61,7 +61,6 @@ import { commonSchema, mergeValues, patchValues } from '../../utils/properties.t
 import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
-import { DockToggle } from '../DockToggle/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
@@ -188,9 +187,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   styles?: Atom.Writable<StyleMap>;
   /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
   onGroup?: () => void;
-  /** Whether the panel is docked beside the canvas; with `onDockedChange`, its toolbar offers to dock or float it. */
+  /** Whether the panel is docked beside the canvas. */
   docked?: boolean;
-  onDockedChange?: (docked: boolean) => void;
 }>;
 
 export const Properties = ({
@@ -207,7 +205,6 @@ export const Properties = ({
   styles,
   onGroup,
   docked = false,
-  onDockedChange,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -359,7 +356,6 @@ export const Properties = ({
               onClick={onFlip}
             />
           )}
-          {onDockedChange && <DockToggle docked={docked} onDockedChange={onDockedChange} />}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

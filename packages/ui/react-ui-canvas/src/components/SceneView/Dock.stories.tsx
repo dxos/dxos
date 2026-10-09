@@ -74,7 +74,7 @@ export const Default: Story = {};
 /** Nothing selected: the properties section says so rather than going away. */
 export const Empty: Story = { args: { select: undefined } };
 
-/** Each section's header collapses it; the toolbar's button floats the panels back over the canvas. */
+/** Each section's header collapses it. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -87,8 +87,5 @@ export const Test: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
-    // 3. The layers toolbar's button floats the panels: the dock goes.
-    await userEvent.click(within(within(dock).getByTestId('layers')).getByTestId('panels-dock'));
-    await waitFor(() => expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument());
   },
 };

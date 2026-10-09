@@ -19,7 +19,7 @@ import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
-import { type Drag, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
+import { type Drag, type PanelMode, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
@@ -140,6 +140,8 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * whatever the projection would allow.
    */
   readonly?: boolean;
+  /** Where the properties and layers panels sit: docked in a column beside the canvas, or floating over it. */
+  panels?: PanelMode;
   children?: ReactNode;
 }>;
 
@@ -157,6 +159,7 @@ const SceneViewRoot = ({
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
+  panels = 'docked',
   children,
 }: SceneViewRootProps) => {
   const registry = useRegistry();
@@ -832,6 +835,7 @@ const SceneViewRoot = ({
       drag={drag}
       tool={tool}
       debug={debug}
+      panels={panels}
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
@@ -1192,9 +1196,9 @@ const SceneViewProperties = ({
   overrides,
   sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+  const { projection, atoms, nodeRegistry, capabilities, selection, store, path, panels } =
     useSceneViewContext('SceneView.Properties');
-  const { docked, setDocked } = usePanelMode('SceneView.Properties');
+  const docked = panels === 'docked';
   const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -1227,7 +1231,6 @@ const SceneViewProperties = ({
     <Properties
       classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
       docked={docked}
-      onDockedChange={setDocked}
       projection={projection}
       atoms={atoms}
       nodes={nodeRegistry}
@@ -1265,18 +1268,6 @@ const PROPERTIES_SECTION: DockSection = {
 
 const LAYERS_SECTION: DockSection = { id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 1 };
 
-/** The panels' mode, and a setter for the panels' dock button. */
-const usePanelMode = (component: string) => {
-  const { atoms } = useSceneViewContext(component);
-  const registry = useRegistry();
-  const docked = useAtomValue(atoms.panels) === 'docked';
-  const setDocked = useCallback(
-    (next: boolean) => registry.set(atoms.panels, next ? 'docked' : 'floating'),
-    [registry, atoms.panels],
-  );
-  return { docked, setDocked };
-};
-
 //
 // Layers
 //
@@ -1288,8 +1279,8 @@ export type SceneViewLayersProps = Util.ThemedClassName<{}>;
  * (the two take turns). Each edit is one intent, so one undo step.
  */
 const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
-  const { projection, atoms, capabilities, selection } = useSceneViewContext('SceneView.Layers');
-  const { docked, setDocked } = usePanelMode('SceneView.Layers');
+  const { projection, atoms, capabilities, selection, panels } = useSceneViewContext('SceneView.Layers');
+  const docked = panels === 'docked';
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -1316,7 +1307,6 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
     <LayersPanel
       classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
       docked={docked}
-      onDockedChange={setDocked}
       layers={layers}
       selected={selected}
       readonly={readonly}

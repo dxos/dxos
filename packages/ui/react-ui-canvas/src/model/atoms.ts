@@ -109,7 +109,6 @@ export type SceneViewAtoms = {
   editing: Atom.Writable<EditingPart | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
-  panels: Atom.Writable<PanelMode>;
 };
 
 /**
@@ -135,5 +134,4 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
-  panels: Atom.keepAlive(Atom.make<PanelMode>('docked')),
 });
