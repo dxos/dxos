@@ -26,6 +26,7 @@ concurrency:
 jobs:
   edge-test:
     runs-on: depot-ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

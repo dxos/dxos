@@ -7,11 +7,10 @@ import * as Struct from 'effect/Struct';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
 
-import { createFunctionAnchors } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { TableComponent } from './Table.tsx';
 
 // Kept out of `Table.tsx`: react-refresh only fast-refreshes a module whose
@@ -34,12 +33,13 @@ export type CreateTableProps = CreateShapeProps<TableShape>;
 export const createTable = (props: CreateTableProps) =>
   createShape<TableShape>({ type: 'table', size: { width: 320, height: 512 }, ...props });
 
-export const tableShape: ShapeDef<TableShape> = {
+export const tableNodeDef = defineComputeNode<TableShape>({
   type: 'table',
   name: 'Table',
   icon: 'ph--table--regular',
+  schema: withZ(TableShape),
   component: TableComponent,
-  createShape: createTable,
-  getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
+  create: createTable,
+  ports: (shape) => createFunctionPorts(shape.size, InputSchema, OutputSchema),
   resizable: true,
-};
+});

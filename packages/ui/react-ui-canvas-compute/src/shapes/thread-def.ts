@@ -7,11 +7,10 @@ import * as Struct from 'effect/Struct';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
 
-import { createFunctionAnchors } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { ThreadComponent } from './Thread.tsx';
 
 // Kept out of `Thread.tsx`: react-refresh only fast-refreshes a module whose
@@ -34,12 +33,14 @@ export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 export const createThread = (props: CreateThreadProps) =>
   createShape<ThreadShape>({ type: 'thread', size: { width: 384, height: 384 }, ...props });
 
-export const threadShape: ShapeDef<ThreadShape> = {
+export const threadNodeDef = defineComputeNode<ThreadShape>({
   type: 'thread',
   name: 'Thread',
   icon: 'ph--chats-circle--regular',
+  group: 'Outputs',
+  schema: withZ(ThreadShape),
   component: ThreadComponent,
-  createShape: createThread,
-  getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
+  create: createThread,
+  ports: (shape) => createFunctionPorts(shape.size, InputSchema, OutputSchema),
   resizable: true,
-};
+});

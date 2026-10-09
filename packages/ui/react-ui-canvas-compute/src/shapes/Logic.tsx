@@ -5,23 +5,22 @@
 import React from 'react';
 
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { FunctionBody } from './common/index.ts';
+import { type ComputeNodeViewProps, FunctionBody } from './common/index.ts';
 import { type IfElseShape, type IfShape } from './logic-def.ts';
 
 //
 // Components
 //
 
-export type IfComponentProps = ShapeComponentProps<IfShape>;
+export type IfComponentProps = ComputeNodeViewProps<IfShape>;
 
-export const IfComponent = ({ shape, ...props }: IfComponentProps) => {
+export const IfComponent = ({ node: shape }: IfComponentProps) => {
   return <FunctionBody shape={shape} inputSchema={IfInput} outputSchema={IfOutput} />;
 };
 
-export type IfElseComponentProps = ShapeComponentProps<IfElseShape>;
+export type IfElseComponentProps = ComputeNodeViewProps<IfElseShape>;
 
-export const IfElseComponent = ({ shape, ...props }: IfElseComponentProps) => {
+export const IfElseComponent = ({ node: shape }: IfElseComponentProps) => {
   return <FunctionBody shape={shape} inputSchema={IfElseInput} outputSchema={IfElseOutput} />;
 };

@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { FunctionShapeComponent } from './Function.tsx';
 
 // Kept out of `Function.tsx`: react-refresh only fast-refreshes a module whose
@@ -36,11 +35,13 @@ export const createFunction = (props: CreateFunctionProps) =>
 // Defs
 //
 
-export const functionShape: ShapeDef<FunctionShape> = {
+export const functionNodeDef = defineComputeNode<FunctionShape>({
   type: 'function',
   name: 'Function',
   icon: 'ph--function--regular',
+  group: 'Transform',
+  schema: withZ(FunctionShape),
   component: FunctionShapeComponent,
-  createShape: createFunction,
-  getAnchors: (shape) => createFunctionAnchors(shape, FunctionInput, AnyOutput),
-};
+  create: createFunction,
+  ports: (shape) => createFunctionPorts(shape.size, FunctionInput, AnyOutput),
+});

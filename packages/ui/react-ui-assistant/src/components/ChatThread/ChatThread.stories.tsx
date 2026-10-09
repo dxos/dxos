@@ -515,7 +515,7 @@ const DeliveryStory = () => {
 /**
  * Prompts on their way to the agent, one per delivery state: read (the agent took it up), delivered
  * (its queue holds it), sent (the client holds it) and failed (with remove). Each renders
- * exactly as an acknowledged prompt does, with the ticks as a widget in the prompt's own document.
+ * exactly as an acknowledged prompt does, with the ticks on the bubble's edge and remove in its toolbar.
  */
 export const Delivery: Story = {
   render: () => <DeliveryStory />,
@@ -528,7 +528,9 @@ export const Delivery: Story = {
       );
     await expect(statuses()).toEqual(['read', 'delivered', 'sent', 'failed']);
 
-    const failed = canvasElement.querySelector<HTMLElement>('[data-delivery="failed"]');
+    const failed = canvasElement
+      .querySelector<HTMLElement>('[data-delivery="failed"]')
+      ?.closest('[data-testid="feed.message"]');
     failed?.querySelector<HTMLElement>('[data-action="remove"]')?.click();
     await expect(deliveryEvents.map(({ type }) => type)).toEqual(['remove-prompt']);
   },

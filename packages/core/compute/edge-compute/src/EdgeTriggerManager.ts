@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -15,12 +16,13 @@ import type * as Scope from 'effect/Scope';
 
 import { type Client, ClientService } from '@dxos/client';
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
-import type * as Trigger from '@dxos/compute/Trigger';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Context as DxosContext } from '@dxos/context';
 import { Ref } from '@dxos/echo';
 import { type EdgeTriggerStatus } from '@dxos/edge-client';
 import { EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EdgeCallFailedError } from '@dxos/protocols';
 
 import { createEdgeClient } from './edge-client.ts';
 
@@ -33,12 +35,22 @@ const POLL_INTERVAL = Duration.seconds(15);
  * Backoff for a force-run that reaches EDGE before the client's state has caught up there
  * (~31s total across 5 retries): a trigger created client-side is force-run immediately by the UI,
  * so the first attempt can lose the race — against replication of the trigger itself (rejected as
- * not found) or against the identity being associated with an account. Every failure is retried
- * rather than a specific code, since EDGE spells these races several ways.
+ * not found) or against the identity being associated with an account. Every failure is retried rather
+ * than a specific code, since EDGE spells these races several ways, except a 409 refusal (EDGE has the
+ * trigger and will not run it). A 409 "Trigger disabled" is still retried: a trigger only reaches here
+ * enabled locally, so EDGE's copy is lagging a re-enable.
  *
  * TODO(dmaretskyi): Remove once the client can await replication of the trigger to EDGE.
  */
 const REPLICATION_BACKOFF = Schedule.exponential(Duration.seconds(1), 2).pipe(Schedule.upTo({ times: 5 }));
+
+/** EDGE's 409 message for a switched-off trigger (`FORCE_RUN_REFUSED.disabled` in compute-service). */
+const TRIGGER_DISABLED_MESSAGE = 'Trigger disabled';
+
+const isRefusal = (error: unknown): error is EdgeCallFailedError =>
+  error instanceof EdgeCallFailedError && error.status === 409;
+
+const isDisabledRefusal = (error: unknown): boolean => isRefusal(error) && error.message === TRIGGER_DISABLED_MESSAGE;
 
 /**
  * EDGE implementation of {@link RemoteTriggerManager.Service}.
@@ -98,15 +110,24 @@ const make = (
       invokeTrigger: (options: Trigger.InvokeOptions) =>
         // Manual invocation of a remote trigger maps onto force-running its cron on the EDGE
         // dispatcher; refresh the view promptly afterwards.
-        Effect.tryPromise(() =>
-          getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
-        ).pipe(
+        Effect.tryPromise({
+          try: () => getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
+          catch: (error) => (error instanceof EdgeCallFailedError ? error : new Cause.UnknownError(error)),
+        }).pipe(
           Effect.tapError((error) =>
-            Effect.sync(() => log.warn('edge force-run failed; retrying', { triggerId: options.trigger.id, error })),
+            Effect.sync(() => log.warn('edge force-run failed', { triggerId: options.trigger.id, error })),
           ),
-          Effect.retry({ schedule: REPLICATION_BACKOFF }),
+          Effect.retry({
+            schedule: REPLICATION_BACKOFF,
+            while: (error) => !isRefusal(error) || isDisabledRefusal(error),
+          }),
           Effect.asVoid,
-          Effect.orDie,
+          // Still disabled once the backoff is spent: EDGE disabled it itself, ahead of the local copy.
+          Effect.catch((error) =>
+            isDisabledRefusal(error)
+              ? Effect.fail(new Trigger.TriggerDisabledError(options.trigger.id))
+              : Effect.die(error),
+          ),
           Effect.tap(() => refresh),
         ),
     } satisfies RemoteTriggerManager.Manager;

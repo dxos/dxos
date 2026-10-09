@@ -34,50 +34,29 @@ correct and delete it; it references objects in other spaces rather than copying
 Fact subjects and objects are entity IRIs that resolve to these objects (pipeline-rdf `Entity.ref`), so
 the RDF graph and ECHO share identity.
 
-## 2. Annotations — facts per source
+## 2. Facts — in the agent's brain
 
-**Decision:** facts are not ECHO objects. A fact is one low-level proposition and an agent records
-hundreds a day; an object per fact costs a document each and buries the objects people read. Each
-**source** the agent reads — a chat transcript, a document, or a web page — instead gets an
-**annotation feed** (the mailbox-enrichment pattern: derived data on a second feed, never on the
-immutable source). The source remains the full-fidelity record.
+**Decision:** facts are not ECHO objects, nor ECHO feed items. A fact is one low-level proposition and an
+agent records hundreds a day; they live only in the agent's brain (`BrainService`: in memory in the
+app, a Durable Object with SQLite on EDGE), which already indexes them for rules and recall. The
+source remains the full-fidelity record. Annotation feeds of `FactEntry`/`ExtractionPass` items written
+before 2026-10-09 are no longer read.
 
-**`readSource` is the one operation that writes annotations** (`org.dxos.operation.agent.readSource`,
+**`readSource` is the one operation that records facts** (`org.dxos.operation.agent.readSource`,
 input `{ agent, source?, url?, text? }`). It reads the source's text — a chat renders as
 `[time] speaker: text` lines, a markdown transcript keeps its `**Speaker:**` paragraphs — runs
 pipeline-rdf's extraction (chunked) as a direct model call with no chat or session, attributes each
-fact to the utterance its quote comes from (speaker, message DXN, time), and appends one entry per fact
-to the source's feed, then an `ExtractionPass` marker that closes the pass. A chat is read incrementally
-from the last marker's `through` cursor; the up to eight
-messages before it are shown to the extractor under an "Earlier messages, for context only" heading, so
-"ok i'll start working on it" resolves to what "it" was, and only facts quoting a new message are kept
-(so context is never extracted twice). `readSource` also returns that rendered window as `transcript`,
-which composed notifications use (§5). The feed is a `Feed` parented to the agent in its home space, keyed by the foreign key
-`{ source: 'org.dxos.agent.annotations', id: <source object id or URL> }` (also its `kind`), so EDGE
-finds it with `Filter.foreignKeys`/`Filter.childOf` and no hierarchy traversal. The conversation skill
-calls it when asked to read a document or link; the playground calls it on its seed transcript.
-
-An entry holds one fact in the `@dxos/pipeline-rdf` `Fact` shape, so its extraction stages and SPARQL
-engine are reused, and one fact per entry so a single fact can be forgotten (its entry removed) and
-referenced directly. The fact is wrapped because an ECHO object id must be an ECHO id, while a fact's
-`id` is the `source#hash#index` that triples and `wasDerivedFrom` refer to; the entry carries that id
-as the foreign key `{ source: 'org.dxos.agent.fact', id: fact.id }`, so it is found without a scan.
+fact to the utterance its quote comes from (speaker, message DXN, time), pushes the facts to the
+agent's brain and delivers what they wake. A chat is read incrementally from the brain's read cursor
+for it (`BrainService.readThrough`), which the same push moves (`PushOptions.read`), so the cursor is
+lost exactly when the facts are and the chat is then read again; the up to eight messages before it
+are shown to the extractor under an "Earlier messages, for context only" heading, so "ok i'll start
+working on it" resolves to what "it" was, and only facts quoting a new message are kept (so context is
+never extracted twice). `readSource` also returns that rendered window as `transcript`, which composed
+notifications use (§5). The conversation skill calls it when asked to read a document or link; the
+playground calls it on its seed transcript.
 
 ```ts
-FactEntry {                     // org.dxos.type.agent.factEntry 0.2.0; one feed item per fact
-  fact: Fact;                   // pipeline-rdf's Fact as is; its Term is tagged by `kind`, so ECHO stores it
-}                               // @meta.keys: [{ source: 'org.dxos.agent.fact', id: fact.id }]
-
-ExtractionPass {                // org.dxos.type.agent.extractionPass 0.1.0; appended after the pass's facts
-  source?: Ref<Obj>;            // the document or chat read (absent for a web page)
-  url?: string;                 // the web page read
-  name?: string;                // the source's display name
-  recordedAt: string;           // when the agent extracted it
-  through?: string;             // a chat's last message read; the next read starts after it
-  extractor: { id: string; model: string; version: string };
-  facts: number;                // how many facts the pass appended
-}                               // its ECHO id is the `pass` of each of those facts
-
 Fact {                          // pipeline-rdf
   assertion: { subject, predicate, object, validFrom?, validTo?, quote? };  // subject/object: { kind: 'entity', entity, label? } | { kind: 'literal', literal }
   factuality: { value, polarity, confidence, nature? };     // FactBank: CT+/PR+/PS+/…
@@ -88,34 +67,26 @@ Fact {                          // pipeline-rdf
     agent?: string;             // the speaker's DXN
     span?: { start, end };      // where in the message text
   };
-  pass?: string;                // the ExtractionPass that recorded it
 }
 ```
-
-- **A pass counts once its marker is in the feed.** Readers (recall, the knowledge panel, the brain's
-  indexer) keep only facts whose `pass` names a marker present in the feed, so a pass interrupted
-  between its facts and its marker is ignored, and `readSource` resumes a chat from the last marker's
-  cursor and reads the interrupted messages again.
 
 - **Every fact records timestamp, speaker and source.** pipeline-rdf requires `source` and
   `generatedAtTime`; `readSource` sets `agent` (the speaker, as a pipeline-rdf entity id such as
   `dima`) whenever the fact's quote locates the utterance. Sources are DXN strings (or a URL) in RDF;
   the UI resolves them to ECHO refs to jump to the message. Later: the speaker's DXN once the sender
   is a resolved `Person`.
-- **Append-only, except forgetting.** A correction is a new fact that supersedes (`wasDerivedFrom`); a
-  retraction is a fact with negative polarity. The feed is an audit trail of what the agent believed
-  and when. Forgetting (`forgetFact`) is the one removal: it deletes the fact's entries, found by
-  their foreign key, so recall stops returning it; the brain's index drops it on its next rebuild.
+- **Append-only.** A correction is a new fact that supersedes (`wasDerivedFrom`); a retraction is a
+  fact with negative polarity. A fact's id is deterministic, so a source read twice stores each fact
+  once.
 - **Expiry is a query concern.** `validTo` bounds a status ("on the Discord bot this week"); expired
   facts are filtered at recall, never deleted.
 - **Predicates are open.** "commits", "owns", "is blocked by" — the RDF vocabulary grows freely.
   Anything that must behave reliably (triggers, rules) matches on `illocution.force` and
   `factuality.polarity`, which the extractor always fills, not on the predicate string.
-- **Recall** (v1, as built) reads every annotation feed in the space and filters in JS: by subject
-  (the entity's names as pipeline-rdf entity ids, matched against subject, object and speaker), by
-  text, and dropping facts past `validTo`; facts come back beside memories with their source and time.
-  Later: load the feeds in scope into pipeline-rdf's in-memory store and query with SPARQL; EDGE's FTS5
-  index over feed items serves text search. Scope follows the audience rule (same space / Discord
+- **Recall** (v1, as built) reads the brain of every agent in the space (`BrainService.query`) and
+  filters in JS: by subject (the entity's names as pipeline-rdf entity ids, matched against subject,
+  object and speaker), by text, and dropping facts past `validTo`; facts come back beside memories
+  with their source and time. Later: push the filters into the brain's query. Scope follows the audience rule (same space / Discord
   server by default).
 
 `Memory` (`org.dxos.type.agent.memory`) is retired once the feeds land: `recordMemory` writes facts,
@@ -224,8 +195,8 @@ home before they can be relied on. Promote them to objects once the shape settle
 - **The hook is the skill's `end-request` hook** (`Skill.Hook`), which the agent process
   (`agent-runtime/agent-process.ts`) already fires once a request completes — in the browser and on
   EDGE alike, with the conversation in the harness. Its operation, `runTriggers`, reads the chat's
-  messages since the last read into the chat's annotation feed (`readSource` keeps a `through` cursor
-  on each entry, so no fact is extracted twice), then fires the agent's triggers those facts match:
+  messages since the last read into the agent's brain (`readSource` resumes from the brain's read
+  cursor for the chat, so no fact is extracted twice), then fires the agent's triggers those facts match:
   the trigger is removed, the message is delivered with `sendMessage` (into the recipient's chat with
   the agent), and the goal is marked achieved. Triggers whose goal closed meanwhile are dropped.
 - Every turn is read, watch or not, since recall answers from those facts too; the time window keeps

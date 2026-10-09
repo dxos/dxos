@@ -5,16 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
-import * as FactEntry from '@dxos/plugin-agent/FactEntry';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
+import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
 
@@ -45,6 +47,7 @@ const meta: Meta<typeof ModuleContainer> = {
   // waits on its own setup rather than racing it.
   beforeEach: () => {
     storyDb = undefined;
+    storyInvoker = undefined;
     setupDone = deferred();
   },
   parameters: {
@@ -62,8 +65,6 @@ const TYPES = [
   Organization.Organization,
   HasSubject.HasSubject,
   Memory.Memory,
-  FactEntry.FactEntry,
-  FactEntry.ExtractionPass,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,
@@ -89,8 +90,7 @@ const LAYOUT = makeLayout();
 /**
  * Rich, Dima and Josiah each talk to the same agent (Kai) in their own chat; every prompt is
  * attributed to the panel's person, so the agent knows who is speaking. The agent reads a transcript
- * of an earlier CI-triage conversation on load (`readSource`), recording its facts in the transcript's
- * annotation feed. Live AI (DeepSeek V4 Pro through EDGE), so excluded from CI.
+ * of an earlier CI-triage conversation on load (`readSource`), pushing its facts to the agent's brain. Live AI (DeepSeek V4 Pro through EDGE), so excluded from CI.
  *
  * Each person opens by saying "hello".
  *
@@ -137,6 +137,8 @@ const refs: PlaygroundRefs = { chats: {} };
 
 // Captured from the setup hook so assertions read the objects the operations write.
 let storyDb: Database.Database | undefined;
+// Captured with the database: the facts are in the agent's brain, which only an operation reads.
+let storyInvoker: Capabilities.OperationInvoker | undefined;
 
 const deferred = () => {
   let resolve = () => {};
@@ -228,6 +230,7 @@ export const PlaygroundScripted: Story = {
     scripted: makePlaygroundScript(refs),
     onReady: async ({ db, invoker }) => {
       storyDb = db;
+      storyInvoker = invoker;
       await setupPlayground({ db, invoker, read: true, refs });
       setupDone.resolve();
     },
@@ -237,7 +240,7 @@ export const PlaygroundScripted: Story = {
     await setupDone.promise;
     const canvas = within(canvasElement);
 
-    // 1. The agent read the transcript into its annotation feed, with no conversation of its own.
+    // 1. The agent read the transcript into its brain, with no conversation of its own.
     await waitFor(
       () => expect(Number(canvas.getByTestId('agent-state-facts').textContent)).toBe(TRANSCRIPT_FACTS.length),
       { timeout: 60_000 },
@@ -245,14 +248,7 @@ export const PlaygroundScripted: Story = {
     await waitFor(() => expect(canvas.getByTestId('agent-state-people').textContent).toBe('3'));
     await waitFor(() => expect(canvas.getByTestId('agent-state-conversations').textContent).toBe('3'));
     await waitForSpace(
-      async (db) => {
-        const feeds = await db.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run();
-        if (feeds.length === 0) {
-          return [];
-        }
-        const entries = await db.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run();
-        return entries.map(({ fact }) => fact);
-      },
+      readFacts,
       // The rule is Dima's, so the fact is attributed to her line of the transcript.
       (facts) =>
         facts.some(
@@ -357,15 +353,22 @@ const readGoals = async (db: Database.Database) =>
     owners: owners.map(({ target }) => (Obj.instanceOf(Person.Person, target) ? target.preferredName : undefined)),
   }));
 
-/** The quotes of every fact the agent recorded. */
-const readQuotes = async (db: Database.Database) => {
-  const feeds = await db.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run();
-  if (feeds.length === 0) {
+/** Every fact in the agent's brain, read through the operation the Brain companion polls. */
+const readFacts = async (db: Database.Database) => {
+  const [agent] = await db.query(Filter.type(Agent.Agent)).run();
+  if (!agent || !storyInvoker) {
     return [];
   }
-  const entries = await db.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run();
-  return entries.map(({ fact }) => fact.assertion.quote);
+  const { data } = await storyInvoker.invokePromise(
+    TriggerOperation.InspectBrain,
+    { agent: Ref.make(agent) },
+    { spaceId: db.spaceId },
+  );
+  return data ? [...data.facts] : [];
 };
+
+/** The quotes of every fact the agent recorded. */
+const readQuotes = async (db: Database.Database) => (await readFacts(db)).map(({ assertion }) => assertion.quote);
 
 /** The text of every message the agent posted in Rich's chat; tool calls, which quote the watch's message, are left out. */
 const readRichReplies = async (db: Database.Database) => {
@@ -409,6 +412,7 @@ export const GoalsScripted: Story = {
     scripted: makePlaygroundScript(refs),
     onReady: async ({ db, invoker }) => {
       storyDb = db;
+      storyInvoker = invoker;
       await setupPlayground({ db, invoker, refs });
       setupDone.resolve();
     },

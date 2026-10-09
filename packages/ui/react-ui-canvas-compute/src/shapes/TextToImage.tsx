@@ -4,11 +4,9 @@
 
 import React from 'react';
 
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
-
-import { Box } from './common/index.ts';
+import { Box, type ComputeNodeViewProps } from './common/index.ts';
 import { type TextToImageShape } from './text-to-image-def.ts';
 
-export const TextToImageComponent = ({ shape }: ShapeComponentProps<TextToImageShape>) => {
+export const TextToImageComponent = ({ node: shape }: ComputeNodeViewProps<TextToImageShape>) => {
   return <Box shape={shape} />;
 };
