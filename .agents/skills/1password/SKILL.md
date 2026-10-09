@@ -12,11 +12,12 @@ description: >-
 # Credentials from 1Password
 
 **Check the shell first.** If the variable the command reads is already exported, use it and stop
-here; `op` is not needed. Test it in the shell, by name only, since a session's environment summary
-can miss variables the shell profile sets:
+here; `op` is not needed. Test that it is exported, since an unexported shell variable never reaches
+the command, and test in the shell itself, since a session's environment summary can miss variables
+the shell profile sets. Send the value to `/dev/null`:
 
 ```bash
-[ -n "${TYPESAFE_API_KEY:-}" ] && echo set || echo unset   # substitute the variable's name
+printenv TYPESAFE_API_KEY >/dev/null && echo exported || echo unset   # substitute the variable's name
 ```
 
 **Use `op` only when `OP_SERVICE_ACCOUNT_TOKEN` is set.** That token authenticates the CLI as a

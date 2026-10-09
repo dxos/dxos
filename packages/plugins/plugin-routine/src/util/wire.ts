@@ -9,12 +9,15 @@ import { Obj, Ref } from '@dxos/echo';
 
 import { runInstructionsRef } from './run-instructions.ts';
 
+const isEmptyRecord = (value: unknown): boolean =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0;
+
 /**
- * Strip a stale RunInstructions binding (`instructions` and its `input`) from a trigger input; an operation
- * validates its input strictly, so either key left behind fails every run.
+ * Strip RunInstructions' binding (`instructions` and its `input`) from a trigger input bound to an operation, which
+ * validates its input strictly. A bare `input: {}` is that binding too: earlier editors left it behind.
  */
-const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
-  if (!input || !('instructions' in input)) {
+const forOperation = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
+  if (!input || (!('instructions' in input) && !isEmptyRecord(input.input))) {
     return input;
   }
   const { instructions: _instructions, input: _input, ...rest } = input;
@@ -37,8 +40,7 @@ export const wireTriggers = (routine: Routine.Routine): void => {
     }
     Obj.update(trigger, (trigger) => {
       trigger.runnable = fn;
-      const base = withoutInstructions(trigger.input);
-      trigger.input = instructions ? { input: {}, ...base, instructions } : base;
+      trigger.input = instructions ? { input: {}, ...trigger.input, instructions } : forOperation(trigger.input);
     });
   }
 };

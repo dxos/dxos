@@ -231,7 +231,7 @@ Every PR is expected to carry a review of its own change. The author or agent ru
 only checks the committed store, so CI needs no API key and spends nothing.
 
 ```sh
-[ -n "${TYPESAFE_API_KEY:-}" ] && echo set || echo unset     # check the shell first
+printenv TYPESAFE_API_KEY >/dev/null && echo exported || echo unset   # check the environment first
 bun .agents/skills/agentic-review/scripts/fast.ts            # key already exported
 TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts  # only with OP_SERVICE_ACCOUNT_TOKEN set
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
