@@ -298,6 +298,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
   }
 
+  /** Resolves once the running query batch, if any, has finished; does not wait for one only scheduled. */
+  async 'whenQueriesIdle'(): Promise<void> {
+    await this._updateQueries.join();
+  }
+
   private '_createQuery'(
     ctx: Context,
     request: QueryService.QueryRequest,

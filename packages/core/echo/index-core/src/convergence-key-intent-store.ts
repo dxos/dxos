@@ -19,8 +19,8 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-inten
  * services a group of one as a no-op before vacating the key's rows.
  *
  * Not an index: the table holds merge-workflow state, not derived data. It lives in the index
- * database anyway because the coupling is transactional — an intent must commit atomically with
- * the index-cursor advance it guards (see `IndexEngine.#update`); if the cursor advanced and the
+ * database anyway because the coupling is transactional — an intent must commit no later than the
+ * index-cursor advance it guards (see `IndexEngine.#update`); if the cursor advanced and the
  * intent write lived in a different store, a crash between the two would lose the detection
  * forever, since that keyed write is never re-presented to the indexing loop.
  */
@@ -44,10 +44,10 @@ export class ConvergenceKeyIntentStore {
   );
 
   /**
-   * Durably queue convergence keys for duplicate detection. Runs inside the same transaction that
-   * commits the index rows and cursors (see `IndexEngine.#update`), so a keyed write can never
-   * be indexed-but-forgotten: until the merge pass services the key and clears the intent, every
-   * later pass re-presents it.
+   * Durably queue convergence keys for duplicate detection. Runs inside the transaction that
+   * commits the keyed objects' index rows, which commits no later than their cursor (see
+   * `IndexEngine.#update`), so a keyed write can never be indexed-but-forgotten: until the merge
+   * pass services the key and clears the intent, every later pass re-presents it.
    */
   record = Effect.fn('ConvergenceKeyIntentStore.record')(
     (intents: readonly { spaceId: SpaceId; convergenceKey: string }[]): Effect.Effect<void, SqlError.SqlError> =>

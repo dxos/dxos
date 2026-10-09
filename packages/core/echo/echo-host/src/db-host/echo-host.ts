@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { scheduleTask, sleep } from '@dxos/async';
+import { scheduleTask, sleep, yieldToEventLoop } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -29,7 +29,7 @@ import {
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { IndexEngine, type IndexingResult, type IndexTransactionLimits } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -107,6 +107,9 @@ export type EchoHostProps = {
   /** Overrides how live queries are debounced in proportion to their cost; see {@link QueryDebounceOptions}. */
   queryDebounce?: Partial<QueryDebounceOptions>;
 
+  /** Overrides the bounds on one index write transaction; see {@link IndexTransactionLimits}. */
+  indexTransactionLimits?: Partial<IndexTransactionLimits>;
+
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
@@ -180,6 +183,8 @@ export class EchoHost extends Resource {
 
   private _feedService: FeedService.Handlers;
 
+  readonly #indexTransactionLimits: Partial<IndexTransactionLimits> | undefined;
+
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
@@ -199,10 +204,12 @@ export class EchoHost extends Resource {
     runtime,
     queryExecutor,
     queryDebounce,
+    indexTransactionLimits,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
     super();
+    this.#indexTransactionLimits = indexTransactionLimits;
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
@@ -366,7 +373,10 @@ export class EchoHost extends Resource {
     // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
     // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
     this._sql = await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient);
-    this._indexEngine = new IndexEngine(this._sql);
+    this._indexEngine = new IndexEngine(this._sql, {
+      transactionLimits: this.#indexTransactionLimits,
+      yieldBetweenTransactions: () => this.#yieldToQueries(),
+    });
 
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
@@ -478,17 +488,19 @@ export class EchoHost extends Resource {
    * @returns Number of records indexed.
    */
   async updateSecondaryIndexes(): Promise<number> {
+    const ctx = this._ctx;
     const startedAt = performance.now();
     let records = 0;
     let batches = 0;
     let hint: InvalidationHint | undefined;
-    for (;;) {
-      if (this._ctx.disposed || !this.isOpen) {
-        break;
+    while (!ctx.disposed && this.isOpen) {
+      if (batches > 0) {
+        await this.#yieldToQueries();
+        if (ctx.disposed) {
+          break;
+        }
       }
-      const result = await this.indexEngine
-        .updateSecondaryIndexes(this._ctx)
-        .pipe(RuntimeProvider.runPromise(this._runtime));
+      const result = await this.indexEngine.updateSecondaryIndexes(ctx).pipe(RuntimeProvider.runPromise(this._runtime));
       records += result.updated;
       batches++;
       const batch = hintFromIndexingResult(result);
@@ -511,6 +523,16 @@ export class EchoHost extends Resource {
       log.warn('slow full-text catch-up', { durationMs, records, batches });
     }
     return records;
+  }
+
+  /**
+   * Runs between two index transactions. The SQLite connection's semaphore does not hand its permit
+   * to a waiting statement, so after yielding the indexer also waits out a running query batch
+   * instead of racing it to the next transaction.
+   */
+  async #yieldToQueries(): Promise<void> {
+    await yieldToEventLoop();
+    await this._queryService.whenQueriesIdle();
   }
 
   /**
@@ -1238,8 +1260,8 @@ export class EchoHost extends Resource {
 
         // Convergence-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
-        // The trigger is the durable intent log written in the same transaction as the index
-        // cursors: a crash or a faulted merge pass leaves the intents in place, and this pass —
+        // The trigger is the durable intent log, committed no later than the index cursors: a crash
+        // or a faulted merge pass leaves the intents in place, and this pass —
         // which also runs once at every startup — retries them, so no detected duplicate is ever
         // silently dropped. The merge's own writes land back here via `documentsSaved`, which
         // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.

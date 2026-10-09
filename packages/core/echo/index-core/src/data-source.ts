@@ -17,7 +17,8 @@ export interface DataSourceCursor {
   spaceId: SpaceId | null;
 
   /**
-   * documentId or queueNamespace.
+   * documentId or queueNamespace. A cursor naming a document covers exactly the batch objects
+   * carrying that `documentId`, and the engine advances it once the last of them is written.
    */
   resourceId: string | null;
 
