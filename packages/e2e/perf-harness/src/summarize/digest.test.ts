@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { digestRows, meanCosts, realmOf } from './digest.ts';
+import { digestRows, functionIdentity, meanCosts, realmOf, topFunctions } from './digest.ts';
 import { type FunctionCost } from './profile.ts';
 
 const cost = (key: string, selfMs: number): FunctionCost => ({
@@ -45,5 +45,36 @@ describe('profile digest', () => {
       1,
     );
     expect(rows.map(({ key }) => key)).toEqual(['moved']);
+  });
+
+  test('a capture and a scenario name one function alike across builds', ({ expect }) => {
+    expect(functionIdentity({ label: 'query index-abc123.js:10:4', source: 'packages/core/echo/src/query.ts' })).toBe(
+      'query@query.ts',
+    );
+    expect(functionIdentity({ label: 'query index-def456.js:88:2', source: 'packages/core/echo/src/query.ts' })).toBe(
+      'query@query.ts',
+    );
+    expect(functionIdentity({ label: 'tick worker.js:5:1' })).toBe('tick@worker.js');
+  });
+
+  test('the signature sums self time across stages and realms and skips native frames', ({ expect }) => {
+    const labelled = (label: string, selfMs: number): FunctionCost => ({ ...cost(label, selfMs), label });
+    const top = topFunctions(
+      [
+        {
+          stage: 'reload',
+          realm: 'page',
+          base: new Map(),
+          candidate: costs(labelled('render a.js:1:1', 30), labelled('(garbage collector)', 900)),
+        },
+        { stage: 'first-answer', realm: 'worker', base: new Map(), candidate: costs(labelled('render a.js:9:1', 40)) },
+        { stage: 'first-answer', realm: 'page', base: new Map(), candidate: costs(labelled('paint b.js:2:2', 50)) },
+      ],
+      2,
+    );
+    expect(top).toEqual([
+      { identity: 'render@a.js', selfMs: 70 },
+      { identity: 'paint@b.js', selfMs: 50 },
+    ]);
   });
 });
