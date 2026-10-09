@@ -68,8 +68,16 @@ export type Output = Schema.Schema.Type<typeof Output>;
 export const Credentials = Schema.Struct({ env: Schema.Record(Schema.String, Schema.String) });
 export type Credentials = Schema.Schema.Type<typeof Credentials>;
 
+/** EDGE refused the lent map (a malformed or reserved name, or an unprintable value); names the variables, never their values. */
+export class InvalidCredentials extends Schema.TaggedError<InvalidCredentials>('InvalidCredentials')(
+  'InvalidCredentials',
+  {
+    message: Schema.String,
+  },
+) {}
+
 export const Control = RpcGroup.make(
-  Rpc.make('provideCredentials', { payload: Credentials, success: Schema.Void }),
+  Rpc.make('provideCredentials', { payload: Credentials, success: Schema.Void, error: InvalidCredentials }),
   Rpc.make('respondPermission', {
     payload: Schema.Struct({ requestId: Schema.String, optionId: Schema.NullOr(Schema.String) }),
     success: Schema.Struct({ answered: Schema.Boolean }),
