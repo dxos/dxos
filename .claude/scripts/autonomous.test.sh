@@ -106,6 +106,8 @@ contains 'explicit task: no-questions rule injected' 'DO NOT ASK THE USER ANYTHI
 contains 'explicit task: user log seeded from transcript' 'keep the PR small, one package only' "$(cat "$user_log")"
 contains 'explicit task: start recorded in decision log' 'Run started' "$(cat "$decision_log")"
 check 'explicit task: state lives in the session directory' "$AUTONOMOUS_STATE_DIR/session-a" "$(bash "$script" dir)"
+check 'explicit task: the session directory is private' '700' "$(stat -c %a "$AUTONOMOUS_STATE_DIR/session-a" 2>/dev/null || stat -f %Lp "$AUTONOMOUS_STATE_DIR/session-a")"
+check 'explicit task: the user log is private' '600' "$(stat -c %a "$user_log" 2>/dev/null || stat -f %Lp "$user_log")"
 
 reset
 run "$(payload '/autonomous land it' "$transcript")" >/dev/null

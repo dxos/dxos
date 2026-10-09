@@ -52,6 +52,8 @@
 #   autonomous.sh point            -> stdin with `bash .claude/scripts/autonomous.sh` made absolute
 
 set -euo pipefail
+# The user log is a verbatim transcript, so nothing this script creates is readable by other users.
+umask 077
 
 script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/autonomous.sh"
 session="${AUTONOMOUS_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-}}"
@@ -119,6 +121,7 @@ require_session() {
     exit 3
   }
   mkdir -p "$state_dir" 2>/dev/null || { printf 'ERROR: could not create %s\n' "$state_dir" >&2; exit 1; }
+  chmod 700 "$state_dir" 2>/dev/null || { printf 'ERROR: could not restrict %s\n' "$state_dir" >&2; exit 1; }
 }
 
 # The injected text spells every command as `bash .claude/scripts/autonomous.sh`;

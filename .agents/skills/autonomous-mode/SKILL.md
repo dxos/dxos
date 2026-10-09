@@ -68,10 +68,10 @@ the answer already exists:
    grep -inE 'scope|small|minimal|separate|one PR|split|just |only |don.t bother' "$(bash .claude/scripts/autonomous.sh user path)"
    ```
 
-   The log is gitignored and never leaves the worktree, but it is a verbatim
-   copy of the conversation — never paste its contents into a commit message, a
-   PR body, or anywhere outbound, for the same reason `AGENTS.md` keeps
-   credentials out of chat in the first place.
+   The log lives in your session's private state directory, outside any
+   checkout, but it is a verbatim copy of the conversation — never paste its
+   contents into a commit message, a PR body, or anywhere outbound, for the same
+   reason `AGENTS.md` keeps credentials out of chat in the first place.
 
    Their stated _preferences_ count as much as their instructions: someone who
    said "keep PRs small" earlier has answered a scoping question you were about
