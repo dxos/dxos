@@ -6,11 +6,12 @@ import type * as Schema from 'effect/Schema';
 import React, { type JSX, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
+import { mx } from '@dxos/ui-theme';
 
 import { useComputeContext } from '../../hooks/compute-context.ts';
 import { Box, type BoxProps } from '../common/index.ts';
 import { type ComputeShape, getProperties } from '../defs.ts';
-import { bodyPadding, rowHeight } from './ports.ts';
+import { rowHeight } from './ports.ts';
 
 const expandedHeight = 200;
 
@@ -55,28 +56,26 @@ export const FunctionBody = ({
       onAction={handleAction}
       {...props}
     >
-      <div
-        className={`grid grid-cols-${columnCount} items-center`}
-        style={{ paddingTop: bodyPadding, paddingBottom: bodyPadding }}
-      >
+      {/* Each column's rows are centred in the body, as the ports beside them are (`createFunctionPorts`). */}
+      <div className={mx(`grid grid-cols-${columnCount}`, !open && 'grow')}>
         {(inputs?.length ?? 0) > 0 && (
-          <div className='flex flex-col'>
+          <div className='flex flex-col justify-center'>
             {inputs?.map(({ name }) => (
-              <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
-                {name}
+              <div key={name} className='flex items-center px-2 text-sm font-mono' style={{ height: rowHeight }}>
+                <span className='truncate'>{name}</span>
               </div>
             ))}
           </div>
         )}
         {(outputs?.length ?? 0) > 0 && (
-          <div className='flex flex-col'>
+          <div className='flex flex-col justify-center'>
             {outputs?.map(({ name }) => (
               <div
                 key={name}
-                className='px-2 truncate text-sm font-mono items-center text-right'
+                className='flex items-center justify-end px-2 text-sm font-mono'
                 style={{ height: rowHeight }}
               >
-                {name}
+                <span className='truncate'>{name}</span>
               </div>
             ))}
           </div>

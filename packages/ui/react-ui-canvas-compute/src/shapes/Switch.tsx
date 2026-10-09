@@ -21,16 +21,14 @@ export const SwitchComponent = ({ node: shape }: ComputeNodeViewProps<SwitchShap
   }, [value]);
 
   return (
-    // The node frame would otherwise take the press as select-and-drag and capture the pointer, so the
-    // switch never sees the click.
-    <div
-      className='flex w-full justify-center items-center'
-      onPointerDown={(ev) => ev.stopPropagation()}
-      onClick={(ev) => ev.stopPropagation()}
-    >
-      <Field.Root>
-        <Input.Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
-      </Field.Root>
+    <div className='flex w-full justify-center items-center'>
+      {/* Only the switch keeps the press from the node frame (which would take it as select-and-drag and capture
+          the pointer, so the switch never saw the click); the rest of the shape drags as any node does. */}
+      <div className='inline-flex' onPointerDown={(ev) => ev.stopPropagation()} onClick={(ev) => ev.stopPropagation()}>
+        <Field.Root>
+          <Input.Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
+        </Field.Root>
+      </div>
     </div>
   );
 };

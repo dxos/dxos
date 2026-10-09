@@ -14,21 +14,16 @@ import { footerHeight, headerHeight } from './box-defs.ts';
 // Kept out of `FunctionBody.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-/** Height of one property row; a function shape's ports are spaced by it. */
-export const rowHeight = 20;
-
-/** Vertical padding inside the function body; the height maths below depends on it. */
-export const bodyPadding = 8;
-
 /**
- * A function shape's height: the chrome plus a body grown to a whole number of grid cells. One row per
- * input is a floor on the body rather than its height, so the box lands on the grid whatever its schema
- * declares — the rows used to set it exactly, and `rowHeight` divides into no grid cell.
+ * Height of one property row, two minor grid cells: with the rows centred in a body that is a whole number of rows,
+ * every row's centre, and so every port, lands on a minor grid line.
  */
-export const getHeight = (input: Schema.Schema<any>, unit = DEFAULT_GRID) => {
+export const rowHeight = 2 * DEFAULT_GRID;
+
+/** A function shape's height: the chrome plus one row per input (at least one), each a whole number of rows. */
+export const getHeight = (input: Schema.Schema<any>) => {
   const properties = SchemaAST.getPropertySignatures(input.ast);
-  const minBody = bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
-  return headerHeight + footerHeight + Math.ceil(minBody / unit) * unit;
+  return headerHeight + footerHeight + Math.max(properties.length, 1) * rowHeight;
 };
 
 /** `n` points one row apart, centred on `center`. */
@@ -107,5 +102,6 @@ export const createFunctionPorts = (
   const outputs = SchemaAST.getPropertySignatures(output.ast).map(({ name }) =>
     createAnchorId('output', name.toString()),
   );
-  return createRowPorts({ size, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 + 1 } });
+  // The rows are centred in the body, between the header and the footer.
+  return createRowPorts({ size, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 } });
 };
