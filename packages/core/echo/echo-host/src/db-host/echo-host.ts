@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { scheduleTask, sleep, yieldToEventLoop } from '@dxos/async';
+import { scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -375,7 +375,7 @@ export class EchoHost extends Resource {
     this._sql = await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient);
     this._indexEngine = new IndexEngine(this._sql, {
       transactionLimits: this.#indexTransactionLimits,
-      yieldBetweenTransactions: () => this.#yieldToQueries(),
+      yieldBetweenTransactions: yieldBehindQueuedTasks,
     });
 
     log('echo-host: running index engine migration...');
@@ -495,7 +495,7 @@ export class EchoHost extends Resource {
     let hint: InvalidationHint | undefined;
     while (!ctx.disposed && this.isOpen) {
       if (batches > 0) {
-        await this.#yieldToQueries();
+        await yieldBehindQueuedTasks();
         if (ctx.disposed) {
           break;
         }
@@ -523,16 +523,6 @@ export class EchoHost extends Resource {
       log.warn('slow full-text catch-up', { durationMs, records, batches });
     }
     return records;
-  }
-
-  /**
-   * Runs between two index transactions. The SQLite connection's semaphore does not hand its permit
-   * to a waiting statement, so after yielding the indexer also waits out a running query batch
-   * instead of racing it to the next transaction.
-   */
-  async #yieldToQueries(): Promise<void> {
-    await yieldToEventLoop();
-    await this._queryService.whenQueriesIdle();
   }
 
   /**

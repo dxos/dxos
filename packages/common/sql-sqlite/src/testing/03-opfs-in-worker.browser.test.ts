@@ -26,6 +26,17 @@ describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequent
     }
   });
 
+  test('a statement queued behind a transaction runs before the same writer takes the connection again', async () => {
+    const worker = spawnInWorkerTestRunner();
+    try {
+      await waitForInWorkerTestRunner(worker);
+      const result = (await runInWorkerTestCase(worker, 'handoff')) as { steps: string[] };
+      expect(result.steps).toEqual(['first transaction', 'waiting statement', 'next transaction']);
+    } finally {
+      terminateInWorkerTestRunner(worker);
+    }
+  });
+
   test('exports database inside worker via SqliteClient.layerOpfs', async () => {
     const worker = spawnInWorkerTestRunner();
     try {

@@ -14,7 +14,6 @@ import { identity } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
-import * as Semaphore from 'effect/Semaphore';
 import * as Client from 'effect/sql/SqlClient';
 import * as SqlConnection from 'effect/sql/SqlConnection';
 import * as SqlError from 'effect/sql/SqlError';
@@ -26,6 +25,7 @@ import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
 
+import { FairLock } from './fair-lock.ts';
 import {
   DEFAULT_JOURNAL_MODE,
   DEFAULT_SYNCHRONOUS,
@@ -303,15 +303,15 @@ export const makeOpfs = (
       });
     });
 
-    const semaphore = yield* Semaphore.make(1);
+    const lock = new FairLock();
     const connection = yield* makeConnection;
 
-    const acquirer = semaphore.withPermits(1)(Effect.succeed(connection));
-    const transactionAcquirer = Effect.uninterruptibleMask((restore) =>
+    const acquirer = lock.withLock(Effect.succeed(connection));
+    const transactionAcquirer = Effect.uninterruptible(
       Effect.as(
         Effect.andThen(
-          restore(semaphore.take(1)),
-          Effect.tap(Effect.scope, (scope) => Scope.addFinalizer(scope, semaphore.release(1))),
+          lock.take,
+          Effect.tap(Effect.scope, (scope) => Scope.addFinalizer(scope, lock.release)),
         ),
         connection,
       ),
@@ -332,8 +332,8 @@ export const makeOpfs = (
         // Object.assign widens unique symbol TypeId; same pattern as @effect/sql-sqlite-wasm makeMemory.
         [WasmSqliteClient.TypeId]: WasmSqliteClient.TypeId as WasmSqliteClient.TypeId,
         config: options,
-        export: semaphore.withPermits(1)(connection.export),
-        import: (data: Uint8Array) => semaphore.withPermits(1)(connection.import(data)),
+        export: lock.withLock(connection.export),
+        import: (data: Uint8Array) => lock.withLock(connection.import(data)),
       },
       // SqlClient.updateValues is incompatible with SqliteClient's `never`; Object.assign cannot narrow it.
     ) as unknown as WasmSqliteClient.SqliteClient;

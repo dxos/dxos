@@ -4,7 +4,9 @@
 
 /// <reference lib="webworker" />
 
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -114,6 +116,28 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
           previousCount: existing.length,
           writtenBytes: rows[0]?.data?.byteLength ?? 0,
         };
+      }
+      case 'handoff': {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS in_worker_handoff (step TEXT NOT NULL)`;
+        yield* sql`DELETE FROM in_worker_handoff`;
+        const write = (step: string) => sql`INSERT INTO in_worker_handoff (step) VALUES (${step})`;
+        const inTransaction = yield* Deferred.make<void>();
+        // Forked outside the transaction, so the statement asks for the connection rather than joining it.
+        const waiting = yield* Effect.forkChild(
+          Deferred.await(inTransaction).pipe(Effect.andThen(write('waiting statement'))),
+        );
+        yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* write('first transaction');
+            yield* Deferred.succeed(inTransaction, undefined);
+            yield* Effect.sleep('20 millis');
+          }),
+        );
+        yield* sql.withTransaction(write('next transaction'));
+        yield* Fiber.join(waiting);
+        const rows = yield* sql<{ step: string }>`SELECT step FROM in_worker_handoff ORDER BY rowid`;
+        return { steps: rows.map((row) => row.step) };
       }
       default:
         return yield* Effect.fail(new SqliteTestError({ message: `Unknown in-worker test case: ${testCase}` }));

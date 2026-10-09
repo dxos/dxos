@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { type YieldStrategy, yieldOrContinue } from './yield.ts';
+import { type YieldStrategy, yieldBehindQueuedTasks, yieldOrContinue } from './yield.ts';
 
 describe('yieldOrContinue', () => {
   let now = 0;
@@ -61,3 +61,13 @@ const yielded = async (strategy: YieldStrategy): Promise<boolean> => {
   await yieldOrContinue(strategy);
   return ran;
 };
+
+describe('yieldBehindQueuedTasks', () => {
+  test('resolves after a task queued before it', async ({ expect }) => {
+    const order: string[] = [];
+    setTimeout(() => order.push('queued'), 0);
+    await yieldBehindQueuedTasks();
+    order.push('after');
+    expect(order).toEqual(['queued', 'after']);
+  });
+});
