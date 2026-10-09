@@ -6920,6 +6920,9 @@ importers:
 
   packages/devtools/cli:
     dependencies:
+      '@dxos/agent-code-mode':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-code-mode
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
