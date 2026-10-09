@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
+import { SnapshotCache } from './snapshot-cache.ts';
 import {
   getTargetSpacesForQuery,
   isSimpleSelectionQuery,
@@ -203,9 +204,11 @@ export class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
-  private _results?: SourceEntry<Obj.Any>[] = undefined;
+  private _results?: SourceEntry[] = undefined;
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
+  /** Snapshots handed out by a snapshot query, kept while their content is unchanged. */
+  private readonly _snapshots = new SnapshotCache();
 
   constructor(private readonly _database: DatabaseImpl) {
     const provider: WorkingSetDataProvider = {
@@ -278,7 +281,7 @@ export class SpaceQuerySource implements QuerySource {
     }
   };
 
-  async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry<Obj.Unknown>[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
     if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query) || queryHasWindowing(query)) {
       return [];
     }
@@ -289,7 +292,7 @@ export class SpaceQuerySource implements QuerySource {
     await this._preloadQueryIds(query);
 
     const items = this._executeWithWorkingSet(query);
-    return items === null ? [] : this._mapItemsToResults(items);
+    return items === null ? [] : this._mapItemsToResults(query, items);
   }
 
   /**
@@ -322,7 +325,7 @@ export class SpaceQuerySource implements QuerySource {
     return false;
   }
 
-  getResults(): SourceEntry<Obj.Unknown>[] {
+  getResults(): SourceEntry[] {
     if (!this._query) {
       return [];
     }
@@ -334,9 +337,11 @@ export class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  private _computeResults(query: QueryAST.Query): SourceEntry<Obj.Unknown>[] {
+  private _computeResults(query: QueryAST.Query): SourceEntry[] {
     const items = this._executeWithWorkingSet(query);
-    return items === null ? [] : this._mapItemsToResults(items);
+    const results = items === null ? [] : this._mapItemsToResults(query, items);
+    this._snapshots.retain(new Set(results.map((entry) => entry.id)));
+    return results;
   }
 
   update(query: QueryAST.Query): void {
@@ -348,6 +353,7 @@ export class SpaceQuerySource implements QuerySource {
     void this._ctx.dispose().catch(() => {});
     this._ctx = new Context();
     this._query = query;
+    this._snapshots.clear();
 
     this._database._updateEvent.on(this._ctx, this._onUpdate);
 
@@ -373,7 +379,7 @@ export class SpaceQuerySource implements QuerySource {
    * Maps working-set executor results, computing per-group counts once over the full set
    * (rather than per-item) so grouped queries report accurate counts.
    */
-  private _mapItemsToResults(items: WorkingSetItem[]): SourceEntry<Obj.Unknown>[] {
+  private _mapItemsToResults(query: QueryAST.Query, items: WorkingSetItem[]): SourceEntry[] {
     const groupCounts = new Map<string, number>();
     for (const item of items) {
       if (item.groupKey === undefined) {
@@ -382,14 +388,16 @@ export class SpaceQuerySource implements QuerySource {
       const serialized = GroupBy.serializeGroupKey(item.groupKey);
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
-    return items.map((item) => this._mapItemToResult(item, groupCounts));
+    const snapshot = QueryAST.isSnapshotQuery(query);
+    return items.map((item) => this._mapItemToResult(item, snapshot, groupCounts));
   }
 
-  private _mapItemToResult(item: WorkingSetItem, groupCounts?: Map<string, number>): SourceEntry<Obj.Unknown> {
+  private _mapItemToResult(item: WorkingSetItem, snapshot: boolean, groupCounts?: Map<string, number>): SourceEntry {
     const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
+    const entity = this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true });
     return {
       id: item.objectId,
-      result: this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true }),
+      result: snapshot && entity ? this._snapshots.fromLive(entity) : entity,
       match: { rank: 1 },
       resolution: {
         source: 'local',

@@ -26,7 +26,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -4326,6 +4326,157 @@ describe('Query', () => {
       Obj.update(plain, (plain) => Annotation.set(plain, StatusAnnotation, 'done'));
       await db.flush({ indexes: true, updates: true });
       await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
+  describe('Snapshot queries', () => {
+    /** A database reopened from storage, so the tab holds none of these objects' documents. */
+    const openReloaded = async (
+      populate: (db: EchoDatabase) => Entity.Any[],
+    ): Promise<{ db: DatabaseImpl; ids: string[] }> => {
+      const reloadBuilder = new EchoTestBuilder();
+      onTestFinished(async () => {
+        await reloadBuilder.close();
+      });
+      const { peer, db: initialDb } = await reloadBuilder.createDatabase();
+      const ids = populate(initialDb).map((object) => object.id);
+      await initialDb.flush({ secondaryIndexes: true });
+      await peer.reload();
+      const db = await peer.openLastDatabase();
+      invariant(db instanceof DatabaseImpl);
+      return { db, ids };
+    };
+
+    const isLoaded = (db: DatabaseImpl, id: string) => db.getObjectCoreById(id, { load: false }) !== undefined;
+
+    test('returns frozen snapshots without loading any document', async () => {
+      const { db, ids } = await openReloaded((db) => [
+        db.add(createTestObject({ value: 1 })),
+        db.add(createTestObject({ value: 2 })),
+      ]);
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).snapshot())
+        .run();
+
+      expect(results.map((snapshot) => snapshot.id).sort()).toEqual([...ids].sort());
+      expect(results.map((snapshot) => snapshot.value).sort()).toEqual([1, 2]);
+      for (const snapshot of results) {
+        expect(Obj.isSnapshot(snapshot)).toBe(true);
+        expect(Object.isFrozen(snapshot)).toBe(true);
+        expect(Obj.getDatabase(snapshot)).toBe(db);
+        expect(isLoaded(db, snapshot.id)).toBe(false);
+      }
+    });
+
+    test('a full-text snapshot query ships object JSON too', async () => {
+      const { db, ids } = await openReloaded((db) => [
+        db.add(Obj.make(TestSchema.Expando, { title: 'snapshot search target' })),
+      ]);
+
+      const results = await db
+        .query(Query.select(Filter.text('snapshot search target', { type: 'full-text' })).snapshot())
+        .run();
+
+      expect(results.map((snapshot) => snapshot.id)).toEqual(ids);
+      expect(results[0].title).toBe('snapshot search target');
+      expect(isLoaded(db, ids[0])).toBe(false);
+    });
+
+    test('a query the host evaluates in memory ships object JSON too', async () => {
+      // A foreign-key filter reads `@meta`, which the SQL compiler declines.
+      const { db, ids } = await openReloaded((db) => {
+        const object = Obj.make(TestSchema.Expando, { value: 1 });
+        Obj.update(object, (object) => Obj.getMeta(object).keys.push({ id: 'snapshot-id', source: 'snapshot-source' }));
+        return [db.add(object)];
+      });
+
+      const results = await db
+        .query(
+          Query.select(
+            Filter.foreignKeys(TestSchema.Expando, [{ id: 'snapshot-id', source: 'snapshot-source' }]),
+          ).snapshot(),
+        )
+        .run();
+
+      expect(results.map((snapshot) => snapshot.id)).toEqual(ids);
+      expect(Obj.isSnapshot(results[0])).toBe(true);
+      expect(Obj.getMeta(results[0]).keys).toEqual([{ id: 'snapshot-id', source: 'snapshot-source' }]);
+      expect(isLoaded(db, ids[0])).toBe(false);
+    });
+
+    test('an object over the size limit is loaded instead, without holding back the rest', async () => {
+      const { db, ids } = await openReloaded((db) => [
+        db.add(createTestObject({ value: 1 })),
+        db.add(Obj.make(TestSchema.Expando, { value: 2, body: 'x'.repeat(70 * 1024) })),
+      ]);
+      const [small, large] = ids;
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).snapshot())
+        .run();
+
+      expect(results.map((snapshot) => snapshot.id).sort()).toEqual([...ids].sort());
+      expect(results.every((snapshot) => Obj.isSnapshot(snapshot))).toBe(true);
+      expect(isLoaded(db, small)).toBe(false);
+      expect(isLoaded(db, large)).toBe(true);
+    });
+
+    test('an object the tab holds is returned as it is now, ahead of the index', async () => {
+      const { db } = await builder.createDatabase();
+      const object = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+
+      const [snapshot] = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).snapshot())
+        .run();
+      expect(Obj.isSnapshot(snapshot)).toBe(true);
+      expect(snapshot.value).toBe(2);
+    });
+
+    test('a local delete drops the object before the index catches up', async () => {
+      const { db } = await builder.createDatabase();
+      const kept = db.add(createTestObject({ value: 1 }));
+      const removed = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      db.remove(removed);
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).snapshot())
+        .run();
+      expect(results.map((snapshot) => snapshot.id)).toEqual([kept.id]);
+      expect(Obj.isSnapshot(results[0])).toBe(true);
+    });
+
+    test('a subscription re-emits a new snapshot for an edit and keeps unchanged ones', async () => {
+      const { db } = await builder.createDatabase();
+      const edited = db.add(createTestObject({ value: 1 }));
+      const untouched = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const query = db.query(
+        Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).snapshot(),
+      );
+      onTestFinished(query.subscribe());
+      await waitForCondition({ condition: () => query.results.length === 2 });
+      const before = new Map(query.results.map((snapshot) => [snapshot.id, snapshot]));
+
+      Obj.update(edited, (edited) => {
+        edited.value = 10;
+      });
+      await db.flush();
+      await waitForCondition({
+        condition: () => query.results.find((snapshot) => snapshot.id === edited.id)?.value === 10,
+      });
+
+      const after = new Map(query.results.map((snapshot) => [snapshot.id, snapshot]));
+      expect(after.get(edited.id)).not.toBe(before.get(edited.id));
+      expect(after.get(untouched.id)).toBe(before.get(untouched.id));
     });
   });
 

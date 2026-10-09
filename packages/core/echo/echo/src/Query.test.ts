@@ -648,6 +648,30 @@ describe('query api', () => {
       expect(pretty).toContain('"timer-probe"');
     });
 
+    test('Query.snapshot types results as read-only snapshots and survives later clauses', () => {
+      const query = Query.select(Filter.type(TestSchema.Person))
+        .options({ deleted: 'exclude' })
+        .snapshot()
+        .orderBy(Order.natural())
+        .limit(10);
+      expectTypeOf<Query.Type<typeof query>>().toEqualTypeOf<
+        Obj.Snapshot<Type.InstanceType<typeof TestSchema.Person>>
+      >();
+      expect(QueryAST.isSnapshotQuery(query.ast)).toBe(true);
+      expect(Query.pretty(query)).toContain('deleted');
+      expect(QueryAST.isSnapshotQuery(Query.select(Filter.type(TestSchema.Person)).ast)).toBe(false);
+    });
+
+    test('a subquery marked snapshot does not make the outer query a snapshot query', () => {
+      const inner = Query.select(Filter.type(TestSchema.Person)).snapshot();
+      const outer: QueryAST.Query = {
+        type: 'from',
+        query: Query.select(Filter.type(TestSchema.Person)).ast,
+        from: { _tag: 'query', query: inner.ast },
+      };
+      expect(QueryAST.isSnapshotQuery(outer)).toBe(false);
+    });
+
     test('Query.pretty returns human-readable query string', () => {
       const query = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
       const pretty = Query.pretty(query);

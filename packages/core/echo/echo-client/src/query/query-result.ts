@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Entity, Query, QueryAST, type QueryResult } from '@dxos/echo';
 import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -35,35 +36,39 @@ const _queryIncludesDeleted = (query: QueryAST.Query): boolean => {
 };
 
 /** A query's results in their public shape. */
-type PresentedResults<T extends Entity.Unknown> = {
+type PresentedResults<T extends Entity.Unknown | Entity.Snapshot> = {
   kind: 'entities' | 'groups' | 'records';
   objects: T[];
-  entries: QueryResult.EntityEntry<T>[];
+  entries: QueryResult.Entry<T>[];
 };
 
 /**
  * Predicate based query.
  */
-export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements QueryResult.QueryResult<T> {
+export class QueryResultImpl<
+  T extends Entity.Unknown | Entity.Snapshot = Entity.Unknown,
+> implements QueryResult.QueryResult<T> {
   private readonly _event = new Event<QueryResult.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
   /** Grouping key under which this query's metrics are recorded. */
   private readonly _metricsKey: string;
 
   private _isActive = false;
-  private _resultCache?: QueryResult.EntityEntry<T>[] = undefined;
+  private _resultCache?: QueryResult.Entry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
   private _atom: Atom.Atom<T[]> | undefined = undefined;
   /** When the reactive query started, until it first holds every source's answer. */
   private _startedAt?: number = undefined;
+  private readonly _snapshot: boolean;
 
   constructor(
-    private readonly _queryContext: QueryContext<T>,
+    private readonly _queryContext: QueryContext<AnyProperties, T>,
     private readonly _query: Query.Query<T>,
   ) {
     // Assigned before the context subscription below, whose recompute records under it.
     this._metricsKey = Query.pretty(this._query);
+    this._snapshot = QueryAST.isSnapshotQuery(this._query.ast);
     queryMetrics.created(this._metricsKey);
 
     this._queryContext.changed.on(() => {
@@ -89,7 +94,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._query;
   }
 
-  get entries(): QueryResult.EntityEntry<T>[] {
+  get entries(): QueryResult.Entry<T>[] {
     this._checkQueryIsRunning();
     this._ensureCachePresent();
     return this._resultCache!;
@@ -113,7 +118,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Execute the query once and return the entries with match metadata.
    * Does not subscribe to updates.
    */
-  async runEntries(opts?: { timeout?: number }): Promise<QueryResult.EntityEntry<T>[]> {
+  async runEntries(opts?: { timeout?: number }): Promise<QueryResult.Entry<T>[]> {
     return (await this._runOnce(opts)).entries;
   }
 
@@ -146,7 +151,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * WARNING: This method will only return the data already cached and may return incomplete results.
    * Use `this.runEntries()` for a complete list of entries stored on-disk.
    */
-  runSyncEntries(): QueryResult.EntityEntry<T>[] {
+  runSyncEntries(): QueryResult.Entry<T>[] {
     this._ensureCachePresent();
     return this._resultCache!;
   }
@@ -266,7 +271,10 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
             this._resultCache.some((entry, index) => entry.id !== presented.entries[index].id)
           : !this._objectCache ||
             this._objectCache.length !== presented.objects.length ||
-            this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
+            // A snapshot is replaced, not mutated, when its object changes, so an edit is a new reference.
+            this._objectCache.some((obj, index) =>
+              this._snapshot ? obj !== presented.objects[index] : obj.id !== presented.objects[index].id,
+            );
 
     log('recomputeResult', { changed });
 
@@ -300,7 +308,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       return {
         kind: 'groups',
         objects: _asResultRows<T>(groups),
-        entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
+        entries: groupEntries as unknown as QueryResult.Entry<T>[],
       };
     }
 

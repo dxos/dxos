@@ -8,8 +8,14 @@ import * as EffectContext from 'effect/Context';
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
-import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
+import { QueryAST } from '@dxos/echo-protocol';
+import {
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  makeDecodedEntityLive,
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,6 +34,7 @@ import {
   getTargetSpacesForQuery,
   queryTargetsSpacesOrFeeds,
 } from '../query/index.ts';
+import { SnapshotCache } from '../query/snapshot-cache.ts';
 
 const HYDRATE_RECORDS_PER_YIELD_CHECK = 64;
 
@@ -157,6 +164,9 @@ export class IndexQuerySource implements QuerySource {
   /** Subscription to local object-load updates (plumbed from `DatabaseImpl`). */
   private _updateSubscription?: CleanupFn = undefined;
 
+  /** Snapshots handed out by a snapshot query, kept while their content is unchanged. */
+  private readonly _snapshots = new SnapshotCache();
+
   constructor(private readonly _params: IndexQuerySourceProps) {}
 
   open(): void {
@@ -170,6 +180,7 @@ export class IndexQuerySource implements QuerySource {
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
+    this._snapshots.clear();
     this._reactiveQueryId = undefined;
     this._updateSubscription?.();
     this._updateSubscription = undefined;
@@ -215,6 +226,7 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
+    this._snapshots.clear();
     this._reactiveQueryId = undefined;
     // Drop any in-flight hydration pass so it doesn't apply results for the previous query.
     void this._hydrationCtx?.dispose().catch(() => {});
@@ -437,6 +449,7 @@ export class IndexQuerySource implements QuerySource {
         }
 
         this._results = results;
+        this._snapshots.retain(new Set(results.map((entry) => entry.id)));
         this._answered = true;
         this.changed.emit();
       } while (this._hydratePending);
@@ -580,6 +593,31 @@ export class IndexQuerySource implements QuerySource {
       };
     }
 
+    const entity = this._isSnapshotQuery()
+      ? await this._resolveSnapshot(ctx, result, hydratedIntoFeedHandle)
+      : await this._resolveLiveEntity(ctx, result, hydratedIntoFeedHandle);
+    if (!entity) {
+      return null;
+    }
+    return {
+      id: result.id,
+      result: entity,
+      match: { rank: result.rank },
+      resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+      group: _groupFromRemoteResult(result),
+    };
+  }
+
+  /**
+   * Resolves one host record to a live entity, or null if it fails to load or validate. Ids hydrated
+   * through a feed handle are added to `hydratedIntoFeedHandle` so the caller can release their
+   * retained `documentJson`.
+   */
+  private async _resolveLiveEntity(
+    ctx: Context,
+    result: QueryService.QueryResult,
+    hydratedIntoFeedHandle?: Set<string>,
+  ): Promise<Entity.Unknown | null> {
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
       spaceId: result.spaceId,
@@ -621,17 +659,7 @@ export class IndexQuerySource implements QuerySource {
       // A record whose JSON we already released on an earlier pass: the feed handle holds the live
       // object under the same id, so re-resolving from its identity map is the whole re-hydration.
       if (documentJsonReleased) {
-        const cached = feedHandle?.getCachedObjectById(EntityId.make(result.id));
-        if (!cached) {
-          return null;
-        }
-        return {
-          id: result.id,
-          result: cached,
-          match: { rank: result.rank },
-          resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-          group: _groupFromRemoteResult(result),
-        };
+        return feedHandle?.getCachedObjectById(EntityId.make(result.id)) ?? null;
       }
 
       invariant(result.documentJson !== undefined);
@@ -662,14 +690,7 @@ export class IndexQuerySource implements QuerySource {
       if (feedHandle) {
         hydratedIntoFeedHandle?.add(result.id);
       }
-      const queryResult: SourceEntry = {
-        id: result.id,
-        result: object,
-        match: { rank: result.rank },
-        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-        group: _groupFromRemoteResult(result),
-      };
-      return queryResult;
+      return object;
     }
 
     const object = await this._resolveIndexedObject(result);
@@ -687,19 +708,79 @@ export class IndexQuerySource implements QuerySource {
     if (!this._matchesDeletedOption(object)) {
       return null;
     }
-
-    const queryResult: SourceEntry = {
-      id: object.id,
-      result: object,
-      match: { rank: result.rank },
-      resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-      group: _groupFromRemoteResult(result),
-    };
-    return queryResult;
+    return object;
   }
 
-  /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
-  private _matchesDeletedOption(object: Entity.Unknown): boolean {
+  private _isSnapshotQuery(): boolean {
+    return this._query !== undefined && QueryAST.isSnapshotQuery(this._query);
+  }
+
+  /**
+   * Resolves one host record to a snapshot without waiting on a document. An entity the tab already
+   * holds is snapshotted as it is now, so local writes show before the index has them; feed items,
+   * relations and records without JSON take the live path.
+   */
+  private async _resolveSnapshot(
+    ctx: Context,
+    result: QueryService.QueryResult,
+    hydratedIntoFeedHandle?: Set<string>,
+  ): Promise<Entity.Snapshot | null> {
+    if (!result.queueId) {
+      const loaded = this._peekLoaded(result);
+      if (loaded) {
+        return this._matchesDeletedOption(loaded) ? (this._snapshots.fromLive(loaded) ?? null) : null;
+      }
+      const json = result.documentJson;
+      if (json !== undefined) {
+        const snapshot = await this._snapshots.fromJSON(result.id, json, () => this._decodeSnapshot(result, json));
+        if (snapshot !== undefined) {
+          return ctx.disposed || !this._matchesDeletedOption(snapshot) ? null : snapshot;
+        }
+      }
+    }
+
+    const entity = await this._resolveLiveEntity(ctx, result, hydratedIntoFeedHandle);
+    return entity ? (this._snapshots.fromLive(entity) ?? null) : null;
+  }
+
+  /** The tab's live entity for a record if its document is already loaded; never starts a load. */
+  private _peekLoaded(result: QueryService.QueryResult): Entity.Unknown | undefined {
+    const database = this._params.graph.getDatabase(SpaceId.make(result.spaceId));
+    if (!(database instanceof DatabaseImpl) || !database.getObjectCoreById(result.id, { load: false })) {
+      return undefined;
+    }
+    return database.getObjectById(result.id, { deleted: true });
+  }
+
+  /**
+   * Decodes index JSON into a frozen snapshot, or undefined for a relation or a record that fails to
+   * decode. `@parent` is dropped because resolving it loads the parent's document.
+   */
+  private async _decodeSnapshot(result: QueryService.QueryResult, json: string): Promise<Entity.Snapshot | undefined> {
+    const { [ATTR_PARENT]: _parent, ...data } = JSON.parse(json);
+    if (data[ATTR_RELATION_SOURCE] !== undefined || data[ATTR_RELATION_TARGET] !== undefined) {
+      return undefined;
+    }
+    const spaceId = SpaceId.make(result.spaceId);
+    try {
+      const object = await Obj.fromJSON(data, {
+        refResolver: this._params.graph.createRefResolver({ context: { space: spaceId } }),
+        uri: EID.make({ spaceId, entityId: EntityId.make(result.id) }),
+        database: this._params.graph.getDatabase(spaceId),
+      });
+      return Obj.getSnapshot(object);
+    } catch (err) {
+      const typeDxn = typeof data[ATTR_TYPE] === 'string' ? data[ATTR_TYPE] : '<unknown>';
+      if (!emittedSchemaValidationWarnings.has(typeDxn)) {
+        emittedSchemaValidationWarnings.add(typeDxn);
+        log.warn('object failed schema validation', { type: typeDxn, error: err });
+      }
+      return undefined;
+    }
+  }
+
+  /** Whether an entity's deleted flag satisfies the query's `deleted` option. */
+  private _matchesDeletedOption(object: Entity.Unknown | Entity.Snapshot): boolean {
     const deleted = Entity.isDeleted(object);
     switch (this._query === undefined ? 'exclude' : getQueryDeletedOption(this._query)) {
       case 'exclude':

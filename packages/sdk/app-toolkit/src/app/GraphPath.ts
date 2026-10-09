@@ -128,10 +128,10 @@ export const getObjectPath = (spaceId: string, typename: string, objectId: strin
   getDatabasePath(spaceId, typename, objectId);
 
 /**
- * Derive the canonical graph path for a reactive ECHO object.
+ * Derive the canonical graph path for an ECHO object or its snapshot.
  * Throws if the object has no database or type URI.
  */
-export const getObjectPathFromObject = (object: Obj.Unknown): string => {
+export const getObjectPathFromObject = (object: Obj.Unknown | Obj.Snapshot): string => {
   const db = Obj.getDatabase(object);
   const typeUri = Obj.getTypeURI(object);
   invariant(db, 'Cannot derive graph path: object has no database.');

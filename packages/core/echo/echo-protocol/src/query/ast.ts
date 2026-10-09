@@ -661,9 +661,33 @@ export const QueryOptions = Schema.Struct({
    * Diagnostics-only label for logs / tooling (not used by execution semantics).
    */
   debugLabel: Schema.optional(Schema.String),
+
+  /**
+   * Return read-only snapshots built from the index instead of live objects, so no result waits on
+   * its document loading.
+   */
+  snapshot: Schema.optional(Schema.Boolean),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
+
+/**
+ * Whether the query returns snapshots (see {@link QueryOptions.snapshot}). Only the outer clause
+ * chain is read: a subquery's options do not decide what the outer query returns.
+ */
+export const isSnapshotQuery = (query: Query): boolean => {
+  switch (query.type) {
+    case 'options':
+      return query.options.snapshot === true || isSnapshotQuery(query.query);
+    case 'order':
+    case 'limit':
+    case 'skip':
+    case 'from':
+      return isSnapshotQuery(query.query);
+    default:
+      return false;
+  }
+};
 
 /**
  * Selects from a space (automerge documents).

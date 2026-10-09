@@ -3,9 +3,9 @@
 //
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -35,6 +35,36 @@ describe('useQuery', () => {
       expect(result.current).toHaveLength(1);
     });
     expect(result.current[0].name).toBe('Alice');
+  });
+
+  test('returns snapshots for a snapshot query and re-renders when one is edited', async () => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    const db = await peer.createDatabase();
+
+    const person = db.add(
+      Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'alice@example.com', tasks: [] }),
+    );
+    await db.flush();
+
+    const query = Query.select(Filter.type(TestSchema.Person)).snapshot();
+    const { result } = renderHook(() => useQuery(db, query));
+    expectTypeOf(result.current).toEqualTypeOf<Obj.Snapshot<Type.InstanceType<typeof TestSchema.Person>>[]>();
+
+    await waitFor(() => {
+      expect(result.current).toHaveLength(1);
+    });
+    const [first] = result.current;
+    expect(Obj.isSnapshot(first)).toBe(true);
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(first.name).toBe('Alice');
+
+    Obj.update(person, (person) => {
+      person.name = 'Bob';
+    });
+    await waitFor(() => {
+      expect(result.current[0].name).toBe('Bob');
+    });
+    expect(result.current[0]).not.toBe(first);
   });
 
   test('returns grouped results for an aggregate query', async () => {

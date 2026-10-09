@@ -24,14 +24,19 @@ export type EntryGroup = {
 };
 
 /**
- * A query-source result entry augmented with internal group membership.
+ * A query-source result entry augmented with internal group membership. A snapshot query's entries
+ * carry snapshots rather than live entities.
  */
-export type SourceEntry<O extends Entity.Unknown = Entity.Unknown> = QueryResult.EntityEntry<O> & {
-  group?: EntryGroup;
-  record?: Readonly<Record<string, unknown>>;
-};
+export type SourceEntry<O extends Entity.Unknown | Entity.Snapshot = Entity.Unknown | Entity.Snapshot> =
+  QueryResult.Entry<O> & {
+    group?: EntryGroup;
+    record?: Readonly<Record<string, unknown>>;
+  };
 
-export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
+export interface QueryContext<
+  T extends AnyProperties = AnyProperties,
+  O extends Entity.Entity<T> | Entity.Snapshot = Entity.Entity<T> | Entity.Snapshot,
+> {
   getResults(): SourceEntry<O>[];
 
   /**
