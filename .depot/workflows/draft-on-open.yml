@@ -1,9 +1,9 @@
 name: Draft on open
 
-# Converts a PR opened ready into a draft, so CI starts only once someone marks it ready. Runs on open
-# only, so marking a PR ready afterwards is never undone. Leaves alone forks (read-only token),
-# release and dependency bots, and PRs opened with the `ci` label; Check's gate skips its `opened` run
-# for exactly the PRs this converts.
+# Converts an agent's PR opened ready into a draft, so CI starts only once someone marks it ready. Runs
+# on open only, so marking a PR ready afterwards is never undone. Agent PRs are same-repo branches under
+# `claude/` or `dm/`, without the `ci` label; the workflows' `if:` gates skip their `opened` run for
+# exactly these PRs, so a new prefix goes in every copy (`git grep -n "'dm/'" .depot/workflows`).
 
 on:
   pull_request:
@@ -18,8 +18,7 @@ jobs:
       !github.event.pull_request.draft &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       !contains(github.event.pull_request.labels.*.name, 'ci') &&
-      !startsWith(github.head_ref, 'changeset-release/') && !startsWith(github.head_ref, 'bot/') &&
-      !startsWith(github.head_ref, 'dependabot/')
+      (startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))
     runs-on: depot-ubuntu-latest
     timeout-minutes: 5
     # GitHub's draft mutation refuses a token without `contents: write`.

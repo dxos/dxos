@@ -37,8 +37,8 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
 8. **Open the PR as a draft** with `gh pr create --draft`. CI skips draft PRs,
-   so iterate on the draft freely; a PR opened ready is converted to a draft
-   anyway (`draft-on-open.yml`). Add the `preview` label if the change is
+   so iterate on the draft freely; a PR opened ready from a `claude/` or `dm/`
+   branch is converted to a draft anyway (`draft-on-open.yml`). Add the `preview` label if the change is
    visible in Composer and a reviewer should try it; only labeled PRs get a
    preview deploy. Title uses `scope: description`. Write the
    description with the `pr-description` skill: pick every template that
