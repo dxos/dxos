@@ -49,6 +49,8 @@ flags the ones marked †, but only after the fact — get them right first time
 9. **Forms** — composed `Form.*` from an Effect Schema; not native `<input>` / `<textarea>` / `<select>`.
    → [Forms](#forms)
 10. **Toolbars** — menu actions with `attendableId`; not a chain of bare buttons. → [Toolbar](#toolbar--menu-wiring)
+11. **Stories** — `Default` is the resting state with no `play`; interaction tests go on a separate named
+    story. † → [Storybook](#storybook)
 
 Imports are per-primitive subpaths: `import * as ScrollArea from '@dxos/react-ui/ScrollArea'`, likewise
 `/Panel`, `/Layout`, `/Listbox`, `/Editable`, `/Toolbar`.
@@ -544,9 +546,11 @@ Two things break silently if omitted:
   resolve. Without it, triggers show the raw key (`foo.add.label`) instead of the translated text — which
   looks like a bug in a screenshot but isn't.
 
-For a container with **complex data behavior** (loading, mutation, multi-step interaction), add a Storybook
-`play` function that drives and asserts the interaction — a basic static story isn't enough to catch
-regressions in behaviour. Keep the basic story too; `play` is the second step, not a replacement.
+**The `Default` story never has a `play` function.** It is the resting state the user opens to review the
+component, and a `play` would mutate it before they see it. For a container with **complex data
+behavior** (loading, mutation, multi-step interaction), add a separate named story (e.g. `export const
+AddItem`) whose `play` drives and asserts the interaction — a static story alone won't catch regressions
+in behaviour. `@dxos/eslint-plugin-rules/no-play-on-default-story` enforces the first half.
 
 Capability hooks (`useCapability`, `useAppGraph`, `useOperationInvoker`) throw in storybook (no
 PluginManager). Keep those in `containers/` and take resolved values as props in `components/` so the
@@ -630,6 +634,6 @@ link `.../<branch>/<path>` — that 404s the moment the file goes.
 - Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.
 - ECHO object passed into a component → wrap with `useObject` at the container boundary.
 - Icons as `ph--<icon>--<weight>`.
-- Every major component/container has a basic `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`; add a `play` function for complex data behaviour.
+- Every major component/container has a basic `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`; `Default` has no `play` — interaction tests go on their own named story.
 - Rendered output changed → before/after screenshots in the PR description, both from one build, with the measurements beside them.
 - Authoring a new `Foo.Root`/`Foo.Content` primitive → [[composite-components]]; plugin wiring/surfaces → [[composer-plugins]].

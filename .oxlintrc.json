@@ -60,6 +60,41 @@
     "@dxos/eslint-plugin-rules/no-dead-tailwind-logical": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/operation-key-shape": "error",
+    "@dxos/eslint-plugin-rules/no-play-on-default-story": [
+      "warn",
+      {
+        "allow": [
+          "packages/common/storybook-utils/src/stories/test/Test.stories.tsx",
+          "packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.stories.tsx",
+          "packages/plugins/plugin-canvas/src/containers/CanvasArticle/CanvasArticle.stories.tsx",
+          "packages/plugins/plugin-code/src/containers/ProjectFolder/ProjectFolder.stories.tsx",
+          "packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.stories.tsx",
+          "packages/plugins/plugin-github/src/stories/PullRequestArticle.stories.tsx",
+          "packages/plugins/plugin-github/src/stories/PullRequestOverview.stories.tsx",
+          "packages/plugins/plugin-github/src/stories/PullRequestsArticle.stories.tsx",
+          "packages/plugins/plugin-github/src/stories/Walkthrough.stories.tsx",
+          "packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.stories.tsx",
+          "packages/plugins/plugin-mobile/src/components/MobileLayout/MobileAppBar.stories.tsx",
+          "packages/plugins/plugin-mobile/src/components/MobileLayout/MobileNavBar.stories.tsx",
+          "packages/plugins/plugin-mobile/src/containers/MobileLayout/MobileDeckLayout.stories.tsx",
+          "packages/plugins/plugin-navtree/src/components/NavTree/NavTree.stories.tsx",
+          "packages/plugins/plugin-projects/src/components/CreateProjectPanel/CreateProjectPanel.stories.tsx",
+          "packages/plugins/plugin-projects/src/components/MoveTaskPanel/MoveTaskPanel.stories.tsx",
+          "packages/plugins/plugin-review/src/components/Suggestions/SuggestionSources.stories.tsx",
+          "packages/plugins/plugin-space/src/components/CardMasonry/CardMasonry.stories.tsx",
+          "packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.stories.tsx",
+          "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArticle.stories.tsx",
+          "packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.stories.tsx",
+          "packages/sdk/react-client/src/testing/withClientProvider.stories.tsx",
+          "packages/stories/stories-inbox/src/stories/MailboxArticle.stories.tsx",
+          "packages/stories/stories-inbox/src/stories/MessageArticle.stories.tsx",
+          "packages/stories/stories-projects/src/stories/ProjectTaskDetail.stories.tsx",
+          "packages/ui/react-ui-experimental/src/components/Ghost/Ghost.stories.tsx",
+          "packages/ui/react-ui-feed/src/stories/mount.stories.tsx",
+          "packages/ui/react-ui-table/src/components/Table/Relations.stories.tsx"
+        ]
+      }
+    ],
     "@dxos/eslint-plugin-rules/prefer-scroll-area": [
       "warn",
       {

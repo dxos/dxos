@@ -362,8 +362,11 @@ rule story-for-new-ui-component: A new container or component ships with a Story
   instead of the container under review, or wires up dependencies the
   component itself never uses. Do not flag a component with no meaningful
   visual state to snapshot (a pure logic hook, a non-visual utility), or an
-  existing component that is merely modified, not newly added. Fix: add the
-  story at the correct component level with a resting-state screenshot.
+  existing component that is merely modified, not newly added. Also flag a
+  `Default` story that has a `play` function: `Default` is the resting state
+  the user reviews, so interaction tests belong on a separate named story. Fix:
+  add the story at the correct component level with a resting-state
+  screenshot.
   Source: 5 review comments across 4 PRs, e.g. https://github.com/dxos/dxos/pull/10719#discussion_r2923831311.
   scope: repo
   files:
