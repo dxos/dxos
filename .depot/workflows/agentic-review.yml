@@ -10,8 +10,11 @@ name: Agentic Review
 # Draft PRs skip this unless labeled `ci`, and so does an agent's PR opened ready, which
 # `draft-on-open.yml` converts: the same gate as `Check`.
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  # Disabled until the review flow is reworked.
+  # pull_request:
+  #   types: [opened, synchronize, reopened, ready_for_review]
+
+  workflow_dispatch:
 
 permissions:
   contents: read
