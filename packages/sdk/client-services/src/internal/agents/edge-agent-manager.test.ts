@@ -62,6 +62,28 @@ describe('EdgeAgentManager', () => {
     expect(guest.admitted).toEqual([]);
     await manager.close();
   });
+
+  test('does not report the agent of an identity replaced during its admission as active', async ({ expect }) => {
+    const guest = new TestOwner();
+    const host = new TestOwner();
+    let active = guest;
+    guest.duringAdmission = () => {
+      active = host;
+    };
+    const edge = new TestEdge();
+    const manager = new EdgeAgentManager(AGENTS_ENABLED, edge, new TestSpaces(), () => active);
+    await manager.open(new Context());
+
+    const agentKey = PublicKey.random();
+    const creating = manager.createAgent(new Context());
+    await edge.requested.wait();
+    edge.created.wake({ deviceKey: agentKey.toHex(), feedKey: PublicKey.random().toHex() });
+    await creating;
+
+    expect(guest.admitted).toEqual([agentKey]);
+    expect(manager.agentStatus).not.toEqual(EdgeAgentStatus.ACTIVE);
+    await manager.close();
+  });
 });
 
 /** An identity that records the devices it admits instead of writing credentials. */
@@ -73,8 +95,10 @@ class TestOwner implements AgentOwner {
   readonly authorizedDeviceKeys: AgentOwner['authorizedDeviceKeys'] = new ComplexMap(PublicKey.hash);
   readonly stateUpdate = new Event();
   readonly admitted: PublicKey[] = [];
+  duringAdmission?: () => void;
 
   readonly admitDevice: AgentOwner['admitDevice'] = async (request) => {
+    this.duringAdmission?.();
     this.admitted.push(requirePublicKey(request.deviceKey));
     return create(CredentialSchema, {});
   };

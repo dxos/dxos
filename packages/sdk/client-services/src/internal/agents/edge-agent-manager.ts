@@ -108,7 +108,7 @@ export class EdgeAgentManager extends Resource {
 
     if (await identity.authorizedDeviceKeys.has(deviceKey)) {
       log.info('agent was already added to HALO, ignoring response', { response });
-      this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
+      this._updateStatus(identity, EdgeAgentStatus.ACTIVE, deviceKey);
       return;
     }
 
@@ -123,7 +123,7 @@ export class EdgeAgentManager extends Resource {
 
     log('agent created', response);
 
-    this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
+    this._updateStatus(identity, EdgeAgentStatus.ACTIVE, deviceKey);
   }
 
   protected override async _open(): Promise<void> {
@@ -172,14 +172,10 @@ export class EdgeAgentManager extends Resource {
       const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
         ownerIdentityDid: identity.did,
       });
-      // A replaced identity's status would stand in for its successor's, which then never asks.
-      if (!this.#isActive(identity)) {
-        return;
-      }
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {
         const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
-        this._updateStatus(agent.status, deviceKey);
+        this._updateStatus(identity, agent.status, deviceKey);
       }
     } catch (err) {
       if (err instanceof EdgeCallFailedError) {
@@ -234,7 +230,11 @@ export class EdgeAgentManager extends Resource {
     }
   }
 
-  private _updateStatus(status: EdgeAgentStatus, deviceKey: PublicKey | undefined): void {
+  private _updateStatus(identity: AgentOwner, status: EdgeAgentStatus, deviceKey: PublicKey | undefined): void {
+    // A replaced identity's status would stand in for its successor's, which then never asks.
+    if (!this.#isActive(identity)) {
+      return;
+    }
     this._agentStatus = status;
     this._agentDeviceKey = deviceKey;
     this.agentStatusChanged.emit(status);
