@@ -149,8 +149,11 @@ type DivergedResyncEntry = {
  */
 const DIVERGED_REPORT_DELAY = 10_000;
 
-/** Diverged documents named in one collection query; the rest ride the next poll. */
-const MAX_DIVERGED_PER_QUERY = 32;
+/**
+ * Diverged documents named in one collection query; the rest ride the next poll. Exported so EDGE's
+ * suite can tell whether the installed client reports diverged documents at all.
+ */
+export const MAX_DIVERGED_PER_QUERY = 32;
 
 /**
  * Consecutive non-converging collection-sync passes before warning, at a ~10s poll — ~1min, so
