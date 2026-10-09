@@ -445,6 +445,12 @@ feat F-9: Pull Request Review
   req F-9.11:
     when: the reader checks a file off, in the tree or with the toolbar's Reviewed action
     then: the file counts as reviewed in that browser until a push changes it, and the toolbar action moves on to the next file
+
+  req F-9.12:
+    when: the user types a pull request URL or `owner/repo#123` into the search dialog (Cmd+K)
+    then: an "Import owner/repo#123 from GitHub" row appears above the results without a request to
+      GitHub, and choosing it files the pull request in the active space through ImportPullRequest and
+      opens it in the deck
 ```
 
 ## Acceptance
@@ -710,6 +716,48 @@ test QA-3: Open a pull request from the browser extension
       do: Right-click the pull request in the navtree and choose Delete.
       invoke: |
         org.dxos.operation.space.removeObjects { objects: [{ "/": "echo://$given.space.id/$imported.id" }], target: $given.space.db }
+      expect: the pull request no longer appears in the space
+```
+
+```mdl
+test QA-4: Import a pull request from the search dialog
+  desc: |
+    Cmd+K offers to import a pull request the moment its URL is pasted, then imports and opens it.
+    Uses a public pull request so no GitHub connection is needed — the import falls back to an
+    anonymous read.
+  actors: user
+  covers: [F-9.12, F-9.1]
+  status: unverified
+  automated:
+    - plugin-github:search-query-action.test.ts#matchPullRequestQuery › labels a pull request URL with its coordinates
+    - plugin-search:SearchDialog.stories.tsx#QueryAction
+  given:
+    - an identity exists
+    - space: a space is open
+    - the GitHub plugin is enabled (Plugins › Labs; it is off by default)
+    - no PullRequest with owner "dxos", repo "dxos", number 1 exists — ABORT rather than
+      deleting one this test did not create
+  steps:
+    - name: Open the search dialog
+      do: Press Cmd+K (Ctrl+K elsewhere).
+      expect: the search dialog opens with its input focused
+    - name: Paste the pull request URL
+      do: Paste https://github.com/dxos/dxos/pull/1 into the search input.
+      expect: an "Import dxos/dxos#1 from GitHub" row appears above the results
+      note: |
+        The row is built from the URL alone; no GitHub request is made until it is chosen.
+    - name: Import and open it
+      do: Choose "Import dxos/dxos#1 from GitHub".
+      invoke: |
+        org.dxos.operation.github.importPullRequest { reference: "https://github.com/dxos/dxos/pull/1" }
+      capture: imported
+      expect: the dialog closes and the pull request "chore: release 1.0.0" opens in the deck
+      assert: return !!$imported.pullRequest
+  after:
+    - name: Delete the imported pull request
+      do: Right-click the pull request in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects { refs: [$imported.pullRequest], target: $given.space.db }
       expect: the pull request no longer appears in the space
 ```
 

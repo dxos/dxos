@@ -51,6 +51,7 @@ export const translations = [
           'Pull request not found — connect GitHub to import one from a private repository',
         'import-pull-request-inaccessible.title':
           'Pull request not found, or not accessible with your GitHub connection',
+        'import-pull-request-query.label': 'Import {{reference}} from GitHub',
         'import-pull-request-no-space.title': 'Open a space to import a pull request into',
         'open-pull-request.label': 'Open pull request',
         'github-token-rejected.title': 'GitHub rejected your connection — reconnect GitHub and try again',

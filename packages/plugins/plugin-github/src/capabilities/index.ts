@@ -3,6 +3,7 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
@@ -13,6 +14,8 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as SearchCapabilities from '@dxos/plugin-search/SearchCapabilities';
+import * as SearchEvents from '@dxos/plugin-search/SearchEvents';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -43,6 +46,17 @@ export const LinkResolver = Capability.lazyModule(
     environments: ['browser', 'tauri'],
   },
   () => import('./link-resolver.ts'),
+);
+// Browser-only: the search dialog it answers renders nowhere else.
+export const SearchQueryAction = Capability.lazyModule(
+  'SearchQueryAction',
+  {
+    requires: [Capabilities.OperationInvoker],
+    provides: [SearchCapabilities.QueryAction],
+    activatesOn: SearchEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./search-query-action.ts'),
 );
 // Narrower than the `appGraphBuilder` family default: the action opens a dialog, which means
 // nothing without an app shell.

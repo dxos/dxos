@@ -11696,6 +11696,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
