@@ -31,12 +31,15 @@ dependency.
 ## Runtime: what happens before ready
 
 ```bash
-pnpm perf compare --base main --metric 'wall > boot'
-pnpm perf summarize --stage boot
+pnpm perf compare --base main --metric 'wall > boot' --http2 --until boot
+DX_PWA=false moon run composer-app:e2e-startup
 node packages/apps/composer-app/scripts/memory/boot-census.mjs http://localhost:4173 out/composer --settle 150
 ```
 
+The perf flow cannot profile `boot`, since nothing exists to attach to before the page does, so
+`summarize` has no boot rows. The startup harness owns boot attribution: its reports name the
+slowest module activations, and each run appends a row to `.perf/startup-benchmarks.md`.
 `boot-census.mjs` attributes what loaded at boot to packages. The local preview serves HTTP/1.1,
 where hundreds of lazy chunks queue behind six connections; production is HTTP/2. Treat a boot
-timing dominated by request queueing as a serving artifact until it shows on HTTP/2
-(`HTTPS=true` with `key.pem` and `cert.pem` at the repo root makes `vite preview` serve HTTP/2).
+timing dominated by request queueing as a serving artifact until it shows under `--http2` too.
+`--until boot` skips the stages after boot, though the projects fixture still gets built.

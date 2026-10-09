@@ -57,6 +57,12 @@ export type Comparability = {
    * a flag that adds one must not split the `instruments` series the timings are trended on.
    */
   counters?: string;
+  /** Served over HTTP/2, as production's CDN serves; absent means HTTP/1.1. */
+  http2?: boolean;
+  /** Built with the PWA service worker, which precaches the bundle mid-run. */
+  serviceWorker?: boolean;
+  /** The page's CPU slowed by this factor; absent means unthrottled. */
+  cpuThrottle?: number;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */

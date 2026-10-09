@@ -5,6 +5,7 @@
 import { type Browser, chromium } from '@playwright/test';
 
 import { Cdp, browserEndpoint } from './cdp.ts';
+import { PERF_HTTP2 } from './conditions.ts';
 
 /**
  * Fixed rather than ephemeral, matching `scripts/memory/measure.mjs`: the port is also how that
@@ -44,6 +45,8 @@ export const launchInstrumentedBrowser = async (): Promise<InstrumentedBrowser> 
       // sums per realm. A no-op where the kernel exposes no PMU (a VM without a perf driver), and
       // the rows say so with `instructionThreads: 0` rather than a misleading zero.
       '--enable-thread-instruction-count',
+      // The HTTP/2 preview serves a self-signed certificate.
+      ...(PERF_HTTP2 ? ['--ignore-certificate-errors'] : []),
       // V8 flags for an experiment (`DX_PERF_JS_FLAGS='--max-semi-space-size=1'`); a run with them is
       // not comparable to one without.
       ...(process.env.DX_PERF_JS_FLAGS ? [`--js-flags=${process.env.DX_PERF_JS_FLAGS}`] : []),
