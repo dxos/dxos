@@ -12,6 +12,7 @@ import React, { type ComponentType, type FC } from 'react';
 
 import {
   type CreateProps,
+  DEFAULT_CELL,
   type Node,
   type NodeDef,
   type NodeViewProps,
@@ -39,10 +40,13 @@ export type ComputeNodeSpec<S extends ComputeShape> = Pick<
   component: FC<ComputeNodeViewProps<S>>;
   /** The shape's factory; the engine's id, centre, size and z are applied over what it makes. */
   create: (props: Pick<ComputeShape, 'id' | 'center'>) => S;
-  /** Defaults to the size the factory gives a new shape. */
+  /** In scene px, as the shapes were designed; defaults to the size the factory gives a new shape. */
   defaultSize?: Size;
   ports: (shape: S) => readonly Port[];
 };
+
+/** A size in scene px as nominal units, so a new node lands at that px size on a drawing with the default grid. */
+const toNominal = ({ width, height }: Size): Size => ({ width: width / DEFAULT_CELL, height: height / DEFAULT_CELL });
 
 /** A compute shape's node definition. */
 export const defineComputeNode = <S extends ComputeShape>({
@@ -59,7 +63,8 @@ export const defineComputeNode = <S extends ComputeShape>({
     schema,
     component: computeNodeView(isShape, component),
     create: ({ id, z, center, size }: CreateProps): Node => ({ ...create({ id, center }), z, size }),
-    defaultSize: defaultSize ?? create({ id: 'default', center: { x: 0, y: 0 } }).size,
+    // The engine sizes a new node in nominal units (major grid cells), so the px size is stated in cells.
+    defaultSize: toNominal(defaultSize ?? create({ id: 'default', center: { x: 0, y: 0 } }).size),
     ports: (node) => (isShape(node) ? ports(node) : []),
   };
 };
