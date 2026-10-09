@@ -252,6 +252,17 @@ export const usePointerMachine = ({
     [registry, atoms.selection, select],
   );
 
+  /** Makes a node's embedded content live (`SceneViewAtoms.active`), when it has any. */
+  const activate = useCallback(
+    (id: NodeId) => {
+      // Escaped: a host's node id may hold characters a selector would misread.
+      if (rootRef.current?.querySelector(`[data-node-id="${CSS.escape(id)}"] [${SCENE_OVERLAY_ATTRIBUTE}]`)) {
+        registry.set(atoms.active, id);
+      }
+    },
+    [rootRef, registry, atoms.active],
+  );
+
   const onNodePointerDown = useCallback(
     (node: Node, event: PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
@@ -272,19 +283,26 @@ export const usePointerMachine = ({
       // A press on the content of the active node (its own toolbar or editor) starts no move: the drag's pointer
       // capture would take the click from that content's controls. Inactive, the content is inert and the node moves.
       const embedded = event.target instanceof Element && event.target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`);
-      if (capabilities.move && !node.locked && !(embedded && registry.get(atoms.active) === node.id)) {
+      if (embedded && registry.get(atoms.active) === node.id) {
+        return;
+      }
+      if (capabilities.move && !node.locked) {
         const { x, y } = nodeBounds(node);
         const ids = [...next].filter((id) => scene.nodes[id] !== undefined);
         startDrag(
           { kind: 'move', ids, origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 }, copy: event.metaKey },
           event,
         );
+      } else if (next.size === 1) {
+        // A node that cannot move has no drag to end in a click, so the press itself activates it.
+        activate(node.id);
       }
     },
     [
       registry,
       atoms.tool,
       atoms.active,
+      activate,
       clickSelect,
       capabilities.move,
       capabilities.link,
@@ -746,13 +764,9 @@ export const usePointerMachine = ({
         }
         case 'move': {
           if (current.delta.x === 0 && current.delta.y === 0) {
-            // A click on a node with embedded content makes that content live (`SceneViewAtoms.active`).
-            const [id] = current.ids;
-            if (
-              current.ids.length === 1 &&
-              rootRef.current?.querySelector(`[data-node-id="${id}"] [${SCENE_OVERLAY_ATTRIBUTE}]`)
-            ) {
-              registry.set(atoms.active, id);
+            // A click (a press that never moved) on a node with embedded content makes that content live.
+            if (current.ids.length === 1) {
+              activate(current.ids[0]);
             }
             break;
           }
@@ -877,8 +891,7 @@ export const usePointerMachine = ({
       minor,
       cell,
       snapMinor,
-      rootRef,
-      atoms.active,
+      activate,
     ],
   );
 

@@ -4,7 +4,7 @@
 
 import { existsSync, readFileSync } from 'fs';
 import { cp, rm } from 'fs/promises';
-import { join, resolve } from 'path';
+import { isAbsolute, join, relative, resolve } from 'path';
 import type { Plugin } from 'vite';
 
 export type IconAssets = {
@@ -65,8 +65,12 @@ export const iconAssetsPlugin = ({ route, dir, copy = true }: IconAssets): Plugi
       }
       const dest = join(outDir, route.replace(/^\//, ''));
       if (!copy) {
-        // A kept outDir would otherwise still ship the catalog an earlier build copied.
-        await rm(dest, { recursive: true, force: true });
+        // A kept outDir would otherwise still ship the catalog an earlier build copied. Only a directory strictly
+        // inside the output is removed: a root route (`/`) or an escaping one names the output itself or beyond it.
+        const within = relative(outDir, dest);
+        if (within !== '' && !within.startsWith('..') && !isAbsolute(within)) {
+          await rm(dest, { recursive: true, force: true });
+        }
         return;
       }
       if (!existsSync(dir)) {
