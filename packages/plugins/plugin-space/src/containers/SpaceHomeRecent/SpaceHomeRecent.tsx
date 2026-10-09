@@ -32,9 +32,9 @@ type SpaceScopedProps = {
 };
 
 /**
- * Recent-objects region for the Home article. Queries the most-recently-modified objects of
- * registered, non-hidden, non-relation, non-collection types and renders them as a Masonry of
- * tiles. Renders nothing (no heading) when the space has no recent objects — the starter-prompt
+ * Recent-objects region for the Home article. Queries snapshots of the most-recently-modified
+ * objects of registered, non-hidden, non-relation, non-collection types, so tiles render from the
+ * index without waiting on each object's document, and renders them as a Masonry of tiles. Renders nothing (no heading) when the space has no recent objects — the starter-prompt
  * contributor (plugin-assistant) fills the empty state instead.
  */
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
@@ -55,7 +55,8 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
     () =>
       Query.select(filter ?? Filter.everything())
         .orderBy(Order.updated('desc'))
-        .limit(RECENT_LIMIT),
+        .limit(RECENT_LIMIT)
+        .snapshot(),
     [filter],
   );
 
@@ -76,7 +77,7 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   );
 };
 
-const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
+const RecentObjectTile = ({ data }: { data: Obj.Snapshot; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);

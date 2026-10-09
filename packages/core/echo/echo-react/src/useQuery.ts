@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Database, type Entity, Filter, Query } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Obj, Query } from '@dxos/echo';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -13,6 +13,8 @@ const noop = () => {};
 interface UseQueryFn {
   <R extends Query.RecordResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
   <R extends Query.RecordResult>(resource: Database.Queryable | undefined, filter: Filter.Filter<R>): R[];
+
+  <S extends Obj.Snapshot>(resource: Database.Queryable | undefined, query: Query.Query<S>): S[];
 
   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
     resource: Database.Queryable | undefined,

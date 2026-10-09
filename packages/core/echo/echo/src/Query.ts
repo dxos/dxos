@@ -343,6 +343,15 @@ export interface Query<T> {
    * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   debugLabel(label: string): Query<T>;
+
+  /**
+   * Return read-only snapshots built from the index instead of live objects. No result waits on its
+   * document loading; an object whose document the tab already holds is returned as a snapshot of
+   * its current state. Results re-emit when the index sees a change.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
+   */
+  snapshot<S extends Obj.Unknown>(this: Query<S>): Query<Obj.Snapshot<S>>;
 }
 
 export type Any = Query<any>;
@@ -629,17 +638,26 @@ class QueryClass implements Any {
   }
 
   debugLabel(label: string): Any {
+    return this.#withOptions({ debugLabel: label });
+  }
+
+  snapshot(): Any {
+    return this.#withOptions({ snapshot: true });
+  }
+
+  /** Merges into an outermost `options` clause rather than nesting a second one. */
+  #withOptions(options: QueryAST.QueryOptions): Any {
     if (this.ast.type === 'options') {
       return new QueryClass({
         type: 'options',
         query: this.ast.query,
-        options: { ...this.ast.options, debugLabel: label },
+        options: { ...this.ast.options, ...options },
       });
     }
     return new QueryClass({
       type: 'options',
       query: this.ast,
-      options: { debugLabel: label },
+      options,
     });
   }
 }

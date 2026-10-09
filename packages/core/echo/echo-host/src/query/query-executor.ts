@@ -17,7 +17,13 @@ import {
   QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  objectStructureToJson,
+} from '@dxos/echo/internal';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import {
   type EntityMeta,
@@ -43,7 +49,7 @@ import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
-import { type CompiledRow } from './sql/index.ts';
+import { type CompiledRow, SNAPSHOT_JSON_LIMIT } from './sql/index.ts';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -651,6 +657,8 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
+  /** The query returns snapshots, so every row ships its JSON and a content change is a result change. */
+  readonly #snapshot: boolean;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -681,6 +689,7 @@ export class QueryExecutor extends Resource {
     this._id = options.queryId;
     this._query = options.query;
     this._reactivity = options.reactivity;
+    this.#snapshot = QueryAST.isSnapshotQuery(this._query);
 
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
@@ -747,7 +756,14 @@ export class QueryExecutor extends Resource {
 
         rank: item.rank,
 
-        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
+        documentJson:
+          this.#snapshot && item.doc
+            ? _snapshotJson(item.objectId, item.doc)
+            : item.doc
+              ? JSON.stringify(item.doc)
+              : item.data
+                ? JSON.stringify(item.data)
+                : undefined,
 
         groupKey: serializedGroupKey,
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
@@ -812,7 +828,8 @@ export class QueryExecutor extends Resource {
     this._trace = trace;
 
     const changed =
-      previous.length !== workingSet.length || previous.some((item, index) => !_sameResult(workingSet[index], item));
+      previous.length !== workingSet.length ||
+      previous.some((item, index) => !_sameResult(workingSet[index], item, this.#snapshot));
 
     // Disabled because concurrent queries don't print hierarchies correctly.
     // ExecutionTrace.putOnPerformanceTimeline(trace);
@@ -2587,7 +2604,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
  * `SqlStep` item already carries its shipped form, so comparing that is comparing the record; an
  * item the steps built is compared on the fields `getResults` derives the record from.
  */
-const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
+const _sameResult = (a: QueryItem, b: QueryItem, snapshot: boolean): boolean => {
   if (a.result !== undefined || b.result !== undefined) {
     return (
       a.result?.id === b.result?.id &&
@@ -2613,6 +2630,14 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     // (e.g. the last item of group A becomes the first item of group B at the same index).
     _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
     // A collapsed group ships only its size and aggregates, so those are what can change.
-    _serializeCollapsed(a) === _serializeCollapsed(b)
+    _serializeCollapsed(a) === _serializeCollapsed(b) &&
+    // A snapshot query ships each document's body, so an edit changes the record without moving it.
+    (!snapshot || a.doc === b.doc || JSON.stringify(a.doc) === JSON.stringify(b.doc))
   );
+};
+
+/** A loaded document's object as snapshot JSON, or nothing over {@link SNAPSHOT_JSON_LIMIT}. */
+const _snapshotJson = (objectId: EntityId, doc: EntityStructure): string | undefined => {
+  const json = JSON.stringify(objectStructureToJson(objectId, doc));
+  return json.length <= SNAPSHOT_JSON_LIMIT ? json : undefined;
 };

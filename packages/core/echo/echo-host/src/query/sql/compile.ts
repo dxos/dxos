@@ -62,7 +62,10 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** JSON text of the body; present for feed rows only, since the client re-loads documents. */
+  /**
+   * JSON text of the body: for feed rows always, for document rows only in a snapshot query (the
+   * client otherwise loads the document) and only within {@link SNAPSHOT_JSON_LIMIT}.
+   */
   documentJson: string | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
@@ -141,7 +144,7 @@ export class SqlPlanCompiler {
     if (options.strongDependencyFilter !== false) {
       root = this.#compileStrongDependencyFilter(root);
     }
-    const final = this.#final(root);
+    const final = this.#final(root, options.snapshot === true);
     const withClause = sql.join(', ', false)(this.#ctes);
     const statement = sql<CompiledRow>`WITH RECURSIVE ${withClause} ${final}`;
     const [text, params] = statement.compile();
@@ -1123,8 +1126,11 @@ export class SqlPlanCompiler {
   // Final projection.
   //
 
-  #final(ws: Relation): Fragment {
+  #final(ws: Relation, snapshot: boolean): Fragment {
     const sql = this.#sql;
+    const documentJson = snapshot
+      ? sql`CASE WHEN m.queueId != '' OR length(d.snapshot) <= ${SNAPSHOT_JSON_LIMIT} THEN json(d.snapshot) END`
+      : sql`CASE WHEN m.queueId != '' THEN json(d.snapshot) END`;
     const aggregates =
       ws.grouped?.collapsed && ws.grouped.aggregateNames.length > 0
         ? sql`json_object(${sql.join(', ', false)(ws.grouped.aggregateNames.map((name) => sql`${name}, w.${sql.literal(aggregateColumn(name))}`))})`
@@ -1136,7 +1142,7 @@ export class SqlPlanCompiler {
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt,
-      CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
+      ${documentJson} AS documentJson,
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ORDER BY w.ord`;
@@ -1149,7 +1155,16 @@ export type CompileOptions = {
    * executor mirrors the client-side gate so dependency-broken objects never reach it.
    */
   strongDependencyFilter?: boolean;
+
+  /** Ship every row's indexed JSON, for a query that returns snapshots (`QueryOptions.snapshot`). */
+  snapshot?: boolean;
 };
+
+/**
+ * Largest document snapshot, in characters of stored JSON, that a snapshot query ships; a larger
+ * object goes without, and the client loads its document instead.
+ */
+export const SNAPSHOT_JSON_LIMIT = 64 * 1024;
 
 /**
  * Compiles a plan, first resolving every `metaVersion` filter to the literal versions present
