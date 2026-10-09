@@ -4,11 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { type PanelMode } from '../../model/atoms.ts';
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
@@ -37,6 +39,7 @@ type StoryArgs = {
   liveDepth: number;
   readonly?: boolean;
   fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes';
+  panels?: PanelMode;
 };
 
 type EditorProps = {
@@ -45,13 +48,15 @@ type EditorProps = {
   liveDepth: number;
   readonly?: boolean;
   lattice?: boolean;
+  panels?: PanelMode;
 };
 
-const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
+const Editor = ({ store, root, liveDepth, readonly, lattice, panels }: EditorProps) => (
   <SceneView.Root
     store={store}
     root={root}
     readonly={readonly}
+    panels={panels}
     createProjection={lattice ? createLatticeProjection : undefined}
   >
     <SceneView.Canvas liveDepth={liveDepth} />
@@ -61,6 +66,7 @@ const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
     <SceneView.Palette />
     <SceneView.Properties />
     <SceneView.Layers />
+    <SceneView.About />
   </SceneView.Root>
 );
 
@@ -187,7 +193,7 @@ const createScenesTree = () => {
     .build();
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
@@ -212,6 +218,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
       liveDepth={liveDepth}
       readonly={readonly}
       lattice={fixture === 'lattice'}
+      panels={panels}
     />
   );
 };
@@ -223,6 +230,11 @@ const meta: Meta<StoryArgs> = {
   // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
   parameters: { translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
+    panels: {
+      control: { type: 'inline-radio' },
+      options: ['docked', 'floating'],
+      description: 'Where the properties and layers panels sit',
+    },
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
       description: 'Levels of nested scenes in the fixture; 0 is an empty scene',
@@ -274,4 +286,35 @@ export const Scenes: Story = {
 
 export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
+};
+
+/** The panels dock by default: one accordion section each beside the canvas; a section collapses to its header. */
+export const Docked: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. The dock holds the properties and layers sections, both open.
+    const dock = await canvas.findByTestId('scene-view-dock');
+    await waitFor(() => expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'open'));
+    await expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'open');
+    // 2. A section's header collapses it.
+    await userEvent.click(
+      within(within(dock).getByTestId('dock-section-properties')).getByRole('button', { name: 'Properties' }),
+    );
+    await waitFor(() =>
+      expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
+    );
+  },
+};
+
+/** Floating panels: no dock, the layers over the canvas until something is selected. */
+export const Floating: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'square', panels: 'floating' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
+    await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
+    // About lives only in the dock.
+    await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+  },
 };

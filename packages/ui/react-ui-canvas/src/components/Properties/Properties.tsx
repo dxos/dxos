@@ -187,6 +187,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   styles?: Atom.Writable<StyleMap>;
   /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
   onGroup?: () => void;
+  /** Whether the panel is docked beside the canvas. */
+  docked?: boolean;
 }>;
 
 export const Properties = ({
@@ -202,6 +204,7 @@ export const Properties = ({
   sceneOptions,
   styles,
   onGroup,
+  docked = false,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -372,8 +375,9 @@ export const Properties = ({
                   autoSave
                   onSave={onSave}
                 >
-                  {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
-                  <Form.Viewport scroll>
+                  {/* Floating, the panel is as tall as its host and a long form scrolls inside it; docked, the dock scrolls
+                      the panels together, so the form keeps no scroll of its own (it would hold the wheel). */}
+                  <Form.Viewport scroll={!docked}>
                     <Form.Content>
                       <Form.Fields exclude={HIDDEN} />
                     </Form.Content>

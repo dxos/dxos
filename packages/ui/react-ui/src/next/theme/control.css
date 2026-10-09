@@ -986,11 +986,9 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--dx-control-inset);
+    /* No gap or padding of its own: the items are block-sized controls, which carry their own spacing. */
     width: 100%;
     min-height: var(--dx-block-size);
-    /* Half a gap of inline padding (px-1 at md), so the end items are not flush with a pane's edge. */
-    padding-inline: calc(var(--dx-gap-size) / 2);
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
   }

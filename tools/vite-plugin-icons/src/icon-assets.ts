@@ -12,6 +12,12 @@ export type IconAssets = {
   route: string;
   /** Directory containing the icon-set catalog, e.g. `node_modules/@phosphor-icons/core/assets`. */
   dir: string;
+  /**
+   * Copy the catalog into the build output (default `true`). `false` serves it from the dev server
+   * only — for a host whose dev sprite can trail the modules it serves but whose builds must not
+   * carry thousands of files.
+   */
+  copy?: boolean;
 };
 
 /**
@@ -19,9 +25,9 @@ export type IconAssets = {
  * resolvers (e.g. @dxos/react-ui's IconRegistry) can fetch glyphs that weren't statically
  * referenced — icons used only by runtime-loaded plugins.
  *
- * In dev: middleware streams from `dir`. In build: assets are copied into the output dir.
+ * In dev: middleware streams from `dir`. In build: assets are copied into the output dir unless `copy` is false.
  */
-export const iconAssetsPlugin = ({ route, dir }: IconAssets): Plugin => {
+export const iconAssetsPlugin = ({ route, dir, copy = true }: IconAssets): Plugin => {
   let outDir: string | undefined;
   return {
     name: `dxos:icon-assets${route}`,
@@ -54,7 +60,7 @@ export const iconAssetsPlugin = ({ route, dir }: IconAssets): Plugin => {
       });
     },
     closeBundle: async () => {
-      if (!outDir || !existsSync(dir)) {
+      if (!copy || !outDir || !existsSync(dir)) {
         return;
       }
       const dest = join(outDir, route.replace(/^\//, ''));

@@ -83,7 +83,8 @@ IconsPlugin({
 
 That serves the catalog from `node_modules` in dev and copies it into the build output for production. A
 host that omits it is sprite-only: unscanned names stay blank. This is a legitimate choice —
-`composer-crx` omits it because copying a full catalog would bloat the packaged extension.
+`composer-crx` omits it because copying a full catalog would bloat the packaged extension. `copy: false`
+serves the catalog in dev without copying it; Storybook uses this for Phosphor.
 
 Because the catalog is large (~9,000 files for Phosphor), it must **not** go into a service-worker
 precache — that would add one install-time request per file. `composer-app` instead excludes
@@ -107,5 +108,17 @@ and `getIconRegistry()` reads it back. `<dx-icon>` follows the same contract as 
   must be reachable by the build-time scanner.
 - **Icons render one frame late on first resolution.** Anything asserting on icon presence immediately
   after mount (tests, screenshots) must wait for the fetch.
+- **In dev, each server has its own sprite.** The plugin writes the dev sprite to a private temp directory
+  and serves `/icons.svg` itself, never through `publicDir`. Storybook and every storybook vitest run load
+  the same `.storybook/main.ts`, and so the same `publicDir`. While they shared `static/icons.svg`, a test
+  run replaced the shared server's sprite with the few icons it had seen. The server never wrote it back,
+  because its own symbol set had not changed, so those icons stayed blank until a restart. On start, a dev
+  server deletes any `icons.svg` left in `publicDir`, because Storybook serves `staticDirs` ahead of every
+  Vite middleware and that stale copy would win.
+- **Storybook's sprite trails lazily loaded stories.** The preview iframe fetches `/icons.svg` once, while
+  the sprite keeps growing as Vite serves story modules. A story opened later in the same iframe can
+  reference icons that the iframe's copy of the sprite lacks. Storybook therefore serves Phosphor at
+  `/phosphor` in dev (`copy: false`), and the registry fetches those icons individually. A `dx--*` glyph has
+  no runtime source, so it still needs a reload.
 - **SSR is unsupported.** The in-page container is built from `document`; `useIconHref` returns
   `undefined` on the server.

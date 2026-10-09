@@ -8,9 +8,10 @@
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
+import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import picomatch from 'picomatch';
-import type { Plugin, ViteDevServer } from 'vite';
+import type { Connect, Plugin, ViteDevServer } from 'vite';
 
 import { type IconAssets, iconAssetsPlugin } from './icon-assets.ts';
 import { normalizeSprite } from './normalize-sprite.ts';
@@ -71,17 +72,15 @@ export const IconsPlugin = ({
 
   let rootDir: string;
   let spritePath: string;
+  // Where a build writes the sprite, so the public-dir copy step ships it.
+  let publicSpritePath: string;
+  // The dev server's private sprite directory, removed when the server closes.
+  let devSpriteDir: string | null = null;
   let server: ViteDevServer | null = null;
 
-  // Coalesce sprite writes during dev startup. Without this, every transform
-  // that detects a new icon symbol triggers a full `makeSprite()` write to
-  // disk; that file lives under publicDir, which fires CSS HMR for every
-  // stylesheet referencing it. During a cold-start with many lazy-loaded
-  // packages, dozens of new icons are discovered in tight bursts as plugin
-  // sources stream through — leading to a "main.css HMR storm" (40+ updates
-  // in 1-2 s) and growing esbuild deps-bundle pass times because CSS HMR
-  // work contends with the deps optimizer. Coalescing collapses N "new
-  // icon" detections in the same idle window into a single write.
+  // Coalesce sprite writes during dev startup: a cold start discovers dozens of new icons in tight
+  // bursts as plugin sources stream through, and each write is a full `makeSprite()`. Coalescing
+  // collapses N detections in the same idle window into a single write.
   //
   // Also skip the write when the sprite's contents would be identical — a cheap guard against
   // repeating the work when the same icons get re-detected after a reload.
@@ -269,7 +268,8 @@ export const IconsPlugin = ({
 
       configResolved: (config) => {
         rootDir = resolve(config.root);
-        spritePath = resolve(config.publicDir, spriteFile);
+        publicSpritePath = resolve(config.publicDir, spriteFile);
+        spritePath = publicSpritePath;
       },
 
       // Eager scan: symbols in files outside the module graph (transform never
@@ -289,9 +289,18 @@ export const IconsPlugin = ({
       configureServer: (_server) => {
         server = _server;
 
-        // Rebuild when a glyph already in the sprite is redrawn. The sprite is served as a static
-        // file, and the icon registry ingests it once per document, so the write alone changes
-        // nothing on screen — hence the full reload.
+        // Every dev server owns a private sprite rather than sharing the public-dir file: the shared
+        // storybook and each storybook vitest run load one config and so one publicDir, and whichever
+        // wrote last — usually a test run that saw a handful of modules — replaced the sprite the
+        // others served, which then never rewrote it because their own symbol set had not changed.
+        devSpriteDir = fs.mkdtempSync(join(tmpdir(), 'dx-icons-'));
+        spritePath = join(devSpriteDir, spriteFile);
+        // A copy left in publicDir by a build or an older dev server would shadow the private one:
+        // Storybook serves `staticDirs` ahead of every Vite middleware.
+        fs.rmSync(publicSpritePath, { force: true });
+
+        // Rebuild when a glyph already in the sprite is redrawn. The icon registry ingests the sprite
+        // once per document, so the write alone changes nothing on screen — hence the full reload.
         const rebuild = () => {
           // The watcher has told us the file changed, which is better evidence than the fingerprint:
           // mtime and size can both survive an edit (a same-length change written within the same
@@ -309,21 +318,33 @@ export const IconsPlugin = ({
         server.watcher.on('unlink', onAssetChange);
         server.watcher.on('add', onAssetAdd);
 
-        // Ensure `/icons.svg` is complete before it is served. On a cold start
-        // the browser requests the sprite as soon as the first <Icon> paints —
-        // often before the debounced write has flushed, or before the file
-        // exists at all on a fresh checkout (the sprite lives in gitignored
-        // publicDir). Either case yields blank icons until a hard reload.
-        // Flushing here guarantees the served sprite reflects every symbol
-        // detected so far. Registered before the scan middleware (and thus
-        // before Vite's public-dir serving) so the write lands first.
+        // Serves the private sprite, complete. On a cold start the browser
+        // requests it as soon as the first <Icon> paints — often before the
+        // debounced write has flushed, or before the first write at all — which
+        // yields blank icons until a hard reload, so a pending write is flushed
+        // first and the served sprite reflects every symbol detected so far.
+        const serveSprite: Connect.NextHandleFunction = (_req, res, next) => {
+          if (!fs.existsSync(spritePath)) {
+            return next();
+          }
+          res.setHeader('Content-Type', 'image/svg+xml');
+          // The sprite grows as modules are served; a cached copy would hide icons found since.
+          res.setHeader('Cache-Control', 'no-store');
+          fs.createReadStream(spritePath).pipe(res);
+        };
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url ?? '').split('?')[0];
-          if (pathname === `/${spriteFile}` && (writeTimer || !fs.existsSync(spritePath))) {
-            void flushSprite().then(next, next);
+          if (pathname !== `/${spriteFile}` || (req.method !== 'GET' && req.method !== 'HEAD')) {
+            return next();
+          }
+          if (writeTimer || !fs.existsSync(spritePath)) {
+            void flushSprite().then(
+              () => serveSprite(req, res, next),
+              () => next(),
+            );
             return;
           }
-          next();
+          serveSprite(req, res, next);
         });
 
         // Process chunks.
@@ -376,6 +397,12 @@ export const IconsPlugin = ({
       // missing icons that were detected during the very last transforms.
       buildEnd: async () => {
         await flushSprite();
+      },
+      closeBundle: () => {
+        if (devSpriteDir) {
+          fs.rmSync(devSpriteDir, { recursive: true, force: true });
+          devSpriteDir = null;
+        }
       },
     },
     ...(assets ?? []).map(iconAssetsPlugin),
