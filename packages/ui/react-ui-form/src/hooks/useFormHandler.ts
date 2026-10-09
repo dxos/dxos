@@ -170,8 +170,6 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
-      // Never log values or error messages: fields may hold secrets (passwords, API keys) and messages can echo them.
-      log('validate', { valid: errors.length === 0, errorPaths: errors.map((error) => error.path) });
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;
         errors = onValidate(validatedValues) ?? [];
@@ -179,6 +177,8 @@ export const useFormHandler = <T extends AnyProperties>({
 
       setErrors(flatMap(errors));
       const valid = errors.length === 0;
+      // Never log values or error messages: fields may hold secrets (passwords, API keys) and messages can echo them.
+      log('validate', { valid, errorPaths: errors.map((error) => error.path) });
       return valid;
     },
     [schema, onValidate],
