@@ -12,6 +12,7 @@ import { gate } from './gate.ts';
 import { readLedger } from './ledger.ts';
 import { runCommand } from './run.ts';
 import { installInterruptHandlers } from './session.ts';
+import { expand, summarize } from './summarize.ts';
 import { HarnessError, errorCode, workspaceRoot } from './workspace.ts';
 
 const HELP = `perf: build, serve and measure the app, and say whether a change helped.
@@ -21,6 +22,9 @@ usage: pnpm perf <command> [options]
   doctor                  ports, load, lock and tree; exit 4 if a measurement would fail or mislead
   run [-n 3]              measure the working tree: stage table, score against the CI budgets
   compare --base <ref>    paired A/B of HEAD against <ref>; the verdict is the exit code
+  summarize [<run>]       where the CPU went: top functions by self time, or by the change in
+                          self time between a compare's arms; source-mapped, one handle per row
+  expand <handle>         a summary row's callers and callees
   gate                    the boot-graph budget CI gates every PR on
   ledger [-n 10]          this worktree's past measurements (.perf/ledger.tsv)
   freeze / thaw           pin the harness for an optimization loop: edits to it are refused,
@@ -38,6 +42,14 @@ compare
                           --check 'moon run composer-app:test'
   --allow-harness-change  measure even though the harness differs between the arms (otherwise void)
   --json                  one JSON line instead of the table
+
+summarize
+  --stage <stage>  --realm <text>  --top 30
+  --heap                  the memory snapshots of a \`run --snapshots\` instead of the CPU profiles
+
+run
+  --snapshots <list>      heap snapshots at idle, a stage id, or end (comma-separated); every
+                          stage after one is perturbed, so the run compares with nothing else
 
 common: --target composer  --ignore-load  --lock-wait <minutes, default 60>
 
@@ -70,6 +82,12 @@ const main = async (): Promise<number> => {
       'max-rounds': { type: 'string' },
       'max-minutes': { type: 'string' },
       'iterations': { type: 'string', short: 'n' },
+      'stage': { type: 'string' },
+      'realm': { type: 'string' },
+      'top': { type: 'string' },
+      'run': { type: 'string' },
+      'heap': { type: 'boolean', default: false },
+      'snapshots': { type: 'string' },
       'json': { type: 'boolean', default: false },
       'ignore-load': { type: 'boolean', default: false },
       'lock-wait': { type: 'string' },
@@ -95,6 +113,7 @@ const main = async (): Promise<number> => {
       return runCommand({
         ...common,
         iterations: Math.max(1, Math.round(integer(values.iterations, 3, 'iterations'))),
+        snapshots: values.snapshots,
       });
     case 'compare': {
       if (!values.base) {
@@ -114,6 +133,21 @@ const main = async (): Promise<number> => {
         checks: values.check ?? [],
         allowHarnessChange: values['allow-harness-change'],
       });
+    }
+    case 'summarize':
+      return summarize({
+        run: positionals[1] ?? values.run,
+        stage: values.stage,
+        realm: values.realm,
+        top: Math.max(1, Math.round(integer(values.top, 30, 'top'))),
+        heap: values.heap,
+      });
+    case 'expand': {
+      const handle = positionals[1];
+      if (!handle) {
+        throw new HarnessError('expand needs a handle from `pnpm perf summarize`, e.g. h3');
+      }
+      return expand({ handle, run: values.run });
     }
     case 'gate':
       return gate({ target: values.target });
