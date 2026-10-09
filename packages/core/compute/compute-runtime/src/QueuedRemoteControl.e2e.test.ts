@@ -209,14 +209,13 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
-    'a process the host keeps rejecting does not hold up another process, and keeps its own commands',
+    'a process whose delivery keeps failing does not hold up another process, and keeps its own commands',
     Effect.fn(function* ({ expect }) {
       yield* withHarness(
         ({ client, host }) =>
           Effect.gen(function* () {
-            // The host hosts no such process, so every delivery for it is rejected — the failure an
-            // outage cannot be told apart from, and the one that must not become head-of-line.
-            const doomed = yield* client.spawn({ spaceId: SPACE, key: 'test.not-hosted', name: 'doomed' });
+            // Every delivery for it fails the way an outage does, which must not become head-of-line.
+            const doomed = yield* client.spawn({ spaceId: SPACE, key: UNREACHABLE_KEY, name: 'doomed' });
             // Queued BEHIND it, for a different process.
             yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'other' });
 
@@ -240,8 +239,15 @@ describe('queued remote control (e2e against a local host)', () => {
             // The other process is untouched by any of this — it is on the host and stays there.
             expect((yield* client.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
           }),
-        // Fast backoff so the losing process cycles quickly; nothing here depends on its timing.
-        { backoff: { initial: Duration.millis(1), max: Duration.millis(5) } },
+        {
+          // Fast backoff so the losing process cycles quickly; nothing here depends on its timing.
+          backoff: { initial: Duration.millis(1), max: Duration.millis(5) },
+          wrap: (control) => ({
+            ...control,
+            spawn: (request) =>
+              request.key === UNREACHABLE_KEY ? Effect.die(new Error('host unavailable')) : control.spawn(request),
+          }),
+        },
       );
     }),
   );
@@ -336,6 +342,33 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
+    'a spawn the host rejects fails the process instead of retrying it forever',
+    Effect.fn(function* ({ expect }) {
+      yield* withHarness(({ client, host }) =>
+        Effect.gen(function* () {
+          const { pid } = yield* client.spawn({ spaceId: SPACE, key: 'test.not-hosted' });
+          yield* waitUntil(
+            client.status({ spaceId: SPACE, pid }).pipe(Effect.map((info) => info.state === Process.State.FAILED)),
+          );
+
+          // Every read reports the host's reason, which is what a caller waiting on the process surfaces.
+          const status = yield* client.status({ spaceId: SPACE, pid });
+          expect(status.error?.message).toContain("does not host process 'test.not-hosted'");
+          const page = yield* client.readEvents({ spaceId: SPACE, pid, cursor: 0 });
+          expect(page.snapshot.state).toEqual(Process.State.FAILED);
+
+          // Nothing is left to retry, and an input for the failed process is refused rather than queued.
+          expect(yield* client.pending).toEqual([]);
+          const input = yield* client.submitInput({ spaceId: SPACE, pid, input: 'late' }).pipe(Effect.exit);
+          expect(Exit.isFailure(input)).toEqual(true);
+          expect(yield* client.pending).toEqual([]);
+          expect(yield* host.list({ spaceId: SPACE })).toEqual([]);
+        }),
+      );
+    }),
+  );
+
+  it.live(
     'the client manager built over the queue spawns and streams through it',
     Effect.fn(function* ({ expect }) {
       // The whole client stack — `makeControlVerbs` + `RemoteProcessHandle` — over the queued control,
@@ -358,6 +391,9 @@ describe('queued remote control (e2e against a local host)', () => {
 });
 
 const SPACE = SpaceId.random();
+
+/** A process key whose spawn the harness fails as an outage would, rather than as a refusal. */
+const UNREACHABLE_KEY = 'test.unreachable';
 
 /** Long enough that only `connected` can end it — which is what makes the signal the thing under test. */
 const BACKOFF = { initial: Duration.seconds(30), max: Duration.seconds(30) };
