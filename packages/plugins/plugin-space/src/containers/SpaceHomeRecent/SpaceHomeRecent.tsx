@@ -43,9 +43,9 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const { recent, pending } = useRecentObjects(space);
-  const placeholders = useMemo(
-    () => (pending > 0 ? Array.makeBy(pending, (index) => `placeholder-${index}`) : []),
-    [pending],
+  const items = useMemo<RecentItem[]>(
+    () => (pending > 0 ? Array.makeBy(pending, (index) => `placeholder-${index}`) : recent),
+    [pending, recent],
   );
   if (recent.length === 0 && pending === 0) {
     return null;
@@ -54,19 +54,12 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.recent.heading')} onClose={onClose} />
-      {pending > 0 ? (
-        <Masonry.Root Tile={PlaceholderTile}>
-          <Masonry.Content padding={false} scrollbars={false}>
-            <Masonry.Viewport items={placeholders} getId={(id) => id} />
-          </Masonry.Content>
-        </Masonry.Root>
-      ) : (
-        <Masonry.Root Tile={RecentObjectTile}>
-          <Masonry.Content padding={false} scrollbars={false}>
-            <Masonry.Viewport items={recent} getId={(object) => object.id} />
-          </Masonry.Content>
-        </Masonry.Root>
-      )}
+      {/* One instance across the swap from placeholders to objects, so the measured grid never remounts. */}
+      <Masonry.Root Tile={RecentTile}>
+        <Masonry.Content padding={false} scrollbars={false}>
+          <Masonry.Viewport items={items} getId={getRecentItemId} cacheKey={space && `${space.id}/recent`} />
+        </Masonry.Content>
+      </Masonry.Root>
     </HomeSection.Root>
   );
 };
@@ -109,6 +102,16 @@ const recentObjectsFilter = (schemas: readonly unknown[]) => {
   );
   return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
 };
+
+/** A recent object, or the id of a placeholder held while the objects load. */
+type RecentItem = Obj.Unknown | string;
+
+const getRecentItemId = (item: RecentItem): string => (typeof item === 'string' ? item : item.id);
+
+const RecentTile = ({ data, index }: { data: RecentItem; index: number }) =>
+  typeof data === 'string' ? <PlaceholderTile /> : <RecentObjectTile data={data} index={index} />;
+
+RecentTile.displayName = 'RecentTile';
 
 const PlaceholderTile = () => (
   <Card.Root>
