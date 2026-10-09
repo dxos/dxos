@@ -43,8 +43,7 @@ System One judges this a likely violation of `no-sleep-in-test` (No sleep or pol
 
 ### Dismissals
 
-- 8fe43a69d86-2, -3, -4: the flagged lines in `Binding.test.ts` predate this PR and are not part of its change.
-- 8fe43a69d86-1: the new tests provide their services the same way as the sibling `run` helper in the same `describe`; a layer for one test would diverge from it.
+- 8fe43a69d86-1, -2, -3, -4: the flagged lines in `Binding.test.ts` predate this PR and are not part of its change; -1 points at the existing `capabilities` helper, which the new tests reuse unchanged.
 
 ### System One pass
 
