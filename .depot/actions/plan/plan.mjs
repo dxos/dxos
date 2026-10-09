@@ -65,10 +65,14 @@ const readAffected = () => {
     console.error('plan: full run, every cell starts.');
     return undefined;
   }
+  // Without `CI`: every e2e task lists it as an input (`.moon/tasks/tag-e2e.yml`), and moon counts a task
+  // whose env input is set as affected, which would start every e2e cell whatever changed.
+  const { CI: _ci, ...env } = process.env;
   try {
     const { tasks } = JSON.parse(
       execFileSync('moon', ['query', 'tasks', '--affected', '--downstream', 'deep'], {
         encoding: 'utf8',
+        env,
         maxBuffer: 64 * 1024 * 1024,
         stdio: ['ignore', 'pipe', 'inherit'],
       }),
@@ -76,7 +80,10 @@ const readAffected = () => {
     const pairs = Object.entries(tasks).flatMap(([project, projectTasks]) =>
       Object.keys(projectTasks).map((task) => [project, task]),
     );
-    console.error(`plan: ${pairs.length} affected tasks.`);
+    const suites = pairs.filter(([, task]) => NODE_TASKS.has(task) || BROWSER_TASKS.has(task) || task === 'e2e');
+    console.error(
+      `plan: ${pairs.length} affected tasks; test/e2e: ${suites.map((pair) => pair.join(':')).join(' ') || 'none'}`,
+    );
     return pairs;
   } catch (err) {
     console.error(`::warning::plan: could not read the affected tasks (${err.message}); every cell starts.`);
