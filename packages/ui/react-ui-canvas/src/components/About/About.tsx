@@ -15,12 +15,12 @@ export type AboutProps = Util.ThemedClassName<{
   stats: readonly AboutStat[];
 }>;
 
-/** A two-column table of the drawing's figures: a label and its value per row. */
+/** A two-column table of the drawing's figures, one per list-height row: a label and its value. */
 export const About = ({ classNames, stats }: AboutProps) => (
   <Panel.Root classNames={classNames} data-testid='about'>
     <Panel.Body>
-      <Layout.Container padBlock>
-        <Layout.Grid cols={['fill', 'auto']} gap='sm'>
+      <Layout.Container>
+        <Layout.Grid cols={['fill', 'auto']}>
           {stats.map(({ id, label, value }) => (
             <Fragment key={id}>
               <Typography.Text tone='muted' truncate>

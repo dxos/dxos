@@ -1365,9 +1365,9 @@ const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--inf
 
 export type SceneViewAboutProps = Util.ThemedClassName<{}>;
 
-/** Figures for the current scene and the drawing; a dock section only, since it has no place over the canvas. */
+/** Counts of the scene's objects and the drawing's scenes; a dock section only, since it has no place over the canvas. */
 const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
-  const { scene, store, selection, camera, path, panels } = useSceneViewContext('SceneView.About');
+  const { scene, store, panels } = useSceneViewContext('SceneView.About');
   const scenes = useAtomValue(store.scenes);
   const docked = panels === 'docked';
   const stats = useMemo<AboutStat[]>(
@@ -1375,12 +1375,9 @@ const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
       { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
       { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
       { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
-      { id: 'selected', label: 'Selected', value: selection.size },
       { id: 'scenes', label: 'Scenes', value: Object.keys(scenes).length },
-      { id: 'depth', label: 'Depth', value: path.length - 1 },
-      { id: 'zoom', label: 'Zoom', value: `${Math.round(camera.zoom * 100)}%` },
     ],
-    [scene, scenes, selection, path, camera.zoom],
+    [scene, scenes],
   );
   return useDockSection(ABOUT_SECTION, docked, <About classNames={mx('h-auto', classNames)} stats={stats} />);
 };
