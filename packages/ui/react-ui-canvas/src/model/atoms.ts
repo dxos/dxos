@@ -77,6 +77,9 @@ export type ControlPointRef = { link: LinkId; index: number };
 /** The text part being edited in place (`parts.ts`). */
 export type EditingPart = { id: NodeId; part: PartKey };
 
+/** Where the properties and layers panels sit: floating over the canvas, or docked in a column beside it. */
+export type PanelMode = 'floating' | 'docked';
+
 export type SceneViewAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<SceneId[]>;
@@ -106,6 +109,7 @@ export type SceneViewAtoms = {
   editing: Atom.Writable<EditingPart | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
+  panels: Atom.Writable<PanelMode>;
 };
 
 /**
@@ -131,4 +135,5 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
+  panels: Atom.keepAlive(Atom.make<PanelMode>('docked')),
 });

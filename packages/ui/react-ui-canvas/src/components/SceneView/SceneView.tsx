@@ -89,6 +89,7 @@ import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { Dock, DockProvider, type DockSection, useDockSection } from './Dock.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
@@ -864,29 +865,34 @@ const SceneViewRoot = ({
       onKeyDown={onKeyDown}
       rootRef={rootRef}
     >
-      <div
-        ref={rootRef}
-        tabIndex={0}
-        className={mx(
-          'relative dx-fill overflow-hidden bg-base-surface outline-none touch-none select-none',
-          tool.kind === 'hand' && 'cursor-grab',
-          tool.kind === 'node' && 'cursor-crosshair',
-          classNames,
-        )}
-        style={{ contain: 'strict' }}
-        data-testid='scene-view'
-        onPointerDown={onBackgroundPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-        onPointerCancel={cancelDrag}
-        onPointerLeave={() => updateHover(undefined)}
-        onDoubleClick={onDoubleClick}
-        onContextMenu={onContextMenu}
-        onKeyDown={onKeyDown}
-      >
-        {children}
-      </div>
+      <DockProvider>
+        {/* The canvas beside the dock, which docked panels move into; with none docked, it takes no space. */}
+        <div className={mx('flex dx-fill overflow-hidden', classNames)}>
+          <div
+            ref={rootRef}
+            tabIndex={0}
+            className={mx(
+              'relative grow h-full overflow-hidden bg-base-surface outline-none touch-none select-none',
+              tool.kind === 'hand' && 'cursor-grab',
+              tool.kind === 'node' && 'cursor-crosshair',
+            )}
+            style={{ contain: 'strict' }}
+            data-testid='scene-view'
+            onPointerDown={onBackgroundPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+            onPointerCancel={cancelDrag}
+            onPointerLeave={() => updateHover(undefined)}
+            onDoubleClick={onDoubleClick}
+            onContextMenu={onContextMenu}
+            onKeyDown={onKeyDown}
+          >
+            {children}
+          </div>
+          <Dock />
+        </div>
+      </DockProvider>
     </SceneViewProvider>
   );
 };
@@ -1188,6 +1194,7 @@ const SceneViewProperties = ({
 }: SceneViewPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
     useSceneViewContext('SceneView.Properties');
+  const { docked, setDocked } = usePanelMode('SceneView.Properties');
   const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -1216,13 +1223,11 @@ const SceneViewProperties = ({
     registry.set(atoms.point, undefined);
   }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
-  if (selection.size === 0) {
-    return null;
-  }
-
-  return (
+  const panel = (
     <Properties
-      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      docked={docked}
+      onDockedChange={setDocked}
       projection={projection}
       atoms={atoms}
       nodes={nodeRegistry}
@@ -1236,9 +1241,41 @@ const SceneViewProperties = ({
       readonly={!capabilities.update}
     />
   );
+  // Docked, the panel stays in its section whatever is selected (it says when nothing is); floating, it shows only
+  // with a selection.
+  const dockedPanel = useDockSection(PROPERTIES_SECTION, docked, panel);
+  if (docked) {
+    return dockedPanel;
+  }
+  return selection.size > 0 ? panel : null;
 };
 
 SceneViewProperties.displayName = 'SceneView.Properties';
+
+//
+// Dock
+//
+
+const PROPERTIES_SECTION: DockSection = {
+  id: 'properties',
+  title: 'Properties',
+  icon: 'ph--sliders-horizontal--regular',
+  order: 0,
+};
+
+const LAYERS_SECTION: DockSection = { id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 1 };
+
+/** The panels' mode, and a setter for the panels' dock button. */
+const usePanelMode = (component: string) => {
+  const { atoms } = useSceneViewContext(component);
+  const registry = useRegistry();
+  const docked = useAtomValue(atoms.panels) === 'docked';
+  const setDocked = useCallback(
+    (next: boolean) => registry.set(atoms.panels, next ? 'docked' : 'floating'),
+    [registry, atoms.panels],
+  );
+  return { docked, setDocked };
+};
 
 //
 // Layers
@@ -1252,6 +1289,7 @@ export type SceneViewLayersProps = Util.ThemedClassName<{}>;
  */
 const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
   const { projection, atoms, capabilities, selection } = useSceneViewContext('SceneView.Layers');
+  const { docked, setDocked } = usePanelMode('SceneView.Layers');
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -1274,13 +1312,11 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
     },
     [layers, registry, atoms],
   );
-  if (selection.size > 0) {
-    return null;
-  }
-
-  return (
+  const panel = (
     <LayersPanel
-      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      docked={docked}
+      onDockedChange={setDocked}
       layers={layers}
       selected={selected}
       readonly={readonly}
@@ -1320,6 +1356,12 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
       }}
     />
   );
+  const dockedPanel = useDockSection(LAYERS_SECTION, docked, panel);
+  if (docked) {
+    return dockedPanel;
+  }
+  // Floating, the layers take the properties panel's place while nothing is selected.
+  return selection.size > 0 ? null : panel;
 };
 
 SceneViewLayers.displayName = 'SceneView.Layers';

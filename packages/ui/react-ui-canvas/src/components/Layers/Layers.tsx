@@ -12,6 +12,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type Layer, type LayerId } from '../../model/types.ts';
+import { DockToggle } from '../DockToggle/index.ts';
 
 export type LayersPanelProps = Util.ThemedClassName<{
   /** The scene's layers, bottom first (`sceneLayers`); the panel lists them top first, as they stack. */
@@ -31,6 +32,9 @@ export type LayersPanelProps = Util.ThemedClassName<{
   onDelete?: (ids: LayerId[]) => void;
   /** Merges the selected layers into the top-most of them; offered while two or more are selected. */
   onMerge?: (ids: LayerId[], into: LayerId) => void;
+  /** Whether the panel is docked beside the canvas; with `onDockedChange`, its toolbar offers to dock or float it. */
+  docked?: boolean;
+  onDockedChange?: (docked: boolean) => void;
 }>;
 
 type LayerNameProps = {
@@ -88,6 +92,8 @@ export const LayersPanel = ({
   onCreate,
   onDelete,
   onMerge,
+  docked = false,
+  onDockedChange,
 }: LayersPanelProps) => {
   const items = useMemo(() => [...layers].reverse(), [layers]);
   // The row whose name is open; a new layer opens its own, so it is named as it is made.
@@ -133,6 +139,7 @@ export const LayersPanel = ({
           data-testid='layers-merge'
           onClick={() => top && onMerge?.(selected, top)}
         />
+        {onDockedChange && <DockToggle docked={docked} onDockedChange={onDockedChange} />}
       </Toolbar.Root>
       <OrderedList.Root
         items={items}
@@ -146,6 +153,8 @@ export const LayersPanel = ({
       >
         {({ items }) => (
           <OrderedList.Content
+            // Docked, the dock scrolls the panels together, so the list keeps no scroll of its own (it would hold the wheel).
+            scroll={!docked}
             aria-label='Layers'
             // The gutter frames the rows above and below as well as at the sides.
             padBlock
