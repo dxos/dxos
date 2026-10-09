@@ -23,7 +23,7 @@ import { Message } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
+import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, evaluate, makeEvalToolkit } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -196,6 +196,27 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           print('scored:', await ops.score({ title: task.title }));
         `);
         expect(created).toEqual('open: 3\nscored: 13');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'evaluate answers with the text the eval tool returns',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        const run = (code: string) =>
+          evaluate({ code, dialect: PlainDialect, sandbox: Sandbox.inProcess, runtime, operations: [ScoreOperation] });
+
+        const code = "print('scored', await ops.score({ title: 'abc' }));";
+        expect(yield* run(code)).toEqual((yield* runEvalResult(code)).output);
+
+        const failing = "print('before'); throw new Error('boom');";
+        const failure = yield* run(failing).pipe(Effect.flip);
+        expect(failure).toEqual((yield* runEvalResult(failing)).output);
+        expect(failure).toEqual('before\nError: boom');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
