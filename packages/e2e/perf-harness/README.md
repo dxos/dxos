@@ -171,6 +171,30 @@ runs one measurement at a time, so worktrees never measure each other. Before th
 compare waits for the load average to fall below the core count, since the build it just ran is
 load the rounds would otherwise measure. Every run appends a row to `.perf/ledger.tsv`.
 
+### Measuring closer to production
+
+By default the bundle is served over HTTP/1.1 with no service worker and an unthrottled CPU, and
+the whole flow runs. Each of these flags changes that for both arms, and every row records it, so
+`compare` voids a verdict whose arms were measured under different conditions:
+
+```bash
+pnpm perf compare --base main --until open-space       # skip the stages after open-space
+pnpm perf compare --base main --http2                   # HTTP/2, as production's CDN serves
+pnpm perf compare --base main --service-worker          # the PWA build, its own cached bundle
+pnpm perf compare --base main --cpu-throttle 4          # the page 4x slower
+```
+
+- `--until` skips every stage after the one named, which shortens an experiment on an early stage.
+  Setup between stages still runs: the projects fixture is built whatever the stage.
+- `--http2` matters for boot. Hundreds of lazy chunks queue behind six HTTP/1.1 connections, so
+  request count reads as boot time locally when production pays little for it. It generates a
+  self-signed `key.pem` and `cert.pem` at the repo root on first use, which `vite preview` reads
+  under `HTTPS=true`.
+- `--service-worker` builds with `DX_PWA=true`; the worker precaches the bundle during the run, as
+  it does on a user's first visit.
+- `--cpu-throttle` sends `Emulation.setCPUThrottlingRate` through the page's session. The factor is
+  not calibrated to a device yet, so pick one and keep it for the whole comparison.
+
 ### Guardrails for an optimization loop
 
 An agent asked to make a number smaller will, sooner or later, make the measurement smaller instead.

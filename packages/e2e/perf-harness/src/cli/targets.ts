@@ -20,6 +20,8 @@ export type Target = {
     env: Record<string, string>;
     /** Relative to `appDir`. */
     outDir: string;
+    /** Names a bundle built with different settings, so its cached arms stay apart. */
+    variant?: string;
   };
   /** Playwright config, relative to `appDir`. */
   config: string;
@@ -37,6 +39,20 @@ export type Target = {
   harness: string[];
   /** The deterministic budget CI gates every PR on; its report is relative to `appDir`. */
   gate?: { moonTarget: string; report: string };
+  /** What this measurement holds constant beyond the target; see {@link withConditions}. */
+  conditions: Conditions;
+};
+
+/** The conditions every arm of one measurement shares. */
+export type Conditions = {
+  /** The last stage to run; later stages are skipped. */
+  until?: string;
+  /** Serve over HTTP/2 with a self-signed certificate, as production's CDN does; HTTP/1.1 otherwise. */
+  http2?: boolean;
+  /** Build with the PWA service worker on. */
+  serviceWorker?: boolean;
+  /** Slow the page's CPU by this factor. */
+  cpuThrottle?: number;
 };
 
 export const TARGETS: Readonly<Record<string, Target>> = {
@@ -62,6 +78,7 @@ export const TARGETS: Readonly<Record<string, Target>> = {
       'packages/apps/composer-app/scripts/score-perf.ts',
     ],
     gate: { moonTarget: 'composer-app:check-boot-budget', report: 'out/boot-budget.json' },
+    conditions: {},
   },
 };
 
@@ -96,4 +113,33 @@ export const resolveTarget = (name: string, scenario?: string): Target => {
 export const readBudgets = (root: string, target: Target): Record<string, Budget> => {
   const file = path.join(root, target.appDir, target.budgets);
   return existsSync(file) ? parseBudgets(JSON.parse(readFileSync(file, 'utf8'))) : {};
+};
+
+/** The flow's environment for each condition; the harness reads them back (`flowConditions`, `StageRunner`). */
+export const conditionsEnv = ({ until, http2, serviceWorker, cpuThrottle }: Conditions): Record<string, string> => ({
+  ...(until ? { DX_PERF_UNTIL: until } : {}),
+  ...(http2 ? { DX_PERF_HTTP2: '1' } : {}),
+  ...(serviceWorker ? { DX_PERF_SERVICE_WORKER: '1' } : {}),
+  ...(cpuThrottle && cpuThrottle > 1 ? { DX_PERF_CPU_THROTTLE: String(cpuThrottle) } : {}),
+});
+
+/** A target measured under `conditions`: the build, the server and the flow all follow them. */
+export const withConditions = (target: Target, conditions: Conditions = {}): Target => ({
+  ...target,
+  conditions,
+  build: conditions.serviceWorker
+    ? { ...target.build, env: { ...target.build.env, DX_PWA: 'true' }, variant: 'sw' }
+    : target.build,
+  env: { ...target.env, ...conditionsEnv(conditions) },
+});
+
+/** One line for a run's header, or nothing when every condition is the default. */
+export const describeConditions = ({ until, http2, serviceWorker, cpuThrottle }: Conditions): string | undefined => {
+  const parts = [
+    until && `until ${until}`,
+    http2 && 'HTTP/2',
+    serviceWorker && 'service worker',
+    cpuThrottle && cpuThrottle > 1 && `CPU ${cpuThrottle}x slower`,
+  ].filter((part): part is string => Boolean(part));
+  return parts.length > 0 ? parts.join(', ') : undefined;
 };
